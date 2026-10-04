@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateAuthorMeta } from "../../../../actions";
 import ImagePicker from "@/app/admin/ImagePicker";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
+import { localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
@@ -20,7 +21,7 @@ export default async function EditAuthor({ params }: { params: { id: string } })
       <p className="text-sm text-[#6B7280] mb-6">{a.language.toUpperCase()}</p>
       <TranslationsPanel type="author" groupId={a.translationGroupId} currentId={a.id} currentLang={a.language} />
 
-      <form action={save} className="space-y-5">
+      <form action={save} dir={localeDir(a.language)} className="space-y-5">
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
           <div>
             <label className="block text-sm mb-1">Name</label>
@@ -40,7 +41,7 @@ export default async function EditAuthor({ params }: { params: { id: string } })
           </div>
           <div>
             <label className="block text-sm mb-1">LinkedIn URL</label>
-            <input name="linkedin" defaultValue={a.linkedin ?? ""} className={input} />
+            <input name="linkedin" dir="ltr" defaultValue={a.linkedin ?? ""} className={input} />
           </div>
         </div>
 

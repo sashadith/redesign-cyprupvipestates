@@ -2,6 +2,8 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { COUNTRIES } from "@/lib/countries";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS } from "@/app/components/qualifierFields";
+import { LEAD_LOCALES } from "../../filters";
+import { LOCALE_LABELS, isLocale } from "@/lib/locale";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 const TIMELINES = [{ v: "", l: "—" }, ...LEAD_TIMELINE_OPTIONS];
@@ -41,7 +43,7 @@ export default function EditLeadForm({ action, lead }: { action: any; lead: any 
             </select>
           </div>
           <div><label className="block text-sm mb-1">Language</label>
-            <select name="languagePreference" className={input} defaultValue={lead.languagePreference ?? ""}><option value="">—</option>{["en", "de", "pl", "ru"].map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}</select>
+            <select name="languagePreference" className={input} defaultValue={lead.languagePreference ?? ""}><option value="">—</option>{LEAD_LOCALES.map((l) => <option key={l} value={l}>{isLocale(l) ? LOCALE_LABELS[l].name : l.toUpperCase()}</option>)}</select>
           </div>
           <div>
             <label className="block text-sm mb-1">Salutation (DE/PL formal address)</label>

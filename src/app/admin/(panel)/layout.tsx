@@ -31,6 +31,8 @@ function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, ac
     { href: "/admin/content/forms", label: "Forms" },
     { href: "/admin/content/landing", label: "Landing Pages" },
     { href: "/admin/content/faq", label: "FAQ" },
+    // EN→HE translation queue for the volume content (developments, areas, developers).
+    { href: "/admin/content/hebrew", label: "Hebrew" },
     { href: "/admin/media", label: "Media" },
   ];
 
@@ -101,11 +103,28 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const hasFeed = (d: (typeof developers)[number]) =>
     d.analyses.some((x) => x.sourceType === "URL" || x.sourceType === "API") ||
     d.developments.some((x) => x.dev && x.dev !== "manual");
-  const developersNav = developers.map((d) => ({ id: d.id, name: d.name, count: d._count.developments, hasFeed: hasFeed(d) }));
+  // Available inventory, not raw totals (2026-09-29, operator request). The box
+  // was being read as "what we can still sell" — the all-status unit total
+  // (4,636) had already been quoted as the available figure on the public
+  // partners page. All three rows now count the same thing: a development that
+  // still has at least one unit with status "available", the developers that
+  // own one, and those units themselves. Publish status is deliberately NOT a
+  // filter here — unlike the public partners band, the admin should see drafts.
+  // The per-developer numbers in the list below use the same map, so they still
+  // add up to the Developments figure.
+  const availableDevs = await prisma.development.findMany({
+    where: { units: { some: { status: "available" } } },
+    select: { developerAccountId: true },
+  });
+  const availableByDeveloper = new Map<string, number>();
+  for (const d of availableDevs) {
+    availableByDeveloper.set(d.developerAccountId, (availableByDeveloper.get(d.developerAccountId) ?? 0) + 1);
+  }
+  const developersNav = developers.map((d) => ({ id: d.id, name: d.name, count: availableByDeveloper.get(d.id) ?? 0, hasFeed: hasFeed(d) }));
   const devTotals = {
-    developers: developers.length,
-    developments: developers.reduce((sum, d) => sum + d._count.developments, 0),
-    units: await prisma.developmentUnit.count(),
+    developers: developers.filter((d) => (availableByDeveloper.get(d.id) ?? 0) > 0).length,
+    developments: availableDevs.length,
+    units: await prisma.developmentUnit.count({ where: { status: "available" } }),
   };
 
   return (

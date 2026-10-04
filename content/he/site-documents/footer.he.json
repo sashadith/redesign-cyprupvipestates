@@ -1,0 +1,293 @@
+{
+  "review": "pending",
+  "logo": {
+    "_type": "image",
+    "asset": {
+      "_ref": "image-9bc9402a78c12bb402634e3618ad701b351a936a-870x769-png",
+      "_type": "reference"
+    }
+  },
+  "title": "Footer HE",
+  "contacts": [
+    {
+      "_key": "b5ab11fd9f86",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-f1d1b767c5e920ade1b11f68b2df28ac5bc0766e-62x61-png",
+          "_type": "reference"
+        }
+      },
+      "type": "Email",
+      "label": "office@cyprusvipestates.com"
+    },
+    {
+      "_key": "f72f9187845d",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-1e7ab0aa4d38f4357ff37fe41c2223ab941b2878-61x62-png",
+          "_type": "reference"
+        }
+      },
+      "type": "Phone",
+      "label": "+357 99 278 285"
+    },
+    {
+      "_key": "572c026bd832",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-3fbb1da921efeaf95beea9090fa345a2b901c2e9-61x62-png",
+          "_type": "reference"
+        }
+      },
+      "type": "Link",
+      "label": " +357 99 278 285"
+    }
+  ],
+  "copyright": "© SecretBrand Solutions LTD 2026. כל הזכויות שמורות.",
+  "vatNumber": "מספר מע\"מ: CY60038766O",
+  "discklaimer": "גילוי נאות: Cyprus VIP Estates פועלת כסוכנות שיווק וייעוץ נדל\"ן. אנחנו לא סוכנות תיווך מורשית בקפריסין, אלא גשר שיווקי בין הרוכשים לבין היזמים ובעלי הנכסים. כל הפעולות המשפטיות, בדיקות הנאותות והכנת החוזים מתבצעות אך ורק בידי עורכי דין עצמאיים בעלי רישיון ובידי היזמים עצמם. איננו נותנים ייעוץ משפטי או פיננסי.",
+  "policyLinks": [
+    {
+      "_key": "31b0909fcbf3",
+      "link": "/he/privacy-policy",
+      "label": "מדיניות הפרטיות"
+    },
+    {
+      "_key": "c9d3a3a475ac3390521730f0649baa59",
+      "link": "/he/terms-and-conditions",
+      "label": "תנאי השימוש"
+    }
+  ],
+  "socialLinks": [
+    {
+      "_key": "9b96239d86d8",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-30e5d8455eba417a6f316c1ca4185ac0518b0cbe-114x114-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.instagram.com/cyprusvipestates/",
+      "label": "אינסטגרם"
+    },
+    {
+      "_key": "5fed80ec356f",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-cbbb7f73e8035e57234878fe3e829b7fd000ea12-115x115-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.youtube.com/@cyprusvipestates",
+      "label": "יוטיוב"
+    },
+    {
+      "_key": "f6b249227a6b",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-9977be1059061f3cf9f51680049d8e69217d88c6-116x115-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.facebook.com/cyprusvipestates",
+      "label": "פייסבוק"
+    },
+    {
+      "_key": "0d9ffe8d649f",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-9c5586f5ca7f08011d0c929dff77a396adcae8fe-64x64-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.tiktok.com/@cyprusvipestates",
+      "label": "טיקטוק"
+    },
+    {
+      "_key": "10dfe2678ff9",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-e8de355d8b266099adb141b1226bc1fa11bd6d3f-114x114-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://wa.me/35799278285",
+      "label": "וואטסאפ"
+    }
+  ],
+  "companyTitle": "החברה",
+  "contactTitle": "יצירת קשר",
+  "footerColumns": [
+    {
+      "_key": "1b414adbd3b5",
+      "links": [
+        {
+          "url": "/he/paphos",
+          "_key": "ba73be77f1f8",
+          "label": "נדל\"ן בפאפוס"
+        },
+        {
+          "url": "/he/limassol",
+          "_key": "1e493e000bf7",
+          "label": "נדל\"ן בלימסול"
+        },
+        {
+          "url": "/he/paphos/apartments",
+          "_key": "10bdf06a4278",
+          "label": "דירות למכירה בפאפוס"
+        },
+        {
+          "url": "/he/paphos/villas",
+          "_key": "1a7396491376",
+          "label": "וילות למכירה בפאפוס"
+        },
+        {
+          "url": "/he/limassol/new-projects",
+          "_key": "cbfa1038944fb8905ac96c59b66f75f0",
+          "label": "פרויקטים חדשים בלימסול"
+        },
+        {
+          "url": "/he/projects",
+          "_key": "381e5575957988d3d025b6efc513c663",
+          "label": "פרויקטים חדשים בקפריסין"
+        }
+      ],
+      "title": "נכסים לפי אזור"
+    },
+    {
+      "_key": "12ba875a1949",
+      "links": [
+        {
+          "url": "/he/villas-cyprus",
+          "_key": "8163c147355b",
+          "label": "וילות למכירה בקפריסין"
+        },
+        {
+          "url": "/he/apartments-for-sale-cyprus",
+          "_key": "bc21468838ec",
+          "label": "דירות למכירה בקפריסין"
+        },
+        {
+          "url": "/he/property-investment-cyprus",
+          "_key": "d8a1cc0c2bd3",
+          "label": "נכסים להשקעה"
+        },
+        {
+          "url": "/he/houses-for-sale-cyprus",
+          "_key": "73ec7889ea8c",
+          "label": "בתים למכירה בקפריסין"
+        },
+        {
+          "url": "/he/seafront-villas-cyprus",
+          "_key": "d3a89c1949a8",
+          "label": "וילות בקו ראשון לים"
+        },
+        {
+          "url": "/he/real-estate-cyprus",
+          "_key": "b62973e02fb1",
+          "label": "נדל\"ן בקפריסין"
+        }
+      ],
+      "title": "סוגי נכסים"
+    },
+    {
+      "_key": "b5cf1057df52",
+      "links": [
+        {
+          "url": "/blog/taxes-on-real-estate-in-cyprus",
+          "_key": "099c9ccb1754",
+          "label": "מיסים על נדל\"ן בקפריסין"
+        },
+        {
+          "url": "/blog/how-to-buy-property-in-cyprus",
+          "_key": "a8a8c562a0df",
+          "label": "איך קונים נכס בקפריסין"
+        },
+        {
+          "url": "/blog/guaranteed-rental-income-in-cyprus-property",
+          "_key": "dce550980233",
+          "label": "הכנסה מובטחת משכירות"
+        },
+        {
+          "url": "/blog/health-insurance-in-cyprus",
+          "_key": "a7af4619f771",
+          "label": "ביטוח בריאות בקפריסין"
+        },
+        {
+          "url": "/blog/how-to-get-permanent-residence-in-cyprus",
+          "_key": "72ab8a7762bd",
+          "label": "תושבות קבע בקפריסין"
+        },
+        {
+          "url": "/blog/how-to-move-to-cyprus-from-the-uk",
+          "_key": "0a1ca88100ed",
+          "label": "מעבר לקפריסין מבריטניה"
+        }
+      ],
+      "title": "החיים בקפריסין (באנגלית)"
+    },
+    {
+      "_key": "3c37a23011f3",
+      "links": [
+        {
+          "url": "/he/about-us",
+          "_key": "edddb4a19055",
+          "label": "עלינו"
+        },
+        {
+          "url": "/he/contacts",
+          "_key": "10a24218d1cb",
+          "label": "צור קשר"
+        },
+        {
+          "url": "/he/faq",
+          "_key": "c7be83aeb8249a1a7c704e422b7ffa7b",
+          "label": "שאלות ותשובות"
+        },
+        {
+          "url": "/he/property-prices-cyprus",
+          "_key": "2ca540ea23be",
+          "label": "מחירי דירות בקפריסין"
+        },
+        {
+          "url": "/blog/how-much-money-do-you-need-to-buy-property-in-cyprus",
+          "_key": "21853235ca74",
+          "label": "כמה באמת עולה לקנות נכס בקפריסין"
+        }
+      ],
+      "title": "על Cyprus VIP Estates"
+    }
+  ],
+  "newsletterTitle": "ניוזלטר",
+  "companyParagraphs": [
+    {
+      "_key": "15d3fa364adf",
+      "paragraph": "Cyprus VIP Estates, מיזם מבית"
+    },
+    {
+      "_key": "7d72ede68ac4",
+      "paragraph": "SecretBrand Solutions LTD"
+    },
+    {
+      "_key": "1e65e0e5b02f",
+      "paragraph": "שיווק וניהול"
+    },
+    {
+      "_key": "1cb361de3024",
+      "paragraph": "Palaion Patron Germanou 11"
+    },
+    {
+      "_key": "35c82f688fc6",
+      "paragraph": "8011 פאפוס, קפריסין"
+    }
+  ],
+  "newsletterButtonLabel": "הרשמה"
+}

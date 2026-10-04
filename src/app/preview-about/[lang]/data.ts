@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { cache } from "react";
 import { refToLocalUrl } from "@/lib/sanityRefs";
 import { CORPORATE_SLUGS, type CorporateLocale } from "@/lib/corporatePageSlugs";
+import { isLocale } from "@/lib/locale";
 
 /* Data the About page still reads from the DB rather than from copy.ts.
 
@@ -55,7 +56,7 @@ export const getProjectCount = cache(async (): Promise<number> => {
 });
 
 export const getAboutPageData = cache(async (lang: string) => {
-  const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
+  const l: CorporateLocale = isLocale(lang) ? lang : "en";
   const row = await prisma.singlepage.findUnique({
     where: { language_slug: { language: l as any, slug: CORPORATE_SLUGS.about[l] } },
     select: { contentBlocks: true, previewImage: true },

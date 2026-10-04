@@ -9,6 +9,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_WIDTH,
   DEFAULT_OG_IMAGE_HEIGHT,
+  ogLocale,
 } from "@/lib/seo";
 
 import {
@@ -21,7 +22,6 @@ import {
 
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import FormStatic from "@/app/components/FormStatic/FormStatic";
 
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
     },
@@ -75,8 +75,6 @@ const CaseStudiesPage = async ({ params }: Props) => {
 
   const caseStudiesPage = await getCaseStudiesPageByLang(lang);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(lang);
 
   const translationSlugs =
     caseStudiesPage?._translations?.map((item) => {
@@ -141,7 +139,6 @@ const CaseStudiesPage = async ({ params }: Props) => {
 
       <Footer params={params} />
 
-      <ModalBrochure lang={lang} formDocument={formDocument} />
 
       <WhatsAppButton lang={lang} />
     </>

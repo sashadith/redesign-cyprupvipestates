@@ -7,6 +7,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { Contact } from "@/types/footer";
 import FormFull from "../FormFull/FormFull";
 import TrackedContactLink from "../TrackedContactLink/TrackedContactLink";
+import Bdi from "@/app/components/Bdi";
 
 type Props = {
   block: ContactFullBlock;
@@ -73,7 +74,7 @@ const ContactFullBlockComponent: FC<Props> = ({ block, lang }) => {
                     unoptimized
                   />
                   <p className={styles.contactLabel}>
-                    {contact.title}: {contact.label}
+                    {contact.title}: <Bdi ltr>{contact.label}</Bdi>
                   </p>
                 </TrackedContactLink>
               ))}

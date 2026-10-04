@@ -1,0 +1,79 @@
+                                                                                                                                                                                2-Jul-26        Version: 1.75
+
+
+                                                                                                 Plus 57 - Tamara Gardens 2
+
+                                                Nbr. of                                  Covered      Covered   Uncovered
+                                                         Nbr. of                                                            Garden   Roof Garden Common Area   Total Area
+     Block            Floor          Unit      Bedroom                     Parking    Internal Area   Veranda    Veranda                                                        Price €         Availability
+                                                        Bathrooms                                                           (SQM)      (SQM)        (SQM)       (SQM)
+                                                  s                                      (SQM)         (SQM)      (SQM)
+
+
+                                     A01           1            1         Uncovered        55           12                   20.5                    6            93.5                              Sold
+                  Ground Floor
+                                     A02           2            2         Uncovered        75           15                   13.5                    6           109.5      €         258,000    Available
+
+   Violet                            A101          1            1          Covered         55           11                                           6.5          72.5                              Sold
+    (A)             First Floor      A102          2            2          Covered         75           15                                           6.5          96.5                              Sold
+                                     A103          2            2          Covered         80           11                                           6.5          97.5                              Sold
+
+                    2nd Floor        A201          2            2          Covered         87           16        58.5                               9.7         171.2      €         317,000    Available
+
+                                     B01           2            2         Uncovered        97           24                    34                     19           174                               Sold
+                  Ground Floor
+                                     B02           3            3         Uncovered        97           24                    34                     19           174                               Sold
+    Rose
+                                     B101          2            2         Uncovered       74.5          16.5                                        10.4         101.4                              Sold
+     (B)
+                    First Floor      B102          1            1         Uncovered        54           12                                          10.4          76.4                              Sold
+                                     B103          2            2         Uncovered       74.5          16.5                             70         10.4         171.4      €         300,000    Available
+
+                                     C01           2            2         Uncovered        74           14                    22                     7.7         117.7      €         258,000    Available
+                  Ground Floor       C02           1            1         Uncovered        53           19                    27                     7.7         106.7                              Sold
+                                     C03           2            2         Uncovered        74           14                    20                     7.7         115.7      €         258,000    Available
+
+                                     C101          2            2         Uncovered        74           15                                           5.3          94.3                              Sold
+                                     C102          1            1          Covered         53           21                               64          5.3         143.3                              Sold
+    Daisy           First Floor
+                                     C103          2            2          Covered         74           20.5                            77.5         5.3         177.3                              Sold
+     (C)                             C104          2            2          Covered         74           15                                           5.3          94.3      €         245,000    Available
+                                     C105          1            1          Covered         53           11                                           5.3          69.3                              Sold
+                                     C106          2            2          Covered         74           15                                           5.3          94.3                              Sold
+
+                                     C201          2            2          Covered         74           24.5       70                                9.5          178       €         315,000    Available
+                    2nd Floor        C202          1            1         Uncovered        53           11                                           9.5          73.5                              Sold
+                                     C203          2            2         Uncovered        74           15                                           9.5          98.5      €         250,000    Available
+
+                                     D01           3            3         Uncovered        94           12                    32                     15           153                               Sold
+                  Ground Floor
+    Tulip                            D02           3            3         Uncovered        94           12                    32                     15           153                               Sold
+
+     (D)                             D101          2            2         Uncovered        78           21                                          13.5         112.5                              Sold
+                    First Floor
+                                     D102          2            2         Uncovered        78           21                               82         13.5         194.5      €         310,000    Available
+
+                                     E01           1            1          Covered         55           16.5                  29                     10          110.5                              Sold
+                  Ground Floor
+                                     E02           2            2          Covered         72           13                    16                     10           111       €         258,000    Available
+
+                                     E101          2            2          Covered         72           13                                          6.75         91.75                              Sold
+    Lilly           First Floor
+                                     E102          2            2          Covered         72           26.5                             68         6.75         173.25     €         287,000    Available
+    (E)                              E103          2            2          Covered         72           16                                          6.75         94.75                              Sold
+                                     E104          2            2          Covered         72           14                                          6.75         92.75      €         245,000    Available
+
+                                     E201          3            3          Covered         99           18         56                                7.5         180.5                              Sold
+                    2nd Floor
+                                     E202          2            2          Covered         72           16                                           7.5          95.5                              Sold
+
+
+
+NB: Prices mentioned above are subject to modifications without prior notice.
+NB: Prices mentioned above do not include the VAT
+
+Project Status:                   Under construction
+Link on website:                  https://bit.ly/439ugfF
+Location:                         Livadia – Larnaca
+Google Maps:                      https://goo.gl/maps/uS8qRwjgrRr4bBfq5
+

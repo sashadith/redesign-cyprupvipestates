@@ -4,15 +4,18 @@ import { useFormState, useFormStatus } from "react-dom";
 import { updateEmailSettings, sendTestEmail, type EmailSettingsView } from "./actions";
 import { looksLikeHtml } from "@/lib/emailSignature/looksLikeHtml";
 import { adminDateTime } from "@/lib/adminTime";
+import { LOCALES, LOCALE_LABELS, localeDir, type Locale } from "@/lib/locale";
 
-type SignatureValues = { en: string; de: string; pl: string; ru: string };
+type SignatureValues = Record<Locale, string>;
 
-const SIGNATURE_LOCALES = [
-  { key: "en" as const, label: "English", field: "signatureEn" },
-  { key: "de" as const, label: "German", field: "signatureDe" },
-  { key: "pl" as const, label: "Polish", field: "signaturePl" },
-  { key: "ru" as const, label: "Russian", field: "signatureRu" },
-];
+// "signatureEn", "signatureHe", … — must match signatureFieldName() in
+// ./actions.ts exactly (both derived from LOCALES the same way, so a future
+// locale needs no change on either side).
+const SIGNATURE_LOCALES = LOCALES.map((key) => ({
+  key,
+  label: LOCALE_LABELS[key].name,
+  field: `signature${key[0].toUpperCase()}${key.slice(1)}`,
+}));
 
 const escapeForPre = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -30,7 +33,7 @@ function buildPreviewDoc(value: string): string {
 }
 
 function SignatureEditor({ initial }: { initial: SignatureValues }) {
-  const [tab, setTab] = useState<keyof SignatureValues>("en");
+  const [tab, setTab] = useState<Locale>("en");
   const [values, setValues] = useState<SignatureValues>(initial);
 
   return (
@@ -48,7 +51,11 @@ function SignatureEditor({ initial }: { initial: SignatureValues }) {
         ))}
       </div>
 
-      {/* All four locales submit every save, regardless of which tab is active. */}
+      {/* Every locale submits every save, regardless of which tab is active —
+          en/de/pl/ru are always written (even empty, unchanged behaviour);
+          `he` is only kept in the saved JSON when it's non-empty (see
+          updateEmailSettings), but is still submitted here every time so an
+          untouched `he` tab round-trips its last-saved value. */}
       {SIGNATURE_LOCALES.map((l) => (
         <input key={l.key} type="hidden" name={l.field} value={values[l.key]} />
       ))}
@@ -58,6 +65,7 @@ function SignatureEditor({ initial }: { initial: SignatureValues }) {
           <label className="block text-[11px] text-[#9CA3AF] mb-1">HTML source</label>
           <textarea
             rows={20}
+            dir={localeDir(tab)}
             value={values[tab]}
             onChange={(e) => setValues((v) => ({ ...v, [tab]: e.target.value }))}
             placeholder="Paste your signature HTML here… (or plain text — existing plain-text signatures keep working as-is)"

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./NewsletterForm.module.scss";
+import { isLocale, type Locale } from "@/lib/locale";
+import { NEWSLETTER_MESSAGES } from "./NewsletterForm.copy";
 
 type NewsletterFormProps = {
   placeholder: string;
@@ -19,13 +21,10 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
   const [company, setCompany] = useState<string>(""); // honeypot — must stay empty
   const [formStartTime] = useState<number>(() => Date.now());
 
-  const supportedLanguages = ["en", "de", "pl", "ru"] as const;
-  type SupportedLang = (typeof supportedLanguages)[number];
+  type SupportedLang = Locale;
 
   const getValidatedLang = (lang: string): SupportedLang => {
-    return supportedLanguages.includes(lang as SupportedLang)
-      ? (lang as SupportedLang)
-      : "en";
+    return isLocale(lang) ? lang : "en";
   };
 
   const getLocalizedMessage = (
@@ -34,31 +33,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
   ): string => {
     const validatedLang = getValidatedLang(lang);
 
-    const messages = {
-      en: {
-        success: "You have successfully subscribed to our newsletter!",
-        error: "Failed to subscribe. Please try again.",
-        invalid: "Please enter a valid email address.",
-      },
-      de: {
-        success:
-          "Sie haben sich erfolgreich für unseren Newsletter angemeldet!",
-        error: "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-        invalid: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
-      },
-      pl: {
-        success: "Pomyślnie zapisałeś się na nasz newsletter!",
-        error: "Nie udało się zapisać. Spróbuj ponownie.",
-        invalid: "Wprowadź poprawny adres e-mail.",
-      },
-      ru: {
-        success: "Вы успешно подписались на нашу рассылку!",
-        error: "Не удалось подписаться. Попробуйте еще раз.",
-        invalid: "Пожалуйста, введите корректный адрес электронной почты.",
-      },
-    };
-
-    return messages[validatedLang][type];
+    return NEWSLETTER_MESSAGES[validatedLang][type];
   };
 
   const handleNewsletterSubmit = async () => {

@@ -8,7 +8,7 @@
 .mapWrap :global(.leaflet-container .leaflet-pane canvas),
 .mapWrap :global(.leaflet-container .leaflet-pane svg) { max-width: none !important; }
 .mapWrap :global(.leaflet-container img.leaflet-tile) { max-width: none !important; }
-.mapWrap :global(.leaflet-container .leaflet-popup-close-button) { color: #fff; top: 5px; right: 5px; }
+.mapWrap :global(.leaflet-container .leaflet-popup-close-button) { color: #fff; top: 5px; inset-inline-end: 5px; }
 
 /* ==== стили карточки-попапа с фоном ==== */
 .projectPopup :global(.leaflet-popup-content-wrapper) {

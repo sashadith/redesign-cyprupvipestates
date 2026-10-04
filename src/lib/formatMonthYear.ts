@@ -1,11 +1,5 @@
 import { resolveRelativeCompletion } from "@/lib/completionDate";
-
-const localeMap: Record<string, string> = {
-  en: "en-US",
-  de: "de-DE",
-  pl: "pl-PL",
-  ru: "ru-RU",
-};
+import { BCP47, isLocale } from "@/lib/locale";
 
 function normalizeToIso(dateStr: string): string | null {
   if (!dateStr) return null;
@@ -45,7 +39,7 @@ export function formatMonthYear(
     return `${mm}-${d.getFullYear()}`;
   }
 
-  const locale = localeMap[lang] ?? "en-US";
+  const locale = isLocale(lang) ? BCP47[lang] : BCP47.en;
   const s = d.toLocaleDateString(locale, { year: "numeric", month: "long" });
   return opts?.capitalize ? capitalizeFirst(s) : s;
 }

@@ -3,8 +3,9 @@ import {
   aggApiBase, fetchAggProjects, parseShareOneDriveUrl, findAggPricelist, downloadAggPricelist,
   type AggProject, type ShareOneDriveRef, type DiscoveredPricelist,
 } from "./agg";
-import { extractAggUnits, type AggUnit } from "./ai/aggPricelist";
+import { extractAggUnits, unpricedAvailableNotes, type AggUnit } from "./ai/aggPricelist";
 import { generateProjectDescription } from "./ai/projectDescription";
+import type { LocaleText } from "./ai/localeTextGuards";
 import { toTitleCaseName } from "@/lib/textCase";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
@@ -39,8 +40,8 @@ import { mirrorAll, devKeyFor, beginSyncWindow, scheduleAppRestart } from "./ima
    and a unit that drops out of the price list flips to "unlisted" (never deleted,
    never silently sold) — the same rules as FEED-ADAPTER-GUIDE.md §4. */
 
-const MAX_IMAGES = 40;
-
+/* No image or floor-plan cap — see the note in driveAvailabilitySync.ts:
+   the operator imports every picture and selects before publishing. */
 const nn = (v: string | null | undefined) => (v && String(v).trim() ? String(v).trim() : null);
 const num = (v: string) => { const n = parseFloat((v || "").replace(/,/g, "")); return Number.isFinite(n) ? String(n) : null; };
 
@@ -114,7 +115,7 @@ async function buildAggPlans(
   });
   const byFeedKey = new Map(existing.map((e) => [e.feedKey, e]));
 
-  const notes: string[] = [];
+  const notes: string[] = unpricedAvailableNotes(units);
   const byProject = new Map<string, AggUnit[]>();
   for (const u of units) {
     const list = byProject.get(u.project) ?? [];
@@ -190,6 +191,8 @@ export type AggWriteResult = {
   skippedExisting: { project: string; reason: string }[];
   skippedEmpty: string[];
   notes: string[];
+  /** refs of "available" units the parser found no price for — see unpricedAvailableNotes */
+  unpricedAvailable?: string[];
   notDue?: string;
   pricelistFile?: string;
 };
@@ -213,7 +216,8 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
 
   const releaseSyncWindow = beginSyncWindow("agg");
   try {
-    const { plans } = await buildAggPlans(developerAccountId, acct.website, ref, pricelist);
+    const { plans, notes: planNotes } = await buildAggPlans(developerAccountId, acct.website, ref, pricelist);
+    const unpricedAvailable = plans.flatMap((p) => p.matchedExisting ? [] : p.units.filter((u) => u.status === "available" && typeof u.price !== "number").map((u) => `${p.projectName}: ${u.ref}`));
 
     const created: { project: string; units: number }[] = [];
     const updated: { project: string; units: number }[] = [];
@@ -242,13 +246,13 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       const stage = rest?.listingStatus[0] || null;
 
       let gallery: string[] = [];
-      let description: { en: string; de: string; pl: string; ru: string } | null = null;
+      let description: LocaleText | null = null;
       const extraFacts: { label: string; value: string }[] = [];
 
       if (needsContent && rest) {
         const devKey = devKeyFor(plan.feedKey);
         const imageUrls = [rest.featuredImage, ...rest.images.map((i) => i.url)].filter((u): u is string => !!u);
-        const uniqueUrls = Array.from(new Set(imageUrls)).slice(0, MAX_IMAGES);
+        const uniqueUrls = Array.from(new Set(imageUrls));
         if (uniqueUrls.length) {
           const m = await mirrorAll(uniqueUrls, devKey);
           gallery = m.urls;
@@ -259,6 +263,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
 
         if (rest.description) {
           description = await generateProjectDescription({
+            publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName), developer: acct.name,
             district: "", town: town || "", area: "",
             category: rest.propertyType.join(", "),
             stage: stage || "",
@@ -302,8 +307,8 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       if (description) {
         await prisma.developmentOverride.upsert({
           where: { developmentId: dev.id },
-          create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
-          update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
+          create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru, descriptionHE: description.he },
+          update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru, descriptionHE: description.he },
         });
       }
 
@@ -368,7 +373,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       data: { driveSyncedAt: new Date(), driveFileModified: pricelist.name },
     });
 
-    return { created, updated, skippedExisting, skippedEmpty, notes: unlistedNotes, pricelistFile: pricelist.name };
+    return { created, updated, skippedExisting, skippedEmpty, notes: [...planNotes, ...unlistedNotes], unpricedAvailable, pricelistFile: pricelist.name };
   } finally {
     releaseSyncWindow();
   }

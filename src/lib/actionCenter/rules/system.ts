@@ -39,6 +39,28 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // closes is the one nobody saw for 13 days — a Dropbox developer that no
   // scheduled job was responsible for at all.
   { job: "kuutio-sync", label: "kuutio-sync", expectedMs: 24 * HOUR },
+  // 2026-09-08 — the MCP connector's two nightly routes (Phase 1 cleanup at
+  // 05:15, Phase 3 catalogue snapshot at 04:50). A snapshot cron that stops
+  // firing only shows up as crm_inventory_changes reporting "no history",
+  // which reads like normal pre-rollout behaviour — this is the alarm.
+  { job: "mcp-cleanup", label: "mcp-cleanup", expectedMs: 24 * HOUR },
+  { job: "inventory-snapshot", label: "inventory-snapshot", expectedMs: 24 * HOUR },
+  // 2026-09-11 — added the day cybarco-sync got its `0 1 * * *` crontab entry,
+  // same convention as kuutio-sync above. Watches whether the nightly Cybarco
+  // website scrape FIRED AT ALL, which matters more here than for most: Cybarco
+  // have no feed, no Drive and no developer contact, so a dead cron shows up
+  // nowhere except as Developments quietly going stale behind a published page.
+  { job: "cybarco-sync", label: "cybarco-sync", expectedMs: 24 * HOUR },
+  // 2026-09-26 — added the day plus-sync got its `30 2 * * *` crontab entry,
+  // same convention as cybarco-sync above. Watches whether the nightly Plus
+  // Properties sync (Excel price lists + website pages into 35 drafts) FIRED AT
+  // ALL; a run that fires but fails is reported by the route itself.
+  { job: "plus-sync", label: "plus-sync", expectedMs: 24 * HOUR },
+  // 2026-10-02 — added with the `45 3 * * *` crontab entry for indexnow-sweep.
+  // Watches whether the nightly sweep that tells IndexNow about content changed
+  // outside the admin (scripts, direct DB edits) FIRED AT ALL; a run that fires
+  // but cannot submit logs ok=false and is reported by the route itself.
+  { job: "indexnow-sweep", label: "indexnow-sweep", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

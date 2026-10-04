@@ -4,6 +4,8 @@ import type { PLocale } from "./copy";
 import { COPY, formatUnitsCount } from "./copy";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
+import { bidiIsolate, ltrIsolate } from "@/lib/locale";
+import { hePlaceOrIsolated } from "@/lib/hePlaces";
 
 export type PresentationItemVM = {
   developmentId: string;
@@ -51,7 +53,10 @@ export default function PropertyCard({
   // show the value once instead of repeating it.
   const district = item.district?.trim() || "";
   const area = item.area?.trim() || "";
-  const locationParts = area && district && area.toLowerCase() === district.toLowerCase() ? [district] : [district, area].filter(Boolean);
+  const rawLocationParts = area && district && area.toLowerCase() === district.toLowerCase() ? [district] : [district, area].filter(Boolean);
+  // Place names are data, not copy: glossary §1 fixes one Hebrew spelling per
+  // place, and anything unknown stays Latin but bidi-isolated (Pass B M17).
+  const locationParts = locale === "he" ? rawLocationParts.map(hePlaceOrIsolated) : rawLocationParts;
 
   return (
     <div
@@ -77,7 +82,7 @@ export default function PropertyCard({
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           disabled={favoriteBusy}
           aria-pressed={favorited}
-          aria-label="Favorite"
+          aria-label={COPY[locale].favorite}
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>
             <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
@@ -95,7 +100,7 @@ export default function PropertyCard({
           {item.deliveryQuarter && (
             <>
               <span aria-hidden="true">·</span>
-              <span>{COPY[locale].delivery}: {item.deliveryQuarter}</span>
+              <span>{COPY[locale].delivery}: {heQuarter(item.deliveryQuarter, locale)}</span>
             </>
           )}
         </p>
@@ -104,4 +109,14 @@ export default function PropertyCard({
       </div>
     </div>
   );
+}
+
+/** toDeliveryQuarter() always yields a Latin "Q3 2027". Styleguide §5 spells
+ *  that out in Hebrew as "רבעון 3 2027"; anything that doesn't match the
+ *  pattern is passed through bidi-isolated rather than guessed at
+ *  (Pass B Should fix #18). No-op for every LTR locale. */
+function heQuarter(raw: string, locale: PLocale): string {
+  if (locale !== "he") return raw;
+  const m = String(raw ?? "").trim().match(/^Q(\d)\s+(\d{4})$/);
+  return m ? `רבעון ${ltrIsolate(`${m[1]} ${m[2]}`)}` : bidiIsolate(String(raw ?? ""));
 }

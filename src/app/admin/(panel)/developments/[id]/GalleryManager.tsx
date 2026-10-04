@@ -131,7 +131,7 @@ export default function GalleryManager({ developmentId, initial, initialHero, is
       </div>
       {msg && <div className="px-5 py-2 text-xs text-[#92400E] bg-[#FFFBEB] border-b border-[#FCD34D]">{msg}</div>}
 
-      {/* "New in feed" — locally mirrored via "Reload images" (SyncControlPanel),
+      {/* "New in feed" — locally mirrored via "Reload units & images" (SyncControlPanel),
           not yet in the curated gallery above. Never auto-added — an admin's
           hand-curated gallery/order must never change on its own (2026-08-08).
           Picking one just adds it to the grid below; still needs "Save images". */}

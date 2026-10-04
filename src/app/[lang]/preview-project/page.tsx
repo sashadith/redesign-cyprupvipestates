@@ -39,12 +39,23 @@ export default async function PreviewProjectPage({ params, searchParams }: { par
   const forceFeed = searchParams?.source === "feed";
 
   // DB-first (synced developments) → live feed as fallback. ?source=feed forces the feed.
-  const dbP = forceFeed ? null : await getDbProject(dev, target);
+  // The DB is asked with the RAW dev, never the normalised one: most developers
+  // (cybarco, plus, drive, sharepoint, …) have no live-feed adapter and exist only
+  // in the database, so normalising first turned every one of their unpublished
+  // drafts into Island Blue's default page (2026-08-28 → 2026-10-03, found on
+  // Thalassa Residences 2). The lookup is a parameterised feedKey match, so an
+  // arbitrary ?dev= can only miss, never misbehave. With no ?id= at all, `target`
+  // is the normalised developer's default project, so that pair is kept.
+  const dbP = forceFeed ? null : await getDbProject(searchParams?.id ? rawDev : dev, target);
   // A published (or any slugged) development has a real SEO URL — send traffic
   // there instead of rendering this admin view twice under two addresses.
   // Straight to /projects/[slug] (not the old /preview-project/[slug], which is
   // now itself just a redirect stub to here) — no reason to double-hop.
-  if (dbP?.slug) {
+  // PUBLISHED only: a draft can already carry a slug (one-off imports set one
+  // at creation), and /projects/[slug] answers 404 for drafts — redirecting
+  // there made such drafts impossible to look at before publishing
+  // (Marfields, 2026-10-04).
+  if (dbP?.slug && dbP.publishStatus === "published") {
     permanentRedirect(localizedHref(lang, ["projects", dbP.slug]));
   }
   const p = dbP ?? (await getPreviewProject(dev, target));

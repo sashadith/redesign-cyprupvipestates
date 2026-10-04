@@ -1,0 +1,15 @@
+{
+  "seo": {
+    "metaTitle": "Our Real Estate in Cyprus",
+    "metaDescription": "Select luxury properties in Cyprus. Villas, apartments in the city center and with sea views"
+  },
+  "slug": {
+    "en": {
+      "_type": "slug",
+      "current": "projects"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "Projects EN",
+  "content": []
+}

@@ -15,7 +15,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { loadBlurMap } from "@/lib/blur";
-import { localizedHref, LOCALES } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { abs } from "@/lib/seo";
 import {
   ApiImage,
@@ -29,7 +29,7 @@ import {
   resolveImage,
 } from "./portableTextHtml";
 
-export const EXPORTED_LOCALES = LOCALES;
+export const EXPORTED_LOCALES = PUBLIC_LOCALES;
 
 export type ProjectsEmbed = {
   id: string;

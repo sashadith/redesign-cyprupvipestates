@@ -12,6 +12,7 @@ import type {
 } from "@/types/footer";
 import FooterContact from "./FooterContact";
 import FooterNewsletter from "./FooterNewsletter";
+import { footerCopy } from "./Footer.copy";
 
 /* Footer — restyled to the redesign (dark). Reuses getFooterByLang + the
    contact/newsletter logic (via preview FooterContact / FooterNewsletter).
@@ -25,8 +26,7 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const placeholderFor = (lang: string) =>
-  lang === "de" ? "Ihre E-Mail Adresse" : lang === "pl" ? "Twój adres e-mail" : lang === "ru" ? "Ваш email" : "Your email";
+const placeholderFor = (lang: string) => footerCopy(lang).emailPlaceholder;
 
 export default async function Footer({ lang = "en" }: { lang?: string }) {
   const data = await getFooterByLang(lang);

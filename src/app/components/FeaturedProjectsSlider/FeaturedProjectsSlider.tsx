@@ -4,7 +4,7 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import ProjectLink from "../ProjectLink/ProjectLink";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, localeDir } from "@/lib/locale";
 
 type Props = {
   featuredProjects: FeaturedProjectsBlock["projects"];
@@ -17,6 +17,7 @@ const FeaturedProjectsSlider: React.FC<Props> = ({
 }) => {
   return (
     <Swiper
+      dir={localeDir(lang)}
       modules={[Autoplay]}
       autoplay={{
         delay: 2500,

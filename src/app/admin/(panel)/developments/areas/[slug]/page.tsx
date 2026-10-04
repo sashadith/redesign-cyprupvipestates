@@ -48,7 +48,7 @@ export default async function AreaEditPage({ params, searchParams }: { params: {
         slug={slug}
         name={name || slug}
         district={district}
-        initial={{ en: existing?.textEN ?? "", de: existing?.textDE ?? "", pl: existing?.textPL ?? "", ru: existing?.textRU ?? "" }}
+        initial={{ en: existing?.textEN ?? "", de: existing?.textDE ?? "", pl: existing?.textPL ?? "", ru: existing?.textRU ?? "", he: existing?.textHE ?? "" }}
         initialStatus={existing?.status ?? "none"}
         aiReady={aiConfigured()}
       />

@@ -1,11 +1,15 @@
+import { isLocale, type Locale } from "@/lib/locale";
+
 // Shared scarcity indicator for Development cards — the merged /projects
 // listing (ProjectsExplorer's Card) and client presentation property cards
 // (PropertyCard) both render this from the same live unit counts, so the
 // trigger/text logic can't drift between the two surfaces.
-export type ScarcityLocale = "en" | "de" | "pl" | "ru";
+export type ScarcityLocale = Locale;
+
+const SCARCITY_EN = { last: "Last unit available", left: (n: number) => `Only ${n} units left` };
 
 const SCARCITY_COPY: Record<ScarcityLocale, { last: string; left: (n: number) => string }> = {
-  en: { last: "Last unit available", left: (n) => `Only ${n} units left` },
+  en: SCARCITY_EN,
   de: { last: "Letzte Einheit verfügbar", left: (n) => `Nur noch ${n} Einheiten` },
   // Polish "lokal" (unit/premises) declines lokal/lokale/lokali — 2-4 takes the
   // "few" form (lokale), 5 the "many"/genitive-plural form (lokali).
@@ -23,6 +27,10 @@ const SCARCITY_COPY: Record<ScarcityLocale, { last: string; left: (n: number) =>
       return `Осталось всего ${n} ${word}`;
     },
   },
+  // Hebrew needs no count branch: the trigger caps `available` at 5, and with a
+  // Western digit in front the plural "יחידות" is correct for 2-5
+  // ("2 יחידות" ... "5 יחידות"). Same arity as the other locales.
+  he: { last: "יחידה אחרונה", left: (n) => `נותרו רק ${n} יחידות` }, // REVIEW(he)
 };
 
 export type ScarcityResult = { tier: "last" | "left"; count: number } | null;
@@ -76,7 +84,7 @@ export default function ScarcityBanner({
 }) {
   const result = resolveScarcity(available, total);
   if (!result) return null;
-  const loc: ScarcityLocale = locale === "de" || locale === "pl" || locale === "ru" ? locale : "en";
+  const loc: ScarcityLocale = isLocale(locale) ? locale : "en";
   const copy = SCARCITY_COPY[loc];
   const text = result.tier === "last" ? copy.last : copy.left(result.count);
   // Negative delay = the animation acts as though it already ran for that

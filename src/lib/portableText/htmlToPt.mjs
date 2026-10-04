@@ -77,8 +77,16 @@ export function htmlToPortableText(html) {
         }
       }
     } else if (tag === "img") {
-      const ref = localUrlToRef(el.getAttribute("src"));
-      if (ref) blocks.push({ _type: "image", _key: key(), asset: { _type: "reference", _ref: ref }, alt: el.getAttribute("alt") ?? "" });
+      const src = el.getAttribute("src");
+      const ref = localUrlToRef(src);
+      const alt = el.getAttribute("alt") ?? "";
+      if (ref) blocks.push({ _type: "image", _key: key(), asset: { _type: "reference", _ref: ref }, alt });
+      // Not an admin-uploaded /uploads/images/<hash>-WxH.<ext> file — e.g. a
+      // Development gallery photo referenced directly by URL (asset.url is
+      // the shape the public renderer already resolves via safeUrl/
+      // dereferenceAssets, see insightsBlocks.tsx and sanityRefs.ts). Keep
+      // it as-is on round-trip instead of silently dropping the image.
+      else if (src && src.startsWith("/uploads/")) blocks.push({ _type: "image", _key: key(), asset: { url: src }, alt });
     } else {
       const b = inlineBlock(el, "normal");
       if (b.children.some((c) => c.text)) blocks.push(b);

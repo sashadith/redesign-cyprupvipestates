@@ -6,7 +6,8 @@ import Link from "next/link";
 export type DevRow = {
   id: string; name: string; feedName: string | null; dev: string; developer: string;
   location: string; priceFrom: string; units: string; status: string; soldOut?: boolean;
-  soldOutSince?: string | null; noFolder?: boolean; synced: string;
+  soldOutSince?: string | null; soldOutOn?: string | null; traffic30?: string | null;
+  noFolder?: boolean; synced: string;
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -68,6 +69,16 @@ export default function DevelopmentsTable({ rows }: { rows: DevRow[] }) {
                     >
                       SOLD OUT
                     </span>
+                  )}
+                  {/* The date and the traffic behind the badge, in the row rather
+                      than only in a tooltip: they are what the archive-or-keep
+                      decision is actually made on, and hovering every row to
+                      compare them is not a decision process. */}
+                  {r.soldOut && (r.soldOutOn || r.traffic30) && (
+                    <div className="mt-1 text-xs text-[#9CA3AF] leading-tight">
+                      {r.soldOutOn && <div>{r.soldOutOn}</div>}
+                      {r.traffic30 && <div>{r.traffic30}</div>}
+                    </div>
                   )}
                   {r.noFolder && (
                     <span

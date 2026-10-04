@@ -30,7 +30,6 @@ import { i18n } from "@/i18n.config";
 import { Translation } from "@/types/homepage";
 import dynamic from "next/dynamic";
 import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistances";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
 import { urlFor } from "@/sanity/sanity.client";
@@ -45,7 +44,7 @@ import Form from "@/app/preview-home/sections/Form";
 import DeveloperSchemaMarkup from "@/app/components/DeveloperSchemaMarkup/DeveloperSchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
-import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 import { localizedHref } from "@/lib/locale";
 import { resolveCompletionYear } from "@/lib/text";
 
@@ -114,7 +113,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.seo.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630, alt: data?.seo.metaTitle }],
     },
@@ -189,8 +188,6 @@ const DeveloperPage = async ({ params }: Props) => {
 
   // console.log("projects", projects);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
 
   const propertyPageTranslationSlugs: {
     [key: string]: { current: string };
@@ -268,7 +265,6 @@ const DeveloperPage = async ({ params }: Props) => {
         <FullDescriptionBlock description={developer.description} />
       </main>
       <Footer params={params} />
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
     </>
   );

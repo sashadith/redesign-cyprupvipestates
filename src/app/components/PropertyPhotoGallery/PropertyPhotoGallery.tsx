@@ -11,6 +11,9 @@ import { urlFor } from "@/sanity/sanity.client";
 import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/property";
 import VideoSlide from "../VideoSlide/VideoSlide";
+import { useIsRtl } from "@/app/components/useIsRtl";
+import { localeDir } from "@/lib/locale";
+import { propertyPhotoGalleryCopy } from "./PropertyPhotoGallery.copy";
 
 type Props = {
   photos: ImageAlt[]; // Только изображения
@@ -27,6 +30,7 @@ const PropertyPhotoGallery: FC<Props> = ({
 }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const isRtl = useIsRtl();
 
   const openModal = (index: number) => {
     setCurrentPhotoIndex(index);
@@ -104,23 +108,16 @@ const PropertyPhotoGallery: FC<Props> = ({
             >
               <div className={styles.remainingOverlay}>
                 +{remainingPhotosCount}
-                {lang === "en"
-                  ? " more"
-                  : lang === "de"
-                    ? " mehr"
-                    : lang === "pl"
-                      ? " więcej"
-                      : lang === "ru"
-                        ? " еще"
-                        : " more"}
+                {propertyPhotoGalleryCopy(lang).more}
               </div>
             </div>
           )}
         </div>
         {showModal && (
-          <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-90 z-[55]">
+          <div className="fixed top-0 start-0 w-full h-full flex justify-center items-center bg-black bg-opacity-90 z-[55]">
             <div className="h-[75vh] w-[320px] md:w-[720px] relative overflow-hidden">
               <Swiper
+                dir={localeDir(lang)}
                 modules={[Navigation]}
                 navigation={{
                   nextEl: ".nextBtnNews",
@@ -147,12 +144,12 @@ const PropertyPhotoGallery: FC<Props> = ({
                 ))}
               </Swiper>
               <div className="navButtonsGallery">
-                <button className="prevBtnNews">❮</button>
-                <button className="nextBtnNews">❯</button>
+                <button className="prevBtnNews">{isRtl ? "❯" : "❮"}</button>
+                <button className="nextBtnNews">{isRtl ? "❮" : "❯"}</button>
               </div>
               <button
                 onClick={closeModal}
-                className="absolute top-2 right-2 text-white text-lg z-20"
+                className="absolute top-2 end-2 text-white text-lg z-20"
               >
                 ✖
               </button>

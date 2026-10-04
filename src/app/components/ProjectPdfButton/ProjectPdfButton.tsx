@@ -2,6 +2,7 @@
 
 "use client";
 import styles from "./ProjectPdfButton.module.scss";
+import { projectPdfButtonCopy } from "./ProjectPdfButton.copy";
 
 type Props = {
   lang: string;
@@ -16,13 +17,7 @@ export default function ProjectPdfButton({ lang, slug }: Props) {
       rel="noopener noreferrer"
       className={styles.button}
     >
-      {lang === "ru"
-        ? "Скачать Брошюру"
-        : lang === "pl"
-          ? "Pobierz broszurę"
-          : lang === "de"
-            ? "Broschüre herunterladen"
-            : "Download Brochure"}
+      {projectPdfButtonCopy(lang).downloadBrochure}
     </a>
   );
 }

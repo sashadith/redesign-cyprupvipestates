@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref, isLocale } from "@/lib/locale";
+import { localizedHref, isLocale, PUBLIC_LOCALES, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -54,6 +54,11 @@ export const getBlogPostByLang = cache(_getBlogPostByLang);
 export const getCaseStudyByLang = cache(_getCaseStudyByLang);
 export const getProjectByLang = cache(_getProjectByLang);
 export const getDeveloperByLang = cache(_getDeveloperByLang);
+// Added 2026-09-26: the header now renders ModalBrochure for every page, so this
+// is fetched once per request by Header.tsx AND, on pages that still needed it,
+// by the page itself. cache() dedupes that within a request — the other six
+// getters above already follow this pattern.
+export const getFormStandardDocumentByLang = cache(_getFormStandardDocumentByLang);
 
 // Attach the migrated lqip (from Media) as blurDataURL on a (dereferenced) image's asset, so the
 // LCP hero can render a blur placeholder. Single lookup — used only for previewImage on detail pages.
@@ -146,10 +151,36 @@ async function mapProjectRowsToLang(rows: AnyRow[], lang: string): Promise<AnyRo
   const langRows = tgids.length ? await prisma.project.findMany({ where: { language: lang as any, translationGroupId: { in: tgids } } }) : [];
   const byTgid = new Map<string, AnyRow>();
   for (const r of langRows) if (r.translationGroupId && !byTgid.has(r.translationGroupId)) byTgid.set(r.translationGroupId, r as AnyRow);
+
+  // Hebrew-only fallback (Phase 5): the legacy `Project` model predates
+  // Development and nothing creates `he` rows in it (decision H — Hebrew
+  // content is seeded as Development/CaseStudy/Singlepage only). Without a
+  // fallback every card sourced from a Project row would be dropped above,
+  // so `he` case studies would render an EMPTY "related properties" section
+  // no matter how correctly CaseStudyProject is linked. Fall back to the EN
+  // sibling: the card's link is `/he/projects/<slug>` and project slugs are
+  // Latin and locale-agnostic (decision A), so the EN row's slug resolves
+  // under `/he` exactly as it does under `/en`. Gated on `lang === "he"` —
+  // en/de/pl/ru behaviour is byte-identical to before.
+  const enFallbackTgids =
+    lang === "he"
+      ? Array.from(
+          new Set(
+            rows
+              .filter((r) => r.language !== "en" && r.translationGroupId && !byTgid.has(r.translationGroupId as string))
+              .map((r) => r.translationGroupId as string),
+          ),
+        )
+      : [];
+  const enRows = enFallbackTgids.length ? await prisma.project.findMany({ where: { language: "en", translationGroupId: { in: enFallbackTgids } } }) : [];
+  const enByTgid = new Map<string, AnyRow>();
+  for (const r of enRows) if (r.translationGroupId && !enByTgid.has(r.translationGroupId)) enByTgid.set(r.translationGroupId, r as AnyRow);
+
   const out: AnyRow[] = [];
   const seen = new Set<string>();
   for (const r of rows) {
-    const m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    let m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    if (!m && lang === "he") m = r.language === "en" ? r : (r.translationGroupId ? enByTgid.get(r.translationGroupId) : undefined);
     if (m && !seen.has(m.sanityId)) { seen.add(m.sanityId); out.push(m); }
   }
   return out;
@@ -165,52 +196,38 @@ async function resolveProjectRefs(refs: any[], lang: string) {
   const mapped = await mapProjectRowsToLang(ordered, lang);
 
   // A ref can still point at an ARCHIVED legacy project (superseded by a
-  // Development) — its own detail page 308-redirects to the canonical
-  // /projects/{devSlug}, so a card built from the stale slug sends every
-  // visitor/crawler through an avoidable extra hop. Confirmed live via a
-  // full-site link crawl (2026-07-18): 21 legacy slugs × 4 locales appeared
-  // this way across "similar/featured projects" widgets on ~1/3 of all
-  // crawled pages. Batch-resolve the real target here, once, at the shared
-  // resolution point every one of those widgets reads from.
-  const redirects = await prisma.legacyProjectRedirect.findMany({
-    where: { projectId: { in: mapped.map((p) => p.id) } },
-    select: { projectId: true, targetPath: true },
-  });
-  const targetSlugById = new Map(
-    redirects
-      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
-      .filter((entry): entry is [string, string] => !!entry[1])
-  );
-
-  // Not every legacy project was superseded by another project: 74 rows redirect
-  // to a DEVELOPER overview instead (the AGG/BBF/Olias/Aristo/Inex/Island Blue
-  // imports, whose individual listings were folded into the developer page). The
-  // slug rewrite above can't express that — its regex only reads a /projects/
-  // segment — so those cards kept the stale project slug and sent visitors
-  // through a 308 to the developer page. Measured 2026-09-03: 225 pinned cards
-  // across 68 published pages. Carry the redirect's own path instead, stripped
-  // of origin and locale prefix so the card can be re-localized at render time
-  // (a de card must not link at an /en path just because the redirect row was
-  // written for en).
-  const hrefPathById = new Map(
-    redirects
-      .filter((r) => !/\/projects\/[^/?#]+/.test(r.targetPath))
-      .map((r) => {
-        const path = r.targetPath.replace(/^https?:\/\/[^/]+/, "");
-        return [r.projectId, path.replace(/^\/(?:en|de|pl|ru)(?=\/)/, "")] as const;
+  // Development). Resolve it via the authoritative supersededByDevelopmentId
+  // foreign key straight to that Development's OWN live, published slug —
+  // NOT by regex-parsing LegacyProjectRedirect.targetPath for a "/projects/
+  // <slug>" match (the previous approach here). That field is free text for
+  // the ARCHIVED PROJECT'S OWN page redirect, meant to send a visitor
+  // arriving at the old URL somewhere sensible — which is often a
+  // /developers/<slug> archive page when there's no 1:1 successor, so the
+  // regex silently failed and fell back to the row's own stale slug. Same
+  // bug, same fix as getThreeProjectsBySameCity's "same city" widget above.
+  // A row with no confirmed still-published successor has no current page to
+  // send a visitor to and is dropped, same "don't guess, drop it" rule
+  // developmentAlternatives.ts already uses.
+  const archivedSuccessorIds = mapped
+    .filter((p) => p.status === "ARCHIVED")
+    .map((p) => p.supersededByDevelopmentId)
+    .filter((id): id is string => !!id);
+  const successors = archivedSuccessorIds.length
+    ? await prisma.development.findMany({
+        where: { id: { in: archivedSuccessorIds }, publishStatus: "published" },
+        select: { id: true, slug: true },
       })
-      .filter((entry): entry is [string, string] => entry[1].startsWith("/"))
-  );
+    : [];
+  const successorSlugById = new Map(successors.filter((d) => !!d.slug).map((d) => [d.id, d.slug as string]));
 
-  return mapped.map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id);
-    const hrefPath = hrefPathById.get(p.id);
-    return projectCardString({
-      ...p,
-      ...(canonicalSlug ? { slug: canonicalSlug } : null),
-      ...(hrefPath ? { hrefPath } : null),
-    });
-  });
+  return mapped
+    .map((p) => {
+      if (p.status !== "ARCHIVED") return projectCardString(p);
+      const canonicalSlug = p.supersededByDevelopmentId && successorSlugById.get(p.supersededByDevelopmentId);
+      if (!canonicalSlug) return null;
+      return projectCardString({ ...p, slug: canonicalSlug });
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry != null);
 }
 
 // Compute filteredProjects for projectsSection/landingProjects blocks.
@@ -421,7 +438,7 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
  * can never show a different universe (PUBLISHED only, Developments merged in,
  * "recommended" order) than a hand-placed block on the next article would.
  */
-export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 3) {
+export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 6) {
   const cards = await computeFilteredProjects(lang, filterCity);
   return cards.slice(0, limit);
 }
@@ -604,7 +621,24 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // is unreachable for all of them, so their rendering is unaffected.
         // Only a block explicitly flipped on (direct DB write, same pattern
         // as every other field on this block type) gets real pagination.
-        if (b.pagesEnabled) {
+        //
+        // landingProjectsBlock only, deliberately: a projectsSectionBlock
+        // renders through the classic block-map switch's own case, which
+        // hands filteredProjects to ProjectsSectionBlockComponent's existing
+        // client-side pager (paginate: usingFiltered, 8/page, useState-driven,
+        // no ?page= awareness). That pager would then window inside whatever
+        // single MAX_FILTERED_PROJECTS-sized batch this branch fetched for the
+        // requested page, with nothing on the page indicating the other
+        // batches exist -- a paginated-looking grid that's silently missing
+        // most of its own matches, worse than the plain 60-item cap it would
+        // replace (see docs/SITE-CHANGELOG.md, 2026-09-09 entry). Guarding
+        // here rather than trusting no one ever sets pagesEnabled on this
+        // block type -- the field is on the same shared shape, the DB doesn't
+        // stop it, and the 2026-09-02 landing-page redesign already proved
+        // this file can't rely on every caller staying in sync by inspection.
+        // Until ProjectsSectionBlockComponent gets a real server-paginated
+        // mode of its own, this block type gets the ordinary capped query.
+        if (b.pagesEnabled && b._type === "landingProjectsBlock") {
           pageConsumed = true;
           const requestedPage = page ?? 1;
           const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, MAX_FILTERED_PROJECTS);
@@ -718,7 +752,7 @@ export async function getFooterByLang(lang: string): Promise<any> {
   return D({ _id: row?.sanityId, ...d });
 }
 
-export async function getFormStandardDocumentByLang(lang: string): Promise<FormStandardDocument> {
+async function _getFormStandardDocumentByLang(lang: string): Promise<FormStandardDocument> {
   if (!isLocale(lang)) return null as unknown as FormStandardDocument;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "formStandardDocument", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
@@ -792,6 +826,42 @@ export async function getAllPathsForLang(lang: string): Promise<string[][]> {
   return Object.values(map);
 }
 
+// Which published Singlepages have real server-side pagination live, and how
+// many pages each has -- for the sitemap to list ?page=2+ alongside the bare
+// URL (2026-09-09: added together with the pager markup fix; before that,
+// pagesEnabled pages had no discovery path for page 2+ at all -- see
+// docs/SITE-CHANGELOG.md). landingProjectsBlock only, matching the same
+// pagesEnabled guard in resolveBlocks above -- a projectsSectionBlock never
+// gets real pagination, so it never belongs in this list either. Returns leaf
+// slugs, not full paths -- callers already have (or can get) the segment path
+// via getAllPathsForLang and shouldn't duplicate that resolution here.
+export async function getPaginatedLandingPageSlugs(lang: string): Promise<{ slug: string; totalPages: number }[]> {
+  if (!isLocale(lang)) return [];
+  const rows = await prisma.singlepage.findMany({
+    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" },
+    select: { slug: true, contentBlocks: true },
+  });
+  const out: { slug: string; totalPages: number }[] = [];
+  for (const row of rows) {
+    const blocks = Array.isArray(row.contentBlocks) ? (row.contentBlocks as any[]) : [];
+    const block = blocks.find((b) => b?._type === "landingProjectsBlock" && b?.pagesEnabled);
+    if (!block) continue;
+    const liveOpts = {
+      maxBeachMinutes: block.maxBeachMinutes,
+      excludePropertyTypes: block.excludePropertyTypes,
+      filterStage: block.filterStage,
+      priceMin: block.priceMin,
+      priceMax: block.priceMax,
+    };
+    // Page size must match resolveBlocks' own call exactly (MAX_FILTERED_PROJECTS)
+    // -- a mismatch here would advertise a totalPages the live page disagrees
+    // with, either 404ing a listed URL or leaving a real page unlisted.
+    const { totalPages } = await computeFilteredProjectsPaged(lang, block.filterCity, block.filterPropertyType, liveOpts, 1, MAX_FILTERED_PROJECTS);
+    if (totalPages > 1) out.push({ slug: row.slug, totalPages });
+  }
+  return out;
+}
+
 // Child landing pages of a parent singlepage (via parentSanityId) — for the contextual
 // parent->child links block. Returns each child's title + canonical (nested) href, same language.
 export async function getChildLandingPages(lang: string, parentSanityId?: string | null): Promise<{ title: string; href: string }[]> {
@@ -829,7 +899,8 @@ export async function getRelatedLandingPages(lang: string, refs: any): Promise<{
 }
 
 // ── Slug lists for generateStaticParams (ISR static generation) ──
-export const ALL_LOCALES = ["en", "de", "pl", "ru"] as const;
+// Static-generation locale set: only locales that are live get pre-rendered.
+export const ALL_LOCALES = PUBLIC_LOCALES;
 // `published` adds status=PUBLISHED (so drafts aren't pre-rendered). Developer/Author/Category
 // have no status column, so they pass published=false.
 const slugList = (model: any, published: boolean) => async (lang: string): Promise<string[]> =>
@@ -958,7 +1029,11 @@ export async function getBlogPostsByLangWithPagination(lang: string, limit: numb
 
 export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
   if (!isLocale(lang)) return 0;
-  return prisma.blog.count({ where: { language: lang as any } });
+  // PUBLISHED only — matches the PUBLISHED-only rows the grid actually
+  // renders (getBlogPostsByLang/getBlogPostsByLangWithPagination), so the
+  // hero counter can never claim more articles than the list shows. Also the
+  // basis for the Phase 6 he-article-count gate (blogIndexMode).
+  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED" } });
 }
 
 // === Case Study ===
@@ -1112,7 +1187,22 @@ export async function getLegacyProjectRedirect(lang: string, slug: string): Prom
     where: { language: lang as any, slug, status: "ARCHIVED" },
     select: { redirectTarget: { select: { targetPath: true } } },
   });
-  return row?.redirectTarget?.targetPath ?? null;
+  if (row?.redirectTarget?.targetPath) return row.redirectTarget.targetPath;
+  // A locale that never had legacy Project rows (Hebrew — decision: no legacy
+  // rows for he) still gets the OLD slug requested under its prefix; without
+  // this, /he/projects/cypress-park 404'd while every other locale 308'd to
+  // the Development that replaced it (staging, 2026-09-20). Resolve through
+  // the EN row's redirect and re-prefix its (prefix-less) target for `lang`.
+  // A target that is itself a legacy-only page still ends in a 404 for such
+  // a locale — nothing to show there, same as before.
+  if (lang === DEFAULT_LOCALE) return null;
+  const en = await prisma.project.findFirst({
+    where: { language: DEFAULT_LOCALE as any, slug, status: "ARCHIVED" },
+    select: { redirectTarget: { select: { targetPath: true } } },
+  });
+  const enTarget = en?.redirectTarget?.targetPath;
+  if (!enTarget || !enTarget.startsWith("/")) return null;
+  return `${localePrefix(lang)}${enTarget}`;
 }
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {
@@ -1304,24 +1394,48 @@ export async function getThreeProjectsBySameCity(lang: string, city: string, exc
 
   // Same fix as resolveProjectRefs/getProjectsByDeveloper above: no `status`
   // filter here means an ARCHIVED (superseded-by-Development) row can still
-  // surface in this "same city" widget, sending its card link through a 308
-  // to the Development's page. Use the redirect target slug instead.
-  const redirects = await prisma.legacyProjectRedirect.findMany({
-    where: { projectId: { in: rows.map((r) => r.id) } },
-    select: { projectId: true, targetPath: true },
-  });
-  const targetSlugById = new Map(
-    redirects
-      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
-      .filter((entry): entry is [string, string] => !!entry[1])
-  );
+  // surface in this "same city" widget. Resolve it via the authoritative
+  // supersededByDevelopmentId foreign key straight to that Development's OWN
+  // live slug — NOT via LegacyProjectRedirect.targetPath (the previous
+  // approach, found wrong 2026-09-26 auditing 8 stale slider links). That
+  // field is free text for the ARCHIVED PROJECT'S OWN page redirect, meant to
+  // send a visitor arriving at the old URL somewhere sensible — which is
+  // often a /developers/<slug> archive page when there's no 1:1 successor,
+  // or (one confirmed row, seaview-heights-villas-cybarco) a bare path
+  // missing the /projects/ segment entirely. Regex-parsing it here as if it
+  // always encoded "the current project slug" produced exactly the
+  // stale/wrong links this fixes: most audited cases pointed at a developer
+  // page the regex couldn't parse and silently fell back to the row's own
+  // retired slug. A row with no confirmed successor Development has no
+  // current project page to send a visitor to and is dropped — same
+  // "don't guess, drop it" rule the alternatives funnel uses elsewhere
+  // (developmentAlternatives.ts: fewer than MIN_ALTERNATIVES → return []
+  // rather than show a weak/wrong suggestion).
+  const archivedSuccessorIds = rows
+    .filter((p) => p.status === "ARCHIVED")
+    .map((p) => p.supersededByDevelopmentId)
+    .filter((id): id is string => !!id);
+  const successors = archivedSuccessorIds.length
+    ? await prisma.development.findMany({
+        where: { id: { in: archivedSuccessorIds }, publishStatus: "published" },
+        select: { id: true, slug: true },
+      })
+    : [];
+  const successorSlugById = new Map(successors.filter((d) => !!d.slug).map((d) => [d.id, d.slug as string]));
 
-  const list = rows.filter((p) => p.previewImage).map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id) ?? p.slug;
-    return D({
-      _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
-    });
-  });
+  const list = rows
+    .filter((p) => p.previewImage)
+    .map((p) => {
+      const canonicalSlug =
+        p.status === "ARCHIVED"
+          ? (p.supersededByDevelopmentId && successorSlugById.get(p.supersededByDevelopmentId)) || null
+          : p.slug;
+      if (!canonicalSlug) return null;
+      return D({
+        _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
+      });
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry != null);
   return list.sort(() => Math.random() - 0.5).slice(0, 3);
 }
 

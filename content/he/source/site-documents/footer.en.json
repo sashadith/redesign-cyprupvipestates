@@ -1,0 +1,292 @@
+{
+  "logo": {
+    "_type": "image",
+    "asset": {
+      "_ref": "image-9bc9402a78c12bb402634e3618ad701b351a936a-870x769-png",
+      "_type": "reference"
+    }
+  },
+  "title": "Footer EN",
+  "contacts": [
+    {
+      "_key": "b5ab11fd9f86",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-f1d1b767c5e920ade1b11f68b2df28ac5bc0766e-62x61-png",
+          "_type": "reference"
+        }
+      },
+      "type": "Email",
+      "label": "office@cyprusvipestates.com"
+    },
+    {
+      "_key": "f72f9187845d",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-1e7ab0aa4d38f4357ff37fe41c2223ab941b2878-61x62-png",
+          "_type": "reference"
+        }
+      },
+      "type": "Phone",
+      "label": "+357 99 278 285"
+    },
+    {
+      "_key": "572c026bd832",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-3fbb1da921efeaf95beea9090fa345a2b901c2e9-61x62-png",
+          "_type": "reference"
+        }
+      },
+      "type": "Link",
+      "label": " +357 99 278 285"
+    }
+  ],
+  "copyright": "© SecretBrand Solutions LTD 2026. All rights reserved.",
+  "vatNumber": "VAT-Nr: CY60038766O",
+  "discklaimer": "Disclaimer: Cyprus VIP Estates operates as a premier real estate marketing and consulting agency. We are not a licensed real estate brokerage in Cyprus. We act as a marketing bridge between buyers and developers/owners. All legal transactions, due diligence, and contract preparations are strictly handled by independent licensed lawyers and the respective developers. We do not provide legal or financial advice.",
+  "policyLinks": [
+    {
+      "_key": "31b0909fcbf3",
+      "link": "/privacy-policy",
+      "label": "Privacy Policy"
+    },
+    {
+      "_key": "c9d3a3a475ac3390521730f0649baa59",
+      "link": "/terms-and-conditions",
+      "label": "Terms and Conditions"
+    }
+  ],
+  "socialLinks": [
+    {
+      "_key": "9b96239d86d8",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-30e5d8455eba417a6f316c1ca4185ac0518b0cbe-114x114-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.instagram.com/cyprusvipestates/",
+      "label": "Instagram"
+    },
+    {
+      "_key": "5fed80ec356f",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-cbbb7f73e8035e57234878fe3e829b7fd000ea12-115x115-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.youtube.com/@cyprusvipestates",
+      "label": "Youtube"
+    },
+    {
+      "_key": "f6b249227a6b",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-9977be1059061f3cf9f51680049d8e69217d88c6-116x115-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.facebook.com/cyprusvipestates",
+      "label": "Facebook"
+    },
+    {
+      "_key": "0d9ffe8d649f",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-9c5586f5ca7f08011d0c929dff77a396adcae8fe-64x64-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://www.tiktok.com/@cyprusvipestates",
+      "label": "TikTok"
+    },
+    {
+      "_key": "10dfe2678ff9",
+      "icon": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-e8de355d8b266099adb141b1226bc1fa11bd6d3f-114x114-png",
+          "_type": "reference"
+        }
+      },
+      "link": "https://wa.me/35799278285",
+      "label": "Whatsapp"
+    }
+  ],
+  "companyTitle": "Company",
+  "contactTitle": "Contact",
+  "footerColumns": [
+    {
+      "_key": "1b414adbd3b5",
+      "links": [
+        {
+          "url": "/properties-paphos",
+          "_key": "ba73be77f1f8",
+          "label": "Properties in Paphos"
+        },
+        {
+          "url": "/property-for-sale-limassol",
+          "_key": "1e493e000bf7",
+          "label": "Properties in Limassol"
+        },
+        {
+          "url": "/property-for-sale-larnaca",
+          "_key": "10bdf06a4278",
+          "label": "Properties in Larnaca"
+        },
+        {
+          "url": "/off-plan-properties-in-paphos",
+          "_key": "1a7396491376",
+          "label": "Off-Plan Properties in Paphos"
+        },
+        {
+          "url": "/off-plan-properties-in-limassol",
+          "_key": "cbfa1038944fb8905ac96c59b66f75f0",
+          "label": "Off-Plan Properties in Limassol"
+        },
+        {
+          "url": "/off-plan-properties-in-larnaca",
+          "_key": "381e5575957988d3d025b6efc513c663",
+          "label": "Off-Plan Properties in Larnaca"
+        }
+      ],
+      "title": "Properties by Location"
+    },
+    {
+      "_key": "12ba875a1949",
+      "links": [
+        {
+          "url": "/villas-in-cyprus",
+          "_key": "8163c147355b",
+          "label": "Villas for Sale"
+        },
+        {
+          "url": "/apartments-in-cyprus",
+          "_key": "bc21468838ec",
+          "label": "Apartments for Sale"
+        },
+        {
+          "url": "/investment-property-in-cyprus",
+          "_key": "d8a1cc0c2bd3",
+          "label": "Investment Properties"
+        },
+        {
+          "url": "/luxury-villas-in-cyprus-over-1-million",
+          "_key": "73ec7889ea8c",
+          "label": "Luxury Villas in Over €1M"
+        },
+        {
+          "url": "/beachfront-properties-in-cyprus",
+          "_key": "d3a89c1949a8",
+          "label": "Beachfront Properties in Cyprus"
+        },
+        {
+          "url": "/off-plan-properties-cyprus",
+          "_key": "b62973e02fb1",
+          "label": "Off-Plan Properties in Cyprus"
+        }
+      ],
+      "title": "Property Types"
+    },
+    {
+      "_key": "b5cf1057df52",
+      "links": [
+        {
+          "url": "/blog/taxes-on-real-estate-in-cyprus",
+          "_key": "099c9ccb1754",
+          "label": "Taxes on Real Estate in Cyprus"
+        },
+        {
+          "url": "/blog/how-to-buy-property-in-cyprus",
+          "_key": "a8a8c562a0df",
+          "label": "How to Buy Property in Cyprus"
+        },
+        {
+          "url": "/blog/guaranteed-rental-income-in-cyprus-property",
+          "_key": "dce550980233",
+          "label": "Guaranteed Rental Income"
+        },
+        {
+          "url": "/blog/health-insurance-in-cyprus",
+          "_key": "a7af4619f771",
+          "label": "Health Insurance in Cyprus"
+        },
+        {
+          "url": "/blog/how-to-get-permanent-residence-in-cyprus",
+          "_key": "72ab8a7762bd",
+          "label": "Get Permanent Residence"
+        },
+        {
+          "url": "/blog/how-to-move-to-cyprus-from-the-uk",
+          "_key": "0a1ca88100ed",
+          "label": "Move to Cyprus from UK"
+        }
+      ],
+      "title": "Living in Cyprus"
+    },
+    {
+      "_key": "3c37a23011f3",
+      "links": [
+        {
+          "url": "/about-us",
+          "_key": "edddb4a19055",
+          "label": "About Us"
+        },
+        {
+          "url": "/contacts",
+          "_key": "10a24218d1cb",
+          "label": "Contacts"
+        },
+        {
+          "url": "/faq",
+          "_key": "c7be83aeb8249a1a7c704e422b7ffa7b",
+          "label": "FAQ"
+        },
+        {
+          "url": "/top-100-properties-in-cyprus",
+          "_key": "2ca540ea23be",
+          "label": "Top 100 Properties in Cyprus"
+        },
+        {
+          "url": "/blog/how-much-money-do-you-need-to-buy-property-in-cyprus",
+          "_key": "21853235ca74",
+          "label": "Real Cost of Buying Property in Cyprus"
+        }
+      ],
+      "title": "Cyprus VIP Estates"
+    }
+  ],
+  "newsletterTitle": "Newsletter",
+  "companyParagraphs": [
+    {
+      "_key": "15d3fa364adf",
+      "paragraph": "Cyprus VIP Estates is a project of"
+    },
+    {
+      "_key": "7d72ede68ac4",
+      "paragraph": "SecretBrand Solutions LTD"
+    },
+    {
+      "_key": "1e65e0e5b02f",
+      "paragraph": "Marketing and management"
+    },
+    {
+      "_key": "1cb361de3024",
+      "paragraph": "Palaion Patron Germanou 11"
+    },
+    {
+      "_key": "35c82f688fc6",
+      "paragraph": "8011 Paphos, Cyprus"
+    }
+  ],
+  "newsletterButtonLabel": "Subscribe"
+}

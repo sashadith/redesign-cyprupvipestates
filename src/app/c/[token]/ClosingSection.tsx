@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import type { PLocale } from "./copy";
 import { COPY } from "./copy";
 import AdvisorPhotoBlock from "./AdvisorPhotoBlock";
+import Bdi from "@/app/components/Bdi";
 import { gsap, ScrollTrigger, safeReveal, focusRevealVars, deepFadeVars, isMobileViewport } from "./anim";
 
 const COMPANY_SITE = "cyprusvipestates.com";
@@ -110,7 +111,7 @@ export default function ClosingSection({
                 <li>
                   <a href={personalTelHref} className="cp-closing__contactlink">
                     <PhoneIcon />
-                    <span>{formatPhoneDisplay(advisor.personalPhone)}</span>
+                    <Bdi ltr>{formatPhoneDisplay(advisor.personalPhone)}</Bdi>
                   </a>
                 </li>
               )}
@@ -118,21 +119,23 @@ export default function ClosingSection({
                 <li>
                   <a href={mailHref} className="cp-closing__contactlink">
                     <MailIcon />
-                    <span>{advisor.email}</span>
+                    <Bdi ltr>{advisor.email}</Bdi>
                   </a>
                 </li>
               )}
               <li>
                 <a href={`https://${COMPANY_SITE}`} target="_blank" rel="noopener noreferrer" className="cp-closing__contactlink">
                   <GlobeIcon />
-                  <span>{COMPANY_SITE}</span>
+                  <Bdi ltr>{COMPANY_SITE}</Bdi>
                 </a>
               </li>
             </ul>
           </div>
         </div>
         <p className="cp-closing__legal">
-          {c.legal} <a href="/privacy-policy">{c.privacyPolicy}</a>
+          {/* The Hebrew client used to land on the ENGLISH privacy policy —
+              every other `he` surface links /he/privacy-policy (Pass B M18). */}
+          {c.legal} <a href={locale === "en" ? "/privacy-policy" : `/${locale}/privacy-policy`}>{c.privacyPolicy}</a>
         </p>
       </div>
     </section>

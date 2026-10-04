@@ -1,7 +1,7 @@
 "use client";
 
 import { UNIT_AMENITY_CATALOG } from "@/lib/unitAmenityCatalog";
-import UnitImages from "./UnitImages";
+import UnitImages, { thumb, large } from "./UnitImages";
 import type { UnitRow } from "./UnitsEditor";
 
 const inp = "w-full rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-sm focus:border-[#1B4B43] focus:outline-none";
@@ -124,9 +124,29 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
         {!readOnly && <p className="text-[11px] text-[#9CA3AF] mt-1.5">Fields & features save with “Save units” / “Save unit” below.</p>}
       </div>
 
-      {/* photos */}
+      {/* Photos. The read-only (feed-managed) case used to print a bare count
+          while the floor plans right below it rendered as thumbnails — so the
+          normal case for almost every unit was "photos exist, you may not look
+          at them". Feed-managed still means not editable; it never meant
+          invisible. Same 80px tile as the plans panel, deliberately. */}
       {readOnly ? (
-        <p className="text-xs text-[#9CA3AF]">{unit.photos.length} photo{unit.photos.length === 1 ? "" : "s"} — feed-managed, switch to manual to edit.</p>
+        unit.photos.length > 0 ? (
+          <div>
+            <p className="text-xs text-[#9CA3AF] mb-1.5">
+              {unit.photos.length} photo{unit.photos.length === 1 ? "" : "s"} — feed-managed, switch to manual to edit.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {unit.photos.map((src) => (
+                <a key={src} href={large(src)} target="_blank" rel="noreferrer" title="Open full size"
+                   className="block w-20 h-20 rounded-md border border-[#E5E7EB] overflow-hidden bg-white hover:border-[#1B4B43] transition-colors">
+                  <img src={thumb(src)} alt="" loading="lazy" className="w-full h-full object-cover" />
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-[#9CA3AF]">No photos in the feed for this unit.</p>
+        )
       ) : unit.id ? (
         <div className="-mx-4"><UnitImages unitId={unit.id} photos={unit.photos} onChange={(photos) => onPatch("photos", photos)} /></div>
       ) : (
@@ -146,9 +166,9 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
           </p>
           <div className="flex flex-wrap gap-2">
             {unit.plans.map((src) => (
-              <a key={src} href={src} target="_blank" rel="noreferrer" title="Open full size"
+              <a key={src} href={large(src)} target="_blank" rel="noreferrer" title="Open full size"
                  className="block w-20 h-20 rounded-md border border-[#E5E7EB] overflow-hidden bg-white hover:border-[#1B4B43] transition-colors">
-                <img src={src} alt="" loading="lazy" className="w-full h-full object-cover" />
+                <img src={thumb(src)} alt="" loading="lazy" className="w-full h-full object-cover" />
               </a>
             ))}
           </div>

@@ -1,16 +1,26 @@
-// Newsletter sign-up → Monday.com board.
-// Hardened: API key from env (never committed), full anti-spam parity with /api/leads,
-// email-format validation, and a PARAMETERIZED GraphQL mutation (no string interpolation
-// of user input → no GraphQL injection).
+// Newsletter sign-up → the CRM (Postgres). Nothing leaves the system.
+//
+// 2026-09-26: the best-effort push to a Monday.com board was removed. The company
+// no longer works with Monday, so every sign-up was handing a name and an email
+// address to a third party for no purpose — a transfer with no recipient behind
+// it, not merely a dead call. It ran whenever MONDAY_API_KEY was present, and
+// that variable is still set in the local env, so "the key is dead" was an
+// assumption about the far end rather than something this code enforced.
+//
+// Removing the call is the enforcement. MONDAY_API_KEY and
+// MONDAY_NEWSLETTER_BOARD_ID can now go from every environment; nothing reads
+// them any more.
+//
+// Kept from the hardened version: anti-spam parity with /api/leads, email-format
+// validation and normalisation, and the per-email rate limit.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { ALLOWED_HOSTS, safeUrl, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
+import { LOCALES } from "@/lib/locale";
 
-const MONDAY_API_URL = "https://api.monday.com/v2";
-const NEWSLETTER_BOARD_ID = process.env.MONDAY_NEWSLETTER_BOARD_ID || "1761993654";
-const LEAD_LOCALES = new Set(["en", "de", "pl", "ru"]);
+const LEAD_LOCALES = new Set<string>(LOCALES);
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();
@@ -22,7 +32,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { email, currentDate, currentPage } = body;
+    const { email, currentPage } = body; // currentDate was only read by the removed Monday push
 
     // Page must be on an allowed host and match the referer host.
     const page = String(currentPage ?? "").trim();
@@ -44,8 +54,8 @@ export async function POST(request: Request) {
     const langNorm = String(body.lang ?? "").toLowerCase();
 
     // Persist to the CRM (system of record). Light dedupe: one NEWSLETTER lead
-    // per email — scoped to this bucket on purpose. The Monday board's API key
-    // is dead (see below), so this page IS the mailing list; a person who is
+    // per email — scoped to this bucket on purpose. This table IS the mailing
+    // list now that the Monday push is gone; a person who is
     // already a lead through another channel and then subscribes gets a second,
     // newsletter-scoped row, deliberately, because a subscriber missing from
     // this list cannot be mailed. Matching across buckets was tried and reverted
@@ -82,35 +92,6 @@ export async function POST(request: Request) {
       }
     } catch (e) {
       console.error("Newsletter lead persist error:", e);
-    }
-
-    // Best-effort sync to the Monday newsletter board (non-fatal; CRM already has it).
-    const apiKey = process.env.MONDAY_API_KEY;
-    if (apiKey) {
-      try {
-        const dateNorm = /^\d{4}-\d{2}-\d{2}$/.test(String(currentDate ?? ""))
-          ? String(currentDate)
-          : new Date().toISOString().split("T")[0];
-        // Parameterized mutation — user input travels only via GraphQL variables.
-        const query = `
-          mutation ($boardId: ID!, $itemName: String!, $cols: JSON!) {
-            create_item (board_id: $boardId, item_name: $itemName, column_values: $cols) { id }
-          }`;
-        const variables = {
-          boardId: NEWSLETTER_BOARD_ID,
-          itemName: emailNorm,
-          cols: JSON.stringify({ date4: dateNorm, text_mkkwhb80: page }),
-        };
-        const response = await fetch(MONDAY_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: apiKey },
-          body: JSON.stringify({ query, variables }),
-        });
-        const data = await response.json();
-        if (data.errors) console.error("Monday newsletter API error:", data.errors);
-      } catch (e) {
-        console.error("Monday newsletter sync error:", e);
-      }
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });

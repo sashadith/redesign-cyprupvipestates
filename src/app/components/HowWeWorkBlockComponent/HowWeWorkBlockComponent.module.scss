@@ -71,13 +71,20 @@
     position: absolute;
     bottom: -30px;
     z-index: 1;
-    left: 50%;
+    left: 50%; // centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
     transform: translateX(-50%);
     color: #bd8948;
-    
+
     @media screen and (min-width: 600px) {
       bottom: unset;
       transform: rotate(-90deg);
+      // step-to-step connector arrow: position + rotation are tied together
+      // (same "howwork connector" limitation as preview-home/tokens.css —
+      // see docs/i18n/acceptance/phase-2.md "Bekannte Asymmetrien" #2). A
+      // value-preserving left/right rename does not reproduce a correctly
+      // mirrored connector — that needs a re-derived RTL formula and a
+      // mirrored rotation, not a property swap. Left physical; candidate for
+      // a follow-up pass with visual QA.
       right: -27px;
       left: unset;
     }
@@ -85,7 +92,7 @@
     @media screen and (min-width: 980px) {
       
       margin-top: 0;
-      margin-left: auto;
+      margin-inline-start: auto;
     }
   }
 

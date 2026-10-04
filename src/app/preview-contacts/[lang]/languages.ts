@@ -33,6 +33,9 @@ const LABELS: Record<string, Record<string, string>> = {
   de: { en: "Englisch", de: "Deutsch", ru: "Russisch", pl: "Polnisch", es: "Spanisch", fr: "Französisch", nl: "Niederländisch", el: "Griechisch", kk: "Kasachisch", uz: "Usbekisch" },
   pl: { en: "Angielski", de: "Niemiecki", ru: "Rosyjski", pl: "Polski", es: "Hiszpański", fr: "Francuski", nl: "Niderlandzki", el: "Grecki", kk: "Kazachski", uz: "Uzbecki" },
   ru: { en: "Английский", de: "Немецкий", ru: "Русский", pl: "Польский", es: "Испанский", fr: "Французский", nl: "Нидерландский", el: "Греческий", kk: "Казахский", uz: "Узбекский" },
+  // REVIEW(he) — language names only; the honesty line about the consultation
+  // language itself (Decision E) lives in copy.ts's `finderLead`.
+  he: { en: "אנגלית", de: "גרמנית", ru: "רוסית", pl: "פולנית", es: "ספרדית", fr: "צרפתית", nl: "הולנדית", el: "יוונית", kk: "קזחית", uz: "אוזבקית" },
 };
 
 /** Sort order for the filter chips — the site's own four locales first. */

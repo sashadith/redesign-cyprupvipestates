@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import Bdi from "@/app/components/Bdi";
 import { gsap, safeReveal, focusRevealVars, deepFadeVars, isMobileViewport } from "./anim";
 
 /* "Coming into focus" entrance: elements emerge from darkness/blur into
@@ -15,7 +16,7 @@ import { gsap, safeReveal, focusRevealVars, deepFadeVars, isMobileViewport } fro
    hidden-state here is applied by GSAP itself, never by static CSS, so any
    animation failure leaves the hero fully visible instead of stuck blank. */
 export default function HeroGreeting({
-  eyebrowTag, greetingWord, name, introLine, requirementsTitle, requirementChips, note, advisorName, districtImage,
+  eyebrowTag, greetingWord, name, introLine, requirementsTitle, requirementChips, note, advisorName, districtImage, locale,
 }: {
   eyebrowTag: string;
   greetingWord: string;
@@ -26,7 +27,11 @@ export default function HeroGreeting({
   note?: string | null;
   advisorName?: string | null;
   districtImage?: string | null;
+  /** Drives the two `he`-only typographic rules below; every LTR locale
+   *  renders exactly what it rendered before. */
+  locale?: string;
 }) {
+  const isHe = locale === "he";
   const rootRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -105,7 +110,11 @@ export default function HeroGreeting({
       <div className="cp-hero__inner">
         <img src="/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x2048.png" alt="Cyprus VIP Estates" className="cp-hero__logo" data-fx="logo" />
         <p className="eyebrow cp-hero__tag" data-fx="eyebrow">{eyebrowTag}</p>
-        <p className="cp-hero__eyebrow" data-fx="greeting">{greetingWord}, <span className="it">{name}!</span></p>
+        {/* Latin client name bidi-isolated inside the Hebrew greeting
+            (styleguide §11.4), and the exclamation mark dropped for `he` —
+            §1 keeps `!` out of running Hebrew text, and the one sanctioned
+            exception already sits in FIRST_CONTACT_INTRO (Pass B S15). */}
+        <p className="cp-hero__eyebrow" data-fx="greeting">{greetingWord}, <span className="it">{isHe ? <Bdi>{name}</Bdi> : `${name}!`}</span></p>
         <p className="cp-hero__intro" data-fx="intro">{introLine}</p>
         {advisorName && <cite className="cp-hero__signature" data-fx="intro">- {advisorName} -</cite>}
         {requirementChips && requirementChips.length > 0 && (
@@ -118,7 +127,9 @@ export default function HeroGreeting({
         )}
         {note && (
           <blockquote className="cp-hero__note">
-            “{note}”
+            {/* Straight double quotes for `he` (§4): the typographic pair
+                renders mirrored in an RTL flow (Pass B S14). */}
+            {isHe ? `"${note}"` : `“${note}”`}
             {advisorName && <cite className="cp-hero__signature">- {advisorName} -</cite>}
           </blockquote>
         )}

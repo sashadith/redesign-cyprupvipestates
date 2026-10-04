@@ -1,6 +1,7 @@
 import React, { FC } from "react";
 // Copy moved to a shared module so the redesigned renderer reads the same source.
 import { STEPS_ICONS as icons, STEPS_TEXT as stepsText } from "@/app/preview-landing/blockCopy";
+import type { Locale } from "@/lib/locale";
 import styles from "./HowWeWorkBlockComponent.module.scss";
 import { HowWeWorkBlock as HowWeWorkBlockType } from "@/types/blog";
 import Image from "next/image";
@@ -22,7 +23,7 @@ const marginValues: Record<string, string> = {
 
 const HowWeWorkBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, marginTop, marginBottom } = block;
-  const texts = stepsText[lang] || stepsText.en;
+  const texts = stepsText[lang as Locale] || stepsText.en;
 
   const computedMarginTop =
     marginTop && marginValues[marginTop] ? marginValues[marginTop] : "0";

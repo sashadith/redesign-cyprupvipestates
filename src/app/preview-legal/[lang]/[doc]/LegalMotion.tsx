@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "../../../preview-home/anim/gsap";
+import { isRtlDoc } from "@/app/components/useIsRtl";
 
 /* Scroll/motion for the legal pages — deliberately the quietest of the three
    redesigned page types. A privacy policy that animates as theatrically as a
@@ -18,6 +19,7 @@ export default function LegalMotion() {
     if (prefersReducedMotion()) return;
 
     const splits: Array<{ revert: () => void }> = [];
+    const isRtl = isRtlDoc(document);
 
     const ctx = gsap.context(() => {
       const headline = document.querySelector<HTMLElement>(".lgl__title");
@@ -35,7 +37,7 @@ export default function LegalMotion() {
 
       gsap.from(".lgl__toc", {
         autoAlpha: 0,
-        x: -16,
+        x: isRtl ? 16 : -16,
         duration: 0.6,
         delay: 0.3,
         ease: "power2.out",

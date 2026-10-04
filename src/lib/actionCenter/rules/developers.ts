@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { duplicateDevelopmentPairs } from "@/lib/overlapSweep";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
+import { MISSING_PRICE_LIST } from "@/lib/plusIncomplete";
 import { WARM_CONTACT_STATUSES } from "./crm";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { developerGroupExists } from "@/lib/developerLink";
@@ -23,7 +25,14 @@ function isSharePointHost(url: string | null | undefined): boolean {
 }
 
 const DAY = 86_400_000;
-const SOLD_OUT_ARCHIVE_REMINDER_DAYS = 60;
+/* 120 days, raised from 60 on 2026-09-09. A sold-out development is already
+   out of the public listing and off the map, so nothing is being mis-sold
+   while it sits there — the only question is when its search value is spent,
+   and the operator judges that over 3-6 months. The nightly dead-page sweep
+   (soldOutSweeps.ts) archives the genuinely dead ones on its own; this
+   reminder is for the ones that still get impressions but no longer earn
+   their place. */
+const SOLD_OUT_ARCHIVE_REMINDER_DAYS = 120;
 const NEW_DEV_WINDOW_DAYS = 7;
 const READY_TO_PUBLISH_MIN_AGE_DAYS = 3;
 const FEED_MISSING_GRACE_DAYS = 2; // 0-1 days is grace (transient feed hiccups happen); alert from day 2
@@ -311,27 +320,74 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
 // this never collides with feedSyncFailures() above — a blocked run is a
 // deliberate skip, not a crash, and the two conditions must stay
 // independently visible/snoozable. Same "latest row per job" pattern.
-async function feedIncompleteWarnings(): Promise<ActionItem[]> {
-  const rows = await prisma.cronRunLog.findMany({
-    where: { job: { startsWith: "feed-incomplete:" } },
-    orderBy: { ranAt: "desc" },
-    take: 500,
-  });
-  const latestByJob = new Map<string, (typeof rows)[number]>();
-  for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
+/* Which developers are STILL refusing, given the completeness log. Pure, and
+   exported, because the "still" is the whole subtlety and it was wrong for
+   three and a half weeks.
 
-  const items: ActionItem[] = [];
+   This rule always said a later clean run supersedes a block. Nothing ever
+   wrote that clean run: a blocked developer logged feed-incomplete:<dev>
+   ok=false, while a healthy one logged feed-sync:<dev> — a DIFFERENT key — so
+   `row.ok` was never once true. Measured 2026-09-24: 0 of 14
+   feed-incomplete: rows had ok=true, and Domenica (blocked 2026-08-31) and
+   Medousa (2026-09-01) had been shown as URGENT for 24 and 23 days while
+   syncing cleanly every single night. The cron route now logs the guard's
+   verdict on every run, pass or fail, and this reads the latest one.
+
+   The Plus Properties sync logs the same verdict per project as
+   plus-incomplete:<project key>; the key is everything after the job's FIRST
+   ":", and `job` is carried so the item can say which kind it is. */
+type FeedBlock = { job: string; devKey: string; message: string | null; since: Date };
+export function pendingFeedBlocks(
+  rows: { job: string; ok: boolean; ranAt: Date; message: string | null }[],
+): FeedBlock[] {
+  const latestByJob = new Map<string, (typeof rows)[number]>();
+  // Callers pass rows newest-first; the first sighting of a job is its latest.
+  for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
+  const out: FeedBlock[] = [];
   for (const [job, row] of Array.from(latestByJob)) {
     if (row.ok) continue; // a later, complete sync superseded the block — not a live condition
-    const devKey = job.slice("feed-incomplete:".length);
-    items.push({
-      id: `feed-incomplete:${job}`, severity: "URGENT", category: "DEVELOPERS",
-      title: `${devKey} feed looks incomplete — nothing was synced`,
-      description: row.message || "A large share of this developer's known units are missing from the feed. Nothing was written; check the feed before the next run.",
-      deepLink: `/admin/developments?dev=${encodeURIComponent(devKey)}`, since: row.ranAt,
-    });
+    out.push({ job, devKey: job.slice(job.indexOf(":") + 1), message: row.message, since: row.ranAt });
   }
-  return items;
+  return out;
+}
+
+/* One panel item per live block. The feed item's id, title and link are
+   unchanged since before Plus existed — snoozes and dismissals are stored
+   against that id. A Plus block is one project, for one of two reasons:
+   - its price list lost too many units: only its units were held back, the
+     project row itself was still refreshed;
+   - its price list is missing from the folder (MISSING_PRICE_LIST): the
+     project was skipped whole, nothing about it was written.
+   Both keep the same id, so a snooze covers the project either way. */
+export function feedBlockItem(b: FeedBlock): ActionItem {
+  if (b.job.startsWith("plus-incomplete:")) {
+    return {
+      id: `feed-incomplete:${b.job}`, severity: "URGENT", category: "DEVELOPERS",
+      title: b.message === MISSING_PRICE_LIST
+        ? `Plus Properties ${b.devKey}: price list missing from the folder — nothing was changed`
+        : `Plus Properties ${b.devKey}: price list looks incomplete — units were not updated`,
+      description: b.message || "A large share of this project's known units are missing from its price list. Its units were not updated; check the list before the next run.",
+      deepLink: "/admin/developments?dev=plusproperties", since: b.since,
+    };
+  }
+  return {
+    id: `feed-incomplete:feed-incomplete:${b.devKey}`, severity: "URGENT", category: "DEVELOPERS",
+    title: `${b.devKey} feed looks incomplete — nothing was synced`,
+    description: b.message || "A large share of this developer's known units are missing from the feed. Nothing was written; check the feed before the next run.",
+    deepLink: `/admin/developments?dev=${encodeURIComponent(b.devKey)}`, since: b.since,
+  };
+}
+
+/* One query per prefix, each with its own window: a Plus run logs ~35 rows a
+   night, so a shared take:500 would shrink the feed-incomplete history from
+   ~55 nights to ~11. The two prefixes never share a job, so concatenating two
+   newest-first lists keeps pendingFeedBlocks' "first sighting is the latest". */
+async function feedIncompleteWarnings(): Promise<ActionItem[]> {
+  const [feedRows, plusRows] = await Promise.all([
+    prisma.cronRunLog.findMany({ where: { job: { startsWith: "feed-incomplete:" } }, orderBy: { ranAt: "desc" }, take: 500 }),
+    prisma.cronRunLog.findMany({ where: { job: { startsWith: "plus-incomplete:" } }, orderBy: { ranAt: "desc" }, take: 500 }),
+  ]);
+  return pendingFeedBlocks(feedRows.concat(plusRows)).map(feedBlockItem);
 }
 
 // (f) Published/ready development whose source feed no longer lists it.
@@ -639,7 +695,7 @@ async function developerLinkCollisions(): Promise<ActionItem[]> {
 // place that surfaces it — without it, a developer replacing bad renderings
 // with real photos would never be noticed. INFO, not ACTION/URGENT: nothing
 // is broken on the live site, this is "worth a look", and the admin decides
-// via "Reload images" + the New in feed picker whether to act on it.
+// via "Reload units & images" + the New in feed picker whether to act on it.
 // One item PER Development (own itemId namespace, image-drift-pending:), not
 // one aggregate — same reasoning as developer-link-collision: above, a
 // dismiss on one project's drift must never swallow another's.
@@ -660,7 +716,7 @@ async function imageDriftPending(): Promise<ActionItem[]> {
     return {
       id: `image-drift-pending:${d.id}`, severity: "INFO", category: "DEVELOPERS",
       title: `${d.publicName}: feed images changed since publish`,
-      description: `${parts.join(", ") || "Images"} in the feed no longer match what's mirrored — the sync skips re-downloading a published project's images automatically. "Reload images" on the project page mirrors the new ones for review.`,
+      description: `${parts.join(", ") || "Images"} in the feed no longer match what's mirrored — the sync skips re-downloading a published project's images automatically. "Reload units & images" under Sync control on the project page mirrors the new ones for review.`,
       deepLink: `/admin/developments/${d.id}`, since: d.imageDriftDetectedAt as Date,
     };
   });
@@ -766,11 +822,69 @@ async function manualSyncDue(): Promise<ActionItem[]> {
   return items;
 }
 
+/* (q) The SAME building present twice as two Developments (2026-09-16, the
+   Eden Golf incident). Rule (j) above only ever compares a legacy Project
+   against a Development, so a pair of Developments was invisible to it: BBF
+   had /projects/golf-residences (hand-made, 2026-07-12) and /projects/eden-golf
+   (feed project 38, 2026-08-28) live against each other for two and a half
+   weeks, competing for the same searches with near-identical prices.
+
+   Report only — there is nothing to confirm. Between two Developments no
+   supersession relation exists in the schema, so the resolution is to archive
+   one, and an archived side removes the pair from the scan. That archive is
+   the acknowledgement, which is why this needs no candidate table and no
+   reject list.
+
+   Severity follows the damage: two PUBLISHED pages actually compete in search
+   and split their own traffic, so that is ACTION. If one side is still a draft
+   nothing is public yet and it is INFO — worth knowing before publishing,
+   not worth interrupting the day.
+
+   The deep link goes to whichever side has fewer units, which in the observed
+   case was the hand-made page with no images and a frozen unit list. That is a
+   convenience for the common shape, NOT a recommendation about which to keep:
+   both names, slugs and unit counts are in the description so the comparison
+   is made on the facts, not on which one this link happened to open. */
+async function duplicateDevelopments(): Promise<ActionItem[]> {
+  const pairs = await duplicateDevelopmentPairs();
+  if (!pairs.length) return [];
+  const ids = Array.from(new Set(pairs.flatMap((p) => [p.aId, p.bId])));
+  const rows = await prisma.development.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, publicName: true, slug: true, publishStatus: true, unitsTotal: true, createdAt: true },
+  });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const out: ActionItem[] = [];
+  for (const pair of pairs) {
+    const a = byId.get(pair.aId), b = byId.get(pair.bId);
+    if (!a || !b) continue;
+    const bothPublished = a.publishStatus === "published" && b.publishStatus === "published";
+    /* Fewer units first — see the header. Ties broken by the newer row, the
+       likelier accident. */
+    const [weaker, stronger] = a.unitsTotal === b.unitsTotal
+      ? (a.createdAt > b.createdAt ? [a, b] : [b, a])
+      : (a.unitsTotal < b.unitsTotal ? [a, b] : [b, a]);
+    const describe = (d: typeof a) => `${d.slug ? `/${d.slug}` : "(no slug)"} · ${d.unitsTotal} unit${d.unitsTotal === 1 ? "" : "s"} · ${d.publishStatus}`;
+    out.push({
+      /* Sorted ids so the key never flips with scan order — a dismissal must
+         not be undone by the pair being found the other way round. */
+      id: `duplicate-development:${[pair.aId, pair.bId].sort().join(":")}`,
+      severity: bothPublished ? "ACTION" : "INFO",
+      category: "DEVELOPERS",
+      title: `"${a.publicName}" exists twice`,
+      description: `${describe(weaker)} and ${describe(stronger)} — ${pair.note}. Two Developments, not a legacy page: archive one to resolve.`,
+      deepLink: `/admin/developments/${weaker.id}`,
+      since: weaker.createdAt,
+    });
+  }
+  return out;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(),
+    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(), duplicateDevelopments(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p, ...q];
 }

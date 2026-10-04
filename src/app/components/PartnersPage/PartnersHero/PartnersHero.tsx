@@ -1,8 +1,10 @@
+import "@/app/fonts/vendored.css";
+import { oswaldPlain } from "@/app/fonts";
 import React, { FC } from "react";
 import styles from "./PartnersHero.module.scss";
 import Image from "next/image";
 import { ButtonModal } from "../../ButtonModal/ButtonModal";
-import { Oswald } from "next/font/google";
+import type { Locale } from "@/lib/locale";
 
 type Props = {
   lang: string;
@@ -18,12 +20,19 @@ type PartnersHeroTranslation = {
   note: string;
 };
 
-const oswald = Oswald({
-  subsets: ["latin", "cyrillic"],
-  weight: ["300", "400"],
-});
+const oswald = oswaldPlain;
 
-const translations: Record<string, PartnersHeroTranslation> = {
+const EN: PartnersHeroTranslation = {
+  subtitleTop: "Become a partner of Cyprus VIP Estates",
+  titleStart: "Join our ",
+  titleHighlight: "partner program",
+  titleEnd: " and earn with us!",
+  subtitleBottom: "Earn up to 40% of our marketing success fee*",
+  button: "become a partner",
+  note: "* For real estate purchases, our partners receive a referral fee of 30–50%. For referring property owners, we pay a 10% referral fee.",
+};
+
+const translations: Record<Locale, PartnersHeroTranslation> = {
   de: {
     subtitleTop: "Werde partner von cyprus vip estates",
     titleStart: "Werde jetzt teil unseres ",
@@ -34,15 +43,7 @@ const translations: Record<string, PartnersHeroTranslation> = {
     button: "jetzt partner werden!",
     note: "* Für Immobilienkäufe erhalten unsere Partner eine Vermittlungsgebühr von 30 % bis 50 %. Für die Empfehlung von Eigentümern bestehender Immobilien zahlen wir 10 % Vermittlungshonorar.",
   },
-  en: {
-    subtitleTop: "Become a partner of Cyprus VIP Estates",
-    titleStart: "Join our ",
-    titleHighlight: "partner program",
-    titleEnd: " and earn with us!",
-    subtitleBottom: "Earn up to 40% of our marketing success fee*",
-    button: "become a partner",
-    note: "* For real estate purchases, our partners receive a referral fee of 30–50%. For referring property owners, we pay a 10% referral fee.",
-  },
+  en: EN,
   pl: {
     subtitleTop: "Zostań partnerem Cyprus VIP Estates",
     titleStart: "Dołącz do naszego ",
@@ -61,10 +62,11 @@ const translations: Record<string, PartnersHeroTranslation> = {
     button: "стать партнёром",
     note: "* За продажу недвижимости партнёры получают вознаграждение от 30 до 50%. За рекомендации владельцев — 10% вознаграждение.",
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 const PartnersHero: FC<Props> = ({ lang }) => {
-  const t: PartnersHeroTranslation = translations[lang] ?? translations.de;
+  const t: PartnersHeroTranslation = translations[lang as Locale] ?? translations.en;
 
   return (
     <section className={styles.partnersHero}>

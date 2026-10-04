@@ -18,6 +18,7 @@ import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
 import { flagHyperactiveSessions } from "@/lib/analyticsBotDetect";
 import { formatInZone, cyprusWallTimeToUtc, CYPRUS_TZ } from "@/lib/booking/timezone";
 import { classifyForDigest, chunkLines, REMINDER_THROTTLE_DAYS } from "@/lib/actionCenter/digestNotify";
+import { loadSocialDigestLines } from "@/lib/social/load";
 
 // Piggybacks on this existing daily cron, same pattern as feed-sync's
 // purgeOldTrash/purgeOldCronLogs — best-effort, never blocks the digest.
@@ -206,18 +207,33 @@ function buildCategorySection(label: string, items: TaggedItem[], siteUrl: strin
   return lines;
 }
 
+// Social (Typefully, read-only) gets its own "📣 SOCIAL" section, built by
+// loadSocialDigestLines() and present only when there is something to report.
+// The SOCIAL Action Center items are therefore kept OUT of the category
+// sections and out of classifyForDigest — the section already names every one
+// of them every morning, and a "fresh/reminder" throttle would wrongly mute an
+// unconfirmed post on its second day.
+async function socialLines(): Promise<string[]> {
+  try {
+    return await loadSocialDigestLines();
+  } catch (e) {
+    return ["", "<b>📣 SOCIAL</b>", `⚠️ Social check failed: ${escapeHtml(e instanceof Error ? e.message : String(e))}`];
+  }
+}
+
 async function runDigest() {
-  const items = (await getActionCenterItems()).filter((i) => i.severity === "URGENT" || i.severity === "ACTION");
+  const items = (await getActionCenterItems()).filter((i) => (i.severity === "URGENT" || i.severity === "ACTION") && i.category !== "SOCIAL");
   const { fresh, recurring, quiet } = await classifyForDigest(items);
   const advisorLines = await maybeAppendAdvisorSummary();
   const appointmentLines = await todaysAppointmentLines();
   const morningSyncLines = await morningSyncSummaryLines();
+  const socialSectionLines = await socialLines();
 
   // morningSyncLines is non-empty on every real day (Teil 5: a confirmation
   // every morning, success or not), so in practice this only stays false if
   // CronRunLog itself is unreachable — that already surfaces via the outer
   // catch/withCronLog, not silently here.
-  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length && !morningSyncLines.length) {
+  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length && !morningSyncLines.length && !socialSectionLines.length) {
     return { sent: false, count: 0, fresh: 0, recurring: 0, quiet };
   }
 
@@ -243,6 +259,7 @@ async function runDigest() {
     ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl),
     ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl),
     ...appointmentLines,
+    ...socialSectionLines,
     ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl),
     ...advisorLines,
   ];

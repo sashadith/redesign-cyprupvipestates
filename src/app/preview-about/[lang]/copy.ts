@@ -19,6 +19,8 @@
      - pl: "…w historię sukces" (truncated noun)
    Each of those is fixed below; the stored rows still contain the originals. */
 
+import { bidiIsolate, type Locale } from "@/lib/locale";
+
 export type AboutStrings = {
   metaTitle: string;
   metaDescription: string;
@@ -39,7 +41,7 @@ export type AboutStrings = {
   statsEyebrow: string;
   statsTitle: string;
   /** `live: "projects"` swaps the hard-coded number for the DB count at render time. */
-  stats: { number: number; sign?: string; live?: "projects"; title: string; description: string }[];
+  stats: { number: number; sign?: string; live?: "projects" | "units"; title: string; description: string }[];
 
   workEyebrow: string;
   workTitle: string;
@@ -98,9 +100,9 @@ const EN: AboutStrings = {
   statsTitle: "Ten years on the ground",
   stats: [
     { number: 195, live: "projects", title: "Real estate projects", description: "In southern Cyprus. From studio apartments to high-class villas" },
+    { number: 0, live: "units", title: "Available units", description: "Residential, investment and commercial properties" },
     { number: 10, title: "Years of experience", description: "As a full-service real estate marketing agency" },
     { number: 360, sign: "°", title: "Service for our clients", description: "From the first contact to the handover of the keys" },
-    { number: 100, sign: "%", title: "Satisfied clients", description: "From Germany, Austria, Switzerland and beyond" },
   ],
 
   workEyebrow: "How we work",
@@ -178,9 +180,9 @@ const DE: AboutStrings = {
   statsTitle: "Zehn Jahre vor Ort",
   stats: [
     { number: 195, live: "projects", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+    { number: 0, live: "units", title: "Verfügbare Einheiten", description: "Wohn-, Anlage- und Gewerbeimmobilien" },
     { number: 10, title: "Jahre Erfahrung", description: "Als Full-Service-Immobilien-Marketing-Agentur" },
     { number: 360, sign: "°", title: "Service für unsere Kunden", description: "Vom ersten Kontakt bis zur Schlüsselübergabe" },
-    { number: 100, sign: "%", title: "Zufriedene Kunden", description: "Aus Deutschland, Österreich, der Schweiz und weiteren Ländern" },
   ],
 
   workEyebrow: "Wie wir arbeiten",
@@ -258,9 +260,9 @@ const PL: AboutStrings = {
   statsTitle: "Dziesięć lat na miejscu",
   stats: [
     { number: 195, live: "projects", title: "Projektów nieruchomości", description: "Na południu Cypru. Od apartamentów studio po luksusowe wille" },
+    { number: 0, live: "units", title: "Dostępne nieruchomości", description: "Mieszkaniowe, inwestycyjne i komercyjne" },
     { number: 10, title: "Lat doświadczenia", description: "Jako agencja kompleksowego marketingu nieruchomości" },
     { number: 360, sign: "°", title: "Obsługa naszych klientów", description: "Od pierwszego kontaktu aż do przekazania kluczy" },
-    { number: 100, sign: "%", title: "Zadowolonych klientów", description: "Z Niemiec, Austrii, Szwajcarii i innych krajów" },
   ],
 
   workEyebrow: "Jak pracujemy",
@@ -338,9 +340,9 @@ const RU: AboutStrings = {
   statsTitle: "Десять лет на месте",
   stats: [
     { number: 195, live: "projects", title: "Проектов недвижимости", description: "На юге Кипра. От студий до вилл высокого класса" },
+    { number: 0, live: "units", title: "Доступных объектов", description: "Жилая, инвестиционная и коммерческая недвижимость" },
     { number: 10, title: "Лет опыта", description: "Как агентство полного цикла маркетинга недвижимости" },
     { number: 360, sign: "°", title: "Спектр услуг для клиентов", description: "От первого контакта до передачи ключей" },
-    { number: 100, sign: "%", title: "Довольных клиентов", description: "Из Германии, Австрии, Швейцарии и других стран" },
   ],
 
   workEyebrow: "Как мы работаем",
@@ -394,6 +396,103 @@ const RU: AboutStrings = {
   },
 };
 
-const ALL: Record<string, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+/* Hebrew. Three deliberate departures from a literal rendering of the EN,
+   all of them required by docs/i18n/he-styleguide.md:
+   1. `teamLead` carries the Decision-E honesty line verbatim (§8, glossary
+      §5) — the six languages the team covers do NOT include Hebrew, and this
+      is the one place on the About page where languages come up.
+   2. `receive[1]` says "signing at the lawyer's" instead of the EN "notary
+      appointment": Cyprus has no notary in the German sense (§7), so a
+      literal translation would state something untrue about the process.
+   3. `teamSpeaks` is "שפות" (Languages), not a verb — "speaks" would force a
+      gender onto whichever consultant the card belongs to (§2, §11.2).
+   4. `work[1]` says "ניסיון רב", not "עשרות שנים": the stats row two sections
+      above states 10 שנות ניסיון and the H2 עשר שנים בשטח, and on the Hebrew
+      page both sit in the same scroll (§8, §10 — every number has a source).
+      The EN/DE/PL/RU source still says "Decades"; see docs/i18n/reviews/wp5.md
+      "Offene Punkte". */
+const HE: AboutStrings = {
+  metaTitle: "אודות Cyprus VIP Estates | סוכנות נדל\"ן בפאפוס ובלימסול",
+  metaDescription:
+    "מי אנחנו, איך אנחנו עובדים ומי הצוות שמאחורי Cyprus VIP Estates, סוכנות נדל\"ן בפאפוס שמלווה רוכשים מהחיפוש הראשון ועד קבלת המפתחות.",
+  heroEyebrow: `אודות ${bidiIsolate("Cyprus VIP Estates")}`,
+  heroTitle: ["גשר לחיים חדשים תחת שמי ", "הים התיכון", ""],
+  heroLead:
+    "אנחנו עוזרים לכם למצוא את הבית שחלמתם עליו בקפריסין, לא רק כיועצי נדל\"ן אלא כשותפים שנשארים איתכם מהשיחה הראשונה ועד היום שבו תקבלו את המפתחות.",
+  heroCta: "להכיר את הצוות",
+  heroImageAlt: "טיילת הים של לימסול בלילה, קפריסין",
+  heroScroll: "גלילה",
 
-export const aboutCopy = (lang: string): AboutStrings => ALL[lang] ?? EN;
+  stanceEyebrow: "מה מניע אותנו",
+  stanceTitle: ["המעבר לקפריסין הוא ", "הרבה יותר", " מרכישת נכס"],
+  stanceBody: [
+    "זה צעד לחיים עצמאיים ומהנים יותר, ואנחנו משקיעים בו את כל הלב.",
+    "המשימה שלנו היא לעזור לאנשים למצוא את הבית המתאים להם תחת השמש הקפריסאית, עם ייעוץ אישי, שקיפות מלאה ועמידה עקבית בסטנדרטים הגבוהים ביותר.",
+    "אנחנו משלבים היכרות עמוקה עם השוק המקומי וכלים דיגיטליים, כדי שכל התהליך יישאר פשוט, בטוח ונעים באמת.",
+  ],
+
+  statsEyebrow: "במספרים",
+  statsTitle: "עשר שנים בשטח",
+  stats: [
+    { number: 195, live: "projects", title: "פרויקטי נדל\"ן", description: "בדרום קפריסין. מדירות סטודיו ועד וילות יוקרה" },
+    { number: 10, title: "שנות ניסיון", description: "כסוכנות שיווק נדל\"ן בשירות מלא" },
+    { number: 360, sign: "°", title: "שירות ללקוחות שלנו", description: "מהפנייה הראשונה ועד מסירת המפתחות" },
+    { number: 100, sign: "%", title: "לקוחות מרוצים", description: "מכל רחבי אירופה" },
+  ],
+
+  workEyebrow: "איך אנחנו עובדים",
+  workTitle: "שלושה דברים שלא נעביר לאף אחד",
+  work: [
+    { title: "ייעוץ אישי בשטח", description: "אנחנו מקשיבים היטב כדי להבין את הצרכים, הרצונות ומטרות החיים שלכם, ואז מאתרים נכסים שבאמת מתאימים." },
+    { title: "מומחיות בשוק ובחוק", description: "ניסיון רב ועבודה צמודה מול הרשויות בקפריסין מאפשרים לנו לנהל משא ומתן והליכי אישור בביטחון." },
+    { title: "תהליכים בתמיכה דיגיטלית", description: "מניתוח בעזרת בינה מלאכותית ועד בדיקת מסמכים אונליין. הכלים המודרניים עובדים לצד שירות אישי, וכך התהליך נשאר שקוף." },
+  ],
+
+  receiveEyebrow: "מה אתם מקבלים",
+  receiveTitle: "שותף אחד, מההתחלה ועד הסוף",
+  receive: [
+    { title: "בחירה מוקפדת", description: "אתם רואים רק נכסים שעומדים בסטנדרטים שלנו לאיכות ולתשואה, לא את כל מה שיש בשוק." },
+    { title: "ליווי מלא", description: "סיורים בנכסים, מימון, ייעוץ משפטי וחתימה אצל עורך הדין, הכל מול איש קשר אחד." },
+    { title: "תמיכה אחרי הרכישה", description: "ליווי במעבר, ניהול הנכס וספקים מקומיים בדוקים, כדי שתרגישו בבית מהיום הראשון." },
+  ],
+
+  valuesEyebrow: "ערכי הליבה",
+  valuesTitle: "מה מנחה אותנו בעבודה",
+  values: [
+    { title: "יושרה ושקיפות", description: "תקשורת פתוחה, וכל סיכום מתועד בכתב." },
+    { title: "מיקוד בלקוח", description: "יחס אישי לכל לקוח, הדרך היחידה להתאים את הנכס למה שאתם באמת מחפשים ולבנות אמון לאורך זמן." },
+    { title: "מומחיות מקומית", description: "היכרות מעמיקה עם האזורים, החוקים והתרבות בקפריסין מאחורי כל החלטה." },
+    { title: "מצוינות ומקצועיות", description: "איכות שירות גבוהה, הכשרה מתמשכת ונוכחות מוקפדת ברשת ומחוצה לה." },
+    { title: "קיימות ואחריות", description: "שיקולים סביבתיים בכל פרויקט, ושותפים עם תנאי עבודה ובנייה הוגנים." },
+    { title: "חדשנות ויעילות", description: "טכנולוגיה מודרנית, כלי בינה מלאכותית וניהול מסמכים דיגיטלי, לייעול התהליכים ולחיסכון בזמן שלכם." },
+  ],
+
+  teamEyebrow: "האנשים",
+  teamTitle: "עם מי תעבדו",
+  teamLead:
+    "בצוות שלנו שש שפות וארבע מדינות, וכולם גרים כאן. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
+  teamSpeaks: "שפות",
+  teamContact: "ליצירת קשר",
+
+  storiesEyebrow: "סיפורי לקוחות",
+  storiesTitle: "מה הלקוחות שלנו אומרים",
+  storiesLead: "כמה מילים מאנשים שכבר עשו את המעבר.",
+  storiesAll: "לכל סיפורי הלקוחות",
+
+  ctaTitle: "נדבר על התוכניות שלכם",
+  ctaLead: "ספרו לנו מה אתם מחפשים, ונחזור אליכם אישית, בדרך כלל עוד באותו יום.",
+  channelWhatsapp: "וואטסאפ",
+  channelPhone: "טלפון",
+  channelEmail: "אימייל",
+  channelHint: {
+    whatsapp: "התשובה המהירה ביותר, בדרך כלל תוך דקות",
+    phone: "אפשר להתקשר אלינו ישירות בשעות הפעילות",
+    email: "לפניות מפורטות ולמסמכים",
+  },
+};
+
+/* Exported (not a file-local `const ALL`) so scripts/qa/copy-modules.json can
+   register this table with the copy-snapshot and he-meta-length gates. */
+export const ABOUT_COPY: Record<Locale, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
+
+export const aboutCopy = (lang: string): AboutStrings => ABOUT_COPY[lang as Locale] ?? EN;

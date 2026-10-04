@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadUnitImages, setUnitPhotos, applyPhotosToIdentical, scheduleUploadsRestartAction } from "./actions";
 
-const thumb = (u: string) => u.replace(/_medium\.webp$/, "_small.webp");
-const large = (u: string) => u.replace(/_medium\.webp$/, "_large.webp");
+// Exported: UnitDetail's read-only media panel needs the same derivation.
+// Every mirrored unit image is stored as the _medium variant with _small and
+// _large siblings (verified across 3720 unit photo/plan entries in production,
+// all of them "..._medium.webp"), so a thumbnail must never load the medium
+// file into an 80px box.
+export const thumb = (u: string) => u.replace(/_medium\.webp$/, "_small.webp");
+export const large = (u: string) => u.replace(/_medium\.webp$/, "_large.webp");
 
 // Controlled: photos live in the parent unit's own state (UnitsEditor), so
 // "Save unit" persists them together with every other field — no separate

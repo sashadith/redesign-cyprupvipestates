@@ -2,6 +2,7 @@
 // route so both honour exactly the same query parameters.
 import type { Prisma } from "@prisma/client";
 import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
+import { LOCALES } from "@/lib/locale";
 
 export const LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER"];
@@ -9,7 +10,7 @@ export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", 
 // live on their own page now, so filtering the leads list by it could only ever
 // return an empty list.
 export const LEAD_LIST_SOURCES = LEAD_SOURCES.filter((s) => bucketOf(s) !== "newsletter");
-export const LEAD_LOCALES = ["en", "de", "pl", "ru"];
+export const LEAD_LOCALES: string[] = [...LOCALES];
 
 export type LeadSearchParams = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v ?? "").trim();

@@ -37,7 +37,7 @@ export default function HeaderNavEditor({ name, initial }: { name: string; initi
         <div key={n._key} className="border border-[#E5E7EB] rounded-md p-3 space-y-2">
           <div className="flex gap-2 items-center">
             <input className={`${input} w-44 shrink-0`} value={n.label ?? ""} placeholder="Menu label" onChange={(e) => setItem(i, { label: e.target.value })} />
-            <input className={input} value={n.link ?? ""} placeholder="/path, section-id, or https://…" onChange={(e) => setItem(i, { link: e.target.value })} />
+            <input className={input} dir="ltr" value={n.link ?? ""} placeholder="/path, section-id, or https://…" onChange={(e) => setItem(i, { link: e.target.value })} />
             <select
               className={`${input} w-36 shrink-0`}
               title="Menu item style"
@@ -58,7 +58,7 @@ export default function HeaderNavEditor({ name, initial }: { name: string; initi
             {(n.subLinks || []).map((s, si) => (
               <div key={s._key} className="flex gap-2">
                 <input className={`${input} w-40 shrink-0`} value={s.label ?? ""} placeholder="Label" onChange={(e) => setSub(i, si, { label: e.target.value })} />
-                <input className={input} value={s.link ?? ""} placeholder="/path" onChange={(e) => setSub(i, si, { link: e.target.value })} />
+                <input className={input} dir="ltr" value={s.link ?? ""} placeholder="/path" onChange={(e) => setSub(i, si, { link: e.target.value })} />
                 <button type="button" onClick={() => removeSub(i, si)} className="text-xs text-[#C0392B] px-1 shrink-0">✕</button>
               </div>
             ))}

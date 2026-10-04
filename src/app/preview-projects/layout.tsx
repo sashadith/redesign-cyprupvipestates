@@ -1,7 +1,13 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "../preview-home/tokens.css";
+/* Staging preview with its own <html>/<body>; nothing else pulls in the
+   global header stylesheet here. */
+import "@/app/header-footer.css";
 import "./projects.css";
+import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* Cyprus VIP Estates — Projects search, isolated redesign preview. Reuses the
    homepage design tokens + fonts. Dark, map-centric explorer. The live
@@ -9,25 +15,9 @@ import "./projects.css";
    excluded from the i18n middleware. No Lenis here — smooth-scroll would fight
    the map's wheel-zoom. */
 
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 export const metadata: Metadata = {
   title: "Projects — redesign preview",
@@ -40,7 +30,10 @@ export default function ProjectsPreviewLayout({ children }: { children: React.Re
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>
-      <body>{children}</body>
+      <body>
+        <AttributionCapture />
+        <ModalProvider>{children}</ModalProvider>
+      </body>
     </html>
   );
 }

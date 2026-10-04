@@ -1,6 +1,7 @@
 import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+import { PUBLIC_LOCALES } from "@/lib/locale";
 import { pageKey, type PageKey } from "./types";
 
 export type InventoryPage = {
@@ -44,7 +45,14 @@ export type InventoryPage = {
   source: { table: "Development" | "Project" | "Blog" | "Singlepage" | "Developer" | "CaseStudy"; id: string } | null;
 };
 
-const LOCALES: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
+// This inventory is "every PUBLICLY REACHABLE, indexable page" (see the
+// getInventory doc comment below) — a language-agnostic Development slug and
+// the hand-authored FIXED_PAGES are only actually served/indexable in locales
+// the site currently routes and advertises, so both loops below iterate
+// PUBLIC_LOCALES, not the full LOCALES set: a gated `he` isn't a real URL yet
+// and must not appear as a page the sitemap cross-check or coverage metrics
+// expect to exist.
+const INVENTORY_LOCALES: readonly Locale[] = PUBLIC_LOCALES as readonly Locale[];
 
 /** English is served prefix-less; every other locale carries its prefix. */
 function localised(locale: Locale, path: string): string {
@@ -192,7 +200,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
   const out: InventoryPage[] = [];
 
   for (const d of devs) {
-    for (const locale of LOCALES) {
+    for (const locale of INVENTORY_LOCALES) {
       const path = localised(locale, `/projects/${d.slug}`);
       out.push({ key: pageKey(locale, path), locale, path, kind: "development", title: d.publicName, publishedAt: d.publishedAt, source: { table: "Development", id: d.id } });
     }
@@ -221,7 +229,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
     const path = localised(c.language, `/case-studies/${c.slug}`);
     out.push({ key: pageKey(c.language, path), locale: c.language, path, kind: "caseStudy", title: c.title, publishedAt: c.publishedAt, source: { table: "CaseStudy", id: c.id } });
   }
-  for (const locale of LOCALES) {
+  for (const locale of INVENTORY_LOCALES) {
     for (const fixed of FIXED_PAGES) {
       const path = fixed.path(locale);
       out.push({ key: pageKey(locale, path), locale, path, kind: "fixed", title: fixed.title, publishedAt: null, source: null });

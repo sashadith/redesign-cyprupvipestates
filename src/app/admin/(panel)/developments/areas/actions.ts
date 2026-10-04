@@ -32,6 +32,7 @@ export async function saveArea(input: { slug: string; name: string; district: st
     textDE: texts.de?.trim() || null,
     textPL: texts.pl?.trim() || null,
     textRU: texts.ru?.trim() || null,
+    textHE: texts.he?.trim() || null,
     source: input.source || "ai",
     status: approve ? "approved" : "draft",
   };

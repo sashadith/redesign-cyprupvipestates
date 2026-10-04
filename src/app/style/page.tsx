@@ -52,7 +52,11 @@ const COMPONENTS: Array<[string, string]> = [
   [".about__medallion", "Round gold medallions (benefits)"],
   [".bstat / .bstat__num", "Number stat with count-up animation"],
   [".formsec__* / .formsec__submit", "Contact form: fields, radios, deep-green Send button"],
-  [".pf__*", "Footer grid (brand · columns · newsletter · bottom)"],
+  [".pf__*", "Footer grid (brand · columns · newsletter · bottom) — top edge carries --gold-contour"],
+  [".pp-plate · --bronze · --bronze-deep", "Metal plate surface (gold / bronze), used by the project page's trust strip"],
+  [".pp-showmore · --bronze", "\"Show N more units\" — ghost, or solid bronze with a golden outer glow"],
+  [".pp-tbl · .pp-tbl__row · __action", "Units table: per-project columns, expandable rows, enquiry column"],
+  [".pp-uc__enquire--sm", "Compact frosted-glass enquiry button inside a table row"],
   [".faq__* / accordion", "FAQ split with sticky head + accordion"],
 ];
 
@@ -62,6 +66,8 @@ const EFFECTS: Array<[string, string]> = [
   ["sweep", "Running gold reflection along the divider lines (.shimmer)"],
   ["Lenis + GSAP ScrollTrigger", "Smooth scroll + scroll reveals (hero SplitText, card stagger, image wipe)"],
   ["Parallax video", "Fixed background video (sunset.mp4) on loop"],
+  ["--gold-contour", "1px gold line fading out to both sides — above/below the map, top edge of the footer"],
+  ["pp-rowroll", "Sold/hidden table rows cascade in, 30ms apart, when \"Show more\" is pressed"],
 ];
 
 export default function StylePage() {
@@ -175,6 +181,95 @@ export default function StylePage() {
             <a className="btn btn--ghost" href="#"><span>Show all projects</span></a>
             <p className="sg__demo-label">.btn .btn--ghost — outline</p>
           </div>
+        </div>
+      </section>
+
+      {/* ---------------- METAL PLATES ---------------- */}
+      <section className="sg__section">
+        <h2 className="sg__h">Metal plates</h2>
+        <p className="sg__sub">
+          <code className="sg__mono">.pp-plate</code> — a metal surface, not a flat gold fill. Five close
+          stops on the diagonal, a soft specular sweep, a white inner top line, a metal rim and the
+          golden glow. Every colour is a <code className="sg__mono">--plate-*</code> variable, so a
+          variant is five lines. Ink is dark on gold and ivory on the bronzes: that is a contrast
+          constraint, not taste (ivory on champagne is 1.8:1).
+        </p>
+        <hr className="shimmer sg__rule" />
+        <div className="sg__cluster">
+          <div className="sg__demo">
+            <div className="pp-plate pp-trust__item"><b>287</b><span>projects across Cyprus, independently compared</span></div>
+            <p className="sg__demo-label">.pp-plate — golden plate (default)</p>
+          </div>
+          <div className="sg__demo">
+            <div className="pp-plate pp-plate--bronze pp-trust__item"><b>24h</b><span>A personal reply from our team — usually the same day</span></div>
+            <p className="sg__demo-label">.pp-plate--bronze — bronze, ivory lettering</p>
+          </div>
+          <div className="sg__demo">
+            <div className="pp-plate pp-plate--bronze-deep pp-trust__item"><b>0 €</b><span>Consultation and viewings, on site or by video call</span></div>
+            <p className="sg__demo-label">.pp-plate--bronze-deep — darkest, ~7:1</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- PROJECT PAGE CONTROLS ---------------- */}
+      <section className="sg__section">
+        <h2 className="sg__h">Project page controls</h2>
+        <p className="sg__sub">The controls introduced with the 2026-10 project page.</p>
+        <hr className="shimmer sg__rule" />
+        <div className="sg__cluster">
+          <div className="sg__demo">
+            <button type="button" className="pp-showmore pp-showmore--bronze">Show 60 more units</button>
+            <p className="sg__demo-label">.pp-showmore.pp-showmore--bronze — solid bronze + golden outer glow</p>
+          </div>
+          <div className="sg__demo">
+            <button type="button" className="pp-showmore">Show more</button>
+            <p className="sg__demo-label">.pp-showmore — the ghost original</p>
+          </div>
+          <div className="sg__demo">
+            <a className="btn btn--glass pp-uc__enquire--sm" href="#"><span>Enquire about this unit</span></a>
+            <p className="sg__demo-label">.btn.btn--glass.pp-uc__enquire--sm — in-row enquiry</p>
+          </div>
+          <div className="sg__demo">
+            <div style={{ width: "100%", height: 1, background: "var(--gold-contour)" }} />
+            <p className="sg__demo-label">--gold-contour — 1px line fading out both ways (map edges, footer top)</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- UNITS TABLE ---------------- */}
+      <section className="sg__section">
+        <h2 className="sg__h">Units table</h2>
+        <p className="sg__sub">
+          The default availability view since 2026-10. Columns are decided per project — one that every
+          unit would leave empty is not drawn — and a thumbnail only appears where the units carry their
+          own photos rather than inheriting the project gallery.
+        </p>
+        <hr className="shimmer sg__rule" />
+        <div className="pp-tbl-wrap">
+          <table className="pp-tbl">
+            <thead>
+              <tr>
+                <th>Unit</th><th>Type</th><th className="r">Beds</th><th className="r">Covered</th>
+                <th className="r">Price</th><th className="r">Status</th><th className="pp-tbl__action" />
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="pp-tbl__row">
+                <td className="pp-tbl__name"><span className="pp-tbl__namegrid"><span className="pp-tbl__chev" aria-hidden>▸</span><span className="pp-tbl__label">C2<small>C2</small></span></span></td>
+                <td>Terraced House</td><td className="r">2</td><td className="r">135.9 m²</td>
+                <td className="r pp-tbl__price">€586,800</td>
+                <td className="r pp-tbl__status"><span className="pp-pill pp-pill--ok">Available</span></td>
+                <td className="pp-tbl__action"><a className="btn btn--glass pp-uc__enquire--sm" href="#"><span>Enquire about this unit</span></a></td>
+              </tr>
+              <tr className="pp-tbl__row is-sold">
+                <td className="pp-tbl__name"><span className="pp-tbl__namegrid"><span className="pp-tbl__chev" aria-hidden>▸</span><span className="pp-tbl__label">C3<small>C3</small></span></span></td>
+                <td>Terraced House</td><td className="r">2</td><td className="r">135.9 m²</td>
+                <td className="r pp-tbl__price">€586,800</td>
+                <td className="r pp-tbl__status"><span className="pp-pill">Sold</span></td>
+                <td className="pp-tbl__action" />
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 

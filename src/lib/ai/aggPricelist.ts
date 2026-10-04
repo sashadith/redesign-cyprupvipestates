@@ -33,7 +33,16 @@ import { join } from "node:path";
         unstable order; the price is the €-amount nearest the "Price:" tag, floored
         at €100k so an on-card "Furniture €25,000" extra can never be read as it.
      4. A unit id can be split across two items ("Penthouse" + "A401"); those are
-        re-joined when a bare number sits just right of a kind word on one baseline. */
+        re-joined when a bare number sits just right of a kind word on one baseline.
+     5. (2026-10-04) A single word can itself arrive as several runs that TOUCH —
+        Vasileon C305's price on page 47 of "Projects Pricelist 021026 AF.pdf" is
+        "€6" + "10" + ",000", each ending exactly where the next starts. No run is an
+        amount on its own, so the card read as Available with no price. Runs on one
+        baseline with no gap between them are glued back together before anything
+        else looks at the page (mergeTouchingRuns). Measured over the whole list:
+        every touching pair is within ±0.15pt, the narrowest real inter-word gap
+        is 1.8pt. The same glue also fixed Kalamos Duo House 2's total area, drawn
+        "11" + "0" and silently read as 11 m² instead of 110. */
 
 export type AggUnit = {
   project: string; // price-list project name, e.g. "VASILEON SIGNATURE RESIDENCES"
@@ -57,7 +66,29 @@ export type AggUnit = {
 };
 
 type Item = { x: number; y: number; w: number; t: string };
-type Page = { page: number; width: number; height: number; items: Item[] };
+export type AggPage = { page: number; width: number; height: number; items: Item[] };
+type Page = AggPage;
+
+/* Two runs are one word when they share a baseline and the second starts where
+   the first ends. Touching pairs measure within ±0.15pt, real word gaps ≥ 1.8pt
+   ("12" / "of 31 Units)"), so 0.75pt sits well clear of both. */
+const TOUCH_TOL = 0.75;
+const BASELINE_TOL = 0.5;
+
+/** Glue runs that touch on one baseline ("€6" + "10" + ",000" → "€610,000"). */
+export function mergeTouchingRuns(items: Item[]): Item[] {
+  const sorted = items.slice().sort((a, b) => b.y - a.y || a.x - b.x);
+  const out: Item[] = [];
+  for (const it of sorted) {
+    const prev = out[out.length - 1];
+    if (prev && Math.abs(prev.y - it.y) <= BASELINE_TOL && it.w > 0 && prev.w > 0 && Math.abs(it.x - (prev.x + prev.w)) <= TOUCH_TOL) {
+      out[out.length - 1] = { x: prev.x, y: prev.y, w: it.x + it.w - prev.x, t: prev.t + it.t };
+    } else {
+      out.push({ ...it });
+    }
+  }
+  return out;
+}
 
 const WORKER_PATH = join(process.cwd(), "scripts", "agg-pricelist-worker.mjs");
 
@@ -140,7 +171,12 @@ function labelledMeasures(fields: Item[]): { label: string; val: string }[] {
  *                            carries the previous one forward (continuation slides).
  */
 export async function extractAggUnits(buf: Buffer, knownProjectNames: string[]): Promise<AggUnit[]> {
-  const pages = await readAggPages(buf);
+  return aggUnitsFromPages(await readAggPages(buf), knownProjectNames);
+}
+
+/** The pure half of extractAggUnits: worker page data → units. No PDF, no I/O —
+ *  the QA check (scripts/qa/agg-pricelist-check.mjs) feeds it captured pages. */
+export function aggUnitsFromPages(pages: Page[], knownProjectNames: string[]): AggUnit[] {
   // Longest first so "VASILEON SIGNATURE RESIDENCES" wins over a bare "VASILEON",
   // and an exact "KALAMOS DUO" is never shadowed by a portfolio "KALAMOS".
   const known = Array.from(new Set(knownProjectNames.map((n) => norm(n)).filter(Boolean))).sort((a, b) => b.length - a.length);
@@ -149,8 +185,9 @@ export async function extractAggUnits(buf: Buffer, knownProjectNames: string[]):
   let carry: string | null = null;
   const rows: AggUnit[] = [];
 
-  for (const pg of pages) {
-    if (pg.page === 1) continue; // slide 1 is the index table, not unit cards
+  for (const raw of pages) {
+    if (raw.page === 1) continue; // slide 1 is the index table, not unit cards
+    const pg = { ...raw, items: mergeTouchingRuns(raw.items) };
     const pageText = " " + norm(pg.items.map((i) => i.t).join(" ")) + " ";
     let projN = known.find((k) => new RegExp("\\b" + escapeRe(k) + "\\b").test(pageText)) || null;
     if (projN) carry = projN; else projN = carry;
@@ -265,4 +302,23 @@ export async function extractAggUnits(buf: Buffer, knownProjectNames: string[]):
     seen.add(k);
     return true;
   });
+}
+
+/**
+ * One note per project that has "available" units with NO price. That combination
+ * is never legitimate in AGG's list (an unreleased card carries neither word nor
+ * price and is held as "reserved" above), so it means the parser lost a price — as
+ * it did for Vasileon C305 — and the sync is about to write price=null over a home
+ * that is for sale. Surfaced in the sync result instead of passing silently.
+ */
+export function unpricedAvailableNotes(units: AggUnit[]): string[] {
+  const byProject = new Map<string, string[]>();
+  for (const u of units) {
+    if (u.status !== "available" || typeof u.price === "number") continue;
+    byProject.set(u.project, [...(byProject.get(u.project) ?? []), u.ref]);
+  }
+  return Array.from(byProject.entries()).map(
+    ([project, refs]) =>
+      `${project}: ${refs.length} unit(s) marked Available but no price read from the price list — written with price=null, check the PDF (${refs.join(", ")})`,
+  );
 }

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import PxSelect from "./PxSelect";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { ProjectCard, type ProjectCardData, type Distances } from "./ProjectCard";
+import { gridSlots } from "./gridSlots";
+import Bdi from "@/app/components/Bdi";
 
 export type { ProjectCardData, Distances };
 
@@ -30,6 +32,12 @@ type Filters = {
   q: string;
   sort: string;
 };
+
+/* How long the price boxes wait after the last keystroke before they apply
+   themselves. 700 ms is what the legacy filter bar
+   (components/StyledProjectFilters) has always used — long enough to type
+   "600000" without firing six queries, short enough not to feel stuck. */
+const PRICE_COMMIT_MS = 700;
 
 const ProjectsMap = dynamic(() => import("./ProjectsMap"), {
   ssr: false,
@@ -141,6 +149,59 @@ export default function ProjectsExplorer({
     [router, pathname, sp],
   );
 
+  /* The two price boxes are the only free-text filters in this bar, so they are
+     the only ones that must not fire a query per keystroke. They now commit
+     three ways: Enter and leaving the box commit at once, and typing commits
+     PRICE_COMMIT_MS after the last keystroke.
+
+     Reported 2026-09-16: before this they were wired to onBlur ALONE. Typing a
+     max budget did nothing, Enter did nothing, and the list only moved once the
+     box lost focus. Enter especially had nothing to fall back on — these inputs
+     sit in a plain <div>, outside the search <form> further down, so there was
+     no implicit form submission to rescue them.
+
+     They stay UNCONTROLLED on purpose. Feeding a value back from the URL can
+     overwrite a half-typed number when a commit round-trips, and the `key` they
+     used to carry (`pf-${filters.priceFrom}`) remounted the box on every URL
+     change — which would now throw focus away mid-number, the moment typing
+     began to commit. The effect below writes the URL's value back only into a
+     box that is NOT focused: that covers Reset and the browser's Back button,
+     and never the person typing. */
+  const priceFromRef = useRef<HTMLInputElement>(null);
+  const priceToRef = useRef<HTMLInputElement>(null);
+  const priceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* setParam is rebuilt whenever the URL changes (it closes over `sp`), so a
+     pending timer has to reach the CURRENT one. Capturing it at schedule time
+     would commit against stale params — silently undoing, say, a city change
+     made while the timer was still running. */
+  const setParamRef = useRef(setParam);
+  useEffect(() => { setParamRef.current = setParam; }, [setParam]);
+
+  const cancelPriceCommit = useCallback(() => {
+    if (priceTimer.current) { clearTimeout(priceTimer.current); priceTimer.current = null; }
+  }, []);
+  const commitPrice = useCallback((patch: Record<string, string>) => {
+    cancelPriceCommit();
+    setParamRef.current(patch);
+  }, [cancelPriceCommit]);
+  const schedulePriceCommit = useCallback((patch: Record<string, string>) => {
+    cancelPriceCommit();
+    priceTimer.current = setTimeout(() => {
+      priceTimer.current = null;
+      setParamRef.current(patch);
+    }, PRICE_COMMIT_MS);
+  }, [cancelPriceCommit]);
+  useEffect(() => cancelPriceCommit, [cancelPriceCommit]);
+
+  // Adopt the URL's price into a box the user is not currently typing in.
+  useEffect(() => {
+    const sync = (el: HTMLInputElement | null, v: number | null) => {
+      if (el && document.activeElement !== el) el.value = v == null ? "" : String(v);
+    };
+    sync(priceFromRef.current, filters.priceFrom);
+    sync(priceToRef.current, filters.priceTo);
+  }, [filters.priceFrom, filters.priceTo]);
+
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setParam({ q: q.trim() });
@@ -151,6 +212,11 @@ export default function ProjectsExplorer({
   // re-fits to the full result set.
   const reset = () => {
     setQ("");
+    // The price boxes are uncontrolled, so clearing the URL does not clear
+    // them; and a commit still pending would put the old budget straight back.
+    cancelPriceCommit();
+    if (priceFromRef.current) priceFromRef.current.value = "";
+    if (priceToRef.current) priceToRef.current.value = "";
     router.replace(pathname, { scroll: false });
   };
 
@@ -185,22 +251,34 @@ export default function ProjectsExplorer({
           {/* 2. Price */}
           <div className="px__price">
             <input
-              key={`pf-${filters.priceFrom ?? ""}`}
+              ref={priceFromRef}
               type="number"
               inputMode="numeric"
               placeholder={s.priceMin}
               defaultValue={filters.priceFrom ?? ""}
-              onBlur={(e) => setParam({ priceFrom: e.target.value })}
+              onChange={(e) => schedulePriceCommit({ priceFrom: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                commitPrice({ priceFrom: e.currentTarget.value });
+              }}
+              onBlur={(e) => commitPrice({ priceFrom: e.target.value })}
               aria-label={s.priceMinAria}
             />
             <span className="px__price-sep">–</span>
             <input
-              key={`pt-${filters.priceTo ?? ""}`}
+              ref={priceToRef}
               type="number"
               inputMode="numeric"
               placeholder={s.priceMax}
               defaultValue={filters.priceTo ?? ""}
-              onBlur={(e) => setParam({ priceTo: e.target.value })}
+              onChange={(e) => schedulePriceCommit({ priceTo: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                commitPrice({ priceTo: e.currentTarget.value });
+              }}
+              onBlur={(e) => commitPrice({ priceTo: e.target.value })}
               aria-label={s.priceMaxAria}
             />
           </div>
@@ -292,7 +370,7 @@ export default function ProjectsExplorer({
       <section className="px__results wrap" aria-label="Project results">
         <div className="px__results-head">
           <p className="px__count">
-            <strong>{total.toLocaleString(s.numLocale)}</strong> {total === 1 ? s.projectOne : s.projectMany}
+            <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
             {hasBbox && <span className="px__count-area"> {s.inThisMapArea}</span>}
           </p>
           {/* Sort lives with the results, not the filters block */}
@@ -305,18 +383,15 @@ export default function ProjectsExplorer({
           <p className="px__empty">{s.empty}</p>
         ) : (
           <div className="px__grid">
-            {/* The map preview takes the 3rd slot on EVERY page — replacing the 3rd
-               card when there are ≥3 results, or simply appended when there are
-               fewer (so it never disappears on small result sets). */}
-            {cards.map((c, i) =>
-              !isMobile && cards.length >= 3 && i === 2 ? (
+            {/* The map preview takes the 3rd slot on every page, pushing the
+               cards along rather than consuming one — see gridSlots.ts for why
+               that distinction is load-bearing. */}
+            {gridSlots(cards, isMobile).map((slot) =>
+              slot.kind === "map" ? (
                 <MapTile key="map-tile" markers={markers} total={total} onOpen={() => setMapOpen(true)} s={s} />
               ) : (
-                <ProjectCard key={c.id} c={c} active={hoveredId === c.id} onHover={setHoveredId} s={s} locale={locale} />
+                <ProjectCard key={slot.card.id} c={slot.card} active={hoveredId === slot.card.id} onHover={setHoveredId} s={s} locale={locale} />
               ),
-            )}
-            {!isMobile && cards.length > 0 && cards.length < 3 && (
-              <MapTile key="map-tile" markers={markers} total={total} onOpen={() => setMapOpen(true)} s={s} />
             )}
           </div>
         )}
@@ -350,7 +425,7 @@ export default function ProjectsExplorer({
         <div className="px__mapoverlay" role="dialog" aria-modal="true" aria-label="Project map">
           <div className="px__mapoverlay-bar">
             <p className="px__mapoverlay-count">
-              <strong>{total.toLocaleString(s.numLocale)}</strong> {total === 1 ? s.projectOne : s.projectMany}
+              <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
               {hasBbox ? ` ${s.inThisArea}` : ""}
             </p>
             <button type="button" className="px__mapoverlay-close" onClick={() => setMapOpen(false)} aria-label={s.close}>

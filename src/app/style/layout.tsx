@@ -1,5 +1,6 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "../preview-home/tokens.css";
 import "../preview-projects/projects.css";
 import "../preview-project/project.css";
@@ -9,25 +10,9 @@ import "./style.css";
    fonts + tokens from /preview-home so the swatches and samples are authoritative.
    noindex; the i18n middleware ignores the "style" prefix. */
 
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 export const metadata: Metadata = {
   title: "Cyprus VIP Estates — Design System / CI",

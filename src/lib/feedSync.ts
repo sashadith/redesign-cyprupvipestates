@@ -148,6 +148,11 @@ export type SyncResult = {
   unitsCreated: number;
   // The same units unitsCreated counts, itemized for the digest email.
   unitsCreatedLines: UnitChangeLine[];
+  // Projects this run created, itemized for the digest. `created` has always
+  // been a bare count; a new development is saved as a draft (publishStatus
+  // defaults to "draft") and is the one thing in the nightly run that cannot
+  // go live without the operator, so the email has to name it and link it.
+  createdProjects: { developmentId: string; name: string }[];
   unitsUnlisted: UnitChangeLine[];
   // Feed-completeness guard tripped (see checkFeedCompleteness below) — this
   // developer's sync was skipped entirely this run, nothing written at all,
@@ -722,12 +727,72 @@ const MITO_INCOMPLETE_ABS_FLOOR = 3;
 // feed), so those units are present on both sides. Dropping them would leave
 // before far below after — measured 2026-09-01: Island Blue -593 %, Medousa
 // -94 % — and the guard could never fire for those developers again.
-async function feedUnitsAtRisk(dev: string): Promise<number> {
+//
+// 2026-09-24 — the "sold is present on both sides" premise above held until
+// Island Blue changed their feed. They now drop a project from the units
+// document entirely once nothing in it is available: 49 of their 68 projects
+// carry no units at all, and our 144 stored sold units are met by 34 in the
+// feed. That is 71 "missing" of 174, 41 %, and it blocked their sync every
+// night from 2026-09-18 onward while their 69 genuinely available units — 39
+// more than we hold — never reached the site.
+//
+// The block was protecting against a loss that cannot occur. A sold unit on a
+// PUBLISHED development is untouchable: syncFeedUnitsPreservingUnlisted skips
+// it by the same hard rule that keeps "gone from the feed" from meaning
+// "sold". So counting it on the before side measures something the sync is
+// incapable of changing.
+//
+// Hence the rule both sides now share: count only what this sync could still
+// change. Sold units are excluded exactly where they are provably safe —
+// published developments — and nowhere else, because publishStatus is what
+// decides the write path. An UNPUBLISHED development goes down
+// deleteMany({source:"feed"}) + createMany (syncOneProject, ~line 653), where
+// every unit really is at risk, sold included; excluding them there would
+// quietly retire the protection. Measured the same day: no development under
+// any of the nine SYNCED_DEVS currently holds a sold unit in draft, so this
+// changes nothing for them today — it is written this way so it stays correct
+// when one does.
+//
+// Mito passes excludeSoldOnPublished: false for that exact reason. Its
+// projects are unpublished by design, so every one of its units is on the
+// hard-delete path and all of them must keep counting.
+export function countableFeedUnits(
+  units: { status?: string | null }[],
+  isPublished: boolean,
+): number {
+  return isPublished ? units.filter((u) => u.status !== "sold").length : units.length;
+}
+
+// The threshold arithmetic itself, in one place so both call sites (and the
+// guard script) can only ever disagree on purpose. beforeCount === 0 means "we
+// hold nothing" — no opinion, never a block.
+export function completenessVerdict(
+  beforeCount: number,
+  afterCount: number,
+  absFloor: number,
+  pct: number = FEED_INCOMPLETE_PCT,
+): { blocked: boolean; missing: number; pctLabel: number } {
+  const missing = beforeCount - afterCount;
+  const missingPct = beforeCount > 0 ? missing / beforeCount : 0;
+  return {
+    blocked: beforeCount > 0 && missing > absFloor && missingPct > pct,
+    missing,
+    pctLabel: Math.round(missingPct * 100),
+  };
+}
+
+async function feedUnitsAtRisk(
+  dev: string,
+  opts: { excludeSoldOnPublished: boolean },
+): Promise<number> {
   return prisma.developmentUnit.count({
     where: {
       source: "feed",
       status: { not: "unlisted" },
       development: { dev, publishStatus: { not: "archived" } },
+      ...(opts.excludeSoldOnPublished
+        ? { NOT: { AND: [{ status: "sold" }, { development: { publishStatus: "published" } }] } }
+        : {}),
     },
   });
 }
@@ -736,27 +801,35 @@ async function checkFeedCompleteness(
   dev: string,
   ids: string[],
 ): Promise<{ blocked: boolean; message?: string; missing?: number; total?: number; vmsById: Map<string, ProjectVM | null> }> {
+  // Which of this developer's projects are published, keyed the way the feed
+  // identifies them. A project the feed offers that we do not hold yet is
+  // absent from this map and therefore counted as unpublished — correct, since
+  // syncOneProject creates it as a draft.
+  const publishedByFeedId = new Map<string, boolean>();
+  for (const row of await prisma.development.findMany({
+    where: { dev, publishStatus: { not: "archived" } },
+    select: { feedProjectId: true, publishStatus: true },
+  })) {
+    if (row.feedProjectId) publishedByFeedId.set(row.feedProjectId, row.publishStatus === "published");
+  }
+
   const vmsById = new Map<string, ProjectVM | null>();
   let afterCount = 0;
   for (const id of ids) {
     let vm: ProjectVM | null = null;
     try { vm = await getPreviewProject(dev, id); } catch { vm = null; }
     vmsById.set(id, vm);
-    afterCount += vm?.units.length ?? 0;
+    afterCount += vm ? countableFeedUnits(vm.units, publishedByFeedId.get(id) === true) : 0;
   }
-  const beforeCount = await feedUnitsAtRisk(dev);
-  if (beforeCount > 0) {
-    const missing = beforeCount - afterCount;
-    const missingPct = missing / beforeCount;
-    if (missing > FEED_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
-      const pctLabel = Math.round(missingPct * 100);
-      return {
-        blocked: true,
-        message: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
-        missing, total: beforeCount,
-        vmsById,
-      };
-    }
+  const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: true });
+  const verdict = completenessVerdict(beforeCount, afterCount, FEED_INCOMPLETE_ABS_FLOOR);
+  if (verdict.blocked) {
+    return {
+      blocked: true,
+      message: `${verdict.missing} of ${beforeCount} units are missing from today's feed (${verdict.pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
+      missing: verdict.missing, total: beforeCount,
+      vmsById,
+    };
   }
   return { blocked: false, vmsById };
 }
@@ -799,16 +872,18 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   // clusters=[], afterCount is 0, so an existing catalogue of any size trips
   // missing > MITO_INCOMPLETE_ABS_FLOOR and blocks rather than silently wiping
   // every unpublished project down to nothing.
+  // Every unit counts on both sides here, sold included: Mito's projects are
+  // unpublished, so they take the hard-delete path where nothing is safe.
   const afterCount = clusters.reduce((n, c) => n + c.units.length, 0);
-  const beforeCount = await feedUnitsAtRisk(dev);
-  if (beforeCount > 0) {
-    const missing = beforeCount - afterCount;
-    const missingPct = missing / beforeCount;
-    if (missing > MITO_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
-      const pctLabel = Math.round(missingPct * 100);
+  const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: false });
+  {
+    const verdict = completenessVerdict(beforeCount, afterCount, MITO_INCOMPLETE_ABS_FLOOR);
+    if (verdict.blocked) {
+      const missing = verdict.missing;
+      const pctLabel = verdict.pctLabel;
       return {
         dev, found: clusters.length, created: 0, updated: 0, failed: 0,
-        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [],
+        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], createdProjects: [],
         blocked: true,
         blockedMessage: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
         blockedMissing: missing, blockedTotal: beforeCount,
@@ -870,12 +945,14 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
   const unitsCreatedLines: UnitChangeLine[] = [];
   const unitsUnlisted: UnitChangeLine[] = [];
+  const createdProjects: { developmentId: string; name: string }[] = [];
   for (const cluster of clusters) {
     const id = idByCluster.get(cluster)!;
     try {
       const r = await syncOneProject(dev, id, accountId, { ...opts, vm: mitoVm(cluster, id) });
       if (!r.ok) { failed++; continue; }
       r.created ? created++ : updated++;
+      if (r.created && r.developmentId) createdProjects.push({ developmentId: r.developmentId, name: r.developmentName! });
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
       unitsWritten += r.unitsWritten;
@@ -889,7 +966,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       failed++;
     }
   }
-  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted };
+  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted, createdProjects };
 }
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
@@ -901,17 +978,19 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
 
   const guard = await checkFeedCompleteness(dev, ids);
   if (guard.blocked) {
-    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
+    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], createdProjects: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
   }
 
   let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
   const unitsCreatedLines: UnitChangeLine[] = [];
   const unitsUnlisted: UnitChangeLine[] = [];
+  const createdProjects: { developmentId: string; name: string }[] = [];
   for (const id of ids) {
     try {
       const r = await syncOneProject(dev, id, accountId, { ...opts, vm: guard.vmsById.get(id) ?? null });
       if (!r.ok) { failed++; continue; }
       r.created ? created++ : updated++;
+      if (r.created && r.developmentId) createdProjects.push({ developmentId: r.developmentId, name: r.developmentName! });
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
       unitsWritten += r.unitsWritten;
@@ -925,7 +1004,7 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
       failed++;
     }
   }
-  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted };
+  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted, createdProjects };
 }
 
 // Public single-developer entry (admin "Sync now" for one dev, debug route) —
@@ -973,11 +1052,15 @@ export async function syncAll(opts: { mirror?: boolean; forceMirror?: boolean } 
 // project-level fields refreshed, but unitsWritten stays 0 (skippedManual
 // true) — the caller renders a message that says so explicitly, never a
 // silent no-op.
-export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; error?: string };
+// mirroredNewFiles is part of the result because the admin button that calls
+// this is the ONLY way to re-mirror a published project's images (the nightly
+// cron freezes them). Dropping the flag here left that button unable to say
+// whether it had done the very thing the Action Center sends people to it for.
+export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean; error?: string };
 export async function syncOneDevelopment(developmentId: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncOneDevelopmentResult> {
   const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true, latitude: true, longitude: true } });
   if (!development?.dev || !development?.feedProjectId) {
-    return { ok: false, unitsWritten: 0, skippedManual: false, error: "no feed configured for this development" };
+    return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "no feed configured for this development" };
   }
   try {
     const accountId = await ensureAccount(development.dev);
@@ -987,7 +1070,7 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
     // development's stored coordinates, the same match syncMitoCore makes.
     if (development.dev === "mito") {
       if (development.latitude == null || development.longitude == null) {
-        return { ok: false, unitsWritten: 0, skippedManual: false, error: "This Mito project has no coordinates, so its cluster cannot be identified." };
+        return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "This Mito project has no coordinates, so its cluster cannot be identified." };
       }
       const clusters = await mitoClusters();
       let best: { cluster: MitoCluster; m: number } | null = null;
@@ -999,18 +1082,18 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
         );
         if (m < MITO_MATCH_M && (!best || m < best.m)) best = { cluster: c, m };
       }
-      if (!best) return { ok: false, unitsWritten: 0, skippedManual: false, error: "No cluster in today's Mito feed matches this project's location." };
+      if (!best) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "No cluster in today's Mito feed matches this project's location." };
       const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: mitoVm(best.cluster, development.feedProjectId) });
-      if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
+      if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
       if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
-      return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
+      return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
     }
     const r = await syncOneProject(development.dev, development.feedProjectId, accountId, opts);
-    if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
+    if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
     if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
-    return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
+    return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
   } catch (e) {
-    return { ok: false, unitsWritten: 0, skippedManual: false, error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 

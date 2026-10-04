@@ -1,0 +1,57 @@
+/* Direction- and script-aware base rules shared by every localized root
+   layout; imported by [lang]/layout.tsx and the seven preview- [lang] layouts.
+   Phase 2 (RTL layout pass) grows this file. */
+:lang(he) { font-family: var(--font-body-he, "Rubik"), "Rubik", Arial, sans-serif; }
+[dir="rtl"] { text-align: start; }
+
+/* Bidi isolation utilities — Bdi.tsx (JSX) and ltrIsolate() (plain strings)
+   in src/lib/locale.ts both target these classes. .ltr-isolate additionally
+   forces left-to-right direction, for prices/phones/e-mails whose own
+   internal digit/character order must never be reordered by RTL prose. */
+.bidi-isolate { unicode-bidi: isolate; }
+.ltr-isolate { direction: ltr; unicode-bidi: isolate; }
+/* ...and nothing else. These wrappers isolate DIRECTION; they must never change
+   the typeface. The :lang(he) rule at the top matches every element in the
+   subtree directly, including these spans — and a declaration that matches an
+   element always beats the value its parent hands down by inheritance. So a
+   price written as <bdi class="ltr-isolate"> inside .prj__price rendered in
+   Rubik while its own container was set in the display face; the headings never
+   showed it because the :is(h1,h2,…) rule below re-declares their font. The
+   card price on /he/projects was the reported case (2026-09-29). Two classes,
+   (0,2,0), so it wins over :lang(he) wherever the bundler puts either file. */
+:lang(he) .ltr-isolate,
+:lang(he) .bidi-isolate,
+/* Same mechanism, second report (2026-09-29): CountNumber wraps every stat
+   figure in a bare <span>, so the track-record band's numbers inherited
+   Fraunces from .bstat__num and then lost it to :lang(he) — 248, 2,252, 10 and
+   360° all came out in Rubik while their own container was set in the display
+   face. Listed explicitly rather than fixed at the root: the clean fix is to
+   stop the rule at the top of the file from matching every descendant, but
+   that changes the typeface of every Hebrew page at once and needs checking
+   across the whole site, not just here. */
+:lang(he) .bstat__num > span { font-family: inherit; }
+
+/* Directional icons (arrows, chevrons) that should mirror under RTL — opt in
+   per-icon with .icon-dir rather than flipping every glyph site-wide.
+   Escape hatch: as of this fix wave, no component uses .icon-dir yet —
+   Phase 2's actual directional-icon fixes (breadcrumb arrow, lightbox/gallery
+   pagers) mirror by other means (dedicated glyph swaps, [dir="rtl"] overrides
+   on the component's own class). Kept for a future case that fits this
+   simpler pattern; grep for call sites before assuming it's live. */
+[dir="rtl"] .icon-dir { transform: scaleX(-1); }
+
+/* Hebrew typography (spec §3.3): display headings prefer the Hebrew display
+   face; Latin-oriented letter-spacing/uppercase tracking reads as broken in
+   Hebrew script, so both are neutralised for the whole :lang(he) subtree
+   except where a component opts back in via .keep-tracking / .keep-case.
+   Escape hatches: as of this fix wave, no component uses .keep-tracking or
+   .keep-case either — every :lang(he) case so far has wanted the
+   neutralised (normal tracking, no uppercase) behaviour. Kept for the first
+   component that genuinely needs Latin-style tracking/case inside Hebrew
+   text (e.g. a co-branded logo mark); grep for call sites before assuming
+   either is live. */
+:lang(he) :is(h1, h2, h3, h4, .display, .h1, .h2, .h3) { font-family: var(--font-display-he, serif), var(--font-display), serif; }
+:lang(he) *:not(.keep-tracking) { letter-spacing: normal !important; }
+:lang(he) *:not(.keep-case) { text-transform: none !important; }
+/* Hebrew has no italic: Frank Ruhl Libre / Rubik ship no italic face, so the browser fakes a slant that reads as broken rendering — the gold .it accent stays upright. */
+:lang(he) .it { font-style: normal; }

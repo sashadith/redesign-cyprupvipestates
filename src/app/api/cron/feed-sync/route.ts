@@ -5,6 +5,7 @@ import { withCronLog, logCronRun } from "@/lib/cronLog";
 import { sweepOverlapCandidates } from "@/lib/overlapSweep";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { buildFeedDigestMessage, sendFeedNotification, type RemovedUnitLine } from "@/lib/feedNotifications";
+import { markProjectsMissingFromFeedSoldOut, archiveSoldOutPagesWithNoImpressions } from "@/lib/soldOutSweeps";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -102,6 +103,21 @@ export async function GET(req: NextRequest) {
         await logCronRun(`feed-incomplete:${r.dev}`, false, r.blockedMessage);
         continue;
       }
+      /* The completeness guard's verdict is logged on EVERY run, not only when
+         it trips — this row is what lets the Action Center's
+         feedIncompleteWarnings rule clear itself.
+         That rule always said a later clean run supersedes a block, but
+         nothing ever wrote one: a block logged feed-incomplete:<dev>, a clean
+         run logged feed-sync:<dev> below, a DIFFERENT key, so the rule's
+         `row.ok` was never once true. Measured 2026-09-24: 0 of 14
+         feed-incomplete: rows had ok=true, and Domenica (blocked 2026-08-31)
+         and Medousa (2026-09-01) had been sitting in the panel as URGENT for
+         24 and 23 days while syncing cleanly every night — the alarm had
+         become wallpaper, which is worse than no alarm.
+         Kept as its own row rather than folded into feed-sync:<dev>, because
+         the two answer different questions: this one is "did the guard let
+         the write happen", that one is "did the write succeed". */
+      await logCronRun(`feed-incomplete:${r.dev}`, true, `feed complete — ${r.found} project(s) checked`);
       // 2026-08-13 (GROSSER AUFTRAG Teil 5) — was undefined on success, so the
       // morning summary (action-digest) had nothing to show per developer
       // beyond a bare checkmark. found/created/updated are already computed.
@@ -178,8 +194,45 @@ export async function GET(req: NextRequest) {
     // type. Four developers with new units used to mean four emails, each
     // carrying only a count; this is one, itemized and linked. See
     // buildFeedDigestMessage for the section order.
+    /* The two nightly sweeps run AFTER every developer has synced, so a project
+       that arrived in this very run is never judged missing. They read syncedAt,
+       which this run has just refreshed for everything that is still in its
+       feed. Failures here must not lose the digest, so each is caught: a sweep
+       that throws leaves its section empty rather than swallowing the whole
+       notification. */
+    let soldOutLines: Awaited<ReturnType<typeof markProjectsMissingFromFeedSoldOut>> = [];
+    try {
+      soldOutLines = await markProjectsMissingFromFeedSoldOut();
+    } catch (e) {
+      console.error("feed-sync: sold-out sweep failed:", e);
+    }
+    let archivedLines: { developmentId: string; development: string; dev: string }[] = [];
+    try {
+      const res = await archiveSoldOutPagesWithNoImpressions();
+      archivedLines = res.archived;
+      if (res.skipped) console.warn(`feed-sync: dead-page sweep skipped — ${res.skipped}`);
+    } catch (e) {
+      console.error("feed-sync: dead-page sweep failed:", e);
+    }
+    const byDev = <T extends { dev: string }>(lines: T[]) => {
+      const m = new Map<string, T[]>();
+      for (const l of lines) m.set(l.dev, [...(m.get(l.dev) ?? []), l]);
+      return Array.from(m, ([dev, xs]) => ({ dev, xs }));
+    };
+
     const notifications: Promise<void>[] = [];
     const digest = buildFeedDigestMessage({
+      soldOutByAbsence: byDev(soldOutLines).map(({ dev, xs }) => ({
+        dev,
+        projects: xs.map((x) => ({ developmentId: x.developmentId, name: x.development, unitsUnlisted: x.unitsUnlisted, missingDays: x.missingDays })),
+      })),
+      archivedDeadPages: byDev(archivedLines).map(({ dev, xs }) => ({
+        dev,
+        projects: xs.map((x) => ({ developmentId: x.developmentId, name: x.development })),
+      })),
+      newProjects: results
+        .filter((r) => r.createdProjects.length > 0)
+        .map((r) => ({ dev: r.dev, projects: r.createdProjects })),
       newUnits: results
         .filter((r) => r.unitsCreatedLines.length > 0)
         .map((r) => ({ dev: r.dev, lines: r.unitsCreatedLines })),
@@ -192,7 +245,7 @@ export async function GET(req: NextRequest) {
         .filter((r) => r.blocked)
         .map((r) => ({ dev: r.dev, missing: r.blockedMissing ?? 0, total: r.blockedTotal ?? 0, message: r.blockedMessage })),
     });
-    if (digest) notifications.push(sendFeedNotification(digest.text, digest.subject));
+    if (digest) notifications.push(sendFeedNotification(digest.text, digest.subject, { html: digest.html, telegram: digest.telegram }));
     // Best-effort: a Telegram/email hiccup must never fail the cron itself —
     // the sync already succeeded and is logged; a missed notification is
     // recoverable from the Action Center (feed-incomplete:/sync-fail: rules)

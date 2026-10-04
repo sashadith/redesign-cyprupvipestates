@@ -26,6 +26,10 @@
   color: #8A929C;
 }
 
+:global([dir="rtl"]) .breadcrumbItem::after {
+  content: "←";
+}
+
 .breadcrumbItem:last-child::after {
   content: "";
   margin: 0;

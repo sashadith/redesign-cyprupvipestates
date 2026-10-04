@@ -1,0 +1,3552 @@
+{
+  "seo": {
+    "metaTitle": "Luxury Real Estate in Cyprus | Investments and purchases",
+    "metaDescription": "Discover premium villas and apartments across Cyprus. Work with top developers, secure Permanent Residency, and invest in ready-to-move homes by the sea."
+  },
+  "slug": {
+    "en": {
+      "_type": "slug",
+      "current": "/"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "Homepage EN",
+  "heroBlock": {
+    "type": "link",
+    "video": {
+      "_type": "file",
+      "asset": {
+        "_ref": "file-bf592cd1f14f515e9cd3d110e654061c563d1f36-mp4",
+        "_type": "reference"
+      }
+    },
+    "heroTitle": "Luxury Property in Cyprus: Villas, Apartments & Investment Projects",
+    "linkLabel": "View All Projects",
+    "posterImage": {
+      "_type": "image",
+      "asset": {
+        "_ref": "image-5264ba3cc5ba57dc619e6cb1d2ba9a34532ba3f2-1920x1080-jpg",
+        "_type": "reference"
+      }
+    },
+    "heroDescription": "Specializing in exclusive real estate and future-proof investments. We guide you from the very first step to a successful closing.",
+    "linkDestination": "/projects"
+  },
+  "aboutBlock": {
+    "title": "This is Cyprus",
+    "bullets": [
+      {
+        "_key": "a2dd15af4e89",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-6f78ce4134efb6213bcf74822a2f09bf1d25ccd9-205x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "340 SUNNY DAYS A YEAR"
+      },
+      {
+        "_key": "c737fe0255c6",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-039f8e50071002f206868fb3ea20f1dce162ffcf-200x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "MEMBER OF THE EUROPEAN UNION"
+      },
+      {
+        "_key": "96cbaa9e9598",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-e16849183edf11ad29df982b42b2151b80887fd0-205x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "ONE OF THE BEST TAX SYSTEMS"
+      },
+      {
+        "_key": "13ad3d2a2391",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-bd35d8692daa35e5e2b9ec9296f75b25bca82e45-204x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "excellent quality of life"
+      },
+      {
+        "_key": "b783167055fc",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-cad4400dbb6879d6de1ec5f4003376f508dbabe6-224x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "VERY HIGH STANDARD OF EDUCATION"
+      },
+      {
+        "_key": "47a879810ef7",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-5e6344ff77db678dc86275914400ee68b2073032-211x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "MODERN healthcare system"
+      }
+    ],
+    "description": "The Republic of Cyprus is located in the eastern Mediterranean and is known for its rich history, beautiful beaches, and friendly people. The capital, Nicosia, along with cities like Limassol, Larnaca, and Paphos, offer a blend of culture, history, and modern living. The Mediterranean climate allows for year-round outdoor activities. The Cypriot cuisine, with its fresh ingredients and Mediterranean flavors, is a true delight. Southern Cyprus boasts moderate living costs, a well-developed healthcare system, and numerous advantages from EU membership, making it an attractive destination for investors, expats, and tourists alike."
+  },
+  "faqSection": {
+    "faq": {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "a7311857a9be",
+            "answer": [
+              {
+                "_key": "ecb23fee18d6",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "c43109fe2606",
+                    "text": "Yes, ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "dc2c7e3f3fb6",
+                    "text": "overseas buyers are allowed to purchase property in Cyprus",
+                    "_type": "span",
+                    "marks": [
+                      "1658075a2dd9"
+                    ]
+                  },
+                  {
+                    "_key": "962334bb7f7a",
+                    "text": ", including apartments, villas, townhouses, and newly built developments. Cyprus has long been a popular destination for international buyers looking for holiday homes, relocation opportunities, retirement property, or real estate investments.\n\nFor EU citizens, the process is generally straightforward. Non-EU buyers may need additional approval from the Council of Ministers, but in many cases this is treated as a standard administrative step and is usually handled by a lawyer during the purchase process.\n\nThe most important point is not only whether you can buy, but whether the property is legally safe, properly documented, and suitable for your goals. Before signing contracts, buyers should check ownership status, permits, payment terms, taxes, and any additional costs.\n\nWith the right legal support and clear guidance, buying property in Cyprus can be a structured and manageable process even for overseas buyers.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "1658075a2dd9",
+                    "href": "/blog/how-to-get-cyprus-residency-if-you-re-not-an-eu-citizen",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "Can foreigners buy property in Cyprus?"
+          },
+          {
+            "_key": "12c11de4eb51",
+            "answer": [
+              {
+                "_key": "1812c467a06d",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7469a94e8a32",
+                    "text": "The advertised property price represents only part of the overall cost, as additional fees and taxes may also need to be considered during the purchase process. Buyers should also consider legal fees, stamp duty, ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "a16331ed5ace",
+                    "text": "VAT",
+                    "_type": "span",
+                    "marks": [
+                      "0f9d855002a4"
+                    ]
+                  },
+                  {
+                    "_key": "5c6367113ce0",
+                    "text": " where applicable, transfer-related costs, property insurance, maintenance fees, and possible bank or currency exchange expenses.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "0f9d855002a4",
+                    "href": "/blog/cyprus-property-vat-explained",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "e97737ebfed5",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "723ddc5cfe88",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "557f86e65be5",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "5ed233a3ba31",
+                    "text": "The final amount depends on whether the property is a new development or resale property, whether VAT applies, whether financing is used, and whether the property will be used for personal living, investment, or rental income.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "d2835d30ffbc",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "3c03155265c7",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "a9ac140f5feb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f4804919d49f",
+                    "text": "This is one of the key reasons why buyers should not evaluate properties based solely on the advertised asking price. A lower-priced property may have different tax treatment, higher renovation needs, or weaker rental potential. A more expensive new development may offer staged payments, modern standards, and lower maintenance needs in the first years.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "7d515f336b90",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "bf590f126a7a",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "9aa287f61314",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "03683f80d4ba",
+                    "text": "Before ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "c6a310951689",
+                    "text": "selecting a property",
+                    "_type": "span",
+                    "marks": [
+                      "656b376e8c9a"
+                    ]
+                  },
+                  {
+                    "_key": "74c805bcde2f",
+                    "text": ", buyers should consider not only the purchase price but also the overall costs associated with ownership and long-term maintenance. This gives a much clearer picture of affordability and investment potential.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "656b376e8c9a",
+                    "href": "/projects",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "How much money do I need beyond the property price?"
+          },
+          {
+            "_key": "61936bd5d6dd",
+            "answer": [
+              {
+                "_key": "2bec393bfb73",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8acff079bce7",
+                    "text": "Cyprus can be ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "d80063443d0b",
+                    "text": "attractive for property investment",
+                    "_type": "span",
+                    "marks": [
+                      "ddd7ae48bc33"
+                    ]
+                  },
+                  {
+                    "_key": "928a61edeab4",
+                    "text": " because it combines tourism demand, international relocation interest, coastal lifestyle, and a property market that appeals to buyers from different countries.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "ddd7ae48bc33",
+                    "href": "/blog/why-uk-citizens-invest-in-cyprus-real-estate-post-brexit",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "cb06ff63852b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "98c55f5e95c6",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "d4789b70bc73",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "17635ec05cf4",
+                    "text": "Investors usually look at Cyprus for several reasons: ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "27f1042edeb6",
+                    "text": "rental income",
+                    "_type": "span",
+                    "marks": [
+                      "456a7c4946f8"
+                    ]
+                  },
+                  {
+                    "_key": "4de76f492617",
+                    "text": ", long-term ownership, potential capital appreciation, retirement planning, or diversification outside their home country. ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "4585bc92170a",
+                    "text": "Apartments",
+                    "_type": "span",
+                    "marks": [
+                      "5e69d60973b4"
+                    ]
+                  },
+                  {
+                    "_key": "435244979eda",
+                    "text": " in popular areas may appeal to tenants and holiday visitors, while villas and premium homes can attract lifestyle buyers and families.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "456a7c4946f8",
+                    "href": "/blog/guaranteed-rental-income-in-cyprus-property",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "5e69d60973b4",
+                    "href": "/apartments-in-cyprus-for-investors",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "3cb45c0a0966",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "2832b12938bf",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "19aa5d4c76cb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "970251b7ae98",
+                    "text": "However, a good investment depends on much more than the country itself. Location, property type, purchase price, rental strategy, maintenance costs, developer reputation, and future demand all affect the result.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "08cac261dbe3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7704865bc239",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "538eb14d9b0b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "72faa90e55f9",
+                    "text": "We do not recommend judging a property only by advertised returns or optimistic rental projections. A better approach is to compare realistic scenarios, understand expenses, and choose a property that matches your investment goals and risk tolerance.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Is Cyprus a good place to invest in property?"
+          },
+          {
+            "_key": "010eb38f7cf7",
+            "answer": [
+              {
+                "_key": "151efd4893ca",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "9971aa062226",
+                    "text": "The best area depends on why you are buying. A property for rental income may require a different location than a home for retirement, family relocation, or personal holidays.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "014290dfcf3c",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a429942d440e",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "4c8066a54e24",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "525614434238",
+                    "text": "Paphos",
+                    "_type": "span",
+                    "marks": [
+                      "fe405c3facf2"
+                    ]
+                  },
+                  {
+                    "_key": "a468525723e9",
+                    "text": " is popular among international buyers, ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "0bd582d1333d",
+                    "text": "retirees",
+                    "_type": "span",
+                    "marks": [
+                      "d1bacbe577c9"
+                    ]
+                  },
+                  {
+                    "_key": "39c7693f149d",
+                    "text": ", and lifestyle investors. It offers coastal living, established expat communities, tourism demand, and a slower pace of life compared with larger urban centres.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "fe405c3facf2",
+                    "href": "/properties-paphos",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "d1bacbe577c9",
+                    "href": "/blog/how-alexander-and-tatiana-found-their-dream-apartment-in-paphos",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "2a6d68f6385b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6683f62502d6",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "70e8e3c6e9cb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "84ec34dfdb29",
+                    "text": "Limassol",
+                    "_type": "span",
+                    "marks": [
+                      "c100ffe1cc04"
+                    ]
+                  },
+                  {
+                    "_key": "4e8a00f7ac6a",
+                    "text": " is often associated with business activity, premium developments, higher-end properties, and stronger urban demand. It may appeal to buyers seeking a livelier urban setting and a more active lifestyle.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "c100ffe1cc04",
+                    "href": "/property-for-sale-limassol",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "0f3918bd9cbd",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "05f8bff9dc51",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "72d61a7ee94f",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a47fc3d33b97",
+                    "text": "Larnaca",
+                    "_type": "span",
+                    "marks": [
+                      "0200424f12ba"
+                    ]
+                  },
+                  {
+                    "_key": "d01fcc9d1ddd",
+                    "text": " is becoming increasingly interesting for buyers who want airport access, coastal living, and potential long-term growth. Some locations may be better suited to families, remote professionals, or buyers who prefer a quieter residential atmosphere.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "0200424f12ba",
+                    "href": "/property-for-sale-larnaca",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "9cc2ca409165",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a83b0bb1b403",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "9d807ab43a46",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8e33b644fd30",
+                    "text": "Instead of choosing only by city name, it is better to compare lifestyle, infrastructure, rental potential, distance to the sea, schools, healthcare, and long-term plans.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Which areas in Cyprus are best for buying property?"
+          },
+          {
+            "_key": "18312c3b713e",
+            "answer": [
+              {
+                "_key": "a1f6a3a2fecf",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a1b424edf32d",
+                    "text": "Yes, many international buyers purchase property in Cyprus remotely. This can be done through video viewings, digital communication, legal representation, and power of attorney.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "1ebdb9ff8478",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "33b796e125bd",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "1cf7512a06bd",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f4ab81f86cd5",
+                    "text": "Remote buying is especially useful for buyers who live abroad and cannot travel immediately. It may simplify certain parts of the process, but it should not be considered a substitute for thorough due diligence.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "da6fcebfb919",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f434d2a646ae",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "4226dc323d3b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "0fe28d5a2f84",
+                    "text": "Before committing remotely, buyers should review property documents, developer information, payment schedule, contract terms, location details, and all additional costs. Independent legal support is strongly recommended.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "c5faac1cf4fa",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7cbc51fbace0",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "976407dcdbc1",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8063d732363b",
+                    "text": "A remote purchase can work well when the process is organised properly and the buyer receives clear information at each stage.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can I buy property in Cyprus remotely?"
+          },
+          {
+            "_key": "8339b145cdc5",
+            "answer": [
+              {
+                "_key": "01d33eb4785b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "22372e3f959b",
+                    "text": "Buying property may support certain residency options in Cyprus, but property ownership does not automatically grant residency.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "7c09f9cf7e34",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "cb2876027bb2",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "f4f10b4d84e8",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "e5855657be9d",
+                    "text": "Residency requirements",
+                    "_type": "span",
+                    "marks": [
+                      "558234aa0b15"
+                    ]
+                  },
+                  {
+                    "_key": "9b2f894444a7",
+                    "text": " can depend on nationality, investment amount, income, documentation, family situation, and current immigration rules. For certain buyers, purchasing property forms part of a wider relocation or long-term lifestyle strategy. For others, the goal is to spend more time in Cyprus, retire abroad, or create a long-term base in Europe.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "558234aa0b15",
+                    "href": "/blog/how-to-get-permanent-residence-in-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "cdc4a9854f2e",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6218b5b1f266",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "11dcefdcb8c9",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "362e37b2060e",
+                    "text": "If residency is an important part of your decision, it is better to clarify the requirements before choosing a property. This helps avoid situations where a property looks attractive but does not match your relocation or documentation needs.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "08e9114eb854",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "e10fddc82a5f",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "a42f3c467aa0",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "b02651bb9876",
+                    "text": "Property choice, budget, ownership structure, and legal planning should work together.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can buying property in Cyprus help with residency?"
+          },
+          {
+            "_key": "3530d00d58b5",
+            "answer": [
+              {
+                "_key": "ad4335eaebfe",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "1afb0e11f501",
+                    "text": "Cyprus provides a diverse selection of properties designed to suit different investment plans, lifestyles, and buyer objectives. International buyers commonly consider ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "7b036c2d4f30",
+                    "text": "apartments",
+                    "_type": "span",
+                    "marks": [
+                      "448a58eab1df"
+                    ]
+                  },
+                  {
+                    "_key": "784bdacd8038",
+                    "text": ", ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "e618b67533da",
+                    "text": "villas",
+                    "_type": "span",
+                    "marks": [
+                      "a268e3a4553f"
+                    ]
+                  },
+                  {
+                    "_key": "6b91a56435b5",
+                    "text": ", townhouses, penthouses, gated communities, and ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "ddf69d0109be",
+                    "text": "off-plan new developments",
+                    "_type": "span",
+                    "marks": [
+                      "11588eb0a895"
+                    ]
+                  },
+                  {
+                    "_key": "1a2d9575a436",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "448a58eab1df",
+                    "href": "/apartments-in-cyprus-for-investors",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "a268e3a4553f",
+                    "href": "/villas-in-cyprus",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "11588eb0a895",
+                    "href": "/off-plan-properties-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "62b256c93d5c",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "9ba636a79c03",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "f8fb8174d9a9",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f124507a503e",
+                    "text": "Apartments may suit buyers looking for lower maintenance, rental potential, or easier ownership. Villas are often preferred by families, retirees, and lifestyle buyers who want more space, privacy, and outdoor areas. Townhouses can offer a balance between comfort, price, and maintenance requirements.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "e9554204131a",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "24baed06c868",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "924ea9cd8fe3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8013880888ef",
+                    "text": "New developments are popular because they may offer modern layouts, energy efficiency, staged payments, and contemporary facilities. Resale properties may appeal to buyers who want immediate use or established locations.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "d88b75019b34",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "da69c32f7f28",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "5052f02e2d8e",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "d91d3b78c0ec",
+                    "text": "The right property type depends on budget, lifestyle, investment expectations, rental strategy, and how often the owner plans to use the property personally.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What types of property are available in Cyprus?"
+          },
+          {
+            "_key": "5d7c67f5a3f8",
+            "answer": [
+              {
+                "_key": "0229bad40d17",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "e369d4892e87",
+                    "text": "Cyprus VIP Estates helps international buyers explore property opportunities in Cyprus with a clearer and more structured approach. Instead of simply browsing listings, buyers can compare locations, property types, investment potential, lifestyle fit, and long-term ownership factors.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "497b11a785b3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "cfea234a7e4e",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "b47c19cc13c6",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "ca3c6a5e9e68",
+                    "text": "Our approach is centred on helping buyers make well-informed and confident property decisions. This may include understanding new developments, comparing apartments and villas, evaluating rental potential, reviewing location advantages, and identifying properties that match relocation, investment, or lifestyle goals.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "defa11a95b71",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6a92f0bb7ec3",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "238d0aa5528f",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "202863dd8189",
+                    "text": "We work with international buyers who may be unfamiliar with the Cyprus market and need practical guidance before taking the next step. Whether you are looking for a holiday home, an investment property, a retirement option, or a permanent residence, Cyprus VIP Estates can help you narrow the search and move forward with more confidence.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Why choose Cyprus VIP Estates for buying property in Cyprus?"
+          }
+        ]
+      },
+      "_type": "faqBlock"
+    },
+    "faqTitle": "Frequently Asked Questions about Properties in Cyprus"
+  },
+  "sliderMain": [
+    {
+      "_key": "26760da808aa",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-7a59f44a79e4a456dfaff3390e7cf781aa7d4857-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "Welcome to Cyprus",
+      "buttonLabel": "Get in contact",
+      "description": "We are your reliable partner for real estate and investments on the dream island, guiding you every step of the way to your new home under the sun."
+    },
+    {
+      "_key": "2d21e0280b41",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-63744b68200dab1e45742b7ba9115762023c86d1-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "Best quality of life",
+      "buttonLabel": "Get in contact",
+      "description": "Enjoy the life you have always dreamed of with first-class properties surrounded by sun, sea and a relaxed, Mediterranean atmosphere."
+    },
+    {
+      "_key": "3403a8aeb567",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-ee8272bb0c585143791ed66b81584d97e3203c26-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "Investment opportunities",
+      "buttonLabel": "Get in contact",
+      "description": "Invest with us in the best real estate projects on the island and benefit from high returns, tax advantages and a fast-growing market."
+    },
+    {
+      "_key": "9b54a5bdcfc7",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-ea361574ae18f3d4ba5a4a08b070bf639df5ce07-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "We speak English",
+      "buttonLabel": "Get in contact",
+      "description": "Our company has successfully guided many english-speaking clients on their journey to their dream property and provides comprehensive advice and top-quality service."
+    },
+    {
+      "_key": "ef01f970dad3",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-a9b4b3fc74670b65af58bd6f715c425654403218-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "Emigrate and start a new life",
+      "buttonLabel": "Get in contact",
+      "description": "We will support you with all the steps and questions you may have if you have decided to move to Cyprus and will help you to start your new life on the island smoothly."
+    }
+  ],
+  "citiesBlock": {
+    "title": "Discover Properties for Sale in Cyprus by Location",
+    "cities": [
+      {
+        "_key": "83e341d64d6c",
+        "city": "Paphos",
+        "link": "/projects?city=Paphos",
+        "_type": "cityItem",
+        "image": {
+          "alt": "Properties for Sale in Paphos, Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-03055e3142095375bf3deaef548d7f8b5be4de71-800x600-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      {
+        "_key": "6abbf40f6d82e4dff67b8841526e66ed",
+        "city": "Limassol",
+        "link": "/projects?city=Limassol",
+        "_type": "cityItem",
+        "image": {
+          "alt": "Properties for Sale in Limassol, Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-5bfd78a15570282b3617ff925479de7d0228f36d-800x600-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      {
+        "_key": "7bf09cca6ac8d795757185ca54c7fc8d",
+        "city": "Larnaca",
+        "link": "/projects?city=Larnaca",
+        "_type": "cityItem",
+        "image": {
+          "alt": "Properties for Sale in Larnaca, Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f97d8e5f8c5b3ca4551393908d5e0df93b51f960-800x600-jpg",
+            "_type": "reference"
+          }
+        }
+      }
+    ]
+  },
+  "reviewsBlock": {
+    "title": "Our Client’s Feedback",
+    "reviews": [
+      {
+        "_key": "84eaad013314",
+        "name": "Anna & Markus Vollmer, Germany",
+        "reviewText": [
+          {
+            "_key": "e14d34011e85",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "59d05ae09f140",
+                "text": "Moving to Paphos was the best decision we've ever made. The villa we purchased is a dream come true – sea views, modern design, and full privacy. The team guided us through every step and made the process effortless.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "9f067065fb89",
+        "name": "Sophie Marchand, France",
+        "reviewText": [
+          {
+            "_key": "ff14225204ea",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "8a1724a8ad1c0",
+                "text": "I was looking for a peaceful yet luxurious lifestyle, and I found it in Limassol. The apartment I bought is steps away from the beach and close to the city's vibrant heart. The team was professional, transparent, and truly listened to my needs.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "f2292676c09d",
+        "name": "David Prescott, UK",
+        "reviewText": [
+          {
+            "_key": "4e2a7ceb7fd9",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "bedf31cc29360",
+                "text": "I’ve lived in major cities around the world, but nothing compares to the quality of life in Cyprus. My villa in Paphos is pure perfection. Great investment, incredible location, and the sunsets are surreal.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "1497d9fa2b8d",
+        "name": "Arsen Kruglov, Russia",
+        "reviewText": [
+          {
+            "_key": "e24f7aa3bf7c",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "427ce2d4387d0",
+                "text": "Thanks to this company, I finally own a stunning penthouse in Limassol. From the panoramic sea views to the concierge-level service, everything exceeded my expectations. I couldn’t be happier.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "d35cf8cf2a1c",
+        "name": "Carlos & Maria Sanz, Spain",
+        "reviewText": [
+          {
+            "_key": "1ab97696b9d2",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "fde69edbd8ab0",
+                "text": "We were looking for a second home in a warm climate, and Cyprus stole our hearts. The apartment we bought is beautifully finished and within walking distance to the marina. The team was responsive, honest, and incredibly knowledgeable.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "a347285da09d",
+        "name": "Jason Wu, Singapore",
+        "reviewText": [
+          {
+            "_key": "6b863000c56f",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "bd3632d9902a0",
+                "text": "As a digital nomad, I wanted a home that felt like a vacation every day. The apartment I bought in Paphos gives me just that. I can work with a sea view and swim during lunch breaks. Cyprus is a paradise.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "048786b32fa5",
+        "name": "Agnieszka Lis, Poland",
+        "reviewText": [
+          {
+            "_key": "4f535687082b",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "0f0c6ff3ce3f0",
+                "text": "From the first video call to receiving the keys, the service was impeccable. They helped me buy a villa remotely, and it was exactly as promised. I wake up every day to the sound of the sea – it’s like a permanent holiday.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "f151e0d899a9",
+        "name": "Emma & Jack Roberts, Australia",
+        "reviewText": [
+          {
+            "_key": "4c4e75b932f7",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "d34fbf2a5fcb0",
+                "text": "We moved to Cyprus for a fresh start, and it’s been life-changing. Our kids love the international schools, and we love the relaxed lifestyle. The team found us a spacious villa near Paphos with breathtaking views.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "4fabefced309",
+        "name": "Kristina Johansen, Norway",
+        "reviewText": [
+          {
+            "_key": "457a0bfe1b22",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "0669b253d7970",
+                "text": "Living in Cyprus has improved my health, my mood, and my lifestyle. I bought a stylish apartment in Limassol city center and couldn’t be more satisfied. The process was incredibly smooth and the team truly knows the market.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      }
+    ]
+  },
+  "benefitsBlock": {
+    "benefits": [
+      {
+        "_key": "dd4724d9ccf3",
+        "title": "Real Estate Projects",
+        "counting": {
+          "conuntNumber": 195
+        },
+        "description": "In Southern Cyprus. From Studio Apartments to High-Class Villas"
+      },
+      {
+        "_key": "d0a29b23a4c5",
+        "title": "Years of experience",
+        "counting": {
+          "conuntNumber": 10
+        },
+        "description": "as a full-service real estate marketing agency"
+      },
+      {
+        "_key": "6bb5ab19ab11",
+        "title": "Service for our clients",
+        "counting": {
+          "sign": "°",
+          "conuntNumber": 360
+        },
+        "description": "We accompany you from the first contact to the handover of the keys"
+      },
+      {
+        "_key": "27c65d3ab2a5",
+        "title": "Satisfied clients",
+        "counting": {
+          "sign": "%",
+          "conuntNumber": 100
+        },
+        "description": "From Germany, Austria, Switzerland, and other countries"
+      }
+    ]
+  },
+  "brochureBlock": {
+    "list": [
+      {
+        "_key": "5d61e75dbeeb",
+        "listItem": "Top investment opportunities"
+      },
+      {
+        "_key": "076aec896c43",
+        "listItem": "Annual returns from 6%"
+      },
+      {
+        "_key": "9e22e811cf45",
+        "listItem": "High quality of life"
+      },
+      {
+        "_key": "495c5f5a9ea3",
+        "listItem": "Attractive location in the EU"
+      },
+      {
+        "_key": "295d41390f27",
+        "listItem": "Favorable tax system"
+      },
+      {
+        "_key": "5b1548825df6",
+        "listItem": "Legal certainty"
+      }
+    ],
+    "logo": {
+      "_type": "image",
+      "asset": {
+        "_ref": "image-30992b87b1b98c76ffa6f9e17a8f9ad3e08e0ec0-500x644-png",
+        "_type": "reference"
+      }
+    },
+    "image": {
+      "_type": "image",
+      "asset": {
+        "_ref": "image-d99a5a8f43f2c94dd77a8209a7bf9b52e8e22c49-1200x564-png",
+        "_type": "reference"
+      }
+    },
+    "title": "Welcome to Cyprus VIP Estates",
+    "subtitle": "Your partner for first-class real estate investments in Cyprus",
+    "buttonLabel": "Get in contact",
+    "description": "We offer you tailor-made services to achieve your investment goals efficiently and successfully. Whether investments, individual property management or the relocation of your company to Cyprus - we accompany you in every phase. Benefit from our expertise and, last but not least, Cyprus' attractive tax system. Trust Cyprus VIP Estates to turn your investment ideas into success stories."
+  },
+  "contentBlocks": [
+    {
+      "_key": "164babeba2bf",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "dd4fb5c6dbb6",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "b2dfc9d40a72",
+                  "text": "Luxury Property in Cyprus: Villas, Apartments and Investments",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "2a0ed2f647c8",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "874ce26b733a",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "e1286912a9c3",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "151e04dc326c",
+                  "text": "Cyprus has become one of the most attractive destinations in Europe for property buyers looking for lifestyle benefits, relocation opportunities, rental income, or long-term investment potential. Buyers from the UK, Germany, Poland, Israel and other international markets increasingly consider Cyprus not only as a holiday destination, but also as a place to purchase apartments, villas, and investment properties.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "3b37d7f23cae",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e184d1215109",
+                  "text": "The Cyprus real estate market presents a broad range of opportunities across different property types and buyer preferences. These include modern apartments near the sea, luxury villas with private pools, off-plan developments, gated communities, townhouses, and investment projects designed for rental returns or capital appreciation. Choosing the right property depends on individual goals, budget, preferred location and expected usage.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "174c7339d4b4",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "3d81a5e6ab50",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "58f2e7baf156",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "103908d6a47e",
+                  "text": "At Cyprus VIP Estates, we help international buyers explore property opportunities across Cyprus and better understand the purchasing process, local market conditions and different regions of the island.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-0",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-1",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-6",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-2",
+                  "text": "Considering options beyond Cyprus? See ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "il-1784408340699-4",
+                  "text": "how Cyprus compares with Spain and Portugal",
+                  "_type": "span",
+                  "marks": [
+                    "il-1784408340699-3"
+                  ]
+                },
+                {
+                  "_key": "il-1784408340699-5",
+                  "text": " for international property buyers.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "il-1784408340699-3",
+                  "href": "/blog/cyprus-vs-spain-and-portugal",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Double Text Block 1"
+    },
+    {
+      "_key": "ccb50963436d",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "75bdbb0745b5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "704df0db290d",
+              "text": "Why Buy Property in Cyprus?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "8641a3415409",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "7db834c28687",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "e7323fd232ab",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "fbd0baf5a84e",
+              "text": "Cyprus attracts buyers for several reasons beyond climate and lifestyle. The island combines European infrastructure, relatively low crime rates, international schools, healthcare access, and favourable conditions for relocation.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "marginTop": "small",
+      "textAlign": "left",
+      "marginBottom": "small"
+    },
+    {
+      "_key": "c6d700dd75f9",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Villa in Cyprus for Sale",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-43807799738ffa9decb6116d7f0ed5994d22717b-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "97a119e7ecb5",
+              "_type": "block",
+              "style": "h3",
+              "children": [
+                {
+                  "_key": "f5a54c2973dd",
+                  "text": "Many buyers consider Cyprus because of:",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "410d4f085212",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "5b77adbc917b",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "a043a02e46ca",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "041e2d3323a0",
+                  "text": "Mediterranean climate with long summers",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "93fedf036d44",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "a54f973e2d9e",
+                  "text": "Potential opportunities for relocation or obtaining long-term residence",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "3e2717623464",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f71d9f8de750",
+                  "text": "High demand for short-term holiday rentals in popular tourist destinations",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "51da0c817046",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "b3bef7464d64",
+                  "text": "Increasing demand for newly built developments and properties with investment potential",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "27b067417e57",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "25ea7ff40af5",
+                  "text": "Established international communities and widespread availability of English-speaking services",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "128145c1efca",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "729845171077",
+                  "text": "Variety of coastal and urban locations",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "66e3335f769c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9e5186272a73",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "e720f19ab01f",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "bc662d05606c",
+                  "text": "For some investors, Cyprus real estate is primarily about rental income and portfolio diversification. For others, purchasing property is connected to lifestyle changes, retirement planning, or moving closer to warmer climates.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "317d93d5ed91",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "98a4c80dd629",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "7c0ac7cedec0",
+                  "text": "Types of Properties Available in Cyprus",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "6f3913cfa1ce",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "1f0046030bf9",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "7aa8c7c9061d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9f82e600da19",
+                  "text": "The Cyprus property market includes multiple categories suitable for different goals.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "House in Cyprus with many flats and apartments",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-1f5698c92db6c7e474eb9f5f8dbf7b975575e90e-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "510e185aacbb3ea5b18883e898f73147",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Villa in Cyprus for Sale",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-4ba79e05aa31a519f16dcaadfc215ba12b51c1e2-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "128145c1efca",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "729845171077",
+                  "text": "Apartments in Cyprus",
+                  "_type": "span",
+                  "marks": [
+                    "17d8047ddce3"
+                  ]
+                },
+                {
+                  "_key": "7085479667fd",
+                  "text": " often attract buyers seeking lower maintenance costs, holiday homes or investment opportunities in cities such as ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "d8ceb5cedd28",
+                  "text": "Paphos",
+                  "_type": "span",
+                  "marks": [
+                    "98a90b98d03a"
+                  ]
+                },
+                {
+                  "_key": "a4c6b8f6b050",
+                  "text": ", ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "f197ff74d7c0",
+                  "text": "Limassol",
+                  "_type": "span",
+                  "marks": [
+                    "b45b947eedb8"
+                  ]
+                },
+                {
+                  "_key": "9dfd09ab4483",
+                  "text": " or Larnaca.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "17d8047ddce3",
+                  "href": "/apartments-in-cyprus",
+                  "_type": "link"
+                },
+                {
+                  "_key": "98a90b98d03a",
+                  "href": "/properties-paphos",
+                  "_type": "link"
+                },
+                {
+                  "_key": "b45b947eedb8",
+                  "href": "/apartments-limassol",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "4cf61e526bce",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "1f418c31e0f4",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "cd7b2c825510",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "01b04e91627e",
+                  "text": "Villas in Cyprus",
+                  "_type": "span",
+                  "marks": [
+                    "2df7dd2ab0cc"
+                  ]
+                },
+                {
+                  "_key": "e92c66d6ee6d",
+                  "text": " are popular among buyers looking for privacy, larger outdoor areas and luxury living. Villas located close to the coast or within high-end developments may attract both lifestyle-focused buyers and property investors.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "2df7dd2ab0cc",
+                  "href": "/villas-in-cyprus",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "f41d37fb7f47",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "234879bee8e3",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "5c24133c9e58",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d94f4353befc",
+                  "text": "Townhouses and semi-detached properties can offer a practical balance between cost efficiency and increased living space.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-7",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-8",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-13",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-9",
+                  "text": "For a closer look at the region, browse our ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "il-1784408340699-11",
+                  "text": "West Coast Cyprus properties guide",
+                  "_type": "span",
+                  "marks": [
+                    "il-1784408340699-10"
+                  ]
+                },
+                {
+                  "_key": "il-1784408340699-12",
+                  "text": ".",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "il-1784408340699-10",
+                  "href": "/west-coast-properties-cyprus",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "0889a3fc981289d5498e5a4ec95e16f1",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "4ac2e877bcc6",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c0c223ab504a",
+                  "text": "Off-plan developments",
+                  "_type": "span",
+                  "marks": [
+                    "5c9aa13e34c2"
+                  ]
+                },
+                {
+                  "_key": "38e941655862",
+                  "text": " attract buyers interested in newer construction standards, flexible payment schedules and potential capital growth before project completion.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "5c9aa13e34c2",
+                  "href": "/off-plan-properties-cyprus",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "990a9aed0c25",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "253d1ebbdfa2",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "2e059a008b61",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "b070dfac368a",
+                  "text": "Investment properties in Cyprus",
+                  "_type": "span",
+                  "marks": [
+                    "e523b9bfb7bf"
+                  ]
+                },
+                {
+                  "_key": "44fab2aa25d3",
+                  "text": " may focus on rental income, tourism demand or long-term appreciation depending on location and project characteristics.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "e523b9bfb7bf",
+                  "href": "/investment-property-in-cyprus",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "Off-Plan Properties in Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d7fb297184e085c9d41779b9d310756b159961a4-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "16627a86eb4d",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "30ce783d68e2",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "dca889823205",
+              "text": "Best Areas to Buy Property in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "c93978c33e15",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "e5610cc78fa9",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "e8a6d380d85f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "63af90e60f6c",
+              "text": "Each region provides its own set of benefits, depending on buyer priorities and lifestyle preferences.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "9ebf61913715",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "e71e6af804b1",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "90765e697f25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ff16ef28e311",
+              "text": "Paphos",
+              "_type": "span",
+              "marks": [
+                "22ed6e5cf6dd"
+              ]
+            },
+            {
+              "_key": "cbeb12a8b54f",
+              "text": " is often chosen by international buyers seeking coastal living, retirement properties and holiday homes. The region combines tourism infrastructure with residential areas and new developments. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "2b5e02b28cf9",
+              "text": "Limassol",
+              "_type": "span",
+              "marks": [
+                "0b5354996393"
+              ]
+            },
+            {
+              "_key": "1543841436ca",
+              "text": " is Cyprus' main business centre and may appeal to buyers interested in luxury developments, international schools and investment potential. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "2910fd7ba0c3",
+              "text": "Larnaca",
+              "_type": "span",
+              "marks": [
+                "f2376ace7118"
+              ]
+            },
+            {
+              "_key": "cdef08965b38",
+              "text": " continues to attract attention because of infrastructure growth, airport access and comparatively diverse pricing. Other ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "f804c078dd9b",
+              "text": "areas across Cyprus",
+              "_type": "span",
+              "marks": [
+                "3443fd72811a"
+              ]
+            },
+            {
+              "_key": "967b87592795",
+              "text": " may suit buyers searching for quieter surroundings, family-oriented neighbourhoods or specific investment strategies.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "22ed6e5cf6dd",
+              "href": "/properties-paphos",
+              "_type": "link"
+            },
+            {
+              "_key": "0b5354996393",
+              "href": "/property-for-sale-limassol",
+              "_type": "link"
+            },
+            {
+              "_key": "f2376ace7118",
+              "href": "/property-for-sale-larnaca",
+              "_type": "link"
+            },
+            {
+              "_key": "3443fd72811a",
+              "href": "/projects",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "a910cad41b27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "a2ce1fa21cc6",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "3cf12bc362c8",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "0bbe6aa30b61",
+              "text": "The most suitable location is often determined more by individual goals than by how well-known or popular an area may be.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "marginTop": "small",
+      "textAlign": "left",
+      "marginBottom": "small"
+    },
+    {
+      "_key": "8da57eeb8933b003c8689a4ee1735489",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Villa in Cyprus for Sale",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-ecb71acf3dadf75ad00368b89b7fbcaf034368f0-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "128145c1efca",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "729845171077",
+                  "text": "Buying Property in Cyprus as a Foreigner",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "fe2c6c6b7e8b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f4f7ac4c4dc1",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "8fb79b59551a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ff55fa07e281",
+                  "text": "Foreigners can purchase property in Cyprus, including apartments, villas and newly built developments. However, the process may differ depending on nationality, property type and intended use.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "b7fba5d06c95ac5e55e897e1f2b24b71",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "2e059a008b61",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "44fab2aa25d3",
+                  "text": "Typical steps often include:",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "bbee0ff4a9f8",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2cad287dda00",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "f09343438e02",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c9941b29342b",
+                  "text": "Selecting a property",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "0e3e0c2d2e74",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9909c327ede1",
+                  "text": "Reserving the unit",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "613a886bb1a2",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "b1af73b49fdd",
+                  "text": "Legal review and due diligence",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "e7ee5eb5b4f8",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d02c3dd8f389",
+                  "text": "Contract preparation and signing",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "5569e9d0ab02",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e29bc9e1eacb",
+                  "text": "Payment stages",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "4c7d587d6a7d",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d072bccce2bc",
+                  "text": "Registration procedures and ownership transfer",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "3cb0504b5fdb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "24f23a44abcb",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "1dc40bf9b87e",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ff73a8990d84",
+                  "text": "Understanding additional costs such as ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "8e8e0caec3c3",
+                  "text": "VAT",
+                  "_type": "span",
+                  "marks": [
+                    "3172383cb65e"
+                  ]
+                },
+                {
+                  "_key": "dd76b0b24829",
+                  "text": ", legal fees, transfer fees or maintenance charges is important before making a decision.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "3172383cb65e",
+                  "href": "/blog/cyprus-property-vat-explained",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "8b8f02a111a6",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "add6207b9462",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "17aad86c3fcb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2f16b971d397",
+                  "text": "Professional legal advice should always be considered during the purchasing process.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "Off-Plan Properties in Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-274aab1b8a41aeff6e506f7a2fc5d92a036890d4-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "4555656580ce570acdf913b78260eef2",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Off-Plan Villa in Cyprus for Sale",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-db6f57d74d0e8723c2fcfa953b44e64fd6dd5ade-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "8fb79b59551a",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "ff55fa07e281",
+                  "text": "Cyprus Property Investment Potential",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "756168db4e70",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "0f5fdda7d912",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "01a0dc257ece",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "40e37ccbbc42",
+                  "text": "Investment expectations",
+                  "_type": "span",
+                  "marks": [
+                    "d1c6b24f8bf3"
+                  ]
+                },
+                {
+                  "_key": "bc6b75edcb58",
+                  "text": " vary significantly between projects.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "d1c6b24f8bf3",
+                  "href": "/blog/taxes-on-real-estate-in-cyprus",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "c03fb7a9c052",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "bdee1558e750",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "a3d8609a9b89",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "77cad215e0db",
+                  "text": "Some buyers prioritise steady rental demand, while others focus on future resale value or long-term capital appreciation. Coastal locations and tourism-focused developments may generate seasonal rental opportunities, although occupancy and returns can fluctuate.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "1c439cc2ff84e8c4728aaf03990d70f5",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "17aad86c3fcb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2f16b971d397",
+                  "text": "Investment performance depends on factors including:",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "fdcdf2cc3562",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ea23d7f64fe2",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "a3d5d1e5700c",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f9f266913313",
+                  "text": "Location",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "ee4332063380",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ceecf91f99f6",
+                  "text": "Property type",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "e24acf7be9bc",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "87b082498304",
+                  "text": "Development quality",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "aaa91809733e",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f0e9d5c721f6",
+                  "text": "Tourism demand",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "3bffd2715e47",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c65992111166",
+                  "text": "Local infrastructure",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "daae0a3034e4",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "5b7111bada8a",
+                  "text": "Purchase timing",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "825a69ccc2cb",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "477ec0022ffd",
+                  "text": "Management costs",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "b5e535b1029d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d7d535b4a296",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "086c0d6904b8",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "19951cb07d0a",
+                  "text": "Property investment",
+                  "_type": "span",
+                  "marks": [
+                    "2c7d21ab3638"
+                  ]
+                },
+                {
+                  "_key": "fcc5d846f8b8",
+                  "text": " always involves risk, and projected returns should be reviewed carefully.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "2c7d21ab3638",
+                  "href": "/investment-property-in-cyprus",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "Cyprus villa interior",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f5a14cef36c03859c1c5b3b449a5ece80b301d70-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "a172c1af406d1f3b5bef2d5915998adb",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Off-Plan Villa in Cyprus for Sale",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f99215d26b440114fe89bcb7aa202d47e8ccd02f-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "marginBottom": "medium",
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "a3d8609a9b89",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "77cad215e0db",
+                  "text": "Explore Properties Across Cyprus with Cyprus VIP Estates",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "93a81228c64b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "8f544c74b622",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "c566fd91dc5c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "18387029587b",
+                  "text": "Cyprus VIP Estates presents selected apartments, villas and new developments across different regions of Cyprus. Our goal is to provide buyers with useful information, project comparisons and insights that support more informed decisions.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "464bd36616d4",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f06d7a04ab13",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "1467e64838bb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "425fc974e670",
+                  "text": "Whether you are searching for a holiday home, relocation property, luxury villa or investment opportunity, understanding the market before purchasing can make a significant difference.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "11eb87ea4d23",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "61685125b789",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "b7587c837204",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "24c7bfe796cf",
+                  "text": "Explore available properties, compare locations and discover projects across Cyprus.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    }
+  ],
+  "homepageTitle": "Cyprus VIP Estates - Luxury Real Estate in Cyprus",
+  "parallaxImage": {
+    "_type": "image",
+    "asset": {
+      "_ref": "image-07986fa492eb71c11dcacd1acf4dab9a9610c5c2-2500x1401-jpg",
+      "_type": "reference"
+    }
+  },
+  "projectsBlock": {
+    "title": "Our Projects"
+  },
+  "howWeWorkBlock": {
+    "steps": [
+      {
+        "_key": "1afdc2e36511",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-010e554d53e8a2f99f7d779b88ad4802ea879931-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "You contact us via the form on our website"
+      },
+      {
+        "_key": "941eb2c409de",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-ea98b4b1814fb2a981c5db0f004a959d3df14989-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "We will contact you and discuss your requirements"
+      },
+      {
+        "_key": "68f92ccdb537",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-34191203d1e6add0437bc90f08afd32a2bb00102-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "You plan your trip to Cyprus with us"
+      },
+      {
+        "_key": "b8761e7f88d3",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-fddcb74dc9aa266cf6c1fa5bbafddc4f09f037ad-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "We visit all suitable projects together"
+      },
+      {
+        "_key": "090c34fc6d24",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-01fd70faab96a48e121b9588c547e3a711cce430-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "You sign the purchase agreement with the developer"
+      },
+      {
+        "_key": "932b3a2ebb6c",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b2beb1ac8dbcd8bbcc7ce08387c37268c8c162be-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "After completion, we will ceremoniously hand over the keys to you"
+      }
+    ],
+    "title": "How we work",
+    "description": "On our website, you can discover exciting real estate projects or commission us to carry out a specific search. You can easily contact us using the callback form. We will clarify your wishes and requirements in a personal consultation. We then search through carefully selected offers from our vetted premium partners and present you with an exclusive selection. You provide us with feedback, and we organize your trip to Cyprus to view the projects together with our developers. Once you've made your decision, the contract will be signed directly with the developer. For new construction, payments are made in stages as construction progresses. Upon completion, you'll ceremoniously receive the keys to your new property."
+  },
+  "descriptionBlock": {
+    "title": "Who We Are",
+    "descriptionFields": [
+      {
+        "_key": "ad8919bf4386",
+        "descriptionField": [
+          {
+            "_key": "54334100fa34",
+            "_type": "block",
+            "style": "h3",
+            "children": [
+              {
+                "_key": "2324a6163cf90",
+                "text": "Professional Advice",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "5afb294a27f7",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "b2ecd972f67b",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "6126424a19a0",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "5590e7b6050c",
+                "text": "Cyprus VIP Estates is a Project of SecretBrand Solutions LTD. The Cyprus real estate market requires expertise, experience, and deep market insights to achieve the best conditions for buyers. Our team has in-depth knowledge of the local markets and brings international real estate experience. We are also multilingual and can professionally serve clients from various countries.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "dcfa1c5a2408",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "5c0c2bb63079",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "b4ae352f242f",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "ec48f7389248",
+                "text": "With up-to-date qualifications and the highest professional standards, Cyprus VIP Estates offers comprehensive services that give buyers\nsecurity and confidence in their investment.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "42420174d43f",
+        "descriptionField": [
+          {
+            "_key": "9a90799c8cc1",
+            "_type": "block",
+            "style": "h3",
+            "children": [
+              {
+                "_key": "7c3bf963658b0",
+                "text": "Diverse Portfolio",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "dcb7279780e0",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "a3c94870a4f1",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "953335cc4dae",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "5c6e9084349f",
+                "text": "The wide variety of properties in our ever-growing database forms the foundation of our real estate business. A comprehensive portfolio not only offers more choice for potential buyers but also leads to more inquiries for sellers.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "23740f1bb5ad",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "ae8592215ec5",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "fe4e4e1f37e4",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "29ba92c0df04",
+                "text": "This gives Cyprus VIP Estates a unique advantage: in-depth market knowledge in Paphos, Limassol, and Larnaca, extensive expertise in property valuations, and an unparalleled sales network.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "060beb40c49a",
+        "descriptionField": [
+          {
+            "_key": "743329baf40a",
+            "_type": "block",
+            "style": "h3",
+            "children": [
+              {
+                "_key": "4b546767cae20",
+                "text": "Forward-Looking",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "077bf0f051e5",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "350eb16913d3",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "1edfba2f282e",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "8e2bd8be26e1",
+                "text": "Through a forward-looking and analytical approach, we continuously adapt to market conditions. Our goal is to understand both the Cypriot real estate market and the needs of modern buyers in order to offer innovative solutions. Thanks to this strategy, we are constantly growing and supporting our clients not only in property purchases but also in investments in individual apartments or large-scale projects. With our in-depth market analysis, you will always make the best possible decision.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      }
+    ]
+  },
+  "featuredProjectsBlock": {
+    "title": "Featured Real Estate Projects in Cyprus",
+    "projects": [
+      {
+        "_key": "c8bd960cbd33",
+        "_ref": "project-limassol-del-mar.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "eece632c5961",
+        "_ref": "b1ff9015-9b3a-42df-8239-2fb55e152d70",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "f0ca544bc4f1",
+        "_ref": "9acf5916-967d-4fde-9d78-e218f4981c3e",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "542568f831b7",
+        "_ref": "project-leptos-zelemenos-mansion.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "4a645b5f9df1",
+        "_ref": "project-one-pafilia.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "6fd3d52adb27",
+        "_ref": "1d6b5276-c277-40b5-a20f-aa03df66e956",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "2299dec2d2e1",
+        "_ref": "5e5c43fa-9660-4d43-b72f-c3159d89b3d8",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "5a1347354be4",
+        "_ref": "project-villa-superior-aristo.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "18d444d34756",
+        "_ref": "051bbb39-218c-493b-a24b-7e3614a0d0e1",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "09f8eef2b626",
+        "_ref": "project-velaro-homes.en",
+        "_type": "projectRef"
+      }
+    ],
+    "description": "Explore our carefully selected featured projects in Cyprus, including modern apartments, luxury villas, and high-investment properties in prime locations such as Limassol, Paphos, and Larnaca. Each project is chosen for its quality, location, and strong investment potential. Whether you are looking to buy property in Cyprus for personal use, relocation, or rental income, these developments represent the best opportunities currently available on the market."
+  },
+  "featuredCaseStudiesBlock": {
+    "title": "Real Estate Success Stories",
+    "button": {
+      "url": "/case-studies",
+      "label": "All Cases"
+    },
+    "caseStudies": [
+      {
+        "_key": "f9705715cb33",
+        "_ref": "7bf6c054-d6c6-4511-b0eb-e391fc8f7922",
+        "_type": "caseStudyRef"
+      },
+      {
+        "_key": "b95a340080ce",
+        "_ref": "aa8a6f8a-6ce5-495e-99f8-481d261f6e91",
+        "_type": "caseStudyRef"
+      }
+    ],
+    "description": "Discover how buyers and investors from around the world successfully navigated the Cyprus property market with our support. These case studies showcase real relocation journeys, investment decisions, and luxury property purchases, offering insight into the strategies, challenges, and outcomes behind each successful transaction."
+  }
+}

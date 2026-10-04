@@ -61,9 +61,25 @@ export default function MoveLeadMenu({
           }
         });
       }}
-      className={className ?? "rounded-md border border-[#E5E7EB] bg-white text-xs px-2 py-1 text-[#6B7280] disabled:opacity-50"}
+      title={pending ? "Moving…" : "Move to another list"}
+      /* A square icon button rather than a labelled dropdown: it sits in the
+         actions column next to Delete on every row, and the word "Move…" cost
+         more width there than it earned. The chevron is drawn as a background
+         image because appearance-none removes the native one; the first option
+         carries no text so the closed control shows only that chevron. The
+         label lives in aria-label and title. */
+      style={{
+        backgroundImage:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+      }}
+      /* 26px square: that is exactly what DeleteLeadButton next door measures
+         (12px text on a 16px line, 4px padding, 1px border), and the two sit
+         side by side in every row. */
+      className={className ?? "h-[26px] w-[26px] shrink-0 cursor-pointer appearance-none rounded-md border border-[#E5E7EB] bg-white text-xs text-[#6B7280] transition-colors hover:border-[#1B4B43] disabled:opacity-50"}
     >
-      <option value="">{pending ? "Moving…" : "Move…"}</option>
+      <option value="">{pending ? "Moving…" : ""}</option>
       {LEAD_BUCKETS.filter((b) => b !== current).map((b) => (
         <option key={b} value={b}>{BUCKET_LABEL[b]}</option>
       ))}

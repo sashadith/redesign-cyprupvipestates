@@ -6,6 +6,7 @@ import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
 import { resolveDevelopmentPrice, resolveDevelopmentLocation, resolveRelativeCompletion } from "@/lib/developmentCard";
 import { developmentCopy } from "@/lib/developmentCopy";
+import { localizedHref, isLocale } from "@/lib/locale";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
    synced Development/Units + merges the admin DevelopmentOverride (alias, area,
@@ -14,7 +15,10 @@ import { developmentCopy } from "@/lib/developmentCopy";
    fallback for anything not yet synced. */
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
-const statusLabel = (s: string, lang: string) => developmentCopy(lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
+// For `he` the VM keeps the English label: UnitsView's StatusPill / status column
+// localize it at render time via heFeedLabel() (feminine forms for a יחידה), so a
+// pre-resolved Hebrew label here would bypass that mapping (Task 5 review).
+const statusLabel = (s: string, lang: string) => developmentCopy(lang === "he" ? "en" : lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
 
 type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverride | null };
 
@@ -22,7 +26,16 @@ type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverri
 // (slug/publishStatus/seoOverride aren't part of the feed-facing ProjectVM
 // contract, but are harmless extra properties on the returned object —
 // structural typing means every existing ProjectVM consumer just ignores them).
-export type DbProjectVM = ProjectVM & { slug: string | null; publishStatus: string; seoOverride: SeoOverride | null };
+export type DbProjectVM = ProjectVM & {
+  slug: string | null;
+  publishStatus: string;
+  seoOverride: SeoOverride | null;
+  // Long-form promotional content block (rendered between the map and units
+  // section) — same per-language resolution as `description` above, admin-
+  // authored via PromoBlocksField/BlockEditor, portable-text-shaped, empty
+  // array when nothing's been written for this project yet.
+  promoBlocks: any[];
+};
 
 // Exported for the Client Presentation system (src/app/c/[token]), which
 // renders developments from potentially many different developers in one
@@ -82,7 +95,10 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     status: d.status ?? "", category: d.category ?? undefined,
     stage: ov?.stage || d.stage || undefined, completion: resolveRelativeCompletion(ov?.completion || d.completion), energy: ov?.energy || d.energy || "",
     priceFrom, priceTo, currency: d.currency ?? "EUR",
-    description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
+    description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU, he: ov?.descriptionHE } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
+    // Same EN fallback as the description above: an empty promoBlocksHE shows
+    // the EN block (translation-queue support for this field is a follow-up).
+    promoBlocks: (({ en: ov?.promoBlocksEN, de: ov?.promoBlocksDE, pl: ov?.promoBlocksPL, ru: ov?.promoBlocksRU, he: ov?.promoBlocksHE } as Record<string, unknown>)[lang] || ov?.promoBlocksEN || []) as any[],
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,
     vatApplies: ov?.vatApplies ?? null,
@@ -146,6 +162,25 @@ export const getDbProjectBySlug = cache(async (slug: string, lang: string = "en"
   });
   return d ? mapRowToVM(d, lang) : null;
 });
+
+/** Last-resort fallback for src/app/[lang]/projects/[slug]/page.tsx, checked
+ *  after a live Development AND getLegacyProjectRedirect both miss: a slug a
+ *  Development USED to have (retired by a manual admin rename — see
+ *  saveOverride's "Manual slug edit" in
+ *  admin/(panel)/developments/[id]/actions.ts) 301s to whatever that
+ *  Development's CURRENT slug is, in one hop even across several renames.
+ *  Returns null — rather than a stale target — if that Development is no
+ *  longer published. */
+export async function resolveDevelopmentSlugHistory(slug: string, lang: string): Promise<string | null> {
+  if (!slug || !isLocale(lang)) return null;
+  const row = await prisma.developmentSlugHistory.findUnique({
+    where: { slug },
+    select: { development: { select: { slug: true, publishStatus: true } } },
+  });
+  const current = row?.development;
+  if (!current?.slug || current.publishStatus !== "published") return null;
+  return localizedHref(lang, ["projects", current.slug]);
+}
 
 /** Bulk by-id lookup, keyed by Development.id — for the Client Presentation
  *  system (src/app/c/[token]), which renders a curated set of developments

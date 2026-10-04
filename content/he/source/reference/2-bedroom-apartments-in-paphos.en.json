@@ -1,0 +1,967 @@
+{
+  "slug": "2-bedroom-apartments-in-paphos",
+  "title": "2 Bedroom Apartments in Paphos for Sale",
+  "excerpt": "Discover a range of 2 bedroom apartments in Paphos, Cyprus — from modern city flats to coastal residences. Access quality listings through our direct developer network with no additional buyer’s fee.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "2 Bedroom Apartments in Paphos Cyprus – Stylish Flats for Sale",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "2 Bedroom Apartments in Paphos Cyprus – Stylish Flats for Sale",
+    "metaDescription": "Explore 2 bedroom apartments in Paphos, Cyprus for sale. Modern flats and coastal living spaces with direct developer access — no extra buyer’s fees through our network."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b-intro-en-1771245186691",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "2 Bedroom Apartments in Paphos Cyprus – Stylish Flats for Sale",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "2 Bedroom Apartments in Paphos for Sale",
+      "subtitle": "Stylish Flats",
+      "buttonLabel": "Buy an Apartment",
+      "description": "Discover a range of 2 bedroom apartments in Paphos, Cyprus — from modern city flats to coastal residences. Access quality listings through our direct developer network with no additional buyer’s fee."
+    },
+    {
+      "_key": "b-tstart-en-1771245186691",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "pt-0-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-0-0-1771245186691-t0-t0",
+              "text": "Welcome to Cyprus VIP Estates’ curated selection of 2 bedroom apartments in Paphos, Cyprus — designed for buyers who value comfort, contemporary design, and excellent lifestyle potential. Whether you are looking for a 2 bedroom apartment for sale in Paphos as a permanent residence, a holiday home, or an investment, our platform connects you directly with trusted developers. Because we operate as a marketing agency and not a traditional real estate brokerage, you pay no extra buyer’s or agency fee — the price you see is the developer’s price.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245186691-t0-t0",
+              "text": "Paphos is widely recognised for its combination of historic charm, beautiful coastline, and modern infrastructure, making it one of Cyprus’s most appealing destinations for property buyers from Europe, the UK, the Middle East, CIS countries, China, and beyond.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "b-proj-en-1771245186691",
+      "_type": "landingProjectsBlock",
+      "title": "List of 2 Bedroom Apartments in Paphos",
+      "projects": [
+        {
+          "_key": "pr-0-1771245186691",
+          "_ref": "b1ff9015-9b3a-42df-8239-2fb55e152d70",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-1-1771245186691",
+          "_ref": "9acf5916-967d-4fde-9d78-e218f4981c3e",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-2-1771245186691",
+          "_ref": "project-minthis-lofos-apartnents-pafilia.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-3-1771245186691",
+          "_ref": "project-minthis-resort-apartments-pafilia.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-4-1771245186691",
+          "_ref": "project-bluvia-residences-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-5-1771245186691",
+          "_ref": "52d9ac99-a07f-4da1-a9bf-79e39d0f5a19",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-6-1771245186691",
+          "_ref": "project-trees-apartments-inex.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-7-1771245186691",
+          "_ref": "1c80a0c5-eafa-4171-9e3a-f1a7c610dbc0",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-8-1771245186691",
+          "_ref": "683dcfd3-8d4c-46e9-b1d9-aec238356798",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-9-1771245186691",
+          "_ref": "project-celestia-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-10-1771245186691",
+          "_ref": "9d671d58-a7c2-4059-bed8-f73e9e35a495",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-11-1771245186691",
+          "_ref": "a73a318d-0a12-44b1-8928-c9a9c12e4447",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-12-1771245186691",
+          "_ref": "f5efc388-395f-4fe9-bd4b-e1fcbfaaa923",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-13-1771245186691",
+          "_ref": "ae8611da-9e74-456a-a303-9f1de2409f19",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-14-1771245186691",
+          "_ref": "project-qube-inex.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-15-1771245186691",
+          "_ref": "project-galaxy-residences-aristo.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-16-1771245186691",
+          "_ref": "project-uno-reiwa.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-17-1771245186691",
+          "_ref": "project-akropolis-275.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-18-1771245186691",
+          "_ref": "project-vista-gardens-quality-homes.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-19-1771245186691",
+          "_ref": "project-begonia-residences-aristo.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-20-1771245186691",
+          "_ref": "project-nova-reiwa.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-21-1771245186691",
+          "_ref": "project-avrora-court-aristo.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-22-1771245186691",
+          "_ref": "project-pearl-park-aristo.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-23-1771245186691",
+          "_ref": "project-leptos-venus-gardens.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-24-1771245186691",
+          "_ref": "3f11abac-8396-4dd3-9292-7ce9d43f095f",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-25-1771245186691",
+          "_ref": "f36a316d-368c-486f-a3c9-d759d3d98844",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-26-1771245186691",
+          "_ref": "project-avalon-gardens-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-27-1771245186691",
+          "_ref": "project-eniko-mare-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-28-1771245186691",
+          "_ref": "project-horizon-quality-homes.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-29-1771245186691",
+          "_ref": "project-paphos-suites-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-30-1771245186691",
+          "_ref": "project-andriana-court-aristo.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-31-1771245186691",
+          "_ref": "project-konia-aura-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-32-1771245186691",
+          "_ref": "project-cirvis-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-33-1771245186691",
+          "_ref": "project-pafilia-plaza-pafilia.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-34-1771245186691",
+          "_ref": "project-coral-gardens.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-35-1771245186691",
+          "_ref": "31f393a8-f891-4f86-b0b5-24c67a59862a",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-36-1771245186691",
+          "_ref": "project-la-bella-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-37-1771245186691",
+          "_ref": "project-akakia-residences-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-38-1771245186691",
+          "_ref": "f6bb5f0f-1f7a-4bf1-8aa9-e59867bd6b70",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-39-1771245186691",
+          "_ref": "f9dbf6b0-72ed-42e4-8e0d-e95c4ec71120",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-40-1771245186691",
+          "_ref": "project-emerald-park-luma.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-41-1771245186691",
+          "_ref": "87b79d08-58a3-4b8e-8621-2d5fed2776ab",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-42-1771245186691",
+          "_ref": "project-arie-x.en",
+          "_type": "reference"
+        }
+      ]
+    },
+    {
+      "_key": "b-tf-en-1771245186691",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "pt-0-1771245186691",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245186691-t0-t0",
+              "text": "Why Buy 2 Bedroom Apartments in Paphos, Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245186691-t0-t0",
+              "text": "Living in Paphos means enjoying a Mediterranean lifestyle with excellent amenities and year-round sunshine. For many buyers, a 2 bedroom flat in Paphos Cyprus for sale represents the perfect blend of:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245186691-t0-t0",
+              "text": "Spacious living — two-bedroom layouts are ideal for couples, small families, retirees, or investors",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-5-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-5-0-1771245186691-t0-t0",
+              "text": "Coastal accessibility — many apartments are within walking distance of beaches and promenades",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245186691-t0-t0",
+              "text": "Modern infrastructure — international schools, healthcare, and transport links",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245186691-t0-t0",
+              "text": "Strong rental appeal — attractive for long-term and holiday rentals",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245186691-t0-t0",
+              "text": "Cultural richness — UNESCO heritage sites, museums, and local gastronomy",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245186691-t0-t0",
+              "text": "The city’s blend of tranquillity and vibrant community life makes it equally suited for year-round residents and seasonal visitors.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245186691",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-12-0-1771245186691-t0-t0",
+              "text": "Types of 2 Bedroom Flats for Sale in Paphos",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-14-0-1771245186691-t0-t0",
+              "text": "Our selection of 2 bedroom apartments for sale in Paphos includes a variety of property types, each offering its own advantages:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245186691",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-16-0-1771245186691-t0-t0",
+              "text": "Modern Urban Flats",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-18-0-1771245186691-t0-t0",
+              "text": "Located in central or developing neighbourhoods, these contemporary apartments feature efficient layouts, quality finishes, and proximity to shops, cafés, and services. They are perfect for everyday living and come with practical amenities.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245186691",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-20-0-1771245186691-t0-t0",
+              "text": "Coastal & Sea-View Apartments",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-22-0-1771245186691-t0-t0",
+              "text": "Flats near the coast offer stunning sea views, outdoor terraces, and easy access to waterfront promenades. These units are often popular as holiday homes or lifestyle properties for buyers who want to enjoy Paphos’s scenic beauty.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-24-1771245186691",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-24-0-1771245186691-t0-t0",
+              "text": "New Build Developments",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-26-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-26-0-1771245186691-t0-t0",
+              "text": "Brand-new apartments in modern complexes are designed with energy-efficient systems, contemporary interiors, and shared amenities such as gardens, parking, and security. These properties are appealing for buyers seeking a turnkey solution.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-28-1771245186691",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-28-0-1771245186691-t0-t0",
+              "text": "Investment-Oriented Flats",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-30-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-30-0-1771245186691-t0-t0",
+              "text": "Some 2 bedroom apartments are ideal for investment portfolios due to their location near business hubs, tourist attractions, or amenities that attract quality tenants and deliver stable rental returns.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-32-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-32-0-1771245186691-t0-t0",
+              "text": "Each category prioritises thoughtful design, quality construction, and practical living spaces to match diverse needs and budgets.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "faq-en-0-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "You can find modern urban flats, newly built complexes, sea-view apartments, and investment-oriented properties — all designed to meet a range of lifestyle and financial goals.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What types of 2 bedroom apartments are available in Paphos?"
+          },
+          {
+            "_key": "faq-en-1-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "Yes. Paphos offers a pleasant Mediterranean climate, strong infrastructure, cultural attractions, and a welcoming environment — ideal for both permanent residents and seasonal visitors.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Is Paphos a good place to live year-round?"
+          },
+          {
+            "_key": "faq-en-2-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "No. As a marketing agency representing developers, we do not charge extra buyer’s or marketing fees. You pay the developer’s price directly.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Do buyers pay additional fees to Cyprus VIP Estates?"
+          },
+          {
+            "_key": "faq-en-3-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "Absolutely. International buyers from Europe, UK, Middle East, CIS, China, and other regions can legally purchase property in Cyprus, supported by transparent legal procedures.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can foreigners buy apartments in Paphos?"
+          },
+          {
+            "_key": "faq-en-4-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "Yes. Due to strong rental demand and limited supply in prime areas, well-located 2 bedroom apartments can deliver strong rental returns and capital growth potential.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Are 2 bedroom flats a good investment in Paphos?"
+          },
+          {
+            "_key": "faq-en-5-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "We offer virtual tours and detailed video walkthroughs that allow you to explore properties remotely before making a decision.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "How can I view apartments if I am abroad?"
+          },
+          {
+            "_key": "faq-en-6-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "Most modern apartments offer fitted kitchens, balconies or terraces, private parking, and access to communal features such as landscaped areas or secure entry.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What amenities are typically included?"
+          },
+          {
+            "_key": "faq-en-7-1771245186691",
+            "answer": [
+              {
+                "_key": "pt-0-1771245186691",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245186691-t0-t0",
+                    "text": "Timelines vary by project and purchase stage, but with proper preparation and support, transactions typically complete within a few weeks to a few months — with full legal transparency.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "How long does it take to complete the purchase?"
+          }
+        ]
+      },
+      "_key": "b-faq-en-1771245186691",
+      "_type": "landingFaqBlock",
+      "title": "Frequently asked questions"
+    },
+    {
+      "_key": "b-ts-en-1771245186691",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "pt-0-1771245186691",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245186691-t0-t0",
+              "text": "How We Help You Buy a 2 Bed Apartment in Paphos",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245186691-t0-t0",
+              "text": "Buying property in a foreign country can be complex, but Cyprus VIP Estates simplifies every step of the process:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245186691-t0-t0",
+              "text": "Initial Consultation – We learn your property goals, budget, and lifestyle preferences.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-5-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-5-0-1771245186691-t0-t0",
+              "text": "Property Selection – A tailored list of suitable 2 bedroom apartments is prepared based on your criteria.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245186691-t0-t0",
+              "text": "Viewings & Virtual Tours – Options include in-person visits or detailed online walkthroughs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245186691-t0-t0",
+              "text": "Direct Developer Contact – Transparent pricing and communication with project owners.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245186691-t0-t0",
+              "text": "Legal and Administrative Support – We connect you with experienced partners to handle due diligence, contracts, and documentation.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245186691",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245186691-t0-t0",
+              "text": "Finalisation & Handover – Smooth transition from reservation to ownership — with no additional buyer’s fees.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-11-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-11-0-1771245186691-t0-t0",
+              "text": "Our multilingual support (English, German, Russian, Polish, and others) ensures clarity and confidence throughout your property journey.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-13-1771245186691",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-13-0-1771245186691-t0-t0",
+              "text": "Find Your Ideal 2 Bedroom Apartment in Paphos",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-15-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-15-0-1771245186691-t0-t0",
+              "text": "Exploring 2 bedroom apartments in Paphos, Cyprus opens the door to a comfortable Mediterranean lifestyle, strong investment opportunities, and a welcoming community. Whether you are considering your next home, a holiday retreat, or a rental property, our marketing network offers direct access to trusted developers — with no additional buyer’s fees and professional support at every stage.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-17-1771245186691",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-17-0-1771245186691-t0-t0",
+              "text": "Start your property journey with Cyprus VIP Estates today and discover the best 2 bed apartments in Paphos Cyprus for sale — beautifully designed, strategically located, and ready for your future.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    {
+      "_key": "ahcqnimrlz",
+      "_ref": "single-properties-for-sale-paphos.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "obt9pmuq9rg",
+      "_ref": "single-investment-property-paphos.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "4y16e098wnl",
+      "_ref": "single-villas-in-paphos-for-investors.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "qbaiiwrra7",
+      "_ref": "a4cb29a9-7f65-4831-ba70-820ec18988e1",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "orwncunk95b",
+      "_ref": "single-properties-near-city-centre-in-paphos.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "rt322q19yl",
+      "_ref": "single-properties-for-sale-coral-bay-cyprus.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "o7p4c741nl",
+      "_ref": "single-off-plan-properties-in-paphos.en",
+      "_type": "singlepageRef"
+    }
+  ]
+}

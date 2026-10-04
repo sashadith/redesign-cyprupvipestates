@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { isDarkHeroPath } from "./navShared";
+import { isDarkHeroPath, isScrimHeroPath } from "./navShared";
 
 /* Toggles <html data-hero-dark> on the dark-hero routes (home, /projects) so the
    global nav stays fully transparent there; every other route keeps the legible

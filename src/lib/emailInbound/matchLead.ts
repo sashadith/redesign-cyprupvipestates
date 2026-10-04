@@ -11,7 +11,7 @@ export type LeadMatch = { leadId: string; ambiguous: boolean };
 // "the code is right but the fallback silently failed" debugging session —
 // see the conversation this was flagged in.
 const GMAIL_DOMAINS = new Set(["gmail.com", "googlemail.com"]);
-function canonicalizeEmail(e: string | null | undefined): string {
+export function canonicalizeEmail(e: string | null | undefined): string {
   const trimmed = (e ?? "").trim().toLowerCase();
   const at = trimmed.lastIndexOf("@");
   if (at === -1) return trimmed;

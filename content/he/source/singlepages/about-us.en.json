@@ -1,0 +1,1184 @@
+{
+  "slug": "about-us",
+  "title": "About Us",
+  "excerpt": null,
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "Trusted real estate agency team based in Cyprus",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-b605a85d73dbb99205fd24e8b5f0f2c3b87541b4-3000x2000-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "About Cyprus VIP Estates | Trusted Real Estate Experts",
+    "metaDescription": "Learn more about Cyprus VIP Estates — your trusted real estate marketing partner in Cyprus. Expert team, local knowledge & luxury properties for sale."
+  },
+  "contentBlocks": [
+    {
+      "_key": "af84682cde25",
+      "_type": "imageFullBlock",
+      "title": "Image Full Block",
+      "imageMain": {
+        "picture": {
+          "alt": "Cyprus VIP Estates team - experts in real estate in Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b605a85d73dbb99205fd24e8b5f0f2c3b87541b4-3000x2000-jpg",
+            "_type": "reference"
+          }
+        },
+        "aspectRatio": "10:5"
+      },
+      "description": {
+        "tag": "h1",
+        "textItems": [
+          {
+            "_key": "82cb4aab7b21",
+            "text": "Welcome to ",
+            "_type": "textItem",
+            "highlighted": false
+          },
+          {
+            "_key": "05c1c26d6255",
+            "text": "Cyprus VIP Estates",
+            "_type": "textItem",
+            "highlighted": true
+          },
+          {
+            "_key": "f69d516ed784",
+            "text": ", your Best Real Estate Partner in Cyprus! Project of SecretBrand Solutions LTD.",
+            "_type": "textItem",
+            "highlighted": false
+          }
+        ]
+      },
+      "hasDescription": true
+    },
+    {
+      "_key": "808f987bffda",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "marginTop": "large",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Willkommen bei Cyprus VIP Estates, Ihrem besten Immobilienpartner auf Zypern",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d4088522f715b8263fda63075531db71581ddb25-1002x682-png",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "73dd423d3284",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "a166320489350",
+                  "text": "Why Choose Us?",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "f96bf66fd83b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9f0153b9e8f3",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "96df019ccac7",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "885c5fed0d4a",
+                  "text": "Our mission",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "1252dc73a140",
+                  "text": " is to connect people with their dream home on the island of sunshine – not just as a property consultancy, but as a bridge to a new lifestyle under the Mediterranean sky.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "4bbe4d4cbecc",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "0cc4dbcd4241",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "9b5c5ba10faf",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c25232c8d976",
+                  "text": "We believe",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "d938d5630701",
+                  "text": " that moving to Cyprus is more than just buying a property: it's a step toward a self-determined, enjoyable life – and we put our heart and soul into it.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "8af4a894f42a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "75052f65f52a",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "16d4a8978044",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2baef7443d1d",
+                  "text": "Our drive stems",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "4e01f2ae0603",
+                  "text": " from the conviction that personal service and local expertise can turn every purchase into a success story.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "medium",
+      "doubleTextBlockTitle": "About main Block"
+    },
+    {
+      "_key": "f74c985f6954",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "7c39b4918964",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "cb685b6494bc0",
+                  "text": "How We Work?",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "e33a90d8ba46",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "3b022aed7fcc",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "74b29f50c1cd",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2d6c66609d46",
+                  "text": "Personal on-site consultation",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "08a487282bdc",
+                  "text": " – we listen carefully to understand your needs, wishes, and life goals and find the perfect properties.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "80517152b629",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "8b492c9a9aee",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "c53a4343fe7a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e863050d6f99",
+                  "text": "Market and legal expertise",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "adbc4a0d92cb",
+                  "text": " – thanks to decades of experience and close cooperation with Cypriot authorities, we navigate confidently through deep market insights and approval procedures.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "84f30d2012d2",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "4296ff1d02fa",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "c33853e4e91d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d1d151f9bdb3",
+                  "text": "Digitally supported processe",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "b06813f00276",
+                  "text": "s – from AI analyses to online document review: We combine modern tools with personalized service for maximum transparency and efficiency.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "Cyprus VIP Estates team - experts in real estate in Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-171f486accff0915740e97b1301d73ce29fc85d2-1206x771-png",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "About Main block 2"
+    },
+    {
+      "_key": "1c87c681434aa5b7bfec8f1ec2aa214f",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Cyprus VIP Estates team - experts in real estate in Cyprus",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-2c6fd62644ff5efdfcd200c5497e0373f925b4b5-1001x634-png",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "b700767e7587",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "3d3353bdc94e0",
+                  "text": "What you'll receive?",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "fc16365d3c6d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "771dd7c580dc",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "4368ecd6db9c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "fb21a9bb1b75",
+                  "text": "A selection of exclusive properties",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "521c44750526",
+                  "text": " – you only receive properties that meet our high quality and return standards.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "74e2671f516e",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ad64ffb831eb",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "3e3a28a41dc3",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "5264e142dba8",
+                  "text": "Full-service support",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "40e9eeefb0df",
+                  "text": " – from property viewings to financing and legal advice to the notary appointment: we are your single point of contact.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "5679f3c6d7d0",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "1aad95b35a28",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "ce70adf60b8c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "0ec054b94479",
+                  "text": "After-sales support",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "a0674cbcf4d1",
+                  "text": " – move-in service, property management, and recommendations of local service providers round out our offerings, so you feel at home immediately.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "large",
+      "doubleTextBlockTitle": "About main Block 3"
+    },
+    {
+      "_key": "fc028e2adddf",
+      "_type": "buttonBlock",
+      "title": "Button",
+      "alignItems": "center",
+      "buttonText": "Contact our team!",
+      "marginBottom": "large",
+      "justifyContent": "center"
+    },
+    {
+      "_key": "481309825db8",
+      "_type": "teamBlock",
+      "title": "Our Team",
+      "members": [
+        {
+          "_key": "0d982a6843ef",
+          "name": "Sascha Dith",
+          "image": {
+            "alt": "CEO Cyprus VIP Estates Sascha Dith",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-807f0251fe7155600df9b18efda5d5873cc00562-700x959-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "CEO",
+          "description": "deutsch, english, русский"
+        },
+        {
+          "_key": "391422b5de75",
+          "name": "Katrin Dith",
+          "image": {
+            "alt": "Katrin Dith",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-310598bbd67926a40ce8ab3c1b03769e428ca1fe-700x845-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Quality control",
+          "description": "русский, english"
+        },
+        {
+          "_key": "b8ea6baae4d6",
+          "name": "Alex Bandziuk",
+          "image": {
+            "alt": "Digital Strategy & Web Technology Lead Cyprus VIP Estates Aliaksandr Bandziuk",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-b9ed0374d3f0a88dc6b83355673bbc85680b9095-700x900-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Digital Strategy & Web Technology Lead",
+          "description": "english, polski, русский"
+        },
+        {
+          "_key": "59a4f831957d",
+          "name": "Alisher Maniyazov",
+          "image": {
+            "alt": "Alisher Maniyazov",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-7354cae70af463d04f07acb3c3614d0ed3481388-1728x2368-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "CBDO",
+          "description": "english, русский, қазақша, oʻzbekcha"
+        },
+        {
+          "_key": "84aeaed1c8f4c3c01ae21375d4d8ca3d",
+          "name": "Daniel Kaufmann",
+          "image": {
+            "alt": "Daniel Kaufmann",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-bc020c0a37e7f2032747ecd4b09ff85f93b4d046-500x670-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Property consultant",
+          "description": "english, español, deutsch"
+        },
+        {
+          "_key": "c12b160e4373",
+          "name": "Denise Prusko",
+          "image": {
+            "alt": "Denise Prusko",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-9da972f8df51f96b9464c32f00464342e84b31f7-500x643-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Property consultant",
+          "description": "english, deutsch"
+        },
+        {
+          "_key": "4fff53daf4d8c82e0c477e543bf2377d",
+          "name": "Patrick Prusko",
+          "image": {
+            "alt": "Patrick Prusko",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-f66f78a963bae70628ab7dcc336002f98491eac2-500x685-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Property consultant",
+          "description": "english, deutsch, polski"
+        },
+        {
+          "_key": "8f5050cd1d6b18f9d780c1e2793776b3",
+          "name": "Guido Steinberg",
+          "image": {
+            "alt": "Guido Steinberg",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-c99dc5537e512e7b1a821fca742821e275dfb3d4-600x894-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Partner",
+          "description": "english, deutsch"
+        },
+        {
+          "_key": "bad281588ad5386b7a96140e174e742e",
+          "name": "Alexander Ostrovski",
+          "image": {
+            "alt": "Alexander Ostrovski",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-5bcbfedd6d21df35e10af4ac18b224f04078279d-590x794-png",
+              "_type": "reference"
+            }
+          },
+          "position": "Property consultant",
+          "description": "english, deutsch, русский"
+        },
+        {
+          "_key": "5018355548b22f65831dffb19832f08a",
+          "name": "Lazaros Filimon",
+          "image": {
+            "alt": "Lazaros Filimon",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-c2f1cb1b39aca61cf5e891b08cf55c4fe08239da-1728x2368-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "Property consultant",
+          "description": "english, deutsch, eλληνικά, русский, dutch, francais"
+        }
+      ]
+    },
+    {
+      "_key": "18e8695fa97e",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "a71714c7da98",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "7642e5241ebb0",
+              "text": "Our Mission",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "3a6d03251f94",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "061691a00b77",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ffdd153b3ef9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "783c6c26fcc3",
+              "text": "Our mission is to help people",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "e93f264f28fc",
+              "text": " find their ideal home under the Cypriot sun – with personalized advice, absolute transparency, and a tireless commitment to the highest quality standards.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "abe43ebee2fe",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "742b83eabde1",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "2e4f6ac7a649",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ea93e3a94441",
+              "text": "We combine ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "0df632c9eeb0",
+              "text": "local market knowledge",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "827030669386",
+              "text": " with ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "85002e428c5f",
+              "text": "digital tools",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "344b70ee1283",
+              "text": " to make the entire real estate process as simple, secure, and convenient as possible.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "textAlign": "center",
+      "backgroundColor": "#262626",
+      "paddingVertical": "small",
+      "paddingHorizontal": "large"
+    },
+    {
+      "_key": "ee680a1df63a",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "0f1654d026f8",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "b49b35aef14f0",
+              "text": "At ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "55208e419177",
+              "text": "Cyprus VIP Estates",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "2af96891db32",
+              "text": ", we are guided by these core values ​​that guide our actions:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "marginTop": "medium",
+      "textAlign": "center",
+      "textColor": "#bd8948",
+      "marginBottom": "none",
+      "backgroundFull": "#F5F5F5",
+      "paddingVertical": "medium",
+      "paddingHorizontal": "medium"
+    },
+    {
+      "_key": "0f958d0ad8c7",
+      "_type": "imageBulletsBlock",
+      "image": {
+        "alt": "At Cyprus VIP Estates, we are guided by these core values ​​that guide our actions:",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-176848aeb6b7530e3fc294af6f8ff3495d01e278-619x973-png",
+          "_type": "reference"
+        }
+      },
+      "title": "Core Values",
+      "bullets": [
+        {
+          "_key": "dbf5727a02e9",
+          "title": "Integrity & Transparency",
+          "description": "We value open communication and document all agreements in writing to ensure complete clarity for our clients."
+        },
+        {
+          "_key": "3240d796a5e6",
+          "title": "Client Focus",
+          "description": "Each client receives personalized attention, as this is the only way we can fulfill personal wishes and create long-term satisfaction."
+        },
+        {
+          "_key": "e540d5bc585e",
+          "title": "Local Expertise",
+          "description": "Our in-depth knowledge of Cypriot regions, laws, and culture ensures you make optimal real estate decisions."
+        },
+        {
+          "_key": "3b6ed5afece3",
+          "title": "Excellence & Professionalism",
+          "description": "We are committed to the highest quality of service, continuous training, and a flawless presence – both offline and online."
+        },
+        {
+          "_key": "81ec9ecddf36",
+          "title": "Sustainability & Responsibility",
+          "description": "We consider environmental aspects in every project and work with partners who maintain fair labor and construction practices."
+        },
+        {
+          "_key": "00c4a4d7e361",
+          "title": "Innovation & Efficiency",
+          "description": "Using the latest technologies (e.g., AI tools, digital document management), we optimize processes and save you time."
+        }
+      ]
+    },
+    {
+      "_key": "ab6471216d2a",
+      "_type": "reviewsFullBlock",
+      "title": "What our customers say?",
+      "reviews": [
+        {
+          "_key": "139593cd1419",
+          "name": "Michael H.",
+          "text": [
+            {
+              "_key": "c64272422283",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "61aeceb12e000",
+                  "text": "The purchase of our villa in Paphos went absolutely smoothly. The team supported us professionally from the first viewing to the signing of the contract. I was particularly impressed by the transparency of all processes.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-f53a07e8727b0d29ff590599aa8a2216ab24cf3e-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "0931cb975901",
+          "name": "Sabine K.",
+          "text": [
+            {
+              "_key": "449af041d7fb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "08fde4367f6c0",
+                  "text": "I found a beautiful apartment in Limassol, exactly what I was looking for. The advice was first-class, and all my questions were answered patiently. A heartfelt thank you for your support!",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-ffdb23fc0727bdc71a0dbca5cadd57c20b9effd4-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "9173099a8cf4",
+          "name": "Andreas W.",
+          "text": [
+            {
+              "_key": "cbdc224a136a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "07ffe38048150",
+                  "text": "The service was excellent! I bought a property in Larnaca and was thrilled with how quickly and easily everything went. The agency provided me with all the necessary information and took away a lot of my worries.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-6503b00045d52ef4e40a0d915d4ac87eeb02d37d-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "0242791f905d",
+          "name": "Claudia M.",
+          "text": [
+            {
+              "_key": "27e8b4f41342",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "4ba895ada63c0",
+                  "text": "Professional, reliable, and honest – exactly what you want from a real estate agency. I purchased a villa in Paphos and am more than satisfied with the transaction.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-8b0222fdb8d8199397984511612c4bb29f3b5572-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "e9d355628e56",
+          "name": "Thomas R.",
+          "text": [
+            {
+              "_key": "00ec03808792",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "4f22f1a002730",
+                  "text": "A truly recommendable agency! My apartment in Limassol was presented to me exactly as described, and all documents were prepared promptly. Very pleasant and professional contact.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-d41aff1f80320573963b80a5984b62b2a40c7ede-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "243b9df39eba",
+          "name": "Kerstin L.",
+          "text": [
+            {
+              "_key": "2fc7e2598d43",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "63e508bcdf8a0",
+                  "text": "Thank you for the excellent advice and support! The purchase of my property in Larnaca was uncomplicated and stress-free thanks to the competent team. I was accompanied and well-informed throughout the entire process.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-070355f667760043f3657c79891ad06558c6a48f-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "e26704f687b2",
+          "name": "Stefan B.",
+          "text": [
+            {
+              "_key": "9c7a98af9628",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e4bd4697c3e10",
+                  "text": "From the first viewing to the notary appointment, everything went smoothly. I bought a villa in Paphos and could rely on the team's expertise. Highly recommended!",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-5c32ea75327be36e139315f6de9f6f2a7dd56415-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "fecc1cf609f4",
+          "name": "Ulrike T.",
+          "text": [
+            {
+              "_key": "6ec61697fb7b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "3ff4f771de640",
+                  "text": "I am absolutely satisfied with my apartment purchase in Limassol. The agency took plenty of time to consider my wishes. I particularly appreciated the honest, unpressured advice.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-fdaa7e2703c618b5833dc592099bba45d59ff67c-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "b5dc97de6146",
+          "name": "Jörg S.",
+          "text": [
+            {
+              "_key": "99be22913e69",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "53572f5b14f20",
+                  "text": "Great service! I received excellent advice and support with my property purchase in Larnaca. I would particularly like to emphasize the quick response times and uncomplicated processing.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-ed801466ebd3c8b06f70103e3f8a326a18e75b9f-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "abba039b4b2e",
+          "name": "Nadine P.",
+          "text": [
+            {
+              "_key": "9f175027621a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "07ea7a71568f0",
+                  "text": "Thank you so much for your fantastic support! I purchased a beautiful villa in Paphos and felt well looked after from start to finish. The agency truly made everything possible.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-759be5867f4021d19b3ba0e786c5a17294eed92b-150x150-png",
+              "_type": "reference"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "_key": "6fe6acbb3e93",
+      "_type": "benefitsBlock",
+      "title": "Benefits",
+      "benefits": [
+        {
+          "_key": "68c604440197",
+          "title": "Real Estate Projects",
+          "counting": {
+            "conuntNumber": 195
+          },
+          "description": "In Southern Cyprus. From Studio Apartments to High-Class Villas"
+        },
+        {
+          "_key": "6ee836295625",
+          "title": "Years of experience",
+          "counting": {
+            "conuntNumber": 10
+          },
+          "description": "as a full-service real estate marketing agency"
+        },
+        {
+          "_key": "81677c357dfc",
+          "title": "Service for our clients",
+          "counting": {
+            "sign": "°",
+            "conuntNumber": 360
+          },
+          "description": "We accompany you from the first contact to the handover of the keys"
+        },
+        {
+          "_key": "c5b40c62e156",
+          "title": "Zufriedene Kunden",
+          "counting": {
+            "sign": "%",
+            "conuntNumber": 100
+          },
+          "description": "Aus Deutschland, Österreich, Schweiz und weiteren Ländern"
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": null
+}

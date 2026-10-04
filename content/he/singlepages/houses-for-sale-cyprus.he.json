@@ -1,0 +1,407 @@
+{
+  "slug": "houses-for-sale-cyprus",
+  "title": "בתים למכירה בקפריסין היוונית",
+  "excerpt": "בתים למכירה בקפריסין היוונית, בתים פרטיים ובתים טוריים בפרויקטים חדשים במחוז פאפוס ובלימסול.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "וילה חדשה עם בריכה פרטית וגינה במחוז פאפוס",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "בתים למכירה בקפריסין היוונית | Cyprus VIP Estates",
+    "metaDescription": "בתים פרטיים ובתים טוריים בפרויקטים חדשים בדרום האי, ישירות מהיזם ובלי תוספת מחיר לרוכש. אפשר להשוות בית על מגרש מול בית טורי לפני הסיור."
+  },
+  "contentBlocks": [
+    {
+      "_key": "iplgzrpx5owa",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "בתים למכירה בקפריסין היוונית",
+      "subtitle": "דרום האי",
+      "buttonLabel": "לקבל שיחה מיועץ",
+      "description": "הביטוי קפריסין היוונית מתאר בעברית את החלק הדרומי של האי, שהוא הרפובליקה של קפריסין ומדינה חברה באיחוד האירופי. רוב הפרויקטים שאנחנו מלווים נמצאים במחוז פאפוס ובמחוז לימסול, ויש גם פרויקטים בקוקליה, בפוליס ובלרנקה. בצפון האי איננו עובדים."
+    },
+    {
+      "_key": "frq4z8t7yfo1",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "3jf9zn4eg3tl",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "292vq4ymf31d",
+              "text": "בעברית המילה בית מתארת משהו אחר מהמילה וילה. ההיצע החדש בקפריסין כולל בית פרטי על מגרש עם בריכה וגינה, בית טורי בתוך מתחם עם קיר משותף וחצר קטנה, ולעיתים בית חד-קומתי במתחם שקט. לבית טורי יש פחות תחזוקה מבית פרטי, אבל הוא מגיע עם דמי ניהול של המתחם.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "r3yk92r6jnx3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "85vdghonxjts",
+              "text": "ההבחנה בין דרום האי לצפונו מעשית ולא רק גיאוגרפית. בדרום, ברפובליקה של קפריסין, חוזה המכר מופקד אצל רשם המקרקעין ובדיקת הבעלות המשפטית על הקרקע ועל הפרויקט היא הליך מוסדר שעורך דין מקומי מבצע. אנחנו עובדים רק בדרום ורק מול יזמים שעברו בדיקה, והמחיר שאתם רואים הוא המחיר שהיזם מפרסם, בלי תוספת מחיר לרוכש.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "4r33wadr6ojf",
+      "_type": "landingProjectsBlock",
+      "title": "בתים בפרויקטים חדשים בדרום קפריסין",
+      "filterPropertyType": "Villa"
+    },
+    {
+      "_key": "xjsyv99o13uk",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "atioqhy1g6qc",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "mt1zgre9a83z",
+              "text": "איפה נבנים הבתים החדשים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "0rro2zin4n9m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "bll8hcd5dv34",
+              "text": "החלק הגדול של הבתים החדשים נמצא במחוז פאפוס, בעיר עצמה, בפייה, בכלורקה ובגרוסקיפו. בלימסול הבנייה החדשה היא בעיקר דירות, ולצידה בתים בפרברי העיר. ככל שמתרחקים מהערים, הבחירה קטנה והמרחק משירותים יומיומיים גדל.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "6g3hr3xj7ilg",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "8080slpycvht",
+              "text": "בית על מגרש מול בית עם קיר משותף",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "kfa0x4sbmuqc",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "5lw6iqqcpyc7",
+              "text": "בית פרטי עומד על מגרש משלו, ולכן שטח המגרש קובע את גודל הגינה ואת המרחק מהשכנים. בית טורי חולק קיר עם השכן ונמכר בדרך כלל בטווח נמוך יותר מבית פרטי על מגרש, ואת הפער בפרויקט מסוים אפשר לקבל בפנייה. בשני המקרים כדאי לבדוק אם יש חדר רחצה צמוד לכל חדר שינה, כי זה מה שקובע את התאמת הבית למשפחה ולאירוח.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "vrcdo3tbi3hl",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "tvcsrmf8kxeg",
+              "text": "כמה מחירי הבתים משתנים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "hm02q9mrk8y3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "579d3cxtvbgy",
+              "text": "אין מחירון אחיד לבית בקפריסין. על המחיר משפיעים המחוז, המרחק מהים, שטח המגרש והשטח הבנוי, שלב הבנייה והשאלה אם מדובר בבית פרטי או בבית טורי. הפער בין שכונה פנימית לקו הראשון לים גדול לרוב מהפער בין פאפוס ללימסול. המחירים עשויים להשתנות. הזמינות מתעדכנת מול היזם.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "gb4rosfelxta",
+      "_type": "landingFaqBlock",
+      "title": "שאלות נפוצות על רכישת בית בקפריסין",
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "lniv331rk7m4",
+            "answer": [
+              {
+                "_key": "sws8ahsrga2z",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6k9lzefpjk51",
+                    "text": "מבחינת העסקה זה מה שמבדיל בין רכישה במדינה חברה באיחוד האירופי, שבה חוזה המכר מופקד אצל רשם המקרקעין, לבין רכישה בצפון האי, שאיננו עובדים בו.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מה זה קפריסין היוונית?"
+          },
+          {
+            "_key": "ykr02vks7aei",
+            "answer": [
+              {
+                "_key": "lnsug9ihxkvf",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8vqgvsgdxxvd",
+                    "text": "אין מחיר אחד. בית טורי במתחם נפתח בטווח נמוך יותר מבית פרטי על מגרש, ובית עם נוף לים יקר משניהם. טווחי המחירים לפי אזור מרוכזים ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "zcp94xtkr32x",
+                    "text": "בעמוד מחירי הנכסים בקפריסין",
+                    "_type": "span",
+                    "marks": [
+                      "tp1btzzdzvhv"
+                    ]
+                  },
+                  {
+                    "_key": "qgxi75di4bza",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "tp1btzzdzvhv",
+                    "href": "/he/property-prices-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "כמה עולה בית בקפריסין?"
+          },
+          {
+            "_key": "9nao2q30fkj8",
+            "answer": [
+              {
+                "_key": "3utbgmw5rdcz",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "umnglvh0xwmj",
+                    "text": "בעברית וילה מתארת בית פרטי גדול, לרוב עם בריכה וגינה. בשוק הקפריסאי מדובר באותו סוג נכס, וההבדל הוא בשטח המגרש ובגימור. בית טורי הוא קטגוריה נפרדת.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מה ההבדל בין בית לווילה?"
+          },
+          {
+            "_key": "t8x9rtx69m5z",
+            "answer": [
+              {
+                "_key": "qhy7djnvo5ya",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7j7zsubbculz",
+                    "text": "כן, חלק מהעסקאות נסגרות מרחוק עם ייצוג משפטי וייפוי כוח. סדר הפעולות המלא, מהסכם שמירת נכס ועד הפקדת החוזה, מתואר ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "yvudbkp40amy",
+                    "text": "בעמוד על תהליך הרכישה בקפריסין",
+                    "_type": "span",
+                    "marks": [
+                      "61goth8s0brj"
+                    ]
+                  },
+                  {
+                    "_key": "wckq3r6jwo2l",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "61goth8s0brj",
+                    "href": "/he/buying-property-in-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "אפשר לקנות בית בקפריסין בלי להגיע לאי?"
+          },
+          {
+            "_key": "qlhi363pe4p8",
+            "answer": [
+              {
+                "_key": "l38mhlzjkwh9",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7n87u9sm4qkf",
+                    "text": "המסמכים משתנים לפי אזרחות הרוכש ולפי סוג העסקה. הרשימה המלאה, כולל מה שנדרש מרוכשים שאינם אזרחי האיחוד האירופי, נמצאת ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "tindt01eeqiv",
+                    "text": "ברשימת המסמכים שבעמוד תהליך הרכישה",
+                    "_type": "span",
+                    "marks": [
+                      "1a9vyjj0zp68"
+                    ]
+                  },
+                  {
+                    "_key": "3kjtapbxpadm",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "1a9vyjj0zp68",
+                    "href": "/he/buying-property-in-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "אילו מסמכים נדרשים לרכישת בית?"
+          }
+        ]
+      }
+    },
+    {
+      "_key": "sdlzji3emd0m",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "jsml8pwt1ncr",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "sgid5vz0atcd",
+              "text": "מי קונה בית ולא דירה",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "yom626i846oa",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "fecuf2x70we4",
+              "text": "בית מתאים בעיקר למי שמתכנן לגור בקפריסין חלק מהשנה או דרך קבע, למשפחות שצריכות חצר, ולמי שרוצה שליטה בגימור ובתכנון לפני סיום הבנייה. מי שקונה בעיקר להשקעה בוחר לרוב דירה, שדורשת פחות תחזוקה ופחות ניהול שוטף.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "hgu250mjpohh",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "gxt67hdg492a",
+              "text": "בית פרטי או בית טורי, איך מחליטים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "q8cmyj27i9vv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "nhiez2b0w361",
+              "text": "ההחלטה נסגרת בדרך כלל על שלוש שאלות, כמה חצר באמת צריך, כמה תחזוקה מוכנים לקחת על עצמכם ומה גובה דמי הניהול במתחם. עם התשובות אפשר לצמצם את הרשימה לכמה פרויקטים ולסגור סיור אחד שמכסה את שני סוגי הבתים.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    "villas-cyprus",
+    "real-estate-cyprus",
+    "seafront-villas-cyprus",
+    "buying-property-in-cyprus"
+  ],
+  "translationGroupSlugEn": null,
+  "parentSlug": null,
+  "review": "pending"
+}

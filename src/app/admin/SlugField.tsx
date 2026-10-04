@@ -15,6 +15,7 @@ export default function SlugField({
   label = "Slug",
   helpText = "(URL path — changing it changes the live URL)",
   fallbackTitle,
+  language,
 }: {
   name?: string;
   titleFieldName?: string;
@@ -22,9 +23,12 @@ export default function SlugField({
   label?: string;
   helpText?: React.ReactNode;
   fallbackTitle?: string;
+  language?: string;
 }) {
   const [value, setValue] = useState(initialValue ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
+  const effectiveHelpText =
+    language === "he" ? "Latin letters, digits and dashes only (Hebrew pages keep an English slug)" : helpText;
 
   const generate = () => {
     const form = inputRef.current?.form;
@@ -36,9 +40,9 @@ export default function SlugField({
 
   return (
     <div>
-      <label className="block text-sm mb-1">{label} {helpText && <span className="text-[#9CA3AF]">{helpText}</span>}</label>
+      <label className="block text-sm mb-1">{label} {effectiveHelpText && <span className="text-[#9CA3AF]">{effectiveHelpText}</span>}</label>
       <div className="flex gap-2">
-        <input ref={inputRef} name={name} value={value} onChange={(e) => setValue(e.target.value)} className={input} />
+        <input ref={inputRef} name={name} value={value} onChange={(e) => setValue(e.target.value)} dir="ltr" inputMode="url" className={input} />
         <button type="button" onClick={generate} title="Generate from title"
           className="shrink-0 rounded-md border border-[#E5E7EB] px-3 text-sm text-[#1B4B43] hover:bg-[#F8F9FA]">
           Generate

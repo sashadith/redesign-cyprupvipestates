@@ -1,24 +1,10 @@
 import React, { FC } from "react";
 import Link from "next/link";
 import styles from "./SectionLinks.module.scss";
+import { isLocale } from "@/lib/locale";
+import { HEADINGS } from "./SectionLinks.copy";
 
-// Two distinct, non-merged link blocks, each rendered ONLY when it has links (never site-wide):
-//  - "section" = structural parent -> child links (via parentSanityId)
-//  - "related" = editor-curated contextual links (Phase 2 "Related Landing Pages")
-export const HEADINGS: Record<string, Record<string, string>> = {
-  section: {
-    en: "More in this section",
-    de: "Mehr in diesem Bereich",
-    ru: "Ещё в этом разделе",
-    pl: "Więcej w tej sekcji",
-  },
-  related: {
-    en: "You may also be interested in",
-    de: "Das könnte Sie auch interessieren",
-    ru: "Вам также может быть интересно",
-    pl: "Może Cię również zainteresować",
-  },
-};
+export { HEADINGS };
 
 type Props = {
   lang: string;
@@ -32,7 +18,7 @@ const SectionLinks: FC<Props> = ({ lang, links, variant = "section" }) => {
   return (
     <section className={styles.sectionLinks}>
       <div className="container">
-        <h2 className={styles.heading}>{headings[lang] ?? headings.en}</h2>
+        <h2 className={styles.heading}>{headings[isLocale(lang) ? lang : "en"]}</h2>
         <ul className={styles.list}>
           {links.map((l) => (
             <li key={l.href}>

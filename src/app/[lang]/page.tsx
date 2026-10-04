@@ -18,6 +18,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_WIDTH,
   DEFAULT_OG_IMAGE_HEIGHT,
+  ogLocale,
 } from "@/lib/seo";
 import { Translation } from "@/types/homepage";
 import { notFound } from "next/navigation";
@@ -28,7 +29,6 @@ import type { TextContent, DoubleTextBlock } from "@/types/blog";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import WhatsAppButton from "../components/WhatsAppButton/WhatsAppButton";
-import ModalBrochure from "../components/ModalBrochure/ModalBrochure";
 
 // Staging redesign sections
 import PreviewMotion from "@/app/preview-home/anim/PreviewMotion";
@@ -40,6 +40,9 @@ import Cities from "@/app/preview-home/sections/Cities";
 import Description from "@/app/preview-home/sections/Description";
 import LatestDevelopments from "@/app/preview-home/sections/LatestDevelopments";
 import Benefits from "@/app/preview-home/sections/Benefits";
+import { buildTrackRecordBlock, hasTrackRecord } from "@/app/preview-home/sections/trackRecord.copy";
+import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
+import { bcp47For } from "@/lib/locale";
 import HowWeWork from "@/app/preview-home/sections/HowWeWork";
 import CaseStudies from "@/app/preview-home/sections/CaseStudies";
 import Content from "@/app/preview-home/sections/Content";
@@ -75,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: homePage?.seo?.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [
         {
@@ -98,11 +101,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Home({ params }: Props) {
   const { lang } = params;
   const homePage = await getHomePageByLang(lang);
+  // The track-record band is built in code, not taken from the CMS block:
+  // its figures are live (see siteStats) and must match the Partners and About
+  // bands. The CMS heading is kept. he has no band today, so it keeps the CMS
+  // path and still renders nothing.
+  const [trackProjects, trackUnits] = await Promise.all([
+    getPublicProjectCount(lang),
+    getAvailableUnitCount(),
+  ]);
   // No homepage row for this locale — including when `lang` isn't a locale at
   // all (/uploads and friends land here). Without this the render dies on a
   // null deref and the URL 500s instead of 404ing.
   if (!homePage) notFound();
-  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
   const t = homeStrings(lang);
 
   // Language-switcher translations (same logic as production).
@@ -132,23 +142,27 @@ export default async function Home({ params }: Props) {
         <Hero
           heroBlock={homePage.heroBlock}
           lang={lang}
-          consultCta={<ConsultButton className="btn btn--glass"><span>{t.getConsultation}</span></ConsultButton>}
+          consultCta={<ConsultButton source="hero" className="btn btn--glass"><span>{t.getConsultation}</span></ConsultButton>}
         />
         <Brochure
           brochure={homePage.brochureBlock}
           cta={
             homePage.brochureBlock?.buttonLabel ? (
-              <ConsultButton className="btn btn--primary"><span>{homePage.brochureBlock.buttonLabel}</span></ConsultButton>
+              <ConsultButton source="brochure_block" className="btn btn--primary"><span>{homePage.brochureBlock.buttonLabel}</span></ConsultButton>
             ) : undefined
           }
         />
-        <About aboutBlock={homePage.aboutBlock} />
+        <About aboutBlock={homePage.aboutBlock} lang={lang} />
         <FeaturedProjects block={homePage.featuredProjectsBlock} lang={lang} />
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} lang={lang} />}
-        {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
+        {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} lang={lang} />}
         <LatestDevelopments lang={lang} />
-        {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
-        {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
+        {hasTrackRecord(lang) ? (
+          <Benefits block={buildTrackRecordBlock(lang, trackProjects, trackUnits, homePage.benefitsBlock?.title ?? "")} locale={bcp47For(lang)} />
+        ) : (
+          homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />
+        )}
+        {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} lang={lang} />}
         {homePage.featuredCaseStudiesBlock && (
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang={lang} />
         )}
@@ -160,7 +174,6 @@ export default async function Home({ params }: Props) {
         <Form lang={lang} />
       </main>
       <Footer params={params} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={lang} />
     </>
   );

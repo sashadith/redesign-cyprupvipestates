@@ -1,0 +1,959 @@
+{
+  "slug": "homes-for-sale-in-limassol",
+  "title": "Homes for Sale in Limassol",
+  "excerpt": "Find homes for sale in Limassol, including modern new houses and first class homes. Direct access to developers through our marketing network — no additional buyer’s fee and full support from inquiry",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "Homes for Sale in Limassol – New Houses & First Class Living",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "Homes for Sale in Limassol – New Houses & First Class Living",
+    "metaDescription": "Explore homes for sale in Limassol, including new houses and first class homes. Buy quality properties in Limassol with direct access to developers — no extra buyer fees."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b-intro-en-1771245183792",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "Homes for Sale in Limassol – New Houses & First Class Living",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "Homes for Sale in Limassol",
+      "subtitle": "Premium Properties",
+      "buttonLabel": "Buy a home",
+      "description": "Find homes for sale in Limassol, including modern new houses and first class homes. Direct access to developers through our marketing network — no additional buyer’s fee and full support from inquiry to purchase."
+    },
+    {
+      "_key": "b-tstart-en-1771245183792",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "pt-0-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-0-0-1771245183792-t0-t0",
+              "text": "At Cyprus VIP Estates, we offer a curated selection of homes for sale in Limassol, from contemporary new houses to first class coastal homes and luxury residences. Limassol is one of Cyprus’s most sought-after cities for high-quality residential real estate — combining Mediterranean lifestyle, cosmopolitan amenities, dynamic investment potential, and easy access to Europe, the Middle East and beyond.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245183792-t0-t0",
+              "text": "Whether you are looking for a peaceful family home, a stylish villa close to the beach, or a new house for sale in Limassol, our platform connects you with trusted developers. As a marketing agency working with leading property creators, we ensure a transparent and efficient buying experience — you pay no additional buyer’s fee and benefit from professional guidance at every step.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "b-proj-en-1771245183792",
+      "_type": "landingProjectsBlock",
+      "title": "List of Homes for Sale in Limassol",
+      "filterCity": "Limassol",
+      "filterPropertyType": "Villa"
+    },
+    {
+      "_key": "b-tf-en-1771245183792",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "pt-0-1771245183792",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245183792-t0-t0",
+              "text": "Why Limassol is a Great Place to Buy a Home",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245183792-t0-t0",
+              "text": "Limassol is widely recognized as a prime destination for residential property due to its blend of modern developments and traditional Mediterranean charm. Buyers from Europe, the UK, the USA, Israel, the UAE, and beyond are attracted by its thriving social scene, high-end amenities, and strong rental demand.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245183792-t0-t0",
+              "text": "Key advantages include:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245183792-t0-t0",
+              "text": "Beautiful coastline and year-round sunshine",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245183792-t0-t0",
+              "text": "Excellent international connectivity",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245183792-t0-t0",
+              "text": "High standards of construction quality",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245183792-t0-t0",
+              "text": "Strong property market growth and stable prices",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245183792-t0-t0",
+              "text": "Diverse choices of neighbourhoods — from central urban living to coastal and suburban settings",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-12-0-1771245183792-t0-t0",
+              "text": "Limassol’s real estate market features everything from detached houses and villas to modern townhouses and luxury estates. Whether you’re seeking a full-time residence, a holiday home, or an investment property, there’s something here for every lifestyle.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245183792",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-14-0-1771245183792-t0-t0",
+              "text": "Contemporary Comfort & Style in Limassol's New Homes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245183792-t0-t0",
+              "text": "Limassol’s new developments bring innovative design, efficient layouts, and quality craftsmanship. The market for new houses for sale in Limassol includes modern detached homes, spacious family villas, and properties in gated communities.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245183792",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-18-0-1771245183792-t0-t0",
+              "text": "Features commonly found in new houses:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-0-1771245183792-t0-t0",
+              "text": "Open-plan living spaces",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-21-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-21-0-1771245183792-t0-t0",
+              "text": "Spacious outdoor areas and gardens",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-22-0-1771245183792-t0-t0",
+              "text": "Modern kitchens and amenities",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-23-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-23-0-1771245183792-t0-t0",
+              "text": "Energy-efficient building systems",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-24-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-24-0-1771245183792-t0-t0",
+              "text": "Close proximity to schools, beaches, and transport links",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-26-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-26-0-1771245183792-t0-t0",
+              "text": "These homes are ideal for buyers who want move-in ready properties or the chance to personalise their space while enjoying contemporary design.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-28-1771245183792",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-28-0-1771245183792-t0-t0",
+              "text": "First Class Homes in Limassol – Premium Residences & Luxury Living",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-30-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-30-0-1771245183792-t0-t0",
+              "text": "For those seeking an elevated lifestyle, first class homes in Limassol offer exclusive design, premium materials, and exceptional locations — often with sea views, private gardens, or pools.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-32-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-32-0-1771245183792-t0-t0",
+              "text": "First class properties may include:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-34-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-34-0-1771245183792-t0-t0",
+              "text": "High-end villas with panoramic sea views",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-35-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-35-0-1771245183792-t0-t0",
+              "text": "Spacious luxury homes in prestigious neighbourhoods",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-36-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-36-0-1771245183792-t0-t0",
+              "text": "Customised architectural finishes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-37-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-37-0-1771245183792-t0-t0",
+              "text": "Private facilities such as wellness areas and landscaped gardens",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-39-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-39-0-1771245183792-t0-t0",
+              "text": "These residences are perfect for discerning buyers who prioritise style, excellence, and long-term value.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "faq-en-0-1771245183792",
+            "answer": [
+              {
+                "_key": "pt-0-1771245183792",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245183792-t0-t0",
+                    "text": "Limassol offers a wide range of homes including new houses, classic villas, townhouses, and first class residences.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What types of homes for sale are available in Limassol?"
+          },
+          {
+            "_key": "faq-en-1-1771245183792",
+            "answer": [
+              {
+                "_key": "pt-0-1771245183792",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245183792-t0-t0",
+                    "text": "Yes — international buyers can legally purchase property, supported by a transparent and secure legal framework.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Is Limassol suitable for international buyers?"
+          },
+          {
+            "_key": "faq-en-2-1771245183792",
+            "answer": [
+              {
+                "_key": "pt-0-1771245183792",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245183792-t0-t0",
+                    "text": "No — as a marketing agency, we connect you with developers without charging an extra buyer’s fee.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Do I pay any fee to Cyprus VIP Estates?"
+          },
+          {
+            "_key": "faq-en-3-1771245183792",
+            "answer": [
+              {
+                "_key": "pt-0-1771245183792",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245183792-t0-t0",
+                    "text": "Yes, virtual tours and digital communication allow remote buyers to explore and secure homes easily.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can I buy homes Limassol remotely?"
+          },
+          {
+            "_key": "faq-en-4-1771245183792",
+            "answer": [
+              {
+                "_key": "pt-0-1771245183792",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245183792-t0-t0",
+                    "text": "Limassol’s market has shown consistent price growth and strong demand, making new homes a valuable investment.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Are new houses in Limassol good investments?"
+          },
+          {
+            "_key": "faq-en-5-1771245183792",
+            "answer": [
+              {
+                "_key": "pt-0-1771245183792",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245183792-t0-t0",
+                    "text": "Prestigious neighbourhoods include coastal districts and established residential zones close to international schools and amenities.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Where in Limassol are first class homes located?"
+          }
+        ]
+      },
+      "_key": "b-faq-en-1771245183792",
+      "_type": "landingFaqBlock",
+      "title": "Frequently asked questions"
+    },
+    {
+      "_key": "b-ts-en-1771245183792",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "pt-0-1771245183792",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245183792-t0-t0",
+              "text": "Variety of Options for Every Home's Buyer",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245183792-t0-t0",
+              "text": "The category homes Limassol covers a wide range of property types — from traditional detached houses and villas to modern townhouses and premium living spaces.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245183792-t0-t0",
+              "text": "Property types you can explore:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245183792-t0-t0",
+              "text": "Detached houses and villas",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245183792-t0-t0",
+              "text": "Semi-detached homes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245183792-t0-t0",
+              "text": "Townhouses",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245183792-t0-t0",
+              "text": "First line residential estates",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245183792-t0-t0",
+              "text": "Homes with large plots and private gardens",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-12-0-1771245183792-t0-t0",
+              "text": "With thousands of listings available and continuously updated developments, buyers have the flexibility to choose based on budget, size, and lifestyle needs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245183792",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-14-0-1771245183792-t0-t0",
+              "text": "Our Process to Buying Homes in Limassol",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245183792-t0-t0",
+              "text": "Cyprus VIP Estates supports international buyers throughout the purchasing journey, offering clarity and personalised service from start to finish:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-18-0-1771245183792-t0-t0",
+              "text": "Initial Consultation – Define your goals, lifestyle needs, and budget.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-19-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-19-0-1771245183792-t0-t0",
+              "text": "Property Selection – Get a tailored list of homes matching your criteria.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-0-1771245183792-t0-t0",
+              "text": "Viewings – Option for in-person tours or virtual walkthroughs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-21-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-21-0-1771245183792-t0-t0",
+              "text": "Developer Engagement – Direct communication and transparent pricing.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-22-0-1771245183792-t0-t0",
+              "text": "Purchase Assistance – Legal and administrative support for contracts.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-23-1771245183792",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-23-0-1771245183792-t0-t0",
+              "text": "Finalisation & Handover – Smooth ownership transfer without extra buyer fees.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-25-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-25-0-1771245183792-t0-t0",
+              "text": "Our marketing network connects you directly with developers, ensuring you receive real and current property opportunities without paying additional buyer charges.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-27-1771245183792",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-27-0-1771245183792-t0-t0",
+              "text": "Your Next Home in Limassol Awaits",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-29-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-29-0-1771245183792-t0-t0",
+              "text": "Limassol combines Mediterranean beauty, modern lifestyle, and exceptional real estate opportunities. Whether you’re interested in homes for sale in Limassol, new houses in Limassol, or first class homes, our marketing network offers direct connections to verified developers — with no additional buyer’s fee.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-31-1771245183792",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-31-0-1771245183792-t0-t0",
+              "text": "Start your property journey with Cyprus VIP Estates today and discover the best homes Limassol has to offer — from contemporary family houses to premium luxury residences.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    {
+      "_key": "mtsvc2kh9vc",
+      "_ref": "single-property-for-sale-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "k8kp5dqb2wn",
+      "_ref": "single-investment-properties-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "i8bzpqwotj",
+      "_ref": "single-sea-view-properties-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "fetv366com",
+      "_ref": "single-villas-in-limassol-for-investors.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "me6rpuaplvc",
+      "_ref": "single-off-plan-properties-in-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "25mx2yd6z0e",
+      "_ref": "single-properties-near-international-schools-limassol.en",
+      "_type": "singlepageRef"
+    }
+  ]
+}

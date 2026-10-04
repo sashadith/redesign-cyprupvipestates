@@ -202,3 +202,495 @@ quality, check the consuming pages for a correct canonical first.
 Project listings and lead forms are deliberately NOT exported (empty
 `div.cvp-embed` placeholders the consumer fills from its own inventory), so no
 `/projects` URL is duplicated anywhere.
+
+## 2026-09-01 — German villa cluster consolidated into `luxusvillen-in-zypern` (backfilled 2026-09-09)
+
+*Backfilled from the `DE_LANDING_MERGES` map in `src/middleware.ts`, where this
+was recorded at the time — this changelog entry was simply never added. No new
+change; documenting what already shipped.*
+
+Six pages collapsed into `luxusvillen-in-zypern` as the flagship, on two
+different kinds of evidence:
+
+**Confirmed duplicate by direct inventory-set comparison** — not just similar
+copy:
+- `villen-in-zypern-fuer-investoren`, `villen-auf-zypern-fuer-auswanderer`,
+  `villen-zypern-aufenthaltstitel-provisionsfrei` — all three queried nothing
+  but `filterPropertyType: "Villa"` (no city) and rendered the byte-identical
+  130-listing set as the flagship's own live query — three titles, one query.
+- `villen-in-paphos` (both its nested `luxusvillen-in-zypern/villen-in-paphos`
+  and flat leaf form) — a `projectsSectionBlock` fixed list that rendered a
+  set byte-identical to its own parent page. No independent page to preserve.
+
+**Decided by search behaviour**, not inventory overlap — these two had
+hand-pinned lists instead of a live query, so the usual duplicate-inventory
+test didn't apply:
+- `luxusimmobilien-auf-zypern`: 346 impressions in August at position 24.9,
+  and **not one query of its own** — every query it appeared for, the
+  flagship also appeared for, and ranked better on. Its three unique pins
+  (City Landmark, Infinity, Royal Bay Resort) were moved to the flagship
+  before the merge shipped, so they kept their only German placement.
+- `luxusvillen-zypern-ueber-1-mio`: 555 of 560 impressions came from queries
+  the flagship also served and ranked better for (position 45.5 vs. the
+  flagship's 18.4). Of its 11 pins, only 3 actually rendered (Küünal Villas,
+  El Pez, Zeus Villas) — the other 8 pointed at archived projects, so the
+  page had been showing 16 cards for 19 pins. The three real ones moved to
+  the flagship.
+
+**Deliberately not merged alongside these:** `strandvillen-zypern`. It looked
+like the same case on paper (44% shared pins, loses its queries to the same
+flagship), but the demand behind it is real — 803 impressions across 17
+beach/sea queries since June, 412 of those on "zypern villa am meer kaufen"
+alone. The answer there was to make the specialist page win its own term, not
+remove it — it stayed independent.
+
+## 2026-09-08 — German/Polish/Russian apartment cluster consolidated into `apartment-zypern` (backfilled 2026-09-09)
+
+*Backfilled from the same map — this changelog entry was also never added at
+the time. See PR #12.*
+
+Same shape and test as the villa cluster above, run for the apartment
+cluster. `apartment-zypern` was confirmed the flagship — best URL, broadest
+GSC query footprint (18 distinct queries over the period, versus a handful or
+zero for the others), most inbound links — after its own 15 pins turned out
+15/15 archived and were replaced with a live `filterPropertyType: "Apartment"`
+query. Its child `apartment-zypern/wohnungen-in-paphos` stayed independent
+(genuinely Paphos-scoped, already live-filtered correctly; its 12 dead pins
+were cleared for hygiene only, no behaviour change).
+
+Two pages merged into the flagship:
+- `wohnungen-fuer-junge-familien-zypern`: zero filtering beyond
+  `propertyType: "Apartment"` — no bedroom or family-amenity signal despite
+  the slug — zero inbound links anywhere on the DE site, and its only ranking
+  queries were Paphos apartment-buying terms it shared with (and lost to)
+  `apartment-zypern/wohnungen-in-paphos`. Not a distinct family-buyer
+  audience; an unfiltered duplicate borrowing someone else's intent.
+- `wohnungen-auf-zypern-fuer-investoren`: the same zero-filtering gap ("für
+  Investoren" promised nothing an investor-specific query would match), and
+  its own block heading mislabeled itself "Die besten Villen" on an
+  apartments page. Zero GSC impressions in the period — invisible in search,
+  not just weak.
+
+`relatedLandingPages` entries pointing at either retired page were swept from
+every live DE singlepage before the redirects shipped. No hardcoded hrefs
+existed to either page outside one already-`ARCHIVED` reference on
+`renditeimmobilien-zypern`, left as-is since that page cannot render.
+
+Kept independent, not merged: `wohnungen-in-limassol` (genuinely
+Limassol-scoped) and `wohnungen-zypern-auswandern` (the only one of the three
+broad duplicates with real ranking signal and its own inbound link — kept as
+the emigration-context entry point).
+
+**Known open issue, not part of this merge, and not tracked in a doc yet:**
+`MAX_FILTERED_PROJECTS = 60` still caps the flagship's render count well
+below its true match count (154 matches, only 60 render; the Paphos child
+matches 95, same 60-card cap). Raised at the time, not written down anywhere
+until this note — worth its own doc if it's not fixed soon.
+
+## 2026-09-09 — Paphos "investment properties" pages retired, redirected to the Paphos+Villa page (DE/PL/RU)
+
+PRs #18 (DE), #19 (PL), #20 (RU), one commit each, run locale by locale. All
+three retiring pages shared the same defect: `filterCity: "Paphos"` with **no
+`filterPropertyType` filter at all**, despite the "investment" framing — every
+Paphos listing (198 matches, 60 rendered under the render cap), not an
+investment-scoped subset. No per-listing investment data exists anywhere on
+the site to back that framing (`investmentData` is 0/407 populated; the ROI
+calculator runs on city+type market presets, not per-listing facts), so the
+page's promise could not be fixed by better filtering — it was retired outright
+rather than repaired.
+
+Redirected to each locale's one live Paphos+Villa page — the correctly-scoped
+home for the same intent, not merely the nearest-named page (verified: block
+config, live/GSC data, and inbound-link audit per locale before writing
+anything). RU's target, `villy-v-pafose-dlya-investorov`, is itself a live
+Track 1 internal-link target; nothing about that page changed, it only gained
+one more inbound redirect.
+
+| Locale | Retired | Redirects to |
+|---|---|---|
+| DE | `investment-immobilien-paphos` | `villen-paphos-investoren-kaufen` |
+| PL | `inwestycje-w-nieruchomosci-pafos` | `wille-na-sprzedaz-pafos-dla-inwestorow` |
+| RU | `investitsii-v-nedvizhimost-pafos` | `villy-v-pafose-dlya-investorov` |
+
+Each locale: inbound `relatedLandingPages`/hardcoded links repointed first (DB
+writes, verified live), then the `middleware.ts` redirect (first entries in
+new `PL_LANDING_MERGES`/`RU_LANDING_MERGES` maps, alongside the existing
+`DE_LANDING_MERGES`), then the Singlepage archived — in that order, so there
+was never a 404 gap. All three retired pages confirmed dropped from the
+sitemap. Full redirect table (730 `legacyProjectRedirect` rows) and all 22
+`middleware.ts` landing-merge entries re-verified live at 200 after this
+change — zero broken.
+
+**Standing gap, not part of this entry:** this changelog was not updated for
+the two consolidations immediately before this one — the DE villa cluster
+(2026-09-01, `luxusvillen-in-zypern` absorbing several pages) and the DE/PL/RU
+apartment cluster (2026-09-08, `apartment-zypern` flagship). Both are real,
+live, documented in their own commit messages and PR descriptions, just never
+logged here. Any GSC series for those retired slugs before this note should
+still be read as migration, not decay — the absence of an entry here is a
+paperwork gap, not evidence the merges didn't happen.
+
+## 2026-09-09 — Landing-page pagination: restored the pager a redesign silently dropped, six days after it was approved
+
+The lesson here matters more than the fix. `?page=N` pagination for
+`landingProjectsBlock` (`pagesEnabled`, commit `512feeb`) was built, reviewed,
+and approved live on 2026-08-26/27 — real server-rendered pager markup, real
+`?page=N` hrefs, verified on `/off-plan-properties-in-paphos`. Six days later,
+an unrelated visual redesign (`3272bd8`/`6b5b1f2`, 2026-09-02) rebuilt the
+entire landing-page component tree from scratch (`LandingBody` +
+`LandingProjectsGrid`, replacing the old `LandingProjectsBlockComponent`) to
+give all 105+ landing pages a new look. Pagination — six days old, built in a
+separate line of work — was simply not on that redesign's parity checklist:
+its own commit message reasons carefully about what does and doesn't carry
+over (breadcrumbs dropped on purpose, related-page links deliberately kept)
+but never mentions pagination at all, and its own verification was "107x HTTP
+200, no errors" — a status-code smoke test that cannot see a missing pager. A
+cleanup commit 90 minutes later (`c333e37`) then deleted the now-unreferenced
+old component, correctly verified as dead code by that point — it didn't cause
+the regression, it just removed the evidence of what the new one was missing.
+
+Nobody caught it because nothing re-checked it. `docs/POST-DEPLOY-CHECKLIST.md`
+has had an item for this exact page since 2026-08-31, re-run on 2026-09-04 —
+*after* the redesign — and its "verified" column still read "200" and moved
+on. The checklist's own method only ever asserted on HTTP status codes; the
+"with pager" note in its "expected" column was never independently checked
+against the rendered HTML, so it sat silently stale for a week. Fixed
+alongside this entry — see that file's own 2026-09-09 correction, which also
+audits the rest of the checklist for the same status-code-standing-in-for-
+markup shape (nothing else in it has this gap: the other count-based items
+already read real hrefs out of live HTML, not a status code).
+
+**The fix, three parts, one PR:**
+
+1. **Pager restored** on `landingProjectsBlock` pages — `LandingBody.tsx` now
+   takes a `pagePath` prop (plumbed from `[lang]/[...slug]/page.tsx`, where it
+   already existed for other purposes) and renders the same pager markup the
+   deleted component had (`<nav aria-label="Results pagination">`, real
+   `<Link href="...?page=N">` tags, reusing `ProjectsSectionBlockComponent`'s
+   pager styles as before), gated on `totalPages > 1` — invisible on every
+   landing page except the one with `pagesEnabled` set today.
+2. **`projectsSectionBlock` guarded against the same flag**, defensively, in
+   `resolveBlocks` (`sanity.utils.ts`) — `pagesEnabled` now only takes effect
+   on `landingProjectsBlock`. A `projectsSectionBlock` page (the classic
+   block-map switch's own render path) has no server-rendered pager of its
+   own; its existing pager is `ProjectsSectionBlockComponent`'s client-side,
+   `useState`-driven, 8-per-page window over whatever array it's handed — with
+   `pagesEnabled` on, that array would silently become one `MAX_FILTERED_
+   PROJECTS`-sized server batch out of several, and the client pager would
+   present it as complete with no indication more exist. That's worse than the
+   plain 60-item cap it would replace, so this block type is refused outright
+   rather than given a second, differently-shaped pager built in a hurry.
+   `apartment-zypern` (`projectsSectionBlock`, 154 true matches, 60 rendered)
+   stays capped until it gets a real one.
+3. **Sitemap now lists page 2+** for any page with real pagination
+   (`getPaginatedLandingPageSlugs` in `sanity.utils.ts`, consumed by
+   `src/app/sitemaps/[type]/route.ts`) — closing the other half of the 08-27
+   baseline's reasoning, which assumed pager links alone would carry discovery
+   and treated the sitemap gap as backlog. With no pager links live for a
+   week, that reasoning had nothing under it; the sitemap addition is no
+   longer optional.
+
+Verified locally before deploy: bare URL, `?page=2`, `?page=3` all render the
+pager with real hrefs; `?page=1` → 308; `?page=99`/`?page=abc` → 404; sitemap
+gained exactly 3 new `?page=` entries (2, 3, 4) for this page and nothing
+else; three other `landingProjectsBlock` pages without `pagesEnabled`
+(`villy-v-pafose-dlya-investorov`, `investment-paphos`,
+`nieruchomosci-przy-plazy-pafos`) render unchanged, no stray pager.
+
+**Deployed** (`main @ 23c1b1d`, release `cve-20260909095744`) **and
+re-verified live**, same checklist, this time reading the actual production
+HTML rather than trusting a status code — the exact discipline that was
+missing on 2026-09-04:
+
+```html
+<nav class="ProjectsSectionBlockComponent_pager__QBUJx" aria-label="Results pagination">
+  <span class="...pagerLink ...pagerLinkDisabled" aria-hidden="true">‹</span>
+  <a class="...pagerLink ...pagerLinkActive" aria-current="page" href="/off-plan-properties-in-paphos">1</a>
+  <a class="...pagerLink" href="/off-plan-properties-in-paphos?page=2">2</a>
+  <span class="...pagerGap" aria-hidden="true">…</span>
+  <a class="...pagerLink" href="/off-plan-properties-in-paphos?page=4">4</a>
+  <a class="...pagerLink" aria-label="Next" href="/off-plan-properties-in-paphos?page=2">›</a>
+</nav>
+```
+
+— fetched live from `https://cyprusvipestates.com/off-plan-properties-in-paphos`, byte-identical to the local build. Bare/`?page=2`/`?page=3`/`?page=4` all 200,
+`?page=1` → 308, `?page=99`/`?page=abc` → 404, all against production. Live
+sitemap (`/sitemaps/pages.xml`) carries exactly the 3 `?page=` entries for
+this page and no others anywhere on the site. The three control landing
+pages checked live too: 200, no pager markup present, unchanged.
+
+## 2026-09-09 — Pagination enabled on the 3 beachfront Paphos pages
+
+`pagesEnabled` flipped live (DE `strandimmobilien-paphos`, PL
+`nieruchomosci-przy-plazy-pafos`, RU `nedvizhimost-u-morya-pafos`) — the first
+real use of the pager restored earlier today, on pages that were never the
+"proven reference" (that was always `/off-plan-properties-in-paphos`). Each
+matches `filterCity: Paphos, maxBeachMinutes: 2, excludePropertyTypes:
+[Commercial, Boutique Hotel]`, all three `landingProjectsBlock` (the guard
+added earlier today doesn't apply). 76 true matches today, 60 previously
+capped — page 2 carries the remaining ~16 on each locale.
+
+**Verified clean before flipping anything, read-only:** the count's history
+(72 → 84 → 76 across three separate readings this week) is real inventory
+movement, not the Project/Development duplicate-render defect
+(`docs/PROJECT-DEVELOPMENT-OVERLAP-DEFECT.md`) reasserting itself — both
+pairs that used to hit these three pages (Tress, The Gallery) were already
+resolved on 2026-08-30, and today's actual matched rows contain zero
+duplicate title collisions.
+
+**Verified live, each locale, same checklist as the corrected
+`POST-DEPLOY-CHECKLIST.md` item:** pager present with real `?page=N` hrefs,
+`?page=2` renders the remaining cards (17/16/16 — the 1-card difference on
+DE is a pre-existing, unrelated stale-slug prose link elsewhere on that page,
+not a duplicate card or a locale-dependent sort difference; traced and
+confirmed below), `?page=1` → 308, `?page=99`/`?page=abc` → 404, one
+unpaginated control page per locale unchanged, no stray pager.
+
+**Edge case, tested live rather than reasoned about:** temporarily narrowed
+one page's filter to push its match count to 52 (under the 60 cap) with
+`pagesEnabled` on. The pager disappeared cleanly (`totalPages` back to 1) and
+`?page=2` correctly 404'd — no stale link to a now-empty page. Reverted
+immediately after.
+
+**Known behaviour, not specific to this rollout:** the sitemap route
+(`src/app/sitemaps/[type]/route.ts`) caches its output for 1 hour
+in-process, with no invalidation hook tied to content changes. Flipping
+`pagesEnabled` (in either direction — enabling it, or a live count dropping
+back to ≤60 on an already-paginated page) can leave the public sitemap
+disagreeing with the actual page for up to an hour: missing new `?page=`
+entries just after enabling, or still listing a `?page=2` that now 404s just
+after a count drop. Confirmed both the underlying computation
+(`getPaginatedLandingPageSlugs`) and the live sitemap end-to-end for this
+rollout — the live endpoint caught up within the hour, as expected. Worth
+remembering for every future page this gets enabled on: don't read the
+sitemap as ground truth for pagination state within an hour of a change.
+
+**One artifact worth recording, not fixing here:** the DE page's stale
+`villen-cap-st-georges-resort` prose link (still redirects correctly, 308)
+is the same "61 vs 60, one extra `/de/projects/` link" anomaly
+`docs/POST-DEPLOY-CHECKLIST.md` flagged on 2026-09-04 without root-causing
+it. Now traced precisely: a hardcoded sentence in the page's own DE body
+copy, using an old slug variant of Cap St Georges Resort that predates a
+rename. Present on both page 1 and page 2 (static content, unrelated to
+pagination), which is why it inflated a naive href count on both.
+
+## 2026-09-07 — Untraced: 10 legacy Project rows archived, no record anywhere
+
+Found 2026-09-09 while auditing why `/de/luxusvillen-in-zypern`'s pinned list renders 4 live
+listings out of 31 refs. 10 `Project` translation groups moved from `PUBLISHED` to `ARCHIVED` in a
+single ~9-hour window on 2026-09-07 (03:42–12:20 UTC): Golden View Villas, Sunset View Villas,
+Riviera Residences, Hills Residences, Seaview, Hillcrest Residences, Royal Bay Resort, Küünal
+Villas, El Pez, Zeus Villas. Four of the ten (Royal Bay Resort, Küünal Villas, El Pez, Zeus Villas)
+had been deliberately pinned to this exact flagship page just four days earlier, checked live at
+the time (see `docs/DEAD-PROJECT-REFS-FRAGILITY.md`'s 2026-09-03 incident entry).
+
+Checked every record this codebase keeps for who did this and why: no `git` commit touches these
+rows, no `AdminAuditLog` entry (0 rows in the window — that log only covers actions taken through
+the admin UI, and this evidently wasn't one), no `SyncLog` entry (that model tracks feed-driven
+`Development` sync, not legacy `Project` archival). A direct DB write, untraceable by anything this
+project logs. Not investigated further — logged per instruction, no action taken.
+
+**Third time this week** something has landed in this tree with no trace of who or why: this
+batch, the 2026-09-02 landing-pager drop (a real commit, at least attributable, but its effect went
+unnoticed for a week), and the render-vs-status conflation in the 09-03 merge itself. Direct DB
+writes with zero audit trail are how a page's own inventory can go stale without the page — or
+anyone maintaining it — ever finding out.
+
+## 2026-09-09 — Reversed: the 09-03 `luxusimmobilien-auf-zypern` merge
+
+**This un-merges one of the two 2026-09-03 villa-cluster mergers (commit `714ce20`) —
+`luxusvillen-zypern-ueber-1-mio` stays merged, that decision isn't revisited here.**
+
+The 09-03 merge's own reasoning was query overlap: "every term it appeared for,
+`/de/luxusvillen-in-zypern` also appeared for, and ranked better." Post-backfill data shows the
+opposite happened for the query that actually mattered. `luxusimmobilien-auf-zypern` held position
+**~5** for `"luxusimmobilien zypern"` continuously through the merge and for the six days after —
+Aug 30: 3.8, Sept 3 (merge day): 5, Sept 6 (freshest): 5, undisturbed throughout. The flagship's own
+position on that exact query, meanwhile, got *worse* after absorbing the page it was supposed to
+inherit ranking strength from: Sept 3: 25, **Sept 4: 74**, Sept 5: 55.5, Sept 6: 55 — against a
+pre-merge baseline around 26-30. Three days of post-merge data is thin and some of this could still
+be redirect-attribution lag rather than a permanent loss, but the direction is unambiguous: the
+merge cost the cluster its best German position on this term and the flagship gained nothing
+measurable in return.
+
+**Reverted:**
+- `src/middleware.ts` — the `"luxusimmobilien-auf-zypern"` entry removed from `DE_LANDING_MERGES`.
+  `luxusvillen-zypern-ueber-1-mio`'s own entry (added the same evening, different page, not part of
+  this reversal) is untouched.
+- The page's own content had the identical archived-pins problem the flagship had (see the
+  render-vs-status incident above) — its 11 pinned refs were checked, and **0 of 11 were still
+  `PUBLISHED`**, restoring it as-is would have shown a page of redirect placeholders, not real
+  inventory. Fixed in the same pass: pinned array dropped, `filterPropertyType: "Villa"` set
+  (Cyprus-wide, matching the flagship's own fix and the page's own historical pin mix, which was
+  8-of-11 shared with the flagship's villa-focused array). Judgment call, not dictated by any
+  existing config on the page — flagging it as such rather than presenting it as the only possible
+  choice.
+- Internal links checked: unlike the original 2026-09-01 four-page merge, this 09-03 merge's own
+  commit never repointed any inline blog links (confirmed — no DE blog article mentioning either
+  page's slug was edited on or after 09-03). One ambiguous data point: `meerblick-immobilien-limassol`'s
+  `relatedLandingPages` was updated 2026-09-03T18:22 (shortly after the merge commit) and currently
+  lists the flagship among 4 related pages, none of them this page — timing is suggestive but there's
+  no prior-state record to confirm this was a repoint rather than an unrelated edit. Not reverted;
+  flagged for a human to judge if it matters.
+
+**Verified before deploy:** local build, isolated worktree — bare URL 200 (was 301), 60 real
+project cards rendered (0 developer-redirect placeholders), `luxusvillen-zypern-ueber-1-mio`
+unaffected (still 301). Production verification pending this change's deploy.
+
+**For whoever reads this in a month and is tempted to re-merge on the same 08-30 traffic-overlap
+reasoning that justified it the first time:** check this page's own query position first. If it's
+still holding ~5 on `"luxusimmobilien zypern"`, the overlap argument that merged it originally
+never actually held for this specific query, whatever it looked like in the aggregate.
+
+## 2026-09-10 — DataForSEO DE content plan closed: villa cluster deliberately left untouched (decision, not a changelog entry)
+
+A DataForSEO pilot (Domain Intersection + AI Optimization + Ranked Keywords, German/DACH market,
+primary-market sales only) produced a 4-item content plan, executed in full:
+
+1. New pillar `/de/blog/haus-auf-zypern-kaufen` — zero prior presence for the "Haus" phrasing cluster.
+2. `/de/blog/immobilienmarkt-zypern-prognose` reworked with real price-table data (median €/m² by
+   city, sample sizes), PwC third-party attribution removed.
+3. `/de/blog/unterschied-zwischen-zypern-und-nordzypern` reinforced — "griechischer Teil" phrasing,
+   2 new FAQ entries, broken text-only mentions in the new pillar converted to real links.
+4. Paphos cluster cross-linked — the new pillar, `ein-haus-in-paphos-zypern-kaufen-...`,
+   `strandimmobilien-paphos`, and `villen-paphos-investoren-kaufen` now link to each other; one
+   stale anchor (`beste-gegenden-um-eine-familienvilla-in-paphos-zu-kaufen`'s "Villen in Paphos
+   kaufen" link) retargeted from the generic Cyprus-wide flagship to the Paphos-specific page.
+
+A 5th item — the villa cluster (`villa zypern`, vol 480) — was scoped out of the plan from the
+start, and stays out. Domain Intersection showed this isn't a content gap like items 1-4: our own
+flagship `luxusvillen-in-zypern` already ranks **#8** for `"villa auf zypern kaufen"` (vol 70) and
+**#17** for `"villa kaufen zypern"` (vol 70). Position #1 on both is `immobilienscout24.de` — a
+listings aggregator, not a competing agency page; the gap is listing volume, not page quality, so
+no realistic content edit closes it. Direct agency competitors are effectively absent (5
+intersecting keywords total with `cy-realty.com` across the whole cluster).
+
+Asked directly whether to spend ~1-2 hours on an on-page nudge (schema/structure/internal links)
+to move #8 → top 5, the explicit call was **no**: a page already holding a decent position against
+a portal is a case where an edit's downside (see the `luxusimmobilien-auf-zypern` incident just
+above on this same page) outweighs the plausible upside. **Leave `luxusvillen-in-zypern` alone.**
+If a future session considers touching it for this reason, re-pull its current position on these
+two queries first — this note is stale the moment that page's ranking picture changes materially,
+not a permanent ban.
+
+## 2026-09-11 — DE villa cluster: position re-check (note above now stale) + technical fixes, still no merge
+
+Ran the standard stats → competitors → AI-visibility cycle on DE (same method already used for
+PL/RU this week). Re-pulled `luxusvillen-in-zypern`'s position on the two queries cited in the
+2026-09-10 note above, per its own instruction to do so before touching anything: it now ranks
+**#11–18** across the four head-query variants (DataForSEO SERP, `location_name: "Germany"`,
+`language_name: "German"`, depth 100), not #8/#17 — a real but modest drop, still page-2-adjacent.
+Top 4 positions on every variant are the same portal aggregators as before
+(`immobilienscout24.de`, `jamesedition.com`, `luxuryestate.com`, `properstar.de`) — the
+domain-authority ceiling documented on 2026-09-10 still holds, so the flagship's own content/structure
+was **not touched** (same "leave it alone" call, now re-confirmed on fresh data instead of assumed).
+
+AI-visibility check (ChatGPT gpt-4o-mini + Perplexity sonar, German prompts, web search on): the
+site is cited by name with a direct URL link in all 4 checks — noticeably stronger than the organic
+picture. The "provisionsfrei, direkt vom Bauträger" USP is apparently legible to both models in a
+way it isn't to the portal-dominated SERP. Competitors named alongside us: BARNES Cyprus, John
+Taylor Cyprus, Oaklane Real Estate, Palmera Real Estate, PropertyAtlas, Insel Immobilien.
+
+Reading the full body content of all 6 cluster pages (`luxusvillen-in-zypern`,
+`luxusvillen-zypern-ueber-1-mio`, `luxusimmobilien-auf-zypern`, `grosse-villen-zypern`,
+`strandvillen-zypern`, `villen-auf-zypern-fuer-auswanderer`) before deciding anything — same
+discipline established for the RU villa cluster after the "would you redirect a page that's in the
+AI index?" correction — found each of the 5 non-generic pages has a genuinely distinct angle
+(price segment, size, beach proximity, emigration/residency), so **no merge**, same as RU. Two
+concrete bugs found and fixed instead:
+
+- `strandvillen-zypern` had **18/18 pinned projects ARCHIVED** (the same dead-pins bug already
+  swept on PL/RU/other DE clusters this week) with no live-query fields set at all — the page was
+  silently falling through to the `[lang]/[...slug]/page.tsx` manual-or-filtered fallback with
+  nothing live behind it. Fixed: `filterPropertyType: "Villa"`, `maxBeachMinutes: 3` (mirrors the
+  PL/RU "villa near the sea" pattern), manual `projects` array cleared.
+- `luxusimmobilien-auf-zypern` titled itself "Villen & Wohnungen" but its `projectsSectionBlock`
+  filter is `filterPropertyType: "Villa"` only — `projectsSectionBlock` has no multi-type or
+  `excludePropertyTypes` support (confirmed in `src/sanity/sanity.utils.ts`, same limitation noted
+  earlier this week for a different page), and removing the filter entirely would leave
+  `filteredProjects` uncomputed (empty page) per the `isNewStyleProjectsBlock`/live-query gate in
+  the same file. Rather than touch shared query infra for one page, repositioned it honestly as a
+  navigation hub: inserted a "Welche Immobilie passt zu Ihnen?" segment-picker block right after
+  its project showcase, linking to all 5 sibling villa pages plus `apartment-zypern` for visitors
+  who actually want an apartment. It also had `relatedLandingPages: null` — the only orphan in the
+  cluster, no outbound and no inbound cross-links — fixed with 6 outbound refs, plus added an
+  inbound ref to it from `luxusvillen-in-zypern`, `grosse-villen-zypern`, and `strandvillen-zypern`.
+
+## 2026-09-11 (later same day) — Häuser-cluster merge reversed; two self-inflicted bugs found and fixed same session
+
+Follow-up to the villa-cluster entry above, same day. Checking apartment-cluster/price-guide GSC
+data (per instruction to ground every DE action in keywords/competitors/AI-visibility, not
+mechanical re-audits) surfaced DataForSEO search volume: **"haus zypern kaufen" = 3600/mo, 7.5x
+the villa flagship's own "villa zypern kaufen" (480/mo)** — the single biggest DE keyword found all
+week. `/de/haeuser-auf-zypern`, the purpose-built flagship for it (real content, published June),
+had 0 GSC impressions in 60 days. `curl` showed why: 301 to `/de/luxusvillen-in-zypern` since
+2026-07-28 (`DE_LANDING_MERGES`), on the same identical-live-query-filter rationale already proven
+wrong once this week (see the `luxusimmobilien-auf-zypern` reversal, 2026-09-09, in this same
+file). Reversed: 9 `DE_LANDING_MERGES` entries removed, 5 nginx exact-match shortcuts removed and
+5+4 bare paths restored to the `cvp_de_only` map (`ops/nginx/cyprusvipestates.conf`, synced to the
+VPS by hand per `ops/nginx/README.md` — `nginx -t` before reload, `systemctl reload`, not
+`restart`). See `src/middleware.ts` for the full keyword/evidence writeup.
+
+**Two mistakes were made and caught before this was called done — both worth recording so the
+pattern doesn't repeat:**
+
+1. **Dead links introduced on a live page.** While reading the villa cluster's content earlier the
+   same day (the work in the entry above), `grosse-villen-zypern`, `luxusvillen-zypern-ueber-1-mio`,
+   and `villen-auf-zypern-fuer-auswanderer` were treated as live pages — their DB rows are
+   `PUBLISHED` and render real content when queried directly via Prisma, which is what the content
+   read used. Only when curling the actual URLs during the Häuser investigation did it surface that
+   all three **already 301 to the villa flagship** (separate, earlier merges — 2026-07-28 and
+   2026-09-01/04/09, all still correctly in force, not reversed). The DB-content read never
+   distinguishes a live page from a merged one — middleware owns that, and a `PUBLISHED` status
+   only means "not archived," not "reachable at its own URL." The new cross-link block added to
+   `luxusimmobilien-auf-zypern` that morning had 3 of its 6 links pointing through redirects.
+   Fixed: rebuilt the segment-picker with only verified-live targets (curled, not queried) —
+   `luxusvillen-in-zypern`, `strandvillen-zypern`, `haeuser-auf-zypern`, `apartment-zypern`.
+   **Lesson: verify a page is live via HTTP, not via its DB status, before linking to it or
+   trusting its GSC/SERP data as reachable.**
+2. **All 4 Häuser-cluster children were ARCHIVED, not just merged** — reading their content via
+   Prisma (same session, same oversight as #1: the read script never selected/checked `status`)
+   showed real, substantial, differentiated content and no reason not to revive them. After
+   removing the redirects, all 4 nested URLs (`haeuser-auf-zypern/{haeuser-in-zypern-fuer-
+   investoren,haus-mit-pool-auf-zypern,luxus-haeuser-zum-verkauf-in-paphos,strandhaus-auf-zypern}`)
+   came back as genuine 404s, not the intended live pages — `getSinglePageByLang` filters
+   `status: "PUBLISHED"` in production (`draftFilter()`), so an archived row is invisible to the
+   route regardless of what the redirect layer does. Only the flagship itself (`haeuser-auf-zypern`)
+   had ever stayed `PUBLISHED` through the original merge. Fixed: all 4 children set back to
+   `PUBLISHED`; confirmed 200 with correct titles on all 4 nested URLs afterward. **Lesson: a
+   cluster merge can bundle two independent actions — a redirect AND an archive — reversing only
+   the one you found first leaves the pages worse off (hard 404) than before the reversal.**
+
+Also fixed same session, smaller: `strandhaus-auf-zypern` had 11/11 pinned projects archived (same
+dead-pins bug swept elsewhere this week) — set `filterPropertyType: "Villa"`, `maxBeachMinutes: 3`,
+manual list cleared, mirroring the `strandvillen-zypern` fix. `luxus-haeuser-zum-verkauf-in-paphos`
+titled itself "Luxusvillen in Paphos" while its own body consistently says "Häuser" — retitled to
+match. The two hubs (`luxusvillen-in-zypern`, `haeuser-auf-zypern`) now cross-link each other.
+
+## 2026-09-11 (same day, third entry) — New page: `/de/immobilien-auf-zypern`
+
+DataForSEO: "immobilien zypern" = 2400/mo, the single biggest DE keyword found all week (bigger
+than "haus zypern kaufen" at 3600/mo only because that one's the biggest *typed* query — this is
+the biggest *untyped/generic* one). `cyprusvipestates.com` did not rank anywhere in the top 100 for
+it, and neither ChatGPT nor Perplexity named the site when asked for a general Cyprus
+property-market overview (contrast with the villa-specific "provisionsfrei" prompts, where the site
+is cited in 4/4 checks — see the DE villa-cluster entry above). Every existing DE page carries a
+narrowing modifier (Luxus-, Villen-, Wohnungen-, Häuser-, a city) — none targets the bare umbrella
+term. Rather than broaden an existing page (risks diluting `luxusimmobilien-auf-zypern`'s own
+"luxusimmobilien zypern" position, itself hard-won back on 2026-09-09), created a new commercially-
+oriented hub page: hero + early lead form, "why invest" bullets, two live-query showcases
+(`filterPropertyType: "Villa"` and `"Apartment"`, self-healing, no manual pins to go stale), a
+property-type router linking the three flagships (`luxusvillen-in-zypern`, `haeuser-auf-zypern`,
+`apartment-zypern`) plus `luxusimmobilien-auf-zypern` for the luxury segment, a region overview
+(Limassol/Paphos/Larnaka/Nikosia — kept as on-page content only, not separate pages: standalone
+city+type search volume all came back null/negligible in the same DataForSEO pull), real Cyprus-
+wide median pricing (from this week's computed dataset: Villa/Townhouse €912,000 n=831, Apartment
+€406,000 n=1063, €4,648/m² n=1839) linking to the existing price-guide blog post, a "why us" USP
+block, commercially-relevant FAQ (cost, foreign buyers, financing, residency, remote purchase,
+timeline), and a final lead-form CTA. `relatedLandingPages` set both ways: the new page links to
+all 4 sibling flagships, and all 4 now link back to it. One build-time bug caught before calling
+this done: an early draft attached a block's markDefs to the wrong Portable Text node (the
+outer `textContent` wrapper instead of the individual block holding the link spans) for the 4
+property-type router links, which `@portabletext/react` surfaced immediately as "Unknown mark
+type" console errors on a local preview — fixed and reverified (console clean, all 4 links present
+and correctly hrefed) before this was written up.

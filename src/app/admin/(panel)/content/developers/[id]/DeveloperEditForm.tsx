@@ -9,23 +9,25 @@ import SaveButton from "@/app/admin/SaveButton";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default function DeveloperEditForm({
-  developer: d,
+  developer: d, dir = "ltr", language,
 }: {
   developer: {
     id: string; title: string; slug: string; titleFull: string | null; excerpt: string | null;
     logo: any; seoTitle: string; seoDescription: string; description: any;
   };
+  dir?: "ltr" | "rtl";
+  language?: string;
 }) {
   const [state, formAction] = useFormState(saveDeveloperAll.bind(null, d.id), null);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} dir={dir} className="space-y-5">
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={d.title} className={input} />
         </div>
-        <SlugField initialValue={d.slug} />
+        <SlugField initialValue={d.slug} language={language} />
         <div>
           <label className="block text-sm mb-1">Full title</label>
           <input name="titleFull" defaultValue={d.titleFull ?? ""} className={input} />
@@ -53,7 +55,7 @@ export default function DeveloperEditForm({
         </div>
       </div>
 
-      <RichFieldEditor name="description" initial={d.description} label="Description (rich text)" />
+      <RichFieldEditor name="description" initial={d.description} label="Description (rich text)" dir={dir} />
 
       <SaveButton result={state} />
     </form>

@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import styles from "./roi-calculator.module.scss";
 import { RoiCalculationResult, RoiStrategy } from "@/lib/roi";
+import { roiChartCopy } from "./RoiChart.copy";
 
 type Props = {
   result: RoiCalculationResult;
@@ -26,86 +27,17 @@ type TooltipPayloadItem = {
 };
 
 const RoiChart: React.FC<Props> = ({ result, strategy, lang }) => {
-  const locale =
-    lang === "pl"
-      ? "pl-PL"
-      : lang === "de"
-        ? "de-DE"
-        : lang === "ru"
-          ? "ru-RU"
-          : "en-US";
+  const c = roiChartCopy(lang);
+  const locale = c.numberLocale;
 
   const t = {
-    chartTitle:
-      strategy === "buyHold"
-        ? lang === "pl"
-          ? "Prognoza wartości inwestycji i dochodu z najmu"
-          : lang === "de"
-            ? "Prognose von Immobilienwert und Mieteinnahmen"
-            : lang === "ru"
-              ? "Прогноз стоимости объекта и дохода от аренды"
-              : "Projected property value and rental income"
-        : lang === "pl"
-          ? "Prognoza wartości inwestycji i zysku ze sprzedaży"
-          : lang === "de"
-            ? "Prognose von Immobilienwert und Wiederverkaufsgewinn"
-            : lang === "ru"
-              ? "Прогноз стоимости объекта и прибыли от перепродажи"
-              : "Projected property value and resale profit",
-
-    xAxis:
-      lang === "pl"
-        ? "Lata"
-        : lang === "de"
-          ? "Jahre"
-          : lang === "ru"
-            ? "Годы"
-            : "Years",
-
-    yAxis:
-      lang === "pl"
-        ? "Kwota (EUR)"
-        : lang === "de"
-          ? "Betrag (EUR)"
-          : lang === "ru"
-            ? "Сумма (EUR)"
-            : "Amount (EUR)",
-
-    year:
-      lang === "pl"
-        ? "Rok"
-        : lang === "de"
-          ? "Jahr"
-          : lang === "ru"
-            ? "Год"
-            : "Year",
-
-    estimatedValue:
-      lang === "pl"
-        ? "Wartość nieruchomości"
-        : lang === "de"
-          ? "Immobilienwert"
-          : lang === "ru"
-            ? "Стоимость недвижимости"
-            : "Property value",
-
-    cumulativeNetRent:
-      lang === "pl"
-        ? "Skumulowany dochód z najmu"
-        : lang === "de"
-          ? "Kumulierte Mieteinnahmen"
-          : lang === "ru"
-            ? "Накопленный доход от аренды"
-            : "Cumulative rental income",
-
-    cumulativeProfit:
-      lang === "pl"
-        ? "Łączny zysk"
-        : lang === "de"
-          ? "Gesamtgewinn"
-          : lang === "ru"
-            ? "Общая прибыль"
-            : "Total profit",
+    chartTitle: strategy === "buyHold" ? c.chartTitleBuyHold : c.chartTitleBuySell,
+    xAxis: c.xAxis,
+    yAxis: c.yAxis,
+    year: c.year,
+    estimatedValue: c.estimatedValue,
+    cumulativeNetRent: c.cumulativeNetRent,
+    cumulativeProfit: c.cumulativeProfit,
   };
 
   const formatCurrency = (value: number) =>

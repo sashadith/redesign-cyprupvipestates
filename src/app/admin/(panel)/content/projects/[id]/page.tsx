@@ -5,7 +5,7 @@ import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import DeactivateControl from "../DeactivateControl";
 import ProjectEditForm from "./ProjectEditForm";
 import { utcToZonedInput } from "@/lib/tz";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +60,8 @@ export default async function EditProject({ params }: { params: { id: string } }
           seoTitle: seo.metaTitle ?? "", seoDescription: seo.metaDescription ?? "",
           description: p.description, fullDescription: p.fullDescription,
         }}
+        dir={localeDir(p.language)}
+        language={p.language}
       />
     </div>
   );

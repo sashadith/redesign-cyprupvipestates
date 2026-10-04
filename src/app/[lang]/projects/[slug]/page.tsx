@@ -8,12 +8,20 @@ import "@/app/preview-home/tokens.css";
 // .pp-map-scoped overrides (narrower selectors, same specificity tier) still win.
 import "@/app/preview-projects/projects.css";
 import "@/app/preview-project/project.css";
+// The promotional content block (ProjectPageBody, between the map and units
+// sections) reuses renderInsightsBlock's textContent/tableBlock rendering —
+// same component blog articles use — which is styled by insights.css's
+// .iart__rich/.iart__table classes, not this route's own pp-* system. Every
+// other route that reuses renderInsightsBlock imports this file for the same
+// reason (see blog/[slug]/page.tsx, [...slug]/page.tsx, developers/[slug]/page.tsx).
+import "@/app/preview-insights/insights.css";
 
 import React from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, bcp47For } from "@/lib/locale";
+import { projectPageCopy } from "./page.copy";
 import {
   getFormStandardDocumentByLang,
   getNotFoundPageByLang,
@@ -40,9 +48,9 @@ export const dynamic = "force-dynamic";
 
 import ProjectPageBody from "@/app/preview-project/ProjectPageBody";
 import DevelopmentSchema from "@/app/components/DevelopmentSchema/DevelopmentSchema";
-import { getDbProjectBySlug } from "@/lib/developmentRender";
+import { getDbProjectBySlug, resolveDevelopmentSlugHistory } from "@/lib/developmentRender";
 import { resolveMetaTitle, resolveMetaDescription, NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
-import { abs, staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { abs, staticAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
@@ -55,7 +63,6 @@ import PropertyDescription from "@/app/components/PropertyDescription/PropertyDe
 // same module scope.
 import nextDynamic from "next/dynamic";
 import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistances";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertySlider from "@/app/components/PropertySlider/PropertySlider";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
@@ -102,7 +109,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       alternates: { canonical, languages },
       robots: { index: canIndex, follow: canIndex },
       openGraph: {
-        title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: lang, type: "website",
+        title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: ogLocale(lang), type: "website",
         images: [{ url: ogImage, width: 1200, height: 630, alt: dev.publicName }],
       },
       twitter: { card: "summary_large_image", title, description, images: [ogImage] },
@@ -134,7 +141,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.seo.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [
         {
@@ -177,13 +184,15 @@ const ProjectPage = async ({ params }: Props) => {
   if (!project) {
     const redirectTarget = await getLegacyProjectRedirect(lang, slug);
     if (redirectTarget) permanentRedirect(redirectTarget);
+    // Last resort: a slug this Development USED to have, before a manual
+    // admin rename — see resolveDevelopmentSlugHistory in developmentRender.ts.
+    const renamedTarget = await resolveDevelopmentSlugHistory(slug, lang);
+    if (renamedTarget) permanentRedirect(renamedTarget);
     notFound();
   }
 
   // console.log("faq", project.faq);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
 
   const propertyPageTranslationSlugs: {
     [key: string]: { current: string };
@@ -252,7 +261,7 @@ const ProjectPage = async ({ params }: Props) => {
 
   return (
     <>
-      {project.location && project.previewImage && <SchemaMarkup project={project} />}
+      {project.location && project.previewImage && <SchemaMarkup project={project} lang={params.lang} />}
       {faqEntities.length > 0 && (
         <script
           type="application/ld+json"
@@ -260,6 +269,7 @@ const ProjectPage = async ({ params }: Props) => {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "FAQPage",
+              inLanguage: bcp47For(params.lang),
               mainEntity: faqEntities,
             }).replace(/</g, "\\u003c"),
           }}
@@ -295,15 +305,7 @@ const ProjectPage = async ({ params }: Props) => {
               <PropertyDescription description={project.description} />
               <div className="property-button">
                 <ButtonModal modalType="brochure">
-                  {lang === "en"
-                    ? "Enquire this amazing project now!"
-                    : lang === "de"
-                      ? "Fragen Sie dieses erstaunliche Projekt jetzt an!"
-                      : lang === "pl"
-                        ? "Zapytaj o ten niesamowity projekt teraz!"
-                        : lang === "ru"
-                          ? "Узнайте об этом проекте!"
-                          : "Enquire this amazing project now!"}
+                  {projectPageCopy(lang).enquireNow}
                 </ButtonModal>
                 <WhatAppButtonProject lang={params.lang} />
               </div>
@@ -312,7 +314,7 @@ const ProjectPage = async ({ params }: Props) => {
                 if (!dev?.slug || !dev?.name) return null;
                 return (
                   <p className="project-developer" style={{ marginTop: 12, fontSize: 14 }}>
-                    {lang === "de" ? "Bauträger" : lang === "ru" ? "Застройщик" : lang === "pl" ? "Deweloper" : "Developer"}:{" "}
+                    {projectPageCopy(lang).developer}:{" "}
                     <Link href={localizedHref(lang, ["developers", dev.slug])} style={{ color: "#bd8948", fontWeight: 500 }}>
                       {dev.name}
                     </Link>
@@ -323,15 +325,12 @@ const ProjectPage = async ({ params }: Props) => {
             <div className="property-features">
               <PropertyFeatures keyFeatures={project.keyFeatures} lang={lang} />
               <div className="property-features-roi-button">
-                <ProjectPdfButton lang={lang} slug={slug} />
+                {/* No PDF brochure for `he` — the react-pdf document has no
+                    Hebrew font and no RTL support (spec Phase 1–4: PDF is not
+                    offered for Hebrew). The ROI button below stays. */}
+                {lang !== "he" && <ProjectPdfButton lang={lang} slug={slug} />}
                 <ButtonModal modalType="roiCalculator">
-                  {lang === "ru"
-                    ? "Рассчитать ROI"
-                    : lang === "de"
-                      ? "ROI berechnen"
-                      : lang === "pl"
-                        ? "Oblicz ROI"
-                        : "Calculate ROI"}
+                  {projectPageCopy(lang).calculateRoi}
                 </ButtonModal>
               </div>
             </div>
@@ -363,15 +362,7 @@ const ProjectPage = async ({ params }: Props) => {
         {project.faq && (
           <div className="container">
             <div className="property-faq">
-              <h2 className="h2-white">
-                {lang === "en"
-                  ? "FAQ"
-                  : lang === "pl"
-                    ? "Najczęściej zadawane pytania"
-                    : lang === "ru"
-                      ? "Часто задаваемые вопросы"
-                      : "Häufig gestellte Fragen"}
-              </h2>
+              <h2 className="h2-white">{projectPageCopy(lang).faq}</h2>
               <AccordionContainer block={project.faq} />
             </div>
           </div>
@@ -385,7 +376,6 @@ const ProjectPage = async ({ params }: Props) => {
       />
 
       <Footer params={params} />
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
       <ModalRoiCalculator lang={params.lang} project={project} />
     </>
   );

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "@/app/context/ModalContext";
 import { Project } from "@/types/project";
 import RoiCalculator from "../roi-calculator/RoiCalculator";
+import { modalRoiCalculatorCopy } from "./ModalRoiCalculator.copy";
 
 const customStyles: ReactModal.Styles = {
   overlay: {
@@ -122,13 +123,7 @@ const ModalRoiCalculator = ({ lang, project }: Props) => {
                 fontWeight: 500,
               }}
             >
-              {lang === "ru"
-                ? "Калькулятор ROI"
-                : lang === "de"
-                  ? "ROI-Rechner"
-                  : lang === "pl"
-                    ? "Kalkulator ROI"
-                    : "ROI Calculator"}
+              {modalRoiCalculatorCopy(lang).title}
             </h3>
 
             <p
@@ -140,13 +135,7 @@ const ModalRoiCalculator = ({ lang, project }: Props) => {
                 maxWidth: "760px",
               }}
             >
-              {lang === "ru"
-                ? "Оцените потенциальную доходность этого объекта."
-                : lang === "de"
-                  ? "Schätzen Sie die potenzielle Rendite dieser Immobilie."
-                  : lang === "pl"
-                    ? "Oszacuj potencjalną rentowność tej nieruchomości."
-                    : "Estimate the potential return of this property."}
+              {modalRoiCalculatorCopy(lang).subtitle}
             </p>
           </div>
 

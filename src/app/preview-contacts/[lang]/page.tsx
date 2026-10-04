@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
-import { languageAlternates } from "@/lib/seo";
+import { localizedHref, isLocale } from "@/lib/locale";
+import { languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Form from "../../preview-home/sections/Form";
 import ContactsMotion from "./ContactsMotion";
@@ -35,7 +35,7 @@ type Props = { params: { lang: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
   const t = contactsCopy(lang);
-  const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
+  const l: CorporateLocale = isLocale(lang) ? lang : "en";
 
   const { canonical, languages } = languageAlternates({
     lang: l,
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
     },
     twitter: { card: "summary_large_image", title: t.metaTitle, description: t.metaDescription },
@@ -89,7 +89,7 @@ export default async function ContactsPage({ params }: Props) {
   return (
     <>
       <ContactsMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="cnt">
         {/* ------------------------------------------------------------ HERO */}

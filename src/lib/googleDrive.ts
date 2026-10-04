@@ -168,6 +168,19 @@ export async function findSubfolder(files: DriveFile[], projectName: string, acc
 // and the scan reports every folder it looked at either way.
 const AUX_FOLDER_RE = /^(photos?|renders?|images?|pictures?|drawings?|plans?|floor\s*plans?|masterplans?|brochures?|videos?|documents?|docs|location|archive|old|misc)$/i;
 
+/* Folder names the operator has excluded for a developer. AUX_FOLDER_RE is
+   anchored, so multi-word names like "Drone Videos of SOLD projects" and
+   "Custom Options" (G&V, 2026-09-08) never match it — and widening that regex
+   would start swallowing real project folders for every other developer.
+   Compared trimmed and case-insensitively: two of G&V's folder names carry a
+   trailing space. */
+export function filterProjectFolderCandidates(files: DriveFile[], exclude: string[] = []): DriveFile[] {
+  const drop = new Set(exclude.map((s) => s.trim().toLowerCase()));
+  return files.filter((f) => f.mimeType === FOLDER_MIME
+    && !AUX_FOLDER_RE.test(f.name.trim())
+    && !drop.has(f.name.trim().toLowerCase()));
+}
+
 export type DriveProjectFolder = {
   folder: DriveFile;
   /** The folder's own listing — already fetched here, so callers never re-list it. */
@@ -195,9 +208,18 @@ export type DriveProjectFolder = {
    "2. Venara View" inside "Venara") keeps working exactly as before — no per-project
    sheet is found for it, and the master-sheet path stays in charge. Descending would
    put project creation one wrong regex away from turning "Birch Park/Drawings" into
-   a project. */
-export async function listProjectFolders(rootFiles: DriveFile[], accessToken: string): Promise<DriveProjectFolder[]> {
-  const folders = rootFiles.filter((f) => f.mimeType === FOLDER_MIME && !AUX_FOLDER_RE.test(f.name.trim()));
+   a project.
+
+   `allowPdfPriceList` and `excludeFolders` are per-developer opt-ins (G&V,
+   2026-09-08) — omitted, behaviour is byte-for-byte what it was before: every
+   spreadsheet developer (Olias, Kuutio, Motive Point) keeps refusing a PDF
+   price list here, unaffected by this change. */
+export async function listProjectFolders(
+  rootFiles: DriveFile[],
+  accessToken: string,
+  opts?: { allowPdfPriceList?: boolean; excludeFolders?: string[] },
+): Promise<DriveProjectFolder[]> {
+  const folders = filterProjectFolderCandidates(rootFiles, opts?.excludeFolders);
   const out: DriveProjectFolder[] = [];
   for (const folder of folders) {
     let files: DriveFile[] = [];
@@ -209,7 +231,7 @@ export async function listProjectFolders(rootFiles: DriveFile[], accessToken: st
       out.push({ folder, files: [], price: null });
       continue;
     }
-    out.push({ folder, files, price: findPriceFile(files, { requireNamed: true, spreadsheetsOnly: true }) });
+    out.push({ folder, files, price: findPriceFile(files, { requireNamed: true, spreadsheetsOnly: !opts?.allowPdfPriceList }) });
   }
   return out;
 }

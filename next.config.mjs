@@ -27,6 +27,11 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // OAuth discovery for the MCP connector (RFC 8414 / RFC 9728). The
+      // .well-known prefix is also excluded from the intl middleware matcher
+      // in src/middleware.ts — both are required.
+      { source: "/.well-known/oauth-authorization-server", destination: "/api/mcp/well-known/oauth-authorization-server" },
+      { source: "/.well-known/oauth-protected-resource", destination: "/api/mcp/well-known/oauth-protected-resource" },
       // Local preview only: serve /uploads from production so images/video show locally.
       ...(isLocalPreview
         ? [{ source: "/uploads/:path*", destination: "https://cyprusvipestates.com/uploads/:path*" }]

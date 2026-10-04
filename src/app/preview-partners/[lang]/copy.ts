@@ -11,10 +11,18 @@
    CRM/portal tracking from benefit #4) into a clearer step-by-step flow — no
    new claims, numbers, or terms are introduced. Flagged here for review. */
 
-export type PartnersStat = { number: string; sign?: string; title: string; description: string };
+import type { Locale } from "@/lib/locale";
+
+/* `source` makes a stat live: the page replaces `number` with the real count
+   from the database (2026-09-29). "projects" uses the same count the /projects
+   listing shows, so the two can never disagree; "units" counts units whose
+   status is available inside published developments. Stats without a source
+   keep their literal number. */
+export type PartnersStat = { number: string; sign?: string; title: string; description: string; source?: "projects" | "units" };
 export type PartnersBenefit = { title: string; description: string };
 export type PartnersType = { title: string; description: string };
 export type PartnersStep = { title: string; description: string };
+export type PartnersFaqItem = { question: string; answer: string };
 
 export type PartnersCopy = {
   metaTitle: string;
@@ -51,6 +59,11 @@ export type PartnersCopy = {
   howTitleAccent: string;
   steps: PartnersStep[];
 
+  faqEyebrow: string;
+  faqTitleStart: string;
+  faqTitleAccent: string;
+  faq: PartnersFaqItem[];
+
   ctaTitleStart: string;
   ctaTitleAccent: string;
   ctaDescription: string;
@@ -80,10 +93,9 @@ export type PartnersCopy = {
   vConsent: string;
 };
 
-export const PARTNERS_COPY: Record<string, PartnersCopy> = {
-  en: {
-    metaTitle: "Partner Program for Property Consultants & Marketers – Cyprus VIP Estates",
-    metaDescription: "Earn up to 40% of our marketing success fee. Join the Cyprus VIP Estates partner program — fast payouts, exclusive properties, expert support.",
+const EN: PartnersCopy = {
+    metaTitle: "Real Estate Referral Partner Program – Cyprus VIP Estates",
+    metaDescription: "Earn up to 40% referral commission on Cyprus property sales. Join our partner program — fast payouts, exclusive listings, expert support.",
     heroEyebrow: "Become a partner of Cyprus VIP Estates",
     heroTitleStart: "Join our ",
     heroTitleAccent: "partner program",
@@ -95,17 +107,17 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     statsTitleStart: "A team built on ",
     statsTitleAccent: "results",
     stats: [
-      { number: "195", title: "Real estate projects", description: "In Southern Cyprus. From studio apartments to high-class villas" },
+      { number: "0", source: "projects", title: "Real estate projects", description: "In Southern Cyprus. From studio apartments to high-class villas" },
+      { number: "0", source: "units", title: "Available units", description: "Residential, investment and commercial properties" },
       { number: "10", title: "Years of experience", description: "As a full-service real estate marketing agency" },
       { number: "360", sign: "°", title: "Customer service", description: "We guide you from the first contact to key handover" },
-      { number: "100", sign: "%", title: "Satisfied clients", description: "From Germany, Austria, Switzerland and beyond" },
     ],
     benefitsEyebrow: "Why partner with us",
     benefitsTitleStart: "The ",
     benefitsTitleAccent: "benefits",
     benefitsTitleEnd: " of our partner program",
     benefits: [
-      { title: "Fast payouts", description: "We pay a 30% advance within 14 days of payment confirmation by the developer. The remaining 70% will be paid once we receive the full service fee." },
+      { title: "Fast payouts", description: "We pay within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement." },
       { title: "Expert collaboration", description: "We organize viewings, coordinate with independent lawyers, who handle legal matters, and support you throughout the entire process." },
       { title: "Exclusive properties", description: "You get access to our database and sell exclusive properties with selected offers and unique referral fee conditions." },
       { title: "Always up to date", description: "Each customer step is digitally tracked. Your requests are automatically transferred to our CRM system. The partner portal gives you full insight into the current status at any time. Detailed reports are always available." },
@@ -126,7 +138,32 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     steps: [
       { title: "Register", description: "Fill out the form below with your details. We review and verify every application personally — no automated approvals." },
       { title: "Refer or list", description: "Submit client referrals or access our exclusive property database through your partner portal — every lead is tracked automatically in our CRM." },
-      { title: "Get paid", description: "Receive a 30% advance within 14 days of the developer's payment confirmation, and the remaining 70% once we receive the full service fee (10% for owner referrals)." },
+      { title: "Get paid", description: "Receive your fee within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement (10% for owner referrals)." },
+    ],
+    faqEyebrow: "Questions",
+    faqTitleStart: "Frequently asked ",
+    faqTitleAccent: "questions",
+    faq: [
+      {
+        question: "How do I become a partner of Cyprus VIP Estates?",
+        answer: "Fill out the registration form on this page with your details. We review and verify every application personally, then set up your access to our partner portal and property database — no automated approval process.",
+      },
+      {
+        question: "How much commission can I earn as a partner?",
+        answer: "For real estate purchases, partners receive a referral fee of 30–40% of our marketing success fee. For referring property owners, we pay a 10% referral fee.",
+      },
+      {
+        question: "I'm a real estate agent or consultant based outside Cyprus — can I still get a referral fee?",
+        answer: "Yes. Our partner program is built for international collaboration: property consultants, relocation specialists, legal advisors and independent agents anywhere in the world can refer clients and earn a commission, without needing to be based in Cyprus or personally handle the transaction — we manage the process locally.",
+      },
+      {
+        question: "How fast do I get paid?",
+        answer: "We pay within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement.",
+      },
+      {
+        question: "Who can join the partner program?",
+        answer: "We work with developers, legal advisors, and agencies and private brokers — as well as independent property consultants and relocation specialists. Every application is reviewed personally before approval.",
+      },
     ],
     ctaTitleStart: "Become our ",
     ctaTitleAccent: "partner",
@@ -154,10 +191,15 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     vEmailInvalid: "Invalid email address",
     vCountry: "Country is required",
     vConsent: "Consent is required",
-  },
+};
+
+// he (Phase 4): decision J: Partners stays English for he — no translation task,
+// no ltrIsolate() needed since the whole page renders in English/LTR for he.
+export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
+  en: EN,
   de: {
-    metaTitle: "Partnerprogramm für Immobilienberater & Vermarkter – Cyprus VIP Estates",
-    metaDescription: "Verdiene bis zu 40 % unserer Marketing-Erfolgsgebühr. Werde Teil des Cyprus VIP Estates Partnerprogramms — schnelle Auszahlungen, exklusive Immobilien, Expertenunterstützung.",
+    metaTitle: "Immobilien-Partnerprogramm mit Provision – Cyprus VIP Estates",
+    metaDescription: "Verdiene bis zu 40 % Provision für Immobilienvermittlung in Zypern. Werde Partner — schnelle Auszahlungen, exklusive Immobilien, Expertenunterstützung.",
     heroEyebrow: "Werde Partner von Cyprus VIP Estates",
     heroTitleStart: "Werde jetzt Teil unseres ",
     heroTitleAccent: "Partnerprogramms",
@@ -169,17 +211,17 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     statsTitleStart: "Ein Team mit ",
     statsTitleAccent: "Ergebnissen",
     stats: [
-      { number: "195", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+      { number: "0", source: "projects", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+      { number: "0", source: "units", title: "Verfügbare Einheiten", description: "Wohn-, Anlage- und Gewerbeimmobilien" },
       { number: "10", title: "Jahre Erfahrung", description: "Als Full-Service Immobilien-Marketing-Agentur" },
       { number: "360", sign: "°", title: "Service für unsere Kunden", description: "Wir begleiten Sie vom ersten Kontakt bis zur Schlüsselübergabe" },
-      { number: "100", sign: "%", title: "Zufriedene Kunden", description: "Aus Deutschland, Österreich, der Schweiz und weiteren Ländern" },
     ],
     benefitsEyebrow: "Warum mit uns zusammenarbeiten",
     benefitsTitleStart: "Die ",
     benefitsTitleAccent: "Vorteile",
     benefitsTitleEnd: " unseres Partnerprogramms",
     benefits: [
-      { title: "Schnelle Auszahlungen", description: "Wir zahlen innerhalb von 14 Tagen nach Zahlungsbestätigung durch den Bauträger einen 30 % Vorschuss aus. Die verbleibenden 70 % erhältst Du, sobald wir die vollständige Vergütung erhalten haben." },
+      { title: "Schnelle Auszahlungen", description: "Wir zahlen innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags." },
       { title: "Zusammenarbeit mit Experten", description: "Wir organisieren Besichtigungen, koordinieren den Kontakt zu unabhängigen Anwälten und unterstützen Dich bei der kompletten Abwicklung." },
       { title: "Exklusive Immobilien", description: "Du erhältst Zugriff auf unsere Datenbank und verkaufst exklusive Immobilien mit ausgewählten Angeboten und einmaligen Servicegebühren." },
       { title: "Immer am Puls der Zeit", description: "Jeder Schritt des Kunden wird digital erfasst. Deine Anfragen werden automatisch in unser CRM-System übernommen. Über das Partnerportal behältst Du jederzeit den Überblick über den aktuellen Stand. Detaillierte Reports stehen Dir jederzeit zur Verfügung." },
@@ -200,7 +242,32 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     steps: [
       { title: "Registrieren", description: "Fülle das Formular unten mit Deinen Daten aus. Wir prüfen jede Bewerbung persönlich — keine automatische Freigabe." },
       { title: "Empfehlen oder vermitteln", description: "Reiche Kundenempfehlungen ein oder greife über Dein Partnerportal auf unsere exklusive Immobiliendatenbank zu — jede Anfrage wird automatisch in unserem CRM erfasst." },
-      { title: "Ausgezahlt werden", description: "Erhalte einen 30 % Vorschuss innerhalb von 14 Tagen nach Zahlungsbestätigung des Bauträgers und die verbleibenden 70 %, sobald wir die vollständige Vergütung erhalten (10 % bei Eigentümerempfehlungen)." },
+      { title: "Ausgezahlt werden", description: "Erhalte Deine Vergütung innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags (10 % bei Eigentümerempfehlungen)." },
+    ],
+    faqEyebrow: "Fragen",
+    faqTitleStart: "Häufig gestellte ",
+    faqTitleAccent: "Fragen",
+    faq: [
+      {
+        question: "Wie werde ich Partner von Cyprus VIP Estates?",
+        answer: "Fülle das Registrierungsformular auf dieser Seite mit Deinen Daten aus. Wir prüfen jede Bewerbung persönlich und richten anschließend Deinen Zugang zum Partnerportal und zur Immobiliendatenbank ein — keine automatische Freigabe.",
+      },
+      {
+        question: "Wie viel Provision kann ich als Partner verdienen?",
+        answer: "Für Immobilienkäufe erhalten Partner eine Vermittlungsgebühr von 30–40 % unserer Marketing-Erfolgsgebühr. Für die Empfehlung von Eigentümern zahlen wir 10 % Vermittlungshonorar.",
+      },
+      {
+        question: "Ich bin Immobilienmakler oder Berater außerhalb Zyperns — kann ich trotzdem eine Vermittlungsgebühr erhalten?",
+        answer: "Ja. Unser Partnerprogramm ist für internationale Zusammenarbeit ausgelegt: Immobilienberater, Relocation-Spezialisten, Rechtsberater und unabhängige Makler weltweit können Kunden empfehlen und Provision verdienen, ohne selbst in Zypern ansässig zu sein oder die Transaktion persönlich abzuwickeln — wir übernehmen den Prozess vor Ort.",
+      },
+      {
+        question: "Wie schnell werde ich ausgezahlt?",
+        answer: "Wir zahlen innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags.",
+      },
+      {
+        question: "Wer kann am Partnerprogramm teilnehmen?",
+        answer: "Wir arbeiten mit Bauunternehmern, Rechtsberatern sowie Immobilienagenturen und privaten Vermittlern zusammen — ebenso mit unabhängigen Immobilienberatern und Relocation-Spezialisten. Jede Bewerbung wird vor der Freigabe persönlich geprüft.",
+      },
     ],
     ctaTitleStart: "Werde unser ",
     ctaTitleAccent: "Partner",
@@ -230,8 +297,8 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     vConsent: "Zustimmung erforderlich",
   },
   pl: {
-    metaTitle: "Program Partnerski dla Doradców i Marketerów Nieruchomości – Cyprus VIP Estates",
-    metaDescription: "Zarób do 40% naszego wynagrodzenia marketingowego. Dołącz do programu partnerskiego Cyprus VIP Estates — szybkie wypłaty, ekskluzywne nieruchomości, wsparcie ekspertów.",
+    metaTitle: "Program Partnerski z Prowizją za Nieruchomości – Cyprus VIP Estates",
+    metaDescription: "Zarób do 40% prowizji za polecenie nieruchomości na Cyprze. Dołącz do programu partnerskiego — szybkie wypłaty, ekskluzywne oferty, wsparcie ekspertów.",
     heroEyebrow: "Zostań partnerem Cyprus VIP Estates",
     heroTitleStart: "Dołącz do naszego ",
     heroTitleAccent: "programu partnerskiego",
@@ -243,17 +310,17 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     statsTitleStart: "Zespół, który daje ",
     statsTitleAccent: "rezultaty",
     stats: [
-      { number: "195", title: "Projektów nieruchomości", description: "Na południu Cypru – od kawalerek po luksusowe wille" },
+      { number: "0", source: "projects", title: "Projektów nieruchomości", description: "Na południu Cypru – od kawalerek po luksusowe wille" },
+      { number: "0", source: "units", title: "Dostępne nieruchomości", description: "Mieszkaniowe, inwestycyjne i komercyjne" },
       { number: "10", title: "Lat doświadczenia", description: "Jako agencja marketingu nieruchomości typu full-service" },
       { number: "360", sign: "°", title: "Obsługa klienta", description: "Prowadzimy Cię od pierwszego kontaktu do przekazania kluczy" },
-      { number: "100", sign: "%", title: "Zadowoleni klienci", description: "Z Niemiec, Austrii, Szwajcarii i innych krajów" },
     ],
     benefitsEyebrow: "Dlaczego warto z nami współpracować",
     benefitsTitleStart: "Korzyści ",
     benefitsTitleAccent: "ze współpracy",
     benefitsTitleEnd: " w naszym programie partnerskim",
     benefits: [
-      { title: "Szybkie wypłaty", description: "Wypłacamy 30% zaliczki w ciągu 14 dni od potwierdzenia płatności przez dewelopera. Pozostałe 70% otrzymasz po pełnym rozliczeniu opłaty za usługę." },
+      { title: "Szybkie wypłaty", description: "Wypłacamy w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej." },
       { title: "Współpraca z ekspertami", description: "Organizujemy prezentacje, koordynujemy kontakt z niezależnymi prawnikami i wspieramy Cię na każdym etapie transakcji." },
       { title: "Ekskluzywne nieruchomości", description: "Otrzymujesz dostęp do naszej bazy danych i sprzedajesz ekskluzywne nieruchomości z wyselekcjonowanymi ofertami i wyjątkowymi warunkami wynagrodzenia." },
       { title: "Nowoczesne rozwiązania", description: "Każdy etap klienta jest rejestrowany cyfrowo. Twoje zgłoszenia trafiają bezpośrednio do naszego CRM. W portalu partnerskim masz pełny podgląd statusu. Szczegółowe raporty są zawsze dostępne." },
@@ -274,7 +341,32 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     steps: [
       { title: "Zarejestruj się", description: "Wypełnij poniższy formularz swoimi danymi. Każde zgłoszenie weryfikujemy osobiście — bez automatycznych zatwierdzeń." },
       { title: "Poleć lub sprzedawaj", description: "Zgłaszaj polecenia klientów lub korzystaj z naszej ekskluzywnej bazy nieruchomości przez portal partnerski — każde zgłoszenie jest automatycznie rejestrowane w naszym CRM." },
-      { title: "Otrzymaj wypłatę", description: "Otrzymaj 30% zaliczki w ciągu 14 dni od potwierdzenia płatności przez dewelopera, a pozostałe 70% po pełnym rozliczeniu opłaty za usługę (10% za polecenia właścicieli)." },
+      { title: "Otrzymaj wypłatę", description: "Otrzymaj wynagrodzenie w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej (10% za polecenia właścicieli)." },
+    ],
+    faqEyebrow: "Pytania",
+    faqTitleStart: "Najczęściej zadawane ",
+    faqTitleAccent: "pytania",
+    faq: [
+      {
+        question: "Jak zostać partnerem Cyprus VIP Estates?",
+        answer: "Wypełnij formularz rejestracyjny na tej stronie, podając swoje dane. Każde zgłoszenie weryfikujemy osobiście, a następnie konfigurujemy dostęp do portalu partnerskiego i bazy nieruchomości — bez automatycznych zatwierdzeń.",
+      },
+      {
+        question: "Ile prowizji mogę zarobić jako partner?",
+        answer: "Za sprzedaż nieruchomości partnerzy otrzymują wynagrodzenie za polecenie w wysokości 30–40% naszego wynagrodzenia marketingowego. Za polecenie właścicieli nieruchomości wypłacamy 10% honorarium.",
+      },
+      {
+        question: "Jestem agentem nieruchomości lub doradcą spoza Cypru — czy mimo to mogę otrzymać wynagrodzenie za polecenie?",
+        answer: "Tak. Nasz program partnerski jest stworzony do współpracy międzynarodowej: doradcy nieruchomości, specjaliści ds. relokacji, doradcy prawni i niezależni agenci z całego świata mogą polecać klientów i zarabiać prowizję, bez konieczności mieszkania na Cyprze czy osobistego prowadzenia transakcji — cały proces na miejscu prowadzimy my.",
+      },
+      {
+        question: "Jak szybko otrzymam wypłatę?",
+        answer: "Wypłacamy w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej.",
+      },
+      {
+        question: "Kto może dołączyć do programu partnerskiego?",
+        answer: "Współpracujemy z deweloperami, doradcami prawnymi oraz agencjami i pośrednikami prywatnymi — a także z niezależnymi doradcami nieruchomości i specjalistami ds. relokacji. Każde zgłoszenie jest weryfikowane osobiście przed zatwierdzeniem.",
+      },
     ],
     ctaTitleStart: "Zostań naszym ",
     ctaTitleAccent: "partnerem",
@@ -304,8 +396,8 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     vConsent: "Zgoda jest wymagana",
   },
   ru: {
-    metaTitle: "Партнёрская программа для консультантов и маркетологов недвижимости – Cyprus VIP Estates",
-    metaDescription: "Зарабатывайте до 40% нашего маркетингового вознаграждения. Присоединяйтесь к партнёрской программе Cyprus VIP Estates — быстрые выплаты, эксклюзивная недвижимость, поддержка экспертов.",
+    metaTitle: "Партнёрская программа с комиссией за недвижимость – Cyprus VIP Estates",
+    metaDescription: "Зарабатывайте до 40% комиссии за рекомендации по недвижимости на Кипре. Присоединяйтесь к партнёрской программе — быстрые выплаты, эксклюзивные предложения, поддержка экспертов.",
     heroEyebrow: "Стань партнёром Cyprus VIP Estates",
     heroTitleStart: "Стань частью нашей ",
     heroTitleAccent: "партнёрской программы",
@@ -317,17 +409,17 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     statsTitleStart: "Команда, которая даёт ",
     statsTitleAccent: "результат",
     stats: [
-      { number: "195", title: "Проектов недвижимости", description: "На юге Кипра: от студий до элитных вилл" },
+      { number: "0", source: "projects", title: "Проектов недвижимости", description: "На юге Кипра: от студий до элитных вилл" },
+      { number: "0", source: "units", title: "Доступных объектов", description: "Жилая, инвестиционная и коммерческая недвижимость" },
       { number: "10", title: "Лет опыта", description: "Как агентство полного цикла по маркетингу недвижимости" },
       { number: "360", sign: "°", title: "Сервис для клиентов", description: "Мы сопровождаем вас от первого контакта до передачи ключей" },
-      { number: "100", sign: "%", title: "Довольных клиентов", description: "Из Германии, Австрии, Швейцарии и других стран" },
     ],
     benefitsEyebrow: "Почему стоит с нами сотрудничать",
     benefitsTitleStart: "Преимущества ",
     benefitsTitleAccent: "нашей программы",
     benefitsTitleEnd: " для партнёров",
     benefits: [
-      { title: "Быстрые выплаты", description: "Мы выплачиваем аванс 30% в течение 14 дней после подтверждения оплаты от застройщика. Остальные 70% — после получения всего вознаграждения." },
+      { title: "Быстрые выплаты", description: "Мы выплачиваем в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования." },
       { title: "Сотрудничество с экспертами", description: "Мы организуем показы, координируем работу с независимыми юристами и сопровождаем сделку от начала до конца." },
       { title: "Эксклюзивная недвижимость", description: "Вы получаете доступ к нашей базе данных и продаёте эксклюзивную недвижимость с отобранными предложениями и уникальными условиями сервисного сбора." },
       { title: "Современные инструменты", description: "Каждое действие клиента фиксируется в CRM. Вы видите статус в партнёрском кабинете в любое время. Подробные отчёты доступны постоянно." },
@@ -348,7 +440,32 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     steps: [
       { title: "Регистрация", description: "Заполните форму ниже своими данными. Мы лично проверяем каждую заявку — без автоматических одобрений." },
       { title: "Рекомендуйте или продавайте", description: "Отправляйте рекомендации клиентов или получайте доступ к нашей эксклюзивной базе недвижимости через партнёрский кабинет — каждая заявка автоматически фиксируется в CRM." },
-      { title: "Получайте оплату", description: "Получите аванс 30% в течение 14 дней после подтверждения оплаты застройщиком, а оставшиеся 70% — после получения полного вознаграждения (10% за рекомендации владельцев)." },
+      { title: "Получайте оплату", description: "Получите вознаграждение в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования (10% за рекомендации владельцев)." },
+    ],
+    faqEyebrow: "Вопросы",
+    faqTitleStart: "Часто задаваемые ",
+    faqTitleAccent: "вопросы",
+    faq: [
+      {
+        question: "Как стать партнёром Cyprus VIP Estates?",
+        answer: "Заполни регистрационную форму на этой странице, указав свои данные. Мы лично проверяем каждую заявку, а затем открываем доступ к партнёрскому кабинету и базе недвижимости — без автоматических одобрений.",
+      },
+      {
+        question: "Сколько можно заработать в качестве партнёра?",
+        answer: "За продажу недвижимости партнёры получают вознаграждение от 30 до 40% нашего маркетингового вознаграждения. За рекомендации владельцев недвижимости мы платим 10% вознаграждение.",
+      },
+      {
+        question: "Я риелтор или консультант вне Кипра — могу ли я получить вознаграждение за рекомендацию?",
+        answer: "Да. Наша партнёрская программа создана для международного сотрудничества: консультанты по недвижимости, специалисты по релокации, юридические консультанты и независимые агенты по всему миру могут рекомендовать клиентов и зарабатывать комиссию — без необходимости находиться на Кипре или лично вести сделку. Весь процесс на месте берём на себя мы.",
+      },
+      {
+        question: "Как быстро я получу оплату?",
+        answer: "Мы выплачиваем в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования.",
+      },
+      {
+        question: "Кто может присоединиться к партнёрской программе?",
+        answer: "Мы сотрудничаем с застройщиками, юридическими консультантами, а также агентствами и частными посредниками — а ещё с независимыми консультантами по недвижимости и специалистами по релокации. Каждая заявка проверяется лично перед одобрением.",
+      },
     ],
     ctaTitleStart: "Стань нашим ",
     ctaTitleAccent: "партнёром",
@@ -377,8 +494,9 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     vCountry: "Страна обязательна",
     vConsent: "Требуется согласие",
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 export function partnersCopy(lang: string): PartnersCopy {
-  return PARTNERS_COPY[lang] ?? PARTNERS_COPY.en;
+  return PARTNERS_COPY[lang as Locale] ?? PARTNERS_COPY.en;
 }

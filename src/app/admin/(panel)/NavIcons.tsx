@@ -24,3 +24,43 @@ export function NavIcon({ k, size = 20 }: { k: string; size?: number }) {
       return <span className="block" style={{ width: size, height: size }} />;
   }
 }
+
+/* Page-level icons for the collapsed secondary sidebar.
+ *
+ * NavIcon above is per MODULE — the rail only ever needs eight. A collapsed
+ * secondary column needs one per PAGE, and pages are declared in layout.tsx
+ * without an icon field. Rather than plumb one through every module, this maps
+ * by href: the nav is small and static, and a page that is not in the map still
+ * gets something meaningful (its initial) instead of an empty square.
+ *
+ * Matching is longest-prefix, so /admin/analytics/seo/power wins over
+ * /admin/analytics. */
+const PAGE_ICON_PATHS: Array<[string, React.ReactNode]> = [
+  ["/admin/crm/newsletter", <><path d="M4 4h16v16H4z" /><path d="m4 7 8 6 8-6" /></>],
+  ["/admin/crm/calendar", <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>],
+  ["/admin/crm/board", <><rect x="3" y="4" width="5" height="16" rx="1" /><rect x="10" y="4" width="5" height="11" rx="1" /><rect x="17" y="4" width="4" height="7" rx="1" /></>],
+  ["/admin/crm/trash", <><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" /></>],
+  ["/admin/crm", <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></>],
+  ["/admin/analytics/seo/advisor", <><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></>],
+  ["/admin/analytics/seo/power", <><path d="M13 2 4 14h7l-1 8 9-12h-7z" /></>],
+  ["/admin/analytics/seo", <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>],
+  ["/admin/analytics", <><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></>],
+  ["/admin/users/activity", <><path d="M3 12h4l3-8 4 16 3-8h4" /></>],
+  ["/admin/users", <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></>],
+];
+
+export function PageIcon({ href, label, size = 18 }: { href: string; label: string; size?: number }) {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const hit = PAGE_ICON_PATHS.find(([prefix]) => href === prefix || href.startsWith(prefix + "/")) ?? PAGE_ICON_PATHS.find(([prefix]) => href === prefix);
+  if (hit) return <svg {...common}>{hit[1]}</svg>;
+  // Fallback: the page's initial, so an unmapped page is still identifiable.
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-[4px] border border-current text-[10px] font-semibold leading-none"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      {label.trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}

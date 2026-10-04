@@ -39,16 +39,21 @@ export default function LeadRow({
             outline icon like lucide's Flame was dropped — it read thin and
             frayed once colored in. Off: light gray, deliberately lighter
             than the old #D1D5DB dot since a solid shape reads heavier than
-            a thin outline did; hover hints gold. On: solid gold fill,
-            matching the existing #C29A5E accent (see CockpitCard's view/
-            favorite counts). Same size both states so nothing shifts on
-            click. */}
+            a thin outline did; hover hints the on-colour.
+
+            On: fire, not gold (2026-09-08). The gold #C29A5E is the brand
+            accent and already carries "premium" all over the admin; a flame
+            in it read as decoration rather than a state. #D2410A is the only
+            place this hue appears, so it means exactly one thing, and it
+            measures 4.67:1 on the row background — the old gold was 2.60:1
+            and barely registered against white. Same size both states so
+            nothing shifts on click. */}
         <form action={toggleLeadHotAction} className="inline-flex">
           <input type="hidden" name="id" value={l.id} />
           <button
             type="submit"
             className={`inline-flex leading-none transition-colors ${
-              l.hotAt ? "text-[#C29A5E] hover:text-[#8E6B3D]" : "text-[#E5E7EB] hover:text-[#D9B978]"
+              l.hotAt ? "text-[#D2410A] hover:text-[#9A2F06]" : "text-[#E5E7EB] hover:text-[#F0A184]"
             }`}
           >
             <FaFire size={18} />
@@ -66,7 +71,9 @@ export default function LeadRow({
           "—"
         )}
       </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{money(l.budgetMax)}</td>
+      {/* tabular-nums + right aligned: amounts in a column only read as a column
+          when their digits line up. */}
+      <td className={`px-4 py-2.5 text-right tabular-nums ${muted ? "" : "text-[#6B7280]"}`}>{money(l.budgetMax)}</td>
       <td className="px-4 py-2.5">
         <StatusPopover
           leadId={l.id}
@@ -77,13 +84,31 @@ export default function LeadRow({
           contactImplyingStatuses={contactImplyingStatuses}
         />
       </td>
-      <td className="px-4 py-2.5 text-center text-base" title={l.countryOfResidence ? COUNTRY_NAME_BY_CODE[l.countryOfResidence] ?? l.countryOfResidence : undefined}>
-        {l.countryOfResidence ? countryCodeToFlagEmoji(l.countryOfResidence) : ""}
+      {/* Flag + the language to actually write in. The preferred language wins
+          over the locale the lead arrived in; the title keeps both, since
+          merging them into one cell would otherwise lose the distinction
+          between "found us in EN" and "asked to be written to in DE". */}
+      <td
+        className="px-4 py-2.5 text-center"
+        title={[
+          l.countryOfResidence ? COUNTRY_NAME_BY_CODE[l.countryOfResidence] ?? l.countryOfResidence : null,
+          l.sourceLocale ? `arrived in ${l.sourceLocale.toUpperCase()}` : null,
+          l.languagePreference ? `prefers ${l.languagePreference.toUpperCase()}` : null,
+        ].filter(Boolean).join(" · ") || undefined}
+      >
+        <span className="inline-flex items-center justify-center gap-1.5">
+          <span className="text-base leading-none">{l.countryOfResidence ? countryCodeToFlagEmoji(l.countryOfResidence) : "—"}</span>
+          <span className={`text-xs ${muted ? "" : "text-[#6B7280]"}`}>
+            {(l.languagePreference ?? l.sourceLocale)?.toUpperCase() ?? "—"}
+          </span>
+        </span>
       </td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.assignedTo?.name ?? "—"}</td>
-      <td className="px-4 py-2.5 text-xs">
-        <div title="Received (site locale at intake)">{l.sourceLocale ? l.sourceLocale.toUpperCase() : "—"}</div>
-        <div className="text-[#9CA3AF]" title="Preferred (editable)">{l.languagePreference ? l.languagePreference.toUpperCase() : "—"}</div>
+      {/* Was the source/preferred language pair — both now live in the
+          Country / Lang cell, so this column answers the question the header
+          always seemed to promise: when did this lead reach us. */}
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`} title={`Received ${l.createdAt.toISOString()}`}>
+        {adminDate(l.createdAt)}
       </td>
       <td className="px-4 py-2.5">
         <div className="flex items-center justify-end gap-2">

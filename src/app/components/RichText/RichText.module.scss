@@ -1,6 +1,6 @@
 .customBulletList {
   list-style: none;
-  padding-left: 0;
+  padding-inline-start: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -13,7 +13,7 @@
       flex-shrink: 0; /* Фиксирует размер SVG */
       width: 12px; /* Задает фиксированную ширину */
       height: 8px; /* Задает фиксированную высоту */
-      margin-right: 9px; /* расстояние между SVG и текстом */
+      margin-inline-end: 9px; /* расстояние между SVG и текстом */
       margin-top: 7px;
     }
   }
@@ -24,13 +24,13 @@
 }
 
 .listItem svg {
-  margin-right: 11px; /* расстояние между SVG и текстом */
+  margin-inline-end: 11px; /* расстояние между SVG и текстом */
 }
 
 .blockquoteWrapper {
   padding: 20px;
   border-radius: 15px;
-  border-left: 2px solid #bd8948;
+  border-inline-start: 2px solid #bd8948;
 
   @media screen and (min-width: 768px) {
     padding: 30px 40px;

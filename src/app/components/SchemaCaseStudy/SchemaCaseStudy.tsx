@@ -1,8 +1,8 @@
 // components/SchemaCaseStudy.tsx
-import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { CaseStudy } from "@/types/caseStudy";
 import { abs } from "@/lib/seo";
+import { bcp47For } from "@/lib/locale";
 
 type Props = {
   caseStudy: CaseStudy;
@@ -22,7 +22,8 @@ const SchemaCaseStudy = ({ caseStudy, lang }: Props) => {
     image: imageUrl ? [imageUrl] : undefined,
     datePublished: caseStudy.publishedAt,
     dateModified: caseStudy._updatedAt,
-    inLanguage: lang,
+    // BCP47 tag, not the raw route-param locale code (Phase 8 fix, all locales).
+    inLanguage: bcp47For(lang),
     author: {
       "@type": "Organization",
       name: "Cyprus VIP Estates",
@@ -32,7 +33,9 @@ const SchemaCaseStudy = ({ caseStudy, lang }: Props) => {
       name: "Cyprus VIP Estates",
     },
     about: {
-      "@type": "RealEstateAgent",
+      // Organization, not RealEstateAgent — see layout.tsx's org schema comment
+      // (2026-09-10): we're not a licensed Cyprus real-estate broker.
+      "@type": "Organization",
       name: "Cyprus VIP Estates",
       areaServed: {
         "@type": "Country",
@@ -42,13 +45,11 @@ const SchemaCaseStudy = ({ caseStudy, lang }: Props) => {
   };
 
   return (
-    <Script
+    <script
       id="schema-case-study"
       type="application/ld+json"
-      strategy="beforeInteractive"
-    >
-      {JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
-    </Script>
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+    />
   );
 };
 

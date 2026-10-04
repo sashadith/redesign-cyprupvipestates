@@ -7,6 +7,8 @@ import { urlFor } from "@/sanity/sanity.client";
 import styles from "./ProjectSameCity.module.scss";
 import ProjectLink from "../ProjectLink/ProjectLink";
 import { localePrefix } from "@/lib/locale";
+import { hePlaceList } from "@/lib/hePlaces";
+import { projectSameCityCopy } from "./ProjectSameCity.copy";
 
 type Props = {
   lang: string;
@@ -25,22 +27,18 @@ const ProjectSameCity = async ({ lang, city, currentProjectId }: Props) => {
     return null;
   }
 
-  const title =
-    lang === "en"
-      ? "Other projects in"
-      : lang === "de"
-        ? "Andere Projekte in"
-        : lang === "pl"
-          ? "Inne projekty w mieście"
-          : lang === "ru"
-            ? "Другие проекты в городе"
-            : "Other projects";
+  const title = projectSameCityCopy(lang).title;
+  // `city` is raw DB free text ("Paphos"). Left alone it puts a Latin place in
+  // a Hebrew heading while PropertyFeatures on the SAME page writes "פאפוס" —
+  // one page, two spellings of one word (Pass B, Must fix #12). Unknown places
+  // stay Latin but isolated; every LTR locale renders the raw value as before.
+  const cityLabel = lang === "he" ? hePlaceList(city) : city;
 
   return (
     <section className={styles.projectSameCity}>
       <div className="container">
         <h2 className={styles.title}>
-          {title} {city}
+          {title} {cityLabel}
         </h2>
         <div className={styles.projects}>
           {projects.map((project: any) => {

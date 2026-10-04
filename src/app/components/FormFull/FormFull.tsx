@@ -20,6 +20,7 @@ import styles from "./FormFull.module.scss";
 import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
+import { formFullCopy } from "./FormFull.copy";
 
 export type FormData = {
   name: string;
@@ -48,6 +49,9 @@ const FormFull: FC<ContactFormProps> = ({
 }) => {
   const uid = useId();
   const [messagePopup, setMessagePopup] = useState<string | null>(null);
+  /* The shared banner draws a tick; on a failure that contradicts the
+     words next to it. See formFeedback.css. */
+  const [messagePopupIsError, setMessagePopupIsError] = useState(false);
 
   const [filled, setFilled] = useState({
     name: false,
@@ -130,15 +134,7 @@ const FormFull: FC<ContactFormProps> = ({
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
-      .required(
-        lang === "ru"
-          ? "Выберите удобный способ связи"
-          : lang === "de"
-            ? "Bitte bevorzugten Kontaktweg auswählen"
-            : lang === "pl"
-              ? "Wybierz preferowaną formę kontaktu"
-              : "Please choose your preferred contact method",
-      ),
+      .required(formFullCopy(lang).contactMethodRequired),
 
     agreedToPolicy: Yup.boolean()
       .required(`${dataForm.validationAgreementRequired}`)
@@ -156,7 +152,7 @@ const FormFull: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime,
@@ -205,6 +201,7 @@ const FormFull: FC<ContactFormProps> = ({
 
         onFormSubmitSuccess && onFormSubmitSuccess();
 
+        setMessagePopupIsError(false);
         setMessagePopup(
           dataForm.successMessage ||
             formSuccessText(lang),
@@ -222,8 +219,10 @@ const FormFull: FC<ContactFormProps> = ({
       const okFalse = error?.response?.data?.ok === false;
 
       if (blocked || okFalse) {
+        setMessagePopupIsError(true);
         setMessagePopup(dataForm.spamBlockedMessage || dataForm.errorMessage || formErrorText(lang));
       } else {
+        setMessagePopupIsError(true);
         setMessagePopup(formErrorText(lang));
       }
 
@@ -235,7 +234,6 @@ const FormFull: FC<ContactFormProps> = ({
 
   return (
     <>
-      {messagePopup && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{messagePopup}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -285,11 +283,11 @@ const FormFull: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="name"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="name">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -308,14 +306,7 @@ const FormFull: FC<ContactFormProps> = ({
                   htmlFor={`${uid}-surname`}
                   className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
                 >
-                  {(dataForm as any).inputSurname ??
-                    (lang === "ru"
-                      ? "Фамилия"
-                      : lang === "de"
-                        ? "Nachname"
-                        : lang === "pl"
-                          ? "Nazwisko"
-                          : "Surname")}
+                  {(dataForm as any).inputSurname ?? formFullCopy(lang).surnameLabel}
                 </label>
 
                 <Field name="surname">
@@ -331,11 +322,11 @@ const FormFull: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="surname"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="surname">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -361,11 +352,11 @@ const FormFull: FC<ContactFormProps> = ({
                   }}
                 />
 
-                <ErrorMessage
-                  name="phone"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="phone">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -400,36 +391,22 @@ const FormFull: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="email">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <fieldset className={`${styles.inputWrapper} min-w-0`}>
                 <legend className={styles.radioGroupLabel}>
-                  {lang === "ru"
-                    ? "Как с вами лучше связаться?"
-                    : lang === "de"
-                      ? "Wie können wir Sie am besten kontaktieren?"
-                      : lang === "pl"
-                        ? "W jaki sposób najlepiej się z Tobą skontaktować?"
-                        : "What’s the best way to contact you?"}
+                  {formFullCopy(lang).contactMethodLegend}
                 </legend>
 
                 <div className={styles.radioGroupWrapper}>
                   <label className={styles.radioOption}>
                     <Field type="radio" name="preferredContact" value="phone" />
-                    <span>
-                      {lang === "ru"
-                        ? "Телефон"
-                        : lang === "de"
-                          ? "Anruf"
-                          : lang === "pl"
-                            ? "Telefonicznie"
-                            : "Phone call"}
-                    </span>
+                    <span>{formFullCopy(lang).phoneCallLabel}</span>
                   </label>
 
                   <label className={styles.radioOption}>
@@ -443,21 +420,15 @@ const FormFull: FC<ContactFormProps> = ({
 
                   <label className={styles.radioOption}>
                     <Field type="radio" name="preferredContact" value="email" />
-                    <span>
-                      {lang === "de"
-                        ? "E-Mail"
-                        : lang === "pl"
-                          ? "E-mail"
-                          : "Email"}
-                    </span>
+                    <span>{formFullCopy(lang).emailLabel}</span>
                   </label>
                 </div>
 
-                <ErrorMessage
-                  name="preferredContact"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="preferredContact">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </fieldset>
 
               <div className={styles.inputWrapper}>
@@ -482,11 +453,11 @@ const FormFull: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="message"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="message">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <Field
@@ -515,44 +486,23 @@ const FormFull: FC<ContactFormProps> = ({
                 />
 
                 <label htmlFor={`${uid}-agreedToPolicy`}>
-                  {lang === "ru"
-                    ? "Я согласен с "
-                    : lang === "de"
-                      ? "Ich habe die Bedingungen der "
-                      : lang === "pl"
-                        ? "Zgadzam się z "
-                        : "I agree with the terms of the "}
+                  {formFullCopy(lang).agreementLead}
                   <Link
                     className={styles.policyLink}
-                    href={
-                      lang === "ru"
-                        ? "/ru/politika-privatnosti"
-                        : lang === "de"
-                          ? "/de/datenschutzrichtlinie"
-                          : lang === "pl"
-                            ? "/pl/polityka-prywatnosci"
-                            : "/privacy-policy"
-                    }
+                    href={formFullCopy(lang).agreementHref}
                     target="_blank"
                   >
-                    {lang === "ru"
-                      ? "Пользовательским соглашением"
-                      : lang === "de"
-                        ? "Benutzervereinbarung"
-                        : lang === "pl"
-                          ? "Umowa użytkownika"
-                          : "User agreement"}
+                    {formFullCopy(lang).agreementLinkLabel}
                   </Link>
-                  {lang === "ru"
-                    ? " прочитал и принимаю их"
-                    : lang === "de"
-                      ? " gelesen und akzeptiere sie"
-                      : lang === "pl"
-                        ? " przeczytałem i akceptuję je"
-                        : " read and accept them"}
+                  {formFullCopy(lang).agreementTail}
                 </label>
               </div>
 
+              {/* In flow, right above the button — matching the homepage contact
+                  section: the visitor is looking there when they press Send.
+                  Above the whole form it can sit off-screen on a long form
+                  (2026-09-28). */}
+              {messagePopup && <div className={`${styles.popup} form-feedback${messagePopupIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{messagePopup}</div>}
               <div>
                 <button
                   type="submit"

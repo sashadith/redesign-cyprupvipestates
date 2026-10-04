@@ -69,9 +69,15 @@
      the cut-out phone only read as a stray cloud. */
   background: transparent;
 }
+/* Same treatment as the adviser popup's .cvpm__art and the homepage form's
+   .formsec__consultant-wrap — a decorative image has no business taking
+   space from the fields on mobile. Same 860px breakpoint everywhere. */
+@media (max-width: 860px) {
+  .artform__art { display: none; }
+}
 .artform__art img {
   position: absolute;
-  right: 0;
+  right: 0; /* hand-holding-phone illustration bled to one side — tied to imagery, not reading direction (matches the consultant-portrait / .cvpm__art precedent) */
   bottom: -6%;
   width: min(118%, 393px);
   /* A global `img { max-width: 100% }` capped this to the column's own width,
@@ -140,16 +146,17 @@
 }
 .artform form .PhoneInput input.PhoneInputInput:focus { outline: none; box-shadow: none; }
 
-/* Name, surname and email each carry an absolutely positioned icon at left:20px,
-   20px wide — so the text must start clear of 40px. The generic 15px padding
-   above ran the typed value straight over the icon. 50px matches the floating
-   label's own left offset, so placeholder and value line up exactly.
+/* Name, surname and email each carry an absolutely positioned icon 20px in from
+   the inline-start edge, 20px wide — so the text must start clear of 40px. The
+   generic 15px padding above ran the typed value straight over the icon. 50px
+   matches the floating label's own inline-start offset, so placeholder and
+   value line up exactly.
    The phone row is excluded: it has no icon, its flag is a laid-out child. */
 .artform form input[type="text"],
 .artform form input[type="email"] {
-  padding-left: 50px;
+  padding-inline-start: 50px;
 }
-.artform form .PhoneInputCountry { margin-right: 12px; }
+.artform form .PhoneInputCountry { margin-inline-end: 12px; }
 .artform form .PhoneInputCountryIcon { background: transparent; box-shadow: none; }
 
 /* --------------------------------------------------------------- the copy */
@@ -192,34 +199,19 @@
 }
 
 /* ------------------------------------------------------------------ errors */
-/* The module positions these absolutely, on top of the field — which is why
-   the message sat inside the input, over the placeholder. Each error div is
-   the element right after its control, so an adjacent-sibling selector reaches
-   it without needing the hashed class:
-     .artform form input + div   (0,1,2)  beats  .error  (0,1,0)  */
-.artform form input + div,
-.artform form textarea + div,
-.artform form .PhoneInput + div,
-.artform form fieldset > div + div {
-  position: static;
-  /* All four of these have to be undone, not just `position`: the module also
-     sets left:50% and transform:translateX(-50%) to centre the message over
-     the field. With position:static the offsets stop applying but the
-     TRANSFORM does not — it kept shifting each message half its own width to
-     the left, out of the card. */
-  transform: none;
-  left: auto;
-  right: auto;
-  top: auto;
-  bottom: auto;
-  height: auto;
-  width: auto;
-  max-width: 100%;
-  background: transparent;
-  padding: 0;
-  margin-top: 6px;
-  display: block;
-  text-align: left;
+/* The wrapper (input + div) is FormMinimalBlockComponent's own .errorSlot — a
+   CSS-grid accordion (0fr -> 1fr, see FormMinimalBlockComponent.module.scss)
+   that animates the error into normal document flow. Don't touch the
+   wrapper's position/display here (an earlier version of this rule did,
+   forcing display:block and silently breaking the accordion) — only the
+   article card's colour/type treatment applies, on the inner text node the
+   ErrorMessage render-prop renders:
+     .artform form input + div > div   (0,1,3)  beats  .error  (0,1,0) */
+.artform form input + div > div,
+.artform form textarea + div > div,
+.artform form .PhoneInput + div > div,
+.artform form fieldset > div + div > div {
+  text-align: start;
   font-size: 12.5px;
   line-height: 1.35;
   /* The champagne family, but the deeper end of it. True champagne (#C29A5E)
@@ -262,7 +254,7 @@
 .artform form div:has(> input[type="checkbox"]) > input[type="checkbox"] {
   display: block;
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   width: 1px;
   height: 1px;
@@ -275,18 +267,22 @@
 
 /* -------------------------------------------------------- contact options */
 .artform form fieldset { border: 0; padding: 0; min-width: 0; }
-/* The module lays the options out in a nowrap flex row; in this column the
-   third one ran past the card's edge. */
+/* The module lays the options out in a nowrap flex row. Wrapping them used to
+   be the fix for the third one running past the card's edge; shrinking the
+   pills (see the label rule below) now keeps all three on one line instead,
+   so this stays nowrap like the module's own default. */
 .artform form fieldset > div:first-of-type {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  gap: 4px;
 }
 .artform form fieldset label {
   background: var(--glass-bg);
   border: 1px solid var(--hairline-strong);
   border-radius: 999px;
-  padding: 9px 16px;
+  padding: 6px 7px;
+  font-size: 0.68rem;
+  white-space: nowrap;
   cursor: pointer;
   transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
 }
@@ -307,7 +303,7 @@
   /* The module centres it with margin-inline:auto and stretches it to 100%;
      both are taken back so it sits at the start of the column. */
   margin-inline: 0;
-  margin-right: auto;
+  margin-inline-end: auto;
   /* Same 80% as the input fields above it, so the column has one edge. */
   width: 80%;
   min-width: 0;
@@ -335,7 +331,18 @@
 @media (max-width: 900px) {
   .artform { grid-template-columns: 1fr; }
   .artform__art { min-height: 200px; order: -1; }
+  /* mirror-formula centring anchor for the translate-X transform below — physical by design (logical would mis-centre in RTL) */
   .artform__art img { width: min(70%, 260px); right: 50%; transform: translateX(50%); bottom: -10%; }
+  /* The 80% cap above exists to keep fields short of a now-gone second
+     column; once that column is gone (grid collapses to 1fr right here),
+     an 80%-wide field just wastes a fifth of an already-narrow card. */
+  .artform form input[type="text"],
+  .artform form input[type="email"],
+  .artform form input[type="tel"],
+  .artform form textarea,
+  .artform form .PhoneInput {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 640px) {

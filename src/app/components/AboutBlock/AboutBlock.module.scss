@@ -6,10 +6,10 @@
 }
 
 .descriptionBlock {
-  padding-left: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
+  padding-inline-start: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
   padding-top: clamp(0.625rem, 0.398rem + 1.14vw, 1.25rem);
   padding-bottom: clamp(0.625rem, 0.398rem + 1.14vw, 1.25rem);
-  border-left: 3px solid #bd8948;
+  border-inline-start: 3px solid #bd8948;
   margin-bottom: clamp(1.25rem, 0.938rem + 1.25vw, 1.875rem);
 }
 

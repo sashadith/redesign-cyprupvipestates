@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 
-import { defaultLocale, locales } from "@/i18n.config";
+import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
+import { retiredProjectTarget } from "@/lib/retiredProjectRedirects";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
 const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
-const ALL_LOCALES = ["en", "de", "pl", "ru"];
+// Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is NOT in
+// this set — it is answered with a guaranteed 404 by the gated-locale guard
+// at the top of middleware() below, not by falling through unmatched (that
+// was the assumption before the Task 3 runtime finding: /he/faq actually
+// fell through to the singlepage catch-all and served English content at a
+// duplicate URL instead of 404ing).
+const ALL_LOCALES: readonly string[] = PUBLIC_LOCALES;
+// PUBLIC_LOCALES always holds at least one non-default locale in practice
+// (today: de/pl/ru on prod, +he on staging), so NON_DEFAULT is never empty.
+const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on prod, "de|pl|ru|he" on staging
+
+// Hoisted to module scope so these are compiled once, not on every request.
+const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
+const FAQ_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?faq$`);
+const CASE_STUDIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?case-studies(?:/([^/]+))?$`);
+const PARTNERS_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?partners$`);
 
 // German landing-page cluster consolidation (2026-07-28): thin-wrapper
 // landing pages merged into their canonical target, confirmed by identical
@@ -21,14 +37,17 @@ const ALL_LOCALES = ["en", "de", "pl", "ru"];
 // (ops/nginx/cyprusvipestates.conf) — kept in sync so no path ever chains
 // through both hops.
 //
-// haeuser-auf-zypern's merged children also need their FLAT leaf slug
-// (in addition to the nested path): nestedPageRedirects.json already 308s
-// the flat form to the nested "canonical" one for those exact leaves, and
-// this check runs before that logic — without the flat entry, a flat hit
-// would chain through the nested-canonicalisation 308 before ever reaching
-// this 301, a two-hop redirect for anyone who reaches the page via its bare
-// leaf slug. haeuser-in-limassol-kaufen is deliberately NOT here — held out,
-// its untyped-Limassol duplication is a separate question.
+// A merged page's nested children (e.g. villen-in-paphos, still merged
+// below) also need their FLAT leaf slug in addition to the nested path:
+// nestedPageRedirects.json already 308s the flat form to the nested
+// "canonical" one for those exact leaves, and this check runs before that
+// logic — without the flat entry, a flat hit would chain through the
+// nested-canonicalisation 308 before ever reaching this 301, a two-hop
+// redirect for anyone who reaches the page via its bare leaf slug.
+// haeuser-in-limassol-kaufen is deliberately NOT here — held out, its
+// untyped-Limassol duplication is a separate question (and its former
+// sibling, the rest of the Häuser cluster, is no longer merged at all —
+// see 2026-09-11 below).
 //
 // AFTER ADDING AN ENTRY, clear the links that still point at the merged page.
 // Other singlepages keep it in relatedLandingPages, and those render as real
@@ -48,17 +67,34 @@ const ALL_LOCALES = ["en", "de", "pl", "ru"];
 // you get the stored refs, which resolve to canonical paths only at render
 // time — asking the database gives false positives in both directions. Fetch
 // the pages and test the hrefs they actually emit.
-const DE_LANDING_MERGES: Record<string, string> = {
+//
+// All four *_LANDING_MERGES maps below are exported (2026-09-14) for the same
+// reason the comment above already flags for relatedLandingPages: a merged
+// page's Singlepage row is still status:PUBLISHED, so anything that queries
+// "published pages" without also knowing about these maps treats it as a
+// real, live URL forever. sitemaps/[type]/route.ts imports them for exactly
+// that check — it had been listing all 28 merged slugs as indexable URLs
+// that immediately 301, found 2026-09-14 while investigating why an AI
+// citation test picked up a since-merged PL page. If a future merge target
+// changes, this filter follows it automatically; no sitemap-side edit needed.
+export const DE_LANDING_MERGES: Record<string, string> = {
   "grosse-villen-zypern": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/haeuser-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
-  "haeuser-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/haus-mit-pool-auf-zypern": "/de/luxusvillen-in-zypern",
-  "haus-mit-pool-auf-zypern": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos": "/de/luxusvillen-in-zypern",
-  "luxus-haeuser-zum-verkauf-in-paphos": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/strandhaus-auf-zypern": "/de/strandvillen-zypern",
-  "strandhaus-auf-zypern": "/de/strandvillen-zypern",
+
+  // 2026-09-11: the "Häuser" cluster's 2026-07-28 merge into the villa
+  // flagship (5 entries: haeuser-auf-zypern + 4 children) is REVERSED — see
+  // docs/SITE-CHANGELOG.md, 2026-09-11. DataForSEO search volume shows "haus
+  // zypern kaufen" (3600/mo) at 7.5x the flagship's own "villa zypern
+  // kaufen" (480/mo); the merge rationale (identical filterPropertyType=
+  // Villa/no-city live query, or a stale project-overlap percentage against
+  // pages later found 0% live) is the same mechanical-identity mistake the
+  // luxusimmobilien-auf-zypern reversal below already documents -- shared
+  // inventory query isn't shared search intent. All 5 pages read with real,
+  // differentiated content (general/investor/pool/Paphos-luxury/beach
+  // angles). Un-redirected here, in ops/nginx/cyprusvipestates.conf (root-
+  // level legacy twin), and nestedPageRedirects.json is unaffected (it only
+  // canonicalizes the flat leaf -> nested path for these same children, not
+  // a merge). haeuser-in-limassol-kaufen stays out of scope, as it always
+  // was -- its own untyped-Limassol duplication is a separate question.
 
   // German villa-cluster consolidation (2026-09-01): four pages collapsed
   // into the flagship, confirmed duplicate by DIRECT INVENTORY SET
@@ -71,34 +107,27 @@ const DE_LANDING_MERGES: Record<string, string> = {
   // villen-in-paphos (a projectsSectionBlock fixed list) rendered a set
   // byte-identical to its own parent page, not a Paphos-filtered subset --
   // there was no independent page to preserve. Both the nested and flat
-  // leaf forms of villen-in-paphos are included, same reasoning as
-  // haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos above: without
-  // the flat entry, a flat hit chains through nestedPageRedirects.json's
-  // 308 before ever reaching this 301, a two-hop redirect for anyone who
-  // reaches the page via its bare leaf slug.
+  // leaf forms of villen-in-paphos are included: without the flat entry, a
+  // flat hit chains through nestedPageRedirects.json's 308 before ever
+  // reaching this 301, a two-hop redirect for anyone who reaches the page
+  // via its bare leaf slug (same reasoning the now-reversed Häuser-cluster
+  // entries above used to document, before 2026-09-11).
   "villen-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
   "villen-auf-zypern-fuer-auswanderer": "/de/luxusvillen-in-zypern",
   "villen-zypern-aufenthaltstitel-provisionsfrei": "/de/luxusvillen-in-zypern",
   "luxusvillen-in-zypern/villen-in-paphos": "/de/luxusvillen-in-zypern",
   "villen-in-paphos": "/de/luxusvillen-in-zypern",
-  /* Not a confirmed duplicate by this table's usual test — that test compares
-     live queries, and these two pages have hand-pinned lists instead, 8 of 11
-     shared. What decided it is search behaviour: over August the page drew 346
-     impressions at position 24.9 and NOT ONE query of its own. Every query it
-     appeared for, /de/luxusvillen-in-zypern also appeared for, and ranked
-     better. Its three unique pins — City Landmark, Infinity, Royal Bay Resort
-     — belong on the target before this goes live, or they lose their only
-     German placement.
-
-     Deliberately NOT merged alongside it: /de/strandvillen-zypern. It looks
-     like the same case (44% shared pins, loses its queries to the same page)
-     but the demand behind it is real — 803 impressions across 17 beach/sea
-     queries since June, 412 on "zypern villa am meer kaufen" alone. There the
-     answer is to make the specialist win its own term, not to remove it. */
-  "luxusimmobilien-auf-zypern": "/de/luxusvillen-in-zypern",
-  /* Same reasoning as the line above, and the same evidence: 555 of its 560
-     impressions came from queries /de/luxusvillen-in-zypern also served and
-     ranked better for — 5 were its own. Position 45.5 against the target's 18.4.
+  // luxusimmobilien-auf-zypern was merged here 2026-09-03 (commit 714ce20) on
+  // GSC query-overlap evidence -- reversed 2026-09-09: the query it actually
+  // owned, "luxusimmobilien zypern", held position ~5 on the retired page
+  // throughout, while this flagship's own position on that exact query went
+  // 25 -> 74 -> 55 after absorbing it. The merge cost the cluster its best
+  // German position on that term and gained nothing measurable in return. See
+  // docs/SITE-CHANGELOG.md, 2026-09-09, for the position data.
+  /* Same evidence as luxusimmobilien-auf-zypern's case above (see that page's
+     own history): 555 of its 560 impressions came from queries
+     /de/luxusvillen-in-zypern also served and ranked better for — 5 were its
+     own. Position 45.5 against the target's 18.4.
 
      Its list looked like the stronger argument to keep it — 11 pins the target
      did not have, all genuinely above €1M. Only 3 of those render: Küünal
@@ -106,6 +135,46 @@ const DE_LANDING_MERGES: Record<string, string> = {
      the page has been showing 16 cards for 19 pins. The three are on the target
      now, and the target's own link to this page is gone (see the note above). */
   "luxusvillen-zypern-ueber-1-mio": "/de/luxusvillen-in-zypern",
+
+  // German apartment-cluster consolidation (2026-09-08): same shape as the
+  // villa cluster above, same test. /de/apartment-zypern was confirmed the
+  // flagship — best URL, broadest GSC query footprint (18 distinct queries
+  // over the period, vs. a handful or zero for the others), most inbound
+  // links — after its own 15 pins turned out 15/15 archived and were replaced
+  // with a live filterPropertyType:"Apartment" query.
+  // wohnungen-fuer-junge-familien-zypern: zero filtering beyond
+  // propertyType:"Apartment" (no bedroom/family-amenity signal despite the
+  // slug), zero inbound links anywhere on the DE site, and its only ranking
+  // queries were Paphos apartment-buying terms it shares with (and loses to)
+  // apartment-zypern/wohnungen-in-paphos — not a distinct family-buyer
+  // audience, just an unfiltered duplicate borrowing someone else's intent.
+  // wohnungen-auf-zypern-fuer-investoren: same zero-filtering gap ("für
+  // Investoren" promises nothing an investor-specific query would match), and
+  // its own block heading even mislabeled itself "Die besten Villen" on an
+  // apartments page. Zero GSC impressions in the period — invisible in
+  // search, not just weak. relatedLandingPages entries pointing at either
+  // page were swept from every live DE singlepage first (see the writeup);
+  // no hardcoded hrefs to either page existed outside that one already-
+  // ARCHIVED reference on renditeimmobilien-zypern, left as-is since that
+  // page cannot render.
+  "wohnungen-fuer-junge-familien-zypern": "/de/apartment-zypern",
+  "wohnungen-auf-zypern-fuer-investoren": "/de/apartment-zypern",
+
+  // Paphos investment cluster (2026-09-09): investment-immobilien-paphos
+  // never filtered on propertyType despite its "investment" framing — it
+  // was just every Paphos listing (198 matches, 60 rendered under the cap)
+  // with investment-flavored copy, no per-listing investment data behind
+  // it (investmentData is 0/407 populated site-wide, and the ROI
+  // calculator runs on city+type market presets, not per-listing facts —
+  // the promise this page made can't be backed now or later). Repointed
+  // to villen-paphos-investoren-kaufen, DE's only live Paphos+Villa page —
+  // narrower (98 matches) and the one page actually scoped to what an
+  // investor-framed page should be selling. villen-in-paphos, the more
+  // "general Paphos villas" alternative, was ruled out: already merged
+  // into luxusvillen-in-zypern above, not a live option. The one hardcoded
+  // link to the retiring page (from strandimmobilien-paphos) was
+  // repointed directly to the new target first.
+  "investment-immobilien-paphos": "/de/villen-paphos-investoren-kaufen",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
@@ -117,6 +186,25 @@ const DE_LANDING_MERGES: Record<string, string> = {
 // unpublish with no 404 gap.
 const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+
+  // German-retiree cannibalization pair (2026-09-30 content inventory):
+  // wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen and
+  // ratgeber-fuer-deutsche-rentner carried a near-identical H2 skeleton (why
+  // Cyprus / which properties / step-by-step purchase / residence permit /
+  // taxes & pension / FAQ) for the same "German retiree buying in Cyprus"
+  // intent -- not two angles, the same guide at two depths. ratgeber is the
+  // canonical target: 4x the depth (7-step process, 7-document checklist, 4
+  // comparison tables, 7 common-mistakes writeup vs. thin bullet lists) and
+  // already the better-ranking page (avg pos. 11.1 vs 18.5, GSC). Its own
+  // lifestyle-category filing on wie-rentner was cosmetic -- it had no real
+  // lifestyle content, just a thinner pass at the same legal/tax ground.
+  // wie-rentner's one concrete fact ratgeber lacked (the ~€3,420/year
+  // tax-free foreign-pension threshold under the 5% flat-rate option) was
+  // folded into ratgeber's "Besteuerung von deutscher Rente" section before
+  // this redirect went in. Its closing projectsSectionBlock was NOT carried
+  // over -- all 6 pinned project refs are archived/missing, the same
+  // dead-pin defect documented throughout this file's other merges.
+  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/blog/ratgeber-fuer-deutsche-rentner",
 };
 
 // English (unprefixed) landing-page merges — same shape/mechanism as
@@ -141,12 +229,148 @@ const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
 // still status:"PUBLISHED"), so it's still sitemap-listed despite
 // redirecting (see src/app/sitemaps/[type]/route.ts, PUBLISHED-only
 // filter); not replicated here.
-const EN_LANDING_MERGES: Record<string, string> = {
+export const EN_LANDING_MERGES: Record<string, string> = {
   "villas-limassol": "/houses-in-cyprus/houses-in-limassol",
   "west-coast-properties-cyprus": "/west-coast-properties-paphos",
 };
 
+// Paphos investment cluster, PL leg (2026-09-09) — same investigation and
+// same reasoning as the DE entry above: inwestycje-w-nieruchomosci-pafos
+// never filtered on propertyType despite its "investment" framing (198
+// Paphos-wide matches, 60 rendered under the cap), and no per-listing
+// investment data exists to back that promise (investmentData is 0/407
+// populated site-wide). Redirects to wille-na-sprzedaz-pafos-dla-inwestorow,
+// PL's one live Paphos+Villa page. First PL entry in this family of maps —
+// same shape/mechanism as DE_LANDING_MERGES, kept separate because that one
+// is only ever checked under the /de/ prefix.
+export const PL_LANDING_MERGES: Record<string, string> = {
+  "inwestycje-w-nieruchomosci-pafos": "/pl/wille-na-sprzedaz-pafos-dla-inwestorow",
+
+  // PL villa cluster consolidation (2026-09-10): 9 separate villa landing
+  // pages were collectively pulling ~46 impressions / 2 clicks over 60 days
+  // (GSC), vs. DE's single consolidated flagship pulling hundreds of
+  // impressions per query for the equivalent cluster. Two of these six had a
+  // worse defect than plain fragmentation: 0-of-21 pinned project refs were
+  // PUBLISHED (same render-vs-status bug documented for the DE flagship
+  // above), rendering only because an implicit fallback query happened to
+  // paper over it. The other four had a live filterPropertyType:"Villa" query
+  // but zero real differentiation beyond marketing copy (investor/large/
+  // emigration/residency angles, no actual filter behind any of them) — the
+  // same "unfiltered duplicate" pattern as DE's wohnungen-fuer-junge-
+  // rodzin-zypern precedent. wille-na-cyprze was picked as the flagship (best
+  // URL, Cyprus-wide "villas" framing) and its own dead pins were fixed to a
+  // live filterPropertyType:"Villa" query in the same pass. NOT merged here,
+  // kept as distinct pages because each has a real, live-query differentiator:
+  // luksusowe-wille-na-cyprze-powyzej-1-mln-euro (priceMin 1M),
+  // wille-na-sprzedaz-pafos-dla-inwestorow (filterCity Paphos, already the
+  // established PL Paphos+Villa target above), wille-w-limassol-na-inwestycje
+  // (filterCity Limassol). relatedLandingPages refs and the 3 known hardcoded
+  // body-text links across the PL site were repointed to the flagship in the
+  // same pass, not left to rely solely on this redirect.
+  "wille-w-pafos": "/pl/wille-na-cyprze",
+  "wille-przy-plazy-cypr": "/pl/wille-na-cyprze",
+  "wille-na-cyprze-dla-inwestorow": "/pl/wille-na-cyprze",
+  "duze-wille-na-cyprze": "/pl/wille-na-cyprze",
+  "wille-na-cyprze-dla-emigracji": "/pl/wille-na-cyprze",
+  "wille-na-cyprze-na-pobyt-staly-bez-prowizji": "/pl/wille-na-cyprze",
+
+  // PL "dom" cluster consolidation (2026-09-11): domy-na-cyprze had the same
+  // 0-of-21-pinned-refs-PUBLISHED defect as the villa flagship, and was
+  // already the single highest-impression PL property page (285/60d) despite
+  // it -- position ~33, the biggest single opportunity found in the whole PL
+  // audit. Fixed to the same live filterPropertyType:"Villa" query as
+  // wille-na-cyprze. Deliberately the SAME query, not a code change to also
+  // pull Townhouse inventory (excludePropertyTypes isn't wired into this
+  // render path's live-query trigger -- would need resolveBlocks/usingFiltered/
+  // MIN_LIVE_RESULTS changes in sanity.utils.ts and [...slug]/page.tsx for
+  // one page's benefit, out of scope here). Kept as a separate page from
+  // wille-na-cyprze anyway: "dom" (260 vol) and "willa" (30-50 vol) are
+  // confirmed-distinct search vocabularies in DataForSEO data, not a
+  // duplicate audience -- same relationship as DE's Haus/Villa pillars,
+  // which also serve overlapping inventory under different query terms.
+  // domy-na-cyprze-dla-inwestorow and sprzedaz-domow-na-cyprze carried the
+  // identical unfiltered filterPropertyType:"Villa" query with no real
+  // differentiation behind the marketing angle -- same pattern as the villa
+  // cluster's own investor/emigration/residency duplicates. domy-z-basenem-
+  // na-cyprze ("houses with a pool") promised a pool filter the schema has
+  // no field for, so it was running the same unfiltered query too. Kept
+  // separate: domy-w-limassol (filterCity Limassol, real differentiator) --
+  // it's a CHILD page nested under sprzedaz-domow-na-cyprze's slug
+  // (/pl/sprzedaz-domow-na-cyprze/domy-w-limassol); this redirect only
+  // matches the exact flat parent path, so the child's own nested URL is
+  // unaffected and keeps resolving normally.
+  "domy-na-cyprze-dla-inwestorow": "/pl/domy-na-cyprze",
+  "sprzedaz-domow-na-cyprze": "/pl/domy-na-cyprze",
+  "domy-z-basenem-na-cyprze": "/pl/domy-na-cyprze",
+
+  // PL apartment/mieszkanie cluster consolidation (2026-09-11): same shape as
+  // the villa and dom clusters above. apartamenty-na-cyprze had 15/15 pinned
+  // refs with 0 PUBLISHED -- fixed to a live filterPropertyType:"Apartment"
+  // query. mieszkania-w-pafos-na-sprzedaz (its own child page, filterCity
+  // Paphos) had the identical dead-pin defect on an otherwise-correct live
+  // filter -- fixed in place, not merged, kept as its own page.
+  // apartamenty-na-cyprze-dla-inwestorow, apartamenty-na-cyprze-do-
+  // przeprowadzki, and mieszkania-dla-mlodych-rodzin-cypr all ran the
+  // identical unfiltered filterPropertyType:"Apartment" query with no real
+  // criteria behind the investor/moving/young-family framing -- the second
+  // and third are near-verbatim matches of the exact DE precedent that
+  // justified merging wohnungen-auf-zypern-fuer-investoren and wohnungen-
+  // fuer-junge-familien-zypern into apartment-zypern. Kept separate:
+  // mieszkania-w-limassol (filterCity Limassol, real differentiator, and PL's
+  // 2nd-highest-impression property page at 96/60d -- weak position, not a
+  // fragmentation problem, left alone here).
+  "apartamenty-na-cyprze-dla-inwestorow": "/pl/apartamenty-na-cyprze",
+  "apartamenty-na-cyprze-do-przeprowadzki": "/pl/apartamenty-na-cyprze",
+  "mieszkania-dla-mlodych-rodzin-cypr": "/pl/apartamenty-na-cyprze",
+};
+
+// Paphos investment cluster, RU leg (2026-09-09) — completes the DE/PL work
+// above. investitsii-v-nedvizhimost-pafos never filtered on propertyType,
+// same defect, same fix: redirect to villy-v-pafose-dlya-investorov, RU's
+// one live Paphos+Villa page. That target is itself a live Track 1
+// internal-link target — nothing about the target page changes here, it
+// only gains one more inbound redirect.
+export const RU_LANDING_MERGES: Record<string, string> = {
+  "investitsii-v-nedvizhimost-pafos": "/ru/villy-v-pafose-dlya-investorov",
+
+  // RU "dom" cluster consolidation (2026-09-11): unlike the RU villa cluster
+  // audited the same day (where every candidate page turned out to carry
+  // real, distinct content -- see docs/SITE-CHANGELOG.md -- and none were
+  // merged), doma-na-kipre and prodazha-domov-na-kipre are a genuine
+  // near-duplicate pair: both target the same generic "buy a house in
+  // Cyprus" intent with no real distinct audience or angle behind either
+  // title, unlike the villa cluster's investor/emigration/VNZH/size/beach
+  // pages, which each had real differentiating content (yields, legal
+  // specifics, dimensions, proximity). doma-na-kipre-dlya-investorov's own
+  // differentiation was thin in a different way: not a real investor-
+  // specific case (no yield data, unlike the villa investment page), just a
+  // named list of 3 partner developers (AGG Luxury Homes, Korantina Homes,
+  // Mito Developers) -- content that duplicates what /developers already
+  // does. The city-by-city breakdown from prodazha-domov-na-kipre and the
+  // 3 developer links from doma-na-kipre-dlya-investorov were both merged
+  // into doma-na-kipre's own content before this redirect went in, not
+  // simply discarded. Kept separate: doma-na-kipre-s-basseinom (its own
+  // real "houses with a pool" angle, already the site's best-performing
+  // "dom" page at 326 impressions/60d) and doma-v-limassole (real filterCity
+  // Limassol differentiator) -- both children nested under doma-na-kipre,
+  // unaffected by this flat-path-only redirect.
+  "prodazha-domov-na-kipre": "/ru/doma-na-kipre",
+  "doma-na-kipre-dlya-investorov": "/ru/doma-na-kipre",
+};
+
 export default async function middleware(request: NextRequest) {
+  // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
+  // launch): answer 404 instead of letting next-intl treat "he" as a plain
+  // path segment and the singlepage catch-all serve English content at a
+  // duplicate URL. The rewrite target is not a route; [lang]/layout.tsx
+  // rejects it via isPublicLocale() → notFound().
+  const firstSeg = request.nextUrl.pathname.split("/")[1] ?? "";
+  if (firstSeg && isLocale(firstSeg) && !isPublicLocale(firstSeg)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/_gated-locale-404";
+    return NextResponse.rewrite(url);
+  }
+
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
     const url = request.nextUrl.clone();
@@ -160,6 +384,20 @@ export default async function middleware(request: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url, 301);
   }
+  const plMergeMatch = request.nextUrl.pathname.match(/^\/pl\/(.+)$/);
+  if (plMergeMatch && PL_LANDING_MERGES[plMergeMatch[1]]) {
+    const url = request.nextUrl.clone();
+    url.pathname = PL_LANDING_MERGES[plMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+  const ruMergeMatch = request.nextUrl.pathname.match(/^\/ru\/(.+)$/);
+  if (ruMergeMatch && RU_LANDING_MERGES[ruMergeMatch[1]]) {
+    const url = request.nextUrl.clone();
+    url.pathname = RU_LANDING_MERGES[ruMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
   const enMergeMatch = request.nextUrl.pathname.match(/^\/([^/]+)$/);
   if (enMergeMatch && EN_LANDING_MERGES[enMergeMatch[1]]) {
     const url = request.nextUrl.clone();
@@ -168,10 +406,22 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301);
   }
 
+  /* Retired project slugs. Matched here rather than in the page, for the same
+     reason the /properties rule below gives: a page-level redirect() is
+     swallowed by the i18n rewrite. See src/lib/retiredProjectRedirects.ts for
+     the list and why it is not a database feature. */
+  const retiredTarget = retiredProjectTarget(request.nextUrl.pathname);
+  if (retiredTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = retiredTarget;
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+
   // The "Properties" section is hidden pre-launch — the live inventory is under
   // "Projects" (audit H3). Redirect any /properties[/...] to the localized projects
   // listing with a real HTTP redirect (page-level redirect() is swallowed by the i18n rewrite).
-  const propMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?properties(?:\/.*)?$/);
+  const propMatch = request.nextUrl.pathname.match(PROPERTIES_RE);
   if (propMatch) {
     const url = request.nextUrl.clone();
     url.pathname = propMatch[1] ? `/${propMatch[1]}/projects` : "/projects";
@@ -179,15 +429,15 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // FAQ redesign — now locale-aware for all 4 languages, same shape as the
+  // FAQ redesign — locale-aware for every live locale, same shape as the
   // Case Studies block below (both were English/prefixless-only until their
-  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq all rewrite
-  // to preview-faq/[lang] — the visible URL never changes. Content per
-  // language lives in the faqPage SiteDocument; a language with no row yet
-  // would 404 via the page's own notFound() rather than silently falling
-  // back, so this only ships once every language actually has content (see
-  // scripts/seed-faq-translations.mjs).
-  const faqMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?faq$/);
+  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq (and /he/faq
+  // once live) all rewrite to preview-faq/[lang] — the visible URL never
+  // changes. Content per language lives in the faqPage SiteDocument; a
+  // language with no row yet would 404 via the page's own notFound() rather
+  // than silently falling back, so this only ships once every language
+  // actually has content (see scripts/seed-faq-translations.mjs).
+  const faqMatch = request.nextUrl.pathname.match(FAQ_RE);
   if (faqMatch) {
     const lang = faqMatch[1] || "en";
     const url = request.nextUrl.clone();
@@ -199,7 +449,7 @@ export default async function middleware(request: NextRequest) {
   // /de/case-studies, /pl/case-studies, /ru/case-studies (and their /slug
   // children) all rewrite to preview-case-studies/[lang]/... — the visible
   // URL never changes, only what's rendered behind it.
-  const caseStudiesMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?case-studies(?:\/([^/]+))?$/);
+  const caseStudiesMatch = request.nextUrl.pathname.match(CASE_STUDIES_RE);
   if (caseStudiesMatch) {
     const [, localeSeg, slug] = caseStudiesMatch;
     const lang = localeSeg || "en";
@@ -216,7 +466,7 @@ export default async function middleware(request: NextRequest) {
   // exact /partners path. The old hardcoded /[lang]/partners/page.tsx this
   // used to sit alongside has been deleted — this rewrite is no longer
   // provisional, it's the only implementation left.
-  const partnersMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?partners$/);
+  const partnersMatch = request.nextUrl.pathname.match(PARTNERS_RE);
   if (partnersMatch) {
     const lang = partnersMatch[1] || "en";
     const url = request.nextUrl.clone();
@@ -237,8 +487,8 @@ export default async function middleware(request: NextRequest) {
   {
     const segs = request.nextUrl.pathname.split("/").filter(Boolean);
     const maybeLocale = segs[0];
-    const hasLocalePrefix = maybeLocale === "de" || maybeLocale === "pl" || maybeLocale === "ru";
-    const lang = hasLocalePrefix ? maybeLocale : "en";
+    const hasLocalePrefix = maybeLocale !== DEFAULT_LOCALE && ALL_LOCALES.includes(maybeLocale);
+    const lang = hasLocalePrefix ? maybeLocale : DEFAULT_LOCALE;
     const rest = hasLocalePrefix ? segs.slice(1) : segs;
     if (rest.length === 1) {
       const slug = rest[0];
@@ -321,8 +571,8 @@ export default async function middleware(request: NextRequest) {
   }
 
   const handleI18nRouting = createIntlMiddleware({
-    locales,
-    defaultLocale,
+    locales: [...PUBLIC_LOCALES],
+    defaultLocale: DEFAULT_LOCALE,
     // Default locale (English) is served without a URL prefix; de/pl/ru keep
     // their prefix. next-intl also redirects `/en/...` → `/...` automatically
     // (307) — the block above intercepts most cases with a 301 first; this
@@ -376,7 +626,9 @@ export const config = {
   // 404 the same way) — flagged separately as a pre-existing gap broader
   // than this one file; not fixed wholesale here to avoid touching this
   // matcher's blast radius beyond what's actually needed right now.
+  // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
+  // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

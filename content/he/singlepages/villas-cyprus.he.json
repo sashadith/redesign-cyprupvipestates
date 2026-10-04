@@ -1,0 +1,426 @@
+{
+  "slug": "villas-cyprus",
+  "title": "וילות למכירה בקפריסין, בתים פרטיים עם בריכה במחוז פאפוס",
+  "excerpt": "וילות למכירה בקפריסין מפרויקטים חדשים, בתים פרטיים עם בריכה וגינה, רובם במחוז פאפוס ומיעוטם בלימסול.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "וילה חדשה עם בריכה פרטית וגינה במחוז פאפוס",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "וילות למכירה בקפריסין | Cyprus VIP Estates",
+    "metaDescription": "וילות בקפריסין בפרויקטים חדשים בפאפוס ובלימסול, בתים פרטיים עם בריכה וגינה ישירות מהיזם, עם תוכניות, שטחי מגרש ומועדי מסירה."
+  },
+  "contentBlocks": [
+    {
+      "_key": "gmoxy0vdxzn8",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "וילות למכירה בקפריסין, בתים פרטיים עם בריכה במחוז פאפוס",
+      "subtitle": "פאפוס ולימסול",
+      "buttonLabel": "לקבל שיחה מיועץ",
+      "description": "מי שמחפש וילה בקפריסין מגיע לשני שווקים שונים לגמרי, השכרת נופש לשבוע ורכישת בית פרטי. ההבדל ביניהם קובע מה בכלל שווה לראות. בתים פרטיים חדשים על מגרש, לרוב עם בריכה וגינה, נבנים היום בעיקר במחוז פאפוס ובהיקף קטן יותר בלימסול."
+    },
+    {
+      "_key": "tx7n3n76csw3",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "dowfaituj6zd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "45vc7lqa25jv",
+              "text": "וילה זה סיפור אחר מדירה במתחם. הבית עומד על מגרש משלו, עם בריכה פרטית וגינה, בלי שכנים מעל ומתחת ולרוב בלי דמי ניהול של מתחם. במקביל, התחזוקה השוטפת עוברת אליכם או לחברת ניהול שאתם בוחרים, ושטח המגרש נכנס למחיר בדיוק כמו השטח הבנוי. מי שקונה לפני סיום הבנייה יכול גם להשפיע על הגימור ועל חלק מהתכנון.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "hibfzy2hp5bt",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "sq7eb9ng9b03",
+              "text": "רוב ההיצע החדש של וילות בקפריסין מרוכז במחוז פאפוס, בעיקר בפייה ובסביבתה, ובפרויקטים בודדים בקורל ביי, בכלורקה ובעיר פאפוס עצמה. בלימסול הבנייה החדשה היא בעיקר דירות במגדלים ובמתחמים מגודרים, ולצידן בתים בפרברי העיר ובתי יוקרה שמשקיפים לים. אנחנו עובדים מול היזמים עצמם, ולכן המחיר שאתם רואים הוא המחיר שהיזם מפרסם, בלי תוספת מחיר לרוכש.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "ikd55jz51hqf",
+      "_type": "landingProjectsBlock",
+      "title": "וילות בקפריסין בפרויקטים חדשים",
+      "filterPropertyType": "Villa"
+    },
+    {
+      "_key": "rcrag6mh7pla",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "96x991hn8ni5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "gd2ym8d6j2as",
+              "text": "מה מבדיל בין וילות בקפריסין",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "8jblbx1ie09k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "k8321rkbux9z",
+              "text": "ההבדל הראשון הוא המרחק מהים. בית בקו הראשון, בית עם נוף פתוח ממדרון שני ובית בשכונה פנימית, אלה שלוש רמות מחיר שונות. ההבדל השני הוא שטח המגרש, שקובע את גודל הגינה ואת המרחק מהשכנים. ההבדל השלישי הוא שלב הבנייה, כי בית שנמכר על הנייר מאפשר בחירת גימור ותוכנית תשלומים שנפרסת לאורך הבנייה.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "xcno31kx6o8l",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "xbq95jsos6xy",
+              "text": "וילה כנכס מניב",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "16m3csib3r8s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "3jbrt2u56ey3",
+              "text": "נכס שמיועד לשוק התיירות עשוי להניב תשואה עונתית גבוהה יותר, אבל התפוסה משתנה לאורך השנה, והשכרה לטווח ארוך יציבה יותר. אנחנו לא מפעילים נכסים להשכרה, וההרחבה על שיקולי התשואה נמצאת ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "hnjzw9jrqzas",
+              "text": "בעמוד ההשקעות בנדל\"ן בקפריסין",
+              "_type": "span",
+              "marks": [
+                "fy5fpj45ui3x"
+              ]
+            },
+            {
+              "_key": "015sb7cla9n2",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "fy5fpj45ui3x",
+              "href": "/he/property-investment-cyprus",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "7mw5lzegpvtr",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "2szl84qc803r",
+              "text": "בדיקה משפטית לפני החתימה",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "q0m5hf7wq85d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "7nzosuf1lgf5",
+              "text": "עורך דין מקומי ובלתי תלוי בודק את מצב הבעלות, חובות ושעבודים קיימים, אישורי תכנון והיתרי בנייה, עובר על נוסח החוזה לפני החתימה ומטפל בדרישות הרישום. בלי הבדיקה הזאת אי אפשר לדעת אם הקרקע ואם הפרויקט נקיים מבחינה משפטית, וזו הסיבה שהיא נעשית לפני כל תשלום מהותי.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "zxi2r2nk8f65",
+      "_type": "landingFaqBlock",
+      "title": "שאלות נפוצות על רכישת וילה בקפריסין",
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "bk38c794rgg5",
+            "answer": [
+              {
+                "_key": "z2fzsaedgi6i",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "c0hxbarpn8uw",
+                    "text": "אין מחיר אחד. הטווח נפתח בבית פרטי במתחם קטן במחוז פאפוס ונמשך עד וילת יוקרה עם נוף לים. השוואה של טווחי המחירים לפי אזור נמצאת ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "ed0wg0eutjhd",
+                    "text": "בעמוד מחירי הנכסים בקפריסין",
+                    "_type": "span",
+                    "marks": [
+                      "zs8jfls70kyq"
+                    ]
+                  },
+                  {
+                    "_key": "g0siie2z3cf3",
+                    "text": ", ואת מחיר הפתיחה של פרויקט מסוים אפשר לקבל בפנייה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "zs8jfls70kyq",
+                    "href": "/he/property-prices-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "כמה עולה וילה בקפריסין?"
+          },
+          {
+            "_key": "clcxpmgxisu1",
+            "answer": [
+              {
+                "_key": "gkbn0rntadio",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "75ghm5v8pi0s",
+                    "text": "המבחר שלנו מתמקד במחוז פאפוס ובמחוז לימסול, ובתוך מחוז פאפוס רוב הבתים החדשים נמצאים בפייה ובסביבתה. בלרנקה אפשר לבקש לראות מה קיים. בצפון קפריסין איננו עובדים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "איפה יש בקפריסין וילות למכירה?"
+          },
+          {
+            "_key": "v3x4bmtlwxva",
+            "answer": [
+              {
+                "_key": "4x0isa7i18yd",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "af1gd9tpfqeb",
+                    "text": "זה תלוי במה שמחפשים. בפאפוס נמצאים רוב הבתים החדשים ובטווח מחירים נמוך יותר, ובלימסול יש קרבה למרכז העסקים, לבתי ספר בינלאומיים ולקהילה הישראלית. את הבתים שבמחוז פאפוס אפשר לראות ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "fgkiatw0grnq",
+                    "text": "בעמוד הווילות בפאפוס",
+                    "_type": "span",
+                    "marks": [
+                      "107b5bh8krjy"
+                    ]
+                  },
+                  {
+                    "_key": "k5c8hqn1llo7",
+                    "text": ", ומי שמחפש דווקא בית מול הים ימצא אותו ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "nwz30hfxwst9",
+                    "text": "בעמוד הבתים על הים",
+                    "_type": "span",
+                    "marks": [
+                      "urrjjvm8iv9y"
+                    ]
+                  },
+                  {
+                    "_key": "4xqygk66eyuy",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "107b5bh8krjy",
+                    "href": "/he/paphos/villas",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "urrjjvm8iv9y",
+                    "href": "/he/seafront-villas-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "עדיף וילה בפאפוס או בלימסול?"
+          },
+          {
+            "_key": "e1xwofhjemyq",
+            "answer": [
+              {
+                "_key": "xsiifeuw5ans",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "rx8igfhfr70s",
+                    "text": "במקרים מסוימים נדרש אישור של מועצת השרים לרוכשים שאינם אזרחי האיחוד האירופי. עורך הדין שמלווה את העסקה מטפל בכך. מה נדרש מרוכש ישראלי באופן כללי מוסבר ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "67wwnk2e6zer",
+                    "text": "בעמוד הנדל\"ן בקפריסין",
+                    "_type": "span",
+                    "marks": [
+                      "xxshmjywcua6"
+                    ]
+                  },
+                  {
+                    "_key": "ikzk5cpa1eny",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "xxshmjywcua6",
+                    "href": "/he/real-estate-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "נדרש אישור מיוחד לרכישת וילה?"
+          }
+        ]
+      }
+    },
+    {
+      "_key": "k1oqglu5h7ky",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "o8lyw7pa80jc",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "78fdz9h6k1tz",
+              "text": "שני מחוזות, שני סוגי רוכשים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "82aiz4mfqflj",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "hayin9rl6gow",
+              "text": "מי שרוצה בית פרטי עם בריכה, גינה ושקט ימצא את רוב הבחירה במחוז פאפוס, ובטווח מחירים נמוך יותר מזה של לימסול. מי שצריך קרבה למרכז העסקים, לבתי ספר בינלאומיים ולקהילה הישראלית באי ימצא את זה בלימסול, שם ההיצע של בתים פרטיים חדשים מצומצם יותר.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "xjsr00899j18",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "4hws77krid5e",
+              "text": "לבחור בין פאפוס ללימסול",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "y3ajqhl7jvz7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "l3zammnnk2kq",
+              "text": "ההחלטה בין שני המחוזות נסגרת מהר כשברור מה חשוב יותר, מגרש גדול ושקט או קרבה לעיר ולקהילה. אחרי שהיא נסגרת נשארים בדרך כלל כמה פרויקטים בלבד, ואפשר לראות אותם ביום נסיעה אחד או בסיור וירטואלי.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    "paphos/villas",
+    "seafront-villas-cyprus",
+    "houses-for-sale-cyprus",
+    "real-estate-cyprus"
+  ],
+  "translationGroupSlugEn": null,
+  "parentSlug": null,
+  "review": "pending"
+}

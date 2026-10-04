@@ -53,12 +53,21 @@ export function resolveStageLabel(
   const t = developmentCopy(lang);
   const raw = stage || status || "";
   if (!raw || raw.toLowerCase().includes("sold")) return null;
-  // Canonical stage/status values (the admin dropdown + feed adapters only ever
-  // produce these — see feeds.ts's STAGE_LABEL and the admin page's <select>)
-  // map to a localized label; anything else (a free-typed custom value) is
-  // shown as-is rather than guessed at.
-  const key = raw.toLowerCase() as keyof typeof t.stage;
-  return t.stage[key] ?? raw;
+  // Canonical stage/status values map to a localized label; anything else (a
+  // free-typed custom value) is shown as-is rather than guessed at. The raw
+  // value's spacing/hyphenation doesn't reliably match t.stage's own keys —
+  // which themselves mix conventions ("off-plan" hyphenated, "under
+  // construction" spaced) — despite the admin dropdown/feed adapters
+  // supposedly only producing canonical values: real DB rows carry "Off
+  // Plan"/"Off-plan"/"off-plan" and "Key-Ready"/"Key Ready" as distinct
+  // strings, all meaning the same stage. Comparing both sides with
+  // spaces/hyphens stripped catches every spelling — confirmed live, "Off
+  // Plan" alone (space, capitalized) accounted for 64 of ~80 stage rows
+  // across every non-English locale, none of them ever matching before this.
+  const squash = (s: string) => s.toLowerCase().replace(/[\s-]+/g, "");
+  const normalized = squash(raw);
+  const key = (Object.keys(t.stage) as (keyof typeof t.stage)[]).find((k) => squash(k) === normalized);
+  return key ? t.stage[key] : raw;
 }
 
 // Admin-facing warning: the stored stage/status claims sold-out, but live unit

@@ -1,0 +1,896 @@
+{
+  "slug": "2-bedroom-apartments-for-sale-limassol",
+  "title": "2 Bedroom Apartments for Sale in Limassol",
+  "excerpt": "Discover spacious and contemporary 2 bedroom apartments for sale in Limassol. Access quality flats through our direct developer network — no additional buyer fees and full support from inquiry to acqu",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "2 Bedroom Apartments for Sale in Limassol – Spacious Modern Flats",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "2 Bedroom Apartments for Sale in Limassol – Spacious Modern Flats",
+    "metaDescription": "Explore 2 bedroom apartments for sale in Limassol. Modern flats in prime locations with direct developer access and no extra buyer fees through our marketing network."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b-intro-en-1771245185155",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "2 Bedroom Apartments for Sale in Limassol – Spacious Modern Flats",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "2 Bedroom Apartments for Sale in Limassol",
+      "subtitle": "Stylish Flats",
+      "buttonLabel": "Buy a Flat",
+      "description": "Discover spacious and contemporary 2 bedroom apartments for sale in Limassol. Access quality flats through our direct developer network — no additional buyer fees and full support from inquiry to acquisition."
+    },
+    {
+      "_key": "b-tstart-en-1771245185155",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "pt-0-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-0-0-1771245185155-t0-t0",
+              "text": "At Cyprus VIP Estates, we offer a carefully curated portfolio of 2 bedroom apartments for sale in Limassol, showcasing modern flats in desirable urban and coastal locations. Limassol has become one of Cyprus’s most dynamic property markets, attracting international buyers from Europe, the UK, the Middle East, CIS countries, China, and beyond. Whether you are seeking a contemporary city residence, a holiday home close to the beach, or an investment property, our selection of 2 bedroom living spaces delivers excellent value, comfort, and long-term potential.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245185155-t0-t0",
+              "text": "We operate as a marketing partner for trusted developers, connecting you directly with project owners and builders. This means when you choose to pursue a property through our network, you don’t incur any additional buyer’s or marketing fee — you benefit from transparent pricing, professional guidance, and full support throughout the process.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "b-proj-en-1771245185155",
+      "_type": "landingProjectsBlock",
+      "title": "List of 2 Bedroom Apartments in Limassol",
+      "projects": [
+        {
+          "_key": "pr-0-1771245185155",
+          "_ref": "project-silicon-park-imperio.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-1-1771245185155",
+          "_ref": "project-limassol-park.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-2-1771245185155",
+          "_ref": "project-glow-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-3-1771245185155",
+          "_ref": "project-portal-sol.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-4-1771245185155",
+          "_ref": "project-golfside-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-5-1771245185155",
+          "_ref": "project-germasogeia-view-2-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-6-1771245185155",
+          "_ref": "project-ace-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-7-1771245185155",
+          "_ref": "project-the-lake-view-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-8-1771245185155",
+          "_ref": "project-portside-imperio.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-9-1771245185155",
+          "_ref": "project-skyline-apartments-imperio.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-10-1771245185155",
+          "_ref": "project-flow-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-11-1771245185155",
+          "_ref": "project-vision-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-12-1771245185155",
+          "_ref": "project-life-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-13-1771245185155",
+          "_ref": "project-cypress-groove-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-14-1771245185155",
+          "_ref": "cbdd3acb-03c0-49b2-83bd-9e6ae0575608",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-15-1771245185155",
+          "_ref": "project-spirit-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-16-1771245185155",
+          "_ref": "project-verde-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-17-1771245185155",
+          "_ref": "project-sense-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-18-1771245185155",
+          "_ref": "project-rosa-dei-venti-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-19-1771245185155",
+          "_ref": "d51ace9d-5163-4efe-8642-3b5986bb120a",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-20-1771245185155",
+          "_ref": "project-rise-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-21-1771245185155",
+          "_ref": "8ea6ab12-4206-47d5-ac98-c2ed8ce9cb66",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-22-1771245185155",
+          "_ref": "project-limassol-blu-marine.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-23-1771245185155",
+          "_ref": "project-limassol-del-mar.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-24-1771245185155",
+          "_ref": "project-capri-bbf.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-25-1771245185155",
+          "_ref": "project-one-pafilia.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-26-1771245185155",
+          "_ref": "project-eden-roc-bbf.en",
+          "_type": "reference"
+        }
+      ]
+    },
+    {
+      "_key": "b-tf-en-1771245185155",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "pt-0-1771245185155",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245185155-t0-t0",
+              "text": "Why Choose 2 Bedroom Apartments in Limassol",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245185155-t0-t0",
+              "text": "Limassol combines vibrant city life with Mediterranean charm, making it an ideal location for comfortable, modern apartment living. A two-bedroom flat in Limassol offers the perfect balance of space, flexibility, and lifestyle advantages — suitable for couples, small families, retirees, or investors seeking rental income.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245185155-t0-t0",
+              "text": "Key benefits of choosing 2 bedroom apartments here include:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245185155-t0-t0",
+              "text": "Central and coastal locations, often within walking distance of amenities",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245185155-t0-t0",
+              "text": "Modern design and efficient layouts suited to everyday life",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245185155-t0-t0",
+              "text": "Strong rental demand due to Limassol’s business and tourism growth",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245185155-t0-t0",
+              "text": "Excellent infrastructure, including international schools, healthcare, and transport",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245185155-t0-t0",
+              "text": "Value stability and growth potential within a key Mediterranean city",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-12-0-1771245185155-t0-t0",
+              "text": "Limassol’s real estate market continues to outperform many comparable European destinations, making well-located flats a sound choice for both resident buyers and investors alike.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245185155",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-14-0-1771245185155-t0-t0",
+              "text": "Types of 2 Bedroom Living Spaces You Can Find",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245185155-t0-t0",
+              "text": "Our listings of 2 bedroom apartments for sale in Limassol include a variety of property types, each designed to match different preferences and budgets.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245185155",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-18-0-1771245185155-t0-t0",
+              "text": "Contemporary Urban Flats",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-0-1771245185155-t0-t0",
+              "text": "Modern apartments located in Limassol’s city centre or close to key services and entertainment hubs. These units are ideal for those who want vibrant living with easy access to city conveniences.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-1771245185155",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-22-0-1771245185155-t0-t0",
+              "text": "Seafront and Coastal Residences",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-24-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-24-0-1771245185155-t0-t0",
+              "text": "Flats set near the Mediterranean coastline, offering sea views, outdoor terraces, and proximity to beaches. These are perfect for holiday homes or long-term living by the water.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-26-1771245185155",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-26-0-1771245185155-t0-t0",
+              "text": "New Build Developments",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-28-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-28-0-1771245185155-t0-t0",
+              "text": "Brand-new construction projects with modern finishes, energy-efficient systems, smart home features, and communal amenities such as gardens, gyms, and parking.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-30-1771245185155",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-30-0-1771245185155-t0-t0",
+              "text": "Investment-Ready Flats",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-32-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-32-0-1771245185155-t0-t0",
+              "text": "Properties designed to attract high rental yields, located near universities, business districts, or tourist hotspots — giving investors strong rental appeal.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-34-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-34-0-1771245185155-t0-t0",
+              "text": "Each apartment features well-planned layouts, quality interiors, and thoughtful design, ensuring that every living space is not just a house, but a home.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "faq-en-0-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "Limassol offers a range of 2 bedroom flats — from city centre apartments to seafront residences and new build developments. You can find options suited for personal living, holiday homes, or investment purposes.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What types of 2 bedroom apartments are available in Limassol?"
+          },
+          {
+            "_key": "faq-en-1-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "Yes. Limassol is a thriving hub with strong infrastructure, growing international appeal, and high demand for residential properties, making it attractive for both residents and investors.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Is Limassol a good location for buying a 2 bedroom flat?"
+          },
+          {
+            "_key": "faq-en-2-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "No. As a marketing agency working with developers, we do not charge any additional buyer’s or marketing fee. You pay the price set by the developer, with support from our team.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Do I have to pay extra fees when buying through Cyprus VIP Estates?"
+          },
+          {
+            "_key": "faq-en-3-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "Absolutely. Buyers from the EU, UK, Middle East, USA, CIS, and other regions can legally acquire property in Cyprus. We provide guidance to international purchasers throughout the process.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can international buyers purchase apartments in Limassol?"
+          },
+          {
+            "_key": "faq-en-4-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "Yes. Due to Limassol’s strong rental market for professionals, students, and families, well-located 2 bedroom apartments can generate solid rental returns and long-term value growth.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Are 2 bedroom flats good for rental investment?"
+          },
+          {
+            "_key": "faq-en-5-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "Yes. We facilitate virtual tours, digital communication with developers, and secure processes that enable remote buyers to proceed with confidence.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can I complete the purchase remotely?"
+          },
+          {
+            "_key": "faq-en-6-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "Many modern 2 bedroom flats include features such as fitted kitchens, balconies or terraces, parking spaces, communal gardens, and access to shared facilities like gyms and pools in larger developments.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What amenities are typically included in these apartments?"
+          },
+          {
+            "_key": "faq-en-7-1771245185155",
+            "answer": [
+              {
+                "_key": "pt-0-1771245185155",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245185155-t0-t0",
+                    "text": "New build apartments often command a premium due to modern designs, energy efficiency, and contemporary amenities. However, they also tend to offer better long-term value and appeal.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Are new build flats more expensive than older apartments?"
+          }
+        ]
+      },
+      "_key": "b-faq-en-1771245185155",
+      "_type": "landingFaqBlock",
+      "title": "Frequently asked questions"
+    },
+    {
+      "_key": "b-ts-en-1771245185155",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "pt-0-1771245185155",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245185155-t0-t0",
+              "text": "How We Support Your Purchase of a 2 Bedroom Flat in Limassol",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245185155-t0-t0",
+              "text": "Buying property abroad can be complex, but our team simplifies every step:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245185155-t0-t0",
+              "text": "Initial Consultation – We discuss your goals, preferred neighbourhoods, and budget.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-5-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-5-0-1771245185155-t0-t0",
+              "text": "Property Matching – You receive a tailored list of suitable apartments directly from developers.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245185155-t0-t0",
+              "text": "Viewings & Virtual Tours – Options for in-person visits or online walkthroughs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245185155-t0-t0",
+              "text": "Transparent Pricing – All prices are provided by developers with no hidden charges.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245185155-t0-t0",
+              "text": "Legal and Administrative Assistance – We connect you with experienced partners for due diligence and contracts.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245185155",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245185155-t0-t0",
+              "text": "Closing & Handover – We ensure a smooth finalisation process with support at every stage.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-11-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-11-0-1771245185155-t0-t0",
+              "text": "Our multilingual team is ready to assist clients in English, German, Russian, Polish, and other languages to ensure clarity, comfort, and confidence in your property journey.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-13-1771245185155",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-13-0-1771245185155-t0-t0",
+              "text": "Your Ideal 2 Bedroom Apartment Awaits",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-15-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-15-0-1771245185155-t0-t0",
+              "text": "Limassol continues to attract buyers seeking a balanced Mediterranean lifestyle, strong investment potential, and world-class amenities. If you are looking for 2 bedroom apartments for sale in Limassol — whether as your permanent home, holiday retreat, or rental investment — our marketing network connects you directly with trusted developers, offering transparent pricing and no additional buyer’s fees.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-17-1771245185155",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-17-0-1771245185155-t0-t0",
+              "text": "Start your journey today with Cyprus VIP Estates and explore the best 2 bedroom flats in Limassol — comfortable, modern, and designed to meet your lifestyle and financial goals.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    {
+      "_key": "f75t503g19k",
+      "_ref": "single-property-for-sale-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "g1rvua6fmjd",
+      "_ref": "single-investment-properties-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "nbn7h94k7x",
+      "_ref": "single-sea-view-properties-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "9wjb2mm81mr",
+      "_ref": "single-villas-in-limassol-for-investors.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "3lut0bv002x",
+      "_ref": "single-off-plan-properties-in-limassol.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "nmtdnlo24v",
+      "_ref": "single-properties-near-international-schools-limassol.en",
+      "_type": "singlepageRef"
+    }
+  ]
+}

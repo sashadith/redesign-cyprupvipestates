@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="//www.cybarco.com/wp-content/plugins/wordpress-seo/css/main-sitemap.xsl"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+	<url>
+		<loc>https://www.cybarco.com/project/sea-gallery-villas/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/sea-gallery-villas/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/sea-gallery-villas/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/sea-gallery-villas/" />
+		<lastmod>2019-06-27T17:33:44+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/06/SeaGalleryVillas.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/trilogy-limassol-seafront/location/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/location/" />
+		<lastmod>2019-07-02T10:48:47+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/sea-gallery-villas/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/sea-gallery-villas/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/sea-gallery-villas/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/sea-gallery-villas/" />
+		<lastmod>2019-07-03T06:29:47+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/06/SeaGalleryVillas.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/akamas-bay-villas/location/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/akamas-bay-villas/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/akamas-bay-villas/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/akamas-bay-villas/location/" />
+		<lastmod>2019-07-04T09:17:58+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/trilogy-limassol-seafront/lokaciya/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/location/" />
+		<lastmod>2019-07-08T16:23:18+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/limassol-marina/lokaciya/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/location/" />
+		<lastmod>2019-07-08T16:31:03+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/the-oval/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/the-oval/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/the-oval/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/the-oval/" />
+		<lastmod>2019-07-09T08:51:26+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/03/TheOval.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/the-oval/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/the-oval/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/the-oval/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/the-oval/" />
+		<lastmod>2019-07-09T08:52:05+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/03/TheOval.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/limassol-marina/location/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/location/" />
+		<lastmod>2019-09-20T08:16:23+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-2/lokaciya/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-2/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-2/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-2/location/" />
+		<lastmod>2021-11-05T13:24:32+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-2/location/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-2/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-2/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-2/location/" />
+		<lastmod>2022-01-26T10:39:06+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-3/location/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-3/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-3/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-3/location/" />
+		<lastmod>2022-01-31T09:27:46+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-3/lokaciya/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-3/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-3/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-3/location/" />
+		<lastmod>2022-01-31T12:38:18+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-3/properties/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-3/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-3/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-3/properties/" />
+		<lastmod>2023-04-05T06:09:08+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-3/nedvizhimost/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-3/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-3/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-3/properties/" />
+		<lastmod>2023-04-05T06:09:24+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-2/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-2/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-2/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-2/" />
+		<lastmod>2024-04-23T21:35:02+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/06/Aktea2.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-2/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-2/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-2/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-2/" />
+		<lastmod>2024-04-23T21:35:47+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/06/Aktea2.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-3/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-3/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-3/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-3/" />
+		<lastmod>2024-04-23T21:36:37+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2022/01/AR3-featured-photo.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-3/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-3/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-3/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-3/" />
+		<lastmod>2024-04-23T21:36:58+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2022/01/AR3-featured-photo.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-2/%d0%bd%d0%b5%d0%b4%d0%b2%d0%b8%d0%b6%d0%b8%d0%bc%d0%be%d1%81%d1%82%d1%8c/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-2/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-2/%d0%bd%d0%b5%d0%b4%d0%b2%d0%b8%d0%b6%d0%b8%d0%bc%d0%be%d1%81%d1%82%d1%8c/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-2/properties/" />
+		<lastmod>2024-04-30T06:18:13+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-2/properties/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-2/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-2/%d0%bd%d0%b5%d0%b4%d0%b2%d0%b8%d0%b6%d0%b8%d0%bc%d0%be%d1%81%d1%82%d1%8c/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-2/properties/" />
+		<lastmod>2024-04-30T06:19:09+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/akamas-bay-villas/lokaciya/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/akamas-bay-villas/location/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/akamas-bay-villas/lokaciya/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/akamas-bay-villas/location/" />
+		<lastmod>2024-08-05T13:11:46+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/ofisy/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/offices/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/ofisy/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/offices/" />
+		<lastmod>2024-08-09T11:26:46+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/thalassa-residences/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/thalassa-residences/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/thalassa-residences/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/thalassa-residences/" />
+		<lastmod>2024-09-11T12:16:22+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2023/04/Thalassa-Residences-1-Featured-768-x-511.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/thalassa-residences/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/thalassa-residences/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/thalassa-residences/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/thalassa-residences/" />
+		<lastmod>2025-08-05T06:28:34+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2023/04/Thalassa-Residences-1-Featured-768-x-511.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/trilogy-limassol-seafront/properties/offices/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/offices/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/ofisy/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/offices/" />
+		<lastmod>2025-08-08T10:48:30+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/limassol-marina/properties/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/properties/" />
+		<lastmod>2026-04-09T11:17:17+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/properties/" />
+		<lastmod>2026-04-09T11:17:31+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/attikis-residences/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/attikis-residences/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/attikis-residences/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/attikis-residences/" />
+		<lastmod>2026-07-08T13:03:10+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2022/08/Attikis-Residences_featured_768x511.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/attikis-residences/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/attikis-residences/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/attikis-residences/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/attikis-residences/" />
+		<lastmod>2026-07-08T13:03:20+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2022/08/Attikis-Residences_featured_768x511.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/villy/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/properties/villas/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/villy/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/properties/villas/" />
+		<lastmod>2026-07-24T11:05:54+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/limassol-marina/properties/villas/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/properties/villas/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/villy/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/properties/villas/" />
+		<lastmod>2026-07-24T11:06:03+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/apartamenty/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/properties/apartments/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/apartamenty/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/properties/apartments/" />
+		<lastmod>2026-07-24T11:06:10+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/limassol-marina/properties/apartments/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/properties/apartments/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/nedvizhimost/apartamenty/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/properties/apartments/" />
+		<lastmod>2026-07-24T11:06:17+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/limassol-marina/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/" />
+		<lastmod>2026-07-24T11:06:26+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/04/LimassolMarina.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/limassol-marina/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-marina/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-marina/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-marina/" />
+		<lastmod>2026-07-24T11:06:33+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/04/LimassolMarina.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/apartamenty/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/apartments/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/apartamenty/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/apartments/" />
+		<lastmod>2026-08-07T11:05:29+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/trilogy-limassol-seafront/properties/apartments/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/apartments/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/apartamenty/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/apartments/" />
+		<lastmod>2026-08-07T11:05:43+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/" />
+		<lastmod>2026-08-07T11:05:59+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/trilogy-limassol-seafront/properties/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/properties/" />
+		<lastmod>2026-08-07T11:06:17+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/trilogy-limassol-seafront/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/" />
+		<lastmod>2026-08-07T11:07:05+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/06/Trilogy-Limassol-Seafront-774-514.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/trilogy-limassol-seafront/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/trilogy-limassol-seafront/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/trilogy-limassol-seafront/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/trilogy-limassol-seafront/" />
+		<lastmod>2026-08-07T11:07:42+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/06/Trilogy-Limassol-Seafront-774-514.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/park-residences-nicosia/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/park-residences-nicosia/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/park-residences-nicosia/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/park-residences-nicosia/" />
+		<lastmod>2026-08-12T10:29:16+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2024/02/Park-Residences-featured-768x511-2.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/park-residences-nicosia/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/park-residences-nicosia/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/park-residences-nicosia/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/park-residences-nicosia/" />
+		<lastmod>2026-08-12T10:31:08+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2024/02/Park-Residences-featured-768x511-2.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/akamas-bay-villas/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/akamas-bay-villas/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/akamas-bay-villas/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/akamas-bay-villas/" />
+		<lastmod>2026-08-18T10:49:33+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/04/ABV.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/akamas-bay-villas/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/akamas-bay-villas/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/akamas-bay-villas/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/akamas-bay-villas/" />
+		<lastmod>2026-08-18T10:50:22+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2019/04/ABV.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/akamas-bay-villas/properties/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/akamas-bay-villas/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/akamas-bay-villas/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/akamas-bay-villas/properties/" />
+		<lastmod>2026-08-18T10:50:39+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/akamas-bay-villas/nedvizhimost/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/akamas-bay-villas/properties/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/akamas-bay-villas/nedvizhimost/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/akamas-bay-villas/properties/" />
+		<lastmod>2026-08-18T10:50:51+00:00</lastmod>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/aktea-residences-4/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-4/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-4/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-4/" />
+		<lastmod>2026-08-21T10:45:49+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2024/04/AR4_774x514.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/aktea-residences-4/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/aktea-residences-4/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/aktea-residences-4/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/aktea-residences-4/" />
+		<lastmod>2026-08-21T10:45:57+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2024/04/AR4_774x514.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/naftikos-residences/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/naftikos-residences/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/naftikos-residences/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/naftikos-residences/" />
+		<lastmod>2026-09-03T12:56:40+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2025/03/NEW_Naftikos-Residences_774-x-514.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/naftikos-residences/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/naftikos-residences/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/naftikos-residences/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/naftikos-residences/" />
+		<lastmod>2026-09-03T12:56:43+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2025/03/NEW_Naftikos-Residences_774-x-514.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/thalassa-residences-2/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/thalassa-residences-2/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/thalassa-residences-2/" />
+		<lastmod>2026-09-04T08:06:50+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2026/09/Thalassa-Residences-2-featured.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/limassol-greens/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-greens/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-greens/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-greens/" />
+		<lastmod>2026-09-04T14:15:11+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2021/03/PROJECT-FEATURED.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/limassol-greens/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/limassol-greens/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/limassol-greens/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/limassol-greens/" />
+		<lastmod>2026-09-04T14:15:25+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2021/03/PROJECT-FEATURED.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/centro-limassol/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/centro-limassol/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/centro-limassol/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/centro-limassol/" />
+		<lastmod>2026-09-04T14:16:02+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2025/07/NEW_Centro-Limassol_768x511.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/centro-limassol/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/centro-limassol/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/centro-limassol/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/centro-limassol/" />
+		<lastmod>2026-09-04T14:16:11+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2025/07/NEW_Centro-Limassol_768x511-1.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/ru/project/seaview-heights-limassol/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/seaview-heights-limassol/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/seaview-heights-limassol/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/seaview-heights-limassol/" />
+		<lastmod>2026-09-04T14:16:39+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2024/02/Seaview-Heights_project_768x511-new.jpg</image:loc>
+		</image:image>
+	</url>
+	<url>
+		<loc>https://www.cybarco.com/project/seaview-heights-limassol/</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://www.cybarco.com/project/seaview-heights-limassol/" />
+		<xhtml:link rel="alternate" hreflang="ru" href="https://www.cybarco.com/ru/project/seaview-heights-limassol/" />
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cybarco.com/project/seaview-heights-limassol/" />
+		<lastmod>2026-09-04T14:16:47+00:00</lastmod>
+		<image:image>
+			<image:loc>https://www.cybarco.com/wp-content/uploads/2024/02/Seaview-Heights_project_768x511-new.jpg</image:loc>
+		</image:image>
+	</url>
+</urlset>
+<!-- XML Sitemap generated by Yoast SEO -->

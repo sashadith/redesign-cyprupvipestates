@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import BlogEditForm from "./BlogEditForm";
 import { utcToZonedInput } from "@/lib/tz";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,8 @@ export default async function EditBlog({ params }: { params: { id: string } }) {
         }}
         authors={authors}
         categories={categories}
+        dir={localeDir(b.language)}
+        language={b.language}
       />
     </div>
   );

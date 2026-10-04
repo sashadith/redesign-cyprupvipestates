@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import styles from "../../BenefitsBlock/BenefitsBlock.module.scss";
 import CountNumber from "../../CountNumber/CountNumber";
 import Image from "next/image";
+import type { Locale } from "@/lib/locale";
 
 type Props = {
   lang: string;
@@ -16,7 +17,33 @@ type BenefitItem = {
 
 type PartnersCountTranslation = BenefitItem[];
 
-const translations: Record<string, PartnersCountTranslation> = {
+const EN: PartnersCountTranslation = [
+  {
+    number: "195",
+    title: "Real estate projects",
+    description:
+      "In Southern Cyprus. From studio apartments to high-class villas",
+  },
+  {
+    number: "10",
+    title: "Years of experience",
+    description: "as a full-service real estate marketing agency",
+  },
+  {
+    number: "360",
+    sign: "°",
+    title: "Customer service",
+    description: "We guide you from the first contact to key handover",
+  },
+  {
+    number: "100",
+    sign: "%",
+    title: "Satisfied clients",
+    description: "From Germany, Austria, Switzerland and beyond",
+  },
+];
+
+const translations: Record<Locale, PartnersCountTranslation> = {
   de: [
     {
       number: "195",
@@ -43,31 +70,7 @@ const translations: Record<string, PartnersCountTranslation> = {
       description: "Aus Deutschland, Österreich, Schweiz und weiteren Ländern",
     },
   ],
-  en: [
-    {
-      number: "195",
-      title: "Real estate projects",
-      description:
-        "In Southern Cyprus. From studio apartments to high-class villas",
-    },
-    {
-      number: "10",
-      title: "Years of experience",
-      description: "as a full-service real estate marketing agency",
-    },
-    {
-      number: "360",
-      sign: "°",
-      title: "Customer service",
-      description: "We guide you from the first contact to key handover",
-    },
-    {
-      number: "100",
-      sign: "%",
-      title: "Satisfied clients",
-      description: "From Germany, Austria, Switzerland and beyond",
-    },
-  ],
+  en: EN,
   pl: [
     {
       number: "195",
@@ -117,10 +120,11 @@ const translations: Record<string, PartnersCountTranslation> = {
       description: "Из Германии, Австрии, Швейцарии и других стран",
     },
   ],
+  he: EN, // decision J: Partners page stays English for he
 };
 
 const PartnersCount: FC<Props> = ({ lang }) => {
-  const benefits = translations[lang] ?? translations["de"];
+  const benefits = translations[lang as Locale] ?? translations.en;
 
   return (
     <section className={styles.benefitsBlock}>

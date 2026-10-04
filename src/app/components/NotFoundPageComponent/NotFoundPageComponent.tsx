@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { NotFoundPage } from "@/types/notFoundPage";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, isLocale, type Locale } from "@/lib/locale";
 
 type Props = {
   notFoundPage: NotFoundPage;
@@ -19,11 +19,14 @@ type Props = {
    Content still comes from the CMS (notFoundPage). The fallbacks below are not
    copy decisions — they only keep the page from rendering an empty shell if the
    document is missing, which is exactly when a visitor is already lost. */
-const FALLBACK: Record<string, { code: string; title: string; lead: string; cta: string }> = {
-  en: { code: "404", title: "Estate Not Found", lead: "The page you are looking for may have been moved, renamed, or is temporarily unavailable.", cta: "View all projects" },
+const FALLBACK_EN = { code: "404", title: "Estate Not Found", lead: "The page you are looking for may have been moved, renamed, or is temporarily unavailable.", cta: "View all projects" };
+
+const FALLBACK: Record<Locale, { code: string; title: string; lead: string; cta: string }> = {
+  en: FALLBACK_EN,
   de: { code: "404", title: "Immobilie nicht gefunden", lead: "Die gesuchte Seite wurde möglicherweise verschoben, umbenannt oder ist vorübergehend nicht verfügbar.", cta: "Alle Projekte anzeigen" },
   pl: { code: "404", title: "Nie znaleziono nieruchomości", lead: "Szukana strona mogła zostać przeniesiona, zmieniła nazwę lub jest tymczasowo niedostępna.", cta: "Zobacz wszystkie projekty" },
   ru: { code: "404", title: "Недвижимость не найдена", lead: "Страница могла быть перемещена, переименована или временно недоступна.", cta: "Смотреть все проекты" },
+  he: { code: "404", title: "לא מצאנו את הדף", lead: "ייתכן שהדף הועבר, ששמו שונה או שאינו זמין כרגע.", cta: "לכל הפרויקטים" }, // REVIEW(he)
 };
 
 /* Gold-animate the closing word of the headline, the way the developer index
@@ -40,7 +43,7 @@ const withAccent = (title: string) => {
 };
 
 const NotFoundPageComponent: FC<Props> = ({ notFoundPage, lang }) => {
-  const fb = FALLBACK[lang] ?? FALLBACK.en;
+  const fb = FALLBACK[isLocale(lang) ? lang : "en"];
   const code = notFoundPage?.textStart || fb.code;
   const title = notFoundPage?.textEnd || fb.title;
   const lead = notFoundPage?.description || fb.lead;

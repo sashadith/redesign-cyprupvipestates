@@ -1,0 +1,1178 @@
+{
+  "slug": "new-homes-in-cyprus-for-sale",
+  "title": "New Homes in Cyprus for Sale",
+  "excerpt": "Discover new homes in Cyprus for sale directly from developers. Choose modern apartments and houses in top locations — no agency commission, transparent process, and exclusive properties.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "New Homes in Cyprus for Sale – Buy Direct from Developers",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "New Homes in Cyprus for Sale – Buy Direct from Developers",
+    "metaDescription": "Explore new homes in Cyprus for sale. Buy apartments and houses in new buildings with no agency fees. Exclusive properties, direct sales, investment options."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b-intro-en-1771245180771",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "New Homes in Cyprus for Sale – Buy Direct from Developers",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "New Homes in Cyprus for Sale",
+      "subtitle": "Exclusive Properties",
+      "buttonLabel": "Buy property",
+      "description": "Discover new homes in Cyprus for sale directly from developers. Choose modern apartments and houses in top locations — no agency commission, transparent process, and exclusive properties."
+    },
+    {
+      "_key": "b-tstart-en-1771245180771",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "pt-0-1771245180772",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-0-0-1771245180772-t0-t0",
+              "text": "At Cyprus VIP Estates we specialize in new homes in Cyprus for sale, offering a curated selection of premium new houses and apartments across Cyprus’s most desirable coastal cities. Whether you are looking to buy an apartment in a new building in Cyprus or invest in a contemporary villa, we provide direct access to developers — no agency commission, no hidden costs, and full support throughout the purchase process.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245180773-t0-t0",
+              "text": "Our portfolio of new homes in Cyprus includes luxury apartments with sea views, modern houses in gated communities, and investment-ready properties in thriving urban locations. We work closely with reputable developers to ensure top quality, excellent design, and competitive pricing.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "b-proj-en-1771245180771",
+      "_type": "landingProjectsBlock",
+      "title": "List of New Homes in Cyprus",
+      "projects": [
+        {
+          "_key": "pr-0-1771245180771",
+          "_ref": "project-armonia.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-1-1771245180771",
+          "_ref": "project-orion-villas-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-2-1771245180771",
+          "_ref": "562f37b1-dc30-4dbd-9861-7b8b4fc55f94",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-3-1771245180771",
+          "_ref": "818ff130-d61d-4c1e-9841-b454b3405959",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-4-1771245180771",
+          "_ref": "project-leptos-zelemenos-mansion.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-5-1771245180771",
+          "_ref": "project-trees-villas-inex.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-6-1771245180771",
+          "_ref": "a9cc904d-01db-41c7-a26a-fb3312f65ba3",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-7-1771245180771",
+          "_ref": "b1ff9015-9b3a-42df-8239-2fb55e152d70",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-8-1771245180771",
+          "_ref": "project-mesoyi-residences-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-9-1771245180771",
+          "_ref": "project-aquila-villas-domenica.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-10-1771245180771",
+          "_ref": "1d6b5276-c277-40b5-a20f-aa03df66e956",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-11-1771245180771",
+          "_ref": "project-villa-superior-aristo.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-12-1771245180771",
+          "_ref": "243e9a9e-33f2-4ebf-95c6-c32b802c615b",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-13-1771245180771",
+          "_ref": "eee0758f-a228-4008-b140-ddfae1b97f7b",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-14-1771245180771",
+          "_ref": "85f810e0-8366-4500-80ef-ad1f4aba07d9",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-15-1771245180771",
+          "_ref": "project-ouaros-villas-island-blue.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-16-1771245180771",
+          "_ref": "051bbb39-218c-493b-a24b-7e3614a0d0e1",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-17-1771245180771",
+          "_ref": "project-skyline-villas-imperio.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-18-1771245180771",
+          "_ref": "aa25e1a6-5ca2-4f9f-ab0d-3ea062fd088b",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-19-1771245180771",
+          "_ref": "project-coral-seas.en",
+          "_type": "reference"
+        },
+        {
+          "_key": "pr-20-1771245180771",
+          "_ref": "d4951479-4350-4841-b11f-3a102932ffa1",
+          "_type": "reference"
+        }
+      ]
+    },
+    {
+      "_key": "b-tf-en-1771245180773",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "pt-0-1771245180773",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245180773-t0-t0",
+              "text": "Benefits of Buying New Homes in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245180773-t0-t0",
+              "text": "Cyprus is one of the fastest-growing markets in the Mediterranean, attracting international buyers from Europe, the UK, the Middle East, Israel, the USA, and beyond. Investing in new houses for sale in Cyprus means benefit from:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245180773-t0-t0",
+              "text": "Modern construction standards and energy-efficient design",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-5-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-5-0-1771245180773-t0-t0",
+              "text": "Prime locations near beaches, marinas, and city centers",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245180773-t0-t0",
+              "text": "Flexible payment plans from developers",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245180773-t0-t0",
+              "text": "Strong rental demand for investment properties",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245180773-t0-t0",
+              "text": "Stable property market with long-term growth potential",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245180773-t0-t0",
+              "text": "With Cyprus VIP Estates, you can explore a wide range of properties built to modern standards and designed for contemporary living.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245180773",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-12-0-1771245180773-t0-t0",
+              "text": "Direct Sales with No Fee",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-14-0-1771245180773-t0-t0",
+              "text": "One of the greatest advantages of buying new homes in Cyprus for sale through our company is that you pay zero agency commission. We connect buyers directly with developers, which means:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245180773-t0-t0",
+              "text": "You do not pay any extra agent fees",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-17-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-17-0-1771245180773-t0-t0",
+              "text": "All pricing is transparent",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-18-0-1771245180773-t0-t0",
+              "text": "There are no hidden charges",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-19-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-19-0-1771245180773-t0-t0",
+              "text": "You get professional assistance with contracts, legal checks, and financial planning",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-21-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-21-0-1771245180773-t0-t0",
+              "text": "This approach ensures that you get the best possible price for your new property, whether it’s a luxury apartment or a modern house.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-23-1771245180773",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-23-0-1771245180773-t0-t0",
+              "text": "Key Cities and Regions to Find New Homes in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-25-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-25-0-1771245180773-t0-t0",
+              "text": "We offer new homes in Cyprus for sale in the most sought-after cities and regions, including:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-27-1771245180773",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-27-0-1771245180773-t0-t0",
+              "text": "New houses and apartments in Paphos",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-29-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-29-0-1771245180773-t0-t0",
+              "text": "A coastal city with rich history, excellent climate, and strong rental demand. Ideal for both primary residence and investment.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-31-1771245180773",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-31-0-1771245180773-t0-t0",
+              "text": "Modern new homes in Limassol",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-33-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-33-0-1771245180773-t0-t0",
+              "text": "A vibrant city with luxury lifestyle, business growth, and stunning beaches. Perfect for high-end buyers and investors.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-35-1771245180773",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-35-0-1771245180773-t0-t0",
+              "text": "New buildings in Larnaca",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-37-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-37-0-1771245180773-t0-t0",
+              "text": "Known for its international airport, relaxed atmosphere, and growing property market. A great choice for families and retirees.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-39-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-39-0-1771245180773-t0-t0",
+              "text": "Each location offers unique advantages, from seaside living to urban amenities and easy access to international transport.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "faq-en-0-1771245180773",
+            "answer": [
+              {
+                "_key": "pt-0-1771245180773",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245180773-t0-t0",
+                    "text": "You can choose from luxury apartments, modern townhouses, contemporary villas, and investment-oriented properties in major cities and coastal regions.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What types of new homes are available in Cyprus?"
+          },
+          {
+            "_key": "faq-en-1-1771245180773",
+            "answer": [
+              {
+                "_key": "pt-0-1771245180773",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245180773-t0-t0",
+                    "text": "Yes, buyers from Europe, the UK, Middle East, CIS countries, China, and the USA can purchase real estate with full legal support.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can international buyers purchase property in Cyprus?"
+          },
+          {
+            "_key": "faq-en-2-1771245180773",
+            "answer": [
+              {
+                "_key": "pt-0-1771245180773",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245180773-t0-t0",
+                    "text": "No — we work directly with developers, so you pay zero agency commission.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Do I pay commission when buying a property through Cyprus VIP Estates?"
+          },
+          {
+            "_key": "faq-en-3-1771245180773",
+            "answer": [
+              {
+                "_key": "pt-0-1771245180773",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245180773-t0-t0",
+                    "text": "Cyprus offers strong rental demand, stable property prices, and long-term growth potential, making it attractive for investors.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Is buying a new home in Cyprus a good investment?"
+          },
+          {
+            "_key": "faq-en-4-1771245180773",
+            "answer": [
+              {
+                "_key": "pt-0-1771245180773",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245180773-t0-t0",
+                    "text": "Yes — we offer virtual tours, digital documentation, and remote purchasing options.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can I buy property remotely?"
+          },
+          {
+            "_key": "faq-en-5-1771245180773",
+            "answer": [
+              {
+                "_key": "pt-0-1771245180773",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245180773-t0-t0",
+                    "text": "Paphos, Limassol, and Larnaca are among the most popular for new developments.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What locations offer the best new homes in Cyprus?"
+          }
+        ]
+      },
+      "_key": "b-faq-en-1771245180773",
+      "_type": "landingFaqBlock",
+      "title": "Frequently asked questions"
+    },
+    {
+      "_key": "b-ts-en-1771245180773",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "pt-0-1771245180773",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245180773-t0-t0",
+              "text": "Types of New Homes in Cyprus for Sale",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245180773-t0-t0",
+              "text": "Whether you’re searching for new apartments or new houses for sale in Cyprus, we have options to suit every lifestyle and budget:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245180773",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-4-0-1771245180773-t0-t0",
+              "text": "Luxury Apartments in New Buildings",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245180773-t0-t0",
+              "text": "Sea-view balconies",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245180773-t0-t0",
+              "text": "Modern interiors",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245180773-t0-t0",
+              "text": "Smart home features",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245180773-t0-t0",
+              "text": "Shared amenities such as gym, pool, and garden",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-11-1771245180773",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-11-0-1771245180773-t0-t0",
+              "text": "Contemporary Houses and Villas",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-13-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-13-0-1771245180773-t0-t0",
+              "text": "Spacious layouts",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-14-0-1771245180773-t0-t0",
+              "text": "Private gardens and pools",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-15-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-15-0-1771245180773-t0-t0",
+              "text": "Gated communities",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245180773-t0-t0",
+              "text": "High-quality finishes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245180773",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-18-0-1771245180773-t0-t0",
+              "text": "Investment Properties",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-0-1771245180773-t0-t0",
+              "text": "High rental yield potential",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-21-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-21-0-1771245180773-t0-t0",
+              "text": "Popular tourist areas",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-22-0-1771245180773-t0-t0",
+              "text": "Excellent resale prospects",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-24-1771245180773",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-24-0-1771245180773-t0-t0",
+              "text": "How to Buy New Homes in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-26-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-26-0-1771245180773-t0-t0",
+              "text": "Buying property abroad can be complex, but our team makes it simple. When you decide to buy an apartment in a new building in Cyprus or invest in a house, we assist you with:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-28-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-28-0-1771245180773-t0-t0",
+              "text": "Personalized consultation",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-29-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-29-0-1771245180773-t0-t0",
+              "text": "Selection of properties according to your budget and preferences",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-30-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-30-0-1771245180773-t0-t0",
+              "text": "Viewing arrangements (in person or virtual tours)",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-31-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-31-0-1771245180773-t0-t0",
+              "text": "Contract negotiation directly with developers",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-32-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-32-0-1771245180773-t0-t0",
+              "text": "Legal support and due diligence",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-33-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-33-0-1771245180773-t0-t0",
+              "text": "Assistance with payments and residency procedures (if applicable)",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-35-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-35-0-1771245180773-t0-t0",
+              "text": "Our goal is to ensure your experience is secure, transparent, and satisfying.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-37-1771245180773",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-37-0-1771245180773-t0-t0",
+              "text": "Secure Your New Home in Cyprus Today",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-39-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-39-0-1771245180773-t0-t0",
+              "text": "If you are ready to explore new homes, now is the perfect time to invest in modern, high-quality properties in one of the Mediterranean’s most desirable destinations. With Cyprus VIP Estates, you get:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-41-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-41-0-1771245180773-t0-t0",
+              "text": "Direct deals with developers",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-42-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-42-0-1771245180773-t0-t0",
+              "text": "No commission or extra fees",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-43-1771245180773",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-43-0-1771245180773-t0-t0",
+              "text": "Full support from selection to closing",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-45-1771245180773",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-45-0-1771245180773-t0-t0",
+              "text": "Contact us today to start your search for the perfect new home in Cyprus — whether it’s a stylish apartment, a luxury house, or a rewarding investment asset.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    {
+      "_key": "npflij7ie4k",
+      "_ref": "4b06b075-4760-4a85-9dff-9cae42ae3b64",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "diwqd5846vi",
+      "_ref": "1393426c-f9ed-4be7-8d48-244b0cf0479e",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "75yjv20s33v",
+      "_ref": "913f99aa-1381-4b6a-a35f-88604ea8232a",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "14w4n7fc0x4",
+      "_ref": "20b7b20c-b561-4034-bfa3-3fb440e5d3d6",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "cj2s8ay8gy",
+      "_ref": "62249f83-1177-4f9f-b1cd-98603b691228",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "y4e5wlgpcu",
+      "_ref": "single-homes-for-sale-in-limassol.en",
+      "_type": "singlepageRef"
+    }
+  ]
+}

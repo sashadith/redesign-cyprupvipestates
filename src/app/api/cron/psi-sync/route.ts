@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { isPsiConfigured, fetchCwv, sleep } from "@/lib/psi/client";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
+import type { Locale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 200;
@@ -14,7 +15,7 @@ const TOP_CLICKS_COUNT = 20;
 const RANDOM_DEV_COUNT = 5;
 const DAY = 86_400_000;
 
-const LOCALE_HOME: Record<string, string> = { en: "/", de: "/de", pl: "/pl", ru: "/ru" };
+const LOCALE_HOME: Record<Locale, string> = { en: "/", de: "/de", pl: "/pl", ru: "/ru", he: "/he" };
 
 async function buildTargetUrls(): Promise<string[]> {
   const urls = new Set<string>();

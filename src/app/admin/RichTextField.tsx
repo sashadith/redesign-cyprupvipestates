@@ -9,15 +9,15 @@ const btn = (active: boolean) =>
   `px-2 py-0.5 text-xs rounded ${active ? "bg-[#1B4B43] text-white" : "bg-white border border-[#E5E7EB] text-[#111827] hover:bg-[#F8F9FA]"}`;
 
 const EDITOR_CLASS =
-  "ProseMirror min-h-[140px] outline-none text-[#1A1A1A] [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_h4]:text-base [&_h4]:font-semibold [&_h5]:text-sm [&_h5]:font-semibold [&_h5]:uppercase [&_h5]:tracking-wide [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-[#C29A5E] [&_blockquote]:pl-3 [&_blockquote]:italic [&_a]:text-[#1B4B43] [&_a]:underline [&_img]:max-w-full";
+  "ProseMirror min-h-[140px] outline-none text-[#1A1A1A] [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_h4]:text-base [&_h4]:font-semibold [&_h5]:text-sm [&_h5]:font-semibold [&_h5]:uppercase [&_h5]:tracking-wide [&_p]:my-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_blockquote]:border-s-2 [&_blockquote]:border-[#C29A5E] [&_blockquote]:ps-3 [&_blockquote]:italic [&_a]:text-[#1B4B43] [&_a]:underline [&_img]:max-w-full";
 
-export default function RichTextField({ initialHtml, onChange }: { initialHtml: string; onChange: (html: string) => void }) {
+export default function RichTextField({ initialHtml, onChange, dir = "ltr" }: { initialHtml: string; onChange: (html: string) => void; dir?: "ltr" | "rtl" }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [StarterKit, LinkExt.configure({ openOnClick: false, autolink: false }), ImageExt],
     content: initialHtml || "",
-    editorProps: { attributes: { class: EDITOR_CLASS } },
+    editorProps: { attributes: { class: EDITOR_CLASS, dir } },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
   if (!editor) return <div className="text-xs text-[#6B7280]">Loading editor…</div>;

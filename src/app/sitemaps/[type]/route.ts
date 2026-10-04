@@ -4,14 +4,18 @@ import {
   getAllPathsForLang,
   getBlogPostsByLang,
   getCaseStudiesByLang,
+  getPaginatedLandingPageSlugs,
+  getTotalBlogPostsByLang,
 } from "@/sanity/sanity.utils";
-import { localePrefix, localizedHref } from "@/lib/locale";
+import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute, type Locale } from "@/lib/locale";
+import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES } from "@/middleware";
 
 const websiteUrl = "https://cyprusvipestates.com";
-const langs = ["de", "pl", "en", "ru"] as const;
+const langs = PUBLIC_LOCALES;
 const sitemapTypes = [
   "projects",
   "blog",
@@ -21,8 +25,23 @@ const sitemapTypes = [
   "developments",
 ] as const;
 
-type Lang = (typeof langs)[number];
 type SitemapType = (typeof sitemapTypes)[number];
+
+// A merged page's Singlepage row stays status:PUBLISHED forever (see the
+// *_LANDING_MERGES comment in middleware.ts) — getAllPathsForLang has no way
+// to know it now 301s, so without this filter every one of these 28 slugs
+// was listed here as an indexable URL that immediately redirects. Only flat,
+// single-segment paths are ever merge-map keys (middleware only merges exact
+// leaf paths, never nested children — see the domy-w-limassol note in
+// PL_LANDING_MERGES), so this only ever drops length-1 segments.
+// Partial: `he` has no merge map (its landing pages were authored fresh, no
+// legacy slugs were ever merged), so it falls back to an empty map below.
+const MERGED_SLUGS_BY_LANG: Partial<Record<Locale, Record<string, string>>> = {
+  de: DE_LANDING_MERGES,
+  pl: PL_LANDING_MERGES,
+  en: EN_LANDING_MERGES,
+  ru: RU_LANDING_MERGES,
+};
 
 type Alt = { hreflang: string; href: string };
 type SitemapPage = {
@@ -75,9 +94,15 @@ function isSitemapType(value: string): value is SitemapType {
   return sitemapTypes.includes(value as SitemapType);
 }
 
-// hreflang alternates for the 4 language versions of a fixed listing path (e.g. "blog").
+// hreflang alternates for the language versions of a fixed listing path (e.g.
+// "blog"). Most segments get one alternate per `langs` (== PUBLIC_LOCALES);
+// a segment listed in UNLOCALIZED_ROUTES (lib/locale.ts — today only
+// "partners", decision J) drops the excluded locale(s) here too, so no
+// locale's page ever advertises a hreflang alternate into a URL that isn't
+// actually offered there.
 function listingAlts(segment: string): Alt[] {
-  const alts: Alt[] = langs.map((l) => ({ hreflang: l, href: buildUrl(localizedHref(l, segment)) }));
+  const locales = localesForStaticRoute(segment, langs);
+  const alts: Alt[] = locales.map((l) => ({ hreflang: l, href: buildUrl(localizedHref(l, segment)) }));
   alts.push({ hreflang: "x-default", href: buildUrl(localizedHref("en", segment)) });
   return alts;
 }
@@ -96,14 +121,14 @@ const ALT_CFG: Record<string, { model: any; seg: string; status: boolean; nested
 };
 // x-default precedence: prefer English, otherwise fall back deterministically so groups with no
 // English version still advertise an x-default (Google recommends one even for non-EN defaults).
-const XDEFAULT_ORDER = ["en", "de", "pl", "ru"] as const;
+const XDEFAULT_ORDER = PUBLIC_LOCALES;
 
 async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const cfg = ALT_CFG[typeKey];
-  const rows: any[] = await cfg.model.findMany({
+  const rows: any[] = (await cfg.model.findMany({
     where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}) },
     select: { language: true, slug: true, translationGroupId: true, ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}) },
-  });
+  })).filter((r: any) => (langs as readonly string[]).includes(r.language));
 
   // Resolve a row to its full path segments. Detail types are always single-segment
   // ("/{seg}/{slug}"); nested singlepages walk their parentSanityId chain (within a language) so
@@ -221,8 +246,14 @@ async function generateDevelopersSitemap(): Promise<SitemapPage[]> {
 async function generateBlogSitemap(): Promise<SitemapPage[]> {
   const pages: SitemapPage[] = [];
   const altIdx = await buildAltIndex("blog");
+  // Computed once (PUBLISHED-only, matching the grid) and reused for every
+  // `he` iteration below — Phase 6: while `he` has fewer than 5 own articles,
+  // /he/blog (and any future /he/blog/page/N) borrows EN content and stays
+  // out of the sitemap. See src/lib/blogIndexMode.ts.
+  const heCount = (langs as readonly string[]).includes("he") ? await getTotalBlogPostsByLang("he") : 0;
+  const blogLocales = sitemapLocalesForType("blog", { publicLocales: langs, heBlogCount: heCount });
 
-  for (const lang of langs) {
+  for (const lang of blogLocales) {
     // English (default) is prefix-less; de/pl/ru are prefixed.
     const prefix = localePrefix(lang);
 
@@ -269,13 +300,18 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
     // /partners: a single fixed page (preview-partners/[lang]/page.tsx), not
     // Singlepage-backed, so it never comes from getAllPathsForLang below —
     // added here explicitly now that it's indexable (see that route's
-    // layout.tsx for the noindex removal this pairs with).
-    pages.push({
-      route: localizedHref(lang, "partners"),
-      changefreq: "monthly",
-      priority: 0.6,
-      alternates: listingAlts("partners"),
-    });
+    // layout.tsx for the noindex removal this pairs with). Excluded for `he`
+    // (UNLOCALIZED_ROUTES in lib/locale.ts, decision J) — the page is
+    // deliberately English-only, so `he` never gets a sitemap row for it and
+    // `/he/partners` itself 404s (see preview-partners/[lang]/page.tsx).
+    if (localesForStaticRoute("partners", langs).includes(lang)) {
+      pages.push({
+        route: localizedHref(lang, "partners"),
+        changefreq: "monthly",
+        priority: 0.6,
+        alternates: listingAlts("partners"),
+      });
+    }
 
     // /faq: same shape as /partners just above — a single fixed page
     // (preview-faq/[lang]/page.tsx), not Singlepage-backed, added now that
@@ -287,7 +323,10 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
       alternates: listingAlts("faq"),
     });
 
-    const allPaths = await getAllPathsForLang(lang);
+    const merged = MERGED_SLUGS_BY_LANG[lang] ?? {};
+    const allPaths = (await getAllPathsForLang(lang)).filter(
+      (segments) => !(Array.isArray(segments) && segments.length === 1 && merged[segments[0]]),
+    );
 
     allPaths
       .filter((segments) => Array.isArray(segments) && segments.length > 0)
@@ -303,6 +342,24 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
           alternates: altIdx.get(`${lang}|${segments[segments.length - 1]}`),
         });
       });
+
+    // ?page=2+ for pages with real server-side pagination (2026-09-09): with
+    // no pager markup, these had no discovery path at all -- see the pager
+    // fix that shipped alongside this. Keyed off the same leaf-slug map
+    // allPaths already built above, so a nested paginated page (none exist
+    // today, but nothing here assumes otherwise) still gets its full parent
+    // path. No hreflang alternates on these -- a page-2+ URL isn't a language
+    // variant of anything, and the base route above already carries them.
+    const byLeaf = new Map(allPaths.map((segments) => [segments[segments.length - 1], segments]));
+    const paginated = await getPaginatedLandingPageSlugs(lang);
+    paginated.forEach(({ slug, totalPages }) => {
+      const segments = byLeaf.get(slug);
+      if (!segments) return; // shouldn't happen -- every PUBLISHED slug is in allPaths
+      const baseRoute = localizedHref(lang, segments);
+      for (let n = 2; n <= totalPages; n++) {
+        pages.push({ route: `${baseRoute}?page=${n}`, changefreq: "weekly", priority: 0.5 });
+      }
+    });
   }
 
   return pages;
@@ -356,7 +413,7 @@ async function generateDevelopmentsSitemap(): Promise<SitemapPage[]> {
 
   const developments = await prisma.development.findMany({
     where: { publishStatus: "published", slug: { not: null } },
-    select: { slug: true, updatedAt: true, gallery: true },
+    select: { slug: true, updatedAt: true, gallery: true, override: { select: { updatedAt: true } } },
   });
 
   const pages: SitemapPage[] = [];
@@ -370,13 +427,22 @@ async function generateDevelopmentsSitemap(): Promise<SitemapPage[]> {
 
     const gallery = Array.isArray(dev.gallery) ? (dev.gallery as unknown as string[]) : [];
 
+    // The page's actual content (descriptionEN/DE/PL/RU, promoBlocks*, etc.) lives in
+    // DevelopmentOverride, saved independently of Development — a content-only edit never
+    // touches Development.updatedAt (which instead tracks the nightly feed/Drive sync). Use
+    // whichever row changed more recently, so a content edit with no new sync (or vice versa)
+    // is still reflected. A Development might not have an override row yet (null-safe).
+    const devUpdatedAt = dev.updatedAt?.getTime() ?? 0;
+    const overrideUpdatedAt = dev.override?.updatedAt?.getTime() ?? 0;
+    const lastmodDate = overrideUpdatedAt > devUpdatedAt ? dev.override!.updatedAt : dev.updatedAt;
+
     for (const lang of langs) {
       const prefix = localePrefix(lang);
       pages.push({
         route: `${prefix}/projects/${dev.slug}`,
         changefreq: "weekly",
         priority: 0.6,
-        lastmod: dev.updatedAt?.toISOString(),
+        lastmod: lastmodDate?.toISOString(),
         alternates,
         image: gallery[0],
       });

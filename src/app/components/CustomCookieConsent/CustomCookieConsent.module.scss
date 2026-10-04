@@ -10,7 +10,7 @@
 // the token actually meant for that, a properly opaque dark sea-green.
 .cookieBanner {
   position: fixed;
-  left: 20px;
+  inset-inline-start: 20px;
   bottom: max(20px, env(safe-area-inset-bottom, 0px) + 12px);
   width: min(420px, calc(100vw - 40px));
   z-index: 1000; // above the WhatsApp button (999), same as before

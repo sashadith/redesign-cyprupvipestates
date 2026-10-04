@@ -97,11 +97,11 @@ export function PromptTuner({
             <div className="grid sm:grid-cols-2 gap-3">
               <label className="block">
                 <span className="block text-xs font-medium text-[#166534] mb-1">✓ Emphasize / include</span>
-                <textarea value={emphasize} onChange={(e) => setE(e.target.value)} rows={3} placeholder="e.g. sea views, families, investment yield" className={ta} />
+                <textarea value={emphasize} onChange={(e) => setE(e.target.value)} rows={3} dir="ltr" placeholder="e.g. sea views, families, investment yield" className={ta} />
               </label>
               <label className="block">
                 <span className="block text-xs font-medium text-[#991B1B] mb-1">✕ Avoid / exclude</span>
-                <textarea value={avoid} onChange={(e) => setA(e.target.value)} rows={3} placeholder="e.g. don't mention price, avoid clichés" className={ta} />
+                <textarea value={avoid} onChange={(e) => setA(e.target.value)} rows={3} dir="ltr" placeholder="e.g. don't mention price, avoid clichés" className={ta} />
               </label>
             </div>
             <div className="flex items-center justify-between">

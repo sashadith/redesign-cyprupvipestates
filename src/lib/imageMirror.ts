@@ -123,8 +123,28 @@ export function scheduleAppRestart() {
    staleness window, polled every 10s, capped at MAX_RESTART_WAIT_MIN, then the
    restart — unconditionally. A stuck sync may DELAY the restart; it must never
    be able to cancel it, because the app serves 404s for freshly mirrored images
-   until it restarts. `restartCmd` is injectable for the same reason. */
-export function buildRestartCommand(app: string, lockDir: string, pendingFile: string, restartCmd = "/usr/bin/pm2 restart"): string {
+   until it restarts. `restartCmd` is injectable for the same reason.
+
+   RELOAD, not restart (2026-09-24). pm2 runs this app in cluster mode with two
+   workers, and `pm2 restart` takes both down at once: an admin who clicked
+   "Reload units & images" on Dream Tower got "Application error: a client-side
+   exception has occurred" when their page refetched into the four-second gap
+   (lock written 18:10:47, both workers down 18:10:53/54). `pm2 reload` replaces
+   the workers one at a time, so one is always serving — the same command
+   deploy-prod.sh has always used on this app, instance-replacement verified.
+
+   What that trades away, deliberately: during the roll a request can still hit
+   the not-yet-replaced worker and miss a BRAND-NEW image for a few seconds.
+   That is the whole point of the restart — Next indexes public/ at boot, so a
+   file mirrored afterwards is invisible to it. Externally nginx serves
+   /uploads/ straight from disk (location ^~) and never needs this; it is
+   next/image that does, because the optimizer resolves a local path by
+   fetching it from Next itself, bypassing nginx. Measured 2026-09-24: a file
+   created after boot returns 200 directly and 400 "The requested resource
+   isn't a valid image" through the optimizer, while an older file returns 200
+   through both at the same width. A missing thumbnail for a few seconds beats
+   taking the whole app down under whoever triggered it. */
+export function buildRestartCommand(app: string, lockDir: string, pendingFile: string, restartCmd = "/usr/bin/pm2 reload"): string {
   return (
     `sleep 4; i=0; ` +
     `while [ $i -lt ${MAX_RESTART_WAIT_MIN * 6} ] && [ -n "$(find '${lockDir}' -type f -mmin -${SYNC_LOCK_STALE_MIN} 2>/dev/null | head -n 1)" ]; ` +

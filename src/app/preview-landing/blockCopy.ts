@@ -7,6 +7,8 @@
    components go, this file stays.
    ===================================================================== */
 
+import type { Locale } from "@/lib/locale";
+
 export const BULLETS_ICONS: string[] = [
   "/uploads/files/ba3f4d2b7dfab88f974568c6e48bfeb05887cc62.png",
   "/uploads/files/6b42b682c9ad5404806c7076b27c570cf6f6aaee.png",
@@ -16,7 +18,16 @@ export const BULLETS_ICONS: string[] = [
   "/uploads/files/ee54c07265e200b7e25ae8586e474a337c225870.png",
 ];
 
-export const BULLETS_TEXT: Record<string, string[]> = {
+const BULLETS_EN: string[] = [
+  "340 SUNNY DAYS A YEAR",
+  "MEMBER OF THE EUROPEAN UNION",
+  "ONE OF THE BEST TAX SYSTEMS",
+  "excellent quality of life",
+  "VERY HIGH STANDARD OF EDUCATION",
+  "MODERN healthcare system",
+];
+
+export const BULLETS_TEXT: Record<Locale, string[]> = {
   de: [
     "340 SONNENTAGE IM JAHR",
     "MITGLIED DER EUROPÄISCHEN UNION",
@@ -25,14 +36,7 @@ export const BULLETS_TEXT: Record<string, string[]> = {
     "SEHR HOHER BILDUNGSSTANDARD",
     "MOdernes gesundheitssystem",
   ],
-  en: [
-    "340 SUNNY DAYS A YEAR",
-    "MEMBER OF THE EUROPEAN UNION",
-    "ONE OF THE BEST TAX SYSTEMS",
-    "excellent quality of life",
-    "VERY HIGH STANDARD OF EDUCATION",
-    "MODERN healthcare system",
-  ],
+  en: BULLETS_EN,
   pl: [
     "340 SŁONECZNYCH DNI W ROKU",
     "CZŁONEK UNII EUROPEJSKIEJ",
@@ -49,6 +53,14 @@ export const BULLETS_TEXT: Record<string, string[]> = {
     "ВЫСОКИЕ стандарты образования",
     "СОВРЕМЕННАЯ система здравоохранения",
   ],
+  he: [
+    "340 ימי שמש בשנה",
+    "מדינה חברה באיחוד האירופי",
+    "אחת ממערכות המס הטובות ביותר",
+    "איכות חיים גבוהה",
+    "רמת חינוך גבוהה מאוד",
+    "מערכת בריאות מודרנית",
+  ], // REVIEW(he)
 };
 
 export const STEPS_ICONS: string[] = [
@@ -60,7 +72,16 @@ export const STEPS_ICONS: string[] = [
   "/uploads/images/b2beb1ac8dbcd8bbcc7ce08387c37268c8c162be-500x500.svg",
 ];
 
-export const STEPS_TEXT: Record<string, string[]> = {
+const STEPS_EN: string[] = [
+  "You contact us via the form on our website",
+  "We will contact you and discuss your requirements",
+  "You plan your trip to Cyprus with us",
+  "We visit all suitable projects together",
+  "You sign the purchase agreement with the developer",
+  "After completion, we will ceremoniously hand over the keys to you",
+];
+
+export const STEPS_TEXT: Record<Locale, string[]> = {
   de: [
     "Sie kontaktieren uns über das Formular auf unserer Website",
     "Wir melden uns bei Ihnen und gehen Ihre Wünsche durch",
@@ -69,14 +90,7 @@ export const STEPS_TEXT: Record<string, string[]> = {
     "Sie unterzeichnen den Kaufvertrag mit dem Bauunternehmer",
     "Nach Fertigstellung übergeben wir Ihnen feierlich die Schlüssel",
   ],
-  en: [
-    "You contact us via the form on our website",
-    "We will contact you and discuss your requirements",
-    "You plan your trip to Cyprus with us",
-    "We visit all suitable projects together",
-    "You sign the purchase agreement with the developer",
-    "After completion, we will ceremoniously hand over the keys to you",
-  ],
+  en: STEPS_EN,
   pl: [
     "Skontaktuj się z nami za pomocą formularza na naszej stronie internetowej",
     "Wizyta na mieSkontaktujemy się z Tobą i omówimy Twoje życzeniajscu",
@@ -93,15 +107,26 @@ export const STEPS_TEXT: Record<string, string[]> = {
     "Вы подписываете договор купли-продажи с подрядчиком",
     "После завершения строительства мы торжественно передадим вам ключи",
   ],
+  he: [
+    "אתם פונים אלינו דרך הטופס באתר",
+    "אנחנו חוזרים אליכם ומבררים מה אתם מחפשים",
+    "אתם מתכננים איתנו את הנסיעה לקפריסין",
+    "אנחנו מבקרים יחד בכל הפרויקטים המתאימים",
+    "אתם חותמים על חוזה המכר מול היזם",
+    "עם סיום הבנייה אנחנו מוסרים לכם את המפתחות בטקס חגיגי",
+  ], // REVIEW(he)
 };
 
 /* Fallback heading for the FAQ section. Most of these pages never filled the
    block's title field — they authored the heading as a prose block just above
    the FAQ instead (26 of 45). That one is lifted into the section; the rest
    fall back to this, the wording the CMS uses everywhere it was filled in. */
-export const FAQ_TITLE: Record<string, string> = {
-  en: "Frequently asked questions",
+const FAQ_TITLE_EN = "Frequently asked questions";
+
+export const FAQ_TITLE: Record<Locale, string> = {
+  en: FAQ_TITLE_EN,
   de: "Häufig gestellte Fragen",
   pl: "Najczęściej zadawane pytania",
   ru: "Часто задаваемые вопросы",
+  he: "שאלות נפוצות", // REVIEW(he)
 };

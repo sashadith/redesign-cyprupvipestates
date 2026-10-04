@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { LOCALES, isLocale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
-const LOCALES = ["en", "de", "pl", "ru"];
 
 export default async function PagesAdmin({ searchParams }: { searchParams: { lang?: string } }) {
-  const lang = LOCALES.includes(searchParams.lang ?? "") ? searchParams.lang! : "en";
+  const lang = isLocale(searchParams.lang ?? "") ? searchParams.lang! : "en";
   const pages = await prisma.singlepage.findMany({ where: { language: lang as any }, orderBy: { slug: "asc" } });
 
   return (

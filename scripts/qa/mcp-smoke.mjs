@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+// End-to-end check of the MCP connector against a running app (default
+// http://localhost:3000): DCR → consent (you click Allow in the browser) →
+// PKCE token exchange → MCP initialize → the read tools, crm_list_drafts, and a deliberately failing crm_send_email. No real writes.
+//
+//   MCP_SMOKE_BASE=http://localhost:3000 node scripts/qa/mcp-smoke.mjs
+//
+// Requires the migration to be applied on the database the app points at and
+// MCP_PUBLIC_ORIGIN set to the same base URL in the app's env.
+import { createHash, randomBytes } from "node:crypto";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+
+const BASE = (process.env.MCP_SMOKE_BASE || "http://localhost:3000").replace(/\/$/, "");
+const b64url = (b) => b.toString("base64url");
+const assert = (cond, msg) => { if (!cond) { console.error(`✗ ${msg}`); process.exit(1); } console.log(`✓ ${msg}`); };
+// For every fetch that is expected to succeed: fail loudly with the status and
+// body instead of throwing an opaque "Cannot read properties of undefined"
+// deep inside the assertion that consumes the parsed JSON.
+const jsonOrDie = async (res, label) => { if (!res.ok) { console.error(`✗ ${label}: HTTP ${res.status} ${await res.text()}`); process.exit(1); } return res.json(); };
+
+// 1. Discovery
+const prm = await jsonOrDie(await fetch(`${BASE}/.well-known/oauth-protected-resource`), "protected resource metadata");
+assert(prm.resource === `${BASE}/api/mcp`, "protected resource metadata points at /api/mcp");
+const asm = await jsonOrDie(await fetch(`${BASE}/.well-known/oauth-authorization-server`), "authorization server metadata");
+assert(asm.registration_endpoint === `${BASE}/api/mcp/oauth/register`, "authorization server metadata served");
+
+// 2. Unauthenticated call gets the 401 challenge
+const unauth = await fetch(`${BASE}/api/mcp`, { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} }) });
+assert(unauth.status === 401 && /resource_metadata=/.test(unauth.headers.get("www-authenticate") || ""), "401 + WWW-Authenticate challenge without a token");
+
+// 3. DCR — our redirect must be on claude.ai per the allow-list, so the
+//    consent redirect is captured by intercepting it: we register the real
+//    claude.ai callback URL but read the code from the browser's address bar.
+const redirectUri = "https://claude.ai/api/mcp/auth_callback";
+const reg = await jsonOrDie(await fetch(asm.registration_endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "mcp-smoke", redirect_uris: [redirectUri] }) }), "dynamic client registration");
+assert(reg.client_id, "dynamic client registration returned a client_id");
+
+// 4. Consent — PKCE. The authorization code minted after Allow is single-use,
+// 60 s, and PKCE-bound to this verifier, so landing on claude.ai's callback
+// with it in the address bar (which will 404, per the prompt below) is not
+// exploitable — nobody else can redeem it without the verifier we hold here.
+const verifier = b64url(randomBytes(32));
+const challenge = b64url(createHash("sha256").update(verifier, "ascii").digest());
+const state = b64url(randomBytes(8));
+const authorizeUrl = `${asm.authorization_endpoint}?${new URLSearchParams({ client_id: reg.client_id, redirect_uri: redirectUri, response_type: "code", code_challenge: challenge, code_challenge_method: "S256", state })}`;
+console.log("\nFirst open a pairing window under Admin → Account → Connected apps, then open this URL within 10 minutes, click Allow, then paste the FULL URL you land on (it will be a claude.ai URL that may 404 — that is fine):\n\n" + authorizeUrl + "\n");
+const landed = await new Promise((resolve) => { process.stdin.setEncoding("utf8"); process.stdin.once("data", (d) => resolve(d.trim())); });
+const landedUrl = new URL(landed);
+assert(landedUrl.searchParams.get("state") === state, "state round-tripped");
+const code = landedUrl.searchParams.get("code");
+assert(code, "authorization code received");
+
+// 5. Token exchange
+const tok = await jsonOrDie(await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier, client_id: reg.client_id, redirect_uri: redirectUri }) }), "token exchange");
+assert(tok.access_token && tok.refresh_token, "token exchange returned access + refresh tokens");
+// Replay is expected to fail (400) — kept as a raw fetch, not jsonOrDie.
+const replay = await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier, client_id: reg.client_id, redirect_uri: redirectUri }) });
+assert(replay.status === 400, "replaying the code is rejected");
+
+// 6. Refresh rotation
+const refreshed = await jsonOrDie(await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: tok.refresh_token, client_id: reg.client_id }) }), "refresh token exchange");
+assert(refreshed.access_token && refreshed.refresh_token !== tok.refresh_token, "refresh rotates the refresh token");
+
+// 7. MCP session
+const transport = new StreamableHTTPClientTransport(new URL(`${BASE}/api/mcp`), { authProvider: { token: async () => refreshed.access_token } });
+const client = new Client({ name: "mcp-smoke", version: "1.0.0" });
+await client.connect(transport);
+assert(/crm_get_project/.test(client.getInstructions() || ""), "server instructions received");
+const tools = await client.listTools();
+const names = tools.tools.map((t) => t.name).sort();
+assert(JSON.stringify(names) === JSON.stringify(["blog_get_article", "blog_list_articles", "blog_social_traffic", "crm_create_lead", "crm_delete_lead", "crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_inventory_changes", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_restore_lead", "crm_search_leads", "crm_search_projects", "crm_send_email", "crm_update_lead", "crm_worklist"]), `19 tools listed: ${names.join(", ")}`);
+
+const parse = (r) => JSON.parse(r.content[0].text);
+const worklist = parse(await client.callTool({ name: "crm_worklist", arguments: { limit: 5 } }));
+assert(Array.isArray(worklist.followUps) && typeof worklist.newLeadsLast7Days === "number", `crm_worklist: ${worklist.followUps.length} follow-ups, ${worklist.newLeadsLast7Days} new leads`);
+
+const search = parse(await client.callTool({ name: "crm_search_leads", arguments: { pageSize: 3 } }));
+const EXCLUDED_ROW_FIELDS = ["password", "utmSource", "lastMatchFilters", "notes", "message", "utmCampaign"];
+assert(search.total >= 0 && search.leads.every((l) => EXCLUDED_ROW_FIELDS.every((f) => !(f in l))), `crm_search_leads: ${search.total} leads, no excluded fields`);
+
+const firstId = worklist.followUps[0]?.leadId ?? search.leads[0]?.leadId;
+if (firstId) {
+  const lead = parse(await client.callTool({ name: "crm_get_lead", arguments: { leadId: firstId } }));
+  assert(lead.leadState?.code && Array.isArray(lead.interactions?.rows), `crm_get_lead: ${lead.name} → ${lead.leadState.code}`);
+  const inboundLeak = lead.interactions.rows.some((r) => ["EMAIL_IN", "WHATSAPP_IN"].includes(r.type) && "body" in r);
+  assert(!inboundLeak, "inbound bodies only under untrusted_content");
+  const match = parse(await client.callTool({ name: "crm_match_properties", arguments: { leadId: firstId, limit: 3 } }));
+  assert(Array.isArray(match.matches), `crm_match_properties: ${match.matches.length} matches`);
+  // This call passed only leadId/limit, no filters — filtersUsed must echo
+  // exactly the caller's input, never the lead's stored admin filters.
+  assert(Object.keys(match.filtersUsed).length === 0, "crm_match_properties: filtersUsed excludes stored admin filters when none were passed");
+}
+const playbook = parse(await client.callTool({ name: "crm_get_playbook", arguments: {} }));
+assert(playbook.contactPhone && playbook.sections.length > 0, "crm_get_playbook returns sections");
+const proj = parse(await client.callTool({ name: "crm_get_project", arguments: { query: "a" } }));
+assert(Array.isArray(proj.candidates), `crm_get_project query: ${proj.candidates.length} candidates`);
+
+const catalogue = parse(await client.callTool({ name: "crm_search_projects", arguments: { pageSize: 3 } }));
+assert(catalogue.total > 0 && catalogue.rows.every((r) => r.publishStatus === "published" && r.publicUrl && !("feedKey" in r)), `crm_search_projects: ${catalogue.total} published projects, first page ${catalogue.rows.length}`);
+const badCompletion = await client.callTool({ name: "crm_search_projects", arguments: { completionBefore: "June 2027" } });
+assert(badCompletion.isError === true, "crm_search_projects rejects a non YYYY/YYYY-MM completionBefore");
+const changes = parse(await client.callTool({ name: "crm_inventory_changes", arguments: { days: 30, limit: 5 } }));
+assert(typeof changes.coverage?.snapshotBased === "boolean" && Array.isArray(changes.events), `crm_inventory_changes: ${changes.total} events, snapshotBased=${changes.coverage.snapshotBased}`);
+
+const drafts = parse(await client.callTool({ name: "crm_list_drafts", arguments: {} }));
+assert(Array.isArray(drafts.drafts) && drafts.drafts.every((d) => !("approvalCode" in d)), `crm_list_drafts: ${drafts.drafts.length} pending, no codes`);
+const bogusSend = await client.callTool({ name: "crm_send_email", arguments: { draftId: "00000000-0000-0000-0000-000000000000", approvalCode: "AAAAAA" } });
+assert(bogusSend.isError === true, "crm_send_email with an unknown draft → isError");
+
+const bogusDelete = await client.callTool({ name: "crm_delete_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000", confirmName: "Nobody", reason: "smoke test" } });
+assert(bogusDelete.isError === true, "crm_delete_lead with an unknown lead → isError (nothing trashed)");
+const blogList = parse(await client.callTool({ name: "blog_list_articles", arguments: { limit: 5 } }));
+assert(blogList.total > 0 && blogList.articles.every((a) => ["en", "de", "pl", "ru"].every((l) => a.locales[l] === "missing" || (a.locales[l].url && a.locales[l].title))), `blog_list_articles: ${blogList.total} articles, ${blogList.publishedByLocale.en} in EN`);
+const firstEn = blogList.articles.find((a) => a.locales.en !== "missing");
+if (firstEn) {
+  const art = parse(await client.callTool({ name: "blog_get_article", arguments: { slug: firstEn.slug, locale: "en" } }));
+  assert(art.body.length > 0 && !/<[a-z]/i.test(art.body) && Array.isArray(art.sources), `blog_get_article: ${art.wordCount} words, ${art.sources.length} sources`);
+}
+const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+const social = parse(await client.callTool({ name: "blog_social_traffic", arguments: { from: since, to: new Date().toISOString() } }));
+assert(Array.isArray(social.articles) && typeof social.totals.linkedin.visits === "number", `blog_social_traffic: ${social.totals.linkedin.visits} LinkedIn / ${social.totals.x.visits} X visits in 30 days`);
+const notFound = await client.callTool({ name: "crm_get_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000" } });
+assert(notFound.isError === true, "unknown lead → isError");
+
+await client.close();
+console.log("\nAll smoke checks passed. Disconnect the 'mcp-smoke' connection under Admin → Account → Connected apps.");
+process.exit(0);

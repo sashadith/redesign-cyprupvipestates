@@ -11,10 +11,12 @@ export default function RichFieldEditor({
   name,
   initial,
   label = "Rich text",
+  dir = "ltr",
 }: {
   name: string;
   initial: unknown;
   label?: string;
+  dir?: "ltr" | "rtl";
 }) {
   const [html, setHtml] = useState(() => portableTextToHtml(Array.isArray(initial) ? initial : []));
 
@@ -24,7 +26,7 @@ export default function RichFieldEditor({
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">{label}</h2>
       </div>
-      <RichTextField initialHtml={html} onChange={setHtml} />
+      <RichTextField initialHtml={html} onChange={setHtml} dir={dir} />
     </div>
   );
 }

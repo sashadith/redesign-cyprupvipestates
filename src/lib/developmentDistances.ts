@@ -25,6 +25,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
+import { isNorthOfCeasefireLine } from "@/lib/ceasefireLine";
 
 export type DevelopmentDistances = Partial<{
   beach: number;
@@ -73,6 +74,9 @@ function loadPoiByCategory(): Map<string, Poi[]> {
     }
     for (const p of rows) {
       if (typeof p.lat !== "number" || typeof p.lng !== "number") continue;
+      // The export covers the whole island; a beach or golf course in the north
+      // is not "8 minutes away" for a buyer in the Republic (see ceasefireLine.ts).
+      if (isNorthOfCeasefireLine(p.lat, p.lng)) continue;
       const list = map.get(p.c);
       if (list) list.push({ lat: p.lat, lng: p.lng });
       else map.set(p.c, [{ lat: p.lat, lng: p.lng }]);

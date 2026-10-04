@@ -27,6 +27,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_WIDTH,
   DEFAULT_OG_IMAGE_HEIGHT,
+  ogLocale,
 } from "@/lib/seo";
 import { Translation } from "@/types/homepage";
 
@@ -41,7 +42,7 @@ import { resolveCompletionYear } from "@/lib/text";
 // Filters change per request (URL-driven) — always render fresh, like the preview.
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 14;
 
 type SearchParams = {
   page?: string;
@@ -80,22 +81,22 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   const { canonical, languages } = staticAlternates(params.lang, "projects");
 
   return {
-    title: data?.seo.metaTitle,
-    description: data?.seo.metaDescription,
+    title: data?.seo?.metaTitle,
+    description: data?.seo?.metaDescription,
     alternates: { canonical, languages },
     openGraph: {
-      title: data?.seo.metaTitle,
-      description: data?.seo.metaDescription,
+      title: data?.seo?.metaTitle,
+      description: data?.seo?.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
     },
     twitter: {
       card: "summary_large_image",
-      title: data?.seo.metaTitle,
-      description: data?.seo.metaDescription,
+      title: data?.seo?.metaTitle,
+      description: data?.seo?.metaDescription,
       images: [DEFAULT_OG_IMAGE],
     },
   };

@@ -6,6 +6,7 @@ import { saveOverride, setStatus } from "./actions";
 import PdfImport from "./PdfImport";
 import AmenitiesField from "./AmenitiesField";
 import DescriptionField from "./DescriptionField";
+import PromoBlocksField from "./PromoBlocksField";
 import SaveOverridesButton from "./SaveOverridesButton";
 import BackLink from "../BackLink";
 import UnitsEditor from "./UnitsEditor";
@@ -23,6 +24,7 @@ import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
 import SyncControlPanel from "./SyncControlPanel";
 import { SYNCED_DEVS, FORCE_SYNC_DEVS } from "@/lib/feedSync";
+import { LOCALES } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -98,8 +100,9 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // rebuilds the EXACT stored key. Drive feedKeys are 3-part (drive:<accountId>:<slug>),
   // so passing only feedProjectId (the slug) would miss and fall back to the live feed.
   // Once a slug exists, link straight to the real SEO-facing URL — the ?dev=&id=
-  // route now just 301s there anyway.
-  const previewHref = d.slug
+  // route now just 301s there anyway. Published only — a draft with a slug
+  // would land on the public route's 404 (see preview-project/page.tsx).
+  const previewHref = d.slug && d.publishStatus === "published"
     ? `/projects/${encodeURIComponent(d.slug)}`
     : `/preview-project?dev=${d.dev}&id=${encodeURIComponent(d.feedKey.slice(d.dev.length + 1))}`;
 
@@ -108,7 +111,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // src/lib/developmentSeo.ts. Needs the full render VM (units drive the
   // beds/type/price computations), so reuse the same lookup the public page uses.
   const vmForSeo = await getDbProjectByFeedKey(d.feedKey);
-  const seoLangs = ["en", "de", "pl", "ru"] as const;
+  const seoLangs = LOCALES;
   const autoTitle = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaTitle(vmForSeo, l) : ""])) as Record<string, string>;
   const autoDesc = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaDescription(vmForSeo, l) : ""])) as Record<string, string>;
   const seoOv = (ov?.seo as Record<string, string> | null) ?? null;
@@ -307,6 +310,20 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 de: ov?.descriptionDE ?? "",
                 pl: ov?.descriptionPL ?? "",
                 ru: ov?.descriptionRU ?? "",
+                he: ov?.descriptionHE ?? "",
+              }}
+            />
+          </div>
+
+          <div>
+            <label className={label}>Promotional content <span className="font-normal text-[#9CA3AF]">— rendered between the map and the units list</span></label>
+            <PromoBlocksField
+              initial={{
+                en: (ov?.promoBlocksEN as any[]) ?? [],
+                de: (ov?.promoBlocksDE as any[]) ?? [],
+                pl: (ov?.promoBlocksPL as any[]) ?? [],
+                ru: (ov?.promoBlocksRU as any[]) ?? [],
+                he: (ov?.promoBlocksHE as any[]) ?? [],
               }}
             />
           </div>
@@ -314,7 +331,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           <div className="grid grid-cols-3 gap-3">
             <div><label className={label}>Completion</label><input name="completion" defaultValue={ov?.completion ?? ""} placeholder={d.completion ?? ""} className={field} /></div>
             <div><label className={label}>Energy</label><input name="energy" defaultValue={ov?.energy ?? ""} placeholder={d.energy ?? ""} className={field} /></div>
-            <div><label className={label}>Hero video URL</label><input name="heroVideo" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
+            <div><label className={label}>Hero video URL</label><input name="heroVideo" dir="ltr" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
           </div>
 
           <div>

@@ -198,7 +198,7 @@ export const TERMS_EN: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "These terms are published in English, German, Polish and Russian. The translations are provided for your convenience; where the versions differ in meaning, the English version applies.",
+          text: "These terms are published in English, German, Polish, Russian and Hebrew. The translations are provided for your convenience; where the versions differ in meaning, the English version applies.",
         },
       ],
     },

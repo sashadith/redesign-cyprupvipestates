@@ -2,6 +2,7 @@ import { AboutBlock as AboutBlockType } from "@/types/homepage";
 import React, { FC } from "react";
 // Copy moved to a shared module so the redesigned renderer reads the same source.
 import { BULLETS_ICONS as icons, BULLETS_TEXT as stepsText } from "@/app/preview-landing/blockCopy";
+import type { Locale } from "@/lib/locale";
 import styles from "./BulletsBlockComponent.module.scss";
 import Image from "next/image";
 import { BulletsBlock } from "@/types/blog";
@@ -21,7 +22,7 @@ const marginValues: Record<string, string> = {
 
 const BulletsBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, marginTop, marginBottom } = block;
-  const texts = stepsText[lang] || stepsText.en;
+  const texts = stepsText[lang as Locale] || stepsText.en;
 
   const computedMarginTop =
     marginTop && marginValues[marginTop] ? marginValues[marginTop] : "0";

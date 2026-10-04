@@ -1,0 +1,46 @@
+"use client";
+
+import { useState } from "react";
+import BlockEditor from "@/app/admin/BlockEditor";
+import { LOCALES, LOCALE_LABELS, localeDir, type Locale } from "@/lib/locale";
+
+// One tab per locale in LOCALES (single source — adding a locale there adds a
+// tab here; the matching promoBlocks<XX> column must exist, see schema.prisma).
+// The field name doubles as the DevelopmentOverride column name the save
+// action writes (`promoBlocksFromForm(formData, "promoBlocksEN")` etc.).
+function promoBlocksField(lang: Locale): string {
+  return `promoBlocks${lang.toUpperCase()}`;
+}
+
+// All language editors stay mounted (just hidden via display:none) so
+// switching tabs never discards an in-progress edit the way unmounting and
+// remounting would. Each BlockEditor gets its own fieldName so the page's
+// one big <form action={saveOverride}> can tell them apart — see fieldName
+// on BlockEditor. Hebrew gets dir="rtl" so its editor lays out right-to-left.
+export default function PromoBlocksField({ initial }: { initial: Record<Locale, any[]> }) {
+  const [tab, setTab] = useState<Locale>("en");
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1 border-b border-[#E5E7EB]">
+        {LOCALES.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setTab(k)}
+            className={`px-3 py-1.5 text-sm -mb-px border-b-2 ${tab === k ? "border-[#1B4B43] text-[#111827] font-medium" : "border-transparent text-[#6B7280] hover:text-[#111827]"}`}
+          >
+            {LOCALE_LABELS[k].name} {initial[k]?.length ? <span className="text-[#16A34A]">•</span> : null}
+          </button>
+        ))}
+      </div>
+      {LOCALES.map((k) => (
+        <div key={k} style={{ display: tab === k ? "block" : "none" }}>
+          <BlockEditor kind="development" fieldName={promoBlocksField(k)} initialBlocks={initial[k] ?? []} dir={localeDir(k)} />
+        </div>
+      ))}
+      <p className="text-[11px] text-[#9CA3AF]">
+        Long-form promotional text, rendered between the map and the units list — separate from the short description above. Headings, lists and comparison tables; no accordion/collapse wrapper.
+      </p>
+    </div>
+  );
+}

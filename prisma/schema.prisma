@@ -24,6 +24,7 @@ enum Locale {
   de
   pl
   ru
+  he
 }
 
 enum ContentStatus {
@@ -243,6 +244,27 @@ model LegacyProjectRedirect {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("legacy_project_redirects")
+}
+
+// Every slug a live Development has ever held, captured automatically on a
+// manual rename (see saveOverride's "Manual slug edit" in
+// admin/(panel)/developments/[id]/actions.ts) so the old public URL 301s to
+// the current one instead of 404ing. Checked as the last fallback in
+// src/app/[lang]/projects/[slug]/page.tsx, after a live Development and
+// LegacyProjectRedirect both miss — see resolveDevelopmentSlugHistory in
+// src/lib/developmentRender.ts. Only protects renames from when this table
+// was introduced onward; nothing before that was tracked, so it can't be
+// backfilled.
+model DevelopmentSlugHistory {
+  id            String   @id @default(uuid())
+  developmentId String
+  slug          String   @unique // the RETIRED slug — look up the development's CURRENT slug to redirect to
+  createdAt     DateTime @default(now())
+
+  development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+
+  @@index([developmentId])
+  @@map("development_slug_history")
 }
 
 // Nightly-swept legacy Project <-> Development overlap candidates
@@ -660,6 +682,10 @@ model User {
   emailSettings          UserEmailSettings?
   interactions           LeadInteraction[]
   activityPings          AdminActivityPing[]
+  // MCP connector (2026-09-07) — additive back-relations only.
+  mcpAuthCodes           McpAuthCode[]
+  mcpTokens              McpToken[]
+  emailDrafts            LeadEmailDraft[]
 
   @@map("users")
 }
@@ -694,7 +720,7 @@ model UserEmailSettings {
   // unsigned 32-bit (up to ~4.29 billion) — a signed Int32 could overflow.
   imapLastUid     BigInt?
   imapUidValidity BigInt?
-  signature       Json? // { en?, de?, pl?, ru? } plain multiline text, one per locale
+  signature       Json? // { en?, de?, pl?, ru?, he? } plain multiline text, one per locale
   lastTestSentAt  DateTime?
   lastTestOk      Boolean?
   updatedAt       DateTime  @updatedAt
@@ -773,6 +799,8 @@ model Lead {
   gclid                String?
   fbclid               String?
   referrer             String?
+  // Partner `?ref=` parameter, first touch (2026-09-28, src/lib/attribution.ts).
+  attributionRef       String?
   telegramNotified     Boolean               @default(false)
   emailNotified        Boolean               @default(false)
   activities           LeadActivity[]
@@ -782,6 +810,7 @@ model Lead {
   preferredChannel     LeadPreferredChannel?
   nextFollowUpAt       DateTime?
   interactions         LeadInteraction[]
+  emailDrafts          LeadEmailDraft[]
   // Lead Cockpit correction batch (2026-07-23) — auto-follow-up cadence.
   // Counts automatic nextFollowUpAt writes (presentation sent/viewed, or a
   // manual Call/Note/Email/WhatsApp log), shared across ALL trigger types,
@@ -875,6 +904,141 @@ model LeadInteraction {
   @@index([leadId])
   @@index([leadId, occurredAt])
   @@map("lead_interactions")
+}
+
+// ─── MCP CONNECTOR (2026-09-07; see docs/superpowers/specs/2026-09-07-crm-mcp-connector-design.md) ───
+// Minimal OAuth 2.1 authorization server for the claude.ai "CVE LEADS" custom
+// connector. Tokens and codes are stored as SHA-256 hex only.
+
+model McpOAuthClient {
+  id           String        @id @default(uuid())
+  clientId     String        @unique
+  clientName   String?
+  redirectUris String[]
+  createdAt    DateTime      @default(now())
+  authCodes    McpAuthCode[]
+  tokens       McpToken[]
+
+  @@map("mcp_oauth_clients")
+}
+
+model McpAuthCode {
+  id            String         @id @default(uuid())
+  codeHash      String         @unique
+  clientId      String
+  client        McpOAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeChallenge String
+  redirectUri   String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime       @default(now())
+
+  @@index([expiresAt])
+  @@map("mcp_auth_codes")
+}
+
+model McpToken {
+  id               String         @id @default(uuid())
+  familyId         String // constant across refresh rotations — revoke-by-family
+  accessTokenHash  String         @unique
+  refreshTokenHash String         @unique
+  clientId         String
+  client           McpOAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issuedHost       String // "cyprusvipestates.com" | "design.cyprusvipestates.com" — shown on the Connected-apps page
+  expiresAt        DateTime // access token
+  refreshExpiresAt DateTime
+  lastUsedAt       DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("mcp_tokens")
+}
+
+enum LeadEmailDraftStatus {
+  PENDING
+  SENDING
+  SENT
+  SUPERSEDED
+  EXPIRED
+  LOCKED
+}
+
+// Phase 2 uses this; created now so there is a single migration.
+model LeadEmailDraft {
+  id                String               @id @default(uuid())
+  leadId            String
+  lead              Lead                 @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User                 @relation(fields: [userId], references: [id])
+  subject           String
+  body              String
+  // 6 chars, stored plain on purpose: single-use, 24 h, useless without the
+  // draft id + a valid bearer token. Hashing it would only complicate the
+  // Cockpit's "code was sent by email" hint without adding real protection.
+  approvalCode      String
+  // CC recipients (2026-10-02), fixed at draft time: shown in the operator's
+  // preview and sent verbatim by crm_send_email — never edited in between.
+  cc                String[]             @default([])
+  status            LeadEmailDraftStatus @default(PENDING)
+  failedAttempts    Int                  @default(0)
+  expiresAt         DateTime
+  previewMessageId  String?
+  sentAt            DateTime?
+  sentInteractionId String?              @unique
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([leadId, status])
+  @@index([status, expiresAt])
+  @@map("lead_email_drafts")
+}
+
+// Per-call access log. No relations on purpose: a deleted lead or token must
+// leave its audit rows intact. Never stores arguments or message text.
+model McpToolCall {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenId    String?
+  tool       String
+  leadId     String?
+  ok         Boolean
+  errorCode  String? // "validation" | "not_found" | "rate_limited" | "config" | "internal"
+  durationMs Int
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([leadId])
+  @@map("mcp_tool_calls")
+}
+
+// Nightly catalogue snapshot for crm_inventory_changes (MCP connector Phase 3,
+// 2026-09-08). One row per development per capture; `units` is
+// [{ key, label, status, price }] over listedUnits(), where key is
+// ref || feedRef || id (published developments keep unit rows across syncs
+// and are matched by ref; "ready" ones are rewritten nightly, so only ref
+// survives). Written only by /api/cron/inventory-snapshot, pruned there after
+// 180 days. Deliberately NO relation to Development: an archived project's
+// history must stay readable inside the retention window.
+model DevelopmentSnapshot {
+  id             String   @id @default(uuid())
+  developmentId  String
+  capturedAt     DateTime @default(now())
+  publishStatus  String
+  priceFrom      Int?
+  priceTo        Int?
+  unitsTotal     Int
+  unitsAvailable Int
+  units          Json
+
+  @@index([developmentId, capturedAt])
+  @@index([capturedAt])
+  @@map("development_snapshots")
 }
 
 // ─── ANALYTICS (self-hosted) ─────────────────────────────────────────────────
@@ -1176,6 +1340,7 @@ model Development {
   override           DevelopmentOverride?
   presentationItems  ClientPresentationItem[]
   supersedesProjects Project[]
+  slugHistory        DevelopmentSlugHistory[]
 
   @@index([developerAccountId])
   @@index([publishStatus])
@@ -1263,6 +1428,23 @@ model DevelopmentOverride {
   descriptionDE String?
   descriptionPL String?
   descriptionRU String?
+  descriptionHE String?
+  // Long-form promotional content block, rendered between the map and the
+  // units section — separate from description{EN,DE,PL,RU} above, which
+  // stays the short, factual "About this development" copy near the top of
+  // the page. Same shape BlockEditor/blocksFromItemsJson already produce for
+  // blog/case-study content (array of Portable-Text-shaped blocks — only
+  // "textContent" and "tableBlock" are offered for this field, see
+  // BlockEditor's kind="development"), rendered via renderInsightsBlock
+  // (src/app/preview-insights/insightsBlocks.tsx), the same renderer blog
+  // articles use. Admin-authored (or AI-drafted then admin-edited, same
+  // pattern as description{EN,DE,PL,RU}) — nothing generates this
+  // automatically yet.
+  promoBlocksEN Json?
+  promoBlocksDE Json?
+  promoBlocksPL Json?
+  promoBlocksRU Json?
+  promoBlocksHE Json?
   amenities     Json? // admin-checked amenities merged with feed ones
   vatApplies    Boolean? // null = follow feed; true/false = admin decision (e.g. renovated no-VAT)
   completion    String?
@@ -1279,7 +1461,7 @@ model DevelopmentOverride {
   stage         String?
   latitude      Float? // admin-set map coordinates (win over feed); parsed from a Maps link or lat,lng
   longitude     Float?
-  seo           Json? // optional per-language SEO overrides: { titleEN/DE/PL/RU, descEN/DE/PL/RU } — empty/missing = auto-generated (see src/lib/developmentSeo.ts)
+  seo           Json? // optional per-language SEO overrides: { titleEN/DE/PL/RU/HE, descEN/DE/PL/RU/HE } — empty/missing = auto-generated (see src/lib/developmentSeo.ts)
   updatedAt     DateTime @updatedAt
 
   development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
@@ -1297,6 +1479,7 @@ model AreaDescription {
   textDE    String?
   textPL    String?
   textRU    String?
+  textHE    String?
   source    String   @default("manual") // ai | manual
   status    String   @default("draft") // draft | approved
   createdAt DateTime @default(now())

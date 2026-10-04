@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { adminDate } from "@/lib/adminTime";
+import { LOCALES, isLocale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
-const LOCALES = ["en", "de", "pl", "ru"];
 
 export default async function BlogAdmin({ searchParams }: { searchParams: { lang?: string } }) {
-  const lang = LOCALES.includes(searchParams.lang ?? "") ? searchParams.lang! : "en";
+  const lang = isLocale(searchParams.lang ?? "") ? searchParams.lang! : "en";
   const posts = await prisma.blog.findMany({
     where: { language: lang as any },
     orderBy: { publishedAt: "desc" },

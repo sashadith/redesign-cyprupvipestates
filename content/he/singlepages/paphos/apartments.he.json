@@ -1,0 +1,349 @@
+{
+  "slug": "paphos/apartments",
+  "title": "דירות למכירה בפאפוס",
+  "excerpt": "דירות חדשות בפאפוס נמצאות במתחמים עם בריכה משותפת, בעיר עצמה ובאזורים הסמוכים לחוף.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "מתחם דירות חדש עם בריכה משותפת",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "דירות למכירה בפאפוס, קפריסין | Cyprus VIP Estates",
+    "metaDescription": "מבחר דירות חדשות בפאפוס עם תוכניות דירה, מחירים ומועדי מסירה מהיזם, בלי תוספת מחיר לרוכש. אפשר לקבל רשימה מותאמת לתקציב ולתאם סיור בנכס."
+  },
+  "contentBlocks": [
+    {
+      "_key": "c4y24yugvvzt",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "מרפסת דירה במתחם חדש במחוז פאפוס",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "דירות למכירה בפאפוס",
+      "subtitle": "פאפוס",
+      "buttonLabel": "לצפייה בזמינות ובמחירים",
+      "description": "פאפוס מציעה את מחירי הפתיחה הנמוכים מבין שני המחוזות שאנחנו מלווים. רוב הדירות החדשות שם נמצאות במתחמים בני כמה קומות עם בריכה משותפת, בעיר עצמה ובאזורים הסמוכים לחוף."
+    },
+    {
+      "_key": "aimxjvrlhpc2",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "xz83q6l0qix3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "dfafwtmxifa5",
+              "text": "דירות למכירה בפאפוס מגיעות כמעט תמיד ממתחמים חדשים ולא ממגדלים. הבנייה במחוז נמוכה ברובה, וזה משפיע ישירות על אופי הדירה. בריכה משותפת וגינה, ולעיתים גינה פרטית בקומת הקרקע או גג פרטי בקומה העליונה. המתחמים ברובם קטנים ממגדל, ולפי מה שאנחנו רואים בפרויקטים שאנחנו מלווים מספר היחידות הנמוך יותר משפיע גם על דמי הניהול החודשיים וגם על כמות התנועה סביב הבריכה המשותפת בעונה.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "gmii9fqomu05",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "09v4fc7zx6w2",
+              "text": "החיפוש הישראלי הנפוץ מפריד בין דירות חדשות לדירות יד שנייה בפאפוס. אנחנו עוסקים רק בחדשות, והסיבה מעשית. בפרויקט חדש יש חוזה מול היזם, תוכנית תשלומים שנפרסת לאורך הבנייה והתחייבויות חוזיות של היזם לגבי העבודות שביצע, ואת שלושת אלה קשה לשחזר בעסקה מול מוכר פרטי. כשמשווים דירה חדשה לדירת יד שנייה באותו אזור, הפער במחיר לא תמיד מסביר את הפער במה שמקבלים, ובעיקר לא את ההבדל ברמת הבידוד, במיזוג האוויר ובמצב המתקנים המשותפים.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "mefc6eyfrer7",
+      "_type": "landingProjectsBlock",
+      "title": "דירות חדשות למכירה בפאפוס",
+      "filterCity": "Paphos",
+      "filterPropertyType": "Apartment"
+    },
+    {
+      "_key": "me1rh3ignaah",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "yjqffm4yxdkx",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "fzjs20zvnrpn",
+              "text": "איפה נמצאות הדירות בפאפוס",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "s8p5cjeo4um3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "4bqu6cw7yxdc",
+              "text": "בעיר עצמה, ובעיקר בקאטו פאפוס לאורך החוף, נמצאים המתחמים הקרובים ביותר לים ולטיילת. באזור כלורקה שמצפון לעיר יש מתחמים שקטים יותר במרחק נסיעה קצר מהחוף. בגרוסקיפו וביישובים הסמוכים המחירים נמוכים יותר והמרחק מהים גדול.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "mpxuig44meh3",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "hehscy1a9a1b",
+              "text": "כמה חדרי שינה",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "y3sp2m7dh85l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "o03a102t7vs3",
+              "text": "בקפריסין סופרים חדרי שינה ולא חדרים. דירה של חדר שינה אחד ודירה של 2 חדרי שינה מבוקשות אצל מי שקונה להשכרה או לחופשות, ודירה של 3 חדרי שינה מתאימה למשפחה שמתכננת לגור בפאפוס בפועל.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pdhykwcmqerq",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "5g30moeir2vh",
+              "text": "מה כדאי לבדוק במתחם",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "qkamw6pa6bme",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "f78u400pf0sz",
+              "text": "שווה להסתכל על מה שמחוץ לדירה לא פחות מאשר עליה. גודל הבריכה המשותפת ומספר היחידות שמשתמשות בה, דמי הניהול החודשיים, חניה מקורה או פתוחה, ומחסן. בדירה בקומה עליונה כדאי לבדוק אם הגג שייך לדירה או משותף לכל הבניין.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "aiiqen5l32b9",
+      "_type": "landingFaqBlock",
+      "title": "שאלות נפוצות על דירות בפאפוס",
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "rkizf34xu7mm",
+            "answer": [
+              {
+                "_key": "knvu55yzdp9u",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "jcva4vohq8m2",
+                    "text": "הטווח בתוך מחוז פאפוס רחב לפי המרחק מהים ולפי רמת הגימור. את המחירון של פרויקט מסוים אפשר לקבל בפנייה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "כמה עולה דירה בפאפוס?"
+          },
+          {
+            "_key": "qlvikl2ulalj",
+            "answer": [
+              {
+                "_key": "kirgndyq1mro",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "9mq91yui6dwe",
+                    "text": "יש שוק כזה, אבל אנחנו לא עוסקים בו. המבחר שלנו הוא פרויקטים חדשים מיזמים, שבהם החוזה, תוכנית התשלומים וההתחייבויות על העבודות הן מול היזם. את היקף ההתחייבויות כדאי לקרוא בחוזה של כל פרויקט.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "יש דירות יד שנייה בפאפוס?"
+          },
+          {
+            "_key": "lldoyehq61ka",
+            "answer": [
+              {
+                "_key": "pz1cn7w483on",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "92nd3gai0otb",
+                    "text": "קאטו פאפוס והחוף העירוני מבוקשים בזכות הקרבה לים ולטיילת. כלורקה מבוקשת אצל מי שמחפש שקט במרחק נסיעה קצר. פייה וקורל ביי הן בעיקר אזור של בתים פרטיים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "אילו אזורים בפאפוס הכי מבוקשים?"
+          },
+          {
+            "_key": "bux1wi3wxzea",
+            "answer": [
+              {
+                "_key": "ma9qo2wh9m0i",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "m4l851ulwka1",
+                    "text": "כן. יש ביקוש לשכירות ארוכת טווח ולהשכרה לטווח קצר בעונת התיירות, ולכל אחת מהן עלויות ניהול שונות. אנחנו לא מפעילים נכסים להשכרה, ולכן כדאי לבדוק את התנאים מול חברת ניהול מקומית.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "אפשר להשכיר דירה בפאפוס?"
+          },
+          {
+            "_key": "0ydsa5qte895",
+            "answer": [
+              {
+                "_key": "cn2h9cvlaky9",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8zt65xtk0sg7",
+                    "text": "זה תלוי בשלב שבו הפרויקט נמצא. יש דירות מוכנות למגורים ויש כאלה שנמצאות בתחילת הבנייה. מועד המסירה מצוין בכל פרויקט לפי רבעון ושנה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "כמה זמן לוקח עד המסירה?"
+          }
+        ]
+      }
+    },
+    {
+      "_key": "7kengn5xh8i1",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "sh91wqu2n1cz",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "y4318j3zf0pj",
+              "text": "מחירים וזמינות",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "gwjbmug67u5u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ectvpey82bvz",
+              "text": "לכל פרויקט יש טבלת יחידות עם השטח הבנוי, מספר חדרי השינה, הקומה והמחיר. אנחנו מקבלים אותה מהיזם ומעבירים אותה כפי שהיא. המחירים עשויים להשתנות. הזמינות מתעדכנת מול היזם.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "24c4wenturkx",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "aaol1h9pa82p",
+              "text": "איך מתחילים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "rvkj292a0t4a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ym9k3fd75kg5",
+              "text": "אפשר לקבל רשימה של הדירות הזמינות בפאפוס בטווח התקציב שלכם, עם תוכניות דירה ומועדי מסירה, ולתאם סיור בנכס בכמה פרויקטים באותו יום.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    "paphos",
+    "paphos/villas",
+    "property-prices-cyprus",
+    "real-estate-cyprus",
+    "apartments-for-sale-cyprus"
+  ],
+  "translationGroupSlugEn": null,
+  "parentSlug": "paphos",
+  "review": "pending"
+}

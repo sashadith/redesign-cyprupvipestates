@@ -42,6 +42,21 @@ import { computeAvailability, type UnitStatusLike } from "@/lib/developmentAvail
 
 const TRACKABLE_STATUSES = new Set(["published", "ready"]);
 
+/* Whether a sold-out marker should be lifted. Extracted so it can be asserted
+   without a database (scripts/qa/sold-out-sweep-check.mjs).
+   `total === 0` is deliberately NOT a return to market: a Development with no
+   units at all has no availability information, which is not the same as
+   having availability. Before 2026-09-10 the two were conflated, so deleting
+   every unit from a sold-out project silently cleared soldOutSince and stamped
+   returnedToMarketAt with a date nobody chose. Six Cybarco projects are sold
+   out and have no price list to generate units from, so a hand-set sold-out
+   state has to survive every sync. */
+export function shouldClearSoldOut(input: { total: number; available: number; wasSoldOut: boolean }): boolean {
+  if (!input.wasSoldOut) return false;
+  if (input.total === 0) return false;
+  return input.available > 0;
+}
+
 export async function recomputeDevelopmentDerivedState(developmentId: string): Promise<void> {
   const dev = await prisma.development.findUnique({
     where: { id: developmentId },
@@ -59,7 +74,7 @@ export async function recomputeDevelopmentDerivedState(developmentId: string): P
   };
   if (soldOut && !wasSoldOut && trackable) {
     data.soldOutSince = new Date();
-  } else if (!soldOut && wasSoldOut) {
+  } else if (shouldClearSoldOut({ total, available, wasSoldOut })) {
     data.soldOutSince = null;
     if (trackable) data.returnedToMarketAt = new Date();
   }

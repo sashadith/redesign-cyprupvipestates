@@ -41,6 +41,8 @@ export async function sendUserEmail(
   userId: string,
   opts: {
     to: string;
+    /** Visible copy recipients (MCP drafts: a partner on a partner lead). */
+    cc?: string[];
     bcc?: string;
     subject: string;
     html: string;
@@ -64,6 +66,7 @@ export async function sendUserEmail(
   const info = await transporter.sendMail({
     from: row.fromName ? `"${row.fromName}" <${row.fromAddress}>` : row.fromAddress!,
     to: opts.to,
+    ...(opts.cc?.length ? { cc: opts.cc } : {}),
     ...(opts.bcc ? { bcc: opts.bcc } : {}),
     subject: opts.subject,
     html: opts.html,

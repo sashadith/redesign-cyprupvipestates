@@ -6,6 +6,7 @@ import { uniquePresentationToken } from "@/lib/crm/presentationToken";
 import { WHATSAPP_MSG } from "@/lib/crm/presentationMessages";
 import { waLink } from "@/lib/crm/waFormat";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { isPublicLocale } from "@/lib/locale";
 
 // Deliberately NOT src/lib/seo.ts's SITE_URL — that constant is hardcoded to
 // the production domain, which would make every presentation generated on
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
   const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, phone: true } });
   if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
-  const locale = ["en", "de", "pl", "ru"].includes(body.locale) ? body.locale : "en";
+  const locale = isPublicLocale(body.locale) ? body.locale : "en";
   const greetingName = String(body.greetingName ?? "").trim().slice(0, 120) || "there";
   const personalNote = String(body.personalNote ?? "").trim().slice(0, 2000) || null;
   const advisorId = body.advisorId ? String(body.advisorId) : (session.user as any)?.id ?? null;

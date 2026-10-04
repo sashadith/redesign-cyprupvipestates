@@ -2,7 +2,8 @@
 import React from "react";
 import Link from "next/link";
 import styles from "./BreadcrumbsBlog.module.scss";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, isLocale } from "@/lib/locale";
+import { BLOG_LABEL_BY_LANG, HOME_LABEL_BY_LANG } from "./BreadcrumbsBlog.copy";
 
 type BreadcrumbsProps = {
   lang: string;
@@ -13,28 +14,15 @@ type BreadcrumbsProps = {
 const humanize = (s: string) =>
   s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-const blogLabelByLang: Record<string, string> = {
-  en: "Blog",
-  ru: "Блог",
-  de: "Blog",
-  pl: "Blog",
-};
-
-const homeLabelByLang: Record<string, string> = {
-  en: "Home",
-  ru: "Главная",
-  de: "Startseite",
-  pl: "Strona główna",
-};
-
 const BreadcrumbsBlog: React.FC<BreadcrumbsProps> = ({
   lang,
   segments,
   currentTitle,
 }) => {
   const base = localePrefix(lang);
-  const homeTitle = homeLabelByLang[lang] ?? homeLabelByLang.en;
-  const blogTitle = blogLabelByLang[lang] ?? blogLabelByLang.en;
+  const resolvedLang = isLocale(lang) ? lang : "en";
+  const homeTitle = HOME_LABEL_BY_LANG[resolvedLang];
+  const blogTitle = BLOG_LABEL_BY_LANG[resolvedLang];
 
   const crumbs = [
     { name: homeTitle, href: base || "/" },

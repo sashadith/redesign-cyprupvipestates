@@ -11,7 +11,7 @@ import InsightsList, { type InsightsCard } from "./InsightsList";
 import InsightsSeo from "./InsightsSeo";
 import LightHeroFlag from "./LightHeroFlag";
 import InsightsMotion from "./InsightsMotion";
-import Nav from "../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../preview-home/sections/Footer";
 
 /* Cyprus Insights — paginated magazine index (EN). Page 1 = 1 featured + 15
@@ -76,7 +76,7 @@ export default async function InsightsIndex({ page }: { page: number }) {
     <>
       <LightHeroFlag />
       <InsightsMotion />
-      <Nav />
+      <Header params={{ lang: "en" }} translations={[]} />
       <main className="ins">
         <header className="ins__hero is-light">
           <div className="wrap ins__hero-grid">

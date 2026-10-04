@@ -3,6 +3,7 @@ import React from "react";
 import Link from "next/link";
 import styles from "./Breadcrumbs.module.scss";
 import { localePrefix } from "@/lib/locale";
+import { breadcrumbsCopy } from "./Breadcrumbs.copy";
 
 type BreadcrumbsProps = {
   lang: string;
@@ -21,16 +22,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   currentTitle,
 }) => {
   const base = localePrefix(lang);
-  const homeTitle =
-    lang === "en"
-      ? "Home"
-      : lang === "ru"
-        ? "Главная"
-        : lang === "pl"
-          ? "Strona główna"
-          : lang === "de"
-            ? "Startseite"
-            : "Home";
+  const homeTitle = breadcrumbsCopy(lang).home;
 
   // Собираем массив крошек
   const crumbs = [

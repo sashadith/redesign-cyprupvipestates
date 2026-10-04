@@ -11,18 +11,22 @@ import nodemailer from "nodemailer";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, LOCALES, isLocale } from "@/lib/locale";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
-import { applyFollowUpCadence, resetFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
+import { logLeadInteraction } from "@/lib/crm/logInteraction";
+import { applyLeadStatusChange, LEAD_STATUSES, type LeadStatusValue } from "@/lib/crm/updateLeadStatus";
+import { createLeadRecord } from "@/lib/crm/createLead";
+import { trashLead, restoreLead } from "@/lib/crm/trashLead";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
-import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS } from "@/app/components/qualifierFields";
+import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -37,8 +41,6 @@ function convertHtmlMarkers(node: any): any {
   }
   return node;
 }
-
-const LOCALES = ["en", "de", "pl", "ru"];
 
 // Resolve the scheduledAt column from the editor form. Only meaningful when the
 // status is SCHEDULED (the naive datetime is read as Europe/Berlin → UTC); any
@@ -132,6 +134,10 @@ async function requireSession() {
   const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
   if (!user || !user.isActive) throw new Error("Unauthorized");
   return session;
+}
+// Actor shape the extracted CRM libraries take (src/lib/crm/sendLeadEmail.ts).
+function actorOf(session: any): { userId: string; userName: string } {
+  return { userId: session.user?.id as string, userName: session.user?.name ?? "admin" };
 }
 async function requireAdmin() {
   const session = await requireSession();
@@ -723,33 +729,8 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
 // StatusPopover.tsx.
 export async function updateLeadStatus(id: string, status: string) {
   const session = await requireSession();
-  if (!STATUSES.includes(status)) throw new Error("Invalid status");
-  await prisma.lead.update({ where: { id }, data: { status: status as any } });
-  const statusContent = `Status changed to ${status.replace(/_/g, " ")}`;
-  await prisma.leadActivity.create({
-    data: {
-      leadId: id,
-      type: "STATUS_CHANGE",
-      content: statusContent,
-      createdBy: session.user?.name ?? "admin",
-      createdById: (session.user as any)?.id ?? null,
-    },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "STATUS_CHANGE",
-      channel: "SYSTEM",
-      body: statusContent,
-      // 2026-08-11 — lets actionCenter/rules/crm.ts's noFollowUp() know the
-      // exact target status without parsing body text (still falls back to
-      // that for historical rows written before this). See
-      // ELEVATED_NO_CONTACT_STATUSES there for why the target matters.
-      metadata: { toStatus: status },
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  if (!(LEAD_STATUSES as readonly string[]).includes(status)) throw new Error("Invalid status");
+  await applyLeadStatusChange(actorOf(session), id, status as LeadStatusValue);
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
@@ -874,22 +855,8 @@ export async function toggleLeadHotAction(formData: FormData) {
 // corrected.
 export async function addLeadNote(id: string, note: string, occurredAt?: Date) {
   const session = await requireSession();
-  const content = note.trim();
-  if (!content) return;
-  const when = occurredAt ?? new Date();
-  await prisma.leadActivity.create({
-    data: { leadId: id, type: "NOTE", content, createdAt: when, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "NOTE",
-      occurredAt: when,
-      body: content,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  if (!note.trim()) return;
+  await logLeadInteraction(actorOf(session), id, { type: "NOTE", body: note, occurredAt });
   revalidatePath(`/admin/crm/${id}`);
 }
 
@@ -908,24 +875,19 @@ export async function addEmailLog(
   opts: { direction: "OUTBOUND" | "INBOUND"; subject?: string; body?: string; occurredAt?: Date; leadReacted?: boolean },
 ) {
   const session = await requireSession();
-  const when = opts.occurredAt ?? new Date();
-  const subject = opts.subject?.trim() || null;
-  const content = opts.body?.trim() || null;
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
-      direction: opts.direction,
-      channel: "EMAIL",
-      subject,
-      body: content,
-      occurredAt: when,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-      ...(opts.leadReacted ? { metadata: { leadReacted: true } } : {}),
-    },
+  // addEmailLog always accepted an empty body (subject-only log) — that's
+  // the admin form's contract (UnifiedTimeline.tsx's "+ Email log"), so a
+  // subject with no body still goes through. Both empty is a no-op, same
+  // as addLeadNote/addCallLog below rather than surfacing logLeadInteraction's
+  // "Message is required." throw to the form.
+  if (!opts.subject?.trim() && !opts.body?.trim()) return;
+  await logLeadInteraction(actorOf(session), id, {
+    type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
+    body: opts.body,
+    subject: opts.subject,
+    occurredAt: opts.occurredAt,
+    leadReacted: opts.leadReacted,
   });
-  await applyFollowUpCadence(id, "manual_contact", { leadReacted: opts.leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
 
@@ -952,23 +914,8 @@ export async function resetLeadFollowUpCadenceAction(id: string) {
 // interaction type so it shows with its own icon in the Unified Timeline.
 export async function addCallLog(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
   const session = await requireSession();
-  const content = note.trim();
-  if (!content) return;
-  const when = occurredAt ?? new Date();
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "CALL",
-      direction: "OUTBOUND",
-      channel: "PHONE",
-      occurredAt: when,
-      body: content,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
-    },
-  });
-  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
+  if (!note.trim()) return;
+  await logLeadInteraction(actorOf(session), id, { type: "CALL", body: note, occurredAt, leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
 
@@ -1056,45 +1003,31 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
-  const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
+  const oneOf = (k: string, allowed: readonly string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
   const assignedToId = String(formData.get("assignedToId") ?? "").trim() || null;
   if (assignedToId) {
     const valid = await prisma.user.findFirst({ where: { id: assignedToId, isActive: true }, select: { id: true } });
     if (!valid) return { error: "Invalid assignee." };
   }
 
-  const lead = await prisma.lead.create({
-    data: {
-      firstName,
-      lastName: lastName || "",
-      email: email || null,
-      phone: phone || null,
-      nationality: String(formData.get("nationality") ?? "").trim() || null,
-      languagePreference: oneOf("languagePreference", LOCALES) as any,
-      budgetMin: num("budgetMin"),
-      budgetMax: num("budgetMax"),
-      timeline: oneOf("timeline", LEAD_TIMELINES) as any,
-      financing: oneOf("financing", LEAD_FINANCING) as any,
-      propertyTypeInterest: formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t)),
-      message: String(formData.get("message") ?? "").trim() || null,
-      notes: String(formData.get("notes") ?? "").trim() || null,
-      source: "MANUAL",
-      status: (oneOf("status", STATUSES) ?? "NEW") as any,
-      assignedToId,
-    },
-  });
-  await prisma.leadActivity.create({
-    data: { leadId: lead.id, type: "CREATED", content: "Lead created manually", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: lead.id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: "Lead created manually",
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
+  // Persisting moved to src/lib/crm/createLead.ts (shared with the MCP
+  // connector's crm_create_lead); the form validation above stays here.
+  const lead = await createLeadRecord(actorOf(session), {
+    firstName,
+    lastName,
+    email,
+    phone,
+    nationality: String(formData.get("nationality") ?? "").trim() || null,
+    languagePreference: oneOf("languagePreference", LOCALES) as any,
+    budgetMin: num("budgetMin"),
+    budgetMax: num("budgetMax"),
+    timeline: oneOf("timeline", LEAD_TIMELINES) as any,
+    financing: oneOf("financing", LEAD_FINANCING) as any,
+    propertyTypeInterest: formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t)),
+    message: String(formData.get("message") ?? "").trim() || null,
+    notes: String(formData.get("notes") ?? "").trim() || null,
+    status: (oneOf("status", STATUSES) ?? "NEW") as any,
+    assignedToId,
   });
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
@@ -1118,7 +1051,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
-  const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
+  const oneOf = (k: string, allowed: readonly string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
 
   await prisma.lead.update({
     where: { id },
@@ -1244,21 +1177,8 @@ export async function mergeLeads(targetId: string, sourceId: string) {
 // permanently deletable by an ADMIN from /admin/crm/trash.
 export async function softDeleteLeadAction(id: string, redirectTo?: string) {
   const session = await requireSession();
-  const uid = (session.user as any)?.id ?? null;
-  await prisma.lead.update({ where: { id }, data: { deletedAt: new Date(), deletedById: uid } });
-  await prisma.leadActivity.create({
-    data: { leadId: id, type: "DELETED", content: "Lead moved to trash", createdBy: session.user?.name ?? "admin", createdById: uid },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: "Lead moved to trash",
-      createdByUserId: uid,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  // Rows written by src/lib/crm/trashLead.ts (shared with the MCP connector's crm_delete_lead).
+  await trashLead(actorOf(session), id);
   revalidatePath("/admin/crm");
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
@@ -1267,20 +1187,8 @@ export async function softDeleteLeadAction(id: string, redirectTo?: string) {
 
 export async function restoreLeadAction(id: string) {
   const session = await requireSession();
-  await prisma.lead.update({ where: { id }, data: { deletedAt: null, deletedById: null } });
-  await prisma.leadActivity.create({
-    data: { leadId: id, type: "RESTORED", content: "Lead restored from trash", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: "Lead restored from trash",
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  // Rows written by src/lib/crm/trashLead.ts (shared with the MCP connector's crm_restore_lead).
+  await restoreLead(actorOf(session), id);
   revalidatePath("/admin/crm");
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
@@ -1324,7 +1232,7 @@ export async function emptyTrashAction(): Promise<{ ok?: string; error?: string 
 // order-preserving). This action rewrites the ordered list from the admin editor.
 export async function updateHomepageFeatured(lang: string, formData: FormData) {
   const session = await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const ids = String(formData.get("projectIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
@@ -1349,7 +1257,7 @@ export async function updateHomepageFeatured(lang: string, formData: FormData) {
 // Homepage "Featured Case Studies" — same ref pattern as featured projects, but caseStudyRef.
 export async function updateHomepageFeaturedCaseStudies(lang: string, formData: FormData) {
   await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const ids = String(formData.get("caseStudyIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) throw new Error("Homepage document not found for this language");
@@ -1369,7 +1277,7 @@ export async function updateHomepageFeaturedCaseStudies(lang: string, formData: 
 // labels/slide texts). Only overwrites existing string leaves; structure/media/rich-text preserved.
 export async function updateHomepageFields(lang: string, formData: FormData) {
   await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) throw new Error("Homepage document not found for this language");
   const data = JSON.parse(JSON.stringify(row.data ?? {}));
@@ -1387,7 +1295,7 @@ export async function updateHomepageFields(lang: string, formData: FormData) {
 // to Portable Text, and writes it back. Sanity/production is never touched.
 export async function saveHomepage(lang: string, formData: FormData) {
   await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) throw new Error("Homepage document not found for this language");
   let incoming: any;
@@ -1404,7 +1312,7 @@ export async function saveHomepage(lang: string, formData: FormData) {
 // Site settings — edits only safe scalar fields on the footer doc; preserves the rest of the JSON.
 export async function updateFooterSettings(lang: string, formData: FormData) {
   await requireAdmin();
-  if (!["en", "de", "pl", "ru"].includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "footer", language: lang as any } } });
   if (!row) throw new Error("Footer not found");
   const prev = row.data as Record<string, any>;
@@ -1523,7 +1431,7 @@ export async function createBlogPost(_prev: any, formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slug = slugify(String(formData.get("slug") ?? "").trim() || title);
   const excerpt = String(formData.get("excerpt") ?? "").trim();
-  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  if (!isLocale(language)) return { error: "Invalid language" };
   if (!title || !slug) return { error: "Title and slug are required." };
   if (await prisma.blog.findFirst({ where: { language: language as any, slug } })) return { error: "A post with this slug already exists in this language." };
   const created = await prisma.blog.create({
@@ -1549,7 +1457,7 @@ export async function createContent(type: string, _prev: any, formData: FormData
   const cfg = CREATE_TYPES[type];
   if (!cfg) return { error: "Unknown content type" };
   const language = String(formData.get("language") ?? "en");
-  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  if (!isLocale(language)) return { error: "Invalid language" };
   const titleVal = String(formData.get("title") ?? "").trim();
   if (!titleVal) return { error: `A ${cfg.label} title is required.` };
 
@@ -1575,7 +1483,7 @@ export async function createProject(_prev: any, formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slug = slugify(String(formData.get("slug") ?? "").trim() || title);
   const excerpt = String(formData.get("excerpt") ?? "").trim();
-  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  if (!isLocale(language)) return { error: "Invalid language" };
   if (!title || !slug) return { error: "Title and slug are required." };
   if (await prisma.project.findFirst({ where: { language: language as any, slug } })) return { error: "A project with this slug already exists in this language." };
   const created = await prisma.project.create({
@@ -1766,27 +1674,37 @@ export async function saveFaqPage(lang: string, categoriesJson: string) {
     create: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang as any, data: { categories } },
   });
   revalidatePath("/admin/content/faq");
-  revalidatePath("/faq");
-  revalidatePath("/de/faq");
-  revalidatePath("/pl/faq");
-  revalidatePath("/ru/faq");
+  for (const l of LOCALES) revalPublic(l, ["faq"]);
   return { ok: true };
 }
 
-// Seeds a new language's faqPage row from an existing one (EN by default) as a
-// starting draft — same spirit as createTranslation below, but against
-// SiteDocument's type+language key rather than a translationGroupId model.
-export async function createFaqTranslation(lang: string, fromLang: string = "en") {
-  await requireSession();
-  const existing = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: lang as any } } });
-  if (!existing) {
-    const source = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: fromLang as any } } });
-    const categories = (source?.data as any)?.categories ?? [];
-    await prisma.siteDocument.create({
-      data: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang as any, data: { categories } },
-    });
-  }
-  revalidatePath("/admin/content/faq");
+// Seeds a new language's row for any SiteDocument type from the English one as
+// a starting draft — covers header/footer/forms/landing/faq, all of which key
+// on SiteDocument's type+language rather than a translationGroupId model. The
+// FAQ page now calls this directly instead of through a faqPage-only wrapper.
+const SITE_DOC_LIST_PATH: Record<string, string> = {
+  header: "/admin/content/header",
+  footer: "/admin/settings",
+  formStandardDocument: "/admin/content/forms",
+  blogPage: "/admin/content/landing",
+  caseStudiesPage: "/admin/content/landing",
+  projectsPage: "/admin/content/landing",
+  notFoundPage: "/admin/content/landing",
+  faqPage: "/admin/content/faq",
+};
+
+export async function createSiteDocTranslation(type: string, lang: string) {
+  await requireAdmin();
+  if (!isLocale(lang)) throw new Error("Invalid language");
+  const en = await prisma.siteDocument.findUnique({ where: { type_language: { type, language: "en" as any } } });
+  if (!en) throw new Error(`No English ${type} document to copy`);
+  await prisma.siteDocument.upsert({
+    where: { type_language: { type, language: lang as any } },
+    update: {},
+    create: { sanityId: `${type}-${lang}`, type, language: lang as any, data: en.data as any },
+  });
+  const path = SITE_DOC_LIST_PATH[type] ?? "/admin/content/" + type;
+  revalidatePath(path);
 }
 
 // ── Translations: create a linked translation of an existing document ──
@@ -1817,7 +1735,7 @@ export async function createTranslation(type: string, sourceId: string, targetLa
   await requireSession();
   const cfg = TR_TYPES[type];
   if (!cfg) throw new Error("Unknown content type");
-  if (!LOCALES.includes(targetLang)) throw new Error("Invalid language");
+  if (!isLocale(targetLang)) throw new Error("Invalid language");
 
   const source: any = await cfg.model.findUnique({ where: { id: sourceId } });
   if (!source) throw new Error("Source document not found");
@@ -1848,7 +1766,7 @@ export async function createTranslation(type: string, sourceId: string, targetLa
     data.slug = slug;
   }
   // Blog references author/category by id — remap them to the target language's sibling
-  // (author/category are fully translated 4-language groups), so the translation links the
+  // (author/category are fully translated groups), so the translation links the
   // correct-language reference instead of inheriting the source language's. null → editor picks.
   if (type === "blog") {
     data.authorId = await siblingIdInLang(prisma.author, source.authorId, targetLang);
@@ -2330,4 +2248,94 @@ export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: F
   revalidatePath(`/admin/developments/developers/${row.developerAccountId}`);
   revalidatePath("/admin/developments/developers/compare");
   return { ok: true };
+}
+
+/* Inline qualification edit from the lead cockpit.
+ *
+ * Separate from updateLead: that one owns the whole record, validates a name
+ * and an email, and redirects to a dedicated page. Budget, timeline, financing
+ * and property interest are the fields that change DURING a conversation —
+ * sending someone to a form page and back to correct one dropdown is why they
+ * were being left stale.
+ *
+ * The activity log names what actually changed rather than "Lead details
+ * edited": on a record several people work, "budget €500k – €1M → €1M – €2M"
+ * is the difference between an audit trail and a shrug.
+ */
+export async function updateLeadQualificationAction(formData: FormData) {
+  const session = await requireSession();
+  const id = String(formData.get("id") ?? "");
+  const before = await prisma.lead.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true },
+  });
+  if (!before) return;
+
+  const budgetKey = String(formData.get("budget") ?? "");
+  // "manual" = amounts typed in rather than a bracket picked. Read as numbers
+  // and normalised so a reversed pair (from 2M, to 1M) stores as a sane range
+  // instead of one that can never match anything.
+  const amount = (k: string) => {
+    const raw = String(formData.get(k) ?? "").trim();
+    if (raw === "") return null;
+    const n = Math.round(Number(raw));
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+  let budgetMin: number | null;
+  let budgetMax: number | null;
+  if (budgetKey === "manual") {
+    const lo = amount("budgetMin");
+    const hi = amount("budgetMax");
+    [budgetMin, budgetMax] = lo != null && hi != null && lo > hi ? [hi, lo] : [lo, hi];
+  } else if (budgetKey === "") {
+    [budgetMin, budgetMax] = [null, null];
+  } else {
+    [budgetMin, budgetMax] = BUDGET_RANGES[budgetKey] ?? [null, null];
+  }
+
+  const oneOf = (k: string, allowed: readonly string[]) => {
+    const v = String(formData.get(k) ?? "").trim();
+    return allowed.includes(v) ? v : null;
+  };
+  const timeline = oneOf("timeline", LEAD_TIMELINES);
+  const financing = oneOf("financing", LEAD_FINANCING);
+  const propertyTypeInterest = formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t));
+
+  const changes: string[] = [];
+  const fmt = (lo: number | null, hi: number | null) => leadBudgetLabel(lo, hi) ?? "—";
+  if (before.budgetMin !== budgetMin || before.budgetMax !== budgetMax) {
+    changes.push(`budget ${fmt(before.budgetMin, before.budgetMax)} → ${fmt(budgetMin, budgetMax)}`);
+  }
+  if ((before.timeline ?? null) !== timeline) {
+    changes.push(`timeline ${leadTimelineLabel(before.timeline) ?? "—"} → ${leadTimelineLabel(timeline) ?? "—"}`);
+  }
+  if ((before.financing ?? null) !== financing) {
+    changes.push(`financing ${leadFinancingLabel(before.financing) ?? "—"} → ${leadFinancingLabel(financing) ?? "—"}`);
+  }
+  const beforeTypes = [...(before.propertyTypeInterest ?? [])].sort().join(", ");
+  const afterTypes = [...propertyTypeInterest].sort().join(", ");
+  if (beforeTypes !== afterTypes) {
+    changes.push(`property interest ${beforeTypes || "—"} → ${afterTypes || "—"}`);
+  }
+  // Nothing moved — a click on Save with no edit should not fill the timeline
+  // with empty entries.
+  if (!changes.length) return;
+
+  await prisma.lead.update({
+    where: { id },
+    data: { budgetMin, budgetMax, timeline: timeline as any, financing: financing as any, propertyTypeInterest },
+  });
+  const summary = `Qualification updated — ${changes.join("; ")}`;
+  await prisma.leadActivity.create({
+    data: { leadId: id, type: "EDIT", content: summary, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id, type: "SYSTEM", channel: "SYSTEM", body: summary,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+    },
+  });
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
 }

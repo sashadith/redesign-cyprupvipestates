@@ -7,9 +7,10 @@ import {
 } from "@/sanity/sanity.utils";
 import { urlFor } from "@/sanity/sanity.client";
 import ProjectsExplorer, { type ProjectCardData, type MapMarker } from "./ProjectsExplorer";
-import Nav from "../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../preview-home/sections/Footer";
 import { resolveCompletionYear } from "@/lib/text";
+import { isLocale } from "@/lib/locale";
 
 /* Cyprus VIP Estates — Projects search (isolated redesign preview, EN).
    Map-centric explorer: URL-driven filters → server fetch → list + live map. The
@@ -18,7 +19,7 @@ import { resolveCompletionYear } from "@/lib/text";
 export const dynamic = "force-dynamic";
 
 const LANG = "en";
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 14;
 
 type SP = Record<string, string | undefined>;
 
@@ -36,8 +37,8 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
   const page = Math.max(1, Number(searchParams.page) || 1);
   // Active site locale for UI strings like the map gesture hint (data still EN).
   // On the real [lang] route this comes from the route; the isolated preview
-  // reads ?lang= so all four locales (en/de/pl/ru) are demonstrable.
-  const locale = ["en", "de", "pl", "ru"].includes(searchParams.lang || "") ? (searchParams.lang as string) : "en";
+  // reads ?lang= so every locale is demonstrable.
+  const locale = isLocale(searchParams.lang || "") ? (searchParams.lang as string) : "en";
   const filters = {
     city: searchParams.city || "",
     propertyType: searchParams.propertyType || "",
@@ -67,7 +68,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
     return {
       id: p._id,
       title: p.title,
-      href: p._source === "development" ? `/en/preview-project/${p.slug?.current ?? ""}` : `/en/projects/${p.slug?.current ?? ""}`,
+      href: p._source === "development" ? `/en/preview-project/${p.slug?.current ?? ""}` : `/projects/${p.slug?.current ?? ""}`,
       image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
       city: kf.city ?? "",
       price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
@@ -90,7 +91,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
     .map((m: any) => ({
       id: m._id,
       title: m.title,
-      href: m._source === "development" ? `/en/preview-project/${m.slug ?? ""}` : `/en/projects/${m.slug ?? ""}`,
+      href: m._source === "development" ? `/en/preview-project/${m.slug ?? ""}` : `/projects/${m.slug ?? ""}`,
       city: m.city ?? "",
       price: typeof m.price === "number" ? m.price : Number(m.price) || null,
       lat: m.location.lat,
@@ -103,7 +104,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
 
   return (
     <>
-      <Nav />
+      <Header params={{ lang: "en" }} translations={[]} />
       <main className="px">
         <ProjectsExplorer
           cards={cards}

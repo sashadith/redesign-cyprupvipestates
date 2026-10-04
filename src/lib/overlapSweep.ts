@@ -182,3 +182,161 @@ export async function sweepOverlapCandidates(): Promise<{ found: number; inserte
   }
   return { found: candidates.length, inserted };
 }
+
+/* ── Development ↔ Development duplicates (2026-09-16) ───────────────────────
+   Everything above matches a legacy Sanity Project against a Development. That
+   is what this file was built for, and it is why Eden Golf went unnoticed: BBF
+   had the same building twice as two DEVELOPMENTS, and nothing here ever
+   compared two of those with each other.
+
+   How it happened: /projects/golf-residences was created by hand on
+   2026-07-12. On 2026-08-28 BBF's feed adapter first saw the same building as
+   project 38 and made a second row, because a Development's identity is its
+   feedKey ("manual:<uuid>" vs "bbf:38") and nothing matches on name. Both
+   pages then ran live against each other for two and a half weeks.
+
+   Detect and report only — there is deliberately nothing to confirm. For a
+   legacy pair, "confirm" writes Project.supersededByDevelopmentId; between two
+   Developments no such relation exists in the schema. The resolution is for an
+   operator to archive one, which is exactly what happened on 2026-09-16, and
+   an archived side drops the pair out of this function. That archive IS the
+   acknowledgement, so no candidate table, no reject list and no migration.
+
+   The corroboration rule is deliberately STRICTER than the legacy one above,
+   where an exact title alone is already persisted at Medium. Two Developments
+   sharing a name is ordinary and usually legitimate: measured 2026-09-16
+   across 288 non-archived rows, exactly two names occurred twice — Eden Golf
+   (same BBF account, 30 m apart) and Thea (Domenica vs AGG, 5 064 m apart),
+   which are two real, different buildings. Requiring a second signal catches
+   the first twice over and never mentions the second. Without it, Thea would
+   be reported every night forever and would need a dismissal mechanism to
+   silence — which is how a nightly alarm becomes wallpaper.
+
+   Word-overlap, the weakest tier above, is not used here. A shared distinctive
+   word between two of the same developer's projects is normal naming ("Aktea
+   Residences 2/3/4"), not evidence of duplication. */
+
+export type DuplicateDevelopmentPair = {
+  aId: string;
+  bId: string;
+  aName: string;
+  bName: string;
+  matchType: "exact-title" | "fuzzy-title";
+  sameAccount: boolean;
+  distanceMeters: number | null;
+  note: string;
+};
+
+/* The shape the matcher needs, so it can be exercised without a database —
+   unlike findOverlapCandidates() above, which queries Prisma itself and can
+   therefore only be tested against live data. */
+export type DuplicateScanRow = {
+  id: string;
+  publicName: string;
+  publishStatus: string;
+  developerAccountId: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  alias?: string | null;
+  overrideLatitude?: number | null;
+  overrideLongitude?: number | null;
+};
+
+/** Pure matching pass over Development rows. No database access, no writes. */
+export function findDuplicateDevelopmentPairs(rows: DuplicateScanRow[]): DuplicateDevelopmentPair[] {
+  /* An archived Development is a resolved one — see the header. Filtering here
+     rather than in the caller keeps the rule true for any caller. */
+  const live = rows.filter((r) => r.publishStatus !== "archived");
+  const indexed = live.map((r) => ({
+    row: r,
+    names: Array.from(new Set([norm(r.publicName), norm(r.alias)].filter(Boolean))),
+    lat: r.overrideLatitude ?? r.latitude,
+    lng: r.overrideLongitude ?? r.longitude,
+  }));
+
+  const pairs: DuplicateDevelopmentPair[] = [];
+  for (let i = 0; i < indexed.length; i++) {
+    for (let j = i + 1; j < indexed.length; j++) {
+      const a = indexed[i], b = indexed[j];
+      if (!a.names.length || !b.names.length) continue;
+
+      const exact = a.names.some((n) => b.names.includes(n));
+      /* Substring either way, with the same >4 floor the legacy matcher uses —
+         "Eden Golf" against "Eden Golf Residences". Below that length a
+         substring is noise. */
+      const fuzzy = !exact && a.names.some((n) => b.names.some((m) =>
+        (n.length > 4 && m.includes(n)) || (m.length > 4 && n.includes(m))));
+      if (!exact && !fuzzy) continue;
+
+      const sameAccount = !!(a.row.developerAccountId && b.row.developerAccountId
+        && a.row.developerAccountId === b.row.developerAccountId);
+      const distanceMeters = (a.lat != null && a.lng != null && b.lat != null && b.lng != null)
+        ? haversineMeters(a.lat, a.lng, b.lat, b.lng)
+        : null;
+      const closeBy = distanceMeters != null && distanceMeters < DISTANCE_HIGH_M;
+
+      /* The strict part, and the two tiers are NOT held to the same bar.
+
+         An exact name needs either signal. A fuzzy one needs PROXIMITY, and
+         the same developer account is explicitly not enough for it.
+
+         That asymmetry is measured, not tasteful. Run against production on
+         2026-09-16, "fuzzy + same account" reported seven pairs and every one
+         of them was a legitimate sibling: VENARA / VENARA VIEW / Venara
+         Lifestyle, Trees Park / Trees, and three "<name> 2" phase pairs
+         (Celestia, Germasogeia View, Avalon Gardens). Naming a phase after its
+         predecessor is how this market names things, so on that tier a shared
+         account is the norm rather than evidence.
+         Distance separates them cleanly: those six sit 72 m to 209 m apart or
+         carry no coordinates at all, while the one pair that does look like a
+         real overlap — Domenica's "elements" and
+         "elements-oxygen-park-of-colours", 19 units against 2 — shares a
+         coordinate exactly, 0 m.
+         So: fuzzy + proximity reports that one and stays silent on the six.
+         Shipping the looser rule would have opened with seven false alarms on
+         day one, which is how a nightly check becomes wallpaper — the same
+         failure this file already guards against for Thea. */
+      const corroborated = exact ? (sameAccount || closeBy) : closeBy;
+      if (!corroborated) continue;
+
+      pairs.push({
+        aId: a.row.id,
+        bId: b.row.id,
+        aName: a.row.publicName,
+        bName: b.row.publicName,
+        matchType: exact ? "exact-title" : "fuzzy-title",
+        sameAccount,
+        distanceMeters,
+        note: [
+          exact ? "same name" : "one name contains the other",
+          sameAccount ? "same developer account" : null,
+          closeBy ? `${Math.round(distanceMeters as number)}m apart` : null,
+        ].filter(Boolean).join(", "),
+      });
+    }
+  }
+  return pairs;
+}
+
+/** Database wrapper around findDuplicateDevelopmentPairs. Reads only. */
+export async function duplicateDevelopmentPairs(): Promise<DuplicateDevelopmentPair[]> {
+  const rows = await prisma.development.findMany({
+    where: { publishStatus: { not: "archived" } },
+    select: {
+      id: true, publicName: true, publishStatus: true, developerAccountId: true,
+      latitude: true, longitude: true,
+      override: { select: { alias: true, latitude: true, longitude: true } },
+    },
+  });
+  return findDuplicateDevelopmentPairs(rows.map((r) => ({
+    id: r.id,
+    publicName: r.publicName,
+    publishStatus: r.publishStatus,
+    developerAccountId: r.developerAccountId,
+    latitude: r.latitude,
+    longitude: r.longitude,
+    alias: r.override?.alias ?? null,
+    overrideLatitude: r.override?.latitude ?? null,
+    overrideLongitude: r.override?.longitude ?? null,
+  })));
+}

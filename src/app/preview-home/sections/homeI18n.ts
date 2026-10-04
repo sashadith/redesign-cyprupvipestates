@@ -4,12 +4,14 @@
 // bullets, project/case data) still comes from the content DB — these are only
 // the small marketing labels the preview baked in.
 
+import type { Locale } from "@/lib/locale";
+
 export type HomeStrings = {
   heroLine1: string; heroAccent: string; heroLine2: string; // "Cyprus [Property] Experts"
   getConsultation: string;
   viewAllProjects: string;
   citiesLead: string;
-  newLead2: string; newAccent: string; newLead: string; showAllProjects: string; top100Cta: string; // Latest Developments
+  newLead2: string; newAccent: string; showAllProjects: string; // Latest Developments
   priceFrom: string; priceOnRequest: string; onRequest: string; sold: string;
   contentTitle: string; contentLead: string;
   faqLead: string;
@@ -23,9 +25,7 @@ const EN: HomeStrings = {
   citiesLead:
     "From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea. Whether you are drawn to the cosmopolitan energy of Limassol, the historic charm of Paphos, or the relaxed coastal pace of Larnaca — Cyprus rewards every lifestyle with world-class infrastructure, a stable legal framework, and over 340 days of sunshine each year.",
   newLead2: "Latest ", newAccent: "Developments",
-  newLead: "The newest additions to our real estate collection.",
   showAllProjects: "Show all projects",
-  top100Cta: "See our curated Top 100",
   priceFrom: "from", priceOnRequest: "Price on request", onRequest: "On request", sold: "Sold",
   contentTitle: "Your Guide to Property in Cyprus",
   contentLead:
@@ -34,8 +34,23 @@ const EN: HomeStrings = {
   readCaseStudy: "Read case study", exploreAllCases: "Explore all cases",
 };
 
-export const HOME_STRINGS: Record<string, HomeStrings> = {
+export const HOME_STRINGS: Record<Locale, HomeStrings> = {
   en: EN,
+  he: {
+    heroLine1: "מומחי ", heroAccent: "נדל\"ן", heroLine2: " בקפריסין",
+    getConsultation: "לקבלת ייעוץ",
+    viewAllProjects: "לצפייה בכל הפרויקטים",
+    citiesLead:
+      "מהמרינות ההומות ועד לסמטאות העיר העתיקה, בכל מקום בקפריסין יש דרך אחרת לחיות מול הים. בלימסול תמצאו אנרגיה קוסמופוליטית ובפאפוס קסם היסטורי, ובשתיהן תשתיות ברמה עולמית, מסגרת משפטית יציבה ויותר מ-340 ימי שמש בשנה.",
+    newLead2: "פרויקטים ", newAccent: "חדשים",
+    showAllProjects: "לכל הפרויקטים",
+    priceFrom: "החל מ-", priceOnRequest: "מחיר לפי פנייה", onRequest: "לפי פנייה", sold: "נמכר",
+    contentTitle: "המדריך שלכם לנדל\"ן בקפריסין",
+    contentLead:
+      "מה כדאי לדעת לפני הרכישה: האזורים, סוגי הנכסים, התהליך לרוכשים מחו\"ל והיכן טמון הערך לטווח הארוך.",
+    faqLead: "כל מה שרוכשים שואלים אותנו על נדל\"ן בקפריסין, במקום אחד.",
+    readCaseStudy: "לקריאת סיפור הלקוח", exploreAllCases: "לכל סיפורי הלקוחות",
+  }, // REVIEW(he)
   de: {
     heroLine1: "Zyperns ", heroAccent: "Immobilien", heroLine2: "experten",
     getConsultation: "Beratung anfragen",
@@ -43,9 +58,7 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     citiesLead:
       "Von lebhaften Yachthäfen bis zu ruhigen Altstädten – jede zypriotische Stadt bietet eine eigene Art, am Meer zu leben. Ob die kosmopolitische Energie von Limassol, der historische Charme von Paphos oder das entspannte Küstentempo von Larnaca – Zypern belohnt jeden Lebensstil mit erstklassiger Infrastruktur, einem stabilen Rechtsrahmen und über 340 Sonnentagen im Jahr.",
     newLead2: "Neueste ", newAccent: "Projekte",
-    newLead: "Die neuesten Ergänzungen unserer Immobilienkollektion.",
     showAllProjects: "Alle Projekte anzeigen",
-    top100Cta: "Unsere Top 100 ansehen",
     priceFrom: "ab", priceOnRequest: "Preis auf Anfrage", onRequest: "Auf Anfrage", sold: "Verkauft",
     contentTitle: "Ihr Leitfaden für Immobilien auf Zypern",
     contentLead:
@@ -60,9 +73,7 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     citiesLead:
       "Od tętniących życiem marin po ciche stare miasta – każde cypryjskie miasto oferuje inny sposób na życie nad morzem. Niezależnie od tego, czy pociąga Cię kosmopolityczna energia Limassol, historyczny urok Pafos, czy spokojne nadmorskie tempo Larnaki – Cypr nagradza każdy styl życia światowej klasy infrastrukturą, stabilnym systemem prawnym i ponad 340 słonecznymi dniami w roku.",
     newLead2: "Najnowsze ", newAccent: "inwestycje",
-    newLead: "Najnowsze pozycje w naszej kolekcji nieruchomości.",
     showAllProjects: "Pokaż wszystkie projekty",
-    top100Cta: "Zobacz nasze Top 100",
     priceFrom: "od", priceOnRequest: "Cena na życzenie", onRequest: "Na życzenie", sold: "Sprzedane",
     contentTitle: "Twój przewodnik po nieruchomościach na Cyprze",
     contentLead:
@@ -77,9 +88,7 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     citiesLead:
       "От оживлённых марин до тихих старых городов — каждый город Кипра предлагает свой способ жить у моря. Космополитичная энергия Лимассола, историческое очарование Пафоса или спокойный прибрежный ритм Ларнаки — Кипр вознаграждает любой образ жизни первоклассной инфраструктурой, стабильной правовой системой и более чем 340 солнечными днями в году.",
     newLead2: "Новейшие ", newAccent: "проекты",
-    newLead: "Самые свежие пополнения нашей коллекции недвижимости.",
     showAllProjects: "Показать все проекты",
-    top100Cta: "Смотреть наш Топ-100",
     priceFrom: "от", priceOnRequest: "Цена по запросу", onRequest: "По запросу", sold: "Продано",
     contentTitle: "Ваш гид по недвижимости на Кипре",
     contentLead:
@@ -89,12 +98,15 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
   },
 };
 
-export const homeStrings = (lang: string): HomeStrings => HOME_STRINGS[lang] ?? EN;
+export const homeStrings = (lang: string): HomeStrings => HOME_STRINGS[lang as Locale] ?? EN;
 
 // Case-study category labels (reused from the production FeaturedCaseStudies).
-export const CASE_CATEGORY_LABELS: Record<string, Record<string, string>> = {
-  en: { "luxury-villa": "Luxury Villa Purchase", apartment: "Apartment Purchase", investment: "Investment Property", relocation: "Relocation to Cyprus", "permanent-residency": "Permanent Residency", "new-development": "New Development" },
+const CASE_CATEGORY_LABELS_EN: Record<string, string> = { "luxury-villa": "Luxury Villa Purchase", apartment: "Apartment Purchase", investment: "Investment Property", relocation: "Relocation to Cyprus", "permanent-residency": "Permanent Residency", "new-development": "New Development" };
+
+export const CASE_CATEGORY_LABELS: Record<Locale, Record<string, string>> = {
+  en: CASE_CATEGORY_LABELS_EN,
   de: { "luxury-villa": "Kauf einer Luxusvilla", apartment: "Wohnungskauf", investment: "Investmentimmobilie", relocation: "Umzug nach Zypern", "permanent-residency": "Daueraufenthalt", "new-development": "Neubauimmobilie" },
   pl: { "luxury-villa": "Zakup luksusowej willi", apartment: "Zakup apartamentu", investment: "Nieruchomość inwestycyjna", relocation: "Przeprowadzka na Cypr", "permanent-residency": "Stały pobyt", "new-development": "Nowa inwestycja" },
   ru: { "luxury-villa": "Покупка роскошной виллы", apartment: "Покупка квартиры", investment: "Инвестиционная недвижимость", relocation: "Переезд на Кипр", "permanent-residency": "Постоянное проживание", "new-development": "Новостройка" },
+  he: { "luxury-villa": "רכישת וילת יוקרה", apartment: "רכישת דירה", investment: "נכס להשקעה", relocation: "רילוקיישן לקפריסין", "permanent-residency": "תושבות קבע", "new-development": "פרויקט חדש" }, // REVIEW(he)
 };

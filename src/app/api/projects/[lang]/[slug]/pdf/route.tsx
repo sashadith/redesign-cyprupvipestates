@@ -262,6 +262,13 @@ const cityTranslations: Record<string, Record<string, string>> = {
 export async function GET(_request: Request, { params }: Props) {
   const { lang, slug } = await params;
 
+  // Spec (Hebrew Phases 1-4): the project PDF is not offered for `he`. The
+  // download button is already hidden on the `he` page, but the route stayed
+  // reachable and rendered tofu (DejaVuSans has no Hebrew glyphs) — Pass B S23.
+  if (lang === "he") {
+    return new Response("Not found", { status: 404 });
+  }
+
   const project = await getProjectByLang(lang, slug);
 
   if (!project) {

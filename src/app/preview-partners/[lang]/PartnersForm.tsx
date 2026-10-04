@@ -14,7 +14,7 @@ import "@/app/components/formFeedback.css";
 /* Partner registration form — redesign styling (reuses the shared .formsec__*
    design-system classes from tokens.css, same as preview-home/sections/Form.tsx),
    but a DEDICATED component rather than reusing Form.tsx directly: Form.tsx
-   posts to /api/monday (the general consultation-request pipeline) and has no
+   posts to /api/leads (the general consultation-request pipeline) and has no
    `country` field. This page's submission must keep hitting /api/email, whose
    PARTNERS_PATH_RE gate REQUIRES a non-empty `country` and tags the resulting
    lead `source: "PARTNER"` for CRM — porting FormPartners.tsx's exact field
@@ -114,7 +114,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
                     <input {...field} id={`${uid}-name`} type="text" autoComplete="given-name" className="formsec__input" />
                   )}
                 </Field>
-                <ErrorMessage name="name" component="div" className="formsec__error" />
+                <div className="formsec__errorSlot">
+                  <ErrorMessage name="name">
+                    {(msg) => <div className="formsec__error">{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className="formsec__field">
@@ -124,7 +128,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
                     <input {...field} id={`${uid}-surname`} type="text" autoComplete="family-name" className="formsec__input" />
                   )}
                 </Field>
-                <ErrorMessage name="surname" component="div" className="formsec__error" />
+                <div className="formsec__errorSlot">
+                  <ErrorMessage name="surname">
+                    {(msg) => <div className="formsec__error">{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className="formsec__field">
@@ -145,7 +153,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
                   onChange={(value) => setFieldValue("phone", value || "", false)}
                   onBlur={() => formikRef.current?.setFieldTouched("phone", true, true)}
                 />
-                <ErrorMessage name="phone" component="div" className="formsec__error" />
+                <div className="formsec__errorSlot">
+                  <ErrorMessage name="phone">
+                    {(msg) => <div className="formsec__error">{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className="formsec__field">
@@ -155,7 +167,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
                     <input {...field} id={`${uid}-email`} type="email" autoComplete="email" className="formsec__input" />
                   )}
                 </Field>
-                <ErrorMessage name="email" component="div" className="formsec__error" />
+                <div className="formsec__errorSlot">
+                  <ErrorMessage name="email">
+                    {(msg) => <div className="formsec__error">{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className="formsec__field formsec__field--full">
@@ -165,7 +181,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
                     <input {...field} id={`${uid}-country`} type="text" autoComplete="country-name" className="formsec__input" />
                   )}
                 </Field>
-                <ErrorMessage name="country" component="div" className="formsec__error" />
+                <div className="formsec__errorSlot">
+                  <ErrorMessage name="country">
+                    {(msg) => <div className="formsec__error">{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
             </div>
 
@@ -184,7 +204,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
                 <a className="formsec__policy" href={t.formPolicyHref} target="_blank" rel="noopener noreferrer">{t.formConsentLink}</a>
                 {t.formConsentPost}
               </label>
-              <ErrorMessage name="agreedToPolicy" component="div" className="formsec__error" />
+              <div className="formsec__errorSlot">
+                <ErrorMessage name="agreedToPolicy">
+                  {(msg) => <div className="formsec__error">{msg}</div>}
+                </ErrorMessage>
+              </div>
             </div>
 
             {message && <div className="form-feedback formsec__feedback" role="alert" aria-live="assertive">{message}</div>}

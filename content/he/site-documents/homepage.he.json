@@ -1,0 +1,3553 @@
+{
+  "review": "pending",
+  "seo": {
+    "metaTitle": "מומחי נדל\"ן בקפריסין לרוכשים מישראל | Cyprus VIP Estates",
+    "metaDescription": "וילות ודירות בפרויקטים חדשים בלימסול ובפאפוס, ישירות מהיזמים. ליווי לרוכשים מישראל מהחיפוש הראשון ועד מסירת המפתחות, כולל בדיקה משפטית עצמאית."
+  },
+  "slug": {
+    "he": {
+      "_type": "slug",
+      "current": "/he"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "Homepage HE",
+  "heroBlock": {
+    "type": "link",
+    "video": {
+      "_type": "file",
+      "asset": {
+        "_ref": "file-bf592cd1f14f515e9cd3d110e654061c563d1f36-mp4",
+        "_type": "reference"
+      }
+    },
+    "heroTitle": "נדל\"ן בקפריסין לרוכשים מישראל, וילות ודירות חדשות",
+    "linkLabel": "לצפייה בכל הפרויקטים",
+    "posterImage": {
+      "_type": "image",
+      "asset": {
+        "_ref": "image-5264ba3cc5ba57dc619e6cb1d2ba9a34532ba3f2-1920x1080-jpg",
+        "_type": "reference"
+      }
+    },
+    "heroDescription": "אנחנו מתמחים בפרויקטים חדשים ובהשקעות לטווח ארוך בקפריסין, ומלווים אתכם מהצעד הראשון ועד סגירת העסקה.",
+    "linkDestination": "/he/projects"
+  },
+  "aboutBlock": {
+    "title": "יש רק קפריסין אחת",
+    "bullets": [
+      {
+        "_key": "a2dd15af4e89",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-6f78ce4134efb6213bcf74822a2f09bf1d25ccd9-205x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "340 ימי שמש בשנה"
+      },
+      {
+        "_key": "c737fe0255c6",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-039f8e50071002f206868fb3ea20f1dce162ffcf-200x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "מדינה חברה באיחוד האירופי"
+      },
+      {
+        "_key": "96cbaa9e9598",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-e16849183edf11ad29df982b42b2151b80887fd0-205x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "אחת ממערכות המס הטובות ביותר"
+      },
+      {
+        "_key": "13ad3d2a2391",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-bd35d8692daa35e5e2b9ec9296f75b25bca82e45-204x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "איכות חיים גבוהה"
+      },
+      {
+        "_key": "b783167055fc",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-cad4400dbb6879d6de1ec5f4003376f508dbabe6-224x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "רמת חינוך גבוהה מאוד"
+      },
+      {
+        "_key": "47a879810ef7",
+        "image": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-5e6344ff77db678dc86275914400ee68b2073032-211x206-png",
+            "_type": "reference"
+          }
+        },
+        "description": "מערכת בריאות מודרנית"
+      }
+    ],
+    "description": "הרפובליקה של קפריסין שוכנת במזרח הים התיכון וידועה בהיסטוריה עשירה, בחופים יפים ובאנשים מסבירי פנים. לצד הבירה ניקוסיה, ערים כמו לימסול ופאפוס משלבות תרבות, היסטוריה וחיים מודרניים. האקלים הים תיכוני מאפשר פעילות בחוץ כל השנה, והמטבח המקומי, שמבוסס על חומרי גלם טריים, הוא חוויה בפני עצמה. בדרום קפריסין יוקר המחיה מתון, מערכת הבריאות מפותחת, והחברות באיחוד האירופי מוסיפה יתרונות רבים למשקיעים, לתושבים זרים ולתיירים."
+  },
+  "faqSection": {
+    "faq": {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "a7311857a9be",
+            "answer": [
+              {
+                "_key": "ecb23fee18d6",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "c43109fe2606",
+                    "text": "כן, ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "dc2c7e3f3fb6",
+                    "text": "רוכשים זרים רשאים לרכוש נכס בקפריסין",
+                    "_type": "span",
+                    "marks": [
+                      "1658075a2dd9"
+                    ]
+                  },
+                  {
+                    "_key": "962334bb7f7a",
+                    "text": ", כולל דירות, וילות, בתים טוריים ופרויקטים חדשים. קפריסין היא יעד ותיק לרוכשים מחו\"ל שמחפשים בית נופש, מעבר מגורים, נכס לגיל הפרישה או השקעה בנדל\"ן.\n\nלאזרחי האיחוד האירופי התהליך פשוט יחסית. רוכשים שאינם אזרחי האיחוד האירופי עשויים להזדקק לאישור של מועצת השרים, וברוב המקרים זהו שלב מנהלי שגרתי שעורך הדין מטפל בו במהלך הרכישה.\n\nהעיקר הוא לא רק אם מותר לקנות, אלא אם הנכס בטוח מבחינה משפטית, מתועד כראוי ומתאים למטרות שלכם. לפני חתימה על חוזה כדאי לבדוק את מצב הבעלות, את ההיתרים, את תנאי התשלום, את המיסים ואת העלויות הנוספות.\n\nעם ליווי משפטי נכון והסברים ברורים, רכישת נכס בקפריסין היא תהליך מסודר וניתן לניהול גם לרוכשים מחו\"ל.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "1658075a2dd9",
+                    "href": "/blog/how-to-get-cyprus-residency-if-you-re-not-an-eu-citizen",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "האם רוכשים מישראל יכולים לקנות נכס בקפריסין?"
+          },
+          {
+            "_key": "12c11de4eb51",
+            "answer": [
+              {
+                "_key": "1812c467a06d",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7469a94e8a32",
+                    "text": "מחיר הנכס המפורסם הוא רק חלק מסך העלות, ולצידו יש לקחת בחשבון תשלומים ומיסים נוספים בתהליך הרכישה. כדאי לכלול בחישוב שכר טרחת עורך דין, מס בולים, ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "a16331ed5ace",
+                    "text": "מע\"מ",
+                    "_type": "span",
+                    "marks": [
+                      "0f9d855002a4"
+                    ]
+                  },
+                  {
+                    "_key": "5c6367113ce0",
+                    "text": " במקרים שבהם הוא חל, עלויות העברת בעלות, ביטוח נכס, דמי ניהול ואפשרות של עמלות העברה והמרת מטבע.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "0f9d855002a4",
+                    "href": "/blog/cyprus-property-vat-explained",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "e97737ebfed5",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "723ddc5cfe88",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "557f86e65be5",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "5ed233a3ba31",
+                    "text": "הסכום הסופי תלוי בשאלה אם מדובר בפרויקט חדש או בנכס יד שנייה, אם חל מע\"מ, אם נלקח מימון ואם הנכס מיועד למגורים, להשקעה או להשכרה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "d2835d30ffbc",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "3c03155265c7",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "a9ac140f5feb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f4804919d49f",
+                    "text": "זו אחת הסיבות המרכזיות לא לשפוט נכס רק לפי המחיר המבוקש. נכס זול יותר עשוי להיות ממוסה אחרת, לדרוש שיפוץ גדול יותר או להניב פחות מהשכרה. פרויקט חדש ויקר יותר עשוי להציע תוכנית תשלומים, סטנדרט בנייה מודרני ופחות הוצאות אחזקה בשנים הראשונות.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "7d515f336b90",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "bf590f126a7a",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "9aa287f61314",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "03683f80d4ba",
+                    "text": "לפני ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "c6a310951689",
+                    "text": "בחירת נכס",
+                    "_type": "span",
+                    "marks": [
+                      "656b376e8c9a"
+                    ]
+                  },
+                  {
+                    "_key": "74c805bcde2f",
+                    "text": " כדאי לשקול לא רק את מחיר הרכישה אלא גם את מלוא עלויות הבעלות והאחזקה לאורך זמן. כך מתקבלת תמונה ברורה הרבה יותר של העלות האמיתית ושל פוטנציאל ההשקעה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "656b376e8c9a",
+                    "href": "/he/projects",
+                    "_type": "link"
+                  }
+                ]
+              }
+            ],
+            "question": "כמה כסף צריך מעבר למחיר הנכס?"
+          },
+          {
+            "_key": "61936bd5d6dd",
+            "answer": [
+              {
+                "_key": "2bec393bfb73",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8acff079bce7",
+                    "text": "קפריסין יכולה להיות ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "d80063443d0b",
+                    "text": "אטרקטיבית להשקעה בנדל\"ן",
+                    "_type": "span",
+                    "marks": [
+                      "ddd7ae48bc33"
+                    ]
+                  },
+                  {
+                    "_key": "928a61edeab4",
+                    "text": " משום שהיא משלבת ביקוש תיירותי, עניין ברילוקיישן, אורח חיים חופי ושוק נדל\"ן שמושך רוכשים ממדינות שונות.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "ddd7ae48bc33",
+                    "href": "/blog/why-uk-citizens-invest-in-cyprus-real-estate-post-brexit",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "cb06ff63852b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "98c55f5e95c6",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "d4789b70bc73",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "17635ec05cf4",
+                    "text": "משקיעים בוחנים את קפריסין מכמה סיבות: ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "27f1042edeb6",
+                    "text": "הכנסה משכירות",
+                    "_type": "span",
+                    "marks": [
+                      "456a7c4946f8"
+                    ]
+                  },
+                  {
+                    "_key": "4de76f492617",
+                    "text": ", בעלות לטווח ארוך, פוטנציאל עליית ערך, תכנון פרישה או פיזור מחוץ למדינת המגורים. ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "4585bc92170a",
+                    "text": "דירות",
+                    "_type": "span",
+                    "marks": [
+                      "5e69d60973b4"
+                    ]
+                  },
+                  {
+                    "_key": "435244979eda",
+                    "text": " באזורים מבוקשים מתאימות לשוכרים ולנופשים, ואילו וילות ובתי יוקרה מושכים משפחות ורוכשים שמחפשים אורח חיים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "456a7c4946f8",
+                    "href": "/blog/guaranteed-rental-income-in-cyprus-property",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "5e69d60973b4",
+                    "href": "/he/apartments-for-sale-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "3cb45c0a0966",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "2832b12938bf",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "19aa5d4c76cb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "970251b7ae98",
+                    "text": "עם זאת, השקעה טובה תלויה בהרבה יותר מהמדינה עצמה. המיקום, סוג הנכס, מחיר הרכישה, אסטרטגיית ההשכרה, עלויות האחזקה, המוניטין של היזם והביקוש העתידי משפיעים כולם על התוצאה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "08cac261dbe3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7704865bc239",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "538eb14d9b0b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "72faa90e55f9",
+                    "text": "אנחנו לא ממליצים לשפוט נכס לפי תשואות מפורסמות או תחזיות שכירות אופטימיות. עדיף להשוות תרחישים ריאליים, להבין את ההוצאות ולבחור נכס שמתאים למטרות ההשקעה ולרמת הסיכון שלכם.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "האם כדאי להשקיע בנדל\"ן בקפריסין?"
+          },
+          {
+            "_key": "010eb38f7cf7",
+            "answer": [
+              {
+                "_key": "151efd4893ca",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "9971aa062226",
+                    "text": "האזור המתאים תלוי במטרת הרכישה. נכס להשכרה עשוי לדרוש מיקום אחר מבית לגיל הפרישה, ממעבר משפחתי או מבית נופש.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "014290dfcf3c",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a429942d440e",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "4c8066a54e24",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "525614434238",
+                    "text": "פאפוס",
+                    "_type": "span",
+                    "marks": [
+                      "fe405c3facf2"
+                    ]
+                  },
+                  {
+                    "_key": "a468525723e9",
+                    "text": " פופולרית בקרב רוכשים מחו\"ל, ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "0bd582d1333d",
+                    "text": "גמלאים",
+                    "_type": "span",
+                    "marks": [
+                      "d1bacbe577c9"
+                    ]
+                  },
+                  {
+                    "_key": "39c7693f149d",
+                    "text": " ומשקיעים שמחפשים אורח חיים. היא מציעה חיים לחוף הים, קהילות ותיקות של תושבים זרים, ביקוש תיירותי וקצב חיים רגוע יותר מאשר במרכזים העירוניים הגדולים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "fe405c3facf2",
+                    "href": "/he/paphos",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "d1bacbe577c9",
+                    "href": "/blog/how-alexander-and-tatiana-found-their-dream-apartment-in-paphos",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "2a6d68f6385b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6683f62502d6",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "70e8e3c6e9cb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "84ec34dfdb29",
+                    "text": "לימסול",
+                    "_type": "span",
+                    "marks": [
+                      "c100ffe1cc04"
+                    ]
+                  },
+                  {
+                    "_key": "4e8a00f7ac6a",
+                    "text": " מזוהה עם פעילות עסקית, פרויקטים ברמה גבוהה, נכסי יוקרה וביקוש עירוני חזק. היא מתאימה למי שמחפש עיר תוססת ואורח חיים פעיל.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "c100ffe1cc04",
+                    "href": "/he/limassol",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "0f3918bd9cbd",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "05f8bff9dc51",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "72d61a7ee94f",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a47fc3d33b97",
+                    "text": "לרנקה",
+                    "_type": "span",
+                    "marks": [
+                      "0200424f12ba"
+                    ]
+                  },
+                  {
+                    "_key": "d01fcc9d1ddd",
+                    "text": " מושכת יותר ויותר תשומת לב בזכות הקרבה לשדה התעופה, החיים לחוף הים ופוטנציאל צמיחה לטווח ארוך. יש מיקומים שמתאימים יותר למשפחות, לעובדים מרחוק או למי שמעדיף שכונה שקטה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "0200424f12ba",
+                    "href": "/he/projects",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "9cc2ca409165",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a83b0bb1b403",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "9d807ab43a46",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8e33b644fd30",
+                    "text": "במקום לבחור לפי שם העיר בלבד, עדיף להשוות אורח חיים, תשתיות, פוטנציאל השכרה, מרחק מהים, בתי ספר, שירותי בריאות ותוכניות לטווח ארוך.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "באילו אזורים בקפריסין כדאי לקנות נכס?"
+          },
+          {
+            "_key": "18312c3b713e",
+            "answer": [
+              {
+                "_key": "a1f6a3a2fecf",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "a1b424edf32d",
+                    "text": "כן, רוכשים רבים מחו\"ל קונים נכס בקפריסין מרחוק. אפשר לעשות זאת באמצעות סיורי וידאו, תקשורת דיגיטלית, ייצוג משפטי וייפוי כוח.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "1ebdb9ff8478",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "33b796e125bd",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "1cf7512a06bd",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f4ab81f86cd5",
+                    "text": "רכישה מרחוק נוחה במיוחד למי שגר בחו\"ל ואינו יכול לטוס מיד. היא מפשטת חלקים מהתהליך, אבל אינה תחליף לבדיקת נאותות יסודית.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "da6fcebfb919",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f434d2a646ae",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "4226dc323d3b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "0fe28d5a2f84",
+                    "text": "לפני התחייבות מרחוק כדאי לעבור על מסמכי הנכס, על פרטי היזם, על לוח התשלומים, על תנאי החוזה, על פרטי המיקום ועל כל העלויות הנוספות. ליווי משפטי עצמאי מומלץ מאוד.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "c5faac1cf4fa",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "7cbc51fbace0",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "976407dcdbc1",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8063d732363b",
+                    "text": "רכישה מרחוק עובדת היטב כשהתהליך מאורגן כראוי והרוכש מקבל מידע ברור בכל שלב.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "אפשר לקנות נכס בקפריסין מרחוק?"
+          },
+          {
+            "_key": "8339b145cdc5",
+            "answer": [
+              {
+                "_key": "01d33eb4785b",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "22372e3f959b",
+                    "text": "רכישת נכס יכולה לתמוך במסלולי תושבות מסוימים בקפריסין, אבל בעלות על נכס אינה מקנה תושבות באופן אוטומטי.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "7c09f9cf7e34",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "cb2876027bb2",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "f4f10b4d84e8",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "e5855657be9d",
+                    "text": "תנאי התושבות",
+                    "_type": "span",
+                    "marks": [
+                      "558234aa0b15"
+                    ]
+                  },
+                  {
+                    "_key": "9b2f894444a7",
+                    "text": " תלויים באזרחות, בסכום ההשקעה, בהכנסה, במסמכים, במצב המשפחתי ובכללי ההגירה התקפים. עבור חלק מהרוכשים הרכישה היא חלק מתוכנית רילוקיישן רחבה יותר, ועבור אחרים המטרה היא לשהות בקפריסין יותר זמן, לעבור לחו\"ל בגיל הפרישה או לבסס נקודת עוגן באירופה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "558234aa0b15",
+                    "href": "/blog/how-to-get-permanent-residence-in-cyprus",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "cdc4a9854f2e",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6218b5b1f266",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "11dcefdcb8c9",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "362e37b2060e",
+                    "text": "אם התושבות חשובה להחלטה שלכם, כדאי לברר את התנאים לפני בחירת הנכס. כך נמנעים ממצב שבו נכס נראה מתאים אבל אינו עונה על דרישות הרילוקיישן או על דרישות המסמכים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "08e9114eb854",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "e10fddc82a5f",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "a42f3c467aa0",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "b02651bb9876",
+                    "text": "בחירת הנכס, התקציב, מבנה הבעלות והתכנון המשפטי צריכים לעבוד יחד. המידע אינו מהווה ייעוץ משפטי או מס. בכפוף לבדיקה פרטנית.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "האם רכישת נכס בקפריסין מסייעת בקבלת תושבות?"
+          },
+          {
+            "_key": "3530d00d58b5",
+            "answer": [
+              {
+                "_key": "ad4335eaebfe",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "1afb0e11f501",
+                    "text": "בקפריסין יש מגוון נכסים שמתאימים לתוכניות השקעה, לאורחות חיים ולמטרות שונות. רוכשים מחו\"ל בוחנים בדרך כלל ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "7b036c2d4f30",
+                    "text": "דירות",
+                    "_type": "span",
+                    "marks": [
+                      "448a58eab1df"
+                    ]
+                  },
+                  {
+                    "_key": "784bdacd8038",
+                    "text": ", ",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "e618b67533da",
+                    "text": "וילות",
+                    "_type": "span",
+                    "marks": [
+                      "a268e3a4553f"
+                    ]
+                  },
+                  {
+                    "_key": "6b91a56435b5",
+                    "text": ", בתים טוריים, פנטהאוזים, קהילות מגודרות ו",
+                    "_type": "span",
+                    "marks": []
+                  },
+                  {
+                    "_key": "ddf69d0109be",
+                    "text": "פרויקטים חדשים על הנייר",
+                    "_type": "span",
+                    "marks": [
+                      "11588eb0a895"
+                    ]
+                  },
+                  {
+                    "_key": "1a2d9575a436",
+                    "text": ".",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": [
+                  {
+                    "_key": "448a58eab1df",
+                    "href": "/he/apartments-for-sale-cyprus",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "a268e3a4553f",
+                    "href": "/he/villas-cyprus",
+                    "_type": "link"
+                  },
+                  {
+                    "_key": "11588eb0a895",
+                    "href": "/he/projects",
+                    "_type": "link"
+                  }
+                ]
+              },
+              {
+                "_key": "62b256c93d5c",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "9ba636a79c03",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "f8fb8174d9a9",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "f124507a503e",
+                    "text": "דירות מתאימות למי שמחפש עלויות אחזקה נמוכות, פוטנציאל השכרה או בעלות פשוטה לניהול. וילות מועדפות על משפחות, גמלאים ורוכשים שמחפשים מרחב, פרטיות ושטחי חוץ. בתים טוריים מציעים איזון בין נוחות, מחיר ודרישות אחזקה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "e9554204131a",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "24baed06c868",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "924ea9cd8fe3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8013880888ef",
+                    "text": "פרויקטים חדשים פופולריים בזכות תכנון מודרני, יעילות אנרגטית, תוכנית תשלומים ומתקנים עדכניים. נכסי יד שנייה מתאימים למי שרוצה להיכנס מיד או למי שמחפש שכונה ותיקה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "d88b75019b34",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "da69c32f7f28",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "5052f02e2d8e",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "d91d3b78c0ec",
+                    "text": "סוג הנכס הנכון תלוי בתקציב, באורח החיים, בציפיות ההשקעה, באסטרטגיית ההשכרה ובתדירות השימוש האישי בנכס.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "אילו סוגי נכסים יש בקפריסין?"
+          },
+          {
+            "_key": "5d7c67f5a3f8",
+            "answer": [
+              {
+                "_key": "0229bad40d17",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "e369d4892e87",
+                    "text": "Cyprus VIP Estates מלווה רוכשים מחו\"ל בבחינת הזדמנויות נדל\"ן בקפריסין בצורה מסודרת וברורה. במקום לדפדף ברשימות, אפשר להשוות מיקומים, סוגי נכסים, פוטנציאל השקעה, התאמה לאורח החיים ושיקולי בעלות לטווח ארוך.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "497b11a785b3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "cfea234a7e4e",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "b47c19cc13c6",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "ca3c6a5e9e68",
+                    "text": "הגישה שלנו ממוקדת בהחלטה מבוססת ובטוחה: להבין מה מציעים פרויקטים חדשים, להשוות בין דירות לווילות, להעריך פוטנציאל השכרה, לבחון יתרונות מיקום ולזהות נכסים שמתאימים למטרות רילוקיישן, השקעה או אורח חיים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "defa11a95b71",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6a92f0bb7ec3",
+                    "text": "",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              },
+              {
+                "_key": "238d0aa5528f",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "202863dd8189",
+                    "text": "אנחנו עובדים עם רוכשים מחו\"ל שאינם מכירים את השוק בקפריסין וזקוקים להכוונה מעשית לפני שמתקדמים. בית נופש, נכס להשקעה, בית לגיל הפרישה או מגורי קבע, Cyprus VIP Estates תעזור לכם לצמצם את החיפוש ולהתקדם בביטחון.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "למה לבחור ב-Cyprus VIP Estates לרכישת נכס בקפריסין?"
+          }
+        ]
+      },
+      "_type": "faqBlock"
+    },
+    "faqTitle": "שאלות נפוצות על נדל\"ן בקפריסין"
+  },
+  "sliderMain": [
+    {
+      "_key": "26760da808aa",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-7a59f44a79e4a456dfaff3390e7cf781aa7d4857-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "ברוכים הבאים לקפריסין",
+      "buttonLabel": "ליצירת קשר",
+      "description": "אנחנו השותפים שלכם לנדל\"ן ולהשקעות באי, ומלווים אתכם בכל שלב עד לבית החדש מול הים."
+    },
+    {
+      "_key": "2d21e0280b41",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-63744b68200dab1e45742b7ba9115762023c86d1-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "איכות חיים גבוהה",
+      "buttonLabel": "ליצירת קשר",
+      "description": "נכסים ברמה גבוהה, שמש, ים ואווירה ים תיכונית רגועה, כל השנה."
+    },
+    {
+      "_key": "3403a8aeb567",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-ee8272bb0c585143791ed66b81584d97e3203c26-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "הזדמנויות השקעה",
+      "buttonLabel": "ליצירת קשר",
+      "description": "אפשר להשקיע איתנו בפרויקטים המובילים באי וליהנות מתשואה, מיתרונות מס ומשוק שממשיך לצמוח."
+    },
+    {
+      "_key": "9b54a5bdcfc7",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-ea361574ae18f3d4ba5a4a08b070bf639df5ce07-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "מדברים אנגלית ורוסית",
+      "buttonLabel": "ליצירת קשר",
+      "description": "ליווינו בהצלחה לקוחות רבים דוברי אנגלית בדרך לנכס שחיפשו. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה."
+    },
+    {
+      "_key": "ef01f970dad3",
+      "type": "button",
+      "image": {
+        "_type": "image",
+        "asset": {
+          "_ref": "image-a9b4b3fc74670b65af58bd6f715c425654403218-2500x1401-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "מעבר לקפריסין והתחלה חדשה",
+      "buttonLabel": "ליצירת קשר",
+      "description": "אם החלטתם לעבור לקפריסין, נלווה אתכם בכל השלבים והשאלות ונעזור לכם להיכנס לחיים החדשים באי בקלות."
+    }
+  ],
+  "citiesBlock": {
+    "title": "נכסים למכירה בקפריסין",
+    "cities": [
+      {
+        "_key": "83e341d64d6c",
+        "city": "פאפוס",
+        "link": "/he/projects?city=Paphos",
+        "_type": "cityItem",
+        "image": {
+          "alt": "נכסים למכירה בפאפוס, קפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-03055e3142095375bf3deaef548d7f8b5be4de71-800x600-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      {
+        "_key": "6abbf40f6d82e4dff67b8841526e66ed",
+        "city": "לימסול",
+        "link": "/he/projects?city=Limassol",
+        "_type": "cityItem",
+        "image": {
+          "alt": "נכסים למכירה בלימסול, קפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-5bfd78a15570282b3617ff925479de7d0228f36d-800x600-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      {
+        "_key": "7bf09cca6ac8d795757185ca54c7fc8d",
+        "city": "לרנקה",
+        "link": "/he/projects?city=Larnaca",
+        "_type": "cityItem",
+        "image": {
+          "alt": "נכסים למכירה בלרנקה, קפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f97d8e5f8c5b3ca4551393908d5e0df93b51f960-800x600-jpg",
+            "_type": "reference"
+          }
+        }
+      }
+    ]
+  },
+  "reviewsBlock": {
+    "title": "המלצות לקוחות",
+    "reviews": [
+      {
+        "_key": "84eaad013314",
+        "name": "Anna & Markus Vollmer, גרמניה",
+        "reviewText": [
+          {
+            "_key": "e14d34011e85",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "59d05ae09f140",
+                "text": "המעבר לפאפוס היה ההחלטה הטובה ביותר שקיבלנו. הווילה שקנינו היא בדיוק מה שחלמנו עליו: נוף לים, עיצוב מודרני ופרטיות מלאה. הצוות ליווה אותנו בכל שלב והתהליך היה פשוט.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "9f067065fb89",
+        "name": "Sophie Marchand, צרפת",
+        "reviewText": [
+          {
+            "_key": "ff14225204ea",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "8a1724a8ad1c0",
+                "text": "חיפשתי אורח חיים שקט ואיכותי, ומצאתי אותו בלימסול. הדירה שקניתי נמצאת כמה צעדים מהחוף וקרובה ללב העיר. הצוות היה מקצועי, שקוף והקשיב באמת למה שחיפשתי.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "f2292676c09d",
+        "name": "David Prescott, בריטניה",
+        "reviewText": [
+          {
+            "_key": "4e2a7ceb7fd9",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "bedf31cc29360",
+                "text": "גרתי בערים גדולות בעולם, ושום דבר לא משתווה לאיכות החיים בקפריסין. הווילה שלי בפאפוס מושלמת. השקעה טובה, מיקום יוצא דופן ושקיעות שקשה להאמין שהן אמיתיות.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "1497d9fa2b8d",
+        "name": "Arsen Kruglov, רוסיה",
+        "reviewText": [
+          {
+            "_key": "e24f7aa3bf7c",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "427ce2d4387d0",
+                "text": "בזכות החברה הזו יש לי היום פנטהאוז בלימסול. מהנוף הפנורמי לים ועד רמת השירות, הכל עלה על הציפיות שלי.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "d35cf8cf2a1c",
+        "name": "Carlos & Maria Sanz, ספרד",
+        "reviewText": [
+          {
+            "_key": "1ab97696b9d2",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "fde69edbd8ab0",
+                "text": "חיפשנו בית שני באקלים חם, וקפריסין כבשה אותנו. הדירה שקנינו מוגמרת יפה ונמצאת במרחק הליכה מהמרינה. הצוות היה זמין, ישר ובקיא מאוד.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "a347285da09d",
+        "name": "Jason Wu, סינגפור",
+        "reviewText": [
+          {
+            "_key": "6b863000c56f",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "bd3632d9902a0",
+                "text": "כנווד דיגיטלי רציתי בית שמרגיש כמו חופשה כל יום. הדירה שקניתי בפאפוס נותנת בדיוק את זה. אני עובד מול נוף לים ושוחה בהפסקת הצהריים. קפריסין היא גן עדן.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "048786b32fa5",
+        "name": "Agnieszka Lis, פולין",
+        "reviewText": [
+          {
+            "_key": "4f535687082b",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "0f0c6ff3ce3f0",
+                "text": "משיחת הווידאו הראשונה ועד קבלת המפתחות השירות היה מושלם. קניתי וילה מרחוק, והכל היה בדיוק כפי שהובטח. אני מתעוררת כל בוקר לקול הים, כמו חופשה שלא נגמרת.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "f151e0d899a9",
+        "name": "Emma & Jack Roberts, אוסטרליה",
+        "reviewText": [
+          {
+            "_key": "4c4e75b932f7",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "d34fbf2a5fcb0",
+                "text": "עברנו לקפריסין להתחלה חדשה, וזה שינה לנו את החיים. הילדים אוהבים את בתי הספר הבינלאומיים ואנחנו אוהבים את אורח החיים הרגוע. הצוות מצא לנו וילה מרווחת ליד פאפוס עם נוף מרהיב.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "4fabefced309",
+        "name": "Kristina Johansen, נורווגיה",
+        "reviewText": [
+          {
+            "_key": "457a0bfe1b22",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "0669b253d7970",
+                "text": "החיים בקפריסין שיפרו לי את הבריאות, את מצב הרוח ואת אורח החיים. קניתי דירה מעוצבת במרכז לימסול ואני מרוצה מאוד. התהליך היה חלק והצוות באמת מכיר את השוק.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      }
+    ]
+  },
+  "benefitsBlock": {
+    "benefits": [
+      {
+        "_key": "dd4724d9ccf3",
+        "title": "פרויקטים",
+        "counting": {
+          "conuntNumber": 195
+        },
+        "description": "בדרום קפריסין. מדירות סטודיו ועד וילות יוקרה"
+      },
+      {
+        "_key": "d0a29b23a4c5",
+        "title": "שנות ניסיון",
+        "counting": {
+          "conuntNumber": 10
+        },
+        "description": "כסוכנות שיווק נדל\"ן בשירות מלא"
+      },
+      {
+        "_key": "6bb5ab19ab11",
+        "title": "שירות ללקוחות שלנו",
+        "counting": {
+          "sign": "°",
+          "conuntNumber": 360
+        },
+        "description": "מלווים אתכם מהפנייה הראשונה ועד מסירת המפתחות"
+      },
+      {
+        "_key": "27c65d3ab2a5",
+        "title": "לקוחות מרוצים",
+        "counting": {
+          "sign": "%",
+          "conuntNumber": 100
+        },
+        "description": "מגרמניה, מאוסטריה, משווייץ וממדינות נוספות"
+      }
+    ]
+  },
+  "brochureBlock": {
+    "list": [
+      {
+        "_key": "5d61e75dbeeb",
+        "listItem": "הזדמנויות השקעה מובילות"
+      },
+      {
+        "_key": "076aec896c43",
+        "listItem": "תשואה שנתית החל מ-6%"
+      },
+      {
+        "_key": "9e22e811cf45",
+        "listItem": "איכות חיים גבוהה"
+      },
+      {
+        "_key": "495c5f5a9ea3",
+        "listItem": "מיקום אטרקטיבי באיחוד האירופי"
+      },
+      {
+        "_key": "295d41390f27",
+        "listItem": "מערכת מס נוחה"
+      },
+      {
+        "_key": "5b1548825df6",
+        "listItem": "ודאות משפטית"
+      }
+    ],
+    "logo": {
+      "_type": "image",
+      "asset": {
+        "_ref": "image-30992b87b1b98c76ffa6f9e17a8f9ad3e08e0ec0-500x644-png",
+        "_type": "reference"
+      }
+    },
+    "image": {
+      "_type": "image",
+      "asset": {
+        "_ref": "image-d99a5a8f43f2c94dd77a8209a7bf9b52e8e22c49-1200x564-png",
+        "_type": "reference"
+      }
+    },
+    "title": "ברוכים הבאים ל-Cyprus VIP Estates",
+    "subtitle": "השותפים שלכם להשקעות נדל\"ן ברמה גבוהה בקפריסין",
+    "buttonLabel": "ליצירת קשר",
+    "description": "אנחנו בונים לכם שירות מותאם אישית כדי להשיג את יעדי ההשקעה ביעילות. השקעות, ניהול נכס פרטני או העברת פעילות החברה לקפריסין, אנחנו לצידכם בכל שלב. תוכלו ליהנות מהניסיון שלנו וגם ממערכת המס האטרקטיבית של קפריסין. Cyprus VIP Estates הופכת רעיונות השקעה לעסקאות מוצלחות."
+  },
+  "contentBlocks": [
+    {
+      "_key": "164babeba2bf",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "dd4fb5c6dbb6",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "b2dfc9d40a72",
+                  "text": "וילות, דירות והשקעות נדל\"ן בקפריסין",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "2a0ed2f647c8",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "874ce26b733a",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "e1286912a9c3",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "151e04dc326c",
+                  "text": "קפריסין הפכה לאחד היעדים המבוקשים באירופה לרוכשי נכסים שמחפשים איכות חיים, אפשרות למעבר מגורים, הכנסה משכירות או פוטנציאל השקעה לטווח ארוך. רוכשים מבריטניה, מגרמניה, מפולין, מישראל ומשווקים נוספים רואים בקפריסין לא רק יעד נופש אלא גם מקום לרכישת דירות, וילות ונכסים להשקעה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "3b37d7f23cae",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e184d1215109",
+                  "text": "שוק הנדל\"ן בקפריסין מציע מגוון רחב של אפשרויות לסוגי נכסים ולהעדפות שונות: דירות מודרניות קרוב לים, וילות יוקרה עם בריכה פרטית, פרויקטים על הנייר, קהילות מגודרות, בתים טוריים ופרויקטים להשקעה שמיועדים לתשואה משכירות או לעליית ערך. בחירת הנכס הנכון תלויה במטרות, בתקציב, במיקום המועדף ובאופן השימוש המתוכנן.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "174c7339d4b4",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "3d81a5e6ab50",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "58f2e7baf156",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "103908d6a47e",
+                  "text": "ב-Cyprus VIP Estates אנחנו עוזרים לרוכשים מחו\"ל להכיר את ההזדמנויות בקפריסין ולהבין את תהליך הרכישה, את תנאי השוק המקומי ואת ההבדלים בין אזורי האי.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-0",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-1",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-6",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-2",
+                  "text": "שוקלים גם יעדים אחרים? ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "il-1784408340699-4",
+                  "text": "כך נראית ההשוואה בין קפריסין לספרד ולפורטוגל",
+                  "_type": "span",
+                  "marks": [
+                    "il-1784408340699-3"
+                  ]
+                },
+                {
+                  "_key": "il-1784408340699-5",
+                  "text": " עבור רוכשים מחו\"ל.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "il-1784408340699-3",
+                  "href": "/blog/cyprus-vs-spain-and-portugal",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Double Text Block 1"
+    },
+    {
+      "_key": "ccb50963436d",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "75bdbb0745b5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "704df0db290d",
+              "text": "למה לקנות נכס בקפריסין?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "8641a3415409",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "7db834c28687",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "e7323fd232ab",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "fbd0baf5a84e",
+              "text": "קפריסין מושכת רוכשים מסיבות שמעבר לאקלים ולאורח החיים. האי משלב תשתיות אירופיות, רמת פשיעה נמוכה יחסית, בתי ספר בינלאומיים, נגישות לשירותי בריאות ותנאים נוחים למעבר מגורים.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "marginTop": "small",
+      "textAlign": "left",
+      "marginBottom": "small"
+    },
+    {
+      "_key": "c6d700dd75f9",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "וילה למכירה בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-43807799738ffa9decb6116d7f0ed5994d22717b-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "97a119e7ecb5",
+              "_type": "block",
+              "style": "h3",
+              "children": [
+                {
+                  "_key": "f5a54c2973dd",
+                  "text": "רוכשים רבים שוקלים קפריסין בזכות:",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "410d4f085212",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "5b77adbc917b",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "a043a02e46ca",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "041e2d3323a0",
+                  "text": "אקלים ים תיכוני עם קיץ ארוך",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "93fedf036d44",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "a54f973e2d9e",
+                  "text": "אפשרות למעבר מגורים או לקבלת תושבות לטווח ארוך",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "3e2717623464",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f71d9f8de750",
+                  "text": "ביקוש גבוה להשכרה לטווח קצר ביעדי תיירות מבוקשים",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "51da0c817046",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "b3bef7464d64",
+                  "text": "ביקוש גובר לפרויקטים חדשים ולנכסים עם פוטנציאל השקעה",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "27b067417e57",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "25ea7ff40af5",
+                  "text": "קהילות בינלאומיות ותיקות ושירותים זמינים באנגלית",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "128145c1efca",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "729845171077",
+                  "text": "מגוון מיקומים חופיים ועירוניים",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "66e3335f769c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9e5186272a73",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "e720f19ab01f",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "bc662d05606c",
+                  "text": "עבור חלק מהמשקיעים נדל\"ן בקפריסין הוא בעיקר הכנסה משכירות ופיזור תיק. עבור אחרים הרכישה קשורה לשינוי באורח החיים, לתכנון פרישה או למעבר לאקלים חם יותר.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "317d93d5ed91",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "98a4c80dd629",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "7c0ac7cedec0",
+                  "text": "סוגי הנכסים בקפריסין",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "6f3913cfa1ce",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "1f0046030bf9",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "7aa8c7c9061d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9f82e600da19",
+                  "text": "שוק הנדל\"ן בקפריסין כולל כמה קטגוריות שמתאימות למטרות שונות.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "בית דירות בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-1f5698c92db6c7e474eb9f5f8dbf7b975575e90e-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "510e185aacbb3ea5b18883e898f73147",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "וילה למכירה בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-4ba79e05aa31a519f16dcaadfc215ba12b51c1e2-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "128145c1efca",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "729845171077",
+                  "text": "דירות בקפריסין",
+                  "_type": "span",
+                  "marks": [
+                    "17d8047ddce3"
+                  ]
+                },
+                {
+                  "_key": "7085479667fd",
+                  "text": " מושכות רוכשים שמחפשים עלויות אחזקה נמוכות, בית נופש או הזדמנות השקעה בערים כמו ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "d8ceb5cedd28",
+                  "text": "פאפוס",
+                  "_type": "span",
+                  "marks": [
+                    "98a90b98d03a"
+                  ]
+                },
+                {
+                  "_key": "a4c6b8f6b050",
+                  "text": ", ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "f197ff74d7c0",
+                  "text": "לימסול",
+                  "_type": "span",
+                  "marks": [
+                    "b45b947eedb8"
+                  ]
+                },
+                {
+                  "_key": "9dfd09ab4483",
+                  "text": " ולרנקה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "17d8047ddce3",
+                  "href": "/he/apartments-for-sale-cyprus",
+                  "_type": "link"
+                },
+                {
+                  "_key": "98a90b98d03a",
+                  "href": "/he/paphos",
+                  "_type": "link"
+                },
+                {
+                  "_key": "b45b947eedb8",
+                  "href": "/he/limassol",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "4cf61e526bce",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "1f418c31e0f4",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "cd7b2c825510",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "01b04e91627e",
+                  "text": "וילות בקפריסין",
+                  "_type": "span",
+                  "marks": [
+                    "2df7dd2ab0cc"
+                  ]
+                },
+                {
+                  "_key": "e92c66d6ee6d",
+                  "text": " מבוקשות בקרב מי שמחפש פרטיות, שטחי חוץ גדולים ורמת גימור גבוהה. וילות קרוב לחוף או בפרויקטים ברמה גבוהה מושכות גם רוכשים לאורח חיים וגם משקיעים.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "2df7dd2ab0cc",
+                  "href": "/he/villas-cyprus",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "f41d37fb7f47",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "234879bee8e3",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "5c24133c9e58",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d94f4353befc",
+                  "text": "בתים טוריים ובתים דו משפחתיים מציעים איזון מעשי בין עלות לשטח מגורים גדול יותר.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-7",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-8",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "il-1784408340699-13",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "il-1784408340699-9",
+                  "text": "להיכרות מקרוב עם האזור אפשר לעיין ב",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "il-1784408340699-11",
+                  "text": "המדריך שלנו לנכסים בחוף המערבי של קפריסין",
+                  "_type": "span",
+                  "marks": [
+                    "il-1784408340699-10"
+                  ]
+                },
+                {
+                  "_key": "il-1784408340699-12",
+                  "text": ".",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "il-1784408340699-10",
+                  "href": "/he/paphos",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "0889a3fc981289d5498e5a4ec95e16f1",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "4ac2e877bcc6",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c0c223ab504a",
+                  "text": "רכישה על הנייר",
+                  "_type": "span",
+                  "marks": [
+                    "5c9aa13e34c2"
+                  ]
+                },
+                {
+                  "_key": "38e941655862",
+                  "text": " מושכת רוכשים שמעדיפים סטנדרט בנייה חדש, לוח תשלומים גמיש ופוטנציאל עליית ערך עד סיום הפרויקט.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "5c9aa13e34c2",
+                  "href": "/he/projects",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "990a9aed0c25",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "253d1ebbdfa2",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "2e059a008b61",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "b070dfac368a",
+                  "text": "נכסים להשקעה בקפריסין",
+                  "_type": "span",
+                  "marks": [
+                    "e523b9bfb7bf"
+                  ]
+                },
+                {
+                  "_key": "44fab2aa25d3",
+                  "text": " מתמקדים בהכנסה משכירות, בביקוש תיירותי או בעליית ערך לטווח ארוך, בהתאם למיקום ולמאפייני הפרויקט.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "e523b9bfb7bf",
+                  "href": "/he/property-investment-cyprus",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "נכסים על הנייר בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d7fb297184e085c9d41779b9d310756b159961a4-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "16627a86eb4d",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "30ce783d68e2",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "dca889823205",
+              "text": "האזורים המומלצים לרכישת נכס בקפריסין",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "c93978c33e15",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "e5610cc78fa9",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "e8a6d380d85f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "63af90e60f6c",
+              "text": "לכל אזור יתרונות משלו, בהתאם לסדרי העדיפויות ולאורח החיים של הרוכש.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "9ebf61913715",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "e71e6af804b1",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "90765e697f25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ff16ef28e311",
+              "text": "פאפוס",
+              "_type": "span",
+              "marks": [
+                "22ed6e5cf6dd"
+              ]
+            },
+            {
+              "_key": "cbeb12a8b54f",
+              "text": " היא בחירה נפוצה של רוכשים מחו\"ל שמחפשים חיים לחוף הים, נכס לגיל הפרישה או בית נופש. האזור משלב תשתית תיירותית עם שכונות מגורים ופרויקטים חדשים. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "2b5e02b28cf9",
+              "text": "לימסול",
+              "_type": "span",
+              "marks": [
+                "0b5354996393"
+              ]
+            },
+            {
+              "_key": "1543841436ca",
+              "text": " היא מרכז העסקים של קפריסין ומתאימה למי שמתעניין בפרויקטים ברמה גבוהה, בבתי ספר בינלאומיים ובפוטנציאל השקעה. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "2910fd7ba0c3",
+              "text": "לרנקה",
+              "_type": "span",
+              "marks": [
+                "f2376ace7118"
+              ]
+            },
+            {
+              "_key": "cdef08965b38",
+              "text": " ממשיכה למשוך תשומת לב בזכות פיתוח תשתיות, קרבה לשדה התעופה וטווח מחירים מגוון. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "f804c078dd9b",
+              "text": "אזורים נוספים בקפריסין",
+              "_type": "span",
+              "marks": [
+                "3443fd72811a"
+              ]
+            },
+            {
+              "_key": "967b87592795",
+              "text": " מתאימים למי שמחפש סביבה שקטה, שכונות משפחתיות או אסטרטגיית השקעה מסוימת.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "22ed6e5cf6dd",
+              "href": "/he/paphos",
+              "_type": "link"
+            },
+            {
+              "_key": "0b5354996393",
+              "href": "/he/limassol",
+              "_type": "link"
+            },
+            {
+              "_key": "f2376ace7118",
+              "href": "/he/projects",
+              "_type": "link"
+            },
+            {
+              "_key": "3443fd72811a",
+              "href": "/he/projects",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "a910cad41b27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "a2ce1fa21cc6",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "3cf12bc362c8",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "0bbe6aa30b61",
+              "text": "המיקום המתאים נקבע לרוב לפי המטרות האישיות, יותר מאשר לפי הפופולריות של האזור.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "marginTop": "small",
+      "textAlign": "left",
+      "marginBottom": "small"
+    },
+    {
+      "_key": "8da57eeb8933b003c8689a4ee1735489",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "וילה למכירה בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-ecb71acf3dadf75ad00368b89b7fbcaf034368f0-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "128145c1efca",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "729845171077",
+                  "text": "רכישת נכס בקפריסין לרוכשים זרים",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "fe2c6c6b7e8b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f4f7ac4c4dc1",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "8fb79b59551a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ff55fa07e281",
+                  "text": "רוכשים זרים יכולים לקנות נכס בקפריסין, כולל דירות, וילות ופרויקטים חדשים. עם זאת, התהליך משתנה לפי אזרחות, סוג הנכס וייעוד השימוש.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "b7fba5d06c95ac5e55e897e1f2b24b71",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "2e059a008b61",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "44fab2aa25d3",
+                  "text": "השלבים הרגילים בתהליך:",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "bbee0ff4a9f8",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2cad287dda00",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "f09343438e02",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c9941b29342b",
+                  "text": "בחירת הנכס",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "0e3e0c2d2e74",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9909c327ede1",
+                  "text": "שריון היחידה",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "613a886bb1a2",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "b1af73b49fdd",
+                  "text": "בדיקה משפטית ובדיקת נאותות",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "e7ee5eb5b4f8",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d02c3dd8f389",
+                  "text": "הכנת החוזה וחתימה",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "5569e9d0ab02",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e29bc9e1eacb",
+                  "text": "שלבי התשלום",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "4c7d587d6a7d",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d072bccce2bc",
+                  "text": "רישום והעברת הבעלות",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "3cb0504b5fdb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "24f23a44abcb",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "1dc40bf9b87e",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ff73a8990d84",
+                  "text": "חשוב להבין את העלויות הנוספות, ובהן ",
+                  "_type": "span",
+                  "marks": []
+                },
+                {
+                  "_key": "8e8e0caec3c3",
+                  "text": "מע\"מ",
+                  "_type": "span",
+                  "marks": [
+                    "3172383cb65e"
+                  ]
+                },
+                {
+                  "_key": "dd76b0b24829",
+                  "text": ", שכר טרחת עורך דין, דמי העברה ודמי ניהול, לפני קבלת ההחלטה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "3172383cb65e",
+                  "href": "/blog/cyprus-property-vat-explained",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "8b8f02a111a6",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "add6207b9462",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "17aad86c3fcb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2f16b971d397",
+                  "text": "מומלץ תמיד לקבל ייעוץ משפטי מקצועי במהלך הרכישה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "נכסים על הנייר בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-274aab1b8a41aeff6e506f7a2fc5d92a036890d4-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "4555656580ce570acdf913b78260eef2",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "וילה על הנייר למכירה בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-db6f57d74d0e8723c2fcfa953b44e64fd6dd5ade-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "8fb79b59551a",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "ff55fa07e281",
+                  "text": "פוטנציאל ההשקעה בנדל\"ן בקפריסין",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "756168db4e70",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "0f5fdda7d912",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "01a0dc257ece",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "40e37ccbbc42",
+                  "text": "ציפיות ההשקעה",
+                  "_type": "span",
+                  "marks": [
+                    "d1c6b24f8bf3"
+                  ]
+                },
+                {
+                  "_key": "bc6b75edcb58",
+                  "text": " משתנות מאוד בין פרויקטים.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "d1c6b24f8bf3",
+                  "href": "/blog/taxes-on-real-estate-in-cyprus",
+                  "_type": "link"
+                }
+              ]
+            },
+            {
+              "_key": "c03fb7a9c052",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "bdee1558e750",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "a3d8609a9b89",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "77cad215e0db",
+                  "text": "יש רוכשים שמעדיפים ביקוש יציב להשכרה, ואחרים מתמקדים בערך המכירה העתידי או בעליית ערך לטווח ארוך. מיקומים חופיים ופרויקטים תיירותיים עשויים לייצר הכנסה עונתית מהשכרה, אך התפוסה והתשואה משתנות.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    },
+    {
+      "_key": "1c439cc2ff84e8c4728aaf03990d70f5",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "17aad86c3fcb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2f16b971d397",
+                  "text": "ביצועי ההשקעה תלויים בגורמים כמו:",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "fdcdf2cc3562",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ea23d7f64fe2",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "a3d5d1e5700c",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f9f266913313",
+                  "text": "מיקום",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "ee4332063380",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ceecf91f99f6",
+                  "text": "סוג הנכס",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "e24acf7be9bc",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "87b082498304",
+                  "text": "איכות הפרויקט",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "aaa91809733e",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f0e9d5c721f6",
+                  "text": "ביקוש תיירותי",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "3bffd2715e47",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c65992111166",
+                  "text": "תשתיות מקומיות",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "daae0a3034e4",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "5b7111bada8a",
+                  "text": "עיתוי הרכישה",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "825a69ccc2cb",
+              "_type": "block",
+              "level": 1,
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "477ec0022ffd",
+                  "text": "עלויות ניהול",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "listItem": "bullet",
+              "markDefs": []
+            },
+            {
+              "_key": "b5e535b1029d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d7d535b4a296",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "086c0d6904b8",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "19951cb07d0a",
+                  "text": "השקעה בנדל\"ן",
+                  "_type": "span",
+                  "marks": [
+                    "2c7d21ab3638"
+                  ]
+                },
+                {
+                  "_key": "fcc5d846f8b8",
+                  "text": " כרוכה תמיד בסיכון, וכדאי לבחון תחזיות תשואה בזהירות.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": [
+                {
+                  "_key": "2c7d21ab3638",
+                  "href": "/he/property-investment-cyprus",
+                  "_type": "link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "פנים וילה בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f5a14cef36c03859c1c5b3b449a5ece80b301d70-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Right"
+    },
+    {
+      "_key": "a172c1af406d1f3b5bef2d5915998adb",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "וילה על הנייר למכירה בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-f99215d26b440114fe89bcb7aa202d47e8ccd02f-800x615-jpg",
+            "_type": "reference"
+          }
+        }
+      },
+      "marginBottom": "medium",
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "a3d8609a9b89",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "77cad215e0db",
+                  "text": "נכסים ברחבי קפריסין עם Cyprus VIP Estates",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "93a81228c64b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "8f544c74b622",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "c566fd91dc5c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "18387029587b",
+                  "text": "Cyprus VIP Estates מציגה דירות, וילות ופרויקטים חדשים נבחרים באזורים שונים בקפריסין. המטרה שלנו היא לתת לרוכשים מידע שימושי, השוואה בין פרויקטים ותובנות שתומכות בהחלטה מבוססת.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "464bd36616d4",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "f06d7a04ab13",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "1467e64838bb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "425fc974e670",
+                  "text": "בית נופש, נכס למעבר מגורים, וילת יוקרה או הזדמנות השקעה, היכרות עם השוק לפני הרכישה עושה הבדל גדול.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "11eb87ea4d23",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "61685125b789",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "b7587c837204",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "24c7bfe796cf",
+                  "text": "אפשר לעיין בנכסים הזמינים, להשוות מיקומים ולהכיר פרויקטים ברחבי קפריסין.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "Image Left"
+    }
+  ],
+  "homepageTitle": "Cyprus VIP Estates, נדל\"ן בקפריסין",
+  "parallaxImage": {
+    "_type": "image",
+    "asset": {
+      "_ref": "image-07986fa492eb71c11dcacd1acf4dab9a9610c5c2-2500x1401-jpg",
+      "_type": "reference"
+    }
+  },
+  "projectsBlock": {
+    "title": "הפרויקטים שלנו"
+  },
+  "howWeWorkBlock": {
+    "steps": [
+      {
+        "_key": "1afdc2e36511",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-010e554d53e8a2f99f7d779b88ad4802ea879931-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "אתם פונים אלינו דרך הטופס באתר"
+      },
+      {
+        "_key": "941eb2c409de",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-ea98b4b1814fb2a981c5db0f004a959d3df14989-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "אנחנו חוזרים אליכם ומבררים מה אתם מחפשים"
+      },
+      {
+        "_key": "68f92ccdb537",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-34191203d1e6add0437bc90f08afd32a2bb00102-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "אתם מתכננים איתנו את הנסיעה לקפריסין"
+      },
+      {
+        "_key": "b8761e7f88d3",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-fddcb74dc9aa266cf6c1fa5bbafddc4f09f037ad-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "אנחנו מבקרים יחד בכל הפרויקטים המתאימים"
+      },
+      {
+        "_key": "090c34fc6d24",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-01fd70faab96a48e121b9588c547e3a711cce430-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "אתם חותמים על חוזה המכר מול היזם"
+      },
+      {
+        "_key": "932b3a2ebb6c",
+        "icon": {
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b2beb1ac8dbcd8bbcc7ce08387c37268c8c162be-500x500-svg",
+            "_type": "reference"
+          }
+        },
+        "text": "עם סיום הבנייה אנחנו מוסרים לכם את המפתחות בטקס חגיגי"
+      }
+    ],
+    "title": "כך אנחנו עובדים",
+    "description": "באתר אפשר לעיין בפרויקטים או להטיל עלינו חיפוש ממוקד. יוצרים איתנו קשר דרך טופס יצירת הקשר באתר, ובשיחה אישית אנחנו מבררים מה אתם מחפשים. אחר כך אנחנו סורקים הצעות נבחרות מהיזמים שעברו אצלנו בדיקה ומציגים לכם מבחר מצומצם. אתם חוזרים אלינו עם משוב, ואנחנו מארגנים את הנסיעה לקפריסין כדי לראות את הפרויקטים יחד עם היזמים. אחרי שהחלטתם, החוזה נחתם ישירות מול היזם. בפרויקט חדש התשלומים נפרסים לפי קצב הבנייה, ועם סיום הבנייה אתם מקבלים את מפתחות הנכס בטקס חגיגי."
+  },
+  "descriptionBlock": {
+    "title": "למה רוכשים מישראל בוחרים בנו",
+    "descriptionFields": [
+      {
+        "_key": "ad8919bf4386",
+        "descriptionField": [
+          {
+            "_key": "54334100fa34",
+            "_type": "block",
+            "style": "h3",
+            "children": [
+              {
+                "_key": "2324a6163cf90",
+                "text": "ייעוץ מקצועי",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "5afb294a27f7",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "b2ecd972f67b",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "6126424a19a0",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "5590e7b6050c",
+                "text": "Cyprus VIP Estates הוא מיזם של SecretBrand Solutions LTD. שוק הנדל\"ן בקפריסין דורש מומחיות, ניסיון והיכרות עמוקה עם השטח כדי להשיג לרוכשים את התנאים הטובים ביותר. לצוות שלנו ידע מעמיק בשווקים המקומיים וניסיון בינלאומי בנדל\"ן, ואנחנו עובדים עם לקוחות ממדינות שונות באנגלית וברוסית.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "dcfa1c5a2408",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "5c0c2bb63079",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "b4ae352f242f",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "ec48f7389248",
+                "text": "Cyprus VIP Estates עובדת בסטנדרט מקצועי גבוה ובהכשרה מעודכנת, ומציעה לרוכשים שירות מקיף שנותן ביטחון בהשקעה.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "42420174d43f",
+        "descriptionField": [
+          {
+            "_key": "9a90799c8cc1",
+            "_type": "block",
+            "style": "h3",
+            "children": [
+              {
+                "_key": "7c3bf963658b0",
+                "text": "מבחר רחב של נכסים",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "dcb7279780e0",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "a3c94870a4f1",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "953335cc4dae",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "5c6e9084349f",
+                "text": "המגוון הרחב במאגר שגדל כל הזמן הוא הבסיס לעבודה שלנו. מבחר גדול נותן לרוכשים יותר אפשרויות ומביא למוכרים יותר פניות.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "23740f1bb5ad",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "ae8592215ec5",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "fe4e4e1f37e4",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "29ba92c0df04",
+                "text": "כך נוצר היתרון של Cyprus VIP Estates: היכרות עמוקה עם השוק בפאפוס ובלימסול, מומחיות בהערכת שווי נכסים ורשת מכירות רחבה.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      },
+      {
+        "_key": "060beb40c49a",
+        "descriptionField": [
+          {
+            "_key": "743329baf40a",
+            "_type": "block",
+            "style": "h3",
+            "children": [
+              {
+                "_key": "4b546767cae20",
+                "text": "מבט קדימה",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "077bf0f051e5",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "350eb16913d3",
+                "text": "",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          },
+          {
+            "_key": "1edfba2f282e",
+            "_type": "block",
+            "style": "normal",
+            "children": [
+              {
+                "_key": "8e2bd8be26e1",
+                "text": "גישה אנליטית ומבט קדימה מאפשרים לנו להתאים את עצמנו לתנאי השוק. אנחנו לומדים גם את שוק הנדל\"ן בקפריסין וגם את הצרכים של הרוכשים של היום, כדי להציע פתרונות חדשים. בזכות זה אנחנו ממשיכים לצמוח ומלווים לקוחות ברכישת נכס ובהשקעות, בדירה בודדת או בפרויקט שלם. עם ניתוח שוק מעמיק תקבלו את ההחלטה הטובה ביותר.",
+                "_type": "span",
+                "marks": []
+              }
+            ],
+            "markDefs": []
+          }
+        ]
+      }
+    ]
+  },
+  "featuredProjectsBlock": {
+    "title": "פרויקטים נבחרים בקפריסין",
+    "projects": [
+      {
+        "_key": "c8bd960cbd33",
+        "_ref": "project-limassol-del-mar.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "eece632c5961",
+        "_ref": "b1ff9015-9b3a-42df-8239-2fb55e152d70",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "f0ca544bc4f1",
+        "_ref": "9acf5916-967d-4fde-9d78-e218f4981c3e",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "542568f831b7",
+        "_ref": "project-leptos-zelemenos-mansion.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "4a645b5f9df1",
+        "_ref": "project-one-pafilia.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "6fd3d52adb27",
+        "_ref": "1d6b5276-c277-40b5-a20f-aa03df66e956",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "2299dec2d2e1",
+        "_ref": "5e5c43fa-9660-4d43-b72f-c3159d89b3d8",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "5a1347354be4",
+        "_ref": "project-villa-superior-aristo.en",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "18d444d34756",
+        "_ref": "051bbb39-218c-493b-a24b-7e3614a0d0e1",
+        "_type": "projectRef"
+      },
+      {
+        "_key": "09f8eef2b626",
+        "_ref": "project-velaro-homes.en",
+        "_type": "projectRef"
+      }
+    ],
+    "description": "מבחר הפרויקטים שבחרנו בקפריסין כולל דירות מודרניות, וילות יוקרה ונכסים עם פוטנציאל השקעה במיקומים מובילים בלימסול ובפאפוס. כל פרויקט נבחר בזכות האיכות, המיקום ופוטנציאל ההשקעה. לרכישה למגורים, למעבר או להכנסה משכירות, אלה ההזדמנויות הטובות ביותר שיש כרגע בשוק."
+  },
+  "featuredCaseStudiesBlock": {
+    "title": "סיפורי לקוחות מקפריסין",
+    "button": {
+      "url": "/he/case-studies",
+      "label": "לכל סיפורי הלקוחות"
+    },
+    "caseStudies": [
+      {
+        "_key": "f9705715cb33",
+        "_ref": "7bf6c054-d6c6-4511-b0eb-e391fc8f7922",
+        "_type": "caseStudyRef"
+      },
+      {
+        "_key": "b95a340080ce",
+        "_ref": "aa8a6f8a-6ce5-495e-99f8-481d261f6e91",
+        "_type": "caseStudyRef"
+      }
+    ],
+    "description": "כך רוכשים ומשקיעים מרחבי העולם מצאו את דרכם בשוק הנדל\"ן בקפריסין עם הליווי שלנו. הסיפורים מציגים מעברי מגורים אמיתיים, החלטות השקעה ורכישות של נכסי יוקרה, ומראים את השיקולים, האתגרים והתוצאות שמאחורי כל עסקה."
+  }
+}

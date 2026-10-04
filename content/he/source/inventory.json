@@ -1,0 +1,195 @@
+[
+  {
+    "town": null,
+    "district": "Kouklia",
+    "publishedDevelopments": 3,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 520000,
+    "priceFromMax": 3950000
+  },
+  {
+    "town": "Kouklia",
+    "district": "Kouklia",
+    "publishedDevelopments": 4,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 430000,
+    "priceFromMax": 1800000
+  },
+  {
+    "town": null,
+    "district": "Larnaca",
+    "publishedDevelopments": 3,
+    "types": [
+      "Gated residential complexes in the city center",
+      "Suburban houses",
+      "Towers, condos and beachfront developments"
+    ],
+    "priceFromMin": 162000,
+    "priceFromMax": 740000
+  },
+  {
+    "town": null,
+    "district": "Limassol",
+    "publishedDevelopments": 51,
+    "types": [
+      "Commercial real estate",
+      "Gated complexes near the sea (affordable luxury)",
+      "Gated residential complexes in the city center",
+      "Mansions overlooking the sea",
+      "Other",
+      "Residential",
+      "Suburban houses",
+      "Towers, condos and beachfront developments"
+    ],
+    "priceFromMin": 187000,
+    "priceFromMax": 41039999
+  },
+  {
+    "town": "Limassol",
+    "district": "Limassol",
+    "publishedDevelopments": 1,
+    "types": [
+      "Apartments"
+    ],
+    "priceFromMin": 385000,
+    "priceFromMax": 385000
+  },
+  {
+    "town": "Troodos",
+    "district": "Limassol",
+    "publishedDevelopments": 2,
+    "types": [
+      "Other"
+    ],
+    "priceFromMin": 520000,
+    "priceFromMax": 619000
+  },
+  {
+    "town": null,
+    "district": "Paphos",
+    "publishedDevelopments": 138,
+    "types": [
+      "Commercial",
+      "Gated residential complexes in the city center",
+      "Luxury Apartments",
+      "Luxury Villas",
+      "Residential",
+      "Towers, condos and beachfront developments"
+    ],
+    "priceFromMin": 160000,
+    "priceFromMax": 33800000
+  },
+  {
+    "town": "Agios Theodoros",
+    "district": "Paphos",
+    "publishedDevelopments": 2,
+    "types": [],
+    "priceFromMin": 469800,
+    "priceFromMax": 509000
+  },
+  {
+    "town": "Ayia Marinouda",
+    "district": "Paphos",
+    "publishedDevelopments": 1,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 293475,
+    "priceFromMax": 293475
+  },
+  {
+    "town": "Chlorakas",
+    "district": "Paphos",
+    "publishedDevelopments": 1,
+    "types": [],
+    "priceFromMin": 586800,
+    "priceFromMax": 586800
+  },
+  {
+    "town": "Coral Bay",
+    "district": "Paphos",
+    "publishedDevelopments": 1,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 912000,
+    "priceFromMax": 912000
+  },
+  {
+    "town": "Geroskipou",
+    "district": "Paphos",
+    "publishedDevelopments": 1,
+    "types": [],
+    "priceFromMin": 232800,
+    "priceFromMax": 232800
+  },
+  {
+    "town": "Konia",
+    "district": "Paphos",
+    "publishedDevelopments": 1,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": null,
+    "priceFromMax": null
+  },
+  {
+    "town": "Paphos",
+    "district": "Paphos",
+    "publishedDevelopments": 24,
+    "types": [
+      "Apartments",
+      "Apartments, Townhomes",
+      "Houses",
+      "Residential",
+      "Villas"
+    ],
+    "priceFromMin": 190000,
+    "priceFromMax": 1250000
+  },
+  {
+    "town": "Peyia",
+    "district": "Paphos",
+    "publishedDevelopments": 11,
+    "types": [
+      "Luxury Villas",
+      "Residential"
+    ],
+    "priceFromMin": 269000,
+    "priceFromMax": 2500000
+  },
+  {
+    "town": "Yeroskipou",
+    "district": "Paphos",
+    "publishedDevelopments": 2,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 720000,
+    "priceFromMax": 1335500
+  },
+  {
+    "town": null,
+    "district": "Polis",
+    "publishedDevelopments": 2,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 805200,
+    "priceFromMax": 1260000
+  },
+  {
+    "town": "Polis",
+    "district": "Polis",
+    "publishedDevelopments": 3,
+    "types": [
+      "Residential"
+    ],
+    "priceFromMin": 170000,
+    "priceFromMax": 506000
+  }
+]

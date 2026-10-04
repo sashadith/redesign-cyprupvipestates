@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Bdi from "@/app/components/Bdi";
 import { languageLabel, sortLanguageKeys } from "./languages";
 
 
@@ -112,7 +113,12 @@ export default function ConsultantFinder({
                   <p className="cnt__person-role">{m.position}</p>
                   <p className="cnt__person-langs">
                     <span className="cnt__person-langs-label">{labels.speaks}</span>
-                    {m.languageKeys.map((k) => languageLabel(k, lang, m.languageRaw[k])).join(" · ")}
+                    {/* A language with no label in this locale falls through as
+                        its stored native spelling ("oʻzbekcha"), so the list can
+                        mix scripts — isolate it so a Latin entry can't reorder
+                        the Hebrew line around it (he-styleguide.md §11.4).
+                        No-op in the LTR locales. */}
+                    <Bdi>{m.languageKeys.map((k) => languageLabel(k, lang, m.languageRaw[k])).join(" · ")}</Bdi>
                   </p>
                 </div>
               </li>

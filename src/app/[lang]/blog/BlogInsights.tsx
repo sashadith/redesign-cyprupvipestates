@@ -4,14 +4,16 @@
 // (handled by the route generateMetadata), swaps the old FormStatic for the new
 // redesign form, and adds de/pl/ru UI translations. Design-system CSS + fonts
 // are imported here so they load only on the listing routes (not /blog/[slug]).
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import React from "react";
 import { notFound } from "next/navigation";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-insights/insights.css";
 
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
+import { blogIndexMode } from "@/lib/blogIndexMode";
 import {
   getBlogPageByLang,
   getBlogPostsByLangWithPagination,
@@ -24,7 +26,6 @@ import { FormStandardDocument } from "@/types/formStandardDocument";
 
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 
 import InsightsList, { type InsightsCard } from "@/app/preview-insights/InsightsList";
@@ -37,25 +38,9 @@ import { blogStrings } from "./blogI18n";
 // the live Header/Footer keep their font). Config MUST match preview-insights/
 // layout.tsx exactly — same weights, italic style, and subsets — otherwise the
 // gold `.it` accent words render as faux-synthesized italic and weights differ.
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 const REGULAR_PER_PAGE = 15;
 const PAGE_1_TOTAL = 1 + REGULAR_PER_PAGE; // 1 featured + 15 regular
@@ -75,27 +60,49 @@ const slugOf = (p: any, lang: string): string =>
 
 export default async function BlogInsights({ lang, page }: { lang: string; page: number }) {
   const t = blogStrings(lang);
-  const total = await getTotalBlogPostsByLang(lang);
+
+  // Phase 6 — cross-locale index: `he` has no Hebrew articles yet, so below
+  // MIN_OWN_ARTICLES (see blogIndexMode.ts) the index borrows the ENGLISH
+  // articles instead of querying (empty) `language: "he"` rows. `heCount` is
+  // only ever consulted for lang === "he"; every other locale is unaffected
+  // (mode.sourceLang === lang, noindex: false).
+  const heCount = lang === "he" ? await getTotalBlogPostsByLang("he") : 0;
+  const mode = blogIndexMode(lang, heCount);
+  const crossLocale = mode.sourceLang !== lang;
+  // In cross-locale mode the count names the language ("articles in English");
+  // once `he` has its own articles the plain nouns apply. LTR never crosses.
+  const articleOne = crossLocale ? (t.articleOneCross ?? t.articleOne) : t.articleOne;
+  const articleMany = crossLocale ? (t.articleManyCross ?? t.articleMany) : t.articleMany;
+  const total = mode.sourceLang === "he" ? heCount : await getTotalBlogPostsByLang(mode.sourceLang);
   const pages = totalPagesFor(total);
   if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) notFound();
 
   // Fetch the full ordered list once — the "All" view shows this page's slice +
-  // pager, while the client category filter needs every article.
-  const allPosts = await getBlogPostsByLangWithPagination(lang, Math.max(total, PAGE_1_TOTAL), 0);
-  const blogBase = localizedHref(lang, "blog"); // "/blog" | "/de/blog" | ...
+  // pager, while the client category filter needs every article. Sourced from
+  // `mode.sourceLang`, not `lang`, so the cross-locale case fetches EN posts.
+  const allPosts = await getBlogPostsByLangWithPagination(mode.sourceLang, Math.max(total, PAGE_1_TOTAL), 0);
+  const blogBase = localizedHref(lang, "blog"); // "/blog" | "/de/blog" | ... — this locale's OWN pagination base
+  // Card hrefs point at the source locale's article path — for `he` in
+  // cross-locale mode that's the EN article ("/blog/<slug>", no /he/ prefix).
+  const articleBase = crossLocale ? localizedHref(mode.sourceLang, "blog") : blogBase;
   const allCards: InsightsCard[] = (allPosts ?? []).map((p: any) => ({
     id: p._id,
     title: p.title,
     excerpt: p.excerpt ?? "",
-    href: `${blogBase}/${slugOf(p, lang)}`,
+    href: `${articleBase}/${slugOf(p, mode.sourceLang)}`,
     image: safeUrl(p.previewImage),
-    category: p.category?.title ?? "",
+    // Cross-locale mode replaces the (English) category with the "In
+    // English" badge in the same slot (icard__cat / ifeat__cat) — it reads
+    // as the intended badge AND, being identical on every card, collapses
+    // InsightsList's category filter to a single value, which hides the
+    // category tabs (InsightsList only renders them when count > 1). Chosen
+    // over showing (English-language) category tabs on a Hebrew page.
+    category: crossLocale ? t.englishBadge : (p.category?.title ?? ""),
     date: p.publishedAt ?? "",
   }));
   const heroCard = allCards[0];
 
   const blogPage = await getBlogPageByLang(lang);
-  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
 
   // hero heading: compact localized brand heading (like the preview), last word
   // gold-accented. The SEO <title>/description still come from the blogPage doc.
@@ -137,7 +144,16 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
               </h1>
               {heroLead && <p className="ins__hero-lead">{heroLead}</p>}
               <p className="ins__hero-meta">
-                {total} {total === 1 ? t.articleOne : t.articleMany}
+                {/* Hebrew needs the whole line, not "{n} {noun}": at 0 it reads
+                    "there are no articles yet", at 1 the numeral is spelled out
+                    inside the noun phrase and no digit is printed. From 2 up it
+                    is the same "{n} {plural}" shape the LTR locales use, which
+                    stay byte-identical. See docs/i18n/reviews/wp4.md. */}
+                {lang === "he" && total <= 1 ? (
+                  total === 0 ? "אין עדיין מאמרים" : articleOne
+                ) : (
+                  <>{total} {total === 1 ? articleOne : articleMany}</>
+                )}
               </p>
             </div>
 
@@ -194,7 +210,6 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
         )}
       </main>
       <Footer params={{ lang }} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={lang} />
     </>
   );

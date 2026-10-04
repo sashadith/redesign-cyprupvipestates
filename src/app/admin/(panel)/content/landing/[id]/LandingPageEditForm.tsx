@@ -8,7 +8,7 @@ const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outli
 const labelOf = (k: string) => k.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
 
 export default function LandingPageEditForm({
-  docId, title, extras, seoTitle, seoDescription, content,
+  docId, title, extras, seoTitle, seoDescription, content, dir = "ltr",
 }: {
   docId: string;
   title: string;
@@ -16,11 +16,12 @@ export default function LandingPageEditForm({
   seoTitle: string;
   seoDescription: string;
   content: any;
+  dir?: "ltr" | "rtl";
 }) {
   const [state, formAction] = useFormState(saveSitePageAll.bind(null, docId), null);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} dir={dir} className="space-y-5">
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
@@ -49,7 +50,7 @@ export default function LandingPageEditForm({
       </div>
 
       {Array.isArray(content) && (
-        <RichFieldEditor name="content" initial={content} label="Page content (rich text)" />
+        <RichFieldEditor name="content" initial={content} label="Page content (rich text)" dir={dir} />
       )}
 
       <SaveButton result={state} />

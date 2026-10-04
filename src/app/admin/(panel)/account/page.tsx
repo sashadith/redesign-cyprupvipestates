@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,10 @@ export default async function AccountPage() {
       <ProfileForm name={user.name} avatar={user.avatar} photoPng={user.photoPng} phone={user.phone} />
       <PasswordForm />
       <EmailSettingsForm userId={uid} settings={emailSettings} />
+      <section className="rounded-lg border border-[#E5E7EB] bg-white p-4">
+        <h2 className="text-lg font-medium">Connected apps</h2>
+        <p className="text-sm text-[#6B7280] mt-1">MCP connectors that can read the CRM (claude.ai). <Link href="/admin/mcp" className="underline">Manage connections</Link></p>
+      </section>
     </div>
   );
 }

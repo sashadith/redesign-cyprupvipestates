@@ -1,31 +1,15 @@
+import "@/app/fonts/vendored.css";
+import { bodoniModaFontDisplay, manropeFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Bodoni_Moda, Playfair_Display, Manrope } from "next/font/google";
 import "./tokens.css";
 
 /* Display — Bodoni Moda: a high-contrast modern Didone (fashion-luxury).
    latin-ext for PL; no Cyrillic → RU falls through to Playfair per-glyph. */
-const display = Bodoni_Moda({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
+const display = bodoniModaFontDisplay;
 
-const displayCyr = Playfair_Display({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const displayCyr = playfairDisplayFontDisplayCyr;
 
-const body = Manrope({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
-  display: "swap",
-});
+const body = manropeFontBody;
 
 export const metadata: Metadata = {
   title: "CVE — Redesign Sandbox V3",

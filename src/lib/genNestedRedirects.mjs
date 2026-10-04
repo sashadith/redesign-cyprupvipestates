@@ -13,7 +13,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const prisma = new PrismaClient();
-const langs = ["en", "de", "pl", "ru"];
+// keep in sync with src/lib/locale.ts LOCALES
+const langs = ["en", "de", "pl", "ru", "he"];
 const out = {};
 
 for (const lang of langs) {

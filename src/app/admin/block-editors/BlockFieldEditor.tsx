@@ -71,16 +71,16 @@ function ListEditor({ items, onChange, render, makeNew, addLabel }: {
   );
 }
 
-function RichField({ label, value, onChange }: { label: string; value: any; onChange: (html: string) => void }) {
+function RichField({ label, value, onChange, dir = "ltr" }: { label: string; value: any; onChange: (html: string) => void; dir?: "ltr" | "rtl" }) {
   return (
     <div>
       <div className="text-xs font-medium text-[#6B7280] mb-1">{label}</div>
-      <RichTextField initialHtml={richInitialHtml(value)} onChange={onChange} />
+      <RichTextField initialHtml={richInitialHtml(value)} onChange={onChange} dir={dir} />
     </div>
   );
 }
 
-export default function BlockFieldEditor({ block, onChange }: { block: any; onChange: (b: any) => void }) {
+export default function BlockFieldEditor({ block, onChange, dir = "ltr" }: { block: any; onChange: (b: any) => void; dir?: "ltr" | "rtl" }) {
   const type = block?._type;
   const set = (patch: any) => onChange({ ...block, ...patch });
   // Replace a rich field (by path) with an {__html} marker, immutably.
@@ -97,7 +97,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
           <input className={input} value={block.buttonText ?? ""} onChange={(e) => set({ buttonText: e.target.value })} />
         </label>
         <label className="col-span-2 text-xs text-[#6B7280]">Link URL <span className="text-[#9CA3AF]">(leave empty for the brochure popup)</span>
-          <input className={input} value={block.url ?? ""} placeholder="https://…  or  /en/contacts" onChange={(e) => set({ url: e.target.value })} />
+          <input dir="ltr" className={input} value={block.url ?? ""} placeholder="https://…  or  /en/contacts" onChange={(e) => set({ url: e.target.value })} />
         </label>
         <label className="text-xs text-[#6B7280]">Open in
           <select className={input} value={block.target ?? "_self"} onChange={(e) => set({ target: e.target.value })}>
@@ -204,7 +204,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
                 onChange={(e) => writeItems(items.map((x, j) => (j === i ? { ...x, question: e.target.value } : x)))} />
               <button type="button" onClick={() => writeItems(items.filter((_, j) => j !== i))} className="text-xs text-[#C0392B] px-2">✕</button>
             </div>
-            <RichField label="Answer" value={it.answer} onChange={(html) => setRich(`${itemsPath}.${i}.answer`, html)} />
+            <RichField label="Answer" value={it.answer} onChange={(html) => setRich(`${itemsPath}.${i}.answer`, html)} dir={dir} />
           </div>
         ))}
         <button type="button" onClick={() => writeItems([...items, { _key: k(), question: "", answer: [] }])}
@@ -298,8 +298,8 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
       <div className="space-y-2">
         {titleRow}
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs text-[#6B7280] block">Latitude<input type="number" step="any" className={input} value={loc.lat ?? ""} onChange={(e) => setLoc({ lat: num(e.target.value) })} /></label>
-          <label className="text-xs text-[#6B7280] block">Longitude<input type="number" step="any" className={input} value={loc.lng ?? ""} onChange={(e) => setLoc({ lng: num(e.target.value) })} /></label>
+          <label className="text-xs text-[#6B7280] block">Latitude<input dir="ltr" type="number" step="any" className={input} value={loc.lat ?? ""} onChange={(e) => setLoc({ lat: num(e.target.value) })} /></label>
+          <label className="text-xs text-[#6B7280] block">Longitude<input dir="ltr" type="number" step="any" className={input} value={loc.lng ?? ""} onChange={(e) => setLoc({ lng: num(e.target.value) })} /></label>
         </div>
       </div>
     );
@@ -363,7 +363,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
         <ListEditor items={block.contacts} onChange={(c) => set({ contacts: c })} makeNew={() => ({ type: "Email", label: "", title: "" })} addLabel="+ Add contact"
           render={(it, patch) => (<>
             <select className={input} value={it.type ?? "Email"} onChange={(e) => patch({ type: e.target.value })}>{["Email", "Phone", "Link"].map((t) => <option key={t} value={t}>{t}</option>)}</select>
-            <input className={input} placeholder="Value (email / phone / url)" value={it.label ?? ""} onChange={(e) => patch({ label: e.target.value })} />
+            <input dir="ltr" className={input} placeholder="Value (email / phone / url)" value={it.label ?? ""} onChange={(e) => patch({ label: e.target.value })} />
             <input className={input} placeholder="Label" value={it.title ?? ""} onChange={(e) => patch({ title: e.target.value })} />
           </>)} />
       </div>
@@ -380,7 +380,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
             return (<>
               <input className={input} placeholder="Name" value={it.name ?? ""} onChange={(e) => patch({ name: e.target.value })} />
               <ImageField refValue={ri.asset?._ref} alt={ri.alt} onChange={(v) => patch({ image: { ...ri, _type: "image", alt: v.alt, asset: v.ref ? { _type: "reference", _ref: v.ref } : ri.asset } })} />
-              <RichField label="Review text" value={it.text} onChange={(html) => patch({ text: { __html: html } })} />
+              <RichField label="Review text" value={it.text} onChange={(html) => patch({ text: { __html: html } })} dir={dir} />
             </>);
           }} />
       </div>
@@ -393,7 +393,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
   return (
     <div className="space-y-3">
       {rich.map((f) => (
-        <RichField key={f.path} label={f.label} value={getAtPath(block, f.path)} onChange={(html) => setRich(f.path, html)} />
+        <RichField key={f.path} label={f.label} value={getAtPath(block, f.path)} onChange={(html) => setRich(f.path, html)} dir={dir} />
       ))}
       <JsonFallback block={block} onChange={onChange} hasRich={rich.length > 0} />
     </div>
@@ -543,16 +543,16 @@ function ProjectsSectionEditor({ block, set, titleRow, marginRow }: { block: any
             </select>
           </label>
           <label className="text-xs text-[#6B7280] block">Price min (€)
-            <input type="number" min={0} className={input} value={block.priceMin ?? ""} onChange={(e) => set({ priceMin: num(e.target.value) })} />
+            <input dir="ltr" type="number" min={0} className={input} value={block.priceMin ?? ""} onChange={(e) => set({ priceMin: num(e.target.value) })} />
           </label>
           <label className="text-xs text-[#6B7280] block">Price max (€)
-            <input type="number" min={0} className={input} value={block.priceMax ?? ""} onChange={(e) => set({ priceMax: num(e.target.value) })} />
+            <input dir="ltr" type="number" min={0} className={input} value={block.priceMax ?? ""} onChange={(e) => set({ priceMax: num(e.target.value) })} />
           </label>
         </div>
       </details>
 
       <label className="text-xs text-[#6B7280] block">Results per page
-        <input type="number" min={1} max={60} className={input} value={block.pageSize ?? 12} onChange={(e) => set({ pageSize: num(e.target.value) || 12 })} />
+        <input dir="ltr" type="number" min={1} max={60} className={input} value={block.pageSize ?? 12} onChange={(e) => set({ pageSize: num(e.target.value) || 12 })} />
       </label>
 
       <p className="text-[11px] text-[#9CA3AF]">

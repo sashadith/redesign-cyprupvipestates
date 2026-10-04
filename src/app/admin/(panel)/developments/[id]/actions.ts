@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { extractProjectFromPdfs } from "@/lib/ai/pdfExtract";
 import { generateProjectDescription } from "@/lib/ai/projectDescription";
@@ -16,10 +17,55 @@ import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
+import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
+import { isHtmlMarker } from "@/lib/portableText/richText";
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
+
+// Duplicated from src/app/admin/actions.ts's own blocksFromItemsJson rather
+// than imported: that file is "use server", where every export must be an
+// async function, and every one of its own 5+ callers already relies on it
+// staying a plain sync helper. Small and stable enough (11 lines) that
+// duplicating beats reworking a shared, working file for one new caller.
+function convertHtmlMarkers(node: any): any {
+  if (isHtmlMarker(node)) return htmlToPortableText(node.__html);
+  if (Array.isArray(node)) return node.map(convertHtmlMarkers);
+  if (node && typeof node === "object") {
+    const o: any = {};
+    for (const [key, v] of Object.entries(node)) o[key] = convertHtmlMarkers(v);
+    return o;
+  }
+  return node;
+}
+
+// Converts BlockEditor's serialized item list (see fieldName/CONTENT_BLOCKS_FIELD
+// in BlockEditor.tsx) into stored Portable Text blocks — textContent items get
+// their HTML converted, everything else (just tableBlock, for kind="development")
+// is preserved verbatim.
+function blocksFromItemsJson(json: string): any[] {
+  let items: { type: string; key: string; html?: string; block?: any }[];
+  try { items = JSON.parse(json || "[]"); } catch { throw new Error("Content blocks were corrupted — please reload and retry."); }
+  if (!Array.isArray(items)) throw new Error("Content blocks were corrupted — please reload and retry.");
+  return items
+    .map((it) => {
+      if (it.type === "textContent") {
+        const orig = (it.block && typeof it.block === "object") ? it.block : {};
+        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
+      }
+      return it.block ? convertHtmlMarkers(it.block) : null;
+    })
+    .filter(Boolean);
+}
+
+// Prisma.JsonNull, not plain `null` — a nullable Json column takes a
+// sentinel to mean "SQL NULL" vs "the empty value null"; the bare value
+// doesn't type-check against JsonNullValueInput.
+function promoBlocksFromForm(formData: FormData, field: string): any {
+  const blocks = blocksFromItemsJson(String(formData.get(field) ?? "[]"));
+  return blocks.length ? blocks : Prisma.JsonNull;
+}
 
 // "Sync with Drive" on a single development's own page — full re-import (rich data +
 // description + images), but scoped to just this project so its siblings aren't touched.
@@ -52,7 +98,7 @@ export async function syncThisDevelopmentUnitsAction(developmentId: string): Pro
   }
 }
 
-// (C) Generate a fresh 4-language description from ALL project data, no project name.
+// (C) Generate a fresh 4-language description from ALL project data, naming the project/developer.
 export async function generateDescription(developmentId: string, words: number, tuning?: { emphasize?: string; avoid?: string }): Promise<{ ok: boolean; texts?: FourLang; error?: string }> {
   try {
     const d = await prisma.development.findUnique({ where: { id: developmentId }, include: { override: true, units: true } });
@@ -79,6 +125,7 @@ export async function generateDescription(developmentId: string, words: number, 
     ].filter(Boolean).join(", ");
 
     const texts = await generateProjectDescription({
+      publicName: ov?.alias || d.publicName, developer: d.developer ?? undefined,
       district: ov?.district || d.district || "",
       town: ov?.town || d.town || "",
       area,
@@ -420,8 +467,8 @@ export async function saveOverride(formData: FormData) {
   // to the auto-generated default (src/lib/developmentSeo.ts) rather than an
   // object of empty strings that would still read as "present".
   const seoEntries = {
-    titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"),
-    descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"),
+    titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"), titleHE: clean(formData, "seoTitleHE"),
+    descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"), descHE: clean(formData, "seoDescHE"),
   };
   const seo = Object.values(seoEntries).some(Boolean) ? seoEntries : null;
   // Map location is saved independently via saveMapLocationAction (its own
@@ -437,6 +484,7 @@ export async function saveOverride(formData: FormData) {
     descriptionDE: clean(formData, "descriptionDE"),
     descriptionPL: clean(formData, "descriptionPL"),
     descriptionRU: clean(formData, "descriptionRU"),
+    descriptionHE: clean(formData, "descriptionHE"),
     completion: clean(formData, "completion"),
     energy: clean(formData, "energy"),
     // Construction-stage override (Available / Under Construction / Key-Ready /
@@ -450,6 +498,14 @@ export async function saveOverride(formData: FormData) {
     stage: clean(formData, "stage"),
     amenities,
     seo: seo as any,
+    // Empty (no blocks added) stores as null rather than [] — "nothing to
+    // render" should read the same as the description fields' own null-when-
+    // empty convention above.
+    promoBlocksEN: promoBlocksFromForm(formData, "promoBlocksEN"),
+    promoBlocksDE: promoBlocksFromForm(formData, "promoBlocksDE"),
+    promoBlocksPL: promoBlocksFromForm(formData, "promoBlocksPL"),
+    promoBlocksRU: promoBlocksFromForm(formData, "promoBlocksRU"),
+    promoBlocksHE: promoBlocksFromForm(formData, "promoBlocksHE"),
   };
   await prisma.developmentOverride.upsert({
     where: { developmentId: id },
@@ -462,6 +518,20 @@ export async function saveOverride(formData: FormData) {
   const rawSlug = clean(formData, "slug");
   if (rawSlug) {
     const finalSlug = await uniqueDevelopmentSlug(rawSlug, id);
+    const before = await prisma.development.findUnique({ where: { id }, select: { slug: true } });
+    // Retire the OLD slug into DevelopmentSlugHistory before overwriting it, so
+    // the URL it used to serve 301s instead of 404ing (see
+    // resolveDevelopmentSlugHistory in developmentRender.ts). A P2002 here means
+    // that exact string was already retired by some OTHER development's own
+    // past rename — an accepted, very rare edge case (see the model's schema
+    // comment) — so it's swallowed rather than blocking this save.
+    if (before?.slug && before.slug !== finalSlug) {
+      try {
+        await prisma.developmentSlugHistory.create({ data: { developmentId: id, slug: before.slug } });
+      } catch (e) {
+        if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+      }
+    }
     await prisma.development.update({ where: { id }, data: { slug: finalSlug } });
   }
   revalidatePath(`/admin/developments/${id}`);
@@ -470,7 +540,7 @@ export async function saveOverride(formData: FormData) {
   if (seo) {
     const dev = await prisma.development.findUnique({ where: { id }, select: { publishStatus: true, slug: true } });
     if (dev?.publishStatus === "published" && dev.slug) {
-      const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
+      const urls = PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
       void pingIndexNow("development-meta-edited", urls);
     }
   }
@@ -499,15 +569,29 @@ export async function saveUnits(developmentId: string, units: any[]) {
   // "becoming manual" happens only through the explicit toggle
   // (setDevelopmentSyncMode below). A brand-new unit (no prior row to match)
   // defaults to "manual" — it demonstrably didn't come from a sync. 2026-07-27.
-  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { ref: true, label: true, photos: true, attrs: true, feedRef: true, source: true } });
-  const photoByKey = new Map<string, any>();
-  const attrsByKey = new Map<string, any>();
-  const feedRefByKey = new Map<string, string | null>();
-  const sourceByKey = new Map<string, string>();
+  //
+  // WHICH stored row a submitted unit continues: by its database id first (the
+  // editor loads every row with its id), and by label only when that label is
+  // unique in the project. Matching by label alone mixed up units whose labels
+  // repeat across buildings — Plus 70-71 has "101" in both Plus 70 and Plus 71,
+  // and one save gave all ten Plus 70 units Plus 71's feedRef (2026-09-26); the
+  // next sync would then have duplicated them on a published page. Same risk
+  // for Plus 67-68-69, Plus 75's villas and Plus 92's offices.
+  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { id: true, ref: true, label: true, photos: true, plans: true, attrs: true, feedRef: true, source: true } });
+  type PrevUnit = (typeof prev)[number];
+  const prevById = new Map<string, PrevUnit>();
+  const byLabel = new Map<string, PrevUnit[]>();
   for (const u of prev) {
+    prevById.set(u.id, u);
     const k = (u.label || u.ref || "").trim().toLowerCase();
-    if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); feedRefByKey.set(k, u.feedRef); sourceByKey.set(k, u.source); }
+    if (k) byLabel.set(k, [...(byLabel.get(k) ?? []), u]);
   }
+  const prevFor = (u: any, key: string): PrevUnit | undefined => {
+    const byId = typeof u?.id === "string" ? prevById.get(u.id) : undefined;
+    if (byId) return byId;
+    const same = key ? byLabel.get(key) : undefined;
+    return same && same.length === 1 ? same[0] : undefined;
+  };
   // Every photo URL is mirrored before it's persisted (2026-08-04) — this is
   // the main unit-photo editing path (no separate "save photos" step), so
   // it's the one most likely to reintroduce an external URL. Already-local
@@ -520,7 +604,8 @@ export async function saveUnits(developmentId: string, units: any[]) {
   const rows = await Promise.all((units || []).map(async (u, i) => {
     const label = String(u.label ?? "").trim() || null;
     const key = (label || "").toLowerCase();
-    const rawPhotos = Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : photoByKey.get(key);
+    const before = prevFor(u, key);
+    const rawPhotos = Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : before?.photos;
     let photos = rawPhotos;
     if (devKey && Array.isArray(rawPhotos) && rawPhotos.length) {
       const r = await mirrorAny(rawPhotos, devKey);
@@ -556,13 +641,16 @@ export async function saveUnits(developmentId: string, units: any[]) {
       // the client is authoritative when it sends an array; only fall back to the
       // stored value for any caller that doesn't send photos at all. Mirrored above.
       photos: photos as any,
-      attrs: (attrsByKey.get(key) ?? null) as any,
+      attrs: (before?.attrs ?? null) as any,
+      // Feed-supplied floor plans are read-only in the editor and were dropped
+      // by this delete+recreate until 2026-09-26 — kept like attrs.
+      plans: (before?.plans ?? null) as any,
       // Never sourced from the form — feedRef has no editable field at all
       // (UnitDetail.tsx shows it read-only). Preserved by key exactly like
       // photos/attrs above, or this delete+recreate would blank it.
-      feedRef: feedRefByKey.get(key) ?? null,
+      feedRef: before?.feedRef ?? null,
       sortIndex: i,
-      source: sourceByKey.get(key) ?? "manual",
+      source: before?.source ?? "manual",
     };
   }));
   await prisma.developmentUnit.deleteMany({ where: { developmentId } });
@@ -634,7 +722,7 @@ export async function setStatus(formData: FormData) {
 
   // Fire-and-forget — never awaited, never blocks this action's response.
   if ((status === "published" || status === "archived") && updated.slug) {
-    const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
+    const urls = PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
     urls.push(absUrl("/projects"));
     void pingIndexNow(`development-${status}`, urls);
   }

@@ -1,4 +1,5 @@
 import React from "react";
+import { bcp47For } from "@/lib/locale";
 
 /* FAQPage JSON-LD for blog posts. Emitted ONLY when the post actually contains
    FAQ items — collects every question/answer from all faqBlock (and standalone
@@ -27,7 +28,7 @@ function collectFaqItems(blocks: any[]): Array<{ question: any; answer: any }> {
   return out;
 }
 
-export default function SchemaBlogFaq({ blocks }: { blocks: any[] }) {
+export default function SchemaBlogFaq({ blocks, lang }: { blocks: any[]; lang: string }) {
   const faqEntities = collectFaqItems(blocks)
     .map((it) => ({
       "@type": "Question",
@@ -45,6 +46,7 @@ export default function SchemaBlogFaq({ blocks }: { blocks: any[] }) {
         __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",
+          inLanguage: bcp47For(lang),
           mainEntity: faqEntities,
         }).replace(/</g, "\\u003c"),
       }}

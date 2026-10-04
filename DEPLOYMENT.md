@@ -35,6 +35,12 @@ deliberately disabled there (`MONDAY_API_KEY`/`TELEGRAM_BOT_TOKEN` blanked in
 its `.env`) so form tests never reach the real CRM — everything else reads
 and writes the one shared database.
 
+## Build-time environment variables
+
+| Variable | Purpose | Scope |
+|---|---|---|
+| `NEXT_PUBLIC_LIVE_LOCALES` | Controls which locales are visible to visitors and search engines. Unset = all locales except `he` (launch-gated); staging typically sets `en,de,pl,ru,he` to test all locales. **Build-time inlined** — changing it requires a rebuild (run `npm run build` as part of deploy). Production launch of a new locale: set this var + add locale prefix to the nginx `location ~` regex in `ops/nginx/cyprusvipestates.conf` + deploy. |  `.env` (read at build time) |
+
 ## The nginx layer (routing decisions made OUTSIDE this repo)
 
 Production's nginx vhost (`/etc/nginx/sites-enabled/cyprusvipestates` on the
@@ -394,6 +400,8 @@ hardcoded in the crontab):
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |
 | `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` |
 | `30 5 * * *` | `gsc-sync` (Google Search Console daily sync — see src/lib/gsc/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op ("skipped: not configured") until `GSC_SERVICE_ACCOUNT_KEY_PATH`/`GSC_SITE_PROPERTY` are set, see .env.example |
+| `15 5 * * *` | `mcp-cleanup` (MCP connector: expired OAuth codes/tokens, expired email drafts, stuck-send alert — see docs/CRM-MCP-CONNECTOR.md) | production, `?key=$CRON_SECRET` — to be installed with the Phase 1 deploy |
+| `0 1 * * *` | `cybarco-sync` (website + price-list PDFs → 15 Developments; see src/lib/cybarcoSync.ts) | production, `?key=$CRON_SECRET` — 01:00 keeps a clear hour before psi-sync at 02:00; a first run mirrors several hundred images |
 | `0 2 * * *` | `psi-sync` (Core Web Vitals nightly sync — see src/lib/psi/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op until `PSI_API_KEY` is set |
 | `0 6 * * 0` | `seo-advisor` (weekly Claude-analyzed SEO suggestions, Sundays — see src/lib/seoAdvisor/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op until `ANTHROPIC_API_KEY` is set (it already is) |
 | `2,7,12,17,22,27,32,37,42,47,52,57 * * * *` | `email-inbound` (files matched lead replies into their timeline, read-only IMAP — see src/lib/emailInbound/) | production, `?key=$CRON_SECRET` — installed 2026-07-25; offset from `publish-scheduled`'s `*/5` so the two never fire in the same wall-clock second |
@@ -472,6 +480,15 @@ Branch deleted (both local and `origin`) once every slice above was resolved
 and deployed to production.
 
 ## Lessons learned
+
+**Third-party API fetches always use `cache: "no-store"`.** Next.js' fetch cache
+once kept replaying a stale 401 from an external API for weeks after the key
+had been fixed — the route looked broken while the credential was fine. Every
+server-side fetch of a third-party API passes `cache: "no-store"`; if a result
+should be reused, memoise it in the process with a short TTL instead (see
+`src/lib/social/typefully.ts`: 5 minutes, successes only, so a fixed outage
+clears on the next request).
+
 
 **`.env` as a stale bootstrap credential, not a source of truth.**
 `prisma/seed-admin.mjs` originally used `upsert`, which overwrote the admin

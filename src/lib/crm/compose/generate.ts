@@ -9,7 +9,7 @@ import { buildEmailClosing } from "./closing";
 
 // Real number from the current signature — given to the model as literal
 // data (never let it invent or reformat a phone number), see call-offer.md.
-const CONTACT_PHONE = "+357 99278285";
+export const CONTACT_PHONE = "+357 99278285";
 
 // Pinned to Sonnet 5 specifically for this feature (2026-07 — confirmed with
 // the user so the SEO Advisor, which also calls Anthropic, stays on its own

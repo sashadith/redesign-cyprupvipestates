@@ -2,11 +2,27 @@ import { prisma } from "@/lib/prisma";
 import { isGscConfigured } from "@/lib/gsc/client";
 import { getPerLocaleTrend, getWeekOverWeekMovers, getCtrWatchlist, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
 import { computeTitleSweepComparison, sweepVerdictLine, isoDay } from "@/lib/seo/titleSweepRemeasure";
+import { LOCALES, type Locale } from "@/lib/locale";
 import SeoSparkline from "./SeoSparkline";
 
 export const dynamic = "force-dynamic";
 
-const LOCALE_LABEL: Record<string, string> = { en: "English", de: "German", pl: "Polish", ru: "Russian" };
+// I2 fix (final-review wave): derived from LOCALES (the single source of
+// locale metadata) rather than a hard-coded four-locale map, so a `he` row
+// from getPerLocaleTrend (src/lib/seo/queries.ts, which deliberately
+// iterates the full LOCALES) renders "Hebrew" instead of the bare code —
+// same defect/fix as CockpitCard.tsx's LOCALE_LABEL (Task 1 review).
+// LOCALE_LABELS (lib/locale.ts) carries each locale's OWN native name
+// (Deutsch/Polski/Русский/עברית) for user-facing UI, not the English admin
+// labels this internal page has always shown, so the admin-English name is
+// pinned here per locale (en/de/pl/ru byte-identical to the original map;
+// he is admin-facing English copy per project convention).
+const ADMIN_LOCALE_NAME: Record<Locale, string> = {
+  en: "English", de: "German", pl: "Polish", ru: "Russian", he: "Hebrew",
+};
+const LOCALE_LABEL: Record<string, string> = Object.fromEntries(
+  LOCALES.map((l) => [l, ADMIN_LOCALE_NAME[l]]),
+);
 const SITE_URL = "https://cyprusvipestates.com";
 
 function gscConsoleUrl(): string | null {

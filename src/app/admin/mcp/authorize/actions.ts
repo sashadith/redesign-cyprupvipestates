@@ -1,0 +1,70 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { getClient } from "@/lib/mcp/auth/clients";
+import { validateAuthorizeRequest } from "@/lib/mcp/auth/authorizeValidate";
+import { issueAuthCode } from "@/lib/mcp/auth/authorize";
+import { verifyPairingToken, pairingSecret, PAIRING_COOKIE, PAIRING_COOKIE_PATH } from "@/lib/mcp/auth/pairing";
+
+// Self-contained session gate (same reasoning as the other admin action
+// files: never export requireSession from a "use server" module).
+async function requireUserId(): Promise<string> {
+  const session = await auth();
+  const uid = (session?.user as any)?.id as string | undefined;
+  if (!session || !uid) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  if (!user || !user.isActive) throw new Error("Unauthorized");
+  return uid;
+}
+
+function paramsFromForm(formData: FormData): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const k of ["client_id", "redirect_uri", "response_type", "code_challenge", "code_challenge_method", "state"]) {
+    const v = formData.get(k);
+    out[k] = typeof v === "string" ? v : undefined;
+  }
+  return out;
+}
+
+function redirectWith(redirectUri: string, params: Record<string, string>): never {
+  const url = new URL(redirectUri);
+  for (const [k, v] of Object.entries(params)) if (v) url.searchParams.set(k, v);
+  redirect(url.toString());
+}
+
+// Both actions re-validate from the posted fields — the page's render-time
+// validation is not trusted across the round trip.
+export async function approveAuthorization(formData: FormData) {
+  const userId = await requireUserId();
+  // The pairing window is the anti-phishing binding: a posted Allow without a
+  // window open in this browser is refused and the operator is told why.
+  if (!verifyPairingToken(cookies().get(PAIRING_COOKIE)?.value, userId, pairingSecret())) {
+    redirect("/admin/mcp?pairing=missing");
+  }
+  // Past this point the pairing window has done its job — clear it on every
+  // path (success, a redirectable validation error, or the thrown error
+  // below), not only on success, so a failed approval doesn't leave a stale
+  // pairing cookie letting a later, unrelated Allow through unchecked.
+  cookies().set({ name: PAIRING_COOKIE, value: "", path: PAIRING_COOKIE_PATH, maxAge: 0 });
+  const p = paramsFromForm(formData);
+  const client = await getClient(p.client_id ?? "");
+  const v = validateAuthorizeRequest(p, client);
+  if (!v.ok) {
+    if (v.redirectable) redirectWith(p.redirect_uri!, { error: v.error, error_description: v.description, state: p.state ?? "" });
+    throw new Error(v.description);
+  }
+  const code = await issueAuthCode({ clientId: v.clientId, userId, redirectUri: v.redirectUri, codeChallenge: v.codeChallenge });
+  redirectWith(v.redirectUri, { code, state: v.state });
+}
+
+export async function denyAuthorization(formData: FormData) {
+  await requireUserId();
+  const p = paramsFromForm(formData);
+  const client = await getClient(p.client_id ?? "");
+  const v = validateAuthorizeRequest(p, client);
+  if (!v.ok && !v.redirectable) throw new Error(v.description);
+  redirectWith(p.redirect_uri!, { error: "access_denied", error_description: "The user denied the request.", state: p.state ?? "" });
+}

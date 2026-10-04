@@ -2,16 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { updateFooterSettings } from "../../actions";
+import { updateFooterSettings, createSiteDocTranslation } from "../../actions";
+import { LOCALES, isLocale, localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
-const LOCALES = ["en", "de", "pl", "ru"];
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default async function SettingsPage({ searchParams }: { searchParams: { lang?: string } }) {
   const session = await auth();
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
-  const lang = LOCALES.includes(searchParams.lang ?? "") ? searchParams.lang! : "en";
+  const lang = isLocale(searchParams.lang ?? "") ? searchParams.lang! : "en";
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "footer", language: lang as any } } });
   const d = (row?.data as any) ?? {};
   const contacts: any[] = Array.isArray(d.contacts) ? d.contacts : [];
@@ -33,7 +33,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
         ))}
       </div>
 
-      <form action={save} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
+      {!row ? (
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-6">
+          <p className="text-sm text-[#6B7280] mb-3">No footer content yet for {lang.toUpperCase()}.</p>
+          <form action={createSiteDocTranslation.bind(null, "footer", lang)}>
+            <button type="submit" className="rounded-md border border-dashed border-[#C29A5E] px-3 py-1.5 text-sm text-[#C29A5E] hover:bg-[#C29A5E]/10">
+              + {lang.toUpperCase()} from English
+            </button>
+          </form>
+        </div>
+      ) : (
+      <form action={save} dir={localeDir(lang)} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
         <div>
           <label className="block text-sm mb-1">Copyright</label>
           <input name="copyright" defaultValue={d.copyright ?? ""} className={input} />
@@ -61,7 +71,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
               {policyLinks.map((l, i) => (
                 <div key={l._key ?? i} className="flex gap-2">
                   <input name={`policy_${i}_label`} defaultValue={l.label ?? ""} className={`${input} w-40 shrink-0`} placeholder="Label" />
-                  <input name={`policy_${i}_link`} defaultValue={l.link ?? ""} className={input} placeholder="https://…" />
+                  <input name={`policy_${i}_link`} dir="ltr" defaultValue={l.link ?? ""} className={input} placeholder="https://…" />
                 </div>
               ))}
             </div>
@@ -93,7 +103,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
               {socialLinks.map((s, i) => (
                 <div key={s._key ?? i} className="flex gap-2 items-center">
                   <span className="w-24 shrink-0 text-sm text-[#6B7280]">{s.label ?? `Link ${i + 1}`}</span>
-                  <input name={`social_${i}_link`} defaultValue={s.link ?? ""}
+                  <input name={`social_${i}_link`} dir="ltr" defaultValue={s.link ?? ""}
                     className={input} placeholder="https://…" />
                 </div>
               ))}
@@ -103,6 +113,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
 
         <button className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2.5 hover:bg-[#142E2D]">Save settings</button>
       </form>
+      )}
     </div>
   );
 }

@@ -1,10 +1,19 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
+import { localeDir } from "@/lib/locale";
+import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
+/* The new global header lives here. This tree has its own <html>/<body> and
+   does NOT inherit src/app/[lang]/layout.tsx, so nothing else would load it. */
+import "@/app/header-footer.css";
 import "../../preview-insights/insights.css";
 import "../case-studies.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
+import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* Case Studies — redesigned. Reuses the homepage design tokens AND the
    Insights index's own stylesheet directly (not re-approximated values) —
@@ -31,25 +40,9 @@ import LenisProvider from "../../preview-home/anim/LenisProvider";
    field and the hardcoded <meta> tag below blocking it. Both removed
    together; leaving either one in place alone would still noindex the page. */
 
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 export const metadata: Metadata = {
   // Without this, any relative URL in this tree's generateMetadata (e.g. a
@@ -70,9 +63,12 @@ export default function CaseStudiesLayout({
   params: { lang: string };
 }) {
   return (
-    <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
+    <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>
-        <LenisProvider>{children}</LenisProvider>
+        <AttributionCapture />
+        <ModalProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </ModalProvider>
       </body>
     </html>
   );

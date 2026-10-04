@@ -24,10 +24,17 @@
   font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
 }
 .lgl__title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   /* Hero/H1 step — see the same note in contacts.css. */
   font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.02em; color: var(--text);
   text-wrap: balance; max-width: 18ch;
+}
+/* Prevailing-language notice, rendered only where the locale's text is a
+   courtesy translation (he). Deliberately quieter than the intro: it is a
+   disclaimer, not the opening of the document. */
+.lgl__binding {
+  margin: var(--s-4) 0 0; max-width: 56ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-sm); font-weight: 400; line-height: 1.5; color: var(--text-faint);
 }
 .lgl__intro {
   margin: var(--s-6) 0 0; max-width: 56ch; font-family: var(--font-body), sans-serif;

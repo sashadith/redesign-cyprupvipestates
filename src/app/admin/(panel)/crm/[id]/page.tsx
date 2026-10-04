@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import {
   addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
-  resetLeadFollowUpCadenceAction, deleteLeadInteraction,
-} from "../../../actions";
+  resetLeadFollowUpCadenceAction, deleteLeadInteraction, updateLeadQualificationAction } from "../../../actions";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
-import { sendCrmEmailAction, logWhatsAppSentAction } from "./emailActions";
+import { sendCrmEmailAction, logWhatsAppSentAction, discardEmailDraftAction } from "./emailActions";
+import PendingDraftCard from "./PendingDraftCard";
 import { listPresentationLocations } from "./presentationActions";
 import PropertyMatching from "./PropertyMatching";
 import ExistingPresentations, { type PresentationRow } from "./ExistingPresentations";
@@ -17,6 +17,7 @@ import CockpitCard, { type LastContact, type PresentationSummary } from "./Cockp
 import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
 import BookingPanel, { type BookingRow } from "./BookingPanel";
 import { adminDate } from "@/lib/adminTime";
+import AutoRefresh from "../AutoRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,12 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   if (!lead) notFound();
+
+  const pendingDraft = await prisma.leadEmailDraft.findFirst({
+    where: { leadId: id, status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, subject: true, body: true, createdAt: true, expiresAt: true },
+  });
 
   // Possible duplicates: same email or phone, different record (audit H2).
   // Matches must be non-empty on BOTH sides — a bare `{ email: lead.email }`
@@ -162,7 +169,9 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
   // Absorbed into CockpitCard's detail groups (see that component) — computed
   // once here, same shape the old page.tsx <dl> built inline.
-  const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent].filter(Boolean).join(" / ");
+  // `ref:` is the partner `?ref=` parameter (attributionRef, 2026-09-28), shown in
+  // the same UTM row rather than a row of its own.
+  const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent, lead.attributionRef ? `ref: ${lead.attributionRef}` : null].filter(Boolean).join(" / ");
   const clickId = [lead.gclid ? `gclid: ${lead.gclid}` : null, lead.fbclid ? `fbclid: ${lead.fbclid}` : null].filter(Boolean).join("  ·  ");
 
   async function assign(formData: FormData) {
@@ -226,6 +235,8 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
   return (
     <div className="max-w-4xl">
+      {/* MCP writes and other operators land without a manual reload. */}
+      <AutoRefresh />
       <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>
 
       <div className="mt-2 mb-6">
@@ -238,6 +249,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
             status: lead.status,
             languagePreference: lead.languagePreference,
             nationality: lead.nationality,
+            countryOfResidence: lead.countryOfResidence,
             source: lead.source,
             phone: lead.phone,
             email: lead.email,
@@ -267,13 +279,17 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           presentationSummary={presentationSummary}
           assignAction={assign}
           saveFollowUpAction={saveFollowUp}
+          saveQualificationAction={updateLeadQualificationAction}
           resetFollowUpAction={resetFollowUp}
           contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES}
         />
       </div>
 
-      <BookingPanel bookings={bookingRows} leadName={`${lead.firstName} ${lead.lastName}`.trim()} />
-
+      {/* Order follows the job, not the history of the code: anything that
+          changes what you are about to do comes first (is this a duplicate? is
+          a draft waiting? is a meeting proposed?), then what has happened, then
+          the deeper work of matching and presenting. The timeline used to sit
+          below three blocks that are usually empty. */}
       {duplicates.length > 0 && (
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-4 mb-6">
           <h2 className="text-sm font-semibold text-[#9A3412] mb-2">⚠ Possible duplicate{duplicates.length > 1 ? "s" : ""} ({duplicates.length})</h2>
@@ -294,6 +310,10 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           <p className="text-[11px] text-[#9A3412]/70 mt-2">Merging moves the other lead’s activity here and deletes it.</p>
         </div>
       )}
+
+      {pendingDraft && <PendingDraftCard draft={pendingDraft} discardAction={discardEmailDraftAction} />}
+
+      <BookingPanel bookings={bookingRows} leadName={`${lead.firstName} ${lead.lastName}`.trim()} />
 
       <div className="mb-6">
         <UnifiedTimeline

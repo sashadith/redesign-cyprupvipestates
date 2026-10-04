@@ -45,6 +45,40 @@ line is stale.
 | `/de/luxusimmobilien-auf-zypern` | 301 → `/de/luxusvillen-in-zypern` | **no — still PUBLISHED** |
 | `/de/luxusvillen-zypern-ueber-1-mio` | 301 → `/de/luxusvillen-in-zypern` | **no — still PUBLISHED** |
 
+**2026-09-05 addition — the villa-over-1M price/filter fix (commit `97b3a35`) and this DE merge
+collided**, since the merge (`1264fcb`, 2026-09-03) predates and is an ancestor of the price fix.
+Resolved:
+
+- **DE twin stays merged, permanently.** The planned DE-only copy write ("ab 1 Million" headline,
+  drafted intro/meta) is **cancelled, not deferred**. The merge was correct on its own terms (3 of
+  11 pins rendering is a broken page, and the flagship had already stopped linking here) — a working
+  price filter doesn't undo that. Un-merging would put it back into competition with the flagship
+  across all eight cluster queries, undoing the cannibalization work from two weeks prior. The
+  flagship's own headline ("villa zypern kaufen", 703 impressions) also isn't getting a €1M
+  threshold added — that would wrongly narrow a promise that shouldn't be narrowed.
+- **The price fix has no visible effect on the EN/RU/PL twins**, and did not at the time it
+  shipped either — this was found, not introduced, by this investigation. All three render 14
+  (EN) / 15 (RU) / 15 (PL) villas, not the ~59 originally sized. Root-caused to a **display-layer
+  precedence bug, not the query**:
+  - The query mechanism itself is correct — `queryFilteredDevelopmentRows`'s price filter is the
+    "any-unit" range-overlap test (`priceTo >= priceFrom`) as designed, not a `priceFrom`-only
+    check. Hand-replicating it today (city unset, `filterPropertyType: Villa`, `priceFrom:
+    1,000,000`) against production returns **53** developments — close to the original 59 (2-day
+    inventory drift, not a sizing error).
+  - `filterPropertyType: "Villa"` is set on all four locale blocks and no `filterCity` is present
+    on any of them — Cyprus-wide, exactly as intended, no hidden narrowing.
+  - The actual cause: all four `landingProjectsBlock` documents carry a legacy, hand-curated
+    `projects` array (19 pinned refs, predating the price filter). These four pages render via
+    `LandingBody.tsx` (`src/app/preview-landing/LandingBody.tsx`), whose precedence is `const
+    projects = manual.length > 0 ? manual : filtered` — the pinned list wins outright whenever
+    it's non-empty, so `filteredProjects` (the price-aware query, correctly computing ~53) is
+    computed and then silently discarded. The visible 14/15/15 is just "how many of the 19 old
+    pins still resolve to a live project," unrelated to the €1M threshold.
+  - Not fixed here — read-only investigation per instruction. Whether/how to make these three
+    pages show the live-filtered set (drop the pinned array, or add the same
+    filtered-wins-above-a-threshold logic the `projectsSectionBlock` case already has via
+    `MIN_LIVE_RESULTS`) is an open decision, not a code question.
+
 ## 2. Five Track 1 internal-link targets
 
 Blog articles link into these five pages — a broken one means a live internal-link chain is
@@ -94,16 +128,34 @@ pages share the identical filter config and both still read exactly 60. Worth a 
 
 ## 4. Off-plan pagination — `/off-plan-properties-in-paphos`
 
-| request | expected | verified 2026-09-04 |
-|---|---|---|
-| bare URL | 200, with pager | 200 |
-| `?page=1` | 308 → bare URL | 308 → `/off-plan-properties-in-paphos` |
-| `?page=2` | 200 | 200 |
-| `?page=99` | 404 | 404 |
+**2026-09-09 correction**: this item's "verified 2026-09-04" column only ever re-checked HTTP
+status codes. The bare URL's "expected" column said "200, with pager" — but no check here ever
+re-read the HTML for pager markup, so when an unrelated redesign (2026-09-02) silently dropped it
+by rebuilding the rendering component without porting it over, this checklist's own 09-04 re-run
+still read "200" and moved on, six days after it was actually broken. A status code proves the
+route resolves; it says nothing about what's on the page. Every "expected" value below that
+describes markup, not just a status, must now be checked against the actual rendered HTML —
+`curl` the URL (or a headless fetch) and grep/assert on the markup itself, not just `$?`/status.
 
-(`?page=3`, `?page=4`, `?page=abc` last checked 2026-08-31, unchanged in kind — not re-run this
-pass, spot-checked `?page=2` and `?page=99` instead as the two branches that matter: a valid page
-past 1, and an out-of-range one.)
+| request | expected | how to actually check it | verified 2026-09-09 |
+|---|---|---|---|
+| bare URL | 200, **and** pager markup present with real `?page=N` hrefs (not just a 200) | fetch the HTML, assert on `<nav aria-label="Results pagination">` (or the pager's CSS-module class) containing `href="...?page=2"` — a 200 with no pager text anywhere is a fail, not a pass | 200 + pager markup confirmed present, hrefs `?page=2`/`?page=3` in the HTML — see docs/SITE-CHANGELOG.md 2026-09-09 entry for the pasted markup |
+| `?page=1` | 308 → bare URL | status/Location header check is sufficient here — no markup claim | 308 → `/off-plan-properties-in-paphos` |
+| `?page=2`, `?page=3` | 200, and the SAME pager markup present (not just the grid) | fetch each, assert on the pager the same way as the bare URL | 200 + pager present on both |
+| `?page=99` | 404 | status check is sufficient — a 404 has no markup to assert on | 404 |
+| sitemap (`/sitemaps/pages.xml`) | contains `?page=2`, `?page=3` for this page, and no `?page=` entries for pages without `pagesEnabled` | fetch the sitemap XML, grep for the page's slug + `?page=` | see 2026-09-09 SITE-CHANGELOG entry |
+
+(`?page=4`, `?page=abc` last checked in kind 2026-08-31/09-04 — still 200/404 respectively by the
+same code path exercised above, not re-run every pass.)
+
+**Audit of the rest of this file for the same shape** (an "expected" column describing rendered
+content/markup, checked against a status code instead): items 2, 3, and 5 below are fine — their
+"count" columns are already href/card counts read out of the live HTML (explicitly documented as
+such, e.g. item 2's "Deduplicated hrefs" method), not status codes standing in for content. Item 1
+is a pure redirect-hop check, where a status code (200 on the merged form, 301 on an archived one)
+*is* the actual claim being made, not a stand-in for something else — no gap there either. This
+item was the only one where the "expected" column asserted something the "verified" column never
+actually tested.
 
 ## 5. filterStage fills (off-plan landing pages)
 

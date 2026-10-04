@@ -5,6 +5,7 @@
 // the lead directly) — one meeting, one consistent story about "where's the
 // link" across the calendar invite and the email.
 import type { Locale } from "./presentationMessages";
+import { BCP47, bidiIsolate, hePrefixDate } from "@/lib/locale";
 
 function meetingNote(locale: Locale, meetingType: "ZOOM" | "PHONE"): string {
   if (meetingType === "PHONE") {
@@ -13,6 +14,9 @@ function meetingNote(locale: Locale, meetingType: "ZOOM" | "PHONE"): string {
       de: "Ich rufe Sie zur vereinbarten Zeit an.",
       pl: "Zadzwonię o uzgodnionej porze.",
       ru: "Я позвоню вам в согласованное время.",
+      // Word-identical with `confirmedPhoneNote` in src/app/book/[token]/copy.ts
+      // (styleguide §11.6 — duplicated strings stay identical).
+      he: "אתקשר אליכם במועד שנקבע.", // REVIEW(he)
     }[locale];
   }
   return {
@@ -20,6 +24,8 @@ function meetingNote(locale: Locale, meetingType: "ZOOM" | "PHONE"): string {
     de: "Den Zoom-Link sende ich Ihnen separat, kurz vor unserem Gespräch.",
     pl: "Link do Zoom wyślę osobno, tuż przed naszą rozmową.",
     ru: "Ссылку на Zoom я пришлю отдельно, незадолго до нашего разговора.",
+    // Word-identical with `confirmedZoomNote` in src/app/book/[token]/copy.ts.
+    he: "את הקישור לפגישת Zoom אשלח בנפרד, זמן קצר לפני השיחה.", // REVIEW(he)
   }[locale];
 }
 
@@ -43,14 +49,14 @@ export const BOOKING_CONFIRMATION_EMAIL: Record<
     subject: "Ваша встреча подтверждена — Cyprus VIP Estates",
     body: `Здравствуйте, ${name}.\n\nВаша встреча подтверждена на ${dt} (по вашему времени).\n\nВо вложении — приглашение в календарь (.ics) с деталями.\n\n${meetingNote("ru", mt)}`,
   }),
+  // `|` instead of the em dash the LTR subjects use (styleguide §3).
+  he: (name, dt, mt) => ({
+    subject: "הפגישה שלכם מאושרת | Cyprus VIP Estates",
+    body: `שלום ${bidiIsolate(name)},\n\nהפגישה שלכם מאושרת ${hePrefixDate("ל", dt)} (לפי השעון שלכם).\n\nמצורפת הזמנה ליומן (.ics) עם כל הפרטים.\n\n${meetingNote("he", mt)}`,
+  }), // REVIEW(he)
 };
 
 // Maps our Locale to an Intl.DateTimeFormat locale for formatting the
 // confirmed slot in the lead's own timezone — display only, same
 // booking/timezone.ts formatInZone() used everywhere else in this feature.
-export const INTL_LOCALE: Record<Locale, string> = {
-  en: "en-GB",
-  de: "de-DE",
-  pl: "pl-PL",
-  ru: "ru-RU",
-};
+export const INTL_LOCALE = BCP47;

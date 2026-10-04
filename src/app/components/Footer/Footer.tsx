@@ -12,6 +12,7 @@ import type {
 } from "@/types/footer";
 import FooterContact from "./FooterContact";
 import FooterNewsletter from "./FooterNewsletter";
+import { footerCopy } from "./Footer.copy";
 
 /* Global site footer — quiet-luxury redesign (migrated from the staging preview).
    All content still comes from the CMS via getFooterByLang; contact links and the
@@ -30,14 +31,7 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const placeholderFor = (lang: string) =>
-  lang === "de"
-    ? "Ihre E-Mail Adresse"
-    : lang === "pl"
-      ? "Twój adres e-mail"
-      : lang === "ru"
-        ? "Ваш email"
-        : "Your email";
+const placeholderFor = (lang: string) => footerCopy(lang).emailPlaceholder;
 
 const Footer = async ({ params }: Props) => {
   const data = await getFooterByLang(params.lang);

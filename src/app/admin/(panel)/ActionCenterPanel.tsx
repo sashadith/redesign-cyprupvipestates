@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { snoozeActionItemAction, dismissForeverActionItemAction } from "./actionCenterActions";
 import { NavIcon } from "./NavIcons";
@@ -11,9 +11,17 @@ export type ActionCenterItemVM = {
 export type ActionCenterGroupVM = { category: Category; items: ActionCenterItemVM[] };
 
 const DOT_COLOR: Record<Severity, string> = { URGENT: "bg-red-600", ACTION: "bg-amber-500", INFO: "bg-[#9CA3AF]" };
-const CATEGORY_LABEL: Record<Category, string> = { DEVELOPERS: "Developers", CRM: "CRM", SEO: "SEO", SEO_ADVISOR: "SEO Advisor", SYSTEM: "System" };
+const CATEGORY_LABEL: Record<Category, string> = { DEVELOPERS: "Developers", CRM: "CRM", SOCIAL: "Social", SEO: "SEO", SEO_ADVISOR: "SEO Advisor", SYSTEM: "System" };
 // Echoes the sidebar rail's own module icon per category, for visual continuity.
-const CATEGORY_ICON: Record<Category, string> = { DEVELOPERS: "developments", CRM: "crm", SEO: "analytics", SEO_ADVISOR: "analytics", SYSTEM: "settings" };
+const CATEGORY_ICON: Record<Category, string> = { DEVELOPERS: "developments", CRM: "crm", SOCIAL: "website", SEO: "analytics", SEO_ADVISOR: "analytics", SYSTEM: "settings" };
+
+// External deep links (Typefully drafts) open in a new tab; internal ones stay client-side routed.
+function ItemLink({ href, className, children, label }: { href: string; className: string; children: React.ReactNode; label?: string }) {
+  if (/^https?:\/\//.test(href)) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" className={className} aria-label={label}>{children}</a>;
+  }
+  return <Link href={href} className={className} aria-label={label}>{children}</Link>;
+}
 const SNOOZE_OPTIONS: [string, number][] = [["1d", 1], ["7d", 7], ["30d", 30]];
 
 function SnoozeMenu({ itemId }: { itemId: string }) {
@@ -90,13 +98,13 @@ function CategoryGroup({ group }: { group: ActionCenterGroupVM }) {
           <li key={item.id} className="flex items-start gap-3 px-5 py-3">
             <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${DOT_COLOR[item.severity]}`} aria-hidden />
             <div className="flex-1 min-w-0">
-              <Link href={item.deepLink} className="text-sm font-medium text-[#111827] hover:text-[#1B4B43] hover:underline">
+              <ItemLink href={item.deepLink} className="text-sm font-medium text-[#111827] hover:text-[#1B4B43] hover:underline">
                 {item.title}
-              </Link>
+              </ItemLink>
               <p className="text-xs text-[#6B7280] mt-0.5">{item.description}</p>
             </div>
             <span className="text-xs text-[#9CA3AF] whitespace-nowrap mt-0.5">since {item.sinceLabel}</span>
-            <Link href={item.deepLink} className="text-[#9CA3AF] hover:text-[#1B4B43] mt-0.5" aria-label="Open">→</Link>
+            <ItemLink href={item.deepLink} className="text-[#9CA3AF] hover:text-[#1B4B43] mt-0.5" label="Open">→</ItemLink>
             <SnoozeMenu itemId={item.id} />
           </li>
         ))}

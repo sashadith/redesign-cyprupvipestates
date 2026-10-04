@@ -21,6 +21,7 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { consentCopy } from "../consentCopy";
+import { formMinimalCopy } from "./FormMinimalBlockComponent.copy";
 
 export type FormData = {
   name: string;
@@ -62,6 +63,9 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 }) => {
   const uid = useId();
   const [message, setMessage] = useState<string | null>(null);
+  /* The shared banner draws a tick; on a failure that contradicts the
+     words next to it. See formFeedback.css. */
+  const [messageIsError, setMessageIsError] = useState(false);
   const dataForm = form.form;
 
   const [formStartTime, setFormStartTime] = useState(0);
@@ -136,15 +140,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
-      .required(
-        lang === "ru"
-          ? "Как с вами лучше связаться?"
-          : lang === "de"
-            ? "Wie können wir Sie am besten kontaktieren?"
-            : lang === "pl"
-              ? "Wybierz preferowaną formę kontaktu"
-              : "What’s the best way to contact you?",
-      ),
+      .required(formMinimalCopy(lang).contactMethodRequired),
 
     agreedToPolicy: Yup.boolean()
       .required(`${dataForm.validationAgreementRequired}`)
@@ -162,7 +158,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime,
@@ -204,6 +200,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 
         onFormSubmitSuccess && onFormSubmitSuccess();
 
+        setMessageIsError(false);
         setMessage(
           dataForm.successMessage ||
             formSuccessText(lang),
@@ -221,8 +218,10 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       const okFalse = error?.response?.data?.ok === false;
 
       if (blocked || okFalse) {
+        setMessageIsError(true);
         setMessage(dataForm.spamBlockedMessage || dataForm.errorMessage || formErrorText(lang));
       } else {
+        setMessageIsError(true);
         setMessage(dataForm.errorMessage || formErrorText(lang));
       }
 
@@ -240,7 +239,6 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
     <>
       <div className={styles.formMinimal}>
         <div className="container">
-          {message && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{message}</div>}
 
           <Formik
             innerRef={(inst) => {
@@ -290,11 +288,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       )}
                     </Field>
 
-                    <ErrorMessage
-                      name="name"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="name">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -313,14 +311,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       htmlFor={`${uid}-surname`}
                       className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
                     >
-                      {(dataForm as any).inputSurname ??
-                        (lang === "ru"
-                          ? "Фамилия"
-                          : lang === "de"
-                            ? "Nachname"
-                            : lang === "pl"
-                              ? "Nazwisko"
-                              : "Surname")}
+                      {(dataForm as any).inputSurname ?? formMinimalCopy(lang).surnameLabel}
                     </label>
 
                     <Field name="surname">
@@ -336,11 +327,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       )}
                     </Field>
 
-                    <ErrorMessage
-                      name="surname"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="surname">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -366,11 +357,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       }}
                     />
 
-                    <ErrorMessage
-                      name="phone"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="phone">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -405,22 +396,16 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       )}
                     </Field>
 
-                    <ErrorMessage
-                      name="email"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="email">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <fieldset className={`${styles.inputWrapper} min-w-0`}>
                     <legend className={styles.radioGroupLabel}>
-                      {lang === "ru"
-                        ? "Как с вами лучше связаться?"
-                        : lang === "de"
-                          ? "Wie können wir Sie am besten kontaktieren?"
-                          : lang === "pl"
-                            ? "W jaki sposób najlepiej się z Tobą skontaktować?"
-                            : "What’s the best way to contact you?"}
+                      {formMinimalCopy(lang).contactMethodLegend}
                     </legend>
 
                     <div className={styles.radioGroupWrapper}>
@@ -430,15 +415,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                           name="preferredContact"
                           value="phone"
                         />
-                        <span>
-                          {lang === "ru"
-                            ? "Телефон"
-                            : lang === "de"
-                              ? "Anruf"
-                              : lang === "pl"
-                                ? "Telefonicznie"
-                                : "Phone call"}
-                        </span>
+                        <span>{formMinimalCopy(lang).phoneCallLabel}</span>
                       </label>
 
                       <label className={styles.radioOption}>
@@ -456,21 +433,15 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                           name="preferredContact"
                           value="email"
                         />
-                        <span>
-                          {lang === "de"
-                            ? "E-Mail"
-                            : lang === "pl"
-                              ? "E-mail"
-                              : "Email"}
-                        </span>
+                        <span>{formMinimalCopy(lang).emailLabel}</span>
                       </label>
                     </div>
 
-                    <ErrorMessage
-                      name="preferredContact"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="preferredContact">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </fieldset>
 
                   {!hideMessage && (
@@ -496,11 +467,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                         )}
                       </Field>
 
-                      <ErrorMessage
-                        name="message"
-                        component="div"
-                        className={styles.error}
-                      />
+                      <div className={styles.errorSlot}>
+                        <ErrorMessage name="message">
+                          {(msg) => <div className={styles.error}>{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
                   )}
 
@@ -542,6 +513,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     </label>
                   </div>
 
+                  {/* In flow, right above the button — matching the homepage contact
+                      section: the visitor is looking there when they press Send.
+                      Above the whole form it can sit off-screen on a long form
+                      (2026-09-28). */}
+                  {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
                   <div>
                     <button
                       type="submit"

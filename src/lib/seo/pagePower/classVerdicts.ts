@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
 import { templateClassOf, type TemplateClass } from "@/lib/seo/templateClass";
+import { nonDefaultLocalePattern } from "@/lib/locale";
 import {
   CLASS_RATE_FRACTION, COMPARISON_PROJECT_PAGES, MIN_COMPARISON_SESSIONS,
   MIN_ENTERING_SESSIONS, MIN_EXPECTED_ONWARD, WINDOW_DAYS, type ClassVerdict,
@@ -171,7 +172,8 @@ const enquiries = (n: number): string => `${fmt(n)} ${n === 1 ? "enquiry" : "enq
  *  two apart and why this module needs one to tell a property from anything
  *  else. Kept beside `propertyOf` rather than reusing the copy inside
  *  `templateClassOf`, because the two answer different questions (see there). */
-const PROPERTY_PATH = /^(?:\/(?:de|pl|ru))?\/projects\/([^/]+)$/;
+const L = nonDefaultLocalePattern();
+const PROPERTY_PATH = new RegExp(`^(?:/(?:${L}))?/projects/([^/]+)$`);
 
 /** Every class gets exactly one verdict, so this list must stay exhaustive.
  *  Declared as a `Record<TemplateClass, number>` and not an array literal: a

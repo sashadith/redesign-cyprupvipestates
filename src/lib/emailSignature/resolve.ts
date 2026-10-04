@@ -12,12 +12,26 @@ function toHtml(raw: string): string {
   return `<p style="white-space:pre-wrap;">${escapeHtml(raw).replace(/\n/g, "<br />")}</p>`;
 }
 
-// Single resolution path for "what HTML signature does this user send with,
-// in this locale" — used by the test email now, and by the Phase 2 compose
-// engine later. EN is the fallback when a locale has nothing saved.
-export async function getSignatureHtml(userId: string, locale: string): Promise<string> {
-  const row = await prisma.userEmailSettings.findUnique({ where: { userId }, select: { signature: true } });
-  const sig = (row?.signature as any) ?? {};
-  const raw = (sig[locale] || sig.en || "").trim();
+// Pure "which signature wins" resolver, split out of getSignatureHtml so it's
+// testable without a database — reads `signature[locale]` generically (any
+// Locale, incl. `he`); the stored JSON simply may not have a `he` key yet
+// (Hebrew Localization Phase 7: the admin signature editor only writes one
+// when the operator actually typed something), in which case this falls back
+// to `en` exactly like any other unset locale.
+export function resolveSignatureHtml(sig: Record<string, string> | null | undefined, locale: string): string {
+  const raw = ((sig?.[locale] || sig?.en || "") as string).trim();
   return toHtml(raw);
 }
+
+// Single resolution path for "what HTML signature does this user send with,
+// in this locale" — used by the test email now, and by the Phase 2 compose
+// engine later.
+export async function getSignatureHtml(userId: string, locale: string): Promise<string> {
+  const row = await prisma.userEmailSettings.findUnique({ where: { userId }, select: { signature: true } });
+  return resolveSignatureHtml((row?.signature as any) ?? {}, locale);
+}
+
+// Named to match the Phase 7 plan's interface (`resolveSignature(userId,
+// locale)`) — same function, kept as an alias so both names work rather than
+// forcing every existing call site to rename.
+export const resolveSignature = getSignatureHtml;

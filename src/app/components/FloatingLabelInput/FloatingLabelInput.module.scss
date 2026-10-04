@@ -19,7 +19,7 @@
 
 .floatingLabel {
   position: absolute;
-  left: 0.5rem;
+  inset-inline-start: 0.5rem;
   top: 0.8rem;
   transition: all 0.2s ease;
   color: #aaa;
@@ -30,7 +30,7 @@
 
 .active {
   top: -0.5rem;
-  left: 0.5rem;
+  inset-inline-start: 0.5rem;
   font-size: 0.8rem;
   color: #bd8948;
   background: #fff;

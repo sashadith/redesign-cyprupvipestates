@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
-import { abs, staticAlternates } from "@/lib/seo";
+import { notFound } from "next/navigation";
+import { localizedHref, localesForStaticRoute, UNLOCALIZED_ROUTES } from "@/lib/locale";
+import { abs, staticAlternates, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import type { BenefitsBlock } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import LightHeroFlag from "../../preview-insights/LightHeroFlag";
+import HreflangLinks from "../../components/HreflangLinks/HreflangLinks";
 import PartnersMotion from "./PartnersMotion";
 import PartnersForm from "./PartnersForm";
+import PartnersFaq from "./PartnersFaq";
 import { partnersCopy } from "./copy";
+import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
+import { bcp47For } from "@/lib/locale";
 
 /* Cyprus VIP Estates — Partners, redesigned. This is now the LIVE /partners
    page (see ./layout.tsx for the indexability fix + why this lives outside
@@ -18,9 +22,17 @@ import { partnersCopy } from "./copy";
    /[lang]/partners page (PartnersHero/Benefits/Cta/Stars/Count/Contact +
    FormPartners/ModalPartners) has been deleted — it was unreachable dead
    code once middleware.ts's rewrite shipped, and is fully superseded by
-   this page. generateMetadata below already builds canonical + hreflang via
-   staticAlternates() (fixed-path type — /partners is identical across all
-   4 locales), unchanged by this cutover.
+   this page. generateMetadata below builds canonical via staticAlternates()
+   (fixed-path type — /partners is identical across all 4 locales); hreflang
+   is rendered SEPARATELY via <HreflangLinks> in the page body below, not
+   through generateMetadata's `alternates.languages` field — see that
+   component's own file header for why (short version: both that mechanism
+   AND a plain JSX `<link hrefLang="...">` render as `hrefLang`, the DOM-IDL
+   casing, not the HTML5 spec's lowercase `hreflang` attribute name — harmless
+   for real browsers/Google/Bing, which are case-insensitive here, but
+   <HreflangLinks> sidesteps it anyway as cheap insurance for simpler
+   text-matching tools). Same component to reuse if this is ever rolled out
+   to other routes.
 
    REUSED, not reinvented (see partners.css header for the full breakdown):
      - Hero: Home's OWN .hero/.hero__media/.hero__scrim/.hero__inner/
@@ -44,11 +56,22 @@ import { partnersCopy } from "./copy";
      - Form: same as before — a dedicated PartnersForm.tsx (not the shared
        preview-home Form.tsx) because the live FormPartners.tsx posts to
        /api/email with a required `country` field and a PARTNER-sourced CRM
-       lead, while Form.tsx posts to /api/monday and has no country field.
+       lead, while Form.tsx posts to /api/leads and has no country field.
        Styled with the shared .formsec__* classes every other redesigned
        page's form already uses. */
 
 type Props = { params: { lang: string } };
+
+// Decision J (spec §4.4/§8): Partners stays English-only — it is not one of
+// the pages that got translated, so a Hebrew URL for it would serve English
+// copy (PARTNERS_COPY.he below is a straight `en` alias, not a translation).
+// UNLOCALIZED_ROUTES (lib/locale.ts) is the single source of truth this
+// checks against — staticAlternates()/the sitemap already exclude `he` for
+// "partners" there; this is the matching runtime guard so the URL itself
+// 404s instead of rendering.
+function partnersOfferedIn(lang: string): boolean {
+  return !(UNLOCALIZED_ROUTES.partners as readonly string[]).includes(lang);
+}
 
 const HERO_IMAGE = "/uploads/files/b2b577b92f5d66696f53125853d50ba3784f912d.webp";
 // Same consultant photo/name/title every other redesigned page's form uses
@@ -56,19 +79,22 @@ const HERO_IMAGE = "/uploads/files/b2b577b92f5d66696f53125853d50ba3784f912d.webp
 const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e6.png";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!partnersOfferedIn(params.lang)) notFound();
   const t = partnersCopy(params.lang);
-  const { canonical, languages } = staticAlternates(params.lang, "partners");
+  const { canonical } = staticAlternates(params.lang, "partners");
   const ogImage = abs(HERO_IMAGE);
   return {
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical, languages },
+    // `languages` deliberately NOT passed here — see the file-header comment
+    // above. Rendered instead via <HreflangLinks> in the page body.
+    alternates: { canonical },
     openGraph: {
       title: t.metaTitle,
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630 }],
     },
@@ -96,13 +122,22 @@ const Star = () => (
   </svg>
 );
 
-export default function PartnersPage({ params }: Props) {
+export default async function PartnersPage({ params }: Props) {
   const { lang } = params;
+  if (!partnersOfferedIn(lang)) notFound();
   const t = partnersCopy(lang);
+  const { languages } = staticAlternates(lang, "partners");
 
-  const translations: Translation[] = i18n.languages.map((l) => ({
-    language: l.id,
-    path: localizedHref(l.id, "partners"),
+  // I1 fix: build the switcher straight from localesForStaticRoute
+  // ("partners") — the same source that gates the route itself (decision J
+  // excludes "he" for "partners") — instead of the full public-locale list
+  // the i18n config exposes, so no Hebrew entry is ever offered here once
+  // `he` goes public (it would 404, see partnersOfferedIn() above).
+  // LangSwitch only needs {language, path} per entry — it derives each
+  // display name itself from LANG_LABELS — so no separate lookup is needed.
+  const translations: Translation[] = localesForStaticRoute("partners").map((l) => ({
+    language: l,
+    path: localizedHref(l, "partners"),
   }));
 
   // Shaped exactly like the homepage's own BenefitsBlock (src/types/homepage.ts)
@@ -111,6 +146,19 @@ export default function PartnersPage({ params }: Props) {
   // component instead, via the same .pnr__eyebrow/.pnr__title pattern used
   // for every other section) since Benefits.tsx's own title-highlight logic
   // is hardcoded to the word "Cyprus" and isn't reusable for other headings.
+  // Live figures for the two data-backed stats (2026-09-29). Projects reuses
+  // the /projects listing's own count, so the band can never claim a number a
+  // visitor cannot browse to. Units counts availability the way the site means
+  // it: status "available", and only inside published developments — the raw
+  // DevelopmentUnit total (4,636) also contains sold, reserved and unlisted
+  // rows plus units of drafts and archived projects.
+  const [projectCount, availableUnits] = await Promise.all([
+    getPublicProjectCount(lang),
+    getAvailableUnitCount(),
+  ]);
+  const liveNumber = (s: (typeof t.stats)[number]) =>
+    s.source === "projects" ? projectCount : s.source === "units" ? availableUnits : Number(s.number);
+
   const benefitsBlock: BenefitsBlock = {
     _key: "partners-stats",
     _type: "benefitsBlock",
@@ -118,7 +166,7 @@ export default function PartnersPage({ params }: Props) {
     benefits: t.stats.map((s, i) => ({
       _key: `stat-${i}`,
       _type: "benefits",
-      counting: { _key: `count-${i}`, _type: "counting", conuntNumber: Number(s.number), sign: s.sign ?? "" },
+      counting: { _key: `count-${i}`, _type: "counting", conuntNumber: liveNumber(s), sign: s.sign ?? "" },
       title: s.title,
       description: s.description,
     })),
@@ -126,8 +174,9 @@ export default function PartnersPage({ params }: Props) {
 
   return (
     <>
+      <HreflangLinks languages={languages} />
       <PartnersMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="pnr">
         {/* ---------------------------------------------------------- HERO */}
@@ -163,7 +212,7 @@ export default function PartnersPage({ params }: Props) {
             </h2>
             <hr className="shimmer pnr__stripe" />
           </div>
-          <Benefits block={benefitsBlock} />
+          <Benefits block={benefitsBlock} locale={bcp47For(lang)} />
         </div>
 
         {/* ------------------------------------------------------ BENEFITS */}
@@ -233,6 +282,14 @@ export default function PartnersPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        {/* ----------------------------------------------------------- FAQ */}
+        <PartnersFaq
+          eyebrow={t.faqEyebrow}
+          titleStart={t.faqTitleStart}
+          titleAccent={t.faqTitleAccent}
+          items={t.faq}
+        />
 
         {/* -------------------------------------------------- FORM / FINAL CTA */}
         <section className="section is-light formsec" id="register">

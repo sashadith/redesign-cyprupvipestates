@@ -1,0 +1,1186 @@
+{
+  "slug": "about-us",
+  "title": "עלינו",
+  "excerpt": null,
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "צוות סוכנות נדל\"ן אמינה בקפריסין",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-b605a85d73dbb99205fd24e8b5f0f2c3b87541b4-3000x2000-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "עלינו | Cyprus VIP Estates, מומחי נדל\"ן בקפריסין",
+    "metaDescription": "Cyprus VIP Estates היא סוכנות שיווק נדל\"ן בקפריסין. צוות מנוסה, היכרות עם השוק המקומי ונכסי יוקרה למכירה בלימסול ובפאפוס."
+  },
+  "contentBlocks": [
+    {
+      "_key": "af84682cde25",
+      "_type": "imageFullBlock",
+      "title": "Image Full Block",
+      "imageMain": {
+        "picture": {
+          "alt": "צוות Cyprus VIP Estates, מומחים לנדל\"ן בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-b605a85d73dbb99205fd24e8b5f0f2c3b87541b4-3000x2000-jpg",
+            "_type": "reference"
+          }
+        },
+        "aspectRatio": "10:5"
+      },
+      "description": {
+        "tag": "h1",
+        "textItems": [
+          {
+            "_key": "82cb4aab7b21",
+            "text": "ברוכים הבאים ל-",
+            "_type": "textItem",
+            "highlighted": false
+          },
+          {
+            "_key": "05c1c26d6255",
+            "text": "Cyprus VIP Estates",
+            "_type": "textItem",
+            "highlighted": true
+          },
+          {
+            "_key": "f69d516ed784",
+            "text": ", השותף שלכם לנדל\"ן בקפריסין. מותג של SecretBrand Solutions LTD.",
+            "_type": "textItem",
+            "highlighted": false
+          }
+        ]
+      },
+      "hasDescription": true
+    },
+    {
+      "_key": "808f987bffda",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "marginTop": "large",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "Cyprus VIP Estates, השותף שלכם לנדל\"ן בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-d4088522f715b8263fda63075531db71581ddb25-1002x682-png",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "73dd423d3284",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "a166320489350",
+                  "text": "למה בוחרים בנו?",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "f96bf66fd83b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "9f0153b9e8f3",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "96df019ccac7",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "885c5fed0d4a",
+                  "text": "המשימה שלנו",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "1252dc73a140",
+                  "text": " היא לחבר אנשים לבית שחלמו עליו בקפריסין. אנחנו לא רק סוכנות נדל\"ן, אלא גם גשר לאורח חיים חדש מול הים התיכון.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "4bbe4d4cbecc",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "0cc4dbcd4241",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "9b5c5ba10faf",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "c25232c8d976",
+                  "text": "אנחנו מאמינים",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "d938d5630701",
+                  "text": " שהמעבר לקפריסין הוא הרבה יותר מרכישת נכס. זה צעד לחיים עצמאיים ומהנים יותר, ואנחנו מלווים אותו בלב שלם.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "8af4a894f42a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "75052f65f52a",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "16d4a8978044",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2baef7443d1d",
+                  "text": "המוטיבציה שלנו נובעת",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "4e01f2ae0603",
+                  "text": " מהאמונה ששירות אישי והיכרות עם השוק המקומי הופכים כל רכישה לסיפור הצלחה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "medium",
+      "doubleTextBlockTitle": "About main Block"
+    },
+    {
+      "_key": "f74c985f6954",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "7c39b4918964",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "cb685b6494bc0",
+                  "text": "איך אנחנו עובדים?",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "e33a90d8ba46",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "3b022aed7fcc",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "74b29f50c1cd",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "2d6c66609d46",
+                  "text": "ייעוץ אישי בשטח",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "08a487282bdc",
+                  "text": ". אנחנו מקשיבים כדי להבין את הצרכים, את הרצונות ואת המטרות שלכם, ומאתרים את הנכסים שמתאימים להם.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "80517152b629",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "8b492c9a9aee",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "c53a4343fe7a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e863050d6f99",
+                  "text": "מומחיות בשוק ובהיבטים המשפטיים",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "adbc4a0d92cb",
+                  "text": ". ניסיון רב שנים ועבודה צמודה מול הרשויות בקפריסין מאפשרים לנו לנוע בביטחון בשוק ובהליכי האישור.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "84f30d2012d2",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "4296ff1d02fa",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "c33853e4e91d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "d1d151f9bdb3",
+                  "text": "תהליכים בתמיכה דיגיטלית",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "b06813f00276",
+                  "text": ". מניתוחים בעזרת בינה מלאכותית ועד בדיקת מסמכים אונליין, אנחנו משלבים כלים מודרניים עם שירות אישי, כדי שהתהליך יהיה שקוף ויעיל ככל האפשר.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "rightContent": {
+        "type": "image",
+        "image": {
+          "alt": "צוות Cyprus VIP Estates, מומחים לנדל\"ן בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-171f486accff0915740e97b1301d73ce29fc85d2-1206x771-png",
+            "_type": "reference"
+          }
+        }
+      },
+      "paddingBottom": "small",
+      "doubleTextBlockTitle": "About Main block 2"
+    },
+    {
+      "_key": "1c87c681434aa5b7bfec8f1ec2aa214f",
+      "_type": "doubleTextBlock",
+      "isDivider": true,
+      "paddingTop": "small",
+      "leftContent": {
+        "type": "image",
+        "image": {
+          "alt": "צוות Cyprus VIP Estates, מומחים לנדל\"ן בקפריסין",
+          "_type": "image",
+          "asset": {
+            "_ref": "image-2c6fd62644ff5efdfcd200c5497e0373f925b4b5-1001x634-png",
+            "_type": "reference"
+          }
+        }
+      },
+      "rightContent": {
+        "type": "text",
+        "blockContent": {
+          "_type": "blockContentWithStyle",
+          "content": [
+            {
+              "_key": "b700767e7587",
+              "_type": "block",
+              "style": "h2",
+              "children": [
+                {
+                  "_key": "3d3353bdc94e0",
+                  "text": "מה תקבלו?",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "fc16365d3c6d",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "771dd7c580dc",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "4368ecd6db9c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "fb21a9bb1b75",
+                  "text": "מבחר נכסים איכותיים",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "521c44750526",
+                  "text": ". אתם מקבלים רק נכסים שעומדים בסטנדרטים שלנו לאיכות ולתשואה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "74e2671f516e",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "ad64ffb831eb",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "3e3a28a41dc3",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "5264e142dba8",
+                  "text": "ליווי מלא",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "40e9eeefb0df",
+                  "text": ". מסיור בנכס, דרך מימון וייעוץ משפטי ועד החתימה אצל עורך הדין, אנחנו איש הקשר היחיד שלכם.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "5679f3c6d7d0",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "1aad95b35a28",
+                  "text": "",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            },
+            {
+              "_key": "ce70adf60b8c",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "0ec054b94479",
+                  "text": "תמיכה אחרי הרכישה",
+                  "_type": "span",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_key": "a0674cbcf4d1",
+                  "text": ". ליווי במעבר, ניהול הנכס והמלצות על נותני שירות מקומיים משלימים את התמונה, כדי שתרגישו בבית מיד.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ]
+        }
+      },
+      "paddingBottom": "large",
+      "doubleTextBlockTitle": "About main Block 3"
+    },
+    {
+      "_key": "fc028e2adddf",
+      "_type": "buttonBlock",
+      "title": "Button",
+      "alignItems": "center",
+      "buttonText": "ליצירת קשר עם הצוות",
+      "marginBottom": "large",
+      "justifyContent": "center"
+    },
+    {
+      "_key": "481309825db8",
+      "_type": "teamBlock",
+      "title": "הצוות שלנו",
+      "members": [
+        {
+          "_key": "0d982a6843ef",
+          "name": "Sascha Dith",
+          "image": {
+            "alt": "Sascha Dith, מנכ\"ל Cyprus VIP Estates",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-807f0251fe7155600df9b18efda5d5873cc00562-700x959-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "מנכ\"ל",
+          "description": "deutsch, english, русский"
+        },
+        {
+          "_key": "391422b5de75",
+          "name": "Katrin Dith",
+          "image": {
+            "alt": "Katrin Dith",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-310598bbd67926a40ce8ab3c1b03769e428ca1fe-700x845-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "בקרת איכות",
+          "description": "русский, english"
+        },
+        {
+          "_key": "b8ea6baae4d6",
+          "name": "Alex Bandziuk",
+          "image": {
+            "alt": "Aliaksandr Bandziuk, ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב ב-Cyprus VIP Estates",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-b9ed0374d3f0a88dc6b83355673bbc85680b9095-700x900-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב",
+          "description": "english, polski, русский"
+        },
+        {
+          "_key": "59a4f831957d",
+          "name": "Alisher Maniyazov",
+          "image": {
+            "alt": "Alisher Maniyazov",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-7354cae70af463d04f07acb3c3614d0ed3481388-1728x2368-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "סמנכ\"ל פיתוח עסקי",
+          "description": "english, русский, қазақша, oʻzbekcha"
+        },
+        {
+          "_key": "84aeaed1c8f4c3c01ae21375d4d8ca3d",
+          "name": "Daniel Kaufmann",
+          "image": {
+            "alt": "Daniel Kaufmann",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-bc020c0a37e7f2032747ecd4b09ff85f93b4d046-500x670-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, español, deutsch"
+        },
+        {
+          "_key": "c12b160e4373",
+          "name": "Denise Prusko",
+          "image": {
+            "alt": "Denise Prusko",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-9da972f8df51f96b9464c32f00464342e84b31f7-500x643-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועצת נדל\"ן",
+          "description": "english, deutsch"
+        },
+        {
+          "_key": "4fff53daf4d8c82e0c477e543bf2377d",
+          "name": "Patrick Prusko",
+          "image": {
+            "alt": "Patrick Prusko",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-f66f78a963bae70628ab7dcc336002f98491eac2-500x685-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, deutsch, polski"
+        },
+        {
+          "_key": "8f5050cd1d6b18f9d780c1e2793776b3",
+          "name": "Guido Steinberg",
+          "image": {
+            "alt": "Guido Steinberg",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-c99dc5537e512e7b1a821fca742821e275dfb3d4-600x894-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "שותף",
+          "description": "english, deutsch"
+        },
+        {
+          "_key": "bad281588ad5386b7a96140e174e742e",
+          "name": "Alexander Ostrovski",
+          "image": {
+            "alt": "Alexander Ostrovski",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-5bcbfedd6d21df35e10af4ac18b224f04078279d-590x794-png",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, deutsch, русский"
+        },
+        {
+          "_key": "5018355548b22f65831dffb19832f08a",
+          "name": "Lazaros Filimon",
+          "image": {
+            "alt": "Lazaros Filimon",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-c2f1cb1b39aca61cf5e891b08cf55c4fe08239da-1728x2368-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, deutsch, eλληνικά, русский, dutch, francais"
+        }
+      ]
+    },
+    {
+      "_key": "18e8695fa97e",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "a71714c7da98",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "7642e5241ebb0",
+              "text": "המשימה שלנו",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "3a6d03251f94",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "061691a00b77",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ffdd153b3ef9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "783c6c26fcc3",
+              "text": "המשימה שלנו היא לעזור לאנשים",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "e93f264f28fc",
+              "text": " למצוא את הבית המתאים להם תחת השמש הקפריסאית, עם ייעוץ אישי, שקיפות מלאה ועמידה עקבית בסטנדרטים הגבוהים ביותר.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "abe43ebee2fe",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "742b83eabde1",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "2e4f6ac7a649",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ea93e3a94441",
+              "text": "אנחנו משלבים ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "0df632c9eeb0",
+              "text": "היכרות עמוקה עם השוק המקומי",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "827030669386",
+              "text": " ו",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "85002e428c5f",
+              "text": "כלים דיגיטליים",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "344b70ee1283",
+              "text": ", כדי שכל התהליך יישאר פשוט, בטוח ונעים באמת.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "textAlign": "center",
+      "backgroundColor": "#262626",
+      "paddingVertical": "small",
+      "paddingHorizontal": "large"
+    },
+    {
+      "_key": "ee680a1df63a",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "0f1654d026f8",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "b49b35aef14f0",
+              "text": "ב-",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "55208e419177",
+              "text": "Cyprus VIP Estates",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "2af96891db32",
+              "text": " אנחנו פועלים לפי ערכי הליבה האלה",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ],
+      "marginTop": "medium",
+      "textAlign": "center",
+      "textColor": "#bd8948",
+      "marginBottom": "none",
+      "backgroundFull": "#F5F5F5",
+      "paddingVertical": "medium",
+      "paddingHorizontal": "medium"
+    },
+    {
+      "_key": "0f958d0ad8c7",
+      "_type": "imageBulletsBlock",
+      "image": {
+        "alt": "ערכי הליבה של Cyprus VIP Estates",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-176848aeb6b7530e3fc294af6f8ff3495d01e278-619x973-png",
+          "_type": "reference"
+        }
+      },
+      "title": "ערכי הליבה",
+      "bullets": [
+        {
+          "_key": "dbf5727a02e9",
+          "title": "יושרה ושקיפות",
+          "description": "אנחנו מקפידים על תקשורת פתוחה ומתעדים כל סיכום בכתב, כדי שלכל לקוח תהיה תמונה ברורה."
+        },
+        {
+          "_key": "3240d796a5e6",
+          "title": "מיקוד בלקוח",
+          "description": "כל לקוח מקבל יחס אישי, כי רק כך אפשר לענות על רצונות אישיים וליצור שביעות רצון לאורך זמן."
+        },
+        {
+          "_key": "e540d5bc585e",
+          "title": "מומחיות מקומית",
+          "description": "ההיכרות שלנו עם האזורים, החוקים והתרבות בקפריסין עוזרת לכם לקבל את ההחלטה הנכונה ברכישה."
+        },
+        {
+          "_key": "3b6ed5afece3",
+          "title": "מצוינות ומקצועיות",
+          "description": "אנחנו מחויבים לרמת שירות גבוהה, להכשרה מתמדת ולנוכחות מוקפדת, גם מחוץ לרשת וגם באינטרנט."
+        },
+        {
+          "_key": "81ec9ecddf36",
+          "title": "קיימות ואחריות",
+          "description": "אנחנו לוקחים בחשבון שיקולים סביבתיים בכל פרויקט ועובדים עם שותפים ששומרים על תנאי העסקה ובנייה הוגנים."
+        },
+        {
+          "_key": "00c4a4d7e361",
+          "title": "חדשנות ויעילות",
+          "description": "בעזרת טכנולוגיות עדכניות, כמו כלי בינה מלאכותית וניהול מסמכים דיגיטלי, אנחנו מייעלים תהליכים וחוסכים לכם זמן."
+        }
+      ]
+    },
+    {
+      "_key": "ab6471216d2a",
+      "_type": "reviewsFullBlock",
+      "title": "מה הלקוחות שלנו אומרים",
+      "reviews": [
+        {
+          "_key": "139593cd1419",
+          "name": "Michael H.",
+          "text": [
+            {
+              "_key": "c64272422283",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "61aeceb12e000",
+                  "text": "רכישת הווילה שלנו בפאפוס עברה בצורה חלקה לגמרי. הצוות ליווה אותנו במקצועיות מהסיור הראשון ועד החתימה על החוזה. במיוחד התרשמתי מהשקיפות של כל התהליך.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-f53a07e8727b0d29ff590599aa8a2216ab24cf3e-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "0931cb975901",
+          "name": "Sabine K.",
+          "text": [
+            {
+              "_key": "449af041d7fb",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "08fde4367f6c0",
+                  "text": "מצאתי דירה יפהפייה בלימסול, בדיוק מה שחיפשתי. הייעוץ היה מצוין וכל השאלות שלי נענו בסבלנות. תודה מקרב לב על הליווי.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-ffdb23fc0727bdc71a0dbca5cadd57c20b9effd4-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "9173099a8cf4",
+          "name": "Andreas W.",
+          "text": [
+            {
+              "_key": "cbdc224a136a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "07ffe38048150",
+                  "text": "השירות היה מצוין. קניתי נכס בלרנקה והתלהבתי מכמה שהכל עבר מהר ופשוט. הסוכנות נתנה לי את כל המידע הדרוש והורידה ממני הרבה דאגות.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-6503b00045d52ef4e40a0d915d4ac87eeb02d37d-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "0242791f905d",
+          "name": "Claudia M.",
+          "text": [
+            {
+              "_key": "27e8b4f41342",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "4ba895ada63c0",
+                  "text": "מקצועיים, אמינים וישרים, בדיוק מה שרוצים מסוכנות נדל\"ן. רכשתי וילה בפאפוס ואני יותר ממרוצה מהעסקה.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-8b0222fdb8d8199397984511612c4bb29f3b5572-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "e9d355628e56",
+          "name": "Thomas R.",
+          "text": [
+            {
+              "_key": "00ec03808792",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "4f22f1a002730",
+                  "text": "סוכנות שממש כדאי להמליץ עליה. הדירה בלימסול הוצגה לי בדיוק כפי שתוארה, וכל המסמכים הוכנו בזמן. הקשר היה נעים ומקצועי מאוד.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-d41aff1f80320573963b80a5984b62b2a40c7ede-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "243b9df39eba",
+          "name": "Kerstin L.",
+          "text": [
+            {
+              "_key": "2fc7e2598d43",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "63e508bcdf8a0",
+                  "text": "תודה על הייעוץ ועל הליווי המצוינים. רכישת הנכס שלי בלרנקה הייתה פשוטה ובלי לחץ, בזכות צוות מקצועי. ליוו אותי ועדכנו אותי לאורך כל התהליך.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-070355f667760043f3657c79891ad06558c6a48f-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "e26704f687b2",
+          "name": "Stefan B.",
+          "text": [
+            {
+              "_key": "9c7a98af9628",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "e4bd4697c3e10",
+                  "text": "מהסיור הראשון ועד החתימה אצל עורך הדין הכל עבר חלק. קניתי וילה בפאפוס והייתי יכול לסמוך על המקצועיות של הצוות. ממליץ בחום.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-5c32ea75327be36e139315f6de9f6f2a7dd56415-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "fecc1cf609f4",
+          "name": "Ulrike T.",
+          "text": [
+            {
+              "_key": "6ec61697fb7b",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "3ff4f771de640",
+                  "text": "אני מרוצה לגמרי מרכישת הדירה שלי בלימסול. הסוכנות הקדישה זמן כדי להבין את הרצונות שלי. במיוחד הערכתי את הייעוץ הכן, בלי לחץ.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-fdaa7e2703c618b5833dc592099bba45d59ff67c-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "b5dc97de6146",
+          "name": "Jörg S.",
+          "text": [
+            {
+              "_key": "99be22913e69",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "53572f5b14f20",
+                  "text": "שירות נהדר. קיבלתי ייעוץ וליווי מצוינים ברכישת הנכס בלרנקה. ראוי לציין במיוחד את זמני התגובה המהירים ואת הטיפול הפשוט.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-ed801466ebd3c8b06f70103e3f8a326a18e75b9f-150x150-png",
+              "_type": "reference"
+            }
+          }
+        },
+        {
+          "_key": "abba039b4b2e",
+          "name": "Nadine P.",
+          "text": [
+            {
+              "_key": "9f175027621a",
+              "_type": "block",
+              "style": "normal",
+              "children": [
+                {
+                  "_key": "07ea7a71568f0",
+                  "text": "תודה רבה על הליווי המצוין. רכשתי וילה יפהפייה בפאפוס והרגשתי בידיים טובות מההתחלה ועד הסוף. הסוכנות באמת דאגה לכל פרט.",
+                  "_type": "span",
+                  "marks": []
+                }
+              ],
+              "markDefs": []
+            }
+          ],
+          "image": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-759be5867f4021d19b3ba0e786c5a17294eed92b-150x150-png",
+              "_type": "reference"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "_key": "6fe6acbb3e93",
+      "_type": "benefitsBlock",
+      "title": "יתרונות",
+      "benefits": [
+        {
+          "_key": "68c604440197",
+          "title": "פרויקטי נדל\"ן",
+          "counting": {
+            "conuntNumber": 195
+          },
+          "description": "בדרום קפריסין. מדירות סטודיו ועד וילות יוקרה."
+        },
+        {
+          "_key": "6ee836295625",
+          "title": "שנות ניסיון",
+          "counting": {
+            "conuntNumber": 10
+          },
+          "description": "כסוכנות שיווק נדל\"ן בשירות מלא"
+        },
+        {
+          "_key": "81677c357dfc",
+          "title": "שירות ללקוחות שלנו",
+          "counting": {
+            "sign": "°",
+            "conuntNumber": 360
+          },
+          "description": "אנחנו מלווים אתכם מהפנייה הראשונה ועד מסירת המפתחות."
+        },
+        {
+          "_key": "c5b40c62e156",
+          "title": "לקוחות מרוצים",
+          "counting": {
+            "sign": "%",
+            "conuntNumber": 100
+          },
+          "description": "מגרמניה, אוסטריה, שווייץ ומדינות נוספות."
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": null,
+  "translationGroupSlugEn": "about-us",
+  "review": "pending"
+}
