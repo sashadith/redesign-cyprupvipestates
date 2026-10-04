@@ -184,7 +184,7 @@ const EN: DevelopmentStrings = {
   viewTable: "Table",
   unitDisplayAria: "Unit display",
   colUnit: "Unit", colType: "Type", colFloor: "Floor", colBeds: "Beds", colBuilt: "Built", colPlot: "Plot", colPrice: "Price", colStatus: "Status",
-  factBeds: "Beds", factBaths: "Baths", factBuilt: "Built", factVeranda: "Veranda", factCovered: "Covered", factFloor: "Floor",
+  factBeds: "Beds", factBaths: "Baths", factBuilt: "Interior", factVeranda: "Veranda", factCovered: "Covered", factFloor: "Floor",
   unitM2: "m²",
   viewTour: "View tour ↗",
   watch: "Watch ↗",

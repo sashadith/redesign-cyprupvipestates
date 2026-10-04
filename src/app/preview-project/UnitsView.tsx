@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { atSize } from "./imageSize";
 import Lightbox from "./Lightbox";
 import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy";
-import { areaValue, coveredArea } from "@/lib/formatArea";
+import { areaValue, coveredArea, interiorArea } from "@/lib/formatArea";
 import { listedUnits } from "@/lib/developmentAvailability";
 import { capitalizeType } from "@/lib/developmentCard";
 import { heFeedLabel } from "@/lib/heFeedVocab";
@@ -179,10 +179,12 @@ function UnitCard({ u, t, lang, projectName, open, onToggle, clamped = false }: 
   // areaInternal where the source has one: five sources keep a veranda-
   // inclusive total in areaBuilt, which built + veranda counted twice.
   const covered = coveredArea(u.areaBuilt, u.areaInternal, u.areaVeranda);
+  // The interior, not the raw areaBuilt — see interiorArea in lib/formatArea.ts.
+  const interior = interiorArea(u.areaBuilt, u.areaInternal);
   const facts = [
     u.beds && { k: t.factBeds, v: u.beds },
     u.baths && { k: t.factBaths, v: u.baths },
-    u.areaBuilt && { k: t.factBuilt, v: sqm(u.areaBuilt, t.unitM2) },
+    interior && { k: t.factBuilt, v: sqm(interior, t.unitM2) },
     u.areaVeranda && { k: t.factVeranda, v: sqm(u.areaVeranda, t.unitM2) },
     covered != null && { k: t.factCovered, v: `${covered} ${t.unitM2}` },
     u.areaPlot && { k: t.factPlot, v: sqm(u.areaPlot, t.unitM2) },
@@ -276,10 +278,12 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
      figures and get the Covered column; the other 138 have nothing to add to
      the built area, so labelling it "Covered" there would be a claim the feed
      never made — those keep Built. Inside a Covered project, the 172 units out
-     of 3,665 that have no veranda of their own fall back to their built area. */
+     of 3,665 that have no veranda of their own fall back to their interior
+     (interiorArea: areaInternal, else areaBuilt). */
   const coveredCol = units.some((u) => areaNum(u.areaVeranda) != null);
+  const interiorOf = (u: UnitVM) => interiorArea(u.areaBuilt, u.areaInternal);
   const coveredOf = (u: UnitVM) => {
-    const c = coveredArea(u.areaBuilt, u.areaInternal, u.areaVeranda) ?? areaNum(u.areaBuilt);
+    const c = coveredArea(u.areaBuilt, u.areaInternal, u.areaVeranda) ?? areaNum(interiorOf(u));
     return c == null ? "" : `${c} ${t.unitM2}`;
   };
   const show = {
@@ -287,7 +291,7 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
     floor: some((u) => u.floor),
     beds: some((u) => u.beds),
     baths: some((u) => u.baths),
-    built: some((u) => u.areaBuilt),
+    built: some(interiorOf),
     plot: some((u) => u.areaPlot),
   };
   // Unit, Price, Status and the action cell are always there.
@@ -368,7 +372,7 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
                   {show.floor && <td>{u.floor || "—"}</td>}
                   {show.beds && <td className="r">{u.beds || "—"}</td>}
                   {show.baths && <td className="r">{u.baths || "—"}</td>}
-                  {show.built && <td className="r">{(coveredCol ? coveredOf(u) : u.areaBuilt && sqm(u.areaBuilt, t.unitM2)) || "—"}</td>}
+                  {show.built && <td className="r">{(coveredCol ? coveredOf(u) : interiorOf(u) && sqm(interiorOf(u), t.unitM2)) || "—"}</td>}
                   {show.plot && <td className="r">{u.areaPlot ? sqm(u.areaPlot, t.unitM2) : "—"}</td>}
                   <td className="r pp-tbl__price">{priceCell(u, t, lang)}</td>
                   <td className="r pp-tbl__status"><StatusPill u={u} lang={lang} /></td>

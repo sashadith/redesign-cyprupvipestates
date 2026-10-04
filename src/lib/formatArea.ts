@@ -27,6 +27,18 @@ export function areaValue(v: string | null | undefined): number | null {
    built >= internal + veranda — Cybarco 402/402, SharePoint 389, manual 145,
    AGG 120, Drive 18 (~1,000 published). Vasileon C305: 89 internal + 11 veranda,
    "Total areas" 124 → the page said 135; the real figure is 100. */
+/* The interior as the source states it: areaInternal when present, else
+   areaBuilt (which is the interior for Plus Properties and the live-feed
+   adapters). Shown on the "Built" line — labelled Wohnfl. / Pow. użytk. /
+   Жилая / Interior — so a card reads interior + veranda = covered. Before
+   2026-10-04 that line showed areaBuilt raw, and for AGG / SharePoint that is a
+   total with parking, storage or communal area in it: Vasileon C305 read
+   "Wohnfl. 124 · Veranda 11 · Gesamtfl. 100". Returns the raw string, so the
+   source's own formatting is kept. */
+export function interiorArea(built: string | null | undefined, internal: string | null | undefined): string {
+  return areaValue(internal) != null ? (internal as string) : built || "";
+}
+
 export function coveredArea(built: string | null | undefined, internal: string | null | undefined, veranda: string | null | undefined): number | null {
   const v = areaValue(veranda);
   if (v == null) return null;

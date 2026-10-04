@@ -7,7 +7,7 @@
 // Pure function only — no DB, no React.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { areaValue, coveredArea } from "@/lib/formatArea";
+import { areaValue, coveredArea, interiorArea } from "@/lib/formatArea";
 
 test("a veranda-inclusive areaBuilt is not added to twice — areaInternal is the base", () => {
   // AGG Vasileon C305: "Total areas: 124" also carries parking 15 + storage 3 + uncovered 6.
@@ -49,4 +49,23 @@ test("areaValue reads the leading number only", () => {
   assert.equal(areaValue(""), null);
   assert.equal(areaValue("—"), null);
   assert.equal(areaValue(undefined), null);
+});
+
+test("the interior line shows areaInternal, so interior + veranda = covered on the card", () => {
+  // Vasileon C305: was "124" (Total areas incl. parking/storage) next to Covered 100.
+  assert.equal(interiorArea("124", "89"), "89");
+  assert.equal(interiorArea("124", "89") && coveredArea("124", "89", "11"), 100);
+  // City Landmark 301: built 138.1 also holds 12 parking + 4.9 communal.
+  assert.equal(interiorArea("138.1", "92.2"), "92.2");
+  // The source's own formatting is kept.
+  assert.equal(interiorArea("67 m²", "52 m²"), "52 m²");
+});
+
+test("without an areaInternal the interior line keeps areaBuilt", () => {
+  assert.equal(interiorArea("71", "71"), "71"); // Plus Properties
+  assert.equal(interiorArea("96.3 m²", undefined), "96.3 m²"); // live-feed adapters
+  assert.equal(interiorArea("96.3", ""), "96.3");
+  assert.equal(interiorArea("96.3", "—"), "96.3");
+  assert.equal(interiorArea("", null), "");
+  assert.equal(interiorArea(null, undefined), "");
 });
