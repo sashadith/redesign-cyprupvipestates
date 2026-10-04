@@ -27,6 +27,12 @@
   --champagne:#C29A5E;
   --bronze:   #8E6B3D;
 
+  /* The thin gold contour: a 1px line that fades out towards both edges. Drawn
+     above and below the property map since 2026-07, and the footer's top edge
+     since 2026-10-03. Defined here because those two live in different
+     stylesheets. */
+  --gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent);
+
   /* spacing — 8px */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
   --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 160px;

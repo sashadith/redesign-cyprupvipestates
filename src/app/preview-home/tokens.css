@@ -15,6 +15,9 @@
   --ink-warm: #221C15;
   --ivory:    #EFE9DB;
   --champagne:#C29A5E;
+  /* same line as design-tokens.css — routes outside [lang] load only this
+     sheet, and .pf's top contour would otherwise resolve to nothing. */
+  --gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent);
   --bronze:   #8E6B3D;
   --scarcity-green: #1F5B4E; /* scarcity banner bg — deep elegant green, distinct from --sea/--sea-deep (too dark/desaturated to read as an urgency accent) */
 
@@ -1056,7 +1059,13 @@ img { max-width: 100%; display: block; }
 .formsec__feedback.formsec__feedback { max-width: 100%; margin: var(--s-5) 0 0; }
 .formsec__feedback + .formsec__submit { margin-top: var(--s-5); }
 @media (min-width: 560px) { .formsec__feedback.formsec__feedback { max-width: 90%; } }
-.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--bronze) !important; color: #ffffff !important; border-color: var(--bronze); }
+/* padding-inline here is the fix for an off-centre label: .btn is built for a
+   trailing .btn__ico chip and carries 26px of lead-in against 16px on the
+   closing edge, so a chip-less button with justify-content:center still sat its
+   text 5px right of the middle (spotted 2026-10-03). Logical padding, so RTL
+   mirrors with it. */
+.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; padding-inline: 26px;
+  background: var(--bronze) !important; color: #ffffff !important; border-color: var(--bronze); }
 .formsec__submit:hover { background: #7e5e35 !important; border-color: #7e5e35; }
 /* The spinner sits inside the button, so it is drawn in the button's ink. */
 .formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.35); border-top-color: #ffffff; animation: spin 0.7s linear infinite; }
@@ -1123,7 +1132,12 @@ img { max-width: 100%; display: block; }
 /* match the original .footer: small top padding (no big bottom), .container geometry */
 .pf {
   position: relative; isolation: isolate; overflow: hidden;
-  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: 90px;
+  /* The map's gold contour instead of a grey hairline (Sascha, 2026-10-03).
+     A background layer, not a border: both of .pf's pseudo-elements are taken
+     by its clouds, and border-image would be the only other way to put a
+     gradient on an edge. */
+  background: var(--gold-contour, linear-gradient(90deg, transparent, #C29A5E, transparent)) top/100% 1px no-repeat, var(--sea-deep);
+  border-top: 0; color: var(--text-soft); padding-top: 90px;
 }
 /* soft golden "clouds" drifting behind the footer content */
 .pf::before, .pf::after {
@@ -1227,3 +1241,38 @@ img { max-width: 100%; display: block; }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   .shimmer::after, .btn::before { display: none; }
 }
+
+/* 2026-10-03 (Sascha): "Request a consultation — <project>" runs across the
+   FULL page container and continues behind the consultant portrait. The
+   main column dissolves into the grid (display: contents) so the heading can
+   span both columns in row 1 while the form keeps column 1 below it; the
+   aside spans both rows, stays vertically centred and keeps its z-index: 1,
+   so where the heading reaches the portrait the text passes behind it. The
+   stripe is unchanged — it already spanned the container (100cqi). Mobile
+   (one column) is untouched: head, form, aside still stack in that order. */
+@media (min-width: 940px) {
+  .formsec__main { display: contents; }
+  .formsec__grid { grid-template-rows: auto 1fr; }
+  .formsec__head { grid-column: 1 / -1; grid-row: 1; }
+  .formsec__form { grid-column: 1; grid-row: 2; }
+  .formsec__aside { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+  .formsec__title { text-wrap: wrap; max-width: none; }
+}
+/* Tighter vertical rhythm between the fields (same request). */
+.formsec__fields { row-gap: var(--s-3); }
+.formsec__field { gap: 5px; }
+.formsec__radio { margin-top: var(--s-4); }
+.formsec__consent { margin-top: var(--s-4); }
+.formsec__submit { margin-top: var(--s-5); }
+
+/* 2026-10-03 (Sascha): stripe 10px lower, and the same air above and below it.
+   Above = heading bottom → line = 24px + 10px. Below = line → form = the same
+   34px, so the form's top margin is exactly 2 × 34px + the 1px line. In the
+   two-column layout the grid's row-gap would add on top of that between the
+   heading row and the form row — zeroed there (the aside spans both rows, so
+   nothing else is affected). */
+.formsec__stripe { margin-top: calc(var(--s-5) + 10px); }
+.formsec__form { margin-top: calc(2 * (var(--s-5) + 10px) + 1px - 20px); } /* 34px above the line, 14px below (operator, 2026-10-03) */
+@media (min-width: 940px) { .formsec__grid { row-gap: 0; } }
+/* Portrait (with its caption) 50px higher in the two-column layout (operator, 2026-10-03). */
+@media (min-width: 940px) { .formsec__aside { transform: translateY(-22px); } }

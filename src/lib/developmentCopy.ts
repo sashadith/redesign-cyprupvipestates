@@ -98,6 +98,21 @@ export type DevelopmentStrings = {
   showMoreUnits: (n: number) => string;
   factsheetPdf: string;
   soon: string;
+
+  // ---- conversion review (2026-10-03) ----
+  heroCtaConsult: string; // hero primary button → #enquiry
+  heroCtaUnits: string; // hero secondary button → #units
+  heroCompletion: string; // caption under the completion/stage hero stat
+  enquireUnit: string; // per-unit button → #enquiry, pre-fills the message
+  enquireUnitMessage: (unit: string, project: string) => string;
+  trustProjects: (n: number) => string; // "{n} projects across Cyprus, independently compared"
+  /* The trust strip repeats one shape: a figure, then what it refers to. The
+     figure is not always a numeral — "same day" carries the second item — so
+     each label is written to read on from its own figure, not to restate it. */
+  trustReplyFig: string;
+  trustReply: string;
+  trustFreeFig: string;
+  trustFree: string;
   enlargePhotos: string;
   enlargePhotoN: (n: number) => string;
   showAllPhotos: (n: number) => string;
@@ -178,6 +193,16 @@ const EN: DevelopmentStrings = {
   showMoreUnits: (n) => `Show ${n} more ${n === 1 ? "unit" : "units"}`,
   factsheetPdf: "Factsheet PDF",
   soon: "soon",
+  heroCtaConsult: "Request a consultation",
+  heroCtaUnits: "View available units",
+  heroCompletion: "completion",
+  enquireUnit: "Enquire about this unit",
+  enquireUnitMessage: (unit, project) => `I am interested in unit ${unit} at ${project}. Please send me details and availability.`,
+  trustProjects: (n) => `${n} projects across Cyprus, independently compared`,
+  trustReplyFig: "24h",
+  trustReply: "A personal reply from our team — usually the same day",
+  trustFreeFig: "0 €",
+  trustFree: "Consultation and viewings, on site or by video call — no obligation",
   enlargePhotos: "Enlarge photos",
   enlargePhotoN: (n) => `Enlarge photo ${n}`,
   showAllPhotos: (n) => `Show all ${n} photos`,
@@ -241,6 +266,16 @@ const DE: DevelopmentStrings = {
   showMoreUnits: (n) => `${n} weitere ${n === 1 ? "Einheit" : "Einheiten"} anzeigen`,
   factsheetPdf: "Factsheet PDF",
   soon: "bald",
+  heroCtaConsult: "Beratung anfragen",
+  heroCtaUnits: "Verfügbare Einheiten ansehen",
+  heroCompletion: "Fertigstellung",
+  enquireUnit: "Diese Einheit anfragen",
+  enquireUnitMessage: (unit, project) => `Ich interessiere mich für die Einheit ${unit} in ${project}. Bitte senden Sie mir Details und Verfügbarkeit.`,
+  trustProjects: (n) => `${n} Projekte auf Zypern, unabhängig verglichen`,
+  trustReplyFig: "24h",
+  trustReply: "Persönliche Antwort von unserem Team — meist noch am selben Tag",
+  trustFreeFig: "0 €",
+  trustFree: "Beratung und Besichtigungen, vor Ort oder per Videocall — unverbindlich",
   enlargePhotos: "Fotos vergrößern",
   enlargePhotoN: (n) => `Foto ${n} vergrößern`,
   showAllPhotos: (n) => `Alle ${n} Fotos anzeigen`,
@@ -304,6 +339,16 @@ const PL: DevelopmentStrings = {
   showMoreUnits: (n) => `Pokaż ${n} więcej ${plCount(n, "lokal", "lokale", "lokali")}`,
   factsheetPdf: "Factsheet PDF",
   soon: "wkrótce",
+  heroCtaConsult: "Poproś o konsultację",
+  heroCtaUnits: "Zobacz dostępne lokale",
+  heroCompletion: "ukończenie",
+  enquireUnit: "Zapytaj o ten lokal",
+  enquireUnitMessage: (unit, project) => `Interesuje mnie lokal ${unit} w ${project}. Proszę o szczegóły i dostępność.`,
+  trustProjects: (n) => `${n} projektów na Cyprze, porównanych niezależnie`,
+  trustReplyFig: "24h",
+  trustReply: "Osobista odpowiedź od naszego zespołu — zwykle tego samego dnia",
+  trustFreeFig: "0 €",
+  trustFree: "Konsultacja i oglądanie nieruchomości, na miejscu lub przez wideorozmowę — bez zobowiązań",
   enlargePhotos: "Powiększ zdjęcia",
   enlargePhotoN: (n) => `Powiększ zdjęcie ${n}`,
   showAllPhotos: (n) => `Pokaż wszystkie ${n} zdjęć`,
@@ -368,6 +413,16 @@ const RU: DevelopmentStrings = {
   showMoreUnits: (n) => `Показать ещё ${n} ${ruCount(n, "объект", "объекта", "объектов")}`,
   factsheetPdf: "Factsheet PDF",
   soon: "скоро",
+  heroCtaConsult: "Запросить консультацию",
+  heroCtaUnits: "Смотреть доступные объекты",
+  heroCompletion: "сдача",
+  enquireUnit: "Узнать об этом объекте",
+  enquireUnitMessage: (unit, project) => `Меня интересует объект ${unit} в ${project}. Пришлите, пожалуйста, детали и наличие.`,
+  trustProjects: (n) => `${n} проектов на Кипре, независимое сравнение`,
+  trustReplyFig: "24h",
+  trustReply: "Личный ответ от нашей команды — как правило, в тот же день",
+  trustFreeFig: "0 €",
+  trustFree: "Консультация и просмотры, на месте или по видеосвязи — без обязательств",
   enlargePhotos: "Увеличить фото",
   enlargePhotoN: (n) => `Увеличить фото ${n}`,
   showAllPhotos: (n) => `Показать все ${n} фото`,
@@ -437,6 +492,17 @@ const HE: DevelopmentStrings = {
   showMoreUnits: (n) => (n === 1 ? "הצגת יחידה נוספת" : `הצגת ${n} יחידות נוספות`),
   factsheetPdf: "דף נתונים PDF",
   soon: "בקרוב",
+  // REVIEW(he) — English placeholders until the Hebrew pass (never written by Claude without an explicit request).
+  heroCtaConsult: "Request a consultation",
+  heroCtaUnits: "View available units",
+  heroCompletion: "completion",
+  enquireUnit: "Enquire about this unit",
+  enquireUnitMessage: (unit, project) => `I am interested in unit ${unit} at ${project}. Please send me details and availability.`,
+  trustProjects: (n) => `${n} projects across Cyprus, independently compared`,
+  trustReplyFig: "24h",
+  trustReply: "A personal reply from our team — usually the same day",
+  trustFreeFig: "0 €",
+  trustFree: "Consultation and viewings, on site or by video call — no obligation",
   enlargePhotos: "הגדלת התמונות",
   enlargePhotoN: (n) => `הגדלת תמונה ${n}`,
   showAllPhotos: (n) => `הצגת כל ${n} התמונות`,
