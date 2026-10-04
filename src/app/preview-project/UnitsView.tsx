@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { atSize } from "./imageSize";
 import Lightbox from "./Lightbox";
 import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy";
-import { roundArea } from "@/lib/formatArea";
+import { areaValue, coveredArea } from "@/lib/formatArea";
 import { listedUnits } from "@/lib/developmentAvailability";
 import { capitalizeType } from "@/lib/developmentCard";
 import { heFeedLabel } from "@/lib/heFeedVocab";
@@ -28,6 +28,11 @@ export type UnitVM = {
   beds: string;
   baths: string;
   areaBuilt: string;
+  // Interior only, when the source states it separately — the base of the Covered
+  // figure (see coveredArea in lib/formatArea.ts). Optional: only the DB-backed
+  // path (developmentRender.ts) has it; the live-feed adapters put the interior
+  // in areaBuilt itself.
+  areaInternal?: string;
   areaPlot: string;
   areaVeranda: string;
   floor: string;
@@ -56,14 +61,8 @@ const sqm = (v: string, unit: string) => {
   // un-normalized. Caught via simulation before deploy, 2026-07-26.
   return /(m²|m2|м²)\s*$/i.test(v) ? v.replace(/\s*(m²|m2|м²)\s*$/i, ` ${unit}`) : `${v} ${unit}`;
 };
-// Extract the leading numeric value from an already-formatted area string
-// ("77 m²" -> 77) so Covered Area can be computed as areaBuilt +
-// areaVeranda at display time, never stored.
-const areaNum = (v: string): number | null => {
-  const m = (v || "").trim().match(/^[\d.]+/);
-  const n = m ? Number(m[0]) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : null;
-};
+// Leading numeric value of an already-formatted area string ("77 m²" -> 77).
+const areaNum = areaValue;
 // Sold → a muted dash (the status pill already says "Sold"). Reserved → the word
 // itself in the price slot, not "Price on request" or the actual figure.
 const priceCell = (u: UnitVM, t: DevelopmentStrings, lang: string) =>
@@ -173,14 +172,13 @@ function UnitDetails({ u, t, projectName, withPhotos = true, withFeatures = fals
 
 function UnitCard({ u, t, lang, projectName, open, onToggle, clamped = false }: { u: UnitVM; t: DevelopmentStrings; lang: string; projectName: string; open: boolean; onToggle: () => void; clamped?: boolean }) {
   const [lb, setLb] = useState<number | null>(null);
-  // Covered Area is never stored — computed here from areaBuilt + areaVeranda
+  // Covered Area is never stored — computed here (interior + covered veranda)
   // so it stays correct if a manual edit later adds/changes the veranda
   // figure. Only shown when a veranda figure actually exists (Domenica/
-  // Pafilia/Square One have none) — no "+0 m²" line otherwise.
-  const builtNum = areaNum(u.areaBuilt), verandaNum = areaNum(u.areaVeranda);
-  // roundArea guards against IEEE 754 drift in the sum (e.g. 125.6 + 9.7 ===
-  // 135.29999999999998 in JS) — see src/lib/formatArea.ts.
-  const covered = builtNum != null && verandaNum != null ? roundArea(builtNum + verandaNum) : null;
+  // Pafilia/Square One have none) — no "+0 m²" line otherwise. The interior is
+  // areaInternal where the source has one: five sources keep a veranda-
+  // inclusive total in areaBuilt, which built + veranda counted twice.
+  const covered = coveredArea(u.areaBuilt, u.areaInternal, u.areaVeranda);
   const facts = [
     u.beds && { k: t.factBeds, v: u.beds },
     u.baths && { k: t.factBaths, v: u.baths },
@@ -269,9 +267,10 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
      column repeating one value carries as little as one that is all dashes. */
   const typeVaries = new Set(units.map((u) => u.type ?? "")).size > 1;
 
-  /* Covered area instead of built (Sascha, 2026-10-03): built + covered
-     veranda, the same figure the cards have always shown as "Covered", rounded
-     through roundArea because 96.3 + 39.6 is 135.89999999999998 in JS.
+  /* Covered area instead of built (Sascha, 2026-10-03): interior + covered
+     veranda, the same figure the cards show as "Covered" (coveredArea — since
+     2026-10-04 the interior is areaInternal where the source has one, see
+     lib/formatArea.ts; built + veranda had double-counted ~1,000 units).
 
      The header follows the data, per project: 230 of 368 projects carry veranda
      figures and get the Covered column; the other 138 have nothing to add to
@@ -280,10 +279,8 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
      of 3,665 that have no veranda of their own fall back to their built area. */
   const coveredCol = units.some((u) => areaNum(u.areaVeranda) != null);
   const coveredOf = (u: UnitVM) => {
-    const b = areaNum(u.areaBuilt);
-    if (b == null) return "";
-    const v = areaNum(u.areaVeranda);
-    return `${v == null ? b : roundArea(b + v)} ${t.unitM2}`;
+    const c = coveredArea(u.areaBuilt, u.areaInternal, u.areaVeranda) ?? areaNum(u.areaBuilt);
+    return c == null ? "" : `${c} ${t.unitM2}`;
   };
   const show = {
     type: typeVaries || !promoted,

@@ -60,7 +60,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     ref: u.ref ?? "", name: u.name ?? "", label: u.label ?? "", type: u.type ?? "",
     status: (u.status as UnitVM["status"]) ?? "available", statusLabel: statusLabel(u.status ?? "available", lang),
     price: u.price ?? null, currency: u.currency ?? "EUR",
-    beds: u.beds ?? "", baths: u.baths ?? "", areaBuilt: u.areaBuilt ?? "", areaPlot: u.areaPlot ?? "", areaVeranda: u.areaVeranda ?? "",
+    beds: u.beds ?? "", baths: u.baths ?? "", areaBuilt: u.areaBuilt ?? "", areaInternal: u.areaInternal ?? "", areaPlot: u.areaPlot ?? "", areaVeranda: u.areaVeranda ?? "",
     floor: u.floor ?? "", attrs: arr(u.attrs), features: arr<string>(u.amenities),
     // Unit imagery, in descending order of how specific it is to THIS unit:
     // its own photos, else its own floor plans, else the project gallery.
