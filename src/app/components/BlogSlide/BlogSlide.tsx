@@ -83,7 +83,7 @@ const BlogSlide: FC<Props> = ({
                           ? "Цена от"
                           : "Price from"}
                   &nbsp;
-                  {price.toLocaleString()} €
+                  {price.toLocaleString("en-US")} €
                 </>)}
           </p>
           {linkLabel && linkDestination && (
