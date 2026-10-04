@@ -16,7 +16,7 @@
   /* shared with .pp-map.px-mapwrap::before/::after below — defined once here so
      both the map's contour and any other divider on this page reference the
      same value instead of a second literal gradient. */
-  --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
+  --pp-gold-contour: var(--gold-contour); }
 /* fixed golden-cloud atmosphere on the page background — behind ALL content, so
    the clouds are never clipped by a section (drift via the design-kit keyframes) */
 .pp-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--sea-deep); }
@@ -28,18 +28,40 @@
 @media (prefers-reduced-motion: reduce) { .pp-atmos span { animation: none; } }
 
 /* extra clouds anchored to specific blocks (behind their content, not clipped) */
-.pp-about, .pp-units-sec { position: relative; z-index: 0; }
-.pp-about::before, .pp-units-sec::before, .pp-units-sec::after {
+.pp-about, .pp-units-sec, .pp-promo-sec { position: relative; z-index: 0; }
+.pp-about::before, .pp-units-sec::before, .pp-units-sec::after,
+.pp-promo-sec::before, .pp-promo-sec::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: radial-gradient(circle, rgba(194,154,94,0.16), rgba(194,154,94,0) 66%); }
 .pp-about::before { left: -9%; top: 2%; width: min(46vw, 520px); animation: cloudDriftB 26s ease-in-out infinite alternate; }
 .pp-units-sec::before { left: -8%; top: 10%; width: min(50vw, 580px); animation: cloudDriftA 27s ease-in-out infinite alternate; }
 .pp-units-sec::after { right: -9%; bottom: 6%; width: min(44vw, 520px);
   background: radial-gradient(circle, rgba(194,154,94,0.13), rgba(194,154,94,0) 66%); animation: cloudDriftB 31s ease-in-out infinite alternate; }
-@media (prefers-reduced-motion: reduce) { .pp-about::before, .pp-units-sec::before, .pp-units-sec::after { animation: none; } }
+/* The long SEO copy at the foot of the page had none — a flat dark field under
+   the lit sections above it (Sascha, 2026-10-03). Two clouds, one per side and
+   slower than the ones upstairs, so a block that is mostly text keeps the same
+   atmosphere without the movement pulling at the reading. */
+.pp-promo-sec::before { left: -10%; top: calc(-6% - 100px); width: min(48vw, 560px); animation: cloudDriftA 34s ease-in-out infinite alternate; }
+/* Third cloud, left, lower down the block — an element because both pseudos on
+   the section are taken. */
+.pp-promo-cloud { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1;
+  will-change: transform; left: -8%; bottom: calc(8% + 100px); width: min(46vw, 540px);
+  background: radial-gradient(circle, rgba(194,154,94,0.13), rgba(194,154,94,0) 66%);
+  animation: cloudDriftB 41s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .pp-promo-cloud { animation: none; } }
+.pp-promo-sec::after { right: -10%; bottom: calc(28% + 400px); width: min(63vw, 750px);
+  background: radial-gradient(circle, rgba(194,154,94,0.12), rgba(194,154,94,0) 66%); animation: cloudDriftB 38s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .pp-about::before, .pp-units-sec::before, .pp-units-sec::after,
+  .pp-promo-sec::before, .pp-promo-sec::after { animation: none; } }
 /* same container as the global header/footer (--maxw / --gutter) */
 .pp-wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
 .pp-section { padding-block: clamp(28px, 4vw, 52px); }
+/* The units block sits 50px closer to the description above it (Sascha,
+   2026-10-03). A negative margin rather than less padding: the section's own
+   top padding bottoms out at 28px on narrow screens, so subtracting 50 there
+   would be invalid, and pulling the whole block up also brings everything
+   below it along, which is what "50px höher" means on a page that flows. */
+.pp-units-sec { margin-top: -40px; }
 .pp-h2 { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem); color: var(--ivory); margin: 0 0 .7em; letter-spacing: -0.01em; }
 .pp-count { font-family: var(--font-body), sans-serif; font-size: 0.9rem; color: var(--text-faint); font-weight: 600; }
@@ -168,7 +190,14 @@
 /* full-width map section — 25% shorter than before */
 .pp-mapsection { padding-block: clamp(28px, 4vw, 52px); }
 .pp-mapsection .pp-h2 { margin-bottom: 16px; }
-.pp-map.px-mapwrap { position: relative; width: 100%; height: min(51vh, 450px); border-radius: 0; }
+/* 500px (operator, 2026-10-03), was min(51vh, 450px) — which never reached its
+   own 450 cap on a normal laptop: 51vh is 407px at a 799px-tall window, so the
+   viewport term was doing all the work and the map came out a good deal shorter
+   than the number in the rule suggested. The vh term is kept, only loosened, so
+   a genuinely short window still shrinks the map instead of letting it swallow
+   the screen; at 70vh it stops constraining anything above ~715px of viewport,
+   which is where the flat 500 takes over. */
+.pp-map.px-mapwrap { position: relative; width: 100%; height: min(70vh, 500px); border-radius: 0; }
 /* thin gold-gradient strip, top+bottom — shared by the property page map and the
    Client Presentation map (PresentationMap.tsx), both of which carry this wrapper.
    z-index must clear Leaflet's own internal panes (tilePane/markerPane/popupPane
@@ -214,6 +243,81 @@
   --about-h2-cap: calc(clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem) * 0.47); }
 .pp-about__main { min-width: 0; margin-top: calc(var(--about-drop) - var(--about-h2-cap)); }
 .pp-about__side { align-self: start; margin-top: var(--about-drop); }
+
+/* TEST (2026-10-03): promo copy continues straight out of the About description
+   and wraps around the facts panel instead of starting a new section below the
+   map. The grid becomes a block so the panel can float — a grid item cannot be
+   flowed around. `inline-end`, not `right`, so Hebrew mirrors on its own.
+   The panel is a float, so it no longer stretches a grid row: the text runs
+   under it as soon as it is past, which is the whole point of the test. */
+@media (min-width: 861px) {
+  /* flow-root, not block: a float taller than its container spills out of it,
+     and everything after the section then flows alongside the panel instead of
+     below it. With the units table moved up directly behind this section that
+     was immediately visible — the table rendered squeezed into the column left
+     of the amenities panel. A block formatting context contains the float, so
+     the section ends below whichever of the two columns is taller. */
+  .pp-about--flow { display: flow-root; }
+  .pp-about--flow .pp-about__side {
+    float: inline-end;
+    /* The grid gave the panel one share of 1.7fr + 1fr after the gap. Restated
+       for the float rather than re-guessed: a first pass wrote
+       clamp(250px, 32%, 380px) here and the 380 bit, visibly narrowing the
+       panel. The gap term is the same clamp the grid used. */
+    width: calc((100% - clamp(24px, 4vw, 60px)) / 2.7);
+    min-width: 250px;
+    margin-inline-start: clamp(24px, 4vw, 60px);
+    margin-bottom: var(--s-6);
+  }
+  /* The promo's first heading follows body copy here, not a section's padding
+     edge, so it wants its normal separation back — the 0 above exists only for
+     the stand-alone placement under the map. */
+  .pp-about--flow .pp-promo > .iart__rich:first-child > .iart__h2:first-child {
+    margin-top: clamp(44px, 6vw, 72px);
+  }
+}
+
+/* ---------------------------------------------------------------- promo copy */
+/* The long admin-authored block under the map is rendered by renderInsightsBlock,
+   so it arrives in the BLOG's editorial typography (.iart__*) — a size up from
+   this page's own prose, and full-strength ivory where the page uses a muted
+   body colour. Measured on /projects/cap-st-georges-resort: heading 35.2 vs
+   33.6px, body 19.2 vs 17px, body rgb(239,233,219) vs rgba(…,0.72). Matched to
+   the "About this development" block above it (operator, 2026-10-03) by reusing
+   .pp-h2's own clamp and .pp-desc's own tokens, so the two cannot drift apart
+   later. Scoped to .pp-promo — two classes, (0,2,0), so it outranks the blog's
+   single-class rules wherever the bundler emits them, and Cyprus Insights keeps
+   its own scale untouched. Heading line-height is deliberately NOT matched: the
+   About H2 has none of its own and inherits 1.7, which on a run of eight
+   headings would open gaps the editorial 1.14 is there to avoid. */
+/* `pretty`, not the blog's `balance`. Balance evens out the line lengths, which
+   suits a ~700px article column and misfires at this width: measured on
+   cap-st-georges-resort, "Cap St Georges Resort: Private-Beach Villas for Sale
+   in Peyia, Paphos" came out as 473 + 558px, because to even the halves the
+   browser had to break early and the nearest legal point was the hyphen inside
+   "Private-Beach". Filled lines break it at a space instead (708 + 316px);
+   `pretty` keeps the orphan protection without the balancing. */
+.pp-promo .iart__h2 { font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem); text-wrap: pretty; }
+/* The map sat off-centre between its neighbours: 104px of air above it, 176px
+   below (cap-st-georges-resort, 2026-10-03). The culprit is this heading's own
+   72px flow margin — the blog uses it to separate mid-article sections, and
+   directly under a section's padding it simply adds to it. Zeroed, the two
+   section paddings alone produce the symmetry, because the element above the
+   map is the DistancesStrip's own bordered box and its edge sits exactly on the
+   section's padding edge: 52 + 52 on both sides. Both are the same clamp, so it
+   holds at every width, not just the one this was measured at.
+
+   Measure against the strip's BORDER, not the text inside it — a first attempt
+   compared the last distance value's box, which sits 28px above that border,
+   concluded the two sides were equal at 132px, and shipped exactly those 28px
+   as a margin here. The gap that reads as "the space under the map" is bounded
+   by what is drawn, not by where the text happens to end. */
+.pp-promo > .iart__rich:first-child > .iart__h2:first-child { margin-top: 0; }
+.pp-promo .iart__p,
+.pp-promo .iart__ul,
+.pp-promo .iart__ol,
+.pp-promo .iart__li { font-size: var(--text-body); line-height: 1.8; color: var(--text-soft); }
+
 /* highlights panel — facts (2×2) + amenities, refined with a gold top hairline */
 .pp-panel { position: relative; border: 1px solid var(--hairline); border-radius: var(--r-ui); overflow: hidden;
   background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.008)); }
@@ -249,7 +353,18 @@
 .pp-loc-col { display: inline-flex; flex-direction: column; }
 .pp-loc-name { line-height: 1.15; padding-bottom: 0.08em; }
 .pp-loc-dot { line-height: 1.02; }
-.pp-loc-tag { font-family: var(--font-body), sans-serif; font-size: 0.32em; font-weight: 600; letter-spacing: 0.22em;
+/* DISTRICT / LOCALITY / AREA — drawn from a data attribute instead of a child
+   span (2026-10-03). The caption sits inside the block's <h2>, and a crawler
+   reads a heading's text with no regard for layout: the markup version came out
+   as "PaphosDistrict·PeyiaLocality·Sea CavesArea", gluing each label onto the
+   place name next to it. With the heading now carrying the location after the
+   promo copy's own "Location — …" H2 was dropped as a duplicate, those three
+   names need to be legible as names. CSS-generated content is not part of
+   textContent, so the heading reads "Paphos · Peyia · Sea Caves" while nothing
+   changes on screen. Safe to hide this way precisely because the labels are
+   decoration — the place names carry the meaning. */
+.pp-loc-col::after { content: attr(data-tag);
+  font-family: var(--font-body), sans-serif; font-size: 0.32em; font-weight: 600; letter-spacing: 0.22em;
   text-transform: uppercase; color: var(--champagne); opacity: 0.72; margin-top: 0.7em; }
 /* cool location pin, top-right — gold, glowing, gently floating */
 .pp-hood__pin { position: absolute; top: clamp(18px, 3vw, 34px); inset-inline-end: clamp(22px, 3.5vw, 48px); z-index: 2;
@@ -353,9 +468,10 @@
   cursor: zoom-in; transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease); }
 .pp-plan:hover { border-color: var(--accent); box-shadow: 0 14px 28px -10px rgba(0,0,0,0.6); }
 .pp-plan img { width: 100%; height: 100%; object-fit: cover; display: block;
-  filter: brightness(0.5) contrast(1.05);
+  /* 0.5 -> 0.7 at rest, 0.75 -> 0.9 on hover (Sascha, 2026-10-03). */
+  filter: brightness(0.7) contrast(1.05);
   transition: transform 0.5s var(--ease), filter var(--dur-sm) var(--ease); }
-.pp-plan:hover img { transform: scale(1.04); filter: brightness(0.75) contrast(1.02); }
+.pp-plan:hover img { transform: scale(1.04); filter: brightness(0.9) contrast(1.02); }
 
 /* units */
 .pp-units-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
@@ -407,9 +523,15 @@
 .pp-spec dt { color: var(--text-faint); margin: 0; } .pp-spec dd { color: var(--ivory); margin: 0; text-align: end; }
 .pp-spec dd a { color: var(--accent); text-decoration: none; } .pp-spec dd a:hover { text-decoration: underline; }
 .pp-uc__desc { font-size: 0.86rem; line-height: 1.65; color: var(--text-soft); margin: 0; }
-.pp-uc__strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.pp-uc__thumb { position: relative; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 6px; overflow: hidden; aspect-ratio: 1; }
-.pp-uc__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s var(--ease); }
+/* Fixed tile HEIGHT, natural width — not a square grid. Measured across twelve
+   developments the mirrored renders run from 1:1 to 2.67:1: a square tile with
+   object-fit:cover kept only the middle 37% of a panorama, so Mamba's strip was
+   five tiles of sky and an awning edge (2026-10-03). Every frame is now shown
+   whole, and tiles of different shapes sit on one baseline. */
+.pp-uc__strip { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp-uc__thumb { position: relative; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 6px; overflow: hidden;
+  flex: 0 0 auto; height: 60px; max-width: 100%; }
+.pp-uc__thumb img { height: 100%; width: auto; max-width: 100%; object-fit: contain; display: block; transition: transform 0.4s var(--ease); }
 .pp-uc__thumb:hover img { transform: scale(1.06); }
 .pp-uc__thumb--more span { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(6,14,12,0.6);
   color: var(--ivory); font-size: 0.8rem; font-weight: 600; }
@@ -440,12 +562,25 @@
 .pp-price-na { color: var(--text-faint); font-weight: 400; }
 .pp-tbl__price .pp-vat { text-align: end; }
 
-/* "Show more" (expands the hidden sold units) */
+/* "Show more" — reveals the available units beyond the first ten. A rounded
+   rectangle, not a pill (asked for 2026-10-03), on the same 16px radius as the
+   table frame it sits in. */
 .pp-showmore { display: flex; align-items: center; gap: 8px; width: fit-content; margin: clamp(30px, 4vw, 48px) auto 0;
-  padding: 10px 24px; border-radius: 999px; border: 1px solid var(--hairline-strong); background: none;
+  padding: 10px 24px; border-radius: var(--r-ui); border: 1px solid var(--hairline-strong); background: none;
   color: var(--ivory); font-family: var(--font-body); font-size: 0.9rem; cursor: pointer;
-  transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease); }
+  transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease); }
 .pp-showmore:hover { border-color: var(--accent); color: var(--champagne); }
+/* Solid bronze with a golden outer glow — no gradient, no sheen (Sascha,
+   2026-10-03): on a control this size a gradient reads as decoration. Two
+   classes to outrank the ghost paint above. */
+.pp-showmore.pp-showmore--bronze { background: var(--bronze); border-color: var(--bronze); color: var(--ivory);
+  box-shadow: 0 0 30px -6px rgba(216,178,104,0.55); }
+/* Hover brightens the bronze (Sascha's call, 2026-10-03, over the darker
+   #7e5e35 the form's Send button uses). Noted for whoever reads this later: the
+   ivory label drops from 4.0:1 to 3.0:1 while hovering. It was a deliberate
+   choice on a momentary state, not an oversight. */
+.pp-showmore.pp-showmore--bronze:hover { background: #A77F49; border-color: #A77F49; color: var(--ivory);
+  box-shadow: 0 0 38px -4px rgba(216,178,104,0.75); }
 
 /* table */
 .pp-tbl-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: var(--r-ui); }
@@ -455,11 +590,61 @@
 .pp-tbl th.r, .pp-tbl td.r { text-align: end; font-variant-numeric: tabular-nums; }
 .pp-tbl tbody tr:last-child td { border-bottom: 0; }
 .pp-tbl tbody tr:hover { background: rgba(255,255,255,0.02); }
-.pp-tbl tr.is-sold, .pp-tbl tr.is-reserved { opacity: 0.5; }
-.pp-tbl__name { color: var(--ivory); font-weight: 600; } .pp-tbl__name small { display: block; color: var(--text-faint); font-weight: 400; font-size: 0.72rem; }
+/* Dimming sits on the CELLS, not the row: the row's own opacity is what the
+   roll-out animates, and a row-level 0.5 would make the reveal end in a flash
+   back down to half. */
+.pp-tbl tr.is-sold > td, .pp-tbl tr.is-reserved > td { opacity: 0.5; }
+/* Chevron · thumbnail · two lines of text, as a grid inside the cell. The
+   reference ("H 1") used to be a block inside the same flow as the chevron, so
+   it started at the cell's left edge while the unit name started after the
+   chevron — the two lines were out of line by exactly the chevron's width.
+   Now only the label column stacks, so they share one left edge. */
+/* The grid sits in an inner element, never on the <td> itself: `display: grid`
+   on a cell takes it out of the table layout, so it no longer stretches to the
+   row's height and its bottom border is drawn above everyone else's — a visible
+   step in the rule under the first column, wherever another cell was taller
+   (the status cell, which stacks a pill over the enquiry link). */
+.pp-tbl__name { color: var(--ivory); font-weight: 600; }
+.pp-tbl__namegrid { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 10px; }
+.pp-tbl__namegrid:not(:has(.pp-tbl__thumb)) { grid-template-columns: auto 1fr; }
+.pp-tbl__label { display: flex; flex-direction: column; min-width: 0; }
+.pp-tbl__name small { display: block; color: var(--text-faint); font-weight: 400; font-size: 0.72rem; }
+/* Keeps the images the cards used to carry — with a real alt this time, which
+   the card version never had. */
+.pp-tbl__thumb { width: 54px; height: 40px; object-fit: cover; border-radius: 6px; display: block;
+  border: 1px solid var(--hairline); background: var(--sea); }
+.pp-tbl__status { white-space: nowrap; }
+
+/* Floor plans in the expanded row. UnitVM has carried `plans` since the feed
+   adapters were written and nothing ever rendered it. */
+.pp-uc__plans { margin-top: 18px; }
+.pp-uc__plans-label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-faint); margin-bottom: 10px; }
+.pp-uc__thumb--plan { background: var(--sea-deep); }
+.pp-uc__thumb--plan img { object-fit: contain; }
+
+.pp-units-head__text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pp-units-head__text .pp-hint { margin: 0; }
 .pp-tbl__price { color: var(--champagne); font-weight: 600; }
 .pp-tbl__row { cursor: pointer; }
+/* Nothing to expand into: the row keeps its chevron column for alignment but
+   offers no affordance (projects whose units carry no photos, plans or specs). */
+.pp-tbl__row.is-flat { cursor: default; }
 .pp-tbl__row.is-open { background: rgba(255,255,255,0.045); }
+/* Clamped, not withheld: rows and cards past the visible limit stay in the
+   document and are hidden here, so a crawler still reads every available unit
+   and its thumbnail's alt text. display:none also keeps the browser from
+   fetching those lazy images, so the page weighs the same as before. */
+.pp-tbl__row.is-clamped, .pp-uc.is-clamped { display: none; }
+/* Sold and reserved units are folded away behind the toggle below the table.
+   A table row cannot transition its own height, so the reveal is a short slide
+   per row with a stagger — the group reads as rolling out from the top rather
+   than appearing all at once. */
+@keyframes pp-rowroll { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+.pp-tbl__row--rolled { animation: pp-rowroll 320ms var(--ease) backwards; animation-delay: calc(var(--i, 0) * 30ms); }
+.pp-tbl__morerow > td { padding: 10px 16px; border-bottom: 0; text-align: center; }
+.pp-tbl__morerow .pp-showmore { margin: 0 auto; }
+@media (prefers-reduced-motion: reduce) { .pp-tbl__row--rolled { animation: none; } }
 .pp-tbl__chev { display: inline-block; width: 1.2em; color: var(--text-faint); font-size: 0.8em; }
 .pp-tbl__detail > td { padding: 0 16px 18px; background: rgba(255,255,255,0.02); }
 .pp-tbl__detail .pp-uc__more { border-top: 0; padding-top: 16px; }
@@ -565,3 +750,168 @@
 @media (max-width: 900px) { .pp-alts__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .pp-alts__grid { grid-template-columns: 1fr; } }
 .dist-strip--compact .dist-strip__value { font-size: 0.85rem; }
+
+/* 2026-10-03 (Sascha): the availability line sits directly under the
+   "Available units" heading — no heading bottom margin inside the head
+   block — and the expanded table row's photo tiles are a quarter of their
+   former size: fixed ~100px tiles that wrap, instead of four tiles spread
+   across the full table width. The cards' own 4-up strip is untouched. */
+.pp-units-head__text .pp-h2 { margin: 0; }
+/* Tighter to the heading, roomier towards the table, upright (not italic). */
+.pp-units-head__text { gap: 2px; }
+.pp-units-head__text .pp-hint { font-style: normal; margin: 0 0 22px; }
+.pp-tbl__detail .pp-uc__strip { gap: 8px; }
+.pp-tbl__detail .pp-uc__thumb { height: 76px; }
+
+/* ---- conversion review, 2026-10-03 (Sascha) ---- */
+/* hero: the two next steps, under the stats */
+/* Same geometry as .hero__cta on the home page: arrow-less buttons, tighter
+   padding, one line — and the same stacking on narrow screens, where two
+   variable-length labels (RU "Получить консультацию") cannot share a row. */
+.pp-hero__cta { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: clamp(18px, 2.4vw, 28px); }
+.pp-hero__cta .btn { padding: 13px 20px; white-space: nowrap; text-decoration: none; }
+@media (max-width: 640px) {
+  .pp-hero__cta { flex-direction: column; align-items: stretch; }
+  .pp-hero__cta .btn { justify-content: center; white-space: normal; }
+}
+/* anchor targets land below the sticky header */
+#units, #enquiry { scroll-margin-top: 96px; }
+/* per-unit enquiry button (replaces the "Factsheet PDF · soon" placeholder) */
+.pp-uc__enquire { height: 40px; padding: 0 18px; font-size: 0.82rem; text-decoration: none; align-self: flex-start; white-space: nowrap; }
+.pp-tbl__detail .pp-uc__enquire { height: 44px; font-size: 0.9rem; }
+/* distances directly under the map, same container as the rest of the page */
+/* The distances sit under the area block now, so they hug it: the section's own
+   top padding would otherwise double the gap the area block already leaves. */
+.pp-dist-sec { padding-top: 0; }
+/* trust strip: one live figure + two promises, right above the form */
+/* Spacing on the shared step scale (--s-*, design-tokens.css) instead of the
+   loose 12/14/16/18px it was built with, and on the same rhythm as the sections
+   around it. Asymmetric on purpose: the map section above already ends on its
+   own 28-52px padding, so the strip adds only --s-5 there, while below it the
+   distance to the light form section — which starts hard at its own edge — was
+   set by eye to 72px (Sascha, 2026-10-03); the scale's nearest steps, 64 and
+   96, both read wrong there. Grid gap --s-6 (doubled from --s-4 once the plates
+   got their glow — they need room for it to fall off), card padding --s-5,
+   inner gap --s-4. */
+.pp-trust { display: grid; grid-template-columns: 1fr; gap: var(--s-6); padding-block: var(--s-5) 72px; }
+@media (min-width: 760px) { .pp-trust { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* ---------- "golden plate" ----------
+   A metal plate, not a flat gold fill: what makes metal read as metal is
+   banding — a bright edge, a mid tone, a darker turn and a second highlight —
+   so the fill runs through five close stops on the diagonal, lifted by a white
+   inner line along the top edge, a soft specular sweep and a metal rim. The
+   stops sit close together on purpose: the banding does the work, not its range.
+
+   Every colour is a variable, so a variant is five lines (see --bronze below)
+   and nothing else about the plate changes. Ink is dark by design: ivory on
+   champagne is 1.8:1 and unreadable, the page's own deep green gives ~8:1. */
+.pp-plate {
+  --plate-1: #DCC094; --plate-2: #CDA976; --plate-3: #C29A5E; --plate-4: #BC945A; --plate-5: #CBA873;
+  --plate-rim: rgba(116,83,36,0.42);
+  --plate-sheen: rgba(255,255,255,0.20);
+  --plate-top: rgba(255,255,255,0.30);
+  --plate-ink: rgba(8,21,18,0.82); --plate-ink-strong: var(--sea-deep);
+  /* The page's own golden glow, the one the buttons use on hover — laid under
+     the plate so it sits on the dark ground like warm light rather than a drop
+     shadow. A box-shadow and not a pseudo-element on purpose: the plate clips
+     its children for the sheen, and a halo drawn inside could never reach past
+     the edge. */
+  --plate-glow: rgba(216,178,104,0.58);
+  position: relative; overflow: hidden; border-radius: var(--r-ui);
+  border: 1px solid var(--plate-rim);
+  background: linear-gradient(135deg, var(--plate-1) 0%, var(--plate-2) 22%, var(--plate-3) 50%, var(--plate-4) 74%, var(--plate-5) 100%);
+  box-shadow: 0 0 26px -7px var(--plate-glow), 0 14px 30px -18px rgba(0,0,0,0.8), inset 0 1px 0 var(--plate-top);
+  color: var(--plate-ink);
+}
+/* The specular band: one soft diagonal sweep of light across the plate, the
+   thing that separates polished metal from a coloured rectangle. */
+.pp-plate::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(104deg, transparent 26%, var(--plate-sheen) 48%, transparent 70%); }
+.pp-plate > * { position: relative; z-index: 1; }
+
+/* Bronze: the same plate, one metal darker and warmer. Built around the design
+   system's own --bronze (#8E6B3D). */
+.pp-plate--bronze.pp-plate--bronze {
+  /* --plate-3 IS the design system's --bronze; the other four stops are that
+     same colour lifted and darkened a little, so the plate bands without ever
+     leaving the brand's bronze. */
+  /* The band is tight — lightest to darkest it spans 4.8:1 to 5.9:1 against the
+     ivory lettering, where the first version ran 2.4 to 4.6 and had a bright
+     corner the text vanished into. One step below --bronze (#8E6B3D) in the
+     same hue, which is what carries ivory above the 4.5:1 reading threshold
+     across the whole plate, sheen included. */
+  --plate-1: #80603A; --plate-2: #7A5B36; --plate-3: #755833; --plate-4: #6E5330; --plate-5: #7B5C37;
+  --plate-rim: rgba(62,42,16,0.55);
+  --plate-sheen: rgba(255,255,255,0.07);
+  --plate-top: rgba(255,255,255,0.14);
+  /* Warmer and a touch stronger than on gold: the darker plate gives the halo
+     less to blend into, so at the gold value it barely showed. */
+  --plate-glow: rgba(204,160,96,0.66);
+  /* Ivory engraving instead of dark ink (trying it, 2026-10-03). Measured
+     against this plate: 4.0:1 on the bronze mid-tone, but only 2.4:1 where the
+     --plate-1 highlight and the sheen run — below any readable threshold. Use
+     --bronze-deep below if the light lettering is the one we keep. */
+  --plate-ink: rgba(239,233,219,0.92); --plate-ink-strong: var(--ivory);
+}
+
+/* Bronze dark enough to carry light lettering: the same hue, the whole band
+   shifted down, sheen and top line halved so they cannot wash out the text.
+   Ivory then sits at ~7:1 across the entire plate, highlight included. */
+.pp-plate--bronze-deep.pp-plate--bronze-deep {
+  --plate-1: #6E5230; --plate-2: #5B4426; --plate-3: #4C3920; --plate-4: #42311C; --plate-5: #5A4426;
+  --plate-rim: rgba(255,255,255,0.14);
+  --plate-sheen: rgba(255,255,255,0.08);
+  --plate-top: rgba(255,255,255,0.12);
+  --plate-ink: rgba(239,233,219,0.88); --plate-ink-strong: var(--ivory);
+}
+
+.pp-trust__item { display: flex; align-items: center; gap: var(--s-4); padding: var(--s-5);
+  font-family: var(--font-body); font-size: 0.9rem; line-height: 1.4; }
+.pp-trust__item b { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 500; font-size: 2.25rem; color: var(--plate-ink-strong); line-height: 1; flex: none; }
+.pp-trust__item b.pp-trust__fig--word { font-size: 1.1rem; line-height: 1.15; max-width: 7.5em; flex: 0 1 auto; }
+/* Long promo copy below the form reads as an article, not as a sales block.
+   It opens on --section-y, the site-wide rhythm the big section boundaries use
+   (up to 100px), rather than the project page's tighter in-page spacing: the
+   block above it is the light contact form, so this is where one world ends and
+   another begins, not a step within a section. Written with both classes
+   (0,2,0) so it outranks .pp-section instead of tying with it — equal
+   specificity would leave the winner to the order the bundler emits, which
+   differs between dev and the production build. */
+/* Whichever of the two opens this closing pair carries the full break from the
+   light form above; the second one follows on a paragraph's worth of air, so
+   "Similar projects" and the SEO copy read as one block rather than two
+   sections. Sibling selectors, because either can stand alone: a project
+   without promo copy ends on the alternatives, one without alternatives ends on
+   the copy, and both then need their own full section padding. */
+.pp-section.pp-promo-sec,
+.pp-section.pp-alts--quiet { padding-top: var(--section-y); }
+.pp-alts--quiet:has(+ .pp-promo-sec) { padding-bottom: 0; }
+/* The copy opens on exactly the air its own H2s get inside the article
+   (.iart__h2's clamp(44px, 6vw, 72px) top margin, insights.css): the gap from
+   the cards to "Villas and Terraced Houses…" then matches the gap above
+   "One Kilometre From Both…" further down (Sascha, 2026-10-03). The first H2
+   keeps margin-top: 0 — the padding carries it here, so the section box, and
+   with it the clouds anchored to it, still starts where the block starts. */
+.pp-alts--quiet + .pp-section.pp-promo-sec { padding-top: clamp(44px, 6vw, 72px); }
+.pp-tbl__status { white-space: normal; }
+/* The per-row enquiry step: the site's frosted-glass button (.btn .btn--glass),
+   sized down to sit in a table row (Sascha, 2026-10-03).
+
+   The class is DOUBLED on purpose: it and .btn are both (0,1,0), so a tie would
+   be settled by bundler emission order, which differs between dev and the
+   production build — the trap that broke the form feedback in production on
+   2026-10-01.
+
+   Logical padding, not the `padding` shorthand: .btn--glass sets
+   padding-inline-end on its own, and mixing a physical shorthand with a logical
+   longhand leaves the winner up to declaration order. */
+.pp-uc__enquire--sm.pp-uc__enquire--sm { padding-block: 6px; padding-inline: 13px; font-size: 0.72rem; border-radius: 9px; gap: 5px;
+  /* Champagne rather than ivory-on-glass (Sascha, 2026-10-03): label and rim in
+     the accent, with a thin wash of it behind — the frosted base stays. */
+  color: var(--champagne); border-color: rgba(194,154,94,0.40); background: rgba(194,154,94,0.12); }
+/* Three classes so the hover beats .btn--glass:hover, which also sets the rim. */
+.pp-uc__enquire--sm.pp-uc__enquire--sm.pp-uc__enquire--sm:hover {
+  border-color: var(--champagne); background: rgba(194,154,94,0.22); color: #D8B268; }
+/* Its own last column: the cell is as narrow as the button (width: 1% makes a
+   table cell shrink to its content) and never wraps. */
+.pp-tbl__action { width: 1%; white-space: nowrap; text-align: end; }

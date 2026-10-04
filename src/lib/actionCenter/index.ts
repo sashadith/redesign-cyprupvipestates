@@ -6,6 +6,7 @@ import { systemRules } from "./rules/system";
 import { seoRules } from "./rules/seo";
 import { seoAdvisorRules } from "./rules/seoAdvisor";
 import { pagePowerRules } from "./rules/pagePower";
+import { socialRules } from "./rules/social";
 import { filterSnoozed } from "./snooze";
 
 export type { ActionItem, Severity, Category } from "./types";
@@ -14,7 +15,8 @@ export { snoozeItem, dismissForeverItem } from "./snooze";
 // 2026-08-11 — CRM moved to the top per request (leads need the fastest
 // glance), Developers second, SEO/SEO_ADVISOR/SYSTEM unchanged relative to
 // each other.
-const CATEGORY_ORDER: Record<Category, number> = { CRM: 0, DEVELOPERS: 1, SEO: 2, SEO_ADVISOR: 3, SYSTEM: 4 };
+// 2026-10-03 — SOCIAL (Typefully, rules/social.ts) right after Developers.
+const CATEGORY_ORDER: Record<Category, number> = { CRM: 0, DEVELOPERS: 1, SOCIAL: 2, SEO: 3, SEO_ADVISOR: 4, SYSTEM: 5 };
 
 function sortItems(items: ActionItem[]): ActionItem[] {
   return [...items].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.since.getTime() - b.since.getTime());
@@ -50,10 +52,10 @@ function sortItems(items: ActionItem[]): ActionItem[] {
 // functions again, but from the weekly advisor cron only — never inside a
 // request that also renders this panel — so nothing is recomputed per load.
 export async function getActionCenterItems(): Promise<ActionItem[]> {
-  const [developers, crm, system, seo, seoAdvisor, pagePower] = await Promise.all([
-    developerRules(), crmRules(), systemRules(), seoRules(), seoAdvisorRules(), pagePowerRules(),
+  const [developers, crm, system, seo, seoAdvisor, pagePower, social] = await Promise.all([
+    developerRules(), crmRules(), systemRules(), seoRules(), seoAdvisorRules(), pagePowerRules(), socialRules(),
   ]);
-  const all = await filterSnoozed([...developers, ...crm, ...system, ...seo, ...seoAdvisor, ...pagePower]);
+  const all = await filterSnoozed([...developers, ...crm, ...system, ...seo, ...seoAdvisor, ...pagePower, ...social]);
   return sortItems(all);
 }
 

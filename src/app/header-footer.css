@@ -863,7 +863,12 @@ html[lang="ru"] .nav__cta-label { display: none; }
 /* ===================== FOOTER (dark) ===================== */
 .pf {
   position: relative; isolation: isolate; overflow: hidden;
-  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: 90px;
+  /* The map's gold contour instead of a grey hairline (Sascha, 2026-10-03).
+     A background layer, not a border: both of .pf's pseudo-elements are taken
+     by its clouds, and border-image would be the only other way to put a
+     gradient on an edge. */
+  background: var(--gold-contour, linear-gradient(90deg, transparent, #C29A5E, transparent)) top/100% 1px no-repeat, var(--sea-deep);
+  border-top: 0; color: var(--text-soft); padding-top: 90px;
 }
 .pf::before, .pf::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;

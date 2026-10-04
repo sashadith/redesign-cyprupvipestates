@@ -68,7 +68,7 @@ await client.connect(transport);
 assert(/crm_get_project/.test(client.getInstructions() || ""), "server instructions received");
 const tools = await client.listTools();
 const names = tools.tools.map((t) => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["crm_create_lead", "crm_delete_lead", "crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_inventory_changes", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_restore_lead", "crm_search_leads", "crm_search_projects", "crm_send_email", "crm_update_lead", "crm_worklist"]), `sixteen tools listed: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["blog_get_article", "blog_list_articles", "blog_social_traffic", "crm_create_lead", "crm_delete_lead", "crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_inventory_changes", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_restore_lead", "crm_search_leads", "crm_search_projects", "crm_send_email", "crm_update_lead", "crm_worklist"]), `19 tools listed: ${names.join(", ")}`);
 
 const parse = (r) => JSON.parse(r.content[0].text);
 const worklist = parse(await client.callTool({ name: "crm_worklist", arguments: { limit: 5 } }));
@@ -109,6 +109,16 @@ assert(bogusSend.isError === true, "crm_send_email with an unknown draft → isE
 
 const bogusDelete = await client.callTool({ name: "crm_delete_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000", confirmName: "Nobody", reason: "smoke test" } });
 assert(bogusDelete.isError === true, "crm_delete_lead with an unknown lead → isError (nothing trashed)");
+const blogList = parse(await client.callTool({ name: "blog_list_articles", arguments: { limit: 5 } }));
+assert(blogList.total > 0 && blogList.articles.every((a) => ["en", "de", "pl", "ru"].every((l) => a.locales[l] === "missing" || (a.locales[l].url && a.locales[l].title))), `blog_list_articles: ${blogList.total} articles, ${blogList.publishedByLocale.en} in EN`);
+const firstEn = blogList.articles.find((a) => a.locales.en !== "missing");
+if (firstEn) {
+  const art = parse(await client.callTool({ name: "blog_get_article", arguments: { slug: firstEn.slug, locale: "en" } }));
+  assert(art.body.length > 0 && !/<[a-z]/i.test(art.body) && Array.isArray(art.sources), `blog_get_article: ${art.wordCount} words, ${art.sources.length} sources`);
+}
+const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+const social = parse(await client.callTool({ name: "blog_social_traffic", arguments: { from: since, to: new Date().toISOString() } }));
+assert(Array.isArray(social.articles) && typeof social.totals.linkedin.visits === "number", `blog_social_traffic: ${social.totals.linkedin.visits} LinkedIn / ${social.totals.x.visits} X visits in 30 days`);
 const notFound = await client.callTool({ name: "crm_get_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000" } });
 assert(notFound.isError === true, "unknown lead → isError");
 

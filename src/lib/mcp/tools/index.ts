@@ -8,6 +8,9 @@ import { registerPlaybook } from "./playbook";
 import { registerSearchProjects } from "./searchProjects";
 import { registerInventoryChanges } from "./inventoryChanges";
 import { registerWhatsappThread } from "./whatsappThread";
+import { registerBlogListArticles } from "./blogListArticles";
+import { registerBlogGetArticle } from "./blogGetArticle";
+import { registerBlogSocialTraffic } from "./blogSocialTraffic";
 import { registerLogInteraction } from "./logInteraction";
 import { registerUpdateLead } from "./updateLead";
 import { registerDraftEmail } from "./draftEmail";
@@ -28,6 +31,10 @@ export function registerReadTools(server: McpServer): void {
   registerSearchProjects(server);
   registerInventoryChanges(server);
   registerWhatsappThread(server);
+  // Blog / social-media content planning (2026-10-03): read-only.
+  registerBlogListArticles(server);
+  registerBlogGetArticle(server);
+  registerBlogSocialTraffic(server);
 }
 
 // Phase 2 — writes. Registered after the read tools; each one is attributed

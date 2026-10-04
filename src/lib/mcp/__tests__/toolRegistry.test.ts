@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { READ_TOOL_NAMES, WRITE_TOOL_NAMES } from "@/lib/mcp/toolNames";
 
 const EXPECTED = [
+  "blog_get_article",
+  "blog_list_articles",
+  "blog_social_traffic",
   "crm_create_lead",
   "crm_delete_lead",
   "crm_draft_email",
@@ -23,7 +26,7 @@ const EXPECTED = [
   "crm_worklist",
 ];
 
-test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the eighteen registered tools", () => {
+test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the 21 registered tools", () => {
   const union = [...READ_TOOL_NAMES, ...WRITE_TOOL_NAMES].slice().sort();
   assert.deepEqual(union, EXPECTED);
 });

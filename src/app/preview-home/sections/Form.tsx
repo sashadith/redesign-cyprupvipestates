@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FC, useId, useRef, useState } from "react";
+import React, { FC, useEffect, useId, useRef, useState } from "react";
 import { Formik, Form as FormikForm, Field, ErrorMessage, FormikHelpers, FormikProps } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
@@ -78,6 +78,21 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
   const [messageIsError, setMessageIsError] = useState(false);
   const [formStartTime] = useState(() => Date.now());
   const formikRef = useRef<FormikProps<FormData> | null>(null);
+  /* Per-unit "Enquire about this unit" buttons (project page, UnitsView)
+     dispatch a `cve:enquire` event with a ready-made message; the form
+     reveals its question field pre-filled and the anchor jump (#enquiry)
+     brings it into view. The field is shown, not required (2026-10-03). */
+  const [prefilledQuestion, setPrefilledQuestion] = useState(false);
+  useEffect(() => {
+    const onEnquire = (e: Event) => {
+      const message = (e as CustomEvent<{ message?: string }>).detail?.message;
+      if (!message) return;
+      setPrefilledQuestion(true);
+      formikRef.current?.setFieldValue("question", message);
+    };
+    window.addEventListener("cve:enquire", onEnquire);
+    return () => window.removeEventListener("cve:enquire", onEnquire);
+  }, []);
 
   const initialValues: FormData = {
     name: "", surname: "", phone: "", email: "",
@@ -282,7 +297,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       </>
                     )}
 
-                    {showQuestionField && (
+                    {(showQuestionField || prefilledQuestion) && (
                       <div className="formsec__field formsec__field--full">
                         <label className="formsec__label" htmlFor={`${uid}-question`}>{questionLabel}</label>
                         <Field name="question">
