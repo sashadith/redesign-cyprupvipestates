@@ -142,8 +142,9 @@ export default async function ProjectPageBody({
      duplicates of the DistancesStrip; they are back by request (2026-10-03) —
      the strip has since moved up under the area block and this copy now sits
      below the form as reading matter and crawler depth, so the repetition costs
-     a reader nothing. src/lib/promoDistances.ts is still in the tree if we ever
-     want the filter back: one call. */
+     a reader nothing. The render-time filter that did the dropping was deleted
+     with them (src/lib/promoDistances.ts, 2026-10-04); git history has it if the
+     duplication ever becomes a problem again. */
   const promoBlocks = Array.isArray(p.promoBlocks) ? p.promoBlocks : [];
   // Trust strip figure — the live count of published developments, the same
   // population /projects lists; never a typed number that goes stale.
