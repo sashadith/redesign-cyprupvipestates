@@ -1,0 +1,110 @@
+{
+  "_source": "Reiwa Development Drive 'Reiwa Projects' (1LT0Dzek5wy1LqsidNHMnZnhKEeoYJpEV). Bronte: 'Bronte Price List.pdf' (2026-09-02, text drawn as outlines — transcribed from the rendered pages). Nova: 'Nova Price List.pdf' (2026-05-28, text PDF). Project facts (pin, completion, energy, distances): reiwa-development.com/project/<slug>/. UNO: price list not readable yet — not in this file.",
+  "account": {
+    "slug": "reiwa",
+    "name": "Reiwa Development",
+    "website": "https://www.reiwa-development.com",
+    "phone": "+357 8000 6666",
+    "email": "info@reiwa-development.com",
+    "contactInfo": "Hellados Ave 59, Office 01, Paphos 8020",
+    "developerCloudUrl": "https://drive.google.com/drive/folders/1LT0Dzek5wy1LqsidNHMnZnhKEeoYJpEV",
+    "manualSyncReminderDays": 30
+  },
+  "projects": [
+    {
+      "slug": "bronte",
+      "name": "Bronte",
+      "category": "Residential",
+      "stage": "Off Plan",
+      "completion": "Q4 2028",
+      "energy": "A+",
+      "district": "Paphos",
+      "area": "Kato Paphos",
+      "latitude": 34.75878028,
+      "longitude": 32.42380875,
+      "amenities": [
+        "Resort-style swimming pool",
+        "Rooftop pool",
+        "Children's pool",
+        "Wellness, spa & gym",
+        "Padel court",
+        "Restaurant & lounge",
+        "Shared offices",
+        "24-hour security",
+        "Concierge service",
+        "VRF air conditioning (LG)",
+        "Covered parking"
+      ],
+      "notes": "Prices exclude VAT. Turnkey; LG VRF A/C; provision for underfloor heating, EV charging, photovoltaics; covered parking per apartment. Furniture packages from €20,000 + VAT. Blocks D, E, F 'Coming soon' (website says 58 units in total).",
+      "units": [
+        { "ref": "A101", "block": "A", "floor": "1", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 22, "total": 72, "price": 350000, "status": "available" },
+        { "ref": "A102", "block": "A", "floor": "1", "type": "Apartment", "view": "City View", "beds": 2, "baths": 2, "internal": 83, "veranda": 9, "total": 92, "price": 450000, "status": "available" },
+        { "ref": "A103", "block": "A", "floor": "1", "type": "Apartment", "view": "Pool View", "beds": 2, "baths": 2, "internal": 84, "veranda": 18, "total": 102, "price": 510000, "status": "available" },
+        { "ref": "A201", "block": "A", "floor": "2", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 22, "total": 72, "price": 380000, "status": "available" },
+        { "ref": "A202", "block": "A", "floor": "2", "type": "Apartment", "view": "Partial Sea View", "beds": 2, "baths": 2, "internal": 83, "veranda": 9, "total": 92, "price": 510000, "status": "available" },
+        { "ref": "A203", "block": "A", "floor": "2", "type": "Apartment", "view": "Pool View", "beds": 2, "baths": 2, "internal": 84, "veranda": 18, "total": 102, "price": 560000, "status": "available" },
+
+        { "ref": "B101", "block": "B", "floor": "1", "type": "Apartment", "view": "Pool View", "beds": 1, "baths": 1, "internal": 58, "veranda": 8, "total": 66, "price": 320000, "status": "available" },
+        { "ref": "B102", "block": "B", "floor": "1", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 54, "veranda": 9, "total": 63, "price": 300000, "status": "available" },
+        { "ref": "B103", "block": "B", "floor": "1", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 11, "total": 61, "price": 290000, "status": "available" },
+        { "ref": "B104", "block": "B", "floor": "1", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 9, "total": 59, "price": 285000, "status": "available" },
+        { "ref": "B105", "block": "B", "floor": "1", "type": "Apartment", "view": "Pool View", "beds": 1, "baths": 1, "internal": 50, "veranda": 11, "total": 61, "price": 290000, "status": "available" },
+        { "ref": "B201", "block": "B", "floor": "2", "type": "Apartment", "view": "Pool View", "beds": 1, "baths": 1, "internal": 56, "veranda": 8, "total": 64, "price": 340000, "status": "available" },
+        { "ref": "B202", "block": "B", "floor": "2", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 49, "veranda": 11, "total": 60, "price": 320000, "status": "available" },
+        { "ref": "B203", "block": "B", "floor": "2", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 10, "total": 60, "price": 310000, "status": "available" },
+        { "ref": "B204", "block": "B", "floor": "2", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 10, "total": 60, "price": 310000, "status": "available" },
+        { "ref": "B205", "block": "B", "floor": "2", "type": "Apartment", "view": "Pool View", "beds": 1, "baths": 1, "internal": 49, "veranda": 9, "total": 58, "price": 310000, "status": "available" },
+        { "ref": "B301", "block": "B", "floor": "3", "type": "Apartment", "view": "Sea View", "beds": 1, "baths": 1, "internal": 55, "veranda": 8, "total": 63, "price": 400000, "status": "available" },
+        { "ref": "B302", "block": "B", "floor": "3", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 49, "veranda": 11, "total": 60, "price": 360000, "status": "available" },
+        { "ref": "B303", "block": "B", "floor": "3", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 10, "total": 60, "price": 360000, "status": "available" },
+        { "ref": "B304", "block": "B", "floor": "3", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 50, "veranda": 10, "total": 60, "price": 360000, "status": "available" },
+        { "ref": "B305", "block": "B", "floor": "3", "type": "Apartment", "view": "Sea View", "beds": 1, "baths": 1, "internal": 50, "veranda": 9, "total": 59, "price": 380000, "status": "available" },
+
+        { "ref": "C101", "block": "C", "floor": "1", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 53, "veranda": 8, "total": 61, "price": 315000, "status": "available" },
+        { "ref": "C102", "block": "C", "floor": "1", "type": "Apartment", "view": "Pool View", "beds": 1, "baths": 1, "internal": 58, "veranda": 10, "total": 68, "price": 350000, "status": "available" },
+        { "ref": "C103", "block": "C", "floor": "1", "type": "Apartment", "view": "Pool View", "beds": 2, "baths": 2, "internal": 83, "veranda": 21, "total": 104, "price": 540000, "status": "available" },
+        { "ref": "C201", "block": "C", "floor": "2", "type": "Apartment", "view": "City View", "beds": 1, "baths": 1, "internal": 56, "veranda": 8, "total": 64, "price": 360000, "status": "available" },
+        { "ref": "C202", "block": "C", "floor": "2", "type": "Apartment", "view": "Pool View", "beds": 1, "baths": 1, "internal": 49, "veranda": 11, "total": 60, "price": 340000, "status": "available" },
+        { "ref": "C203", "block": "C", "floor": "2", "type": "Apartment", "view": "Pool View", "beds": 2, "baths": 2, "internal": 83, "veranda": 21, "total": 104, "price": 580000, "status": "available" },
+        { "ref": "C301", "block": "C", "floor": "3", "type": "Apartment", "view": "Sea View", "beds": 2, "baths": 2, "internal": 86, "veranda": 24, "total": 110, "price": 660000, "status": "available" },
+        { "ref": "C302", "block": "C", "floor": "3", "type": "Apartment", "view": "Sea View", "beds": 2, "baths": 2, "internal": 83, "veranda": 20, "total": 103, "price": 620000, "status": "available" },
+        { "ref": "C401", "block": "C", "floor": "4", "type": "Penthouse", "view": "Sea View", "beds": 2, "baths": 2, "internal": 86, "veranda": 23, "total": 109, "price": 800000, "status": "available" },
+        { "ref": "C402", "block": "C", "floor": "4", "type": "Penthouse", "view": "Sea View", "beds": 2, "baths": 2, "internal": 83, "veranda": 20, "total": 103, "price": 760000, "status": "available" }
+      ]
+    },
+    {
+      "slug": "nova",
+      "name": "Nova",
+      "category": "Residential",
+      "stage": "Under Construction",
+      "completion": "Q2 2027",
+      "energy": "A",
+      "district": "Paphos",
+      "area": "Tombs of the Kings",
+      "latitude": 34.777907,
+      "longitude": 32.413737,
+      "amenities": [
+        "Communal swimming pool",
+        "Landscaped gardens",
+        "Alarm system",
+        "Parking space per apartment",
+        "VRF air conditioning (LG)"
+      ],
+      "notes": "Price list says 'No subject to VAT' (renovation of an existing frame — website: '19% VAT savings') and a contractual 6% guaranteed annual return. Turnkey; LG VRF A/C. Furniture packages: 1-bed from €15,000 + VAT, 2-bed from €20,000 + VAT. Website lists 203 as reserved; the price list (2026-05-28) still prices it.",
+      "units": [
+        { "ref": "G01", "floor": "Ground", "type": "Apartment", "beds": 2, "baths": 2, "internal": 76.25, "veranda": 20.26, "terrace": 36.2, "total": 96.5, "price": 400000, "status": "available" },
+        { "ref": "G02", "floor": "Ground", "type": "Apartment", "beds": 1, "baths": 2, "internal": 58.85, "veranda": 31.29, "terrace": 9.42, "total": 90.15, "price": 350000, "status": "available" },
+        { "ref": "G03", "floor": "Ground", "type": "Apartment", "beds": 1, "baths": 2, "internal": 58.85, "veranda": 31.29, "terrace": 9.42, "total": 90.15, "price": 350000, "status": "available" },
+        { "ref": "G04", "floor": "Ground", "type": "Apartment", "beds": 2, "baths": 2, "internal": 76.71, "veranda": 18.75, "total": 95.5, "price": 400000, "status": "available" },
+        { "ref": "101", "floor": "1", "type": "Apartment", "beds": 2, "baths": 2, "internal": 76.25, "veranda": 18.75, "total": 95, "price": 420000, "status": "available" },
+        { "ref": "102", "floor": "1", "type": "Apartment", "beds": 1, "baths": 2, "internal": 55.85, "veranda": 31.42, "total": 87.3, "price": 370000, "status": "available" },
+        { "ref": "103", "floor": "1", "type": "Apartment", "beds": 1, "baths": 2, "internal": 55.85, "veranda": 31.42, "total": 87.3, "price": 370000, "status": "available" },
+        { "ref": "104", "floor": "1", "type": "Apartment", "beds": 2, "baths": 2, "internal": 76.72, "veranda": 18.8, "total": 95.5, "price": 420000, "status": "available" },
+        { "ref": "201", "floor": "2", "type": "Penthouse", "beds": 2, "baths": 2, "internal": 82.59, "terrace": 11.32, "rooftop": 68, "total": 82.6, "price": 580000, "status": "available" },
+        { "ref": "202", "floor": "2", "type": "Penthouse", "beds": 2, "baths": 2, "internal": 69.02, "veranda": 8.02, "terrace": 11.63, "rooftop": 65.6, "total": 77, "price": 540000, "status": "available" },
+        { "ref": "203", "floor": "2", "type": "Penthouse", "beds": 2, "baths": 2, "internal": 69.02, "veranda": 8.02, "terrace": 11.63, "rooftop": 66, "total": 77, "price": 540000, "status": "available" },
+        { "ref": "204", "floor": "2", "type": "Penthouse", "beds": 2, "baths": 2, "internal": 83.2, "terrace": 10.66, "rooftop": 67, "total": 83.2, "price": null, "status": "sold" }
+      ]
+    }
+  ]
+}
