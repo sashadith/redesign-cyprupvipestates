@@ -39,12 +39,69 @@ export type DriveFile = { id: string; name: string; mimeType: string; modifiedTi
 // replayed for days across multiple deploys with fixed tokens and fixed code —
 // the fetch never actually reached Google again. Drive content must always be
 // read fresh regardless: a cached listing/file is stale by definition here.
+const SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
+const FOLDER_MIME = "application/vnd.google-apps.folder";
+
+/** A listing entry as Drive returns it — a shortcut carries its target here. */
+export type RawDriveFile = DriveFile & { shortcutDetails?: { targetId?: string; targetMimeType?: string } };
+
+/* Shortcuts ("Verknüpfung zu Drive hinzufügen") resolved to what they point at.
+   A shortcut is its own file type and, unresolved, is neither a folder the scanner
+   descends into nor a price list it reads — it simply falls through, silently.
+
+   This is what lets one root folder of OURS gather several developers' own folders
+   without copying anything: a shortcut per developer inside it (the Misc Projects
+   account, 2026-10-05). The developer keeps editing their own folder; we read
+   through the link.
+
+   The NAME stays the shortcut's, not the target's: the project name is derived
+   from the folder name, and the shortcut is the one part of that we can set
+   without touching someone else's folder.
+
+   The target's modifiedTime is only fetched for non-folders, and that is not
+   frugality for its own sake: sourceSignature() decides whether a sync can be
+   skipped from the price list's modifiedTime, and a shortcut's own timestamp does
+   not move when the sheet behind it is edited. A folder's modifiedTime is read by
+   nothing, so a shortcut to a folder — the normal case here — costs no extra call. */
+export async function resolveShortcuts(
+  files: RawDriveFile[],
+  getTarget: (id: string) => Promise<{ mimeType: string; modifiedTime: string } | null>,
+): Promise<DriveFile[]> {
+  const out: DriveFile[] = [];
+  for (const f of files) {
+    if (f.mimeType !== SHORTCUT_MIME) { out.push({ id: f.id, name: f.name, mimeType: f.mimeType, modifiedTime: f.modifiedTime }); continue; }
+    const targetId = f.shortcutDetails?.targetId;
+    const targetMime = f.shortcutDetails?.targetMimeType;
+    // One level only. Drive does not nest shortcuts, and following them would be
+    // an unbounded chase for a case that cannot legitimately occur.
+    if (!targetId || !targetMime || targetMime === SHORTCUT_MIME) continue;
+    if (targetMime === FOLDER_MIME) { out.push({ id: targetId, name: f.name, mimeType: targetMime, modifiedTime: f.modifiedTime }); continue; }
+    const target = await getTarget(targetId);
+    // Share revoked, or the target binned: drop the entry. It then shows up as a
+    // missing project in the admin's folder preview, which is a better failure
+    // than half-importing one.
+    if (!target) continue;
+    out.push({ id: targetId, name: f.name, mimeType: target.mimeType, modifiedTime: target.modifiedTime });
+  }
+  return out;
+}
+
+async function fetchTargetMeta(id: string, accessToken: string): Promise<{ mimeType: string; modifiedTime: string } | null> {
+  const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?fields=id,mimeType,modifiedTime&supportsAllDrives=true`;
+  try {
+    const r = await fetch(url, { headers: { Authorization: "Bearer " + accessToken }, cache: "no-store" });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j?.mimeType ? { mimeType: j.mimeType as string, modifiedTime: (j.modifiedTime as string) ?? "" } : null;
+  } catch { return null; }
+}
+
 export async function listFolder(folderId: string, accessToken: string): Promise<DriveFile[]> {
   const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
-  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,modifiedTime)&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,modifiedTime,shortcutDetails(targetId,targetMimeType))&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true`;
   const r = await fetch(url, { headers: { Authorization: "Bearer " + accessToken }, cache: "no-store" });
   const j = await r.json();
-  return (j.files ?? []) as DriveFile[];
+  return resolveShortcuts((j.files ?? []) as RawDriveFile[], (id) => fetchTargetMeta(id, accessToken));
 }
 
 const SHEET_MIME = "application/vnd.google-apps.spreadsheet";
@@ -121,7 +178,6 @@ export function findPriceFile(files: DriveFile[], opts: FindPriceOpts = {}): Dri
   return null;
 }
 
-const FOLDER_MIME = "application/vnd.google-apps.folder";
 const IMG_RE = /^image\/(jpe?g|png|webp)$/i;
 const normKey = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 
