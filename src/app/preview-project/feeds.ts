@@ -901,6 +901,15 @@ async function medousa(id: string): Promise<ProjectVM | null> {
 // bracket-prefixed <desc>, same shape Aristo/xml2u use for their own feeds.
 // ==================================================================
 const SQUAREONE_URL = "https://admin.squareone.com.cy/api/project/projects/xml/";
+
+// Square One also sells office buildings through the same feed (Apex,
+// 2026-10-05: four units, every one typed "Office"). The adapter used to file
+// every project as "Residential", so the CRM inventory search and the MCP
+// project tool listed Apex as housing. A project counts as commercial only
+// when ALL its units are commercial types; one apartment keeps it residential.
+const COMMERCIAL_UNIT_TYPE = /\b(office|shop|retail|commercial|warehouse)\b/i;
+export const squareOneCategory = (unitTypes: string[]): string =>
+  unitTypes.length > 0 && unitTypes.every((t) => COMMERCIAL_UNIT_TYPE.test(t)) ? "Commercial real estate" : "Residential";
 const projectSlugFrom = (url: any) => txt(url).match(/projects\/([^/?#]+)/i)?.[1] ?? "";
 
 async function squareOne(id: string): Promise<ProjectVM | null> {
@@ -955,7 +964,7 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
   return {
     id, dev: "squareone", publicName, developerName, developer: "Square One",
     area, district, town: "", location: joinLoc(district, area),
-    status: "Available", category: "Residential", completion: "", energy: "",
+    status: "Available", category: squareOneCategory(units.map((u) => u.type)), completion: "", energy: "",
     description: anonymize(descBody, developerName, publicName),
     gallery, plans: [], renders: [], amenities, heroVideo: ov.heroVideo, center, units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: units[0]?.currency || "EUR",
