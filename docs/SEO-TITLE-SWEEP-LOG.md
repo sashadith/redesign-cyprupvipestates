@@ -176,3 +176,22 @@ Telegram notification instead of inheriting Batch 1's.)
 All other Batch-1 pages (the remaining 12 of the original 17 + the 13 developer-profile pages) also close
 2026-08-29 — omitted above since they weren't candidates in the Snippet Rewrite Pack; see Batch 1's own
 table for the full list. Nothing is currently protected past 2026-09-07.
+
+## 2026-10-05 — Batch 3: 1 title/meta rewrite (SEO Advisor run 2026-10-04, "unclicked" pile)
+
+**Source:** advisor suggestion 1934772d ("Rewrite titles/meta on 'unclicked' pages"). Of its four
+targets only one was genuinely clean: `/pl/blog/ubezpieczenie-zdrowotne-na-cyprze` and
+`/pl/blog/cypr-a-cypr-polnocny` were Batch 1 pages (verdict null — leave alone, per the same run's
+suggestion a7d35967), and `/de/blog/wie-nach-zypern-auswandern` + `/pl/blog/cypr-a-cypr-polnocny` were
+fully rewritten on 2026-10-02 (stale-facts sweep), so their 28-day GSC numbers describe the old text.
+
+**Re-measure after:** 2026-11-02 to 2026-11-16 (4–6 weeks). Baseline = GSC 28 days to 2026-09-29.
+
+| # | Locale | URL | Baseline pos | Baseline CTR |
+|---|--------|-----|--------------|--------------|
+| 1 | de | `/de/luxusvillen-in-zypern` | 13.2 | 0.19% |
+
+- Old title: "Luxusvillen auf Zypern kaufen – Neubau vom Bauträger"
+- New title: "Villa auf Zypern kaufen – Luxusvillen am Meer, Neubau" — the page's real queries are
+  "villa (auf/in) zypern kaufen" variants (≈ 500 of 1,031 impressions); "luxus" appears in only ~170.
+- Meta description rewritten to lead with the same phrase. CMS content only (`Singlepage.seo`), no code.
