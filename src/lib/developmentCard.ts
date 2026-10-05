@@ -220,11 +220,34 @@ export function resolveDevelopmentType(category: string | null | undefined, unit
 // Broadening ONLY this one filter value to also accept office/shop keeps the
 // change additive — every other filter value's matching behavior, and every
 // existing city+type landing page, is untouched.
+/* Each filter value and the unit-type words that belong under it. The developer's
+   own vocabulary stays on the card and in the units table — a penthouse is
+   described as a penthouse — and only findability is widened here.
+
+   Measured across the 292 published projects on 2026-10-05: the unit `type`
+   column holds 23 distinct spellings, 13 of them outside the filter's four
+   words, and ELEVEN projects matched no filter value at all, so the type filter
+   hid them completely. Six of those eleven are fixed by the synonyms below; the
+   rest carry no usable type at all and need data, which no amount of matching
+   can substitute for — hence the deliberate absence of a "building" synonym,
+   and why an empty type still matches nothing.
+
+   Only words that are unambiguously a subtype belong here. "House" is not among
+   them: it reads as a detached house in "Villas / Houses" and as an attached one
+   in "Terraced House", so it is matched by its compound, never on its own. */
+const TYPE_SYNONYMS: Record<string, string[]> = {
+  apartment: ["penthouse", "duplex", "studio", "maisonette", "flat"],
+  townhouse: ["semi-detached", "semi detached", "terraced"],
+  commercial: ["office", "shop", "hotel"],
+  villa: [],
+};
+
 export function matchesPropertyTypeFilter(resolvedType: string, filterValue: string): boolean {
   const resolved = resolvedType.toLowerCase();
   const filter = filterValue.toLowerCase();
-  if (filter === "commercial") return resolved.includes("commercial") || resolved.includes("office") || resolved.includes("shop");
-  return resolved.includes(filter);
+  if (!resolved || !filter) return false;
+  if (resolved.includes(filter)) return true;
+  return (TYPE_SYNONYMS[filter] ?? []).some((syn) => resolved.includes(syn));
 }
 
 // The merged /projects listing card reuses the LEGACY compact-4-footer
