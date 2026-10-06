@@ -4,6 +4,11 @@
    ===================================================================== */
 
 :root { --px-nav: 74px; --px-filter: 74px; }
+/* --px-nav must equal the fixed header's real height, or the sticky filter bar
+   parks below it and the cards scroll through the gap. 74px is the desktop bar
+   (16px + 42px logo + 16px, header-footer.css ≥1024px); below 1024px the bar is
+   12px + 38px + 12px = 62px — the 12px hole Sascha saw on phones (2026-10-06). */
+@media (max-width: 1023px) { :root { --px-nav: 62px; } }
 
 .px { display: block; background: var(--sea-deep); color: var(--text); padding-top: var(--px-nav); min-height: 100vh; }
 
