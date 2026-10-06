@@ -578,8 +578,22 @@
 .pp-showmore.pp-showmore--bronze { color: var(--champagne); border-color: rgba(194,154,94,0.40);
   background: rgba(194,154,94,0.12); box-shadow: none;
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
+/* Hover = the Enquire button's full hover, which it inherits from .btn and
+   .btn--glass (header-footer.css): champagne rim and stronger wash, the soft
+   glow with a light inner top edge, a one-off sheen sweep, and a slight press
+   on click. Replicated here because this <button> does not carry .btn (its
+   padding and type scale would change the size). */
+.pp-showmore.pp-showmore--bronze { position: relative; overflow: hidden;
+  transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease),
+              box-shadow var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease-soft); }
+.pp-showmore.pp-showmore--bronze::before {
+  content: ""; position: absolute; top: 0; bottom: 0; inset-inline-start: 0; width: 46%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.40), transparent);
+  transform: translateX(-220%) skewX(-18deg); pointer-events: none; }
+.pp-showmore.pp-showmore--bronze:hover::before { animation: btnSheen 1.5s var(--ease-soft); }
 .pp-showmore.pp-showmore--bronze:hover { border-color: var(--champagne); background: rgba(194,154,94,0.22);
-  color: #D8B268; box-shadow: none; }
+  color: #D8B268; box-shadow: 0 6px 46px -6px var(--glow-btn), inset 0 1px 0 var(--glass-highlight); }
+.pp-showmore.pp-showmore--bronze:active { transform: scale(0.985); }
 
 /* table */
 .pp-tbl-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: var(--r-ui); }
