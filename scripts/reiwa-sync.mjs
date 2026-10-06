@@ -45,10 +45,22 @@ function unitRow(p, u, i) {
   // The price list's own total is the check on the transcription: internal +
   // covered veranda must give "Total Covered" (Nova's penthouses have no covered
   // veranda, so internal alone must). Anything else is a misread cell.
-  const sum = Math.round(((u.internal ?? 0) + (u.veranda ?? 0)) * 100) / 100;
-  if (u.total != null && Math.abs(sum - u.total) > 0.6) problems.push(`${p.name} ${u.ref}: internal ${u.internal} + veranda ${u.veranda ?? 0} = ${sum}, list says ${u.total}`);
+  // UNO's list adds two layers: "Livable" = internal + veranda, and "Total
+  // Covered" = livable + the unit's share of common areas + its storage room.
+  const r2 = (x) => Math.round(x * 100) / 100;
+  const sum = r2((u.internal ?? 0) + (u.veranda ?? 0));
+  const expected = u.livable != null ? u.livable : u.total;
+  if (expected != null && Math.abs(sum - expected) > 0.6) problems.push(`${p.name} ${u.ref}: internal ${u.internal} + veranda ${u.veranda ?? 0} = ${sum}, list says ${expected}`);
+  if (u.livable != null && u.total != null) {
+    const t = r2(u.livable + (u.common ?? 0) + (u.storage ?? 0));
+    if (Math.abs(t - u.total) > 0.06) problems.push(`${p.name} ${u.ref}: livable + common + storage = ${t}, list says total ${u.total}`);
+  }
   if (u.status === "available" && !u.price) problems.push(`${p.name} ${u.ref}: available without a price`);
   const attrs = [];
+  if (u.livable != null) attrs.push({ name: "Livable area", value: m2(u.livable) });
+  if (u.common != null) attrs.push({ name: "Common area share", value: m2(u.common) });
+  if (u.storage != null) attrs.push({ name: "Storage room", value: m2(u.storage) });
+  if (u.parking) attrs.push({ name: "Parking space (assigned)", value: u.parking });
   if (u.total != null) attrs.push({ name: "Total covered area", value: m2(u.total) });
   if (u.rooftop != null) attrs.push({ name: "Private roof terrace", value: m2(u.rooftop) });
   return {
@@ -64,6 +76,7 @@ function unitRow(p, u, i) {
     areaVeranda: m2(u.veranda),
     areaVerandaOpen: m2(u.terrace),
     floor: u.floor,
+    storage: u.storage != null ? "yes" : null,
     attrs,
     amenities: u.view ? [u.view] : [],
     source: "manual",
@@ -71,7 +84,7 @@ function unitRow(p, u, i) {
   };
 }
 
-const CMP = ["label", "type", "status", "price", "beds", "baths", "areaBuilt", "areaInternal", "areaVeranda", "areaVerandaOpen", "floor", "attrs", "amenities", "source", "sortIndex"];
+const CMP = ["label", "type", "status", "price", "beds", "baths", "areaBuilt", "areaInternal", "areaVeranda", "areaVerandaOpen", "floor", "storage", "attrs", "amenities", "source", "sortIndex"];
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 try {
