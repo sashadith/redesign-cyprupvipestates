@@ -447,6 +447,13 @@
 .prj__specs { display: flex; flex-wrap: wrap; gap: 6px 14px; min-width: 0; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--text-soft); }
 .prj__specs span { position: relative; }
 .prj__specs span + span::before { content: ""; position: absolute; inset-inline-start: -8px; top: 50%; width: 3px; height: 3px; border-radius: 50%; background: var(--hairline-strong); transform: translateY(-50%); }
+/* Phones (Sascha, 2026-10-06): no energy class on the cards — the spec line
+   then fits one row. The dot before the next item stays (it belongs to that
+   item); only when energy was the first item does that dot have to go. */
+@media (max-width: 640px) {
+  .prj__specs .prj__energy { display: none; }
+  .prj__specs .prj__energy:first-child + span::before { content: none; }
+}
 .prj__dist { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--ivory); }
 .prj__dist span { display: inline-flex; align-items: baseline; gap: 4px; }
 .prj__dist i { font-style: normal; color: var(--text-soft); }

@@ -151,7 +151,7 @@ export function ProjectCard({
                 reordered by the surrounding RTL card — same failure mode
                 heBedrooms() already guards against for bedsLabel above. */}
             {c.area && <span>{isHe ? ltrIsolate(c.area) : c.area} {s.areaUnit}</span>}
-            {c.energy && <span>{s.energyPrefix} {c.energy}</span>}
+            {c.energy && <span className="prj__energy">{s.energyPrefix} {c.energy}</span>}
             {/* c.completion is already resolved to a plain year string (or "")
                 server-side — see resolveCompletionYear in src/lib/text.ts.
                 Never compute a Date here: parsing the free-text completion
