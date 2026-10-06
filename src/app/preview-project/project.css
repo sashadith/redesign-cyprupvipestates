@@ -448,9 +448,9 @@
   .pp-lb__nav { width: 44px; height: 44px; font-size: 1.5rem;
     /* a touch of liquid glass (Sascha, 2026-10-06): heavy blur + saturation
        over the photo, a light top-left sheen, a bright rim and an inner
-       highlight along the top edge; no shadows, blur halved to 8px (same day) */
+       highlight along the top edge; no shadows, blur down to 4px (same day) */
     background: linear-gradient(140deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0.12));
-    -webkit-backdrop-filter: blur(8px) saturate(180%); backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(4px) saturate(180%); backdrop-filter: blur(4px) saturate(180%);
     border: 1px solid rgba(255,255,255,0.32);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.08); }
   .pp-lb__nav--prev { inset-inline-start: -8px; } .pp-lb__nav--next { inset-inline-end: -8px; }
