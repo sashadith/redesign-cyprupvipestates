@@ -367,13 +367,13 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
                       <span className="pp-tbl__label">{unitLabel(u)}<small>{u.ref}</small></span>
                     </span>
                   </td>
-                  {show.type && <td>{u.type ? (lang === "he" ? heFeedLabel(u.type) : capitalizeType(u.type)) : "—"}</td>}
-                  {promoted && <td>{promotedValue(u) || "—"}</td>}
-                  {show.floor && <td>{u.floor || "—"}</td>}
-                  {show.beds && <td className="r">{u.beds || "—"}</td>}
-                  {show.baths && <td className="r">{u.baths || "—"}</td>}
-                  {show.built && <td className="r">{(coveredCol ? coveredOf(u) : interiorOf(u) && sqm(interiorOf(u), t.unitM2)) || "—"}</td>}
-                  {show.plot && <td className="r">{u.areaPlot ? sqm(u.areaPlot, t.unitM2) : "—"}</td>}
+                  {show.type && <td className="pp-tbl__meta">{u.type ? (lang === "he" ? heFeedLabel(u.type) : capitalizeType(u.type)) : "—"}</td>}
+                  {promoted && <td className="pp-tbl__meta" data-label={promoted}>{promotedValue(u) || "—"}</td>}
+                  {show.floor && <td className="pp-tbl__meta" data-label={t.colFloor}>{u.floor || "—"}</td>}
+                  {show.beds && <td className="r pp-tbl__meta" data-label={t.colBeds}>{u.beds || "—"}</td>}
+                  {show.baths && <td className="r pp-tbl__meta" data-label={t.factBaths}>{u.baths || "—"}</td>}
+                  {show.built && <td className="r pp-tbl__meta" data-label={coveredCol ? t.factCovered : t.colBuilt}>{(coveredCol ? coveredOf(u) : interiorOf(u) && sqm(interiorOf(u), t.unitM2)) || "—"}</td>}
+                  {show.plot && <td className="r pp-tbl__meta" data-label={t.colPlot}>{u.areaPlot ? sqm(u.areaPlot, t.unitM2) : "—"}</td>}
                   <td className="r pp-tbl__price">{priceCell(u, t, lang)}</td>
                   <td className="r pp-tbl__status"><StatusPill u={u} lang={lang} /></td>
                   {/* A collapsed row had no next step at all — the enquiry step

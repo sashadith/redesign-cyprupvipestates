@@ -942,6 +942,44 @@
    with it the clouds anchored to it, still starts where the block starts. */
 .pp-alts--quiet + .pp-section.pp-promo-sec { padding-top: clamp(44px, 6vw, 72px); }
 .pp-tbl__status { white-space: normal; }
+/* Phones (Sascha, 2026-10-06): the 9–10 column table was wider than the
+   screen — price and status scrolled out of view, the unit name ran into the
+   type column and "Show more" sat off-screen. Each unit becomes a compact
+   three-line row instead, built from the same cells (flex with order; two
+   zero-height pseudo elements force the line breaks):
+     1  unit name ................................ price
+     2  Apartment · Floor 1 · Beds 1 · Baths 1 · Covered 59 m²
+     3  status ............................ Enquire button
+   The header row goes; each figure carries its own label from data-label.
+   The expand chevron goes too — the row stays tappable. Desktop untouched. */
+@media (max-width: 640px) {
+  .pp-tbl, .pp-tbl tbody { display: block; }
+  .pp-tbl thead { display: none; }
+  .pp-tbl tr.pp-tbl__row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 7px;
+    padding: 14px 16px; border-bottom: 1px solid var(--hairline); }
+  .pp-tbl tr.pp-tbl__row.is-clamped { display: none; }
+  .pp-tbl tr.pp-tbl__row > td { display: block; padding: 0; border: 0; white-space: normal; }
+  .pp-tbl tr.pp-tbl__row::before, .pp-tbl tr.pp-tbl__row::after { content: ""; flex-basis: 100%; height: 0; }
+  .pp-tbl tr.pp-tbl__row::before { order: 3; }
+  .pp-tbl tr.pp-tbl__row::after { order: 6; }
+  .pp-tbl .pp-tbl__name { order: 1; flex: 1 1 0; min-width: 0; }
+  .pp-tbl .pp-tbl__price { order: 2; flex: none; text-align: end; }
+  .pp-tbl .pp-tbl__meta { order: 4; flex: none; font-size: 0.8rem; color: var(--text-soft); text-align: start; }
+  /* label in front of each figure ("Floor 1"), and a "·" before every item
+     but the first — one pseudo element carries both */
+  .pp-tbl .pp-tbl__meta[data-label]::before { content: attr(data-label) " a0"; color: var(--text-faint); }
+  .pp-tbl .pp-tbl__meta + .pp-tbl__meta::before { content: "· a0 a0"; color: var(--text-faint); }
+  .pp-tbl .pp-tbl__meta + .pp-tbl__meta[data-label]::before { content: "· a0 a0" attr(data-label) " a0"; }
+  .pp-tbl .pp-tbl__status { order: 7; flex: 1 1 auto; text-align: start; }
+  .pp-tbl .pp-tbl__action { order: 8; flex: none; width: auto; }
+  .pp-tbl__chev { display: none; }
+  .pp-tbl__namegrid, .pp-tbl__namegrid:not(:has(.pp-tbl__thumb)) { grid-template-columns: auto 1fr; }
+  .pp-tbl__namegrid:not(:has(.pp-tbl__thumb)) { display: block; }
+  .pp-tbl tr.pp-tbl__detail, .pp-tbl tr.pp-tbl__morerow { display: block; }
+  .pp-tbl tr.pp-tbl__detail > td, .pp-tbl tr.pp-tbl__morerow > td { display: block; }
+  .pp-tbl tr.pp-tbl__detail > td { border-bottom: 1px solid var(--hairline); }
+  .pp-tbl tr.pp-tbl__morerow > td { padding: 16px; }
+}
 /* The per-row enquiry step: the site's frosted-glass button (.btn .btn--glass),
    sized down to sit in a table row (Sascha, 2026-10-03).
 
