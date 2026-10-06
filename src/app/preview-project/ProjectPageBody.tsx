@@ -223,10 +223,10 @@ export default async function ProjectPageBody({
                 ) : (
                   <div className="pp-hero__price"><b>{isSold ? "—" : t.priceOnRequest}</b></div>
                 )}
-                <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
-                {listed.length > 0 && <div><b>{avail.length}{avail.length !== listed.length && <small>/{listed.length}</small>}</b><span>{t.heroAvailable}</span></div>}
+                <div className="pp-hero__type"><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
+                {listed.length > 0 && <div className="pp-hero__avail"><b>{avail.length}{avail.length !== listed.length && <small>/{listed.length}</small>}</b><span>{t.heroAvailable}</span></div>}
                 {/* Completion / build stage is a top-3 buying criterion off-plan — surfaced in the hero, not only in the facts panel (2026-10-03). */}
-                {(p.completion || stageLabel) && <div><b>{p.completion || stageLabel}</b><span>{t.heroCompletion}</span></div>}
+                {(p.completion || stageLabel) && <div className="pp-hero__completion"><b>{p.completion || stageLabel}</b><span>{t.heroCompletion}</span></div>}
               </div>
               {/* The page had no CTA pointing at the form at all — the hero now
                   offers the two next steps a buyer actually takes (2026-10-03). */}

@@ -183,6 +183,18 @@
 .pp-hero__stats b { font-family: var(--font-display), serif; font-weight: 500; font-size: 1.6rem; color: var(--champagne); line-height: 1; }
 .pp-hero__stats b small { font-size: 1rem; color: rgba(255,255,255,0.6); font-weight: 400; }
 .pp-hero__stats span { font-size: 0.76rem; color: rgba(255,255,255,0.6); letter-spacing: 0.02em; }
+/* Phones (Sascha, 2026-10-06): a tidy two-column grid instead of a wrapping
+   row — price left with completion beside it on the right, then type left and
+   units available right. Order is visual only; the DOM keeps price, type,
+   available, completion. A lone item (no completion, no available) simply
+   stays in its own cell. */
+@media (max-width: 640px) {
+  .pp-hero__stats { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 20px; row-gap: 16px; }
+  .pp-hero__price { order: 1; }
+  .pp-hero__completion { order: 2; align-items: flex-end; text-align: end; }
+  .pp-hero__type { order: 3; }
+  .pp-hero__avail { order: 4; align-items: flex-end; text-align: end; }
+}
 /* shimmering gold divider — gold at the left, fading out to the right (like __stripe) */
 .pp-rule { margin-block: clamp(10px, 3vw, 30px); max-width: none;
   background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.8; }
