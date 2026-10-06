@@ -176,7 +176,8 @@
   color: rgba(255,255,255,0.92); padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .pp-title { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
-  font-size: clamp(2.2rem, 1.4rem + 3.4vw, 3.8rem); line-height: 1.06; color: #fff; margin: 0 0 22px; letter-spacing: -0.015em;
+  /* floor raised 2.2 → 2.7rem (2026-10-06): phones sat on the floor at ~35px */
+  font-size: clamp(2.7rem, 1.4rem + 3.4vw, 3.8rem); line-height: 1.06; color: #fff; margin: 0 0 22px; letter-spacing: -0.015em;
   text-shadow: 0 2px 34px rgba(0,0,0,0.45); }
 .pp-hero__stats { display: flex; flex-wrap: wrap; gap: clamp(20px, 3vw, 40px); }
 .pp-hero__stats > div { display: flex; flex-direction: column; gap: 3px; }
