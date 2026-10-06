@@ -56,6 +56,7 @@ export type ProjectsStrings = {
   bedUnit: string; // "{n} bed"
   areaUnit: string; // "{n} m²"
   energyPrefix: string; // "Energy {grade}"
+  keyReady: string; // card spec for a completion in the past — same words as developmentCopy stage["key-ready"]
   priceFrom: string; // "from "
   priceOnRequest: string;
   minShort: string; // distance minutes suffix
@@ -151,6 +152,7 @@ const EN: ProjectsStrings = {
   bedUnit: "bed",
   areaUnit: "m²",
   energyPrefix: "Energy",
+  keyReady: "Key-Ready",
   priceFrom: "from ",
   priceOnRequest: "Price on request",
   minShort: "min",
@@ -238,6 +240,7 @@ const DE: ProjectsStrings = {
   bedUnit: "Schlafz.",
   areaUnit: "m²",
   energyPrefix: "Energie",
+  keyReady: "Bezugsfertig",
   priceFrom: "ab ",
   priceOnRequest: "Preis auf Anfrage",
   minShort: "Min",
@@ -325,6 +328,7 @@ const PL: ProjectsStrings = {
   bedUnit: "syp.",
   areaUnit: "m²",
   energyPrefix: "Energia",
+  keyReady: "Gotowe do odbioru",
   priceFrom: "od ",
   priceOnRequest: "Cena na zapytanie",
   minShort: "min",
@@ -412,6 +416,7 @@ const RU: ProjectsStrings = {
   bedUnit: "спал.",
   areaUnit: "m²",
   energyPrefix: "Энергия",
+  keyReady: "Сдан",
   priceFrom: "от ",
   priceOnRequest: "Цена по запросу",
   minShort: "мин",
@@ -504,6 +509,7 @@ const HE: ProjectsStrings = {
   bedUnit: "חדרי שינה",
   areaUnit: "מ\"ר",
   energyPrefix: "אנרגיה",
+  keyReady: "מוכן למגורים",
   priceFrom: "החל מ-",
   priceOnRequest: "מחיר לפי פנייה",
   minShort: "דק'",

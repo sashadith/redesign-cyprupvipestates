@@ -71,6 +71,30 @@ const MONTH_NAMES = [
 // near the epoch, so 0 sorts ahead of every genuine value.
 const READY_SORT_KEY = 0;
 const READY_LABELS = /^(ready|ready to move in|ready to move|move-in ready|completed?|delivered|finished)$/i;
+/** True once the whole stated period is over: "Q2 2026" after June 2026,
+    "October 2025" after October 2025, a bare "2025" from 2026 on, and any
+    ready/completed label. A value naming several years ("Q4 2025 (Block A),
+    Q2 2027 (Block B)") counts as past only once its LATEST year is over — one
+    finished block does not make the project key-ready. Used by the cards to
+    say "Key-Ready" instead of a year that has gone by (2026-10-06). */
+export function isCompletionPast(raw: string | null | undefined, now: Date = new Date()): boolean {
+  const s = resolveRelativeCompletion(raw, now);
+  if (!s) return false;
+  if (READY_LABELS.test(s) || /^key[\s-]*ready$/i.test(s)) return true;
+  const years = (s.match(/\b(19|20)\d{2}\b/g) ?? []).map(Number);
+  if (years.length > 1) return Math.max(...years) < now.getUTCFullYear();
+  const start = completionSortKey(s);
+  if (start == null || !years.length) return false;
+  const d = new Date(start);
+  let end: number;
+  if (/^Q[1-4]\s+\d{4}/i.test(s)) end = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 3, 1);
+  else if (/^[A-Za-z]+\s+\d{4}$/.test(s)) end = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+  else if (/^\d{4}-\d{2}-\d{2}$/.test(s)) end = start + 86400000;
+  else if (/^\d{4}-\d{2}$/.test(s)) end = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+  else end = Date.UTC(d.getUTCFullYear() + 1, 0, 1);
+  return end <= now.getTime();
+}
+
 export function completionSortKey(raw: string | null | undefined): number | null {
   const s = resolveRelativeCompletion(raw);
   if (!s) return null;

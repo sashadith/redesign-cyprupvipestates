@@ -162,7 +162,7 @@ export function ProjectCard({
                 outer guard was checking the raw string, not the parsed
                 result). Gating on the same already-resolved string here
                 means the separator and the value can never disagree. */}
-            {c.completion && <span>{c.completion}</span>}
+            {c.completion && <span>{c.completion === "ready" ? s.keyReady : c.completion}</span>}
           </div>
           <div className="prj__price">
             {c.price != null && <span className="prj__price-from">{s.priceFrom}</span>}

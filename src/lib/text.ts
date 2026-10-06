@@ -1,4 +1,4 @@
-import { resolveRelativeCompletion } from "@/lib/completionDate";
+import { isCompletionPast, resolveRelativeCompletion } from "@/lib/completionDate";
 
 // Admin-entered descriptions (DevelopmentOverride.descriptionEN/DE/PL/RU) are
 // stored as plain text with CRLF line breaks ("\r\n\r\n" between paragraphs,
@@ -30,11 +30,18 @@ export function splitDescriptionParagraphs(text: string): string[][] {
 // identical on server and client, and returns "" (not a NaN-derived "") for
 // non-date strings like "Ready" — never call `new Date()` on this field in a
 // rendered component again; resolve it to a plain string here, once.
-export function resolveCompletionYear(raw: string | null | undefined): string {
+//
+// Returns the sentinel "ready" once the completion lies in the past (or reads
+// "Ready"/"Completed"): the cards then show the localized "Key-Ready" label
+// (projectsStrings().keyReady) instead of a year that has gone by (2026-10-06).
+export function resolveCompletionYear(raw: string | null | undefined, now: Date = new Date()): string {
   if (!raw) return "";
+  if (isCompletionPast(raw, now)) return "ready";
   // "24 months from signing" carries no year to extract — resolve it to a
   // concrete quarter first, then pull the year out of that. See
   // resolveRelativeCompletion; anything else passes through untouched.
-  const m = resolveRelativeCompletion(raw).match(/(19|20)\d{2}/);
-  return m ? m[0] : "";
+  // Several blocks with their own dates ("Q4 2025 (Block A), Q2 2027 (Block
+  // B)"): the project is finished when the LAST one is, so show the latest year.
+  const years = resolveRelativeCompletion(raw).match(/(19|20)\d{2}/g);
+  return years ? String(Math.max(...years.map(Number))) : "";
 }
