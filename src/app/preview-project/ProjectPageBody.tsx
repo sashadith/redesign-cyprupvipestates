@@ -404,6 +404,7 @@ export default async function ProjectPageBody({
                 <TrustItem fig={String(projectCount)} text={t.trustProjects(projectCount).replace(/^\d+\s*/, "")} />
                 <TrustItem fig={t.trustReplyFig} text={t.trustReply} />
                 <TrustItem fig={t.trustFreeFig} text={t.trustFree} />
+                {t.trustCommissionFig && t.trustCommission && <TrustItem fig={t.trustCommissionFig} text={t.trustCommission} />}
               </div>
             </section>
 

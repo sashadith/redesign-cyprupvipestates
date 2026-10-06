@@ -852,6 +852,16 @@
    a soft champagne glow rises behind each figure. */
 .pp-trust__panel { display: grid; grid-template-columns: 1fr; }
 @media (min-width: 760px) { .pp-trust__panel { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Four figures (2026-10-06): 2 × 2 on tablets, one row from 1100px. Three
+   (Hebrew has no 4th) keep the single row of three above. */
+@media (min-width: 760px) and (max-width: 1099px) {
+  .pp-trust__panel:has(> .pp-trust__item:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp-trust__panel:has(> .pp-trust__item:nth-child(4)) > .pp-trust__item:nth-child(odd) { border-inline-start: 0; }
+  .pp-trust__panel:has(> .pp-trust__item:nth-child(4)) > .pp-trust__item:nth-child(n+3) { border-top: 1px solid var(--hairline); }
+}
+@media (min-width: 1100px) {
+  .pp-trust__panel:has(> .pp-trust__item:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 /* ---------- "golden plate" ----------
    A metal plate, not a flat gold fill: what makes metal read as metal is
    banding — a bright edge, a mid tone, a darker turn and a second highlight —

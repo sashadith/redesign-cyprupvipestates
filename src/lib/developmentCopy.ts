@@ -113,6 +113,10 @@ export type DevelopmentStrings = {
   trustReply: string;
   trustFreeFig: string;
   trustFree: string;
+  // 4th trust figure (2026-10-06, Sascha). Optional: Hebrew has none — no new
+  // HE copy is written here — and the strip then simply shows three.
+  trustCommissionFig?: string;
+  trustCommission?: string;
   enlargePhotos: string;
   enlargePhotoN: (n: number) => string;
   showAllPhotos: (n: number) => string;
@@ -203,6 +207,8 @@ const EN: DevelopmentStrings = {
   trustReply: "A personal reply from our team — usually the same day",
   trustFreeFig: "€0.00", // EN number format (2026-10-06)
   trustFree: "Consultation and viewings, on site or by video call — no obligation",
+  trustCommissionFig: "0%",
+  trustCommission: "commission for buyers — you pay the developer's price",
   enlargePhotos: "Enlarge photos",
   enlargePhotoN: (n) => `Enlarge photo ${n}`,
   showAllPhotos: (n) => `Show all ${n} photos`,
@@ -276,6 +282,8 @@ const DE: DevelopmentStrings = {
   trustReply: "Persönliche Antwort von unserem Team — meist noch am selben Tag",
   trustFreeFig: "0,00 €",
   trustFree: "Beratung und Besichtigungen, vor Ort oder per Videocall — unverbindlich",
+  trustCommissionFig: "0 %",
+  trustCommission: "Provision für Käufer — Sie zahlen den Preis des Bauträgers",
   enlargePhotos: "Fotos vergrößern",
   enlargePhotoN: (n) => `Foto ${n} vergrößern`,
   showAllPhotos: (n) => `Alle ${n} Fotos anzeigen`,
@@ -349,6 +357,8 @@ const PL: DevelopmentStrings = {
   trustReply: "Osobista odpowiedź od naszego zespołu — zwykle tego samego dnia",
   trustFreeFig: "0,00 €",
   trustFree: "Konsultacja i oglądanie nieruchomości, na miejscu lub przez wideorozmowę — bez zobowiązań",
+  trustCommissionFig: "0%",
+  trustCommission: "prowizji dla kupującego — płacisz cenę dewelopera",
   enlargePhotos: "Powiększ zdjęcia",
   enlargePhotoN: (n) => `Powiększ zdjęcie ${n}`,
   showAllPhotos: (n) => `Pokaż wszystkie ${n} zdjęć`,
@@ -423,6 +433,8 @@ const RU: DevelopmentStrings = {
   trustReply: "Личный ответ от нашей команды — как правило, в тот же день",
   trustFreeFig: "0,00 €",
   trustFree: "Консультация и просмотры, на месте или по видеосвязи — без обязательств",
+  trustCommissionFig: "0%",
+  trustCommission: "комиссии для покупателя — вы платите цену застройщика",
   enlargePhotos: "Увеличить фото",
   enlargePhotoN: (n) => `Увеличить фото ${n}`,
   showAllPhotos: (n) => `Показать все ${n} фото`,
