@@ -66,9 +66,12 @@ const LocationPin = () => (
    one did and the other two read as leftover text. A figure that is not a
    short figure ("287", "24h", "0 €") is set in the full display size; anything
    longer would push the sentence out of the card and is set smaller. */
+/* 2026-10-06: the three bronze plates became one framed panel in the
+   neighbourhood card's design (Sascha), with the figures in the site's
+   animated gold-shimmer accent (.it, preview-home/tokens.css). */
 const TrustItem = ({ fig, text }: { fig: string; text: string }) => (
-  <div className="pp-plate pp-plate--bronze pp-trust__item">
-    <b className={fig.length <= 5 ? "" : "pp-trust__fig--word"}>{fig}</b>
+  <div className="pp-trust__item">
+    <b className={`it${fig.length <= 5 ? "" : " pp-trust__fig--word"}`}>{fig}</b>
     <span>{text}</span>
   </div>
 );
@@ -393,9 +396,11 @@ export default async function ProjectPageBody({
                 a live figure (published projects) and two promises the form's
                 own success copy already makes ("usually the same day"). */}
             <section className="pp-wrap pp-trust">
-              <TrustItem fig={String(projectCount)} text={t.trustProjects(projectCount).replace(/^\d+\s*/, "")} />
-              <TrustItem fig={t.trustReplyFig} text={t.trustReply} />
-              <TrustItem fig={t.trustFreeFig} text={t.trustFree} />
+              <div className="pp-panel pp-trust__panel">
+                <TrustItem fig={String(projectCount)} text={t.trustProjects(projectCount).replace(/^\d+\s*/, "")} />
+                <TrustItem fig={t.trustReplyFig} text={t.trustReply} />
+                <TrustItem fig={t.trustFreeFig} text={t.trustFree} />
+              </div>
             </section>
 
             <div id="enquiry">
