@@ -442,10 +442,11 @@
 .pp-lb__nav--prev { inset-inline-start: 24px; } .pp-lb__nav--next { inset-inline-end: 24px; }
 /* Phones (Sascha, 2026-10-06): the 24px inset comes on top of the lightbox's
    40px padding, so the arrows sat 64px in — over the middle of the photo.
-   Pull them out to 12px from the screen edge (40 - 28) and one size down. */
+   Pulled out to 32px from the screen edge (40 - 8; 12px was too far) and
+   one size down. */
 @media (max-width: 640px) {
   .pp-lb__nav { width: 44px; height: 44px; font-size: 1.5rem; }
-  .pp-lb__nav--prev { inset-inline-start: -28px; } .pp-lb__nav--next { inset-inline-end: -28px; }
+  .pp-lb__nav--prev { inset-inline-start: -8px; } .pp-lb__nav--next { inset-inline-end: -8px; }
 }
 .pp-lb__count { position: absolute; top: 22px; inset-inline-start: 24px; z-index: 2; color: var(--text-soft); font-size: 0.85rem; }
 /* clickable thumbnail strip — normal flow now (not absolutely positioned),
