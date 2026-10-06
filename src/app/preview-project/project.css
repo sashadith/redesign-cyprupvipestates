@@ -570,15 +570,16 @@
   color: var(--ivory); font-family: var(--font-body); font-size: 0.9rem; cursor: pointer;
   transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease); }
 .pp-showmore:hover { border-color: var(--accent); color: var(--champagne); }
-/* Quiet bronze outline (Sascha, 2026-10-06: the solid bronze fill with its
-   golden glow from 10-03 "nervt" — it shouted louder than the units above it).
-   Transparent fill, a thin half-strength bronze edge, no glow; the bronze only
-   fills in faintly on hover. Two classes to outrank the ghost paint above. */
-.pp-showmore.pp-showmore--bronze { background: transparent; color: var(--champagne);
-  border-color: color-mix(in srgb, var(--bronze) 55%, transparent);
-  padding: 8px 20px; font-size: 0.85rem; letter-spacing: 0.01em; box-shadow: none; }
-.pp-showmore.pp-showmore--bronze:hover { background: color-mix(in srgb, var(--bronze) 12%, transparent);
-  border-color: var(--bronze); color: var(--ivory); box-shadow: none; }
+/* Same paint as the row "Enquire about this unit" button (.pp-uc__enquire--sm):
+   champagne label and rim with a thin champagne wash, no glow (Sascha,
+   2026-10-06 — the solid bronze fill with its golden glow from 10-03 "nervt").
+   Size and radius stay the base .pp-showmore ones. Two classes to outrank the
+   ghost paint above. */
+.pp-showmore.pp-showmore--bronze { color: var(--champagne); border-color: rgba(194,154,94,0.40);
+  background: rgba(194,154,94,0.12); box-shadow: none;
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
+.pp-showmore.pp-showmore--bronze:hover { border-color: var(--champagne); background: rgba(194,154,94,0.22);
+  color: #D8B268; box-shadow: none; }
 
 /* table */
 .pp-tbl-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: var(--r-ui); }
