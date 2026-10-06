@@ -66,7 +66,11 @@
 .px__select, .px__price input { color-scheme: dark; }
 .px__select option { background: var(--sea-deep); color: var(--ivory); }
 
+/* inline-flex + centring (2026-10-06): the phone layout switches the button to
+   display: inline-flex, which without align-items left "Reset" stuck to the
+   top of its 44px pill. */
 .px__reset {
+  display: inline-flex; align-items: center; justify-content: center;
   height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer; white-space: nowrap;
   background: none; border: 1px solid var(--hairline-strong); color: var(--text-soft);
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm);
@@ -85,6 +89,12 @@
 
 /* ---- custom select (PxSelect): trigger reuses the .px__select pill, panel + options styled to match ---- */
 .pxsel { position: relative; display: block; }
+/* An open panel lifts its whole select above the neighbouring filters
+   (2026-10-06). On phones the revealed filters animate in with a transform,
+   which gives each one its own stacking context — the panel's z-index: 50 then
+   only counts inside the select, and the later siblings (search, Map, "Hide
+   filters") painted straight through the open list. */
+.pxsel.is-open { z-index: 60; }
 .pxsel__btn { display: flex; align-items: center; width: 100%; cursor: pointer; }
 .pxsel__btn:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .pxsel__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
