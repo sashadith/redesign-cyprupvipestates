@@ -783,9 +783,12 @@
    variable-length labels (RU "Получить консультацию") cannot share a row. */
 .pp-hero__cta { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: clamp(18px, 2.4vw, 28px); }
 .pp-hero__cta .btn { padding: 13px 20px; white-space: nowrap; text-decoration: none; }
+/* Phones: no hero buttons at all (Sascha, 2026-10-06 — "Ordnung schaffen").
+   Stacked full-width they pushed the stats and the facts panel a screen further
+   down; the enquiry form is reached through "Speak to an adviser" in the header
+   and the WhatsApp button, and the units are one scroll away. */
 @media (max-width: 640px) {
-  .pp-hero__cta { flex-direction: column; align-items: stretch; }
-  .pp-hero__cta .btn { justify-content: center; white-space: normal; }
+  .pp-hero__cta { display: none; }
 }
 /* anchor targets land below the sticky header */
 #units, #enquiry { scroll-margin-top: 96px; }
