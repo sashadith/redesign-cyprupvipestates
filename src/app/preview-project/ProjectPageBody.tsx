@@ -1,5 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
+import { getPublicProjectCount } from "@/lib/siteStats";
 import type { Translation } from "@/types/homepage";
 
 import Header from "@/app/components/Header/Header";
@@ -149,9 +150,12 @@ export default async function ProjectPageBody({
      with them (src/lib/promoDistances.ts, 2026-10-04); git history has it if the
      duplication ever becomes a problem again. */
   const promoBlocks = Array.isArray(p.promoBlocks) ? p.promoBlocks : [];
-  // Trust strip figure — the live count of published developments, the same
-  // population /projects lists; never a typed number that goes stale.
-  const projectCount = await prisma.development.count({ where: { publishStatus: "published" } });
+  // Trust strip figure — the shared site figure (src/lib/siteStats.ts), i.e.
+  // exactly what /projects lists in this locale, so it matches the homepage and
+  // About bands. Was a raw count of published developments until 2026-10-06:
+  // that included ~43 sold-out projects /projects hides and missed the 20 legacy
+  // listings it shows (328 here against 305 on the homepage).
+  const projectCount = await getPublicProjectCount(lang);
 
   // Plot / build-area ranges, computed from the currently AVAILABLE units (not
   // sold/reserved) — values aren't always suffixed "m²" at the source, so extract
