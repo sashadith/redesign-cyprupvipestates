@@ -956,7 +956,7 @@
   .pp-tbl, .pp-tbl tbody { display: block; }
   .pp-tbl thead { display: none; }
   .pp-tbl tr.pp-tbl__row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 7px;
-    padding: 14px 16px; border-bottom: 1px solid var(--hairline); }
+    padding: 14px; border-bottom: 1px solid var(--hairline); }
   .pp-tbl tr.pp-tbl__row.is-clamped { display: none; }
   .pp-tbl tr.pp-tbl__row > td { display: block; padding: 0; border: 0; white-space: normal; }
   .pp-tbl tr.pp-tbl__row::before, .pp-tbl tr.pp-tbl__row::after { content: ""; flex-basis: 100%; height: 0; }
@@ -964,13 +964,15 @@
   .pp-tbl tr.pp-tbl__row::after { order: 6; }
   .pp-tbl .pp-tbl__name { order: 1; flex: 1 1 0; min-width: 0; }
   .pp-tbl .pp-tbl__price { order: 2; flex: none; text-align: end; }
-  .pp-tbl .pp-tbl__meta { order: 4; flex: none; font-size: 0.8rem; color: var(--text-soft); text-align: start; }
-  /* label in front of each figure ("Floor 1"), and a "·" before every item
-     but the first — one pseudo element carries both */
-  .pp-tbl .pp-tbl__meta[data-label]::before { content: attr(data-label) " a0"; color: var(--text-faint); }
-  .pp-tbl .pp-tbl__meta + .pp-tbl__meta::before { content: "· a0 a0"; color: var(--text-faint); }
-  .pp-tbl .pp-tbl__meta + .pp-tbl__meta[data-label]::before { content: "· a0 a0" attr(data-label) " a0"; }
-  .pp-tbl .pp-tbl__status { order: 7; flex: 1 1 auto; text-align: start; }
+  /* the specs sit on one line at phone width: a tighter gap than the row's 12px */
+  .pp-tbl .pp-tbl__meta { order: 4; flex: none; font-size: 0.78rem; color: var(--text-soft); text-align: start; margin-inline-end: -6px; }
+  /* label in front of each figure ("Floor 1") on ::before, the "·" after
+     every item but the last on ::after — so the two never share a pseudo
+     element. Plain margins, no escaped spaces in content. */
+  .pp-tbl .pp-tbl__meta[data-label]::before { content: attr(data-label); margin-inline-end: 0.25em; color: var(--text-faint); }
+  .pp-tbl .pp-tbl__meta:has(+ .pp-tbl__meta)::after { content: "·"; margin-inline-start: 0.4em; color: var(--text-faint); }
+  /* tr in the selector: td.r (text-align: end) would otherwise win */
+  .pp-tbl tr .pp-tbl__status { order: 7; flex: 1 1 auto; text-align: start; }
   .pp-tbl .pp-tbl__action { order: 8; flex: none; width: auto; }
   .pp-tbl__chev { display: none; }
   .pp-tbl__namegrid, .pp-tbl__namegrid:not(:has(.pp-tbl__thumb)) { grid-template-columns: auto 1fr; }

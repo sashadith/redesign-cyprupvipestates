@@ -372,7 +372,9 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
                   {show.floor && <td className="pp-tbl__meta" data-label={t.colFloor}>{u.floor || "—"}</td>}
                   {show.beds && <td className="r pp-tbl__meta" data-label={t.colBeds}>{u.beds || "—"}</td>}
                   {show.baths && <td className="r pp-tbl__meta" data-label={t.factBaths}>{u.baths || "—"}</td>}
-                  {show.built && <td className="r pp-tbl__meta" data-label={coveredCol ? t.factCovered : t.colBuilt}>{(coveredCol ? coveredOf(u) : interiorOf(u) && sqm(interiorOf(u), t.unitM2)) || "—"}</td>}
+                  {/* no data-label: on phones "59 m²" reads as the area on its own, and the
+                      spec line then fits one row at 360px */}
+                  {show.built && <td className="r pp-tbl__meta">{(coveredCol ? coveredOf(u) : interiorOf(u) && sqm(interiorOf(u), t.unitM2)) || "—"}</td>}
                   {show.plot && <td className="r pp-tbl__meta" data-label={t.colPlot}>{u.areaPlot ? sqm(u.areaPlot, t.unitM2) : "—"}</td>}
                   <td className="r pp-tbl__price">{priceCell(u, t, lang)}</td>
                   <td className="r pp-tbl__status"><StatusPill u={u} lang={lang} /></td>
