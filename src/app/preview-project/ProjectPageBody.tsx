@@ -72,7 +72,7 @@ const LocationPin = () => (
    animated gold-shimmer accent (.it, preview-home/tokens.css). */
 const TrustItem = ({ fig, text }: { fig: string; text: string }) => (
   <div className="pp-trust__item">
-    <b className={`it${fig.length <= 5 ? "" : " pp-trust__fig--word"}`}>{fig}</b>
+    <b className={`it${fig.length <= 6 ? "" : " pp-trust__fig--word"}`}>{fig}</b>
     <span>{text}</span>
   </div>
 );
