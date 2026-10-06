@@ -892,10 +892,11 @@
 .pp-trust__item::before { content: ""; position: absolute; top: 0; inset-inline-start: 0; width: 70%; height: 70%;
   background: radial-gradient(closest-side, rgba(194,154,94,0.10), transparent); pointer-events: none; }
 .pp-trust__item > * { position: relative; }
-/* The figure: display serif in the gold-shimmer accent (.it supplies italic,
-   colour, glow and the travelling highlight). Line-height and padding leave
+/* The figure: display serif in the gold-shimmer accent (.it supplies colour,
+   glow and the travelling highlight; its italic is switched off below). Line-height and padding leave
    room for the italic overhang and the glow so background-clip does not crop. */
 .pp-trust__item b { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
+  font-style: normal; /* upright figures, the shimmer stays (Sascha, 2026-10-06) */
   font-size: clamp(2.6rem, 4.4vw, 3.6rem); line-height: 1.05; padding-inline-end: 0.12em; width: fit-content; }
 .pp-trust__item b.pp-trust__fig--word { font-size: clamp(1.4rem, 2.2vw, 1.8rem); line-height: 1.15; max-width: 11em; }
 .pp-trust__item span { max-width: 32ch; }
