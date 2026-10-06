@@ -193,7 +193,8 @@
   .pp-hero__price { order: 1; }
   .pp-hero__completion { order: 2; align-items: flex-end; text-align: end; }
   .pp-hero__type { order: 3; }
-  .pp-hero__avail { order: 4; align-items: flex-end; text-align: end; }
+  /* bottom-aligned with the type, whose label can wrap onto two lines */
+  .pp-hero__avail { order: 4; align-items: flex-end; text-align: end; align-self: end; }
 }
 /* shimmering gold divider — gold at the left, fading out to the right (like __stripe) */
 .pp-rule { margin-block: clamp(10px, 3vw, 30px); max-width: none;
