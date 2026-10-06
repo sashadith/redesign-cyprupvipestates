@@ -570,17 +570,15 @@
   color: var(--ivory); font-family: var(--font-body); font-size: 0.9rem; cursor: pointer;
   transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease); }
 .pp-showmore:hover { border-color: var(--accent); color: var(--champagne); }
-/* Solid bronze with a golden outer glow — no gradient, no sheen (Sascha,
-   2026-10-03): on a control this size a gradient reads as decoration. Two
-   classes to outrank the ghost paint above. */
-.pp-showmore.pp-showmore--bronze { background: var(--bronze); border-color: var(--bronze); color: var(--ivory);
-  box-shadow: 0 0 30px -6px rgba(216,178,104,0.55); }
-/* Hover brightens the bronze (Sascha's call, 2026-10-03, over the darker
-   #7e5e35 the form's Send button uses). Noted for whoever reads this later: the
-   ivory label drops from 4.0:1 to 3.0:1 while hovering. It was a deliberate
-   choice on a momentary state, not an oversight. */
-.pp-showmore.pp-showmore--bronze:hover { background: #A77F49; border-color: #A77F49; color: var(--ivory);
-  box-shadow: 0 0 38px -4px rgba(216,178,104,0.75); }
+/* Quiet bronze outline (Sascha, 2026-10-06: the solid bronze fill with its
+   golden glow from 10-03 "nervt" — it shouted louder than the units above it).
+   Transparent fill, a thin half-strength bronze edge, no glow; the bronze only
+   fills in faintly on hover. Two classes to outrank the ghost paint above. */
+.pp-showmore.pp-showmore--bronze { background: transparent; color: var(--champagne);
+  border-color: color-mix(in srgb, var(--bronze) 55%, transparent);
+  padding: 8px 20px; font-size: 0.85rem; letter-spacing: 0.01em; box-shadow: none; }
+.pp-showmore.pp-showmore--bronze:hover { background: color-mix(in srgb, var(--bronze) 12%, transparent);
+  border-color: var(--bronze); color: var(--ivory); box-shadow: none; }
 
 /* table */
 .pp-tbl-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: var(--r-ui); }
