@@ -374,9 +374,18 @@ export default function ProjectsExplorer({
             {hasBbox && <span className="px__count-area"> {s.inThisMapArea}</span>}
           </p>
           {/* Sort lives with the results, not the filters block */}
-          <select className="px__select px__select--sort" value={filters.sort} onChange={(e) => setParam({ sort: e.target.value })} aria-label={s.sortAria}>
-            {s.sorts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          {/* The same PxSelect as the filters above (2026-10-06) — the native
+              <select> opened the OS's own popup, unlike every other menu on
+              the page. "recommended" is the default sort, so it plays the
+              placeholder (empty value): choosing it drops ?sort from the URL. */}
+          <PxSelect
+            className="px__select--sort"
+            label={s.sortAria}
+            placeholder={s.sorts.find((o) => o.value === "recommended")?.label ?? s.sorts[0].label}
+            value={filters.sort === "recommended" ? "" : filters.sort}
+            options={s.sorts.filter((o) => o.value !== "recommended")}
+            onChange={(v) => setParam({ sort: v })}
+          />
         </div>
 
         {cards.length === 0 ? (
