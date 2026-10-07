@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { maySyncCreateUnits } from "./curatedUnits";
 import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, listProjectFolders, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject, type ExtractStats } from "./ai/pricelistExtract";
 import { toTitleCaseName } from "@/lib/textCase";
@@ -228,12 +229,14 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   const projectAmenities = ((dev.amenities as string[] | null) ?? []).filter(Boolean);
 
   const touchedIds = new Set<string>();
+  const mayCreate = maySyncCreateUnits(existingUnits);
   for (const u of p.units) {
     const ref = String(u.ref || "").trim();
     if (!ref) continue;
     const base = { ref, price: typeof u.price === "number" ? Math.round(u.price) : null, status: u.status };
     const k = refKey(ref, p.project);
     const existing = existingByKey.get(k);
+    if (!existing && !mayCreate) continue; // curated unit list — see curatedUnits.ts
     let data: Record<string, any> = base;
     if (richUnits) {
       const fresh = { beds: nn(u.bedrooms), ...unitFields(u) };
