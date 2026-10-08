@@ -67,3 +67,10 @@ export function isLeadBucket(v: unknown): v is LeadBucket {
 // newsletter lead is, subscribers would be invisible in both places at once.
 export const EXCLUDE_NEWSLETTER: Prisma.LeadWhereInput = { source: { not: "NEWSLETTER" } };
 export const ONLY_NEWSLETTER: Prisma.LeadWhereInput = { source: "NEWSLETTER" };
+
+// The Partner page (2026-10-08) takes partner leads out of the leads list the
+// same way the Newsletter page took subscribers out — list views only. The
+// pipeline board and the Action Center's follow-up rules still see them: a
+// partner relationship that goes quiet is still a follow-up someone owes.
+export const EXCLUDE_PARTNER: Prisma.LeadWhereInput = { source: { not: "PARTNER" } };
+export const ONLY_PARTNER: Prisma.LeadWhereInput = { source: "PARTNER" };

@@ -1,7 +1,7 @@
 // Lead CSV export (audit H3). Auth-gated; honours the same filters as the list page.
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { buildLeadWhere, orderForSort, type LeadSearchParams } from "../filters";
+import { buildLeadWhere, listBucketOf, orderForSort, type LeadSearchParams } from "../filters";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
   const sp: LeadSearchParams = Object.fromEntries(new URL(request.url).searchParams.entries());
   const leads = await prisma.lead.findMany({
-    where: buildLeadWhere(sp),
+    where: buildLeadWhere(sp, listBucketOf(sp)),
     orderBy: orderForSort(sp),
     take: 50000,
     include: { assignedTo: { select: { name: true } } },

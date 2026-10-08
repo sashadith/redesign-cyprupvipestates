@@ -237,7 +237,10 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     <div className="max-w-4xl">
       {/* MCP writes and other operators land without a manual reload. */}
       <AutoRefresh />
-      <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>
+      {/* A partner lead lives on the Partner page (2026-10-08), so that is where "back" goes. */}
+      {lead.source === "PARTNER"
+        ? <Link href="/admin/crm/partners" className="text-sm text-[#1B4B43] hover:underline">← Back to partners</Link>
+        : <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>}
 
       <div className="mt-2 mb-6">
         <CockpitCard
