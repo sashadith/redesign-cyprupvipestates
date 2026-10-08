@@ -272,5 +272,30 @@ try { CB.parseListing(NL().replace("Newly Launched", "Coming Soon"), NL_SITEMAP)
 catch (e) { strictThrew = String(e.message || e); }
 check("parseListing (the strict form) still throws on it", /unrecognised status mark "Coming Soon"/.test(strictThrew), true);
 
+/* ── 2026-10-08: an unlinked card no longer takes the run down ─────────────
+   Real capture of that morning (listing-unlinked-attikis.html + its sitemap):
+   the sold-out Attikis Residences card links to "?post_type=projects&p=11495"
+   and only "/ru/project/attikis-residences/" is left in the sitemap. Every
+   nightly run threw "no sitemap slug" and synced nothing. */
+const ATT = () => fx("listing-unlinked-attikis.html");
+const ATT_SM = fx("sitemap-unlinked-attikis.xml");
+check("the EN sitemap list really lacks attikis (the trigger)", CB.slugsFromSitemap(ATT_SM).includes("attikis-residences"), false);
+check("…its RU copy carries the slug", CB.localizedSlugsFromSitemap(ATT_SM).includes("attikis-residences"), true);
+check("localized slugs carry no language prefix", CB.localizedSlugsFromSitemap(ATT_SM).some((s) => s.includes("/")), false);
+const att = CB.readListing(ATT(), ATT_SM);
+check("attikis resolves to its existing key, sold out",
+  att.cards.filter((c) => c.slug === "attikis-residences").map((c) => c.status), ["sold_out"]);
+check("nothing unresolved, nothing blocked on the real page", [att.unresolved.length, att.blocked.length], [0, 0]);
+check("all 16 cards read", att.cards.length, 16);
+check("a linked card keeps its link slug (EN list wins)", att.cards.find((c) => c.name === "Seaview Heights")?.slug, "seaview-heights-limassol");
+/* A card with no link and no sitemap entry in ANY language: held apart, never thrown. */
+const orphan = CB.readListing(ATT().replace('<h3 class="h4">The Oval</h3>', '<h3 class="h4">Nonexistent Orphan Project</h3>'), ATT_SM);
+check("an unresolvable card is held apart", orphan.unresolved, [{ name: "Nonexistent Orphan Project", mark: "Sold out", soldOut: true }]);
+check("…and the other 15 still read", orphan.cards.length, 15);
+let strictOrphan = "";
+try { CB.parseListing(ATT().replace('<h3 class="h4">The Oval</h3>', '<h3 class="h4">Nonexistent Orphan Project</h3>'), ATT_SM); }
+catch (e) { strictOrphan = String(e.message || e); }
+check("parseListing (strict) still throws on it", /no sitemap slug for unlinked card "Nonexistent Orphan Project"/.test(strictOrphan), true);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

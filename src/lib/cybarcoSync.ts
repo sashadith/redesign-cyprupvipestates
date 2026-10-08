@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {
   readListing, parseProjectPage, parseGallery, priceListDate,
-  type CybarcoCard, type CybarcoBlockedCard, type CybarcoDetail, type CybarcoStatus,
+  type CybarcoCard, type CybarcoBlockedCard, type CybarcoUnresolvedCard, type CybarcoDetail, type CybarcoStatus,
 } from "./cybarco";
 import { cybarcoReadPages, type CybarcoUnit } from "./ai/cybarcoPriceTable";
 import { readPdfPages } from "./ai/availabilityTable";
@@ -725,10 +725,22 @@ export function runVerdict(input: { attempted: number; failed: number }): RunVer
    ok:false is what reaches one (the Telegram failure message and the Action
    Center's URGENT item). Without that, the new project would simply never
    appear and nothing would say why. Pure, so the QA suite can pin it. */
-export function listingVerdict(fetch: RunVerdict, blocked: CybarcoBlockedCard[]): RunVerdict {
-  if (!blocked.length) return fetch;
-  const marks = blocked.map((b) => `${b.slug} ${JSON.stringify(b.mark)}`).join(", ");
-  const reason = `unrecognised status mark on ${blocked.length} card(s), skipped this run: ${marks}`;
+export function listingVerdict(fetch: RunVerdict, blocked: CybarcoBlockedCard[], unresolved: CybarcoUnresolvedCard[] = []): RunVerdict {
+  const reasons: string[] = [];
+  if (blocked.length) {
+    const marks = blocked.map((b) => `${b.slug} ${JSON.stringify(b.mark)}`).join(", ");
+    reasons.push(`unrecognised status mark on ${blocked.length} card(s), skipped this run: ${marks}`);
+  }
+  /* A card with no slug at all (no link, no sitemap entry) is held apart too.
+     A SOLD-OUT one costs nothing — there is nothing to sell or update — so it
+     is a note, never a failed run; anything else may be a project on sale that
+     would silently never appear, so that one does need a human. */
+  const live = unresolved.filter((u) => !u.soldOut);
+  if (live.length) {
+    reasons.push(`no slug for ${live.length} unlinked card(s), skipped this run: ${live.map((u) => `${JSON.stringify(u.name)} ${JSON.stringify(u.mark)}`).join(", ")}`);
+  }
+  if (!reasons.length) return fetch;
+  const reason = reasons.join("; ");
   return { ok: false, reason: fetch.reason ? `${fetch.reason}; ${reason}` : reason };
 }
 
@@ -902,13 +914,16 @@ export async function gatherCybarco(): Promise<{
   verdict: RunVerdict;
 }> {
   const [listing, sitemap] = await Promise.all([get(LISTING_URL), get(SITEMAP_URL)]);
-  const { cards, blocked } = readListing(listing, sitemap);
+  const { cards, blocked, unresolved } = readListing(listing, sitemap);
   const notes: string[] = [];
-  if (!cards.length && !blocked.length) throw new Error("Cybarco: the listing page parsed to zero cards — the markup changed");
+  if (!cards.length && !blocked.length && !unresolved.length) throw new Error("Cybarco: the listing page parsed to zero cards — the markup changed");
   /* Every card unrecognised is not sixteen new marks on one night — it is the
      mark markup moving (an empty mark is unrecognised too). That is the zero-
      cards case above in another form, so it fails the whole run the same way. */
-  if (!cards.length) throw new Error(`Cybarco: every listing card carries an unrecognised status mark (first: ${JSON.stringify(blocked[0].mark)}) — the markup changed`);
+  if (!cards.length) throw new Error(`Cybarco: no listing card could be read (${blocked.length} unrecognised mark(s), ${unresolved.length} without a slug) — the markup changed`);
+  for (const u of unresolved) {
+    notes.push(`${JSON.stringify(u.name)}: unlinked card with no sitemap slug (mark ${JSON.stringify(u.mark)}) — card SKIPPED this run${u.soldOut ? " (sold out, nothing to sync)" : ""}`);
+  }
   for (const b of blocked) {
     notes.push(`${b.slug}: unrecognised status mark ${JSON.stringify(b.mark)} — card SKIPPED this run (nothing written; an existing project keeps its stored status). Teach statusOf() in src/lib/cybarco.ts what it means`);
   }
@@ -937,7 +952,7 @@ export async function gatherCybarco(): Promise<{
   const fetchFailures = plans.reduce((a, p) => a + p.fetchFailures, 0);
   const fetchVerdict = runVerdict({ attempted: fetchAttempts, failed: fetchFailures });
   if (fetchVerdict.reason) notes.push(fetchVerdict.reason);
-  const verdict = listingVerdict(fetchVerdict, blocked);
+  const verdict = listingVerdict(fetchVerdict, blocked, unresolved);
 
   return { plans, blocked, notes, fetchAttempts, fetchFailures, siteRefused: !fetchVerdict.ok, verdict };
 }

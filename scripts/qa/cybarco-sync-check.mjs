@@ -502,7 +502,14 @@ check("refused AND held: both reasons survive",
    (syncedAt only) so the missing-from-feed sweep cannot mistake it for gone. */
 check("gatherCybarco reads the listing tolerantly, not with the strict parser",
   [/readListing\(listing, sitemap\)/.test(syncSrc), /parseListing\(/.test(syncSrc)], [true, false]);
-check("…and judges the run with listingVerdict", /const verdict = listingVerdict\(fetchVerdict, blocked\)/.test(syncSrc), true);
+check("…and judges the run with listingVerdict", /const verdict = listingVerdict\(fetchVerdict, blocked, unresolved\)/.test(syncSrc), true);
+/* 2026-10-08: a card with no slug is held apart too. Sold out → a note only;
+   anything else → the run fails so a human looks, neighbours still sync. */
+const soldOrphan = { name: "Attikis Residences", mark: "Sold Out", soldOut: true };
+const liveOrphan = { name: "New Project", mark: "Under construction", soldOut: false };
+check("a sold-out card without a slug does not fail the run", S.listingVerdict(healthy, [], [soldOrphan]), healthy);
+check("an on-sale card without a slug fails it, named", (() => { const v = S.listingVerdict(healthy, [], [liveOrphan]); return [v.ok, /no slug for 1 unlinked card.*"New Project"/.test(v.reason ?? "")]; })(), [false, true]);
+check("…both reasons together when a mark is unseen as well", (() => { const v = S.listingVerdict(healthy, [card], [liveOrphan]); return [v.ok, /unrecognised status mark/.test(v.reason ?? ""), /no slug/.test(v.reason ?? "")]; })(), [false, true, true]);
 check("a held existing project gets syncedAt stamped and nothing else",
   /for \(const b of blocked\) \{\s*const row = await prisma\.development\.findUnique\(\{ where: \{ feedKey: `cybarco:\$\{b\.slug\}` \}, select: \{ id: true, dev: true \} \}\);\s*if \(row\?\.dev === "cybarco"\) await prisma\.development\.update\(\{ where: \{ id: row\.id \}, data: \{ syncedAt: new Date\(\) \} \}\);\s*\}/.test(syncSrc), true);
 

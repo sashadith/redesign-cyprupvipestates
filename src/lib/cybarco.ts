@@ -37,6 +37,21 @@ export function slugsFromSitemap(xml: string): string[] {
   return Array.from(new Set(out));
 }
 
+/* The same sitemap's language copies ("/ru/project/<slug>/"). Cybarco uses one
+   slug for every language, so a project that dropped out of the English list
+   but still has a translated page keeps its identity here. Seen 2026-10-08:
+   the sold-out Attikis Residences card links to "?post_type=projects&p=11495"
+   and only "/ru/project/attikis-residences/" is left in the sitemap. Only ever
+   consulted after the English list (see resolveSlug), never in its place. */
+export function localizedSlugsFromSitemap(xml: string): string[] {
+  const out: string[] = [];
+  for (const m of Array.from(xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/g))) {
+    const hit = m[1].match(/^https:\/\/www\.cybarco\.com\/[a-z]{2}\/project\/([a-z0-9-]+)\/$/);
+    if (hit) out.push(hit[1]);
+  }
+  return Array.from(new Set(out));
+}
+
 /* The site spells the same state four ways. Anything unrecognised is NEVER
    given a silent default: a new mark would otherwise import as "under
    construction" and quietly put a sold-out project back on sale. null here is
@@ -89,16 +104,20 @@ function parseSubTitle(sub: string): { priceFrom: number | null; district: strin
    and -3 to aktea-residences-4). Their slug is recovered by matching the card's
    own name against the sitemap, never by slugifying the display name: a derived
    slug that drifts re-keys the project and creates a duplicate Development. */
-function resolveSlug(name: string, linked: string | null, sitemap: string[]): string {
+function resolveSlug(name: string, linked: string | null, sitemap: string[], localized: string[]): string | null {
   if (linked) return linked;
   const key = name.toLowerCase().replace(/[^a-z0-9]+/g, "");
-  const hit = sitemap.find((s) => s.replace(/-/g, "") === key);
-  if (hit) return hit;
-  throw new Error(`Cybarco: no sitemap slug for unlinked card ${JSON.stringify(name)}`);
+  const match = (list: string[]) => list.find((s) => s.replace(/-/g, "") === key);
+  return match(sitemap) ?? match(localized) ?? null;
 }
+
+const noSitemapSlug = (name: string) => new Error(`Cybarco: no sitemap slug for unlinked card ${JSON.stringify(name)}`);
 
 /** A listing card whose status mark is one nobody has seen yet. */
 export type CybarcoBlockedCard = { slug: string; name: string; mark: string };
+
+/** A listing card with no link and no sitemap entry — no slug to key it on. */
+export type CybarcoUnresolvedCard = { name: string; mark: string; soldOut: boolean };
 
 /* The listing, with every card whose mark is unrecognised held apart instead of
    throwing. Until 2026-10-03 one unknown mark threw out of the whole parse, so
@@ -108,20 +127,25 @@ export type CybarcoBlockedCard = { slug: string; name: string; mark: string };
    (it gets no status, so it is never written), but its neighbours, whose marks
    are known, are no longer hostage to it. The caller decides how loudly to
    fail; syncCybarco fails the run.
-   An unlinked card with no sitemap match still throws: that is a slug that
-   cannot be resolved at all, a different failure (see resolveSlug). */
-export function readListing(html: string, sitemapXml: string): { cards: CybarcoCard[]; blocked: CybarcoBlockedCard[] } {
+   An unlinked card with no sitemap match is held apart the same way (it has
+   no slug, so nothing can be written for it); until 2026-10-08 it threw and
+   took every other project down with it — a sold-out card whose link had
+   turned into "?post_type=projects&p=…" did exactly that. */
+export function readListing(html: string, sitemapXml: string): { cards: CybarcoCard[]; blocked: CybarcoBlockedCard[]; unresolved: CybarcoUnresolvedCard[] } {
   const sitemap = slugsFromSitemap(sitemapXml);
+  const localized = localizedSlugsFromSitemap(sitemapXml);
   const cards: CybarcoCard[] = [];
   const blocked: CybarcoBlockedCard[] = [];
+  const unresolved: CybarcoUnresolvedCard[] = [];
   for (const chunk of html.split('<div class="project">').slice(1)) {
     const one = (re: RegExp) => chunk.match(re)?.[1] ?? "";
     const name = toTitleCaseName(strip(one(/<h3[^>]*>([\s\S]*?)<\/h3>/)));
     if (!name) continue;
     const linked = chunk.match(/href="https:\/\/www\.cybarco\.com\/project\/([a-z0-9-]+)\/"/)?.[1] ?? null;
-    const slug = resolveSlug(name, linked, sitemap);
+    const slug = resolveSlug(name, linked, sitemap, localized);
     const mark = strip(one(/<span class="mark">([\s\S]*?)<\/span>/));
     const status = statusOf(mark);
+    if (!slug) { unresolved.push({ name, mark, soldOut: status === "sold_out" }); continue; }
     if (!status) { blocked.push({ slug, name, mark }); continue; }
     const sub = strip(one(/<span class="sub-title">([\s\S]*?)<\/span>/));
     const { priceFrom, district } = parseSubTitle(sub);
@@ -135,12 +159,13 @@ export function readListing(html: string, sitemapXml: string): { cards: CybarcoC
       description: strip(one(/<div class="desktop-hover">\s*<p>([\s\S]*?)<\/p>/)),
     });
   }
-  return { cards, blocked };
+  return { cards, blocked, unresolved };
 }
 
-/** The strict form: any unrecognised mark throws. */
+/** The strict form: an unresolvable card or an unrecognised mark throws. */
 export function parseListing(html: string, sitemapXml: string): CybarcoCard[] {
-  const { cards, blocked } = readListing(html, sitemapXml);
+  const { cards, blocked, unresolved } = readListing(html, sitemapXml);
+  if (unresolved.length) throw noSitemapSlug(unresolved[0].name);
   if (blocked.length) throw unrecognisedMark(blocked[0].mark);
   return cards;
 }
