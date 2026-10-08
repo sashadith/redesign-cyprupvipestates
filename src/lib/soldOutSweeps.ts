@@ -61,7 +61,19 @@ export function isMissingFromFeed(
   const ageMs = now.getTime() - syncedAt.getTime();
   if (ageMs < MISSING_FROM_FEED_DAYS * 86_400_000) return false;
   const freshCutoff = now.getTime() - PEER_FRESH_HOURS * 3_600_000;
-  return peerSyncedAt.some((d) => d != null && d.getTime() >= freshCutoff);
+  /* MOST synced siblings fresh, not merely one (2026-10-08). A one-project
+     resync — the admin's per-development "Sync with Drive", or a scripted
+     import of a single new draft — refreshes exactly one sibling while the
+     rest of the developer still sits at its last full run. With "any sibling
+     fresh" that lone fresh draft (Meander) made all three of Motive Point's
+     published projects (VENARA, VENARA VIEW, DIAMOND) look gone after their
+     weekly run turned 8 days old: every unit was unlisted and the pages read
+     sold out. A real departure from the feed happens during a FULL run, which
+     refreshes everything still present — so the fresh siblings are then the
+     majority. Siblings that never synced (manual rows) are not counted. */
+  const synced = peerSyncedAt.filter((d): d is Date => d != null);
+  const fresh = synced.filter((d) => d.getTime() >= freshCutoff).length;
+  return fresh > 0 && fresh * 2 > synced.length;
 }
 
 /**

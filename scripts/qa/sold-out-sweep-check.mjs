@@ -61,7 +61,18 @@ check("...even at 60 days stale",
 check("...and a developer with no siblings at all cannot fire either",
   isMissingFromFeed(daysAgo(30), [], NOW), false);
 check("one stale among fresh IS the project being gone",
-  isMissingFromFeed(daysAgo(9), [daysAgo(9), hoursAgo(2), daysAgo(9)], NOW), true);
+  isMissingFromFeed(daysAgo(9), [hoursAgo(2), hoursAgo(2), daysAgo(9)], NOW), true);
+
+/* 2026-10-08 regression: a single-project resync (Meander, a new draft) left
+   one sibling fresh while Motive Point's published projects sat at their
+   8-day-old weekly run — all three were unlisted and showed sold out. */
+console.log("\na single-project resync is not a full run");
+check("one fresh sibling among stale ones does not fire (Motive Point)",
+  isMissingFromFeed(daysAgo(8), [hoursAgo(24), daysAgo(8), daysAgo(8), null], NOW), false);
+check("...a fresh half is not a majority either",
+  isMissingFromFeed(daysAgo(8), [hoursAgo(2), daysAgo(8)], NOW), false);
+check("...but the fresh majority still finds a project that left",
+  isMissingFromFeed(daysAgo(8), [hoursAgo(2), hoursAgo(3), daysAgo(8)], NOW), true);
 
 console.log("\nthe 5-day floor holds");
 check("4 days is still a hiccup", isMissingFromFeed(daysAgo(4), [hoursAgo(2)], NOW), false);
