@@ -980,11 +980,16 @@ Expected: `401` both times, with `XELLEX_API_KEY` unset locally — which also p
 - [ ] **Step 3: Delete the probe, clean up, build**
 
 ```bash
-pkill -f "next dev -p 3011"; rm -rf src/app/api/bridge-probe .next
-npx next build   # needs node_modules + .env.local in place
-rm -rf .next node_modules .env.local
-git status --porcelain   # must be empty
+# stop only the dev server this task started (match its own port), then drop
+# the probe route before any build, so it cannot end up in a build artefact.
+rm -rf src/app/api/bridge-probe .next
+npx next build          # needs node_modules + .env.local in place
+rm -rf .next .env.local # .env.local is a copy of production credentials
+npm test                # the cursor codec's contract, 586 assertions total
+git status --porcelain  # must be empty
 ```
+
+**Do not delete `node_modules`.** An earlier version of this step did, which was wrong twice over: it is gitignored, so it was never what `git status` was checking, and removing it breaks `npm test` and every later task in this worktree. Leave it as the real directory it is.
 
 - [ ] **Step 4: Commit** (the probe route must not be in it)
 
