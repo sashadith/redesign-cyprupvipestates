@@ -1155,6 +1155,17 @@ model DeveloperAccount {
   // developer admin (ManualReminderSelect). 30 = monthly.
   manualSyncReminderDays Int?
   notes             String?
+  // Xellex bridge (2026-10-09) — which developers are deliverable to the second
+  // portal. Default OFF: a developer account created next year must not appear
+  // on a public site nobody decided to put it on.
+  //
+  // `bridgeChangedAt` is not bookkeeping, it is load-bearing. Switching a
+  // developer off touches none of its Development rows, so their `updatedAt`
+  // stays old and a pure cursor sync would never report the removal — the
+  // projects would stay live on Xellex forever. The removal query reads this
+  // stamp; see removedSince() in src/lib/bridge/query.ts.
+  bridgeEnabled   Boolean   @default(false)
+  bridgeChangedAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

@@ -57,6 +57,12 @@ function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, ac
         { href: "/admin/developments", label: "All developments" },
         { href: "/admin/developments/areas", label: "Area descriptions" },
         { href: "/admin/developers/publishing-queue", label: "Publishing Queue" },
+        // Per-developer switch deciding whose published projects are delivered
+        // to Xellex, the second public portal. Lives in this module because the
+        // Developer-Feeds module it was planned under was merged into
+        // Developments (see the redirect in (panel)/feeds/page.tsx), and the
+        // switch is per developer account like everything else here.
+        { href: "/admin/feeds/bridge", label: "Xellex Bridge" },
       ],
     },
     { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }, { href: "/admin/analytics/seo", label: "SEO" }, { href: "/admin/analytics/seo/power", label: "Page Power" }, { href: "/admin/analytics/seo/advisor", label: "SEO Advisor" }] },
