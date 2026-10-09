@@ -212,7 +212,7 @@ git commit
 **Interfaces:**
 - Produces: `type ImageVariant = { url: string; bytes: number; modified: string }`, `type BridgeImage = { stored: string; variants: Partial<Record<"small" | "medium" | "large", ImageVariant>> }`, `imagesFor(urls: string[]): Promise<BridgeImage[]>`
 
-- [ ] **Step 1: Write the module**
+- [x] **Step 1: Write the module**
 
 Create `src/lib/bridge/images.ts`:
 
@@ -293,7 +293,7 @@ export async function imagesFor(urls: string[]): Promise<BridgeImage[]> {
 }
 ```
 
-- [ ] **Step 2: Verify against real files**
+- [x] **Step 2: Verify against real files**
 
 Run: `npx tsc --noEmit` → exit 0.
 
@@ -305,7 +305,7 @@ ssh -i ~/.ssh/cvp_vps root@72.60.89.239 "ls /var/www/shared-uploads/developments
 
 Expected: three files sharing one hash with `_small` / `_medium` / `_large` suffixes. Confirm your `MIRROR_RE` matches that exact shape, including the extension, and say in your report how many of a sample project's stored URLs produced three variants versus fewer.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/bridge/images.ts docs/superpowers/plans/2026-10-09-xellex-bridge.md
