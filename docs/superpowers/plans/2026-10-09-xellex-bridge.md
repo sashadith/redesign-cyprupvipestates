@@ -13,7 +13,7 @@
 ## Global Constraints
 
 1. **`npx tsc --noEmit` must exit 0.** `tsconfig.json` sets **no `target`** and **no `downlevelIteration`**: wrap Map/Set iteration in `Array.from()`; the regex `/u` flag and `\p{L}` are unavailable.
-2. **There is no test runner in this repo, by decision.** Do not add one. The test cycle for every task is: `tsc`, then run the real thing against the production database through a temporary route on a dev server, then read the output. Where a task says "verify", that is what it means.
+2. **This repo HAS a test runner, and this constraint was false.** Corrected 2026-10-09, after every task had already been implemented under it. `package.json` has `npm test` → `node --import tsx --test`, over 74 existing test files in `src/lib/__tests__`, `src/lib/mcp/__tests__`, `scripts/codemods/__tests__` and `scripts/qa/__tests__` (586 assertions passing). What is true, and what the constraint should have said: **most of this feature cannot be unit-tested** — it is Prisma queries, `fs.stat` against an 11 GB image store, and a route that needs a key and a database — so for those the cycle is `tsc`, then run the real thing against production, then read the output. But where a task produces a **pure function**, it gets a test, because this repo tests pure functions. The cursor codec is the one such function here, and it is the one piece whose contract is both subtle and silently breakable: `src/lib/__tests__/bridgeCursor.test.ts`.
 3. **`.env.local` tunnels to the PRODUCTION database on `localhost:5433`.** Read-only queries only. **Never run `prisma migrate dev`, `migrate deploy` or `db push`** — they would connect to production outside the deploy path. `npx prisma generate` is local codegen and is fine. The migration in Task 1 is hand-written and reaches production only via `CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh`.
 4. **A deploy touching `prisma/schema.prisma` or `prisma/migrations/` needs `CVP_RUN_MIGRATE=1`**, or every query on the changed table 500s. This caused a ~15–20 minute outage on 2026-09-17.
 5. **Admin-facing copy is English.** Public/client-facing copy is localised. This API is machine-facing; its error strings are English.
@@ -46,7 +46,9 @@ Image variants on disk are `<hash>_small.webp`, `_medium.webp`, `_large.webp`; t
 | `src/lib/bridge/images.ts` (new) | one stored URL → up to three variants with `bytes` + `modified` |
 | `src/lib/bridge/payload.ts` (new) | the field allowlist; one `Development` row → one wire object |
 | `src/lib/bridge/query.ts` (new) | the three-table `updatedSince` cursor and the two-source `removed` list |
-| `src/app/api/bridge/projects/route.ts` (new) | auth, paging, response assembly, access log |
+| `src/app/api/bridge/projects/route.ts` (new) | auth, rate limit, paging, response assembly, access log |
+| `src/lib/bridge/cursor.ts` (new) | the opaque cursor codec — split out of the route because it is the one pure function here, and `npm test` can hold it to its contract |
+| `src/lib/__tests__/bridgeCursor.test.ts` (new) | that contract: one `generatedAt` per run, round-tripped to the millisecond, and every forged shape rejected |
 | `src/app/admin/(panel)/feeds/bridge/page.tsx` (new) | the per-developer switch screen |
 | `src/app/admin/(panel)/feeds/bridge/actions.ts` (new) | the toggle server action |
 
@@ -693,8 +695,10 @@ Create `src/app/api/bridge/projects/route.ts`:
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { makeRateLimiter } from "@/lib/antispam";
 import { changedSince, removedSince } from "@/lib/bridge/query";
 import { buildProject, type BridgeProject } from "@/lib/bridge/payload";
+import { decodeCursor, encodeCursor } from "@/lib/bridge/cursor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -706,6 +710,22 @@ export const dynamic = "force-dynamic";
  *  response. If the catalogue doubles, lower this rather than letting the
  *  latency rise. */
 const PAGE_SIZE = 50;
+
+// Both floors copied from the public blog API (src/lib/publicApi/auth.ts),
+// which is the precedent this endpoint should have been built on from the
+// start: CVE has served a read-only outbound API behind the same X-API-Key
+// header since before this feature, and the spec's claim that "no outbound
+// feed exists" was simply wrong.
+//
+// The limiter is not a security control — the key is — it stops a runaway
+// sync loop. That matters more here than on the blog API: one full export
+// costs 120,972 fs.stat calls, so an authenticated client looping full
+// exports is not merely wasteful, which is what the spec assumed. In-memory
+// and per instance, resetting on redeploy, which is the right shape for a
+// single consumer syncing a few times a day.
+const MIN_KEY_LENGTH = 24;
+const MAX_REQUESTS_PER_MINUTE = 60;
+const limiter = makeRateLimiter();
 
 /**
  * Constant-time comparison of the presented key against the configured one.
@@ -723,6 +743,13 @@ const PAGE_SIZE = 50;
 function authorized(req: NextRequest): boolean {
   const expected = process.env.XELLEX_API_KEY;
   if (!expected) return false;
+  // A short key on a public endpoint is worse than no endpoint — the same
+  // floor src/lib/publicApi/auth.ts applies to BLOG_API_KEYS. Without it a
+  // one-character XELLEX_API_KEY would be accepted silently.
+  if (expected.length < MIN_KEY_LENGTH) {
+    console.warn("[xellex-bridge] XELLEX_API_KEY is shorter than the 24-character minimum; refusing all requests");
+    return false;
+  }
   const presented = Buffer.from(req.headers.get("x-api-key") ?? "", "utf8");
   const configured = Buffer.from(expected, "utf8");
   if (presented.length !== configured.length) {
@@ -730,59 +757,6 @@ function authorized(req: NextRequest): boolean {
     return false;
   }
   return crypto.timingSafeEqual(presented, configured);
-}
-
-/**
- * The cursor carries the RUN's generatedAt, not only the last id of the page.
- *
- * Opaque by contract — base64 of a tiny JSON object — so a consumer cannot
- * read the id out of it and start paging by hand. Deliberately not signed:
- * every field in it is the caller's own sync position, the WHERE clause and
- * the field allowlist are server-side, and a caller who forges one can only
- * corrupt its own window. It is validated rather than trusted all the same,
- * so a mangled or hand-written cursor is a clean 400 instead of a 500 or,
- * worse, a silently wrong window.
- *
- * Buffer.from(…, "base64url") does not throw on garbage, it discards the
- * invalid bytes — so JSON.parse and the field checks below are the real gate,
- * not the decode.
- */
-const CURSOR_VERSION = 1;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-type DecodedCursor = { id: string; generatedAt: Date; since: Date | null };
-
-function encodeCursor(generatedAt: Date, since: Date | null, lastId: string): string {
-  const payload = {
-    v: CURSOR_VERSION,
-    g: generatedAt.toISOString(),
-    s: since ? since.toISOString() : null,
-    i: lastId,
-  };
-  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-}
-
-function decodeCursor(raw: string): DecodedCursor | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
-  } catch {
-    return null;
-  }
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-  const c = parsed as Record<string, unknown>;
-  if (c.v !== CURSOR_VERSION) return null;
-  if (typeof c.i !== "string" || !UUID_RE.test(c.i)) return null;
-  if (typeof c.g !== "string") return null;
-  const generatedAt = new Date(c.g);
-  if (Number.isNaN(generatedAt.getTime())) return null;
-  let since: Date | null = null;
-  if (c.s !== null) {
-    if (typeof c.s !== "string") return null;
-    since = new Date(c.s);
-    if (Number.isNaN(since.getTime())) return null;
-  }
-  return { id: c.i, generatedAt, since };
 }
 
 /**
@@ -805,6 +779,16 @@ export async function GET(req: NextRequest) {
     // authenticated outcome below is logged.
     console.warn("[xellex-bridge] unauthorized request refused");
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // Keyed on the endpoint, not the caller: there is one consumer, and keying
+  // on the key itself would put the secret into the limiter's Map.
+  if (limiter("xellex-bridge", MAX_REQUESTS_PER_MINUTE, 60_000)) {
+    console.warn("[xellex-bridge] rate limited");
+    return NextResponse.json(
+      { error: "rate_limited", message: `Max ${MAX_REQUESTS_PER_MINUTE} requests/minute.` },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
   }
 
   const params = req.nextUrl.searchParams;
