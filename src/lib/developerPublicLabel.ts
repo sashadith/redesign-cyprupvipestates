@@ -67,26 +67,72 @@ export function stripIntegrationMarker(name: string): string {
   return base.trim() || name.trim();
 }
 
+/** The linked public developer page's own title, or null when the account is
+ *  unlinked, the link has gone stale, or the lookup fails. */
+export async function publicPageTitle(groupId: string | null | undefined): Promise<string | null> {
+  if (!groupId) return null;
+  try {
+    /* Any locale will do — the title is the brand and is identical across the
+       group — but prefer `en` so the choice is deterministic rather than
+       whichever row Postgres hands back first. */
+    const rows = await prisma.developer.findMany({
+      where: { translationGroupId: groupId },
+      select: { language: true, title: true },
+    });
+    return (rows.find((r) => r.language === "en") ?? rows[0])?.title?.trim() || null;
+  } catch {
+    /* A sync must never fail over a cosmetic label. */
+    return null;
+  }
+}
+
 /** The brand to show the public for this account. Pass the account row the
  *  adapter already has in hand; only the linked-page lookup touches the DB. */
 export async function publicDeveloperLabel(acct: {
   name: string;
   developerTranslationGroupId?: string | null;
 }): Promise<string> {
-  const fallback = stripIntegrationMarker(acct.name);
-  if (!acct.developerTranslationGroupId) return fallback;
-  try {
-    /* Any locale will do — the title is the brand and is identical across the
-       group — but prefer `en` so the choice is deterministic rather than
-       whichever row Postgres hands back first. */
-    const rows = await prisma.developer.findMany({
-      where: { translationGroupId: acct.developerTranslationGroupId },
-      select: { language: true, title: true },
-    });
-    const title = (rows.find((r) => r.language === "en") ?? rows[0])?.title?.trim();
-    return title || fallback;
-  } catch {
-    /* A sync must never fail over a cosmetic label. */
-    return fallback;
-  }
+  return (await publicPageTitle(acct.developerTranslationGroupId)) ?? stripIntegrationMarker(acct.name);
+}
+
+/* ---------------------------------------------------------------------------
+   The admin-side guard.
+
+   stripIntegrationMarker only removes a parenthetical it RECOGNISES, which is
+   what keeps "The View (Phase B)" intact. The flip side: renaming an account to
+   something like "Foo (Bitrix)" produces a marker nothing here knows about, so
+   it would be treated as part of the brand and — for an account with no linked
+   public page — handed straight to clients again. That is the 2026-10-09 bug
+   returning through the one door the write-path fix cannot close.
+
+   So the account forms warn once, rather than silently accepting it. Not a hard
+   block: a real brand may genuinely contain a parenthetical, and only the
+   operator knows. The message says what clients would actually see, which
+   depends on whether a public page is linked. */
+
+/** The trailing parenthetical on an account name, and whether it is one of the
+ *  integration markers this module strips. */
+export function reviewAccountName(name: string): { marker: string | null; recognised: boolean } {
+  const m = String(name).match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+  if (!m || !m[1].trim()) return { marker: null, recognised: false };
+  const token = m[2].trim();
+  return { marker: token, recognised: INTEGRATION_MARKERS.has(token.toLowerCase()) };
+}
+
+/* Listed in the warning so the operator can pick a word that works instead of
+   guessing. Display spelling, not the lower-cased set. */
+const MARKER_EXAMPLES = "API, CC, CSV, drive, dropbox, feed, JSON, manual, OneDrive, portal, scrape, SharePoint, XML";
+
+/** Warning for a name whose trailing parenthetical is NOT a recognised
+ *  integration marker, or null when the name is unambiguous. Pure — the caller
+ *  resolves `linkedPageTitle` (via publicPageTitle) because create and edit
+ *  read the link from different places. */
+export function accountNameWarning(name: string, linkedPageTitle: string | null): string | null {
+  const { marker, recognised } = reviewAccountName(name);
+  if (!marker || recognised) return null;
+  const head = `“(${marker})” is not a recognised integration marker.`;
+  const tail = `Recognised markers: ${MARKER_EXAMPLES}. Press Save again to keep this name as it is.`;
+  return linkedPageTitle
+    ? `${head} New projects would still show “${linkedPageTitle}” publicly, from the linked public developer page — but if that link is ever cleared or goes stale, clients would see “${name.trim()}” instead. ${tail}`
+    : `${head} This account has no linked public developer page, so clients would see “${name.trim()}” as the developer on every new project, and in its structured data. Link a public page, use a recognised marker, or keep it. ${tail}`;
 }

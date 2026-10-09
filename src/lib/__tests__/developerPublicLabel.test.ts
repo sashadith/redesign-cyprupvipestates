@@ -13,7 +13,7 @@
    mangle a name.) */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { stripIntegrationMarker } from "@/lib/developerPublicLabel";
+import { accountNameWarning, reviewAccountName, stripIntegrationMarker } from "@/lib/developerPublicLabel";
 
 test("the five integration markers actually in use are stripped", () => {
   // The four accounts that had leaked into public rows.
@@ -68,4 +68,69 @@ test("whitespace is normalised, and a name that is only a marker is kept", () =>
   // Stripping would leave an empty public label, which is worse than the marker.
   assert.equal(stripIntegrationMarker("(drive)"), "(drive)");
   assert.equal(stripIntegrationMarker(""), "");
+});
+
+/* --- the admin-form guard ------------------------------------------------- */
+
+test("a recognised marker needs no warning — that is the intended way to label an account", () => {
+  for (const n of ["BBF (API)", "Korantina Homes (SharePoint)", "Kuutio (drive)", "AGG (CC)",
+                   "Island Blue (XML)", "Something (Dropbox)"]) {
+    assert.equal(accountNameWarning(n, null), null, n);
+    assert.equal(accountNameWarning(n, "Some Brand"), null, n);
+  }
+});
+
+test("a name with no parenthetical at all needs no warning", () => {
+  assert.equal(accountNameWarning("Cybarco", null), null);
+  assert.equal(accountNameWarning("Quality Home Developers", null), null);
+});
+
+test("an UNRECOGNISED marker on an unlinked account warns that clients would see it", () => {
+  const w = accountNameWarning("Foo (Bitrix)", null);
+  assert.ok(w, "expected a warning");
+  assert.match(w, /\(Bitrix\)/);
+  assert.match(w, /not a recognised integration marker/);
+  // It must say what actually happens, not just that something is off.
+  assert.match(w, /no linked public developer page/);
+  assert.match(w, /Foo \(Bitrix\)/);
+  assert.match(w, /structured data/);
+  // And how to get out of it.
+  assert.match(w, /SharePoint/);
+});
+
+test("the same name on a LINKED account warns about the stale-link case instead", () => {
+  const w = accountNameWarning("Foo (Bitrix)", "Korantina Homes");
+  assert.ok(w, "expected a warning");
+  // Today the page title wins, so the warning must not claim clients see the marker now.
+  assert.match(w, /would still show “Korantina Homes” publicly/);
+  assert.match(w, /cleared or goes stale/);
+  assert.doesNotMatch(w, /no linked public developer page/);
+});
+
+test("reviewAccountName reports the token and whether it is known", () => {
+  assert.deepEqual(reviewAccountName("Kuutio (drive)"), { marker: "drive", recognised: true });
+  assert.deepEqual(reviewAccountName("Foo (Bitrix)"), { marker: "Bitrix", recognised: false });
+  assert.deepEqual(reviewAccountName("The View (Phase B)"), { marker: "Phase B", recognised: false });
+  assert.deepEqual(reviewAccountName("Cybarco"), { marker: null, recognised: false });
+  // Case is irrelevant to recognition, but the token is reported as typed.
+  assert.deepEqual(reviewAccountName("BBF (api)"), { marker: "api", recognised: true });
+});
+
+test("a real brand that happens to END in parentheses warns rather than being mangled", () => {
+  /* The guard's whole reason to be a warning and not a hard block: only the
+     operator knows whether this is an internal marker or the actual name. */
+  const w = accountNameWarning("Leptos Estates (Cyprus)", null);
+  assert.ok(w);
+  assert.match(w, /Press Save again to keep this name as it is/);
+  // and nothing silently rewrites it either way
+  assert.equal(stripIntegrationMarker("Leptos Estates (Cyprus)"), "Leptos Estates (Cyprus)");
+});
+
+test("a parenthetical in the MIDDLE of a name is not at risk and is not flagged", () => {
+  /* Only a TRAILING parenthetical has the marker shape, and only that shape
+     can be mistaken for one — so this must stay quiet, or the guard becomes
+     noise on perfectly ordinary company names. */
+  assert.equal(accountNameWarning("Leptos (Cyprus) Ltd", null), null);
+  assert.equal(accountNameWarning("Foo (Bitrix) Holdings", null), null);
+  assert.equal(stripIntegrationMarker("Leptos (Cyprus) Ltd"), "Leptos (Cyprus) Ltd");
 });

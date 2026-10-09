@@ -13,11 +13,11 @@ type Dev = {
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#1B4B43]";
 
-function SaveBtn() {
+function SaveBtn({ confirming }: { confirming?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button disabled={pending} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2.5 hover:bg-[#142E2D] disabled:opacity-60">
-      {pending ? "Saving…" : "Save"}
+      {pending ? "Saving…" : confirming ? "Save anyway" : "Save"}
     </button>
   );
 }
@@ -31,7 +31,7 @@ const field = (label: string, name: string, value: string | null, type = "text")
 
 export default function DeveloperContact({ dev, badge, pageLinkSection }: { dev: Dev; badge: React.ReactNode; pageLinkSection?: React.ReactNode }) {
   const [editing, setEditing] = useState(false);
-  const [state, action] = useFormState(saveDeveloperContact.bind(null, dev.id), null as { ok?: boolean; error?: string } | null);
+  const [state, action] = useFormState(saveDeveloperContact.bind(null, dev.id), null as { ok?: boolean; error?: string; confirm?: string } | null);
   // Collapse the editor once the save succeeds.
   useEffect(() => { if (state?.ok) setEditing(false); }, [state]);
 
@@ -80,7 +80,15 @@ export default function DeveloperContact({ dev, badge, pageLinkSection }: { dev:
         )
       ) : (
         <form action={action} className="mt-4 space-y-4">
-          {state?.error && <p className="text-sm text-[#C0392B]">{state.error}</p>}
+          {state?.error && (
+            <div className="text-sm text-[#C0392B] bg-[#C0392B]/10 rounded px-3 py-2 space-y-1">
+              <p>{state.error}</p>
+              {/* Echoed back so the action can tell a deliberate second Save from
+                  the first one. Editing the name changes the field but not this
+                  value, so the check runs again — which is the point. */}
+              {state.confirm && <input type="hidden" name="confirmName" value={state.confirm} />}
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-4">
             {field("Name *", "name", dev.name)}
             {field("Contact person", "contactPerson", dev.contactPerson)}
@@ -96,7 +104,7 @@ export default function DeveloperContact({ dev, badge, pageLinkSection }: { dev:
             <textarea name="notes" rows={2} defaultValue={dev.notes ?? ""} className={input} />
           </div>
           <div className="flex gap-2">
-            <SaveBtn />
+            <SaveBtn confirming={!!state?.confirm} />
             <button type="button" onClick={() => setEditing(false)} className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">Cancel</button>
           </div>
         </form>

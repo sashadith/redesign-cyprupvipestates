@@ -1,6 +1,7 @@
 "use server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { accountNameWarning, publicPageTitle } from "@/lib/developerPublicLabel";
 import { auth, signOut } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -1992,6 +1993,26 @@ async function uniqueAccountSlug(desired: string, excludeId?: string): Promise<s
 // The account that already holds a given translationGroupId, for the P2002
 // error message below — "already linked to X", not a generic constraint
 // failure a human has to go look up themselves.
+/* The operator confirms a flagged name by submitting it a second time
+   unchanged: the form echoes it back in `confirmName`, so editing the name in
+   between invalidates the confirmation and the check runs again. */
+function confirmedName(formData: FormData): string {
+  return String(formData.get("confirmName") ?? "").trim();
+}
+
+/** accountNameWarning() for an EXISTING account — resolves the linked public
+ *  page itself. Returns null once the operator has confirmed this exact name. */
+async function accountNameWarningFor(id: string, name: string, formData: FormData): Promise<string | null> {
+  if (confirmedName(formData) === name) return null;
+  const acct = await prisma.developerAccount.findUnique({
+    where: { id }, select: { name: true, developerTranslationGroupId: true },
+  });
+  // Renaming is what creates the risk; an untouched name is left alone so the
+  // warning cannot block an unrelated edit to a phone number.
+  if (!acct || acct.name === name) return null;
+  return accountNameWarning(name, await publicPageTitle(acct.developerTranslationGroupId));
+}
+
 async function accountHoldingGroup(groupId: string, excludeId?: string) {
   return prisma.developerAccount.findFirst({
     where: { developerTranslationGroupId: groupId, ...(excludeId ? { id: { not: excludeId } } : {}) },
@@ -2006,6 +2027,13 @@ export async function createDeveloperAccount(_prev: any, formData: FormData) {
   const slug = await uniqueAccountSlug(String(formData.get("slug") ?? "") || name);
   const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
   const pageLink = s("developerTranslationGroupId");
+  /* An unrecognised trailing parenthetical is the one way the admin label can
+     still reach clients (see developerPublicLabel.ts) — warn once, tied to this
+     exact string so editing the name re-asks. */
+  const nameWarning = confirmedName(formData) === name
+    ? null
+    : accountNameWarning(name, await publicPageTitle(pageLink));
+  if (nameWarning) return { error: nameWarning, confirm: name };
   let dev: { id: string };
   try {
     dev = await prisma.developerAccount.create({
@@ -2066,6 +2094,8 @@ export async function updateDeveloperAccount(id: string, formData: FormData) {
   await requireSession();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) throw new Error("Developer name is required.");
+  const warning = await accountNameWarningFor(id, name, formData);
+  if (warning) throw new Error(warning);
   const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
   await prisma.developerAccount.update({
     where: { id },
@@ -2081,10 +2111,12 @@ export async function updateDeveloperAccount(id: string, formData: FormData) {
 }
 
 // Collapsible-form variant: returns state so the client can close the editor on success.
-export async function saveDeveloperContact(id: string, _prev: any, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
+export async function saveDeveloperContact(id: string, _prev: any, formData: FormData): Promise<{ ok?: boolean; error?: string; confirm?: string }> {
   await requireSession();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Name is required." };
+  const warning = await accountNameWarningFor(id, name, formData);
+  if (warning) return { error: warning, confirm: name };
   const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
   await prisma.developerAccount.update({
     where: { id },
