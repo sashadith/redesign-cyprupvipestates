@@ -1,4 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { McpConfigError } from "./publicOrigin";
 import { TOOL_CALLS_PER_MINUTE, toolCallLimited } from "./rateLimit";
@@ -15,7 +16,8 @@ export class ToolError extends Error {
 
 // Every tool handler runs through here: auth context check, per-token rate
 // limit, error → {isError} mapping, and one McpToolCall audit row (never the
-// arguments). Unhandled exceptions are logged WITHOUT the args and returned
+// arguments; `opts.detail` may add a small JSON summary such as a length or an
+// external message id). Unhandled exceptions are logged WITHOUT the args and returned
 // as a generic "internal" error so nothing about the failure leaks to the
 // client beyond the fact that it failed.
 export async function runTool<T>(
@@ -23,6 +25,7 @@ export async function runTool<T>(
   ctx: McpCallContext | null,
   leadId: string | null,
   fn: (ctx: McpCallContext) => Promise<T>,
+  opts: { detail?: () => Prisma.InputJsonValue | undefined } = {},
 ): Promise<CallToolResult> {
   const started = Date.now();
   if (!ctx) return toolResultFromOutcome({ ok: false, code: "unauthorized", message: "No valid token for this call." });
@@ -60,7 +63,7 @@ export async function runTool<T>(
   }
   await prisma.mcpToolCall
     .create({
-      data: { userId: ctx.userId, tokenId: ctx.tokenId, tool: name, leadId, ok: outcome.ok, errorCode: outcome.ok ? null : outcome.code, durationMs: Date.now() - started },
+      data: { userId: ctx.userId, tokenId: ctx.tokenId, tool: name, leadId, ok: outcome.ok, errorCode: outcome.ok ? null : outcome.code, durationMs: Date.now() - started, detail: opts.detail?.() },
     })
     .catch((e) => console.error("mcp audit insert failed:", e instanceof Error ? e.message : e));
   return result;

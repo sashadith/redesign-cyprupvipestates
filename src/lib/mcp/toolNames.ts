@@ -1,4 +1,4 @@
 // Single list the consent page and the instructions show; the tools
 // themselves are registered in src/lib/mcp/tools/index.ts.
 export const READ_TOOL_NAMES = ["crm_worklist", "crm_search_leads", "crm_get_lead", "crm_match_properties", "crm_get_project", "crm_get_playbook", "crm_search_projects", "crm_inventory_changes", "crm_whatsapp_thread", "blog_list_articles", "blog_get_article", "blog_social_traffic"] as const;
-export const WRITE_TOOL_NAMES = ["crm_log_interaction", "crm_update_lead", "crm_draft_email", "crm_send_email", "crm_list_drafts", "crm_create_lead", "crm_delete_lead", "crm_restore_lead", "crm_whatsapp_send"] as const;
+export const WRITE_TOOL_NAMES = ["crm_log_interaction", "crm_update_lead", "crm_draft_email", "crm_send_email", "crm_list_drafts", "crm_create_lead", "crm_delete_lead", "crm_restore_lead", "crm_whatsapp_send", "notify_owner_telegram"] as const;

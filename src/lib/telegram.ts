@@ -1,4 +1,7 @@
-export async function sendTelegramMessage(text: string) {
+// `plain: true` sends without parse_mode, so the text is shown literally — for
+// callers whose text is not HTML (the notify_owner_telegram MCP tool, the
+// social reminders). Every other caller keeps the HTML default.
+export async function sendTelegramMessage(text: string, opts: { plain?: boolean } = {}) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -17,7 +20,7 @@ export async function sendTelegramMessage(text: string) {
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode: "HTML",
+        ...(opts.plain ? {} : { parse_mode: "HTML" }),
         link_preview_options: {
           is_disabled: true,
         },

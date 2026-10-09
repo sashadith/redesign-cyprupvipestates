@@ -8,7 +8,7 @@ Status: Phase 4 (WhatsApp tools) — Phases 1–3 live since 2026-09-07/08; Phas
 ## What it is
 
 A remote MCP server inside this app at `/api/mcp`, protected by a minimal OAuth 2.1
-server on the admin login. claude.ai connects to it as a *custom connector* and gets twenty-one tools — eight CRM read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`, `crm_search_projects`, `crm_inventory_changes`), three blog read tools (`blog_list_articles`, `blog_get_article`, `blog_social_traffic`), eight write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`, `crm_create_lead`, `crm_delete_lead`, `crm_restore_lead`), and two WhatsApp tools (`crm_whatsapp_thread`, `crm_whatsapp_send`); customer email needs the operator's approval code (see below).
+server on the admin login. claude.ai connects to it as a *custom connector* and gets twenty-two tools — eight CRM read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`, `crm_search_projects`, `crm_inventory_changes`), three blog read tools (`blog_list_articles`, `blog_get_article`, `blog_social_traffic`), eight write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`, `crm_create_lead`, `crm_delete_lead`, `crm_restore_lead`), two WhatsApp tools (`crm_whatsapp_thread`, `crm_whatsapp_send`), and `notify_owner_telegram`; customer email needs the operator's approval code (see below).
 
 ## Environment
 
@@ -144,6 +144,12 @@ Three read-only tools for social-media content planning; no writes, no new table
 - `blog_social_traffic` — `{ from, to, slug? }` (max 365 days): per article, visits and unique visitors whose referrer was LinkedIn (`linkedin.com`, `lnkd.in`) or X (`x.com`, `twitter.com`, `t.co`), with a per-locale breakdown, using the admin Analytics page's exact exclusion (`isBot`/`isPrefetch`/`isTest` false — `isBot` covers the ingestion UA check and the nightly hyperactive-session backfill). **UTM is not stored per page view** (the query string is stripped at ingestion), so the tool reports `leadsWithFirstTouchUtm` instead — leads created in the range whose first-touch `utm_source` was linkedin/x/twitter and who landed on the article. Lead counts, not traffic; a per-view `utmSource` column would be the follow-up migration.
 
 Verification lives in `scripts/qa/blog-tools-check.mts` (testbed only — it calls `assertNotProdDb()` first): article count per locale, the four URLs of a given EN slug HEAD-checked against the live site, no empty titles, Markdown without HTML, a 30-day social-traffic run.
+
+## Owner notification (2026-10-09)
+
+`notify_owner_telegram` — `{ text }` only: one plain-text Telegram message (no `parse_mode`) to the owner, through the same bot and chat as the cron alerts and the morning digest (`TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`). The recipient is fixed server-side; the input schema is strict, so a `chat_id` or any other extra key is rejected, not ignored. Max 3,500 characters. At most 10 successful sends per rolling hour across all callers — counted from `mcp_tool_calls` (`ok = true`), not in memory, because production runs two pm2 workers; refused calls do not use up the allowance. Each call's audit row carries `detail = { length, telegramMessageId }`. Like every tool, input the SDK rejects (wrong schema) never reaches the handler and so leaves no audit row. Tests: `src/lib/mcp/__tests__/notifyOwnerTelegram.test.ts`.
+
+The social reminders themselves (evening / T-90 / T-30 / missed for planned Typefully drafts) are a separate cron, `social-reminders`, not this tool — see `src/lib/social/socialReminders.ts` and DEPLOYMENT.md's cron table.
 
 ## Approving an email
 

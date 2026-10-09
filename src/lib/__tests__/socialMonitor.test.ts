@@ -129,7 +129,7 @@ test("pages are followed until a short page", async () => {
   assert.ok(r.ok && r.drafts.length === 51 && !r.truncated);
 });
 
-test("successes are memoised for 5 minutes, failures for 1 minute", async () => {
+test("successes are memoised for 2 minutes, failures for 1 minute", async () => {
   let clock = 0;
   const { calls, fetchImpl } = recordingFetch([[draft("planned", null)]]);
   const client = createTypefullyClient({ apiKey: () => "k", fetchImpl, now: () => clock });
@@ -190,10 +190,11 @@ test("platforms come from every *_post_enabled flag, in a fixed order", () => {
 /* ── Morning digest ──────────────────────────────────────────────────────── */
 
 const thisWeek = (dayOffset: number, hourCyprus: number) => new Date(Date.UTC(2026, 9, 5 + dayOffset, hourCyprus - 3)); // Cyprus = UTC+3 in October
+const MONDAY_LINES = ["", "<b>📭 KW 41 (5 - 9 Oct)</b>", NO_WEEK_DRAFTS_LINE];
 
-test("Monday with no drafts dated Tue–Fri → the 'routine may not have run' line", () => {
+test("Monday with no drafts dated Mon–Fri → the 'routine may not have run' block with the week label", () => {
   const lines = socialDigestLines({ scheduled: EMPTY, planned: EMPTY, errored: EMPTY, rest: [EMPTY, EMPTY, EMPTY] }, MONDAY);
-  assert.deepEqual(lines, ["", "<b>📣 SOCIAL</b>", `• ${NO_WEEK_DRAFTS_LINE}`]);
+  assert.deepEqual(lines, MONDAY_LINES);
 });
 
 test("Monday with a draft (any status) dated this Thursday → no such line", () => {
@@ -201,39 +202,55 @@ test("Monday with a draft (any status) dated this Thursday → no such line", ()
   assert.deepEqual(lines, []);
 });
 
-test("Monday: a draft dated next Monday does not count for this week", () => {
-  const lines = socialDigestLines({ scheduled: EMPTY, planned: EMPTY, errored: EMPTY, rest: [ok([draft("draft", thisWeek(7, 10))]), EMPTY, EMPTY] }, MONDAY);
-  assert.ok(lines.includes(`• ${NO_WEEK_DRAFTS_LINE}`));
+test("Monday: a post already published at 07:00 this Monday counts for this week", () => {
+  const lines = socialDigestLines({ scheduled: EMPTY, planned: EMPTY, errored: EMPTY, rest: [EMPTY, ok([draft("published", thisWeek(0, 7))]), EMPTY] }, MONDAY);
+  assert.deepEqual(lines, []);
 });
 
-test("non-Monday with no drafts → no line, and the whole section is absent", () => {
+test("Monday: a draft dated next Monday does not count for this week", () => {
+  const lines = socialDigestLines({ scheduled: EMPTY, planned: EMPTY, errored: EMPTY, rest: [ok([draft("draft", thisWeek(7, 10))]), EMPTY, EMPTY] }, MONDAY);
+  assert.deepEqual(lines, MONDAY_LINES);
+});
+
+test("non-Monday with no drafts → the whole section is absent", () => {
   assert.deepEqual(socialDigestLines({ scheduled: EMPTY, planned: EMPTY, errored: EMPTY }, WEDNESDAY), []);
 });
 
 test("Monday with a failed list never claims the routine did not run — it reports the failure", () => {
   const lines = socialDigestLines({ scheduled: EMPTY, planned: EMPTY, errored: EMPTY, rest: [fail(401, "invalid key"), EMPTY, EMPTY] }, MONDAY);
-  assert.ok(lines.some((l) => /Typefully API returned HTTP 401/.test(l)));
-  assert.ok(!lines.some((l) => l.includes(NO_WEEK_DRAFTS_LINE)));
+  assert.deepEqual(lines, ["", "<b>🚨 Typefully unreachable (HTTP 401)</b>"]);
 });
 
-test("digest lists today's scheduled posts, unconfirmed (48h), missed and errors", () => {
+test("digest blocks: today, not confirmed (48h), missed (24h), publish failed — each line ends with its link", () => {
   const today = draft("scheduled", new Date(WEDNESDAY.getTime() + 4 * HOUR), { draft_title: "Today <post>" });
   const tomorrow = draft("scheduled", new Date(WEDNESDAY.getTime() + 28 * HOUR));
-  const soon = draft("planned", new Date(WEDNESDAY.getTime() + 30 * HOUR), { draft_title: "Soon" });
+  const soon = draft("planned", new Date(WEDNESDAY.getTime() + 30 * HOUR), { draft_title: "Soon", linkedin_post_enabled: false, x_post_enabled: true });
   const later = draft("planned", new Date(WEDNESDAY.getTime() + 60 * HOUR), { draft_title: "Later" });
-  const missed = draft("planned", new Date(WEDNESDAY.getTime() - 20 * HOUR), { draft_title: "Gone" });
-  const broken = draft("error", null, { draft_title: "Broken" });
-  const lines = socialDigestLines({ scheduled: ok([today, tomorrow]), planned: ok([soon, later, missed]), errored: ok([broken]) }, WEDNESDAY);
-  assert.equal(lines[1], "<b>📣 SOCIAL</b>");
-  const body = lines.slice(2);
-  assert.equal(body.length, 4, body.join("\n"));
-  assert.match(body[0], /^• Today 12:00 · LinkedIn · <a href="https:\/\/typefully\.com\/\?d=\d+&a=339303">Today &lt;post&gt;<\/a>$/);
-  assert.match(body[1], /Missed, never confirmed .*Gone/);
-  assert.match(body[2], /Not confirmed · Thu,? 08 Oct, 14:00 .*Soon/);
-  assert.match(body[3], /Publish error .*Broken/);
+  const missed = draft("planned", new Date(WEDNESDAY.getTime() - 20 * HOUR), { draft_title: "2026-W41 · Tue · News · Gone" });
+  const tooOld = draft("planned", new Date(WEDNESDAY.getTime() - 25 * HOUR), { draft_title: "Older" });
+  const broken = draft("error", null, { draft_title: "Broken", linkedin_post_enabled: false, bluesky_post_enabled: true, publish_error: "token expired" });
+  const lines = socialDigestLines({ scheduled: ok([today, tomorrow]), planned: ok([soon, later, missed, tooOld]), errored: ok([broken]) }, WEDNESDAY);
+  const L = (id: number) => `  👉 https://typefully.com/?d=${id}&amp;a=339303`;
+  assert.deepEqual(lines, [
+    "", "<b>📣 Social · today</b>",
+    `   💼 12:00 LinkedIn — Today &lt;post&gt;${L(today.id)}`,
+    "", "<b>⚠️ Not confirmed yet — will NOT go out</b>",
+    `   🌐 Thu 8 Oct 14:00 — Soon${L(soon.id)}`,
+    "", "<b>❌ Missed (last 24 h)</b>",
+    `   🗞 Tue 12:00 News — 2026-W41 · Tue · News · Gone${L(missed.id)}`,
+    "", "<b>🚨 Publish failed</b>",
+    `   🌐 Broken — token expired${L(broken.id)}`,
+  ]);
 });
 
-test("API failure is said explicitly in the digest", () => {
+test("API failure is said explicitly in the digest, with the status code", () => {
   const lines = socialDigestLines({ scheduled: fail(500), planned: EMPTY, errored: EMPTY }, WEDNESDAY);
-  assert.ok(lines.some((l) => /⚠️ Typefully API returned HTTP 500/.test(l)));
+  assert.deepEqual(lines, ["", "<b>🚨 Typefully unreachable (HTTP 500)</b>"]);
+});
+
+test("a failed list does not hide what the other lists found", () => {
+  const soon = draft("planned", new Date(WEDNESDAY.getTime() + 2 * HOUR));
+  const lines = socialDigestLines({ scheduled: fail(429), planned: ok([soon]), errored: EMPTY }, WEDNESDAY);
+  assert.ok(lines.includes("<b>⚠️ Not confirmed yet — will NOT go out</b>"));
+  assert.ok(lines.includes("<b>🚨 Typefully unreachable (HTTP 429)</b>"));
 });

@@ -20,6 +20,7 @@ import { registerCreateLead } from "./createLead";
 import { registerDeleteLead } from "./deleteLead";
 import { registerRestoreLead } from "./restoreLead";
 import { registerWhatsappSend } from "./whatsappSend";
+import { registerNotifyOwnerTelegram } from "./notifyOwnerTelegram";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -50,4 +51,6 @@ export function registerWriteTools(server: McpServer): void {
   registerDeleteLead(server);
   registerRestoreLead(server);
   registerWhatsappSend(server);
+  // Owner notification (2026-10-09): plain text to the fixed owner chat, 10/hour.
+  registerNotifyOwnerTelegram(server);
 }

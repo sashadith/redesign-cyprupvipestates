@@ -207,7 +207,7 @@ function buildCategorySection(label: string, items: TaggedItem[], siteUrl: strin
   return lines;
 }
 
-// Social (Typefully, read-only) gets its own "📣 SOCIAL" section, built by
+// Social (Typefully, read-only) gets its own Social section, built by
 // loadSocialDigestLines() and present only when there is something to report.
 // The SOCIAL Action Center items are therefore kept OUT of the category
 // sections and out of classifyForDigest — the section already names every one
@@ -217,7 +217,7 @@ async function socialLines(): Promise<string[]> {
   try {
     return await loadSocialDigestLines();
   } catch (e) {
-    return ["", "<b>📣 SOCIAL</b>", `⚠️ Social check failed: ${escapeHtml(e instanceof Error ? e.message : String(e))}`];
+    return ["", `<b>🚨 Social check failed: ${escapeHtml(e instanceof Error ? e.message : String(e))}</b>`];
   }
 }
 
@@ -284,7 +284,9 @@ async function runDigest() {
   // strip of the HTML version) so the two can never drift apart — replaces
   // a separately hand-built plain-text version that duplicated all of the
   // section-building logic above.
-  const stripHtml = (s: string) => s.replace(/<[^>]+>/g, "");
+  // Entities are decoded too, or an escaped link (…?d=1&amp;a=339303) would
+  // arrive broken in the plain-text email.
+  const stripHtml = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const emailText = [
     "Daily Action Center Digest",
     ...lines.map(stripHtml),

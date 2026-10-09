@@ -16,6 +16,7 @@
 import type { ActionItem } from "@/lib/actionCenter/types";
 import { CYPRUS_TZ, cyprusWallTimeToUtc, formatInZone } from "@/lib/booking/timezone";
 import { TYPEFULLY_SOCIAL_SET_ID, type DraftListResult, type TypefullyDraft } from "./typefully";
+import { cyprusDayTime, cyprusHm, cyprusWeekdayTime, platformIcons, platformLabels, weekLabel } from "./socialFormat";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -55,8 +56,6 @@ export function platformsOf(d: TypefullyDraft): string[] {
 const platformText = (d: TypefullyDraft) => platformsOf(d).join(", ") || "no platform selected";
 const at = (d: TypefullyDraft) => (d.scheduled_date ? new Date(d.scheduled_date) : null);
 const cyprusDateTime = (date: Date) => formatInZone(date, CYPRUS_TZ); // "Tue, 06 Oct, 09:30"
-const cyprusTime = (date: Date) =>
-  new Intl.DateTimeFormat("en-GB", { timeZone: CYPRUS_TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
 const sinceOf = (d: TypefullyDraft, fallback: Date) => {
   const t = d.updated_at || d.created_at;
   const parsed = t ? new Date(t) : null;
@@ -159,71 +158,85 @@ function cyprusDayRange(now: Date, fromOffset: number, toOffset: number): [Date,
 }
 
 export const NO_WEEK_DRAFTS_LINE = "No social drafts for this week — the Sunday routine may not have run.";
+export const DIGEST_MISSED_LOOKBACK_MS = 24 * HOUR;
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const linked = (d: TypefullyDraft) => `<a href="${draftLink(d.id)}">${esc(draftTitle(d))}</a>`;
 const byDate = (a: TypefullyDraft, b: TypefullyDraft) => (at(a)?.getTime() ?? 0) - (at(b)?.getTime() ?? 0);
 const inRange = (d: TypefullyDraft, from: number, to: number) => {
   const w = at(d)?.getTime();
   return w !== undefined && !Number.isNaN(w) && w >= from && w < to;
 };
+/** Typefully's own error text if the draft carries one (any non-empty string field named *error*). */
+function errorReason(d: TypefullyDraft): string {
+  for (const [k, v] of Object.entries(d)) {
+    if (/error/i.test(k) && typeof v === "string" && v.trim()) return v.replace(/\s+/g, " ").trim().slice(0, 120);
+  }
+  return "no reason given by Typefully";
+}
 
 export type SocialDigestInput = {
   scheduled: DraftListResult;
   planned: DraftListResult;
   errored: DraftListResult;
-  /** Plain drafts ("draft" status), fetched on Mondays only for the "no drafts this
-   *  week" check. Together with scheduled/planned/error that covers every status
-   *  that can carry a Tue–Fri date at 08:00 on a Monday: "published" and
-   *  "publishing" are by definition dated now or earlier. */
+  /** The other statuses (draft, published, publishing), fetched on Mondays only
+   *  for the "no drafts this week" check: with scheduled/planned/error that is
+   *  every status a Monday–Friday draft of this week can be in. */
   rest?: DraftListResult[];
 };
 
-/** The digest's "📣 SOCIAL" section — [] when there is nothing to report. */
+/** The digest's Social section (Telegram HTML) — [] when there is nothing to report.
+ *  Format (2026-10-09 brief), every block only when it has content:
+ *    📣 Social · today            scheduled posts dated today
+ *    ⚠️ Not confirmed yet         planned, due within 48h
+ *    ❌ Missed (last 24 h)        planned, date passed in the 24h before the digest
+ *    🚨 Publish failed            status "error"
+ *    🚨 Typefully unreachable     any list failed
+ *    📭 KW …                      Mondays: no drafts at all for Mon–Fri
+ *  Every draft line ends with its Typefully link. */
 export function socialDigestLines(input: SocialDigestInput, now: Date): string[] {
   const t = now.getTime();
-  const body: string[] = [];
-
-  const failures = [input.scheduled, input.planned, input.errored, ...(input.rest ?? [])].filter((r) => !r.ok) as Extract<DraftListResult, { ok: false }>[];
-  if (failures.length) {
-    const f = failures[0];
-    body.push(`⚠️ Typefully API ${f.status !== null ? `returned HTTP ${f.status}` : "unreachable"} — social posts could not be checked (${esc(f.message.slice(0, 120))}).`);
-  }
+  const blocks: string[][] = [];
+  const link = (d: TypefullyDraft) => `  👉 ${esc(draftLink(d.id))}`;
 
   const [todayStart, todayEnd] = cyprusDayRange(now, 0, 1);
   if (input.scheduled.ok) {
-    for (const d of input.scheduled.drafts.filter((x) => inRange(x, todayStart.getTime(), todayEnd.getTime())).sort(byDate)) {
-      body.push(`• Today ${cyprusTime(at(d)!)} · ${esc(platformText(d))} · ${linked(d)}`);
-    }
+    const today = input.scheduled.drafts.filter((x) => inRange(x, todayStart.getTime(), todayEnd.getTime())).sort(byDate);
+    if (today.length) blocks.push(["<b>📣 Social · today</b>", ...today.map((d) =>
+      `   ${platformIcons(d)} ${cyprusHm(at(d)!)} ${esc(platformLabels(d))} — ${esc(draftTitle(d))}${link(d)}`)]);
   }
 
   if (input.planned.ok) {
     const planned = [...input.planned.drafts].sort(byDate);
-    for (const d of planned.filter((x) => inRange(x, t - MISSED_LOOKBACK_MS, t))) {
-      body.push(`• 🔴 Missed, never confirmed · ${cyprusDateTime(at(d)!)} · ${esc(platformText(d))} · ${linked(d)}`);
-    }
-    for (const d of planned.filter((x) => inRange(x, t, t + DIGEST_UNCONFIRMED_MS + 1))) {
-      body.push(`• ⚠️ Not confirmed · ${cyprusDateTime(at(d)!)} · ${esc(platformText(d))} · ${linked(d)}`);
-    }
+    const soon = planned.filter((x) => inRange(x, t, t + DIGEST_UNCONFIRMED_MS + 1));
+    if (soon.length) blocks.push(["<b>⚠️ Not confirmed yet — will NOT go out</b>", ...soon.map((d) =>
+      `   ${platformIcons(d)} ${cyprusDayTime(at(d)!)} — ${esc(draftTitle(d))}${link(d)}`)]);
+    const missed = planned.filter((x) => inRange(x, t - DIGEST_MISSED_LOOKBACK_MS, t));
+    if (missed.length) blocks.push(["<b>❌ Missed (last 24 h)</b>", ...missed.map((d) =>
+      `   ${platformIcons(d)} ${cyprusWeekdayTime(at(d)!)} ${esc(platformLabels(d))} — ${esc(draftTitle(d))}${link(d)}`)]);
   }
 
-  if (input.errored.ok) {
-    for (const d of [...input.errored.drafts].sort(byDate)) {
-      body.push(`• ❌ Publish error · ${esc(platformText(d))} · ${linked(d)}`);
-    }
+  if (input.errored.ok && input.errored.drafts.length) {
+    blocks.push(["<b>🚨 Publish failed</b>", ...[...input.errored.drafts].sort(byDate).map((d) =>
+      `   ${platformIcons(d)} ${esc(draftTitle(d))} — ${esc(errorReason(d))}${link(d)}`)]);
   }
 
-  // Monday: anything dated Tuesday–Friday of this ISO week, in ANY status. Only
+  const failures = [input.scheduled, input.planned, input.errored, ...(input.rest ?? [])].filter((r) => !r.ok) as Extract<DraftListResult, { ok: false }>[];
+  if (failures.length) {
+    const f = failures[0];
+    blocks.push([`<b>🚨 Typefully unreachable (${f.status !== null ? `HTTP ${f.status}` : esc(f.message.slice(0, 120))})</b>`]);
+  }
+
+  // Monday: anything dated Monday–Friday of this ISO week, in ANY status. Only
   // claimed when every list actually answered — a failed fetch is reported
   // above and must not turn into a false "the routine did not run".
   if (cyprusYmd(now).weekday === 1 && input.rest) {
     const lists = [input.scheduled, input.planned, input.errored, ...input.rest];
     if (lists.every((r) => r.ok)) {
-      const [tue, sat] = cyprusDayRange(now, 1, 5);
-      const any = lists.some((r) => r.ok && r.drafts.some((d) => inRange(d, tue.getTime(), sat.getTime())));
-      if (!any) body.push(`• ${NO_WEEK_DRAFTS_LINE}`);
+      const [mon, sat] = cyprusDayRange(now, 0, 5);
+      const any = lists.some((r) => r.ok && r.drafts.some((d) => inRange(d, mon.getTime(), sat.getTime())));
+      if (!any) blocks.push([`<b>📭 ${weekLabel(now)}</b>`, NO_WEEK_DRAFTS_LINE]);
     }
   }
 
-  return body.length ? ["", "<b>📣 SOCIAL</b>", ...body] : [];
+  return blocks.length ? blocks.flatMap((b) => ["", ...b]) : [];
 }

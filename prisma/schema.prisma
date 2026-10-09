@@ -1015,11 +1015,28 @@ model McpToolCall {
   ok         Boolean
   errorCode  String? // "validation" | "not_found" | "rate_limited" | "config" | "internal"
   durationMs Int
+  // Optional per-tool details, never the arguments themselves — e.g.
+  // notify_owner_telegram: { length, telegramMessageId } (2026-10-09).
+  detail     Json?
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
   @@index([leadId])
   @@map("mcp_tool_calls")
+}
+
+// Exactly-once ledger for the social reminder cron (2026-10-09): one row per
+// Typefully draft and reminder kind ("evening" | "t90" | "t30" | "missed").
+// draftId 0 + kind "api-unreachable" marks that the alert for the current
+// Typefully outage was sent; it is deleted on the next successful read.
+model SocialReminderSent {
+  id      String   @id @default(uuid())
+  draftId Int      @map("draft_id")
+  kind    String   @map("reminder_kind")
+  sentAt  DateTime @default(now()) @map("sent_at")
+
+  @@unique([draftId, kind])
+  @@map("social_reminders_sent")
 }
 
 // Nightly catalogue snapshot for crm_inventory_changes (MCP connector Phase 3,

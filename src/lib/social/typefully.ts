@@ -20,7 +20,10 @@ const MAX_PAGES = 10; // 500 drafts per status — far above anything a weekly r
 /* Short on purpose: the admin layout counts Action Center items on EVERY admin
    page render, so a hanging Typefully must not add more than this to any page. */
 const TIMEOUT_MS = 5_000;
-export const CACHE_TTL_MS = 5 * 60_000;
+/* 2 minutes (was 5 until 2026-10-09): the reminder job reads fresh anyway, but
+   the Action Center should not show a draft as unconfirmed for long after it
+   was confirmed in Typefully. */
+export const CACHE_TTL_MS = 2 * 60_000;
 /* Failures are remembered too, but briefly: long enough that an outage or a 429
    costs one request per minute rather than one per admin page, short enough that
    a fixed key or a recovered API shows up within a minute. */
@@ -103,10 +106,13 @@ export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
   }
 
   return {
-    async listDrafts(status: DraftStatus): Promise<DraftListResult> {
+    /** `fresh: true` skips the memo (the result is still stored for others):
+     *  the reminder job must never remind about a draft from a 2-minute-old
+     *  list in which it was not yet confirmed. */
+    async listDrafts(status: DraftStatus, opts: { fresh?: boolean } = {}): Promise<DraftListResult> {
       const key = apiKey()?.trim();
       if (!key) return { ok: false, status: null, message: "TYPEFULLY_API_KEY is not set" };
-      const hit = cache.get(status);
+      const hit = opts.fresh ? undefined : cache.get(status);
       if (hit && now() - hit.at < (hit.value.ok ? CACHE_TTL_MS : FAILURE_TTL_MS)) return hit.value;
       const pending = inFlight.get(status);
       if (pending) return pending;

@@ -18,8 +18,10 @@ export async function loadSocialDigestLines(now = new Date()): Promise<string[]>
     typefully.listDrafts("scheduled"), typefully.listDrafts("planned"), typefully.listDrafts("error"),
   ]);
   // The "no drafts this week" check counts every status that can be dated
-  // Tue–Fri of this week: scheduled/planned/error above, plus plain drafts.
-  // Published/publishing cannot be (see SocialDigestInput.rest). Mondays only.
-  const rest = isMonday ? [await typefully.listDrafts("draft")] : undefined;
+  // Monday–Friday of this week (a Monday 08:00 post may already be published
+  // when the digest runs at 08:00). Mondays only.
+  const rest = isMonday
+    ? await Promise.all([typefully.listDrafts("draft"), typefully.listDrafts("published"), typefully.listDrafts("publishing")])
+    : undefined;
   return socialDigestLines({ scheduled, planned, errored, rest }, now);
 }
