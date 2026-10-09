@@ -568,9 +568,28 @@ import { BRIDGE_INCLUDE, type DevelopmentWithRelations } from "./payload";
  *
  * Paged by id rather than by any date: ids are stable and total-ordered, so a
  * row edited mid-pagination cannot jump between pages or be skipped. Page size
- * is a latency budget, not a payload one — 18.6 MB for all 350 projects is one
+ * is a latency budget, not a payload one — 37.9 MB for all 350 projects is one
  * ordinary gzipped response, but assembling them means ~121,000 fs.stat calls,
  * and that belongs in seven requests rather than one held-open connection.
+ *
+ * `id: { gt: cursorId }` rather than Prisma's own `cursor` + `skip: 1`, which
+ * was this function's first draft and silently lost a project. `skip` offsets
+ * the FILTERED result set, not the cursor row: Prisma emits `id >= cursorId`
+ * and then `OFFSET 1`, so as soon as the cursor row itself stops matching this
+ * where clause between two pages — depublished, archived, or its developer's
+ * switch turned off while Xellex was paginating — the offset eats the first
+ * genuinely new row instead of the cursor row. Measured against production
+ * 2026-10-09 with an archived id standing in for "was on page N, is not any
+ * more": the next three should have been ridge, olivea-residences and
+ * agnades-village-1, and cursor+skip delivered olivea-residences,
+ * agnades-village-1, cap-st-georges-resort — ridge gone, no error anywhere.
+ * A deleted cursor row is worse still: `id >= cursorId` matches nothing, the
+ * page comes back empty, the route reads that as complete=true and ends the
+ * run early. Either way the consumer advances its watermark past rows it never
+ * received, which is the same permanent silent loss the one-generatedAt-per-run
+ * rule exists to prevent, arriving through a different door. The plain
+ * comparison needs no cursor row to exist; verified identical over the whole
+ * 7-page catalogue (350 of 350, same order) on the same date.
  */
 export async function changedSince(
   since: Date | null,
@@ -581,6 +600,7 @@ export async function changedSince(
     where: {
       publishStatus: "published",
       developerAccount: { bridgeEnabled: true },
+      ...(cursorId ? { id: { gt: cursorId } } : {}),
       ...(since
         ? {
             OR: [
@@ -599,7 +619,6 @@ export async function changedSince(
     include: BRIDGE_INCLUDE,
     orderBy: { id: "asc" },
     take: limit,
-    ...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
   });
 }
 
@@ -961,7 +980,7 @@ git commit
 
 **The blocker you will hit first, and it is expected:** `bridgeEnabled` does not exist in production until the migration is deployed, so `changedSince` cannot run end to end here. Verify everything that does not depend on that column, and say plainly in the hand-off which checks had to wait for the deploy. Do not work around it by applying the migration yourself.
 
-- [ ] **Step 1: Verify the payload builder against a real project**
+- [x] **Step 1: Verify the payload builder against a real project**
 
 Temporary route `src/app/api/bridge-probe/route.ts` (created and deleted inside this task) that calls `buildProject` on one published development fetched with `BRIDGE_INCLUDE` — bypassing `changedSince`, so the missing column does not block it. Check, and report:
 
@@ -969,7 +988,7 @@ Temporary route `src/app/api/bridge-probe/route.ts` (created and deleted inside 
 - how many images resolved to three variants versus fewer, and whether any stored URL produced none
 - the payload size of one project against the 370 KB measured for the largest
 
-- [ ] **Step 2: Verify auth**
+- [x] **Step 2: Verify auth**
 
 ```bash
 curl -s -o /dev/null -w "no key   -> %{http_code}\n" http://localhost:3011/api/bridge/projects
@@ -977,7 +996,7 @@ curl -s -o /dev/null -H "x-api-key: wrong" -w "bad key  -> %{http_code}\n" http:
 ```
 Expected: `401` both times, with `XELLEX_API_KEY` unset locally — which also proves the route fails closed when the variable is missing rather than letting everyone in.
 
-- [ ] **Step 3: Delete the probe, clean up, build**
+- [x] **Step 3: Delete the probe, clean up, build**
 
 ```bash
 # stop only the dev server this task started (match its own port), then drop
@@ -991,9 +1010,9 @@ git status --porcelain  # must be empty
 
 **Do not delete `node_modules`.** An earlier version of this step did, which was wrong twice over: it is gitignored, so it was never what `git status` was checking, and removing it breaks `npm test` and every later task in this worktree. Leave it as the real directory it is.
 
-- [ ] **Step 4: Commit** (the probe route must not be in it)
+- [x] **Step 4: Commit** (the probe route must not be in it)
 
-- [ ] **Step 5: Hand off to the operator — deployment is their call, not yours**
+- [x] **Step 5: Hand off to the operator — deployment is their call, not yours**
 
 State:
 - **The deploy needs the migration flag:** `CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh`, dry run first. Without it every query on `developer_accounts` 500s — that is the 2026-09-17 outage, ~15–20 minutes.

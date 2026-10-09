@@ -19,9 +19,28 @@ import { BRIDGE_INCLUDE, type DevelopmentWithRelations } from "./payload";
  *
  * Paged by id rather than by any date: ids are stable and total-ordered, so a
  * row edited mid-pagination cannot jump between pages or be skipped. Page size
- * is a latency budget, not a payload one — 18.6 MB for all 350 projects is one
+ * is a latency budget, not a payload one — 37.9 MB for all 350 projects is one
  * ordinary gzipped response, but assembling them means ~121,000 fs.stat calls,
  * and that belongs in seven requests rather than one held-open connection.
+ *
+ * `id: { gt: cursorId }` rather than Prisma's own `cursor` + `skip: 1`, which
+ * was this function's first draft and silently lost a project. `skip` offsets
+ * the FILTERED result set, not the cursor row: Prisma emits `id >= cursorId`
+ * and then `OFFSET 1`, so as soon as the cursor row itself stops matching this
+ * where clause between two pages — depublished, archived, or its developer's
+ * switch turned off while Xellex was paginating — the offset eats the first
+ * genuinely new row instead of the cursor row. Measured against production
+ * 2026-10-09 with an archived id standing in for "was on page N, is not any
+ * more": the next three should have been ridge, olivea-residences and
+ * agnades-village-1, and cursor+skip delivered olivea-residences,
+ * agnades-village-1, cap-st-georges-resort — ridge gone, no error anywhere.
+ * A deleted cursor row is worse still: `id >= cursorId` matches nothing, the
+ * page comes back empty, the route reads that as complete=true and ends the
+ * run early. Either way the consumer advances its watermark past rows it never
+ * received, which is the same permanent silent loss the one-generatedAt-per-run
+ * rule exists to prevent, arriving through a different door. The plain
+ * comparison needs no cursor row to exist; verified identical over the whole
+ * 7-page catalogue (350 of 350, same order) on the same date.
  */
 export async function changedSince(
   since: Date | null,
@@ -32,6 +51,7 @@ export async function changedSince(
     where: {
       publishStatus: "published",
       developerAccount: { bridgeEnabled: true },
+      ...(cursorId ? { id: { gt: cursorId } } : {}),
       ...(since
         ? {
             OR: [
@@ -50,7 +70,6 @@ export async function changedSince(
     include: BRIDGE_INCLUDE,
     orderBy: { id: "asc" },
     take: limit,
-    ...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
   });
 }
 
