@@ -81,8 +81,11 @@ export async function GET(req: NextRequest) {
     // key, and that holds for a truncated or hashed one too. Deliberately not
     // a CronRunLog row either — this path is reachable by anyone on the
     // internet, and giving unauthenticated traffic a write into the table the
-    // Action Center reads would be a self-inflicted flood. Every
-    // authenticated outcome below is logged.
+    // Action Center reads would be a self-inflicted flood. The same reasoning
+    // exempts the 429 below — logging a runaway caller into that table is the
+    // flood this paragraph is about. Every authenticated outcome that reaches
+    // the data path is logged, which is the line that matters: a sync that ran
+    // and failed leaves a row, a caller that never got through does not.
     console.warn("[xellex-bridge] unauthorized request refused");
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

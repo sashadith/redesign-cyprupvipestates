@@ -30,9 +30,9 @@
 | developer accounts | 25, all with published work |
 | unit rows | 4,921 |
 | `/uploads/` image references | 40,324 delivered (~115 per project) |
-| full payload, raw JSON | 18.6 MB |
-| largest single project | 370 KB |
-| image store | 11 GB, 97,433 files; `public/uploads` → `/var/www/shared-uploads` (symlink) |
+| full payload, raw JSON | 37.9 MB (~6 MB gzipped) |
+| largest single project | 2,241 KB (zoia); median 73 KB |
+| image store | 11.0 GiB, 101,771 files; `public/uploads` → `/var/www/shared-uploads` (symlink) |
 
 Image variants on disk are `<hash>_small.webp`, `_medium.webp`, `_large.webp`; the database stores the `_medium` URL. The hash is `sha1(sourceUrl)`, **not** a content hash — which is why images need `bytes` + `modified`.
 
@@ -341,7 +341,7 @@ import { imagesFor, type BridgeImage } from "./images";
 export const BRIDGE_INCLUDE = {
   override: true,
   units: { orderBy: { sortIndex: "asc" } },
-  developerAccount: { select: { name: true, slug: true } },
+  developerAccount: { select: { slug: true } },
   // A RELATION, not a JSON array — DevelopmentSlugHistory rows, one per
   // retired slug. Verified against the schema 2026-10-09, because treating it
   // as a scalar array would have silently delivered [] for every project and
@@ -362,7 +362,15 @@ export type DevelopmentWithRelations = Prisma.DevelopmentGetPayload<{ include: t
  *
  *   driveFolderId, driveImagesModified  — the credential above, plus its clock
  *   developerAccountId, dev, feedProjectId, feedKey — internal source identity;
- *       feedKey is literally "<vendor>:<id>"
+ *       feedKey is literally "<vendor>:<id>". Withheld as fields, but note
+ *       (measured 2026-10-09) that this is tidiness rather than secrecy for
+ *       three of them: imageMirror names folders "<pipeline>-<accountId>-<slug>"
+ *       or "<dev>-<feedProjectId>", so those values ride inside the image URLs
+ *       of 53 of 350 payloads — and are already in the live public HTML of
+ *       cyprusvipestates.com, so the bridge discloses nothing a visitor cannot
+ *       read. `driveFolderId` is the one that is genuinely a credential, and it
+ *       appears in no payload and in no image path (0 hits for all 39 distinct
+ *       values across all 350 projects)
  *   syncedAt, imageDriftDetectedAt, newFromFeed — sync bookkeeping
  *   presentationItems, supersedesProjects — CRM and migration relations
  *   publishStatus, createdAt — withheld as noise rather than as secrets, and
@@ -394,7 +402,7 @@ export type BridgeProject = {
   publicName: string;
   developerName: string;
   developer: string | null;
-  developerAccount: { name: string; slug: string };
+  developerAccount: { slug: string };
   category: string | null; status: string | null; stage: string | null;
   completion: string | null; energy: string | null;
   district: string | null; town: string | null; area: string | null;
@@ -466,7 +474,16 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
     publicName: o?.alias || row.publicName,
     developerName: row.developerName,
     developer: row.developer,
-    developerAccount: { name: row.developerAccount.name, slug: row.developerAccount.slug },
+    // The SLUG only, deliberately: `DeveloperAccount.name` is an admin label,
+    // not a public name. Measured 2026-10-09: 277 of 350 published projects sit
+    // under an account whose name encodes the integration — "BBF (API)",
+    // "Aristo (XML)", "Korantina Homes (SharePoint)", "AGG (CC)" — or is a
+    // bucket rather than a developer ("Misc Projects"). Delivering it would put
+    // CVE's internal plumbing on a public portal and would defeat the stated
+    // reason for withholding `dev` and `feedKey` two lines up. The slug is a
+    // stable grouping key and carries no label; `developer` above is the public
+    // name, the one cyprusvipestates.com itself displays.
+    developerAccount: { slug: row.developerAccount.slug },
     category: row.category, status: row.status,
     stage: o?.stage ?? row.stage,
     completion: o?.completion ?? row.completion,
@@ -794,8 +811,11 @@ export async function GET(req: NextRequest) {
     // key, and that holds for a truncated or hashed one too. Deliberately not
     // a CronRunLog row either — this path is reachable by anyone on the
     // internet, and giving unauthenticated traffic a write into the table the
-    // Action Center reads would be a self-inflicted flood. Every
-    // authenticated outcome below is logged.
+    // Action Center reads would be a self-inflicted flood. The same reasoning
+    // exempts the 429 below — logging a runaway caller into that table is the
+    // flood this paragraph is about. Every authenticated outcome that reaches
+    // the data path is logged, which is the line that matters: a sync that ran
+    // and failed leaves a row, a caller that never got through does not.
     console.warn("[xellex-bridge] unauthorized request refused");
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
@@ -986,7 +1006,7 @@ Temporary route `src/app/api/bridge-probe/route.ts` (created and deleted inside 
 
 - the withheld fields are **absent** — grep the serialised output for `driveFolderId`, `feedKey`, `feedProjectId`, `syncedAt`, `developerAccountId`. **Any hit is a failure, and `driveFolderId` is the one that matters: it is an access token.**
 - how many images resolved to three variants versus fewer, and whether any stored URL produced none
-- the payload size of one project against the 370 KB measured for the largest
+- the payload size of one project against the 2,241 KB measured for the largest (zoia) and the 73 KB median
 
 - [x] **Step 2: Verify auth**
 

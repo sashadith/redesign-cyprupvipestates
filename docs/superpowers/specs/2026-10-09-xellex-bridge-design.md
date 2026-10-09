@@ -17,9 +17,9 @@ The operator was shown the duplicate-content consequence and accepted it: CVE's 
 | developer accounts with published work | 25 of 25 |
 | unit rows under them | 4,921 |
 | `/uploads/` image references | 40,324 delivered (~115 per project) |
-| full payload, raw JSON | 18.6 MB (~3 MB gzipped) |
-| largest single project | 370 KB |
-| mirrored image store on disk | 11 GB, 97,433 files, 432 folders |
+| full payload, raw JSON | 37.9 MB (~6 MB gzipped) |
+| largest single project | 2,241 KB (zoia, 3,737 images); median 73 KB |
+| mirrored image store on disk | 11.0 GiB, 101,771 files, 438 folders |
 | CVE's own data refresh | feed-sync 04:00, drive-sync 04:30, publish-scheduled every 5 min |
 
 ## What was verified before this spec
@@ -54,7 +54,9 @@ GET /api/bridge/projects?updatedSince=<iso8601>[&cursor=<opaque>]
 
 **`generatedAt` is the server's time, and Xellex passes it back as the next `updatedSince`.** Letting the client supply its own clock loses any change that lands between the query and the client's idea of "now", and the two clocks need not agree.
 
-**`complete: false` means keep going** with the returned `cursor` until it is `true`. Pagination is not a response-size concern — 3 MB gzipped is one ordinary response — it is a latency and memory concern: the largest single project is 370 KB, and assembling all 350 with their units and 120,972 `stat` calls in one request would hold a connection open far too long. **Page size: 50 projects.**
+**`complete: false` means keep going** with the returned `cursor` until it is `true`. Pagination is not a response-size concern — the heaviest 50-project page is 6.87 MB raw, about 1.2 MB gzipped, one ordinary response — it is a latency and memory concern: the largest single project is 2,241 KB (zoia, 3,737 images; the median is 73 KB), and assembling all 350 with their units and 120,972 `stat` calls in one request would hold a connection open far too long. **Page size: 50 projects.**
+
+**Paged by `id > cursor`, never by Prisma's `cursor` + `skip: 1`.** They look equivalent and are not: Prisma emits `id >= cursorId` then `OFFSET 1`, and the offset applies to the *filtered* rows, so the moment the cursor row stops matching the where clause — depublished, archived, its developer switched off, or deleted between two of Xellex's page requests — the offset eats the first genuinely new row instead. Measured 2026-10-09 against production, twice with different rows: one project silently missing per occurrence, and if the cursor row is deleted outright the page returns empty, which reads as `complete: true` and ends the run early. Either way the consumer advances its watermark to the run's `generatedAt` past rows it never received. This was the last silent row-loss found in the feature, and it was in the pagination itself.
 
 `removed` is only meaningful alongside `updatedSince`. On a full export it is empty: everything absent is removed, by definition.
 
@@ -148,9 +150,11 @@ No push, no webhooks — CVE's data changes once a day at 04:00, and delivery gu
 
 ### Two things Xellex's implementer must know about the variants
 
-**`medium` and `large` are byte-identical for about a fifth of the catalogue** — measured over a 4,000-pair sample on 2026-10-09: 910 of 4,000, 22%. `mirrorImage` passes `withoutEnlargement: true` and caps at 1920 px, so any source narrower than that produces the same output twice. The API reports both honestly and does **not** collapse them: `bytes` and `modified` are right there, and a consumer that re-hosts can skip the duplicate with one comparison. Deduplicating server-side would mean the payload no longer describes what is on disk.
+**`medium` and `large` are byte-identical for about a fifth of the catalogue** — 7,705 of all 40,324 delivered references, 19.1%, measured 2026-10-09 across the whole catalogue (an earlier 22% came from a 4,000-pair sample). `mirrorImage` passes `withoutEnlargement: true` and caps at 1920 px, so any source narrower than that produces the same output twice. The API reports both honestly and does **not** collapse them: `bytes` and `modified` are right there, and a consumer that re-hosts can skip the duplicate with one comparison. Deduplicating server-side would mean the payload no longer describes what is on disk.
 
-**Zero-byte variants exist and are delivered as real images** — 5 files, all Island Blue, all written 2026-07-05, one of them a `_medium` that the database itself stores. `stat` succeeds, so they ship with `bytes: 0`. They are not filtered, deliberately: dropping the zero-byte `_medium` would leave that image delivered as `_small` only, which is worse than an honest zero a consumer can test for. **These images are already broken on cyprusvipestates.com** — verified 2026-10-09, both return HTTP 200 with 0 bytes — so the fix belongs in the mirroring path, not in this API.
+**Zero-byte variants exist and are delivered as real images** — 5 files, all Island Blue, all written 2026-07-05, one of them a `_medium` that the database itself stores. `stat` succeeds, so they ship with `bytes: 0`. They are not filtered, deliberately: dropping the zero-byte `_medium` would leave that image delivered as `_small` only, which is worse than an honest zero a consumer can test for. **These images were already broken on cyprusvipestates.com** — verified 2026-10-09, serving HTTP 200 with 0 bytes — so the fix belonged in the mirroring path, not in this API.
+
+  **Repaired the same day,** in a separate task: the file above now serves 71,114 bytes, and a sweep of the whole store later that day found **no zero-byte file in any of its 101,771 files** (smallest Island Blue file: 3,328 bytes). So the `bytes: 0` path is still correct and currently has nothing to exercise — kept rather than removed, because the condition that produced those five files was in the mirroring path and nothing guarantees it cannot recur. Both measurements were right when taken; this is a case where the catalogue moved under the spec rather than the spec being wrong.
 
 ## Risks named
 

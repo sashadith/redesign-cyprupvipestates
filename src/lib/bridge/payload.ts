@@ -9,7 +9,7 @@ import { imagesFor, type BridgeImage } from "./images";
 export const BRIDGE_INCLUDE = {
   override: true,
   units: { orderBy: { sortIndex: "asc" } },
-  developerAccount: { select: { name: true, slug: true } },
+  developerAccount: { select: { slug: true } },
   // A RELATION, not a JSON array — DevelopmentSlugHistory rows, one per
   // retired slug. Verified against the schema 2026-10-09, because treating it
   // as a scalar array would have silently delivered [] for every project and
@@ -30,7 +30,15 @@ export type DevelopmentWithRelations = Prisma.DevelopmentGetPayload<{ include: t
  *
  *   driveFolderId, driveImagesModified  — the credential above, plus its clock
  *   developerAccountId, dev, feedProjectId, feedKey — internal source identity;
- *       feedKey is literally "<vendor>:<id>"
+ *       feedKey is literally "<vendor>:<id>". Withheld as fields, but note
+ *       (measured 2026-10-09) that this is tidiness rather than secrecy for
+ *       three of them: imageMirror names folders "<pipeline>-<accountId>-<slug>"
+ *       or "<dev>-<feedProjectId>", so those values ride inside the image URLs
+ *       of 53 of 350 payloads — and are already in the live public HTML of
+ *       cyprusvipestates.com, so the bridge discloses nothing a visitor cannot
+ *       read. `driveFolderId` is the one that is genuinely a credential, and it
+ *       appears in no payload and in no image path (0 hits for all 39 distinct
+ *       values across all 350 projects)
  *   syncedAt, imageDriftDetectedAt, newFromFeed — sync bookkeeping
  *   presentationItems, supersedesProjects — CRM and migration relations
  *   publishStatus, createdAt — withheld as noise rather than as secrets, and
@@ -62,7 +70,7 @@ export type BridgeProject = {
   publicName: string;
   developerName: string;
   developer: string | null;
-  developerAccount: { name: string; slug: string };
+  developerAccount: { slug: string };
   category: string | null; status: string | null; stage: string | null;
   completion: string | null; energy: string | null;
   district: string | null; town: string | null; area: string | null;
@@ -134,7 +142,16 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
     publicName: o?.alias || row.publicName,
     developerName: row.developerName,
     developer: row.developer,
-    developerAccount: { name: row.developerAccount.name, slug: row.developerAccount.slug },
+    // The SLUG only, deliberately: `DeveloperAccount.name` is an admin label,
+    // not a public name. Measured 2026-10-09: 277 of 350 published projects sit
+    // under an account whose name encodes the integration — "BBF (API)",
+    // "Aristo (XML)", "Korantina Homes (SharePoint)", "AGG (CC)" — or is a
+    // bucket rather than a developer ("Misc Projects"). Delivering it would put
+    // CVE's internal plumbing on a public portal and would defeat the stated
+    // reason for withholding `dev` and `feedKey` two lines up. The slug is a
+    // stable grouping key and carries no label; `developer` above is the public
+    // name, the one cyprusvipestates.com itself displays.
+    developerAccount: { slug: row.developerAccount.slug },
     category: row.category, status: row.status,
     stage: o?.stage ?? row.stage,
     completion: o?.completion ?? row.completion,
