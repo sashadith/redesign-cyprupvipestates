@@ -27,7 +27,9 @@ The operator was shown the duplicate-content consequence and accepted it: CVE's 
 - **No outbound feed exists.** Everything under `src/app/api` either pulls data in (cron, feed-sync) or serves the admin. This is a new surface, not a change to an existing one.
 - **`Development`, `DevelopmentOverride` and `DevelopmentUnit` each carry `updatedAt @updatedAt`** — the cursor exists in all three places it is needed.
 - **There is no settings/config table** in the schema, so the per-developer switch needs somewhere to live.
-- **Mirrored filenames are NOT content-addressed.** `imageMirror.ts` names files `<hash>_<size>.webp` where `hash` is `sha1(sourceUrl).slice(0,16)` — derived from the *source URL*, not the bytes. A developer who replaces a photo at the same URL produces the same filename with different content. The filename alone therefore cannot serve as the change signal.
+- **Feed-mirrored filenames are not content-addressed.** `imageMirror.ts` names files `<hash>_<size>.webp` where `hash` is `sha1(toLargeVariant(sourceUrl)).slice(0,16)` — derived from the *source URL*, **normalised to its largest sibling first** (`_medium`→`_large`, WordPress `-1024x683.jpg`→`.jpg`). A developer who replaces a photo at the same URL produces the same filename with different content, and because distinct vendor URLs deliberately collapse onto one name, several source URLs can land on the same file. The filename alone therefore cannot serve as the change signal.
+
+  Two corrections to the first draft of this line, both found by measuring rather than reading: the hash is of the *normalised* URL, not the raw one — which makes the argument stronger, not weaker — and the claim is true of **feed** images only. `storeUploadedImage` and `storeRawFile` hash the bytes, so admin uploads and the 31 `manual-*` folders genuinely are content-addressed. It changes nothing in the design: the two kinds are indistinguishable by filename, so every file must be `stat`'d either way.
 
 ## Contract
 
@@ -90,7 +92,9 @@ Every image, all three mirrored variants, each with an absolute URL and a finger
 }
 ```
 
-`bytes` + `modified` come from `fs.stat` and exist because the filename does not change when content does (see above). Cost: one `stat` per file — ~46,000 on a full export, spread over seven pages; a handful on an incremental call. A content hash would be stronger and is deliberately not built: hashing 11 GB per export is not affordable, and storing a hash at mirror time is a change to the mirroring path, which this feature has no other reason to touch.
+`bytes` + `modified` come from `fs.stat` and exist because the filename does not change when content does (see above).
+
+**Cost, measured on production 2026-10-09 rather than estimated:** one `stat` per *file*, but three files per reference — so ~139,000 stats on a full export, not the 46,000 the first draft said. Timed on the VPS at 76–89 µs warm: 3,014 stored URLs cost 9,042 stats in 691–808 ms, so ~0.8 s per 50-project page and ~5 s across the whole catalogue. The conclusion holds — page size 50 is comfortable and no caching or concurrency is warranted — but the number the pagination decision rests on is 139,000. A content hash would be stronger and is deliberately not built: hashing 11 GB per export is not affordable, and storing a hash at mirror time is a change to the mirroring path, which this feature has no other reason to touch.
 
 ## Configuration, and the removal signal
 
@@ -125,6 +129,12 @@ Each call appends a log row: timestamp, mode (full/incremental), project count, 
 ## Non-goals
 
 No push, no webhooks — CVE's data changes once a day at 04:00, and delivery guarantees, retries and a queue are not worth building for that. No write path back from Xellex. No content other than developments: no blog, no landing pages, no case studies. No drafts: `publishStatus = "published"` only.
+
+### Two things Xellex's implementer must know about the variants
+
+**`medium` and `large` are byte-identical for about a fifth of the catalogue** — measured over a 4,000-pair sample on 2026-10-09: 910 of 4,000, 22%. `mirrorImage` passes `withoutEnlargement: true` and caps at 1920 px, so any source narrower than that produces the same output twice. The API reports both honestly and does **not** collapse them: `bytes` and `modified` are right there, and a consumer that re-hosts can skip the duplicate with one comparison. Deduplicating server-side would mean the payload no longer describes what is on disk.
+
+**Zero-byte variants exist and are delivered as real images** — 5 files, all Island Blue, all written 2026-07-05, one of them a `_medium` that the database itself stores. `stat` succeeds, so they ship with `bytes: 0`. They are not filtered, deliberately: dropping the zero-byte `_medium` would leave that image delivered as `_small` only, which is worse than an honest zero a consumer can test for. **These images are already broken on cyprusvipestates.com** — verified 2026-10-09, both return HTTP 200 with 0 bytes — so the fix belongs in the mirroring path, not in this API.
 
 ## Risks named
 
