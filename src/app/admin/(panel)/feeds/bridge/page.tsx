@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { listBridgeDevelopers, type BridgeDeveloper } from "@/lib/bridge/config";
-import { toggleBridgeDeveloper } from "./actions";
+import BridgeSwitch from "./BridgeSwitch";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +71,7 @@ export default async function XellexBridgePage() {
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         <p className="font-semibold">This is not a filter — it publishes to a public website.</p>
         <p className="mt-1">
-          Turning a developer <strong>on</strong> delivers every one of its published projects — names, all four
+          Turning a developer <strong>on</strong> delivers every one of its published projects — names, all five
           language descriptions, prices, units and photos — to <strong>Xellex</strong>, a second public website with
           its own domain and audience. Turning it <strong>off</strong> removes those projects from Xellex at its next
           sync. Nothing on this screen changes what cyprusvipestates.com shows, and nothing here is a draft: a
@@ -126,35 +126,13 @@ export default async function XellexBridgePage() {
                       )}
                     </td>
                     <td className="px-4 py-2.5">
-                      <form action={toggleBridgeDeveloper.bind(null, d.slug, !d.enabled)}>
-                        <button
-                          type="submit"
-                          disabled={lockedOff}
-                          aria-pressed={d.enabled}
-                          title={
-                            lockedOff
-                              ? "This developer has no published projects — turning it on would deliver nothing."
-                              : d.enabled
-                                ? `Stop delivering ${d.name} — its ${d.publishedProjects} projects come off Xellex at the next sync`
-                                : `Deliver ${d.name} — its ${d.publishedProjects} published projects go live on Xellex`
-                          }
-                          className={`inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs font-medium transition-colors ${
-                            d.enabled
-                              ? "border-[#166534] bg-[#166534] text-white hover:bg-[#14532D]"
-                              : "border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F8F9FA]"
-                          } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className={`block h-4 w-7 shrink-0 rounded-full p-0.5 ${d.enabled ? "bg-white/30" : "bg-[#E5E7EB]"}`}
-                          >
-                            <span
-                              className={`block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${d.enabled ? "translate-x-3.5" : ""}`}
-                            />
-                          </span>
-                          {d.enabled ? "Live on Xellex" : "Not delivered"}
-                        </button>
-                      </form>
+                      <BridgeSwitch
+                        slug={d.slug}
+                        name={d.name}
+                        enabled={d.enabled}
+                        publishedProjects={d.publishedProjects}
+                        lockedOff={lockedOff}
+                      />
                     </td>
                     <td className="px-4 py-2.5 text-[#6B7280]">
                       {d.changedAt ? (
