@@ -551,6 +551,11 @@ model Developer {
   logo               Json?
   description        Json?
   seo                Json?
+  // Set on EVERY language row of the group together (src/lib/developerLifecycle.ts).
+  // Non-null = the public page is offline: /developers/<slug> 308s to the
+  // developers index and the page drops out of the index, sitemap, hreflang
+  // and the "Developer:" link on project pages. Null = live.
+  deactivatedAt      DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

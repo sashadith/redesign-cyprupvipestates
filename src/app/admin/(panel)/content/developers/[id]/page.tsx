@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import DeveloperEditForm from "./DeveloperEditForm";
+import DeveloperLifecycleControls from "./DeveloperLifecycleControls";
 import { localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function EditDeveloper({ params }: { params: { id: string }
       <h1 className="text-2xl font-semibold mt-2 mb-1">{d.title}</h1>
       <p className="text-sm text-[#6B7280] mb-6">{d.language.toUpperCase()} · /developers/{d.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
       <TranslationsPanel type="developer" groupId={d.translationGroupId} currentId={d.id} currentLang={d.language} />
+      <DeveloperLifecycleControls id={d.id} deactivatedAt={d.deactivatedAt ? d.deactivatedAt.toISOString() : null} />
 
       <DeveloperEditForm
         developer={{

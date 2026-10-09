@@ -246,6 +246,9 @@ async function handleDeveloperProfile(row: QueueRow, deps: ProcessDeps, force: b
     ...(heDescription !== undefined ? { description: heDescription } : {}),
     ...(result.he.seo ? { seo: result.he.seo } : {}),
     ...(en.logo ? { logo: en.logo } : {}),
+    // The HE row follows the group's live/offline state (src/lib/developerLifecycle.ts) —
+    // a translation finishing after a deactivation must not put the page back online.
+    ...(en.deactivatedAt ? { deactivatedAt: en.deactivatedAt } : {}),
   };
 
   if (heRow) {
@@ -400,6 +403,7 @@ export async function enqueueMissing(kind: EnqueueKind, prisma: QueuePrisma): Pr
   const heRows = rows.filter((r) => r.language === "he");
   for (const d of rows) {
     if (d.language !== "en") continue;
+    if (d.deactivatedAt) continue; // offline page — nothing to translate for
     const sibling =
       heRows.find((r) => str(d.translationGroupId) && str(r.translationGroupId) === str(d.translationGroupId)) ??
       heRows.find((r) => str(r.slug) === str(d.slug)) ??
@@ -460,6 +464,7 @@ export async function enqueueDevelopersForce(prisma: QueuePrisma): Promise<{ cre
   let created = 0;
   for (const d of rows) {
     if (d.language !== "en") continue;
+    if (d.deactivatedAt) continue; // offline page — nothing to translate for
     if (await enqueue(prisma, taken, HE_ENTITY_TYPE.developerProfile, d.id, FORCE)) created++;
   }
   return { created };

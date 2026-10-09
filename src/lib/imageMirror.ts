@@ -1,6 +1,6 @@
 import sharp from "sharp";
-import { createHash } from "crypto";
-import { mkdir, writeFile, access, mkdtemp, readdir, readFile, rm } from "fs/promises";
+import { createHash, randomBytes } from "crypto";
+import { mkdir, writeFile, mkdtemp, readdir, readFile, rm, rename, stat, unlink } from "fs/promises";
 import { readFileSync, writeFileSync, mkdirSync, unlinkSync, utimesSync, existsSync, statSync, readdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -170,7 +170,73 @@ export function syncWindowActive(): boolean {
 }
 const root = () => join(process.cwd(), "public", "uploads", "developments");
 const hash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 16);
-const exists = (p: string) => access(p).then(() => true).catch(() => false);
+
+/* Variant writes (2026-10-09). Five variants across two Island Blue units sat
+   live at 0 bytes from 2026-07-05 until they were found three months later:
+   four images in island-blue-21 and two in island-blue-65 were cut off
+   mid-loop at one instant each (17:54:25 and 18:40:27), three of them never
+   getting a _large file at all — the signature of an abruptly killed process,
+   not of a per-image sharp or disk error. Two things made that damage stick:
+
+     1. writeFile() opens with O_TRUNC, so a write that never lands leaves an
+        EMPTY file where a good one used to be. Nothing checked the result.
+     2. The "already mirrored" test below asked only whether
+        <hash>_medium.webp EXISTED. A 0-byte medium answered yes, so no later
+        sync — not even a forced one — could ever heal it.
+
+   Both are fixed here rather than at the call sites: mirrorImage(),
+   storeUploadedImage() and storeRawFile() are the only writers of these files,
+   and they all go through writeVariantFile() now. */
+
+// A variant counts as present only if it has bytes in it. Size, not existence.
+const hasBytes = async (p: string) => {
+  try { const st = await stat(p); return st.isFile() && st.size > 0; } catch { return false; }
+};
+
+// All three variants present AND non-empty — the real "already mirrored" test.
+// A partially written image now re-mirrors on the next pass instead of being
+// skipped forever. Measured against the live store on 2026-10-09: 32,480 of
+// 32,484 hash-groups were already complete, and the 4 stragglers were exactly
+// the 2026-07-05 casualties (since repaired), so this costs two extra stat()
+// calls per image and zero extra downloads in steady state.
+const allVariantsPresent = (dir: string, h: string) =>
+  Promise.all(SIZES.map(([size]) => hasBytes(join(dir, `${h}_${size}.webp`))))
+    .then((present) => present.every(Boolean));
+
+/* Writes one variant so that neither an empty buffer nor an interrupted write
+   can replace a good file with a broken one: refuse 0 bytes outright, write to
+   a temp file in the SAME directory, verify the byte count landed, then
+   rename() — atomic within one filesystem, so a reader sees either the old
+   file or the complete new one, never a truncated one.
+
+   A process killed between the two steps now leaves a stray
+   "<hash>_<size>.webp.tmp-<pid>-<rand>" and the previous variant untouched.
+   Those leftovers are inert: they match neither the "<hash>_<size>.webp" shape
+   every stored URL has, nor anything the site requests. */
+async function writeVariantFile(file: string, buf: Buffer): Promise<void> {
+  if (buf.length === 0) throw new Error(`[imageMirror] refusing to write 0 bytes to ${file}`);
+  const tmp = `${file}.tmp-${process.pid}-${randomBytes(4).toString("hex")}`;
+  try {
+    await writeFile(tmp, buf);
+    const written = (await stat(tmp)).size;
+    if (written !== buf.length) throw new Error(`[imageMirror] short write for ${file}: ${written}/${buf.length} bytes`);
+    await rename(tmp, file);
+  } catch (e) {
+    await unlink(tmp).catch(() => {});
+    throw e;
+  }
+}
+
+/* Renders every variant into memory BEFORE writing any of them, so a failure on
+   the last size can't leave a half-published image on disk — the state three of
+   the 2026-07-05 images were left in. */
+async function writeAllVariants(buf: Buffer, dir: string, h: string): Promise<void> {
+  const rendered: [string, Buffer][] = [];
+  for (const [size, w] of SIZES) {
+    rendered.push([size, await sharp(buf).rotate().resize({ width: w, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer()]);
+  }
+  for (const [size, out] of rendered) await writeVariantFile(join(dir, `${h}_${size}.webp`), out);
+}
 
 // Upgrade any incoming URL to its "large" tier when the source follows a
 // known variant-naming convention, so we always mirror from the biggest
@@ -333,9 +399,8 @@ export async function mirrorImage(src: string, devKey: string): Promise<MirrorRe
   const h = sourceUrlHash(src);
   const large = toLargeVariant(src);
   const dir = join(root(), devKey);
-  const mediumFile = join(dir, `${h}_medium.webp`);
   const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;
-  if (await exists(mediumFile)) return { url: mediumUrl, wasNew: false }; // already mirrored → skip download
+  if (await allVariantsPresent(dir, h)) return { url: mediumUrl, wasNew: false }; // already mirrored → skip download
   try {
     let res = await fetch(large, { signal: AbortSignal.timeout(20000), cache: "no-store" });
     if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) {
@@ -348,12 +413,13 @@ export async function mirrorImage(src: string, devKey: string): Promise<MirrorRe
     }
     const buf = Buffer.from(await res.arrayBuffer());
     await mkdir(dir, { recursive: true });
-    for (const [size, w] of SIZES) {
-      const out = await sharp(buf).rotate().resize({ width: w, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
-      await writeFile(join(dir, `${h}_${size}.webp`), out);
-    }
+    await writeAllVariants(buf, dir, h);
     return { url: mediumUrl, wasNew: true };
-  } catch {
+  } catch (e) {
+    // Loudly, deliberately: a silent mirror failure is how five broken images
+    // went unnoticed for three months. Callers still degrade gracefully
+    // (mirrorAll drops the image, mirrorAny keeps the external URL).
+    console.error(`[imageMirror] mirror failed for ${src} (devKey=${devKey}):`, e instanceof Error ? e.message : e);
     return null;
   }
 }
@@ -366,12 +432,10 @@ export async function storeUploadedImage(buf: Buffer, devKey: string): Promise<s
     const dir = join(root(), devKey);
     const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;
     await mkdir(dir, { recursive: true });
-    for (const [size, w] of SIZES) {
-      const out = await sharp(buf).rotate().resize({ width: w, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
-      await writeFile(join(dir, `${h}_${size}.webp`), out);
-    }
+    await writeAllVariants(buf, dir, h);
     return mediumUrl;
-  } catch {
+  } catch (e) {
+    console.error(`[imageMirror] storeUploadedImage failed (devKey=${devKey}):`, e instanceof Error ? e.message : e);
     return null;
   }
 }
@@ -383,9 +447,10 @@ export async function storeRawFile(buf: Buffer, devKey: string, ext: string): Pr
     const dir = join(root(), devKey);
     const url = `/uploads/developments/${devKey}/${h}.${ext}`;
     await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, `${h}.${ext}`), buf);
+    await writeVariantFile(join(dir, `${h}.${ext}`), buf);
     return url;
-  } catch {
+  } catch (e) {
+    console.error(`[imageMirror] storeRawFile failed (devKey=${devKey}, ext=${ext}):`, e instanceof Error ? e.message : e);
     return null;
   }
 }
