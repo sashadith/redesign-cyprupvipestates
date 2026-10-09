@@ -110,11 +110,12 @@ function listingAlts(segment: string): Alt[] {
 // Build a "lang|slug" -> hreflang-alternates index for a detail type, grouped by
 // translationGroupId. Only PUBLISHED rows (matching what the sitemap includes); groups with a
 // single language get no alternates (a self-only hreflang is pointless).
-const ALT_CFG: Record<string, { model: any; seg: string; status: boolean; nested?: boolean }> = {
+const ALT_CFG: Record<string, { model: any; seg: string; status: boolean; nested?: boolean; where?: Record<string, unknown> }> = {
   projects: { model: prisma.project, seg: "projects", status: true },
   blog: { model: prisma.blog, seg: "blog", status: true },
   "case-studies": { model: prisma.caseStudy, seg: "case-studies", status: true },
-  developers: { model: prisma.developer, seg: "developers", status: false },
+  // No status column; a deactivated page (deactivatedAt set) 308s, so it is no alternate.
+  developers: { model: prisma.developer, seg: "developers", status: false, where: { deactivatedAt: null } },
   // singlepages can nest via parentSanityId, so their canonical URL is a parent/child path,
   // not a flat "/slug" — alternates must use the resolved nested path (see segsFor below).
   pages: { model: prisma.singlepage, seg: "", status: true, nested: true },
@@ -126,7 +127,7 @@ const XDEFAULT_ORDER = PUBLIC_LOCALES;
 async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const cfg = ALT_CFG[typeKey];
   const rows: any[] = (await cfg.model.findMany({
-    where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}) },
+    where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}), ...(cfg.where ?? {}) },
     select: { language: true, slug: true, translationGroupId: true, ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}) },
   })).filter((r: any) => (langs as readonly string[]).includes(r.language));
 

@@ -186,9 +186,9 @@ export async function getInventory(): Promise<InventoryPage[]> {
       where: { status: "PUBLISHED", slug: { not: "" } },
       select: { id: true, slug: true, language: true, title: true, sanityId: true, parentSanityId: true },
     }),
-    // Developer has no status column — every row is live (see src/app/sitemaps/[type]/route.ts).
+    // Developer has no status column — live means not deactivated (src/lib/developerLifecycle.ts).
     prisma.developer.findMany({
-      where: { slug: { not: "" } },
+      where: { slug: { not: "" }, deactivatedAt: null },
       select: { id: true, slug: true, language: true, title: true },
     }),
     prisma.caseStudy.findMany({

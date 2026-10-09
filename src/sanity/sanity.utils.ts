@@ -923,7 +923,23 @@ const slugList = (model: any, published: boolean) => async (lang: string): Promi
 export const getProjectSlugs = (lang: string) => slugList(prisma.project, true)(lang);
 export const getBlogSlugs = (lang: string) => slugList(prisma.blog, true)(lang);
 export const getCaseStudySlugs = (lang: string) => slugList(prisma.caseStudy, true)(lang);
-export const getDeveloperSlugs = (lang: string) => slugList(prisma.developer, false)(lang);
+export const getDeveloperSlugs = async (lang: string): Promise<string[]> =>
+  (await prisma.developer.findMany({
+    where: { language: lang as any, slug: { not: "" }, deactivatedAt: null },
+    select: { slug: true },
+  })).map((r) => r.slug);
+
+/* A deactivated developer page (src/lib/developerLifecycle.ts) 308s to the
+   developers index in its own language — the page is gone, the topic is not.
+   A deleted page has no row left and 404s as usual. */
+export async function getDeactivatedDeveloperRedirect(lang: string, slug: string): Promise<string | null> {
+  if (!isLocale(lang)) return null;
+  const row = await prisma.developer.findFirst({
+    where: { language: lang as any, slug, deactivatedAt: { not: null } },
+    select: { id: true },
+  });
+  return row ? localizedHref(lang, ["developers"]) : null;
+}
 
 // Single-page path items (current + parent slug) for generateStaticParams.
 export async function getSinglePagePathItems(lang: string): Promise<{ current: string; parent?: string }[]> {
@@ -1167,7 +1183,7 @@ async function _getProjectByLang(lang: string, slug: string): Promise<Project | 
   if (!isLocale(lang)) return null;
   const row = await prisma.project.findFirst({
     where: { language: lang as any, slug, ...draftFilter() },
-    include: { developer: { select: { sanityId: true, title: true, slug: true, logo: true } } },
+    include: { developer: { select: { sanityId: true, title: true, slug: true, logo: true, deactivatedAt: true } } },
   });
   if (!row) return null;
   const out: AnyRow = {
@@ -1176,7 +1192,8 @@ async function _getProjectByLang(lang: string, slug: string): Promise<Project | 
     previewImage: await withBlur(D(row.previewImage)), videoId: row.videoId, videoPreview: D(row.videoPreview),
     images: D(row.images), description: D(row.description),
     location: row.latitude != null ? { _type: "geopoint", lat: row.latitude, lng: row.longitude } : null,
-    developer: row.developer
+    // No "Developer:" link into a deactivated page (it only redirects).
+    developer: row.developer && !row.developer.deactivatedAt
       ? { _id: row.developer.sanityId, name: row.developer.title, slug: row.developer.slug, logo: D(row.developer.logo) }
       : null,
     keyFeatures: row.keyFeatures, investmentData: row.investmentData,
@@ -1219,7 +1236,7 @@ export async function getLegacyProjectRedirect(lang: string, slug: string): Prom
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {
   if (!isLocale(lang)) return [];
-  const rows = await prisma.developer.findMany({ where: { language: lang as any, slug: { not: "" } }, orderBy: { title: "asc" } });
+  const rows = await prisma.developer.findMany({ where: { language: lang as any, slug: { not: "" }, deactivatedAt: null }, orderBy: { title: "asc" } });
   return rows.map((d) => ({ _id: d.sanityId, _updatedAt: d.updatedAt, title: d.title, slug: slugObj(d), slugStr: d.slug, logo: D(d.logo), excerpt: d.excerpt })) as unknown as Developer[];
 }
 
@@ -1235,7 +1252,7 @@ export async function getDeveloperProjectCounts(lang: string): Promise<Record<st
   if (!isLocale(lang)) return {};
   const [devs, accounts] = await Promise.all([
     prisma.developer.findMany({
-      where: { language: lang as any, slug: { not: "" } },
+      where: { language: lang as any, slug: { not: "" }, deactivatedAt: null },
       select: { slug: true, translationGroupId: true },
     }),
     prisma.developerAccount.findMany({
@@ -1257,7 +1274,9 @@ export async function getDeveloperProjectCounts(lang: string): Promise<Record<st
 
 async function _getDeveloperByLang(lang: string, slug: string): Promise<Developer | null> {
   if (!isLocale(lang)) return null;
-  const row = await prisma.developer.findFirst({ where: { language: lang as any, slug } });
+  // A deactivated page resolves to nothing here; the page route then asks
+  // getDeactivatedDeveloperRedirect() where to send the visitor instead.
+  const row = await prisma.developer.findFirst({ where: { language: lang as any, slug, deactivatedAt: null } });
   if (!row) return null;
   const out: AnyRow = {
     _id: row.sanityId, seo: row.seo, slug: slugObj(row), title: row.title, titleFull: row.titleFull,

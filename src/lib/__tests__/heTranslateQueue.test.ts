@@ -211,6 +211,30 @@ test("processQueue creates the Hebrew developer row in the English row's transla
   assert.deepEqual(he.description, hePortable);
 });
 
+test("a Hebrew developer row created for a deactivated page is created deactivated", async () => {
+  const off = new Date("2026-10-09T10:00:00Z");
+  const f = fakePrisma({
+    developers: [{ id: "dev1", language: "en", slug: "acme", title: "Acme", translationGroupId: "grp-9", excerpt: "x", deactivatedAt: off }],
+    queue: [{ id: "q1", entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1", status: "PENDING" }],
+  });
+  const t = fakeTranslate({ slug: "acme", title: "Acme", excerpt: HE_2 });
+  await processQueue([row({ entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1" })], { prisma: f.prisma, translate: t.translate, now });
+  const he = f.developers.find((d) => d.language === "he");
+  assert.ok(he);
+  assert.equal(he.deactivatedAt, off, "a late translation must not put an offline page back online");
+});
+
+test("bulk force re-translation skips deactivated developer pages", async () => {
+  const f = fakePrisma({
+    developers: [
+      { id: "on", language: "en", slug: "on", title: "On", translationGroupId: "g1" },
+      { id: "off", language: "en", slug: "off", title: "Off", translationGroupId: "g2", deactivatedAt: new Date() },
+    ],
+  });
+  const { created } = await enqueueDevelopersForce(f.prisma);
+  assert.equal(created, 1);
+});
+
 test("processQueue gives an ungrouped English developer a translation group before translating", async () => {
   const f = fakePrisma({
     developers: [{ id: "dev1", language: "en", slug: "cyfield", title: "Cyfield", excerpt: "A Cypriot developer.", translationGroupId: null }],

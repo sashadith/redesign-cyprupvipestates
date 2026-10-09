@@ -5,7 +5,7 @@ import "@/app/preview-insights/insights.css";
 import "@/app/[lang]/developers/developer-catalog.css";
 
 import React from "react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
 import {
   getFormStandardDocumentByLang,
@@ -13,6 +13,7 @@ import {
   getDeveloperCatalogByLang,
   getNotFoundPageByLang,
   getDeveloperSlugs,
+  getDeactivatedDeveloperRedirect,
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
 
@@ -131,6 +132,8 @@ const DeveloperPage = async ({ params }: Props) => {
   const developer = await getDeveloperByLang(lang, slug);
 
   if (!developer) {
+    const redirectTo = await getDeactivatedDeveloperRedirect(lang, slug);
+    if (redirectTo) permanentRedirect(redirectTo);
     notFound();
   }
 

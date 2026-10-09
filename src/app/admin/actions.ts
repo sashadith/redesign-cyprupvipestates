@@ -11,8 +11,9 @@ import nodemailer from "nodemailer";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
-import { localizedHref, LOCALES, isLocale } from "@/lib/locale";
+import { localizedHref, LOCALES, isLocale, PUBLIC_LOCALES } from "@/lib/locale";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
+import { developerImpact, deactivateDeveloperGroup, reactivateDeveloperGroup, deleteDeveloperGroup, type DeveloperImpact } from "@/lib/developerLifecycle";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
@@ -581,8 +582,9 @@ export async function getDeactivateSuggestions(projectId: string): Promise<Deact
 
   let developerAccount: { id: string; slug: string; name: string } | null = null;
   if (p.developerId) {
-    const legacyDev = await prisma.developer.findUnique({ where: { id: p.developerId }, select: { translationGroupId: true } });
-    if (legacyDev?.translationGroupId) {
+    const legacyDev = await prisma.developer.findUnique({ where: { id: p.developerId }, select: { translationGroupId: true, deactivatedAt: true } });
+    // A deactivated developer page only redirects — never offer it as a target.
+    if (legacyDev?.translationGroupId && !legacyDev.deactivatedAt) {
       developerAccount = await prisma.developerAccount.findFirst({
         where: { developerTranslationGroupId: legacyDev.translationGroupId },
         select: { id: true, slug: true, name: true },
@@ -1815,6 +1817,80 @@ export async function saveDeveloperAll(id: string, _prev: any, formData: FormDat
   } catch (e: any) {
     return { error: e?.message || "Something went wrong." };
   }
+}
+
+// ── Developer page lifecycle (2026-10-09): deactivate / reactivate / delete ──
+// The DB work lives in src/lib/developerLifecycle.ts (tested there); these
+// wrappers add the session check, cache revalidation and IndexNow.
+function revalidateDeveloperLifecycle(
+  rows: { language: string; slug: string }[],
+  projects: { language: string; slug: string }[],
+  developments: { slug: string | null }[],
+) {
+  for (const r of rows) revalidateDeveloperPublic(r.language, r.slug);
+  for (const p of projects) revalidateProjectPublic(p.language, p.slug);
+  for (const d of developments) {
+    if (!d.slug) continue;
+    for (const l of LOCALES) revalPublic(l, ["projects", d.slug]);
+  }
+  if (developments.length) for (const l of LOCALES) revalPublic(l, ["projects"]);
+  revalidatePath("/admin/content/developers");
+  revalidatePath("/admin/developments");
+}
+
+export async function getDeveloperImpact(id: string): Promise<DeveloperImpact> {
+  await requireSession();
+  return developerImpact(prisma, id);
+}
+
+export async function deactivateDeveloper(id: string, archiveProjects: boolean): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const r = await deactivateDeveloperGroup(prisma, id, { archiveProjects });
+    // Published legacy projects link to this page — re-render them without the link
+    // (archived or not); archived developments drop out of the catalog pages.
+    revalidateDeveloperLifecycle(r.impact.rows, r.impact.publishedProjects, r.archivedDevelopments);
+    revalidatePath(`/admin/content/developers/${id}`);
+    const urls = [
+      ...r.impact.rows.map((x) => absUrl(localizedHref(x.language, ["developers", x.slug]))),
+      ...r.archivedProjects.map((p) => absUrl(localizedHref(p.language, ["projects", p.slug]))),
+      ...r.archivedDevelopments.flatMap((d) => (d.slug ? PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", d.slug!]))) : [])),
+    ];
+    void pingIndexNow("developer-deactivated", urls);
+    const n = r.archivedDevelopments.length + r.archivedProjects.length;
+    return { ok: archiveProjects ? `Deactivated — ${n} project page${n === 1 ? "" : "s"} archived.` : "Deactivated — project pages stay live." };
+  } catch (e: any) {
+    return { error: e?.message ?? "Deactivation failed." };
+  }
+}
+
+export async function reactivateDeveloper(id: string): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const r = await reactivateDeveloperGroup(prisma, id);
+    const impact = await developerImpact(prisma, id);
+    revalidateDeveloperLifecycle(r.rows, impact.publishedProjects, []);
+    revalidatePath(`/admin/content/developers/${id}`);
+    void pingIndexNow("developer-reactivated", r.rows.map((x) => absUrl(localizedHref(x.language, ["developers", x.slug]))));
+    return { ok: "Reactivated — the page is live again. Archived projects stay archived until republished." };
+  } catch (e: any) {
+    return { error: e?.message ?? "Reactivation failed." };
+  }
+}
+
+export async function deleteDeveloper(id: string, typedName: string): Promise<{ error?: string }> {
+  let ok = false;
+  try {
+    await requireSession();
+    const r = await deleteDeveloperGroup(prisma, id, typedName);
+    revalidateDeveloperLifecycle(r.impact.rows, r.impact.publishedProjects, []);
+    void pingIndexNow("developer-deleted", r.impact.rows.map((x) => absUrl(localizedHref(x.language, ["developers", x.slug]))));
+    ok = true;
+  } catch (e: any) {
+    return { error: e?.message ?? "Delete failed." };
+  }
+  if (ok) redirect("/admin/content/developers");
+  return {};
 }
 
 // ── Authors (reference entity — appears on blog posts; bio is plain text) ──
