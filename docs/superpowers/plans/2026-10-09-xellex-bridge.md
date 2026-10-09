@@ -484,7 +484,7 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
 }
 ```
 
-**Note on Hebrew:** `descriptionHE` / `promoBlocksHE` are included because the operator's instruction was "deliver everything" and `/he` is live on CVE since 2026-09-26. The standing rule in this project is never to *author or edit* Hebrew content, which delivering does not do. If the operator decides Xellex should not receive Hebrew, removing the two fields here is the whole change.
+**Note on Hebrew:** all five languages ship, `descriptionHE` / `promoBlocksHE` included — the operator confirmed this explicitly on 2026-10-09 when asked, after being told the override carries five languages and not the four the spec first said. `/he` has been live on CVE since 2026-09-26. This does not conflict with the standing rule never to *author or edit* Hebrew content: delivering an existing field is not authoring one. Do not drop these fields on the assumption they were an oversight.
 
 - [ ] **Step 2: Verify**
 
