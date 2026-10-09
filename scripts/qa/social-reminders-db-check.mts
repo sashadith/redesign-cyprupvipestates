@@ -54,7 +54,7 @@ async function main() {
   await runSocialReminders(deps);
   await runSocialReminders(deps);
   assert.equal(sent.length, 1);
-  assert.deepEqual([...(await real.sentKeys([ID]))], [sentKey(ID, "t90")]);
+  assert.deepEqual(Array.from(await real.sentKeys([ID])), [sentKey(ID, "t90")]);
 
   // 3. Concurrent runs (two pm2 workers / overlapping crons) send once.
   clock = cy(13, 9, 33);

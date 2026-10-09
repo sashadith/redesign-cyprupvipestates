@@ -31,7 +31,7 @@ function world(initial: TypefullyDraft[] | DraftListResult, opts: { telegram?: (
   let clock = new Date(0);
   const deps: ReminderDeps = {
     listPlanned: async () => list,
-    sentKeys: async (ids) => new Set([...ledger].filter((k) => ids.includes(Number(k.split(":")[0])))),
+    sentKeys: async (ids) => new Set(Array.from(ledger).filter((k) => ids.includes(Number(k.split(":")[0])))),
     claim: async (rows: ClaimRow[]) => rows.filter((r) => {
       const k = sentKey(r.draftId, r.kind);
       if (ledger.has(k)) return false;
@@ -71,7 +71,7 @@ test("a planned draft gets evening, T-90, T-30 and missed — each exactly once 
   assert.match(w.messages[1], /^⏰ 90 minutes left — not confirmed yet\n/);
   assert.match(w.messages[2], /^🚨 Last reminder — 30 minutes\n/);
   assert.match(w.messages[3], /^❌ Missed — not published\n[\s\S]*\nReschedule in Typefully if still relevant\.$/);
-  assert.deepEqual([...w.ledger].sort(), ["evening", "missed", "t30", "t90"].map((k) => sentKey(d.id, k)).sort());
+  assert.deepEqual(Array.from(w.ledger).sort(), ["evening", "missed", "t30", "t90"].map((k) => sentKey(d.id, k)).sort());
 });
 
 test("running twice at the same instant sends nothing the second time", async () => {
