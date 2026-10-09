@@ -101,9 +101,13 @@ Two columns on `DeveloperAccount`, no new table:
 
 An admin screen lists the 24 developers with their published-project and unit counts and a switch each.
 
-### The cursor spans three tables
+### The cursor spans three tables, plus the switch
 
 A unit price changing does not touch the `Development` row. The incremental query therefore selects developments where `publishStatus = "published"`, the developer is enabled, **and** any of `Development.updatedAt`, `DevelopmentOverride.updatedAt` or `DevelopmentUnit.updatedAt` is newer than `updatedSince`.
+
+**A fourth condition: or the developer's own `bridgeChangedAt` is newer.** Switching a developer **on** is exactly as invisible as switching it off — its projects' rows do not change, so none of the three timestamps moves, and an incremental consumer would never learn they became deliverable. They would surface only on a full export, which this design discourages.
+
+This was missed in the first draft of the spec, which named only the off direction. It is the same bug `bridgeChangedAt` exists to prevent, pointing the other way: the stamp means *"the switch was last touched at T"*, and both the inclusion query and the removal query read it.
 
 ### `removed` has two sources, and the second is the one that gets forgotten
 
