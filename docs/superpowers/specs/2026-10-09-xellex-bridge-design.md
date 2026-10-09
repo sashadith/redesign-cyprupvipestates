@@ -13,10 +13,10 @@ The operator was shown the duplicate-content consequence and accepted it: CVE's 
 
 | | |
 |---|---|
-| published developments | 344 |
-| developer accounts with published work | 24 of 25 |
-| unit rows under them | 4,872 |
-| `/uploads/` image references | 46,423 (~135 per project) |
+| published developments | 350 |
+| developer accounts with published work | 25 of 25 |
+| unit rows under them | 4,921 |
+| `/uploads/` image references | 40,324 delivered (~115 per project) |
 | full payload, raw JSON | 18.6 MB (~3 MB gzipped) |
 | largest single project | 370 KB |
 | mirrored image store on disk | 11 GB, 97,433 files, 432 folders |
@@ -52,7 +52,7 @@ GET /api/bridge/projects?updatedSince=<iso8601>[&cursor=<opaque>]
 
 **`generatedAt` is the server's time, and Xellex passes it back as the next `updatedSince`.** Letting the client supply its own clock loses any change that lands between the query and the client's idea of "now", and the two clocks need not agree.
 
-**`complete: false` means keep going** with the returned `cursor` until it is `true`. Pagination is not a response-size concern — 3 MB gzipped is one ordinary response — it is a latency and memory concern: the largest single project is 370 KB, and assembling all 344 with their units and 46,423 `stat` calls in one request would hold a connection open far too long. **Page size: 50 projects.**
+**`complete: false` means keep going** with the returned `cursor` until it is `true`. Pagination is not a response-size concern — 3 MB gzipped is one ordinary response — it is a latency and memory concern: the largest single project is 370 KB, and assembling all 350 with their units and 120,972 `stat` calls in one request would hold a connection open far too long. **Page size: 50 projects.**
 
 `removed` is only meaningful alongside `updatedSince`. On a full export it is empty: everything absent is removed, by definition.
 
@@ -94,7 +94,9 @@ Every image, all three mirrored variants, each with an absolute URL and a finger
 
 `bytes` + `modified` come from `fs.stat` and exist because the filename does not change when content does (see above).
 
-**Cost, measured on production 2026-10-09 rather than estimated:** one `stat` per *file*, but three files per reference — so ~139,000 stats on a full export, not the 46,000 the first draft said. Timed on the VPS at 76–89 µs warm: 3,014 stored URLs cost 9,042 stats in 691–808 ms, so ~0.8 s per 50-project page and ~5 s across the whole catalogue. The conclusion holds — page size 50 is comfortable and no caching or concurrency is warranted — but the number the pagination decision rests on is 139,000. A content hash would be stronger and is deliberately not built: hashing 11 GB per export is not affordable, and storing a hash at mirror time is a change to the mirroring path, which this feature has no other reason to touch.
+**Cost, measured on production 2026-10-09 rather than estimated:** one `stat` per *file*, but three files per reference — so ~121,000 stats on a full export, not the 46,000 the first draft said.
+
+  Re-measured 2026-10-09 after Task 3 existed, which is the first time the number could be counted from what the payload actually delivers rather than from what the database holds. The two differ, and the earlier 46,423 was the wrong one: it counted every `/uploads/` reference on the rows, including feed galleries that an admin has replaced and the API therefore never sends. Applying the override precedence `buildProject` applies gives **40,324 references → 120,972 stats** across 350 projects and 4,921 units — fewer, not more, than the figure the pagination decision was first argued from. The conclusion is unchanged and now rests on a count of the real thing. Timed on the VPS at 76–89 µs warm: 3,014 stored URLs cost 9,042 stats in 691–808 ms, so ~0.8 s per 50-project page and ~5 s across the whole catalogue. The conclusion holds — page size 50 is comfortable and no caching or concurrency is warranted. A content hash would be stronger and is deliberately not built: hashing 11 GB per export is not affordable, and storing a hash at mirror time is a change to the mirroring path, which this feature has no other reason to touch.
 
 ## Configuration, and the removal signal
 
@@ -140,5 +142,5 @@ No push, no webhooks — CVE's data changes once a day at 04:00, and delivery gu
 
 - **Duplicate content is accepted, not solved.** Two public sites carrying the same four-language copy for the same development names. The operator decided this knowingly; the canonical choice is Xellex's.
 - **`bytes` + `modified` is weaker than a content hash.** A file rewritten with identical size in the same second would not be detected. Practically irrelevant for photo re-uploads, and stated here rather than left implied.
-- **The `stat` cost grows with the catalogue.** 46,423 today across seven pages. If the image count doubles, page size should fall rather than the latency rising.
+- **The `stat` cost grows with the catalogue.** 40,324 references, 120,972 stats, today across seven pages. If the image count doubles, page size should fall rather than the latency rising.
 - **A full export is 3 MB gzipped and will grow.** Xellex should use `updatedSince` after its first sync; nothing enforces that, and a client that re-downloads everything hourly would be wasteful but not harmful.

@@ -26,10 +26,10 @@
 
 | | |
 |---|---|
-| published developments | 344 |
+| published developments | 350 |
 | developer accounts | 24 with published work, 25 total |
-| unit rows | 4,872 |
-| `/uploads/` image references | 46,423 (~135 per project) |
+| unit rows | 4,921 |
+| `/uploads/` image references | 40,324 delivered (~115 per project) |
 | full payload, raw JSON | 18.6 MB |
 | largest single project | 370 KB |
 | image store | 11 GB, 97,433 files; `public/uploads` → `/var/www/shared-uploads` (symlink) |
@@ -566,8 +566,8 @@ import { BRIDGE_INCLUDE, type DevelopmentWithRelations } from "./payload";
  *
  * Paged by id rather than by any date: ids are stable and total-ordered, so a
  * row edited mid-pagination cannot jump between pages or be skipped. Page size
- * is a latency budget, not a payload one — 18.6 MB for all 344 projects is one
- * ordinary gzipped response, but assembling them means ~46,000 fs.stat calls,
+ * is a latency budget, not a payload one — 18.6 MB for all 350 projects is one
+ * ordinary gzipped response, but assembling them means ~121,000 fs.stat calls,
  * and that belongs in seven requests rather than one held-open connection.
  */
 export async function changedSince(
@@ -687,7 +687,7 @@ import { buildProject, type BridgeProject } from "@/lib/bridge/payload";
 
 export const dynamic = "force-dynamic";
 
-/** 344 published projects today; seven pages. Sized by the ~46,000 fs.stat
+/** 350 published projects today; seven pages. Sized by the ~40,000 fs.stat
  *  calls a full export costs, not by response bytes. If the catalogue doubles,
  *  lower this rather than letting the latency rise. */
 const PAGE_SIZE = 50;
@@ -790,13 +790,13 @@ git commit
 
 This task has no code fence: `src/app/admin/(panel)/feeds/page.tsx` is the styleguide. Read it first and match its layout, table shape, spacing and data-loading pattern. The requirements below are binding; the visual detail is yours.
 
-- [ ] **Step 1: The server action**
+- [x] **Step 1: The server action**
 
 `actions.ts`, following the admin auth pattern in `src/app/admin/actions.ts` exactly — `auth()`, then **re-validate against the DB** (`prisma.user.findUnique(... isActive)`) before acting. That re-validation is not boilerplate: without it a deactivated user keeps acting for the remainder of their JWT lifetime (audit M3). Name the helper for what it checks; `requireAdmin` is already taken in `actions.ts` by a stricter helper that also demands `role === "ADMIN"`, and the bridge screen sits under Analytics/Feeds, which is not role-gated.
 
 The action takes `(slug: string, enabled: boolean)`, calls `setBridgeEnabled`, and `revalidatePath("/admin/feeds/bridge")`.
 
-- [ ] **Step 2: The screen**
+- [x] **Step 2: The screen**
 
 A table of all 25 developer accounts from `listBridgeDevelopers()`: name, slug, published-project count, a switch, and when it was last changed. Sorted with enabled developers first, then by name, so the deliverable set is readable at a glance.
 
@@ -804,11 +804,11 @@ Above the table, one line stating what the switch means in plain English — tha
 
 A developer with 0 published projects is shown but its switch is disabled, with the reason as a tooltip: enabling it would deliver nothing, and the row exists so nobody wonders where that developer went.
 
-- [ ] **Step 3: The nav entry**
+- [x] **Step 3: The nav entry**
 
 In `src/app/admin/(panel)/layout.tsx`, add `{ href: "/admin/feeds/bridge", label: "Xellex Bridge" }` to the module that already contains the Feeds pages. The sidebar matches longest-prefix, so this does not disturb the existing `/admin/feeds` entry — verify that claim in `Sidebar.tsx`'s `matchLen`/`resolveActive` before relying on it.
 
-- [ ] **Step 4: Verify it compiles and renders**
+- [x] **Step 4: Verify it compiles and renders**
 
 Run: `npx tsc --noEmit` → exit 0.
 
@@ -824,7 +824,7 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" http://localhost:301
 
 Expected: `307 -> http://localhost:3011/admin/login`, the route compiled in the dev log, and **no 500**. Note that the page will hit the `bridgeEnabled` column, which does not exist in production until the deploy — so expect a Prisma `P2022` and make sure the screen surfaces it as a readable "awaiting deploy" state rather than a crash.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add "src/app/admin/(panel)/feeds/bridge/page.tsx" "src/app/admin/(panel)/feeds/bridge/actions.ts" "src/app/admin/(panel)/layout.tsx" docs/superpowers/plans/2026-10-09-xellex-bridge.md
