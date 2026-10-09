@@ -540,7 +540,7 @@ git commit
 - Consumes: `BRIDGE_INCLUDE`, `DevelopmentWithRelations` from `payload.ts` (Task 3)
 - Produces: `changedSince(since: Date | null, cursorId: string | null, limit: number): Promise<DevelopmentWithRelations[]>`, `removedSince(since: Date): Promise<string[]>`
 
-- [ ] **Step 1: Write the module**
+- [x] **Step 1: Write the module**
 
 Create `src/lib/bridge/query.ts`:
 
@@ -635,7 +635,7 @@ export async function removedSince(since: Date): Promise<string[]> {
 }
 ```
 
-- [ ] **Step 2: Verify the cursor logic against production**
+- [x] **Step 2: Verify the cursor logic against production**
 
 Run: `npx tsc --noEmit` → exit 0.
 
@@ -657,7 +657,7 @@ const {PrismaClient}=require("@prisma/client");const p=new PrismaClient();
 
 Report the three timestamps and whether any project in the sample has a unit or override newer than its development row — that is the concrete evidence the three-way `OR` is needed rather than assumed.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/bridge/query.ts docs/superpowers/plans/2026-10-09-xellex-bridge.md
