@@ -1,6 +1,7 @@
 import { parse as parseHtml, HTMLElement } from "node-html-parser";
 import { countableFeedUnits, completenessVerdict } from "./feedSync";
 import { prisma } from "./prisma";
+import { publicDeveloperLabel } from "./developerPublicLabel";
 import { getAccessToken, listFolder, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { storeUploadedImage, pdfPagesToJpegs, devKeyFor, beginSyncWindow, scheduleAppRestart } from "./imageMirror";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
@@ -482,8 +483,11 @@ async function mediaFolders(token: string): Promise<Map<string, string>> {
 }
 
 export async function syncPlusProperties(accountId: string, opts: { force?: boolean; dryRun?: boolean } = {}): Promise<PlusRunResult> {
-  const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true } });
+  const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true, developerTranslationGroupId: true } });
   if (!acct) throw new Error(`Plus Properties: no DeveloperAccount ${accountId}`);
+  // The PUBLIC brand, never acct.name: that one carries the admin-only
+  // integration marker. See developerPublicLabel.ts.
+  const publicLabel = await publicDeveloperLabel(acct);
   const result: PlusRunResult = { ok: true, reason: null, dryRun: !!opts.dryRun, projects: 0, created: 0, units: 0, failed: [], blocked: [], notes: [], plan: [] };
   const release = beginSyncWindow("plus-sync");
   let anyNewMedia = false;
@@ -673,7 +677,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
         const units = g.project?.units ?? [];
         const row: Record<string, unknown> = {
           developerAccountId: acct.id, dev: PLUS_DEV, feedProjectId: g.key, feedKey,
-          developerName: g.project?.title ?? publicNameFor(g.key), publicName: publicNameFor(g.key), developer: acct.name,
+          developerName: g.project?.title ?? publicNameFor(g.key), publicName: publicNameFor(g.key), developer: publicLabel,
           currency: "EUR", syncedAt: new Date(),
           ...(area ? { area } : {}), ...(district ? { district } : {}),
           ...(g.project?.stage ? { stage: g.project.stage, status: g.project.stage } : {}),

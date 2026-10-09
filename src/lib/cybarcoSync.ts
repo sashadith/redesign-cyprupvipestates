@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 import {
   readListing, parseProjectPage, parseGallery, priceListDate,
   type CybarcoCard, type CybarcoBlockedCard, type CybarcoUnresolvedCard, type CybarcoDetail, type CybarcoStatus,
@@ -1112,8 +1113,11 @@ export async function syncCybarco(
   siteRefused: boolean;
   blocked: CybarcoBlockedCard[];
 }> {
-  const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true } });
+  const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true, developerTranslationGroupId: true } });
   if (!acct) throw new Error(`Cybarco: no DeveloperAccount ${accountId}`);
+  // The PUBLIC brand, never acct.name: that one carries the admin-only
+  // integration marker. See developerPublicLabel.ts.
+  const publicLabel = await publicDeveloperLabel(acct);
 
   /* Held across the whole run and released in finally. scheduleAppRestart() does
      a hard pm2 restart and cuts every in-flight request; on 2026-08-25 the 04:00
@@ -1257,7 +1261,7 @@ export async function syncCybarco(
            feedSync.ts applies: an admin's display alias lives in
            DevelopmentOverride, which no sync ever writes. */
         publicName: card.name, // already title-cased by parseListing
-        developer: acct.name,
+        developer: publicLabel,
         district: card.district,
         /* `town` is deliberately not written at all. Cybarco's subtitle names a
            district ("Nicosia", "Limassol", "Pafos"), never a town inside it, and

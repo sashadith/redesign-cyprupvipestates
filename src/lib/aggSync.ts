@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 import {
   aggApiBase, fetchAggProjects, parseShareOneDriveUrl, findAggPricelist, downloadAggPricelist,
   type AggProject, type ShareOneDriveRef, type DiscoveredPricelist,
@@ -206,6 +207,10 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
     return { created: [], updated: [], skippedExisting: [], skippedEmpty: [], notes: [], notDue: "Interval is off — scheduled run skipped." };
   }
 
+  // The PUBLIC brand, never acct.name: that one carries the admin-only
+  // integration marker. See developerPublicLabel.ts.
+  const publicLabel = await publicDeveloperLabel(acct);
+
   const ref = aggRef(acct.driveFolderUrl);
   // Cheap trigger check FIRST (two folder-listing calls, no download): the current
   // price-list filename vs the one we last synced. Unchanged → do nothing.
@@ -263,7 +268,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
 
         if (rest.description) {
           description = await generateProjectDescription({
-            publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName), developer: acct.name,
+            publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName), developer: publicLabel,
             district: "", town: town || "", area: "",
             category: rest.propertyType.join(", "),
             stage: stage || "",
@@ -280,7 +285,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
         create: {
           developerAccountId, dev: "agg", feedProjectId: plan.feedProjectId, feedKey: plan.feedKey,
           developerName: plan.projectName, publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName),
-          developer: acct.name,
+          developer: publicLabel,
           category: rest?.propertyType.join(", ") || null,
           status: stage, stage, town,
           currency: "EUR",
