@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 import { syncAll, syncDeveloper } from "@/lib/feedSync";
 import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type DriveFolderPreview } from "@/lib/driveAvailabilitySync";
 import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
@@ -158,7 +159,11 @@ export async function createManualDevelopment(developerAccountId: string, formDa
       feedKey: `manual:${pid}`,
       developerName: name,
       publicName: name,
-      developer: acct.name,
+      // The public brand, not acct.name — that one carries the admin-only
+      // integration marker. The manual path is how "Kuutio (drive)" and
+      // "BBF (API)" reached public rows even for accounts whose synced
+      // developments were clean. See developerPublicLabel.ts.
+      developer: await publicDeveloperLabel(acct),
       publishStatus: "draft",
     },
   });

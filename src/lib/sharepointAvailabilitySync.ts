@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 import {
   openShare, listFolder, listTree, downloadFile, isFolder, isPdf, isJunkFile, nameOverlap,
   IMAGE_MIME_RE, AVAILABILITY_FOLDER_RE, PICTURES_FOLDER_RE, PLANS_FOLDER_RE,
@@ -577,6 +578,11 @@ export async function writeKorantinaDraft(
     }
   }
 
+  // The PUBLIC brand, never acct.name: that one carries the admin-only
+  // integration marker. See developerPublicLabel.ts. Resolved before the
+  // sync window is taken, so nothing can leave it held.
+  const publicLabel = await publicDeveloperLabel(acct);
+
   const releaseSyncWindow = beginSyncWindow("sharepoint:korantina");
   try {
     const ctx = await openShare(acct.driveFolderUrl);
@@ -693,7 +699,7 @@ export async function writeKorantinaDraft(
 
         const description = needsContent && sourceText
           ? await generateProjectDescription({
-              publicName: t.projectName, developer: acct.name,
+              publicName: t.projectName, developer: publicLabel,
               district: "", town: "", area: "",
               projectAmenities: amenities, unitAmenities: [],
               unitSummary: `${units.length} units, ${avail} available`,
@@ -705,7 +711,7 @@ export async function writeKorantinaDraft(
           where: { feedKey: t.feedKey },
           create: {
             developerAccountId, dev: "sharepoint", feedProjectId: t.feedProjectId, feedKey: t.feedKey,
-            developerName: t.projectName, publicName: t.projectName, developer: acct.name,
+            developerName: t.projectName, publicName: t.projectName, developer: publicLabel,
             publishStatus: "draft",
             unitsTotal: units.length, unitsAvailable: avail,
             priceFrom: prices.length ? Math.min(...prices) : null,

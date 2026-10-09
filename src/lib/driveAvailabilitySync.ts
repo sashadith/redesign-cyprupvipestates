@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 import { maySyncCreateUnits } from "./curatedUnits";
 import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, listProjectFolders, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject, type ExtractStats } from "./ai/pricelistExtract";
@@ -110,7 +111,7 @@ type ProjectHints = {
   feedProjectId?: string | null;
 };
 
-async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content, hints: ProjectHints = {}): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number } }> {
+async function writeProject(developerAccountId: string, publicLabel: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content, hints: ProjectHints = {}): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number } }> {
   // Project-level fields sourced straight from the price-list TEXT (category, completion,
   // amenities, area, map link) cost nothing extra to refresh — no image download, no PDF
   // conversion, no document analysis — so they should update on a fast units-only sync too,
@@ -181,7 +182,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     where: { feedKey },
     create: {
       developerAccountId, dev: "drive", feedProjectId: projSlug, feedKey,
-      developerName: p.project, publicName: p.project, developer: accountName,
+      developerName: p.project, publicName: p.project, developer: publicLabel,
       publishStatus: "draft", unitsTotal: p.units.length, unitsAvailable: avail, syncedAt: new Date(),
       ...rich,
     },
@@ -584,6 +585,9 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   if (!driveConfigured()) return { ok: false, message: "Google Drive is not configured (GOOGLE_* env vars)." };
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
   if (!acct?.driveFolderUrl) return { ok: false, message: "No Drive folder link set for this developer." };
+  // The PUBLIC brand, never acct.name: that one carries the admin-only
+  // integration marker ("Kuutio (drive)"). See developerPublicLabel.ts.
+  const publicLabel = await publicDeveloperLabel(acct);
   // Guarded here too, not just in syncAllDrives()'s batch loop — the admin
   // panel's "Sync now" buttons (developments/actions.ts, developments/[id]/
   // actions.ts) call this directly with a specific developerAccountId,
@@ -704,7 +708,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     claimed.add(fp.feedProjectId ?? slug(fp.project));
     claimed.add(slug(fp.project));
     claimedNames.push(fp.project);
-    const r = await writeProject(developerAccountId, acct.name, p, content, rootFiles, at, richUnits, { folderId: fp.folder.id, feedProjectId: fp.feedProjectId });
+    const r = await writeProject(developerAccountId, publicLabel, p, content, rootFiles, at, richUnits, { folderId: fp.folder.id, feedProjectId: fp.feedProjectId });
     fromFolders++;
     totalAvail += r.avail;
     if (r.mediaChanged) mediaChanged = true;
@@ -805,7 +809,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
 
     for (const p of rest) {
       if (!p.project || !p.units?.length) continue;
-      const r = await writeProject(developerAccountId, acct.name, p, content, rootFiles, at, richUnits);
+      const r = await writeProject(developerAccountId, publicLabel, p, content, rootFiles, at, richUnits);
       fromMaster++;
       totalAvail += r.avail;
       if (r.mediaChanged) mediaChanged = true;

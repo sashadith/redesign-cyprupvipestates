@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { publicPageTitleForAccount } from "@/lib/developerPublicLabel";
 import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoCluster, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
@@ -60,7 +61,21 @@ async function ensureAccount(dev: string): Promise<string> {
 
 const int = (n: number | null | undefined) => (n != null && Number.isFinite(n) ? Math.round(n) : null);
 
-function developmentRow(vm: ProjectVM, dev: string, feedProjectId: string, accountId: string) {
+/* `publicLabel` is the linked public developer page's own title, or null when
+   the account has no such page. It WINS over the feed's own developer string:
+   DeveloperAccount is a 1:1 proxy for the brand here — verified 2026-10-09,
+   every account+adapter in production carries exactly one distinct developer
+   value, no feed mixes two — while the vendors' own strings are inconsistent
+   about it. Some feeds already match the public page ("Aristo Developers",
+   "Medousa Developers"), others give a short form the page spells out
+   ("Domenica" vs "Domenica Group", "Mito" vs "Mito Developers"), which left the
+   project page naming a developer differently from that developer's own page.
+   Null falls back to the feed value, so an unlinked account behaves exactly as
+   before. */
+/* Exported for the same reason freezeForPublished is: the developer-label
+   precedence is a rule worth pinning in a test, not an inline expression
+   nobody can reach without a database. */
+export function developmentRow(vm: ProjectVM, dev: string, feedProjectId: string, accountId: string, publicLabel: string | null) {
   const available = vm.units.filter((u) => u.status === "available").length;
   return {
     developerAccountId: accountId,
@@ -69,7 +84,7 @@ function developmentRow(vm: ProjectVM, dev: string, feedProjectId: string, accou
     feedKey: `${dev}:${feedProjectId}`,
     developerName: vm.developerName || vm.publicName || "",
     publicName: vm.publicName || "",
-    developer: vm.developer || null,
+    developer: publicLabel || vm.developer || null,
     category: vm.category || null,
     status: vm.status || null,
     stage: vm.stage || null,
@@ -624,7 +639,10 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       }
     }
   }
-  const fullData = developmentRow(vm, dev, id, accountId);
+  /* Resolved per project rather than threaded through syncOneProject's four
+     call sites: two indexed reads next to this function's dozens of queries
+     and its image mirroring, and it cannot go stale mid-run after a rename. */
+  const fullData = developmentRow(vm, dev, id, accountId, await publicPageTitleForAccount(accountId));
   let updateData: Partial<typeof fullData> & typeof driftPatch = fullData;
   if (existing?.publishStatus === "published") {
     updateData = freezeForPublished(fullData, existing);

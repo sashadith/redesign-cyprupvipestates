@@ -5,11 +5,11 @@ import SlugField from "@/app/admin/SlugField";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#1B4B43]";
 
-function Submit() {
+function Submit({ confirming }: { confirming?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button disabled={pending} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2.5 hover:bg-[#142E2D] disabled:opacity-60">
-      {pending ? "Creating…" : "Create developer"}
+      {pending ? "Creating…" : confirming ? "Create anyway" : "Create developer"}
     </button>
   );
 }
@@ -22,10 +22,18 @@ const field = (label: string, name: string, type = "text", placeholder = "") => 
 );
 
 export default function NewDeveloperForm({ pageOptions }: { pageOptions: { translationGroupId: string; title: string; takenByName?: string | null }[] }) {
-  const [state, formAction] = useFormState<{ error?: string } | null>(createDeveloperAccount as any, null);
+  const [state, formAction] = useFormState<{ error?: string; confirm?: string } | null>(createDeveloperAccount as any, null);
   return (
     <form action={formAction} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4 max-w-lg">
-      {state?.error && <p className="text-sm text-[#C0392B] bg-[#C0392B]/10 rounded px-3 py-2">{state.error}</p>}
+      {state?.error && (
+        <div className="text-sm text-[#C0392B] bg-[#C0392B]/10 rounded px-3 py-2 space-y-1">
+          <p>{state.error}</p>
+          {/* Echoed back so the action can tell a deliberate second submit from
+              the first one. Editing the name leaves this value behind, so the
+              check runs again — which is the point. */}
+          {state.confirm && <input type="hidden" name="confirmName" value={state.confirm} />}
+        </div>
+      )}
       <div>
         <label className="block text-xs text-[#6B7280] mb-1">Developer name *</label>
         <input name="name" required className={input} placeholder="e.g. Aristo Developers" />
@@ -55,7 +63,7 @@ export default function NewDeveloperForm({ pageOptions }: { pageOptions: { trans
         <label className="block text-xs text-[#6B7280] mb-1">Notes</label>
         <textarea name="notes" rows={2} className={input} />
       </div>
-      <Submit />
+      <Submit confirming={!!state?.confirm} />
     </form>
   );
 }

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import mammoth from "mammoth";
 import { prisma } from "@/lib/prisma";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 import { dropboxConfigured, getDropboxAccessToken, listSharedFolder, findPriceFile, downloadSharedFile, type DropboxFile } from "./dropbox";
 import { extractUnitsForSection, extractAmenitiesForSection, buildCanonicalMatcher, type ExtractedUnit } from "./ai/pricelistExtract";
 import { extractColoredRowsFromPdf } from "./ai/pdfPricelistColors";
@@ -431,6 +432,10 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
       return { created: [], skippedExisting: [], skippedEmpty: [], notDue };
     }
   }
+
+  // The PUBLIC brand, never acct.name: that one carries the admin-only
+  // integration marker. See developerPublicLabel.ts.
+  const publicLabel = await publicDeveloperLabel(acct);
   // Same protection as the Drive adapter: this run mirrors images over several
   // minutes and must not be cut short by somebody else's restart.
   const releaseSyncWindow = beginSyncWindow("dropbox:kuutio");
@@ -530,7 +535,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
     }
 
     const descCtx = isNewDev ? {
-      publicName: r.projectName, developer: acct.name,
+      publicName: r.projectName, developer: publicLabel,
       district: "", town: "", area: "",
       projectAmenities: amenities, unitAmenities: [],
       unitSummary: `${r.units.length} units, ${avail} available`,
@@ -542,7 +547,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
       where: { feedKey },
       create: {
         developerAccountId, dev: "dropbox", feedProjectId: projSlug, feedKey,
-        developerName: r.projectName, publicName: r.projectName, developer: acct.name,
+        developerName: r.projectName, publicName: r.projectName, developer: publicLabel,
         publishStatus: "draft", unitsTotal: r.units.length, unitsAvailable: avail,
         priceFrom: prices.length ? Math.min(...prices) : null,
         syncedAt: new Date(),
