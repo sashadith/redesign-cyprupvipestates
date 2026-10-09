@@ -27,7 +27,7 @@
 | | |
 |---|---|
 | published developments | 350 |
-| developer accounts | 24 with published work, 25 total |
+| developer accounts | 25, all with published work |
 | unit rows | 4,921 |
 | `/uploads/` image references | 40,324 delivered (~115 per project) |
 | full payload, raw JSON | 18.6 MB |
@@ -129,7 +129,7 @@ export type BridgeDeveloper = {
  *
  * Returns ALL accounts, not just enabled ones: the screen's job is to let
  * someone turn a developer ON, which is impossible if the off ones are hidden.
- * Measured 2026-10-09: 25 accounts, 24 of them with published work.
+ * Measured 2026-10-09: 25 accounts, all 25 with published work.
  */
 export async function listBridgeDevelopers(): Promise<BridgeDeveloper[]> {
   const [accounts, counts] = await Promise.all([
@@ -639,23 +639,33 @@ export async function removedSince(since: Date): Promise<string[]> {
 
 Run: `npx tsc --noEmit` → exit 0.
 
-Then prove the three-table cursor actually catches a unit-only change. Read-only — this reads timestamps, it does not write:
+Then prove the three-table cursor actually catches a unit-only change. Read-only — this reads timestamps, it does not write.
+
+**This step was originally written as a `findFirst` with no `orderBy`, which is the wrong instrument and said `false` when it ran.** One arbitrary project proves nothing here: the 04:00 sync touches most development rows every morning (246 of 350 on 2026-10-09), so a single sample is far more likely to land on a project whose development row is the newest of the three than on one that demonstrates the problem. The probe has to span the catalogue:
 
 ```bash
 node --env-file=.env.local -e '
 const {PrismaClient}=require("@prisma/client");const p=new PrismaClient();
 (async()=>{
-  const d=await p.development.findFirst({where:{publishStatus:"published"},include:{units:{orderBy:{updatedAt:"desc"},take:1},override:true}});
-  const dev=d.updatedAt, unit=d.units[0]?.updatedAt, ov=d.override?.updatedAt;
-  console.log("development.updatedAt:",dev?.toISOString());
-  console.log("newest unit.updatedAt:",unit?.toISOString()??"(none)");
-  console.log("override.updatedAt  :",ov?.toISOString()??"(none)");
-  console.log("a Development-only cursor would miss unit/override changes:",
-    !!(unit&&unit>dev)||!!(ov&&ov>dev));
+  const rows=await p.development.findMany({where:{publishStatus:"published"},
+    select:{publicName:true,updatedAt:true,override:{select:{updatedAt:true}},
+      units:{select:{updatedAt:true},orderBy:{updatedAt:"desc"},take:1}}});
+  let u=0,o=0,either=0;const ex=[];
+  for(const r of rows){
+    const un=r.units[0]?.updatedAt, ov=r.override?.updatedAt;
+    const nu=!!(un&&un>r.updatedAt), no=!!(ov&&ov>r.updatedAt);
+    if(nu)u++; if(no)o++;
+    if(nu||no){either++; if(nu)ex.push(r.publicName+": dev "+r.updatedAt.toISOString()+" < unit "+un.toISOString());}
+  }
+  console.log("published:",rows.length);
+  console.log("unit newer than dev row:",u,"| override newer:",o,"| either:",either);
+  console.log(ex.slice(0,3).join("\n"));
   await p.$disconnect();})();'
 ```
 
-Report the three timestamps and whether any project in the sample has a unit or override newer than its development row — that is the concrete evidence the three-way `OR` is needed rather than assumed.
+Measured 2026-10-09, twice independently: **350 published, 8 with a unit newer than their own development row, 34 with a newer override, 39 with either.** Elpez is the cleanest single case — development `2026-10-05T03:02:20.511Z`, newest unit `2026-10-05T06:37:26.136Z`, a unit-only write 3.5 hours after the row a one-table cursor watches. Those 39 are projects a `Development.updatedAt`-only cursor would deliver in a stale version and never correct. That is the concrete evidence the multi-table `OR` is needed rather than assumed.
+
+Note what this probe cannot do: `changedSince` itself filters on `bridgeEnabled`, which does not exist in production until this branch is deployed, so running it raises `P2022`. Branches 1–3 can be exercised with the bridge filters dropped; branch 4 only by substituting a `DeveloperAccount` column that does exist. Do that, and say which it was — do not report a figure the query could not have produced.
 
 - [x] **Step 3: Commit**
 

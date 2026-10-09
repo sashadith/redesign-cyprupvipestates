@@ -2025,7 +2025,50 @@ export async function saveDeveloperContact(id: string, _prev: any, formData: For
 
 export async function deleteDeveloperAccount(id: string) {
   await requireSession();
-  await prisma.developerAccount.delete({ where: { id } }); // cascades analyses
+  // The comment here used to read "cascades analyses". It also cascades every
+  // Development of this account (schema: onDelete: Cascade), and that makes it
+  // the one way to take a developer off CVE that the Xellex bridge cannot
+  // report. The removal signal has two sources (src/lib/bridge/query.ts): a
+  // row that stopped being published, and a developer whose switch was turned
+  // off. A cascade satisfies neither — the Development rows are gone, so there
+  // is nothing to match, and the DeveloperAccount is gone, so there is no
+  // bridgeChangedAt to read. Those projects would stay live on the second
+  // portal permanently: exactly the failure bridgeChangedAt was added to
+  // prevent, arriving through a different door.
+  //
+  // So refuse while the bridge is on, and say what to do instead. Switching
+  // the developer off first stamps bridgeChangedAt, which fires the second
+  // removal source on Xellex's next sync. That still leaves a window if the
+  // delete lands before that sync, but it turns a silent permanent leak into
+  // a visible ordering step. Anything airtight needs a per-consumer delivery
+  // ledger, which the design deliberately declined.
+  // Read the switch in its own try/catch: bridgeEnabled does not exist in the
+  // database until this branch is deployed with CVP_RUN_MIGRATE=1, and every
+  // local dev server points at production (.env.local), so an unguarded select
+  // here would 500 this page for everyone in the meantime. Treating the
+  // missing column as "not delivered" is correct rather than merely
+  // convenient: before the migration there is no bridge, so there is nothing
+  // on the second portal to leak. Narrowed to P2022 — any other failure is a
+  // real fault and must not be read as permission to delete.
+  let acct: { name: string; bridgeEnabled: boolean; _count: { developments: number } } | null = null;
+  try {
+    acct = await prisma.developerAccount.findUnique({
+      where: { id },
+      select: { name: true, bridgeEnabled: true, _count: { select: { developments: true } } },
+    });
+  } catch (e) {
+    if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2022")) throw e;
+  }
+  if (acct?.bridgeEnabled) {
+    return {
+      error:
+        `${acct.name} is currently delivered to Xellex. Deleting it would remove its ` +
+        `${acct._count.developments} project(s) from this database without Xellex ever ` +
+        `being told, so they would stay online there. Switch the Xellex Bridge off for ` +
+        `this developer first, let Xellex sync, then delete.`,
+    };
+  }
+  await prisma.developerAccount.delete({ where: { id } }); // cascades its developments, analyses, units
   revalidatePath("/admin/developments");
   redirect("/admin/developments");
 }

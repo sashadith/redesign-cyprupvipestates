@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { deleteDeveloperAccount } from "@/app/admin/actions";
+import DeleteDeveloperButton from "./DeleteDeveloperButton";
 import { createManualDevelopment, runSync } from "../../actions";
 import AnalyzeForm from "./analyze-form";
 import DeveloperContact from "./DeveloperContact";
@@ -47,7 +47,6 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
   const availableUnits = await prisma.developmentUnit.count({
     where: { status: "available", development: { developerAccountId: dev.id, publishStatus: { not: "archived" } } },
   });
-  const del = deleteDeveloperAccount.bind(null, dev.id);
   const addDev = createManualDevelopment.bind(null, dev.id);
   const feedDevKey = dev.developments.find((d) => d.dev && d.dev !== "manual")?.dev ?? null;
   const lastSynced = dev.developments.map((d) => d.syncedAt).filter(Boolean).sort((a, b) => (a! < b! ? 1 : -1))[0] ?? null;
@@ -302,9 +301,7 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
       </div>
 
       {/* Danger */}
-      <form action={del} className="pt-1">
-        <button className="text-sm text-[#C0392B] hover:underline">Delete developer and all analyses</button>
-      </form>
+      <DeleteDeveloperButton id={dev.id} name={dev.name} developmentCount={dev.developments.length} />
     </div>
   );
 }

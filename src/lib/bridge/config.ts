@@ -15,7 +15,7 @@ export type BridgeDeveloper = {
  *
  * Returns ALL accounts, not just enabled ones: the screen's job is to let
  * someone turn a developer ON, which is impossible if the off ones are hidden.
- * Measured 2026-10-09: 25 accounts, 24 of them with published work.
+ * Measured 2026-10-09: 25 accounts, all 25 with published work.
  */
 export async function listBridgeDevelopers(): Promise<BridgeDeveloper[]> {
   const [accounts, counts] = await Promise.all([

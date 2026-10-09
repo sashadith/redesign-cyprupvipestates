@@ -105,7 +105,7 @@ Two columns on `DeveloperAccount`, no new table:
 - **`bridgeEnabled Boolean @default(false)`** — the switch. Default off: a new developer account is not silently published to a second portal.
 - **`bridgeChangedAt DateTime?`** — stamped on every toggle.
 
-An admin screen lists the 24 developers with their published-project and unit counts and a switch each.
+An admin screen lists the 25 developers with their published-project and unit counts and a switch each.
 
 ### The cursor spans three tables, plus the switch
 
@@ -121,6 +121,18 @@ This was missed in the first draft of the spec, which named only the off directi
 2. **Every project of a developer whose `bridgeChangedAt` is after `since` and whose `bridgeEnabled` is now false.**
 
 Without (2), switching a developer off changes nothing on its project rows, their `updatedAt` stays old, no incremental call ever mentions them, and they stay live on Xellex forever. This is the failure that would surface months later as "why are these still online" — it is the reason `bridgeChangedAt` exists at all.
+
+### Two ways off CVE that neither source can report
+
+Found while building the query (Task 4), not predicted. Both are the same failure as above arriving through a different door, and both are recorded here rather than solved, because solving either properly needs the per-consumer delivery ledger this design declined.
+
+**1. Deleting the developer account — fixed, as far as it can be.** `Development.developerAccount` is `onDelete: Cascade`, and `deleteDeveloperAccount` in `src/app/admin/actions.ts` deletes the account outright (its comment said "cascades analyses"; it also cascades every Development, which is what nobody had noticed). After that cascade source 1 has no row left to match and source 2 has no `DeveloperAccount` left to read `bridgeChangedAt` from, so those projects would stay live on Xellex permanently. The action now **refuses while `bridgeEnabled` is true** and tells the operator to switch the bridge off first, which stamps `bridgeChangedAt` and fires source 2 on the next sync. That leaves a window if the delete lands before Xellex syncs; it turns a silent permanent leak into a visible ordering step. The check reads the switch inside a `P2022` catch, because the column does not exist until this branch is deployed and a bare select would 500 the developer page for everyone in the meantime.
+
+**2. Reassigning a published project to a disabled developer — not fixed, not reachable.** Changing `developerAccountId` bumps `Development.updatedAt` but leaves `publishStatus = "published"`, so source 1 (which requires a row that stopped being published) misses it, and source 2 requires the *target* developer's `bridgeChangedAt` to be recent, which a long-disabled developer's is not. Nothing in `src/` writes `developerAccountId` on an existing Development, so today this is reachable only by hand-written SQL. A third branch — published, `updatedAt > since`, developer now disabled — would close it cheaply if a reassignment path is ever built.
+
+### One `generatedAt` per run, not per page
+
+A project that *newly starts qualifying* partway through a paginated run, with an `id` below the cursor already passed, is skipped in that run. It is recovered only if the client's next `updatedSince` is the **first** page's `generatedAt`. So the route must carry one `generatedAt` through the whole run — echoed inside the opaque cursor — and must not restamp it per page: a client that keeps the last page's stamp would lose such a row permanently. The contract above says `generatedAt` is the server's time and the client passes it back; this is the part of that sentence which is load-bearing.
 
 ## Access and operation
 
