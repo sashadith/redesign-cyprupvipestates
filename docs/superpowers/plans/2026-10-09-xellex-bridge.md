@@ -62,7 +62,7 @@ Image variants on disk are `<hash>_small.webp`, `_medium.webp`, `_large.webp`; t
 **Interfaces:**
 - Produces: `listBridgeDevelopers(): Promise<BridgeDeveloper[]>`, `setBridgeEnabled(slug: string, enabled: boolean): Promise<void>`, `type BridgeDeveloper = { id: string; name: string; slug: string; enabled: boolean; changedAt: Date | null; publishedProjects: number }`
 
-- [ ] **Step 1: Add the two columns**
+- [x] **Step 1: Add the two columns**
 
 In `prisma/schema.prisma`, inside `model DeveloperAccount`, directly after the `notes` field:
 
@@ -80,7 +80,7 @@ In `prisma/schema.prisma`, inside `model DeveloperAccount`, directly after the `
   bridgeChangedAt DateTime?
 ```
 
-- [ ] **Step 2: Write the migration by hand**
+- [x] **Step 2: Write the migration by hand**
 
 Create `prisma/migrations/20261009120000_add_bridge_config/migration.sql`:
 
@@ -89,18 +89,25 @@ Create `prisma/migrations/20261009120000_add_bridge_config/migration.sql`:
 -- data rewritten. Applied exclusively via the deploy path
 -- (CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh), never from a dev machine —
 -- .env.local points at production.
-ALTER TABLE "developer_accounts" ADD COLUMN     "bridgeEnabled" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "bridgeChangedAt" TIMESTAMP(3);
+--
+-- Column order is alphabetical, not schema order, because that is what
+-- `prisma migrate dev` emits for a multi-column ALTER TABLE — see
+-- 20260801082214 (schema says soldOutSince then returnedToMarketAt, the
+-- migration says the reverse) and 20260706054910 (seven columns, fully
+-- re-sorted). Hand-writing it the other way round would leave the table's
+-- physical column order disagreeing with every future generated migration.
+ALTER TABLE "developer_accounts" ADD COLUMN     "bridgeChangedAt" TIMESTAMP(3),
+ADD COLUMN     "bridgeEnabled" BOOLEAN NOT NULL DEFAULT false;
 ```
 
 Verify the SQL against what Prisma would emit for these two field types by comparing with an existing additive migration in `prisma/migrations/` — `Boolean @default(false)` → `BOOLEAN NOT NULL DEFAULT false`, `DateTime?` → `TIMESTAMP(3)` with no `NOT NULL`. Do not run `prisma migrate dev` to find out.
 
-- [ ] **Step 3: Regenerate the client**
+- [x] **Step 3: Regenerate the client**
 
 Run: `npx prisma generate`
 Expected: "Generated Prisma Client". This is local codegen and opens no database connection — if you doubt that, run it with `DATABASE_URL="postgresql://nobody:nobody@127.0.0.1:1/none"` and confirm it still succeeds.
 
-- [ ] **Step 4: Write the config module**
+- [x] **Step 4: Write the config module**
 
 Create `src/lib/bridge/config.ts`:
 
@@ -171,7 +178,7 @@ export async function enabledDeveloperIds(): Promise<string[]> {
 }
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run: `npx tsc --noEmit`
 Expected: exit 0, no output.
@@ -188,7 +195,7 @@ p.developerAccount.findFirst({select:{slug:true,bridgeEnabled:true}})
 ```
 Expected: `expected P2022 (column missing in prod): P2022`. That confirms both that the client knows the column and that production does not have it yet — exactly the state before the deploy.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add prisma/schema.prisma prisma/migrations/20261009120000_add_bridge_config/migration.sql src/lib/bridge/config.ts docs/superpowers/plans/2026-10-09-xellex-bridge.md
