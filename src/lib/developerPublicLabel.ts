@@ -86,6 +86,20 @@ export async function publicPageTitle(groupId: string | null | undefined): Promi
   }
 }
 
+/** The linked public page's title for an account known only by id — for the
+ *  feed path, which has the id but not the row. Null when the account is
+ *  unlinked, so a caller can keep whatever it already had. */
+export async function publicPageTitleForAccount(accountId: string): Promise<string | null> {
+  try {
+    const acct = await prisma.developerAccount.findUnique({
+      where: { id: accountId }, select: { developerTranslationGroupId: true },
+    });
+    return await publicPageTitle(acct?.developerTranslationGroupId);
+  } catch {
+    return null;
+  }
+}
+
 /** The brand to show the public for this account. Pass the account row the
  *  adapter already has in hand; only the linked-page lookup touches the DB. */
 export async function publicDeveloperLabel(acct: {

@@ -11,14 +11,21 @@
      AGG  "AGG"  → "AGG Luxury Homes"      (12 published)
      Luma "Luma" → "Luma Development"      ( 3 published)
 
-   WHY THIS IS SAFE ONLY FOR SOME ADAPTERS, and the reason for the guard below:
-   `developer` is in NO adapter's FROZEN_WHEN_PUBLISHED list. For the XML/API
-   feeds it is rewritten from the vendor's own feed data on EVERY sync
-   (feedSync.ts developmentRow → vm.developer), so correcting such a row by
-   hand would be silently reverted the same night. Those rows are therefore
-   left alone and reported instead — "Domenica" → "Domenica Group" (23 rows)
-   and "Mito" → "Mito Developers" (4) are real mismatches but belong to that
-   class and need a feed-side or freeze-side decision, not an UPDATE here.
+   2026-10-09, second pass — the feed adapters are now included too:
+
+     Domenica "Domenica" → "Domenica Group"   (23 rows)
+     Mito     "Mito"     → "Mito Developers"  ( 4 rows)
+
+   `developer` is in NO adapter's FROZEN_WHEN_PUBLISHED list, so for the XML/API
+   feeds it is rewritten on EVERY sync. That used to make a hand correction
+   pointless — it would be reverted the same night — because the value came from
+   the vendor's own feed string. feedSync.ts now prefers the linked public page's
+   title over that string, so the sync writes the SAME value this script does and
+   re-syncing reinforces the fix instead of undoing it.
+
+   ORDER MATTERS: that is only true once the code is deployed. A Domenica or Mito
+   sync running against the OLD code would still revert these rows — after the
+   deploy the next sync heals them again by itself.
 
    Dry run (prints the plan, writes nothing):
      node --env-file=.env.local scripts/align-developer-labels-to-page-title.mjs
@@ -32,11 +39,14 @@ import { PrismaClient } from "@prisma/client";
 const APPLY = process.argv.includes("--apply");
 const prisma = new PrismaClient();
 
-/* Adapters that write `developer` on CREATE only (drive, dropbox, sharepoint,
-   agg) or re-derive it from publicDeveloperLabel() on every write (cybarco,
-   plusproperties), plus "manual" rows the admin creates. For all of these the
-   corrected value is what a future write would produce anyway, so it holds. */
-const SAFE_ADAPTERS = new Set(["drive", "dropbox", "sharepoint", "agg", "manual", "cybarco", "plusproperties"]);
+/* Every adapter now either writes `developer` on CREATE only (drive, dropbox,
+   sharepoint, agg), re-derives it from publicDeveloperLabel() on every write
+   (cybarco, plusproperties), takes it from the linked public page in feedSync
+   (the XML/API feeds), or is created by the admin ("manual"). In all cases the
+   corrected value is what a future write produces anyway, so it holds — see the
+   ORDER MATTERS note in the header for the one exception, a feed sync running
+   before the code is deployed. */
+const SAFE_ADAPTERS = null; // null = no adapter is excluded any more
 
 const accts = await prisma.developerAccount.findMany({
   select: { id: true, name: true, developerTranslationGroupId: true },
@@ -62,8 +72,8 @@ const mismatched = rows.filter((r) => {
   const t = want.get(r.developerAccountId);
   return t && r.developer && r.developer !== t;
 });
-const safe = mismatched.filter((r) => SAFE_ADAPTERS.has(r.dev));
-const unsafe = mismatched.filter((r) => !SAFE_ADAPTERS.has(r.dev));
+const safe = mismatched.filter((r) => !SAFE_ADAPTERS || SAFE_ADAPTERS.has(r.dev));
+const unsafe = mismatched.filter((r) => SAFE_ADAPTERS && !SAFE_ADAPTERS.has(r.dev));
 
 const nameOf = (id) => accts.find((a) => a.id === id).name;
 const group = (list) => {
