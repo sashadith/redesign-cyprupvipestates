@@ -36,9 +36,22 @@ export default function DeleteDeveloperButton({
       return;
     setError(null);
     start(async () => {
-      // On success the action redirects, so nothing after this runs.
-      const res = await deleteDeveloperAccount(id);
-      if (res?.error) setError(res.error);
+      // try/catch, not just the returned error: `deleteDeveloperAccount` starts
+      // with requireSession(), which THROWS "Unauthorized", and the delete
+      // itself can throw too. Without this, a rejected promise inside the
+      // transition means setError never runs and `pending` just clears — a
+      // click that silently did nothing, which is the exact outcome this file
+      // exists to prevent, reached through a different door. An admin
+      // deactivated in another tab hits precisely that path.
+      try {
+        // On success the action redirects, so nothing after this runs.
+        const res = await deleteDeveloperAccount(id);
+        if (res?.error) setError(res.error);
+      } catch (e) {
+        setError(e instanceof Error && e.message === "Unauthorized"
+          ? "Your session is no longer active — reload and sign in again."
+          : "The delete failed. Nothing was changed; check the server log and try again.");
+      }
     });
   };
 

@@ -28,6 +28,12 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export type DecodedCursor = { id: string; generatedAt: Date; since: Date | null };
 
 export function encodeCursor(generatedAt: Date, since: Date | null, lastId: string): string {
+  // Validate on the way OUT as well as in. decodeCursor rejects anything that
+  // is not a UUID; all 437 Development ids are UUIDs today, but a single
+  // hand-created id from an import script would make the page AFTER that row a
+  // hard 400 and kill the rest of that run's pagination. Failing here instead
+  // turns a silent dead end into one error naming the row.
+  if (!UUID_RE.test(lastId)) throw new Error(`bridge cursor: id is not a UUID: ${lastId}`);
   const payload = {
     v: CURSOR_VERSION,
     g: generatedAt.toISOString(),

@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { imagesFor, type BridgeImage } from "./images";
+import { resolveDevelopmentPrice } from "@/lib/developmentCard";
+import { computeAvailability, listedUnits } from "@/lib/developmentAvailability";
 
 /**
  * The shape Task 4's query must select. Declared here, next to the allowlist
@@ -99,6 +101,34 @@ export type BridgeProject = {
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
 
+/**
+ * How many /uploads/ references a row HOLDS, versus how many images the built
+ * payload DELIVERS. The route compares the two per page.
+ *
+ * Why this exists: `imagesFor` drops an image whose files cannot be stat'd,
+ * which is right for one missing photo and catastrophic for all of them.
+ * `public/uploads` is a per-release symlink to /var/www/shared-uploads; if
+ * that link is missing, every stat fails, every array comes back empty, and
+ * the route would answer 200 / complete / ok with `gallery: []` for all 350
+ * projects. Xellex re-hosts the images and syncs incrementally, so it would
+ * read that as "these projects have no images now" and could drop the 11 GiB
+ * it mirrored — never delivered, never reported, one level below the row.
+ */
+export function countStoredRefs(row: DevelopmentWithRelations): number {
+  const o = row.override;
+  const base = strings(o?.gallery).length > 0 ? strings(o?.gallery) : strings(row.gallery);
+  const main = o?.mainImage ?? null;
+  let n = (main ? [main, ...base.filter((u) => u !== main)] : base).length + strings(row.plans).length;
+  for (const u of listedUnits(row.units)) n += strings(u.photos).length + strings(u.plans).length;
+  return n;
+}
+
+export function countDeliveredImages(p: BridgeProject): number {
+  let n = p.gallery.length + p.plans.length;
+  for (const u of p.units) n += u.photos.length + u.plans.length;
+  return n;
+}
+
 export async function buildProject(row: DevelopmentWithRelations): Promise<BridgeProject> {
   const o = row.override;
   // The override's images win over the development's when set — same precedence
@@ -107,15 +137,36 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
   // feed gallery an admin already replaced. Length-checked, not null-checked,
   // for the same reason the page does it: an empty admin gallery means "never
   // curated", not "deliberately blank".
-  const galleryUrls = strings(o?.gallery).length > 0 ? strings(o?.gallery) : strings(row.gallery);
-  const [mainImage, gallery, plans] = await Promise.all([
-    o?.mainImage ? imagesFor([o.mainImage]) : Promise.resolve([]),
+  const baseGallery = strings(o?.gallery).length > 0 ? strings(o?.gallery) : strings(row.gallery);
+  // The hero is the FIRST element of the gallery, not a separate image beside
+  // it — mapRowToVM builds `main ? [main, ...gallery.filter(u => u !== main)]
+  // : gallery`, and this now does the same. The earlier version delivered
+  // `mainImage` as its own field and left the gallery untouched, which
+  // measured badly in both directions on 2026-10-09: for 300 of 350 published
+  // projects the hero was ALSO an element of the gallery, so a consumer
+  // rendering [mainImage, ...gallery] drew it twice; and the 50 projects with
+  // no `override.mainImage` arrived with no nominated hero at all, while CVE
+  // shows gallery[0]. No published project has a mainImage outside its
+  // gallery, so the prepend only ever de-duplicates.
+  const main = o?.mainImage ?? null;
+  const galleryUrls = main ? [main, ...baseGallery.filter((u) => u !== main)] : baseGallery;
+  const [gallery, plans] = await Promise.all([
     imagesFor(galleryUrls),
     imagesFor(strings(row.plans)),
   ]);
 
+  // `unlisted` units do not travel. CVE keeps them as full rows — price, area,
+  // photos — but the public site never renders one (`listedUnits()`, and the
+  // type comment in UnitsView.tsx says so outright: "kept in the DB with its
+  // full row but never shown on the public site"). 215 of the 4,921 units on
+  // published projects are unlisted, measured 2026-10-09. Delivering them with
+  // nothing but an opaque status string would put stock CVE deliberately
+  // withdrew back on sale on a second public domain — and it would leave
+  // `units.length` disagreeing with the counts below.
+  const visibleUnits = listedUnits(row.units);
+  const availability = computeAvailability(visibleUnits);
   const units: BridgeUnit[] = [];
-  for (const u of row.units) {
+  for (const u of visibleUnits) {
     const [photos, unitPlans] = await Promise.all([imagesFor(strings(u.photos)), imagesFor(strings(u.plans))]);
     units.push({
       id: u.id, ref: u.ref, name: u.name, label: u.label, type: u.type,
@@ -159,10 +210,36 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
     district: o?.district ?? row.district,
     town: o?.town ?? row.town,
     area: o?.area ?? row.area,
-    priceFrom: row.priceFrom, priceTo: row.priceTo, currency: row.currency,
+    // Price is RECOMPUTED from the units, not read off the row. The columns are
+    // a cache that `resolveDevelopmentPrice` (src/lib/developmentCard.ts) only
+    // falls back to when no unit carries a price; every CVE surface displays
+    // the recomputed range. Measured 2026-10-09 across all 350 published
+    // projects, the row columns alone would have delivered a different range
+    // for 100 of them, no `priceFrom` at all for 33 that CVE prices, and no
+    // `priceTo` for 79 — venara would have gone out at "from 305,000" against
+    // its real entry price of 245,000, i.e. 60,000 too high, on a second
+    // public portal.
+    ...resolveDevelopmentPrice(row.priceFrom, row.priceTo, visibleUnits),
+    currency: row.currency,
     latitude: o?.latitude ?? row.latitude,
     longitude: o?.longitude ?? row.longitude,
-    unitsTotal: row.unitsTotal, unitsAvailable: row.unitsAvailable,
+    // Counts are RECOMPUTED too, and the schema says why in terms this feature
+    // cannot argue with: `unitsTotal`/`unitsAvailable` carry "May be stale —
+    // NEVER read for display or logic, always use computeAvailability() ...
+    // instead", written after the Trinity Residences incident of 2026-07-31.
+    // Measured 2026-10-09: 26 of 350 published projects have cached counts
+    // that disagree with their own unit rows, and two disagree dangerously —
+    // azalea-villas caches 8 available with `soldOutSince` set and all 8 units
+    // sold, serenity-court the same with 1. Shipping that would have
+    // advertised sold villas as available on a public portal, in a payload
+    // that contradicted itself.
+    //
+    // Taken over the LISTED population, which is what every public count must
+    // use (see isListedUnit's comment: GALAXY RESIDENCES once said "29 Units"
+    // above a list of 27) and what keeps `unitsTotal` equal to `units.length`
+    // in the delivered payload.
+    unitsTotal: availability.total,
+    unitsAvailable: availability.available,
     soldOutSince: iso(row.soldOutSince),
     returnedToMarketAt: iso(row.returnedToMarketAt),
     description: row.description,
@@ -190,7 +267,7 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
           seo: o.seo, vatApplies: o.vatApplies,
         }
       : null,
-    mainImage: mainImage[0] ?? null,
+    mainImage: gallery[0] ?? null,
     gallery,
     plans,
     units,
