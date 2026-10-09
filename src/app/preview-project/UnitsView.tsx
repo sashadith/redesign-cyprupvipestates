@@ -422,7 +422,20 @@ function UnitsTable({ units, splitAt, showAll, onToggleSold, t, lang, projectNam
   );
 }
 
-export default function UnitsView({ units, lang = "en", projectName }: { units: UnitVM[]; lang?: string; projectName: string }) {
+/* `unavailableCount` (2026-10-09). Sold and reserved units are counted here
+   but never rendered (see the split below), so ProjectPageBody now hands this
+   component the available units ALONE and passes their number separately —
+   otherwise every sold unit's photos, plans, attrs and description are
+   serialised into the RSC payload of a page that will never draw them.
+   Measured across production before the change: 1,027 unit-photo URLs across
+   127 published, still-selling projects, worst case avalon-residences at 492
+   URLs for 34 unrendered units.
+
+   The filtering below is deliberately LEFT IN PLACE rather than moved out:
+   handed the full list this component still behaves exactly as it did, so the
+   prop is an optimisation and not a new precondition. When the count is not
+   given it is derived, as before. */
+export default function UnitsView({ units, lang = "en", projectName, unavailableCount }: { units: UnitVM[]; lang?: string; projectName: string; unavailableCount?: number }) {
   const t = developmentCopy(lang);
   /* Table by default (2026-10-03). Only the selected view is rendered, so the
      default is what ends up in the HTML a crawler reads. The table was chosen
@@ -469,7 +482,7 @@ export default function UnitsView({ units, lang = "en", projectName }: { units: 
      units and delivered things nobody can buy. Only the count in the line
      under the heading still mentions them. */
   const available = sorted.filter((u) => u.status === "available");
-  const unavailable = sorted.filter((u) => u.status !== "available");
+  const unavailable = unavailableCount ?? sorted.length - available.length;
 
   /* Long availability lists are cut short; the button reveals the REST OF THE
      AVAILABLE units, which is what a reader expects it to do. Nine in the card
@@ -504,7 +517,7 @@ export default function UnitsView({ units, lang = "en", projectName }: { units: 
       <div className="pp-units-head">
         <div className="pp-units-head__text">
           <h2 className="pp-h2">{t.unitsHeading}</h2>
-          <p className="pp-hint">{t.unitsSubAvailable(available.length)}{unavailable.length > 0 ? t.unitsSubSold(unavailable.length) : ""}</p>
+          <p className="pp-hint">{t.unitsSubAvailable(available.length)}{unavailable > 0 ? t.unitsSubSold(unavailable) : ""}</p>
         </div>
         <div className="pp-viewtoggle" role="tablist" aria-label={t.unitDisplayAria}>
           <button role="tab" aria-selected={view === "table"} className={view === "table" ? "is-on" : ""} onClick={() => setView("table")}>{t.viewTable}</button>
