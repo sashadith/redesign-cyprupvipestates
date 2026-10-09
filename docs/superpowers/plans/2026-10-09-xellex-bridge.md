@@ -323,7 +323,7 @@ git commit
 - Consumes: `imagesFor` and `BridgeImage` from `src/lib/bridge/images.ts` (Task 2)
 - Produces: `type BridgeProject`, `buildProject(row: DevelopmentWithRelations): Promise<BridgeProject>`, `type DevelopmentWithRelations` (the Prisma payload type the query in Task 4 must produce)
 
-- [ ] **Step 1: Write the module**
+- [x] **Step 1: Write the module**
 
 Create `src/lib/bridge/payload.ts`:
 
@@ -363,6 +363,11 @@ export type DevelopmentWithRelations = Prisma.DevelopmentGetPayload<{ include: t
  *       feedKey is literally "<vendor>:<id>"
  *   syncedAt, imageDriftDetectedAt, newFromFeed — sync bookkeeping
  *   presentationItems, supersedesProjects — CRM and migration relations
+ *   publishStatus, createdAt — withheld as noise rather than as secrets, and
+ *       named here only because an allowlist whose withheld list is incomplete
+ *       cannot be audited: every row this API can return is "published" by
+ *       construction, and createdAt is when CVE first synced the row, not
+ *       anything about the project — publishedAt is the date that travels.
  *
  * An allowlist also fails safe forward: a column added to Development next
  * year is withheld until someone decides it should travel, instead of
@@ -396,7 +401,7 @@ export type BridgeProject = {
   unitsTotal: number; unitsAvailable: number;
   soldOutSince: string | null; returnedToMarketAt: string | null;
   description: string | null;
-  amenities: unknown; distances: unknown; extraFacts: unknown;
+  amenities: string[]; distances: unknown; extraFacts: unknown;
   publishedAt: string | null;
   updatedAt: string;
   override: {
@@ -419,8 +424,11 @@ const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is
 export async function buildProject(row: DevelopmentWithRelations): Promise<BridgeProject> {
   const o = row.override;
   // The override's images win over the development's when set — same precedence
-  // the public project page applies, so Xellex shows what cyprusvipestates.com
-  // shows rather than the raw feed gallery an admin already replaced.
+  // mapRowToVM (src/lib/developmentRender.ts) applies for the public project
+  // page, so Xellex shows what cyprusvipestates.com shows rather than the raw
+  // feed gallery an admin already replaced. Length-checked, not null-checked,
+  // for the same reason the page does it: an empty admin gallery means "never
+  // curated", not "deliberately blank".
   const galleryUrls = strings(o?.gallery).length > 0 ? strings(o?.gallery) : strings(row.gallery);
   const [mainImage, gallery, plans] = await Promise.all([
     o?.mainImage ? imagesFor([o.mainImage]) : Promise.resolve([]),
@@ -448,7 +456,10 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
     id: row.id,
     slug: row.slug,
     // Xellex builds its own URLs and needs the retired slugs to set up its own
-    // redirects when a project is renamed on this side.
+    // redirects when a project is renamed on this side. Empty for every
+    // project today — the table holds 0 rows as of 2026-10-09 because it only
+    // records renames from its own introduction onward — so this travels for
+    // the renames that have yet to happen, not for history.
     slugHistory: row.slugHistory.map((h) => h.slug),
     publicName: o?.alias || row.publicName,
     developerName: row.developerName,
@@ -468,7 +479,16 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
     soldOutSince: iso(row.soldOutSince),
     returnedToMarketAt: iso(row.returnedToMarketAt),
     description: row.description,
-    amenities: o?.amenities ?? row.amenities,
+    // Amenities are the UNION of the admin's and the feed's, not
+    // override-wins like every field above. The schema calls this column
+    // "admin-checked amenities merged with feed ones", and mapRowToVM builds
+    // exactly that union for the public page. An earlier draft of this file
+    // used `??`: measured against production on 2026-10-09 that under-
+    // delivered 30 of 350 published projects and 96 amenities in total —
+    // Elpez would have shipped 19 of the 31 its own page lists, Blossom Park
+    // 6 of 12 — because an admin who ticks boxes in the editor saves only
+    // their own list, never a copy of the feed's.
+    amenities: Array.from(new Set([...strings(o?.amenities), ...strings(row.amenities)])),
     distances: row.distances,
     extraFacts: row.extraFacts,
     publishedAt: iso(row.publishedAt),
@@ -493,11 +513,16 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
 
 **Note on Hebrew:** all five languages ship, `descriptionHE` / `promoBlocksHE` included — the operator confirmed this explicitly on 2026-10-09 when asked, after being told the override carries five languages and not the four the spec first said. `/he` has been live on CVE since 2026-09-26. This does not conflict with the standing rule never to *author or edit* Hebrew content: delivering an existing field is not authoring one. Do not drop these fields on the assumption they were an oversight.
 
-- [ ] **Step 2: Verify**
+**Two corrections this task made to the draft above**, both measured against production on 2026-10-09 rather than argued:
+
+- **Amenities are the union, not override-wins.** The draft wrote `amenities: o?.amenities ?? row.amenities`, and `??` is the wrong operator for the one field on this row that the public page *merges* instead of overriding (`mapRowToVM`, `src/lib/developmentRender.ts`; the schema calls the column "admin-checked amenities merged with feed ones"). Measured: 30 of 350 published projects and 96 amenity entries would have been under-delivered — Elpez 19 of the 31 its own page lists, Blossom Park 6 of 12 — because an admin who ticks boxes in the editor saves only their own list, never a copy of the feed's. Every *other* field here is genuinely override-wins and keeps `??`.
+- **`publishStatus` and `createdAt` were in neither list.** Not delivered, and not named in the withheld comment either — so the allowlist could not be audited against the schema, which is the one thing an allowlist has to support. Both are now named as withheld: every row this API can return is `published` by construction, and `createdAt` is when CVE first synced the row, not anything about the project. Audited field by field against `model Development` (47 fields): every one is now either delivered or named.
+
+- [x] **Step 2: Verify**
 
 Run: `npx tsc --noEmit` → exit 0. The `satisfies Prisma.DevelopmentInclude` on `BRIDGE_INCLUDE` is what makes a typo in the include a compile error rather than a silently missing relation.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/bridge/payload.ts docs/superpowers/plans/2026-10-09-xellex-bridge.md
