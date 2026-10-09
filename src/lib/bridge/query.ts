@@ -17,6 +17,19 @@ import { BRIDGE_INCLUDE, type DevelopmentWithRelations } from "./payload";
  * discourages. bridgeChangedAt means "the switch was last touched at T", and
  * both this query and removedSince() read it, in opposite directions.
  *
+ * INVARIANT this cannot enforce: a DELETED unit matches none of the four
+ * branches — the row is gone, so `units.some` cannot see it, and nothing on
+ * the Development or its override changed. Every unit-deleting call site today
+ * sits beside a `recomputeDevelopmentDerivedState()`, which always issues a
+ * `development.update` and so bumps `updatedAt`, which is the only reason this
+ * is covered (feedSync, cybarcoSync, plusPropertiesSync, driveAvailabilitySync,
+ * dropboxAvailabilitySync and the two admin unit actions — checked 2026-10-09;
+ * two of them already recompute BEFORE pruning, the ordering that would break
+ * it). A future delete path that skips the recompute leaves that unit listed
+ * and purchasable on Xellex permanently, with nothing logged. No fifth branch
+ * can be written against a row that no longer exists, so the rule is: touch
+ * the Development row whenever you delete one of its units.
+ *
  * Paged by id rather than by any date: ids are stable and total-ordered, so a
  * row edited mid-pagination cannot jump between pages or be skipped. Page size
  * is a latency budget, not a payload one — 37.9 MB for all 350 projects is one

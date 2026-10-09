@@ -106,8 +106,10 @@ export default async function XellexBridgePage() {
                 // A developer with nothing published cannot be switched on —
                 // enabling it would deliver zero projects and only confuse the
                 // next person reading this table. The row stays visible so
-                // nobody wonders where that developer went (25 accounts, 24 with
-                // published work, measured 2026-10-09).
+                // nobody wonders where that developer went (25 accounts, all 25
+                // with published work as of 2026-10-09 — so this is currently a
+                // guard against a state that does not exist, kept because a new
+                // account starts with none).
                 //
                 // The guard is one-directional: if a developer is already ON and
                 // its last published project later goes away, the switch must

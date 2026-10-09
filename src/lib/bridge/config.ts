@@ -54,11 +54,3 @@ export async function setBridgeEnabled(slug: string, enabled: boolean): Promise<
   });
 }
 
-/** Ids of the developer accounts currently deliverable. */
-export async function enabledDeveloperIds(): Promise<string[]> {
-  const rows = await prisma.developerAccount.findMany({
-    where: { bridgeEnabled: true },
-    select: { id: true },
-  });
-  return rows.map((r) => r.id);
-}

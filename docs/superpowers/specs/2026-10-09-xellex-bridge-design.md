@@ -60,6 +60,22 @@ GET /api/bridge/projects?updatedSince=<iso8601>[&cursor=<opaque>]
 
 `removed` is only meaningful alongside `updatedSince`. On a full export it is empty: everything absent is removed, by definition.
 
+**If an id is in both `projects` and `removed`, `removed` wins.** The two come from separate queries and the gap between them is seconds wide, not milliseconds, because assembling a page costs ~17,000 `fs.stat` calls. A project depublished during that window is fetched into `projects` and then listed in `removed`. Applying them in the other order leaves it live on Xellex.
+
+### Three fields are recomputed, not read off the row
+
+Found by review on 2026-10-09, after all seven tasks were implemented. The payload claimed parity with `mapRowToVM` throughout, and for these three it had none — the right rows were arriving with the wrong values.
+
+- **Price.** `resolveDevelopmentPrice` recomputes the range from available unit prices and only falls back to `priceFrom`/`priceTo` when no unit carries one. Every CVE surface shows the recomputed figure. The columns alone would have delivered a different range for **100 of 350** published projects, no `priceFrom` for **33** that CVE prices, and no `priceTo` for **79** — `venara` at "from 305,000" against a real entry price of 245,000.
+- **Unit counts.** The schema says it outright on those two columns: *"May be stale — NEVER read for display or logic, always use `computeAvailability()`"*, written after the Trinity Residences incident of 2026-07-31. **26 of 350** disagreed with their own unit rows; `azalea-villas` cached 8 available with `soldOutSince` set and all 8 units sold, `serenity-court` the same with 1. That is a sold-out development advertised as available on a public portal, in a payload contradicting itself.
+- **`unlisted` units do not travel at all.** CVE keeps them as full rows and never renders one. **215 of 4,921** units on published projects are unlisted. Delivered with nothing but an opaque status string, they would have put withdrawn stock back on sale on a second domain — and left `units.length` disagreeing with `unitsTotal`.
+
+Re-verified across all 350 after the fix: zero price mismatches, zero count mismatches, zero unlisted units delivered, zero duplicated gallery URLs.
+
+### The image layer could not report its own total failure
+
+`imagesFor` drops an image whose files cannot be `stat`'d — right for one missing photo, catastrophic for all of them. `public/uploads` is a per-release symlink to `/var/www/shared-uploads`; a release that lands without it would have made every array empty while the route still answered **200, `complete: true`, `ok: true`**. Xellex re-hosts images and syncs incrementally, so it would read that as "these projects have no images now" and could drop the 11 GiB it mirrored, with no error anywhere — the feature's signature failure one level below the row. The route now counts stored references against delivered images, logs both, and refuses a page that holds references and delivers none.
+
 ### Per-project payload
 
 The published record as a reader of the page would know it: name and alias, category, status, stage, completion, energy rating, district/town/area, price range and currency, coordinates, unit counts, the four-language descriptions and SEO overrides from `DevelopmentOverride`, amenities, distances, extra facts, gallery and plans, developer label, and every `DevelopmentUnit` with its ~24 fields.

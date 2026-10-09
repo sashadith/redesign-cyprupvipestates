@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { makeRateLimiter } from "@/lib/antispam";
 import { changedSince, removedSince } from "@/lib/bridge/query";
-import { buildProject, type BridgeProject } from "@/lib/bridge/payload";
+import { buildProject, countDeliveredImages, countStoredRefs, type BridgeProject } from "@/lib/bridge/payload";
 import { decodeCursor, encodeCursor } from "@/lib/bridge/cursor";
 
 export const runtime = "nodejs";
@@ -156,12 +156,41 @@ export async function GET(req: NextRequest) {
     const page = rows.slice(0, PAGE_SIZE);
     const complete = rows.length <= PAGE_SIZE;
     const projects: BridgeProject[] = [];
-    for (const row of page) projects.push(await buildProject(row));
+    let storedRefs = 0;
+    let deliveredImages = 0;
+    for (const row of page) {
+      const project = await buildProject(row);
+      storedRefs += countStoredRefs(row);
+      deliveredImages += countDeliveredImages(project);
+      projects.push(project);
+    }
+
+    // An image whose files cannot be stat'd is dropped from its array, which is
+    // right for one missing photo and catastrophic for all of them.
+    // `public/uploads` is a per-release symlink to /var/www/shared-uploads; if
+    // a release lands without it, every stat fails and this route would answer
+    // 200 / complete / ok with every gallery empty. Xellex re-hosts the images
+    // and syncs incrementally, so it would read that as "these projects have
+    // no images now" and could drop the 11 GiB it mirrored — with no error
+    // anywhere. A whole page holding references and delivering none is not a
+    // thin page, it is a broken mount, so refuse and say so.
+    if (storedRefs > 0 && deliveredImages === 0) {
+      throw new Error(
+        `image store unreadable: ${storedRefs} stored references on this page resolved to 0 files ` +
+          `(is public/uploads linked to the shared store?)`,
+      );
+    }
 
     // Removals belong to the whole sync, not to a page: sent once, on the last
     // page, so a consumer that stops paginating early never acts on a partial
     // removal list. Meaningless without `since` — on a full export everything
     // absent is removed by definition.
+    // Read AFTER the projects above, so the two queries see different
+    // snapshots: a project depublished while this page was being assembled —
+    // seconds, not milliseconds, because of the stat loop — can appear in both
+    // `projects` and `removed`. **`removed` wins.** Stated in the response's
+    // own documentation and in the spec, because applying them in the other
+    // order leaves that project live on Xellex.
     const removed = complete && since ? await removedSince(since) : [];
     const lastId = page.length ? page[page.length - 1].id : null;
 
@@ -179,7 +208,7 @@ export async function GET(req: NextRequest) {
         ok: true,
         // run= is the whole point of logging a page at all: it is the one
         // field that stitches the seven rows of one sync back together.
-        message: `${since ? "incremental" : "full"}: ${projects.length} projects, ${removed.length} removed, complete=${complete}, run=${generatedAt.toISOString()}`,
+        message: `${since ? "incremental" : "full"}: ${projects.length} projects, ${deliveredImages}/${storedRefs} images, ${removed.length} removed, complete=${complete}, run=${generatedAt.toISOString()}`,
         durationMs: Date.now() - started,
       },
     });

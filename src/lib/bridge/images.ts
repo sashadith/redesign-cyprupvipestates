@@ -1,5 +1,5 @@
 import { stat } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const SITE_URL = "https://cyprusvipestates.com";
 const SIZES = ["small", "medium", "large"] as const;
@@ -26,12 +26,24 @@ export type BridgeImage = { stored: string; variants: Partial<Record<Size, Image
 const MIRROR_RE = /^(\/uploads\/developments\/[^/]+\/[0-9a-f]+)_(small|medium|large)(\.[a-z0-9]+)$/i;
 
 /** Absolute path on disk for a /uploads/... URL. In production
- *  public/uploads is a symlink to /var/www/shared-uploads; join() follows it. */
-const diskPath = (url: string) => join(process.cwd(), "public", url.replace(/^\//, ""));
+ *  public/uploads is a symlink to /var/www/shared-uploads; join() follows it.
+ *
+ *  Contained to public/uploads on the way out. The caller already requires a
+ *  /uploads/ prefix, but a prefix check alone passes "/uploads/../../etc" and
+ *  join() would happily follow it. Only reachable by someone who can already
+ *  write image URLs into the database, so this is defence in depth rather than
+ *  a live hole — and two lines. */
+const UPLOADS_ROOT = resolve(join(process.cwd(), "public", "uploads"));
+const diskPath = (url: string): string | null => {
+  const p = resolve(join(process.cwd(), "public", url.replace(/^\//, "")));
+  return p === UPLOADS_ROOT || p.startsWith(UPLOADS_ROOT + "/") ? p : null;
+};
 
 async function variantOf(url: string): Promise<ImageVariant | null> {
   try {
-    const s = await stat(diskPath(url));
+    const p = diskPath(url);
+    if (!p) return null;
+    const s = await stat(p);
     if (!s.isFile()) return null;
     return { url: `${SITE_URL}${url}`, bytes: s.size, modified: s.mtime.toISOString() };
   } catch {
