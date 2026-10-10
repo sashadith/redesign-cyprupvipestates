@@ -25,7 +25,9 @@
 #   /var/www/shared/.env                     real file, symlinked into every release
 #   /var/www/shared/secrets/                 real dir,  symlinked into every release
 #   /var/www/shared-uploads/                 real dir,  symlinked into every release's public/uploads
-#   /var/www/deploy-logs/                    .deploy-status / .deploy-build.log — NOT part of any release
+#   /var/www/deploy-logs/                    .deploy-status-<ts> / .deploy-build-<ts>.log, one pair per
+#                                            deploy — NOT part of any release. Plus .deploy.lock, which
+#                                            serialises deploys: see the flock in the remote script.
 #
 # Rollback (under 5 seconds, DB untouched — schema is additive-only):
 #   ln -sfn /var/www/releases/cve-<previous-good-timestamp> /var/www/cyprusvipestates.new
@@ -183,6 +185,12 @@ BEFORE_PIDS="$(ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 
 
 mkdir -p "$STAGE/.deploy" # local scratch only, for the heredoc file below
 REMOTE_SCRIPT="$STAGE/.deploy/run.sh"
+# Per-release paths, so two deploys running at once cannot read, overwrite or
+# delete each other's status. See the comment on STATUS_FILE inside the remote
+# script for the incident this replaced.
+REMOTE_STATUS_FILE="/var/www/deploy-logs/.deploy-status-$RELEASE_TS"
+REMOTE_BUILD_LOG="/var/www/deploy-logs/.deploy-build-$RELEASE_TS.log"
+
 cat > "$REMOTE_SCRIPT" <<REMOTE
 #!/usr/bin/env bash
 set -euo pipefail
@@ -194,7 +202,56 @@ set -euo pipefail
 # right after mkdir (belt-and-suspenders, not either/or).
 umask 022
 mkdir -p /var/www/deploy-logs
-trap 'echo \$? > /var/www/deploy-logs/.deploy-status' EXIT
+
+# The status file is per RELEASE, not shared. It used to be one global
+# /var/www/deploy-logs/.deploy-status for every deploy, and on 2026-10-10 two
+# deploys ran at once: the faster one finished and wrote 0 there, the slower
+# one polled that same file, read the other's zero, and printed
+# "Production updated -> release <its own>" while its own build was still
+# running and had produced no BUILD_ID at all. Nothing was wrong with
+# production — the swap it claimed had simply never happened — but the script
+# lied about it, and a swap performed on that claim would have pointed the live
+# symlink at a release with no build in it.
+STATUS_FILE="/var/www/deploy-logs/.deploy-status-$RELEASE_TS"
+BUILD_LOG="/var/www/deploy-logs/.deploy-build-$RELEASE_TS.log"
+trap 'echo \$? > '"\$STATUS_FILE"'' EXIT
+
+# One deploy at a time. Separate status files stop a deploy from reading
+# someone else's result; they do not stop two deploys from racing the symlink,
+# where the LAST to finish wins regardless of which carries the newer commit —
+# which is the other half of what happened on 2026-10-10.
+#
+# The lock is held for as long as ANY process holding this descriptor lives,
+# children included. Measured rather than assumed: kill -9 on the holding shell
+# does NOT release it while its `next build` child is still running. That is the
+# behaviour we want — a build still running is exactly when a second deploy must
+# not start — but it means an orphaned build keeps the lock, so the refusal below
+# names who holds it and since when instead of just saying no. To clear a lock
+# whose owner is genuinely gone: kill the pid it names, or `rm` the lock file.
+#
+# Exit 99 is reserved for "someone else holds it", so the caller reports a
+# refusal rather than a build failure that never happened.
+# Opened for APPEND, not truncate: `exec 9>` empties the file on open, so a
+# deploy that is about to be REFUSED would first wipe the very line naming the
+# holder it then tries to print. Measured 2026-10-10 — the line came back empty.
+exec 9>>/var/www/deploy-logs/.deploy.lock
+if ! flock -n 9; then
+  echo "REFUSED: another deploy is already running on this host."
+  echo "  lock: /var/www/deploy-logs/.deploy.lock"
+  echo "  held by:"
+  # fuser prints the pids holding the file; ps turns them into something a
+  # human can act on. Both are best-effort — never fail the refusal over them.
+  for p in \$(fuser /var/www/deploy-logs/.deploy.lock 2>/dev/null); do
+    ps -o pid=,etime=,cmd= -p "\$p" 2>/dev/null | sed 's/^/    /' || true
+  done
+  cat /var/www/deploy-logs/.deploy.lock.info 2>/dev/null | sed 's/^/    /' || true
+  echo "  Nothing was built, nothing was swapped, production is untouched."
+  exit 99
+fi
+# Who holds it, for the next deploy's refusal message. A separate file, so the
+# lock itself is never written to and never needs truncating.
+echo "holder: release $RELEASE_TS, pid \$\$, started \$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > /var/www/deploy-logs/.deploy.lock.info || true
 
 RELEASE="$RELEASE"
 DIR="$DIR"
@@ -368,7 +425,7 @@ REMOTE
 
 scp -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -r "$STAGE/.deploy" "$HOST:/tmp/.cvp-deploy-$RELEASE_TS" >/dev/null
 ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" \
-  "mkdir -p /var/www/deploy-logs && rm -f /var/www/deploy-logs/.deploy-status /var/www/deploy-logs/.deploy-build.log && chmod +x '/tmp/.cvp-deploy-$RELEASE_TS/run.sh' && (nohup '/tmp/.cvp-deploy-$RELEASE_TS/run.sh' >/var/www/deploy-logs/.deploy-build.log 2>&1 &) && echo launched"
+  "mkdir -p /var/www/deploy-logs && chmod +x '/tmp/.cvp-deploy-$RELEASE_TS/run.sh' && (nohup '/tmp/.cvp-deploy-$RELEASE_TS/run.sh' >'$REMOTE_BUILD_LOG' 2>&1 &) && echo launched"
 
 # Poll for the status file the script's trap writes on exit (success or
 # failure alike) — this ssh call returning does NOT mean the build is done,
@@ -378,7 +435,7 @@ MAX_WAIT=1200   # 20 minutes — generous headroom over the ~3-5 min observed bu
 elapsed=0
 status=""
 while [ "$elapsed" -lt "$MAX_WAIT" ]; do
-  status="$(ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" "cat /var/www/deploy-logs/.deploy-status 2>/dev/null" || true)"
+  status="$(ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" "cat '$REMOTE_STATUS_FILE' 2>/dev/null" || true)"
   [ -n "$status" ] && break
   sleep "$POLL_INTERVAL"
   elapsed=$((elapsed + POLL_INTERVAL))
@@ -387,12 +444,18 @@ done
 
 if [ -z "$status" ]; then
   echo "✗ timed out after ${MAX_WAIT}s waiting for the remote build to finish. Log tail:"
-  ssh -i "$KEY" "$HOST" "tail -n 60 /var/www/deploy-logs/.deploy-build.log 2>/dev/null" | sed 's/^/     /'
+  ssh -i "$KEY" "$HOST" "tail -n 60 '$REMOTE_BUILD_LOG' 2>/dev/null" | sed 's/^/     /'
+  exit 1
+fi
+if [ "$status" = "99" ]; then
+  echo "✗ REFUSED: another deploy is already running on this host."
+  echo "  Nothing was built and nothing was swapped — production is untouched."
+  echo "  Wait for the other deploy to finish, then run this again."
   exit 1
 fi
 if [ "$status" != "0" ]; then
   echo "✗ remote build/deploy FAILED (exit $status). Log tail:"
-  ssh -i "$KEY" "$HOST" "tail -n 60 /var/www/deploy-logs/.deploy-build.log 2>/dev/null" | sed 's/^/     /'
+  ssh -i "$KEY" "$HOST" "tail -n 60 '$REMOTE_BUILD_LOG' 2>/dev/null" | sed 's/^/     /'
   echo "  (the live symlink was only ever changed AFTER both build gates passed — if this"
   echo "   failure is from before the swap step in the log above, production was never touched.)"
   exit 1
