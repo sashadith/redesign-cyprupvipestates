@@ -108,11 +108,21 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
           and they did: Publishing Queue was declared in `pages` and therefore
           drew an icon in the collapsed rail, but never appeared here or in the
           mobile drawer — reachable only by typing its URL. Anything added to
-          that module's `pages` has to be added here too. */}
+          that module's `pages` has to be added here too.
+
+          It happened again on 2026-10-10 with Xellex Bridge, which is why this
+          sentence is no longer the last word on the subject: the entry was
+          added to `pages`, its active-state behaviour was verified against
+          resolveActive/matchLen — which is real, but governs only the collapsed
+          rail — and the conclusion drawn was that the navigation worked. The
+          operator could not find the link. Verifying the rail says nothing
+          about this hand-written list, and nothing about the rail is visible
+          while the panel is expanded, which is its default. */}
       <div className="pt-2 mt-2 border-t border-[#E5E7EB] space-y-0.5">
         {simple("/admin/developments", "All developments", pathname === "/admin/developments")}
         {simple("/admin/developments/areas", "Area descriptions", pathname.startsWith("/admin/developments/areas"))}
         {simple("/admin/developers/publishing-queue", "Publishing Queue", pathname.startsWith("/admin/developers/publishing-queue"))}
+        {simple("/admin/feeds/bridge", "Xellex Bridge", pathname.startsWith("/admin/feeds/bridge"))}
       </div>
     </nav>
   );
