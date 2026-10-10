@@ -8,6 +8,7 @@ import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { logCronRun } from "./cronLog";
 import { cleanNumber, parsePriceList, type PlusProject, type PlusUnit } from "./plusProperties";
 import { MISSING_PRICE_LIST } from "./plusIncomplete";
+import { publicDeveloperLabel } from "./developerPublicLabel";
 
 /* Plus Properties sync. Spec:
    docs/superpowers/specs/2026-09-25-plus-properties-connector-design.md.
@@ -673,7 +674,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
         const units = g.project?.units ?? [];
         const row: Record<string, unknown> = {
           developerAccountId: acct.id, dev: PLUS_DEV, feedProjectId: g.key, feedKey,
-          developerName: g.project?.title ?? publicNameFor(g.key), publicName: publicNameFor(g.key), developer: acct.name,
+          developerName: g.project?.title ?? publicNameFor(g.key), publicName: publicNameFor(g.key), developer: await publicDeveloperLabel(acct.id, acct.name),
           currency: "EUR", syncedAt: new Date(),
           ...(area ? { area } : {}), ...(district ? { district } : {}),
           ...(g.project?.stage ? { stage: g.project.stage, status: g.project.stage } : {}),

@@ -11,6 +11,7 @@ import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { mirrorAll, devKeyFor, beginSyncWindow, scheduleAppRestart } from "./imageMirror";
+import { publicDeveloperLabel } from "./developerPublicLabel";
 
 /* AGG Luxury Homes' two-source sync (2026-08-28) — see src/lib/agg.ts for the two
    sources (WordPress REST for identity/media, a ShareOneDrive folder for the price
@@ -263,7 +264,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
 
         if (rest.description) {
           description = await generateProjectDescription({
-            publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName), developer: acct.name,
+            publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName), developer: await publicDeveloperLabel(acct.id, acct.name),
             district: "", town: town || "", area: "",
             category: rest.propertyType.join(", "),
             stage: stage || "",
@@ -280,7 +281,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
         create: {
           developerAccountId, dev: "agg", feedProjectId: plan.feedProjectId, feedKey: plan.feedKey,
           developerName: plan.projectName, publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName),
-          developer: acct.name,
+          developer: await publicDeveloperLabel(acct.id, acct.name),
           category: rest?.propertyType.join(", ") || null,
           status: stage, stage, town,
           currency: "EUR",

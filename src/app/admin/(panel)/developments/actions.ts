@@ -8,6 +8,7 @@ import { syncAll, syncDeveloper } from "@/lib/feedSync";
 import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type DriveFolderPreview } from "@/lib/driveAvailabilitySync";
 import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
+import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
 // try/catch added 2026-08-11 — DriveSyncButton.tsx's own catch only ever sees Next's
@@ -158,7 +159,7 @@ export async function createManualDevelopment(developerAccountId: string, formDa
       feedKey: `manual:${pid}`,
       developerName: name,
       publicName: name,
-      developer: acct.name,
+      developer: await publicDeveloperLabel(acct.id, acct.name),
       publishStatus: "draft",
     },
   });

@@ -9,6 +9,7 @@ import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, beginSyncWindow, schedu
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { developmentSlug } from "./developmentSeo";
 import { normalizeRef } from "./unitRef";
+import { publicDeveloperLabel } from "./developerPublicLabel";
 
 /* Cybarco's sync (2026-09-11).
 
@@ -1257,7 +1258,7 @@ export async function syncCybarco(
            feedSync.ts applies: an admin's display alias lives in
            DevelopmentOverride, which no sync ever writes. */
         publicName: card.name, // already title-cased by parseListing
-        developer: acct.name,
+        developer: await publicDeveloperLabel(acct.id, acct.name),
         district: card.district,
         /* `town` is deliberately not written at all. Cybarco's subtitle names a
            district ("Nicosia", "Limassol", "Pafos"), never a town inside it, and

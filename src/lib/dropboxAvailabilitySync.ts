@@ -14,6 +14,7 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { workbookToText } from "@/lib/sheetToText";
+import { publicDeveloperLabel } from "./developerPublicLabel";
 
 /* No image or floor-plan cap — see the note in driveAvailabilitySync.ts:
    the operator imports every picture and selects before publishing. */
@@ -530,7 +531,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
     }
 
     const descCtx = isNewDev ? {
-      publicName: r.projectName, developer: acct.name,
+      publicName: r.projectName, developer: await publicDeveloperLabel(acct.id, acct.name),
       district: "", town: "", area: "",
       projectAmenities: amenities, unitAmenities: [],
       unitSummary: `${r.units.length} units, ${avail} available`,
@@ -542,7 +543,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
       where: { feedKey },
       create: {
         developerAccountId, dev: "dropbox", feedProjectId: projSlug, feedKey,
-        developerName: r.projectName, publicName: r.projectName, developer: acct.name,
+        developerName: r.projectName, publicName: r.projectName, developer: await publicDeveloperLabel(acct.id, acct.name),
         publishStatus: "draft", unitsTotal: r.units.length, unitsAvailable: avail,
         priceFrom: prices.length ? Math.min(...prices) : null,
         syncedAt: new Date(),
