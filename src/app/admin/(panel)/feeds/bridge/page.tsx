@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { listBridgeDevelopers, type BridgeDeveloper } from "@/lib/bridge/config";
 import BridgeSwitch from "./BridgeSwitch";
+import { currentUserMayToggleBridge } from "./actions";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,17 @@ async function loadDevelopers(): Promise<{ rows: BridgeDeveloper[]; awaitingDepl
 
 export default async function XellexBridgePage() {
   const { rows, awaitingDeploy } = await loadDevelopers();
+  const mayToggle = await currentUserMayToggleBridge();
+  // Who flipped what, most recent first. `bridgeChangedAt` is a single column
+  // and can only hold WHEN; the actor lives in AdminAuditLog, which already
+  // existed for this purpose. Shown on the screen rather than left for someone
+  // to query, because an unread log answers no questions.
+  const auditRows = awaitingDeploy ? [] : await prisma.adminAuditLog.findMany({
+    where: { action: { in: ["bridge_developer_enabled", "bridge_developer_disabled"] } },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+    select: { action: true, actorName: true, actorEmail: true, createdAt: true, detail: true },
+  });
 
   // Enabled first, then alphabetical, so "what is currently on a second public
   // website" is the top of the table rather than something to hunt for.
@@ -134,6 +147,7 @@ export default async function XellexBridgePage() {
                         enabled={d.enabled}
                         publishedProjects={d.publishedProjects}
                         lockedOff={lockedOff}
+                        mayToggle={mayToggle}
                       />
                     </td>
                     <td className="px-4 py-2.5 text-[#6B7280]">
@@ -155,6 +169,49 @@ export default async function XellexBridgePage() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!awaitingDeploy && !mayToggle && (
+        <p className="text-sm text-[#6B7280]">
+          The switches are read-only for your account. Turning a developer on publishes its whole catalogue to a
+          second public website, so this control is restricted to administrators.
+        </p>
+      )}
+
+      {!awaitingDeploy && (
+        <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#F8F9FA] text-[#6B7280] text-sm font-medium">
+            Switch history
+          </div>
+          {auditRows.length === 0 ? (
+            <p className="px-4 py-6 text-center text-sm text-[#9CA3AF]">
+              No switch has been flipped since this screen started recording.
+            </p>
+          ) : (
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {auditRows.map((a, i) => {
+                  const d = (a.detail ?? {}) as Record<string, unknown>;
+                  const on = a.action === "bridge_developer_enabled";
+                  return (
+                    <tr key={i}>
+                      <td className="px-4 py-2.5 text-[#6B7280] whitespace-nowrap">{stamp(a.createdAt)}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={on ? "text-[#166534] font-medium" : "text-[#991B1B] font-medium"}>
+                          {on ? "Turned on" : "Turned off"}
+                        </span>{" "}
+                        <span className="text-[#111827]">{String(d.developerName ?? d.developerSlug ?? "—")}</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-[#6B7280]">
+                        {a.actorName || a.actorEmail || "unknown"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </div>

@@ -19,12 +19,16 @@ export default function BridgeSwitch({
   enabled,
   publishedProjects,
   lockedOff,
+  mayToggle,
 }: {
   slug: string;
   name: string;
   enabled: boolean;
   publishedProjects: number;
   lockedOff: boolean;
+  /** ADMIN only. The server action enforces this independently; this just
+      stops a non-admin from clicking into an error they cannot act on. */
+  mayToggle: boolean;
 }) {
   const [pending, start] = useTransition();
   const router = useRouter();
@@ -44,10 +48,12 @@ export default function BridgeSwitch({
     <button
       type="button"
       onClick={run}
-      disabled={lockedOff || pending}
+      disabled={!mayToggle || lockedOff || pending}
       aria-pressed={enabled}
       title={
-        lockedOff
+        !mayToggle
+          ? "Only administrators can change what is delivered to Xellex."
+          : lockedOff
           ? "This developer has no published projects — turning it on would deliver nothing."
           : enabled
             ? `Stop delivering ${name} — its ${publishedProjects} projects come off Xellex at the next sync`
