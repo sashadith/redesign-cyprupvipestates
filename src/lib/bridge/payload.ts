@@ -100,6 +100,14 @@ export type BridgeProject = {
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+// The same stored URL can appear twice in one gallery — a source-data fault,
+// measured 2026-10-10 on 3 of 350 published projects (plus-39 holds 58 entries
+// for 45 distinct images) and on 3 unit photo lists. cyprusvipestates.com
+// renders the duplicate too, so this is not a divergence from the page so much
+// as a decision not to propagate the fault: a repeated URL carries no
+// information, and a consumer that re-hosts would download and publish the
+// same picture twice. Order is preserved, so the hero stays first.
+const uniq = (urls: string[]): string[] => Array.from(new Set(urls));
 
 /**
  * How many /uploads/ references a row HOLDS, versus how many images the built
@@ -118,8 +126,11 @@ export function countStoredRefs(row: DevelopmentWithRelations): number {
   const o = row.override;
   const base = strings(o?.gallery).length > 0 ? strings(o?.gallery) : strings(row.gallery);
   const main = o?.mainImage ?? null;
-  let n = (main ? [main, ...base.filter((u) => u !== main)] : base).length + strings(row.plans).length;
-  for (const u of listedUnits(row.units)) n += strings(u.photos).length + strings(u.plans).length;
+  // Counted after de-duplication, because that is what buildProject delivers —
+  // comparing a raw count against a de-duplicated one would make the route's
+  // image guard read a shortfall that is not one.
+  let n = uniq(main ? [main, ...base.filter((u) => u !== main)] : base).length + uniq(strings(row.plans)).length;
+  for (const u of listedUnits(row.units)) n += uniq(strings(u.photos)).length + uniq(strings(u.plans)).length;
   return n;
 }
 
@@ -149,10 +160,10 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
   // shows gallery[0]. No published project has a mainImage outside its
   // gallery, so the prepend only ever de-duplicates.
   const main = o?.mainImage ?? null;
-  const galleryUrls = main ? [main, ...baseGallery.filter((u) => u !== main)] : baseGallery;
+  const galleryUrls = uniq(main ? [main, ...baseGallery.filter((u) => u !== main)] : baseGallery);
   const [gallery, plans] = await Promise.all([
     imagesFor(galleryUrls),
-    imagesFor(strings(row.plans)),
+    imagesFor(uniq(strings(row.plans))),
   ]);
 
   // `unlisted` units do not travel. CVE keeps them as full rows — price, area,
@@ -167,7 +178,7 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
   const availability = computeAvailability(visibleUnits);
   const units: BridgeUnit[] = [];
   for (const u of visibleUnits) {
-    const [photos, unitPlans] = await Promise.all([imagesFor(strings(u.photos)), imagesFor(strings(u.plans))]);
+    const [photos, unitPlans] = await Promise.all([imagesFor(uniq(strings(u.photos))), imagesFor(uniq(strings(u.plans)))]);
     units.push({
       id: u.id, ref: u.ref, name: u.name, label: u.label, type: u.type,
       status: u.status, price: u.price, currency: u.currency,
