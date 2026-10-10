@@ -31,6 +31,8 @@ const parseXml = (xml: string) => parseStringPromise(xml, { explicitArray: false
 // projects of the same feed — avoids re-downloading/re-parsing multi-MB XML on
 // every page load (Island Blue 1.9 MB, BBF 3.6 MB). In prod this becomes a 24h sync.
 const feedCache = new Map<string, { at: number; data: any }>();
+/** Tests swap the feed body between cases; production never calls this. */
+export const __resetFeedCacheForTests = () => feedCache.clear();
 const FEED_TTL = 5 * 60 * 1000;
 async function cachedParse(url: string, headers?: Record<string, string>): Promise<any> {
   const hit = feedCache.get(url);
@@ -1056,6 +1058,53 @@ export async function canonicalizeByContentLength(urls: string[], lengthOf: (u: 
   return new Map(uniq.map((u) => [u, best.get(keys.get(u)!)!]));
 }
 
+/* Floor plans also arrive as ordinary "photos" (2026-10-10: Portside 10 of
+   30 distinct images, Silicon Park 18 of 35, Skyline 2 of 12 — the feed
+   gives them no category of their own). A plan is a near-colourless line
+   drawing on white; every render and interior photo has colour or shade.
+   Measured on all 77 distinct images: plans ≥ 88 % light pixels and mean
+   saturation ≤ 0.010; photos ≤ 36 % light — the thresholds sit far inside
+   that gap. Judged on Qobrix's ~6 KB "small" variant, memoised per url. */
+export function looksLikeFloorPlan(stats: { lightFraction: number; meanSaturation: number }): boolean {
+  return stats.lightFraction >= 0.7 && stats.meanSaturation <= 0.05;
+}
+const qobrixPlanCache = new Map<string, boolean>();
+async function qobrixIsPlan(url: string): Promise<boolean> {
+  const hit = qobrixPlanCache.get(url);
+  if (hit !== undefined) return hit;
+  let plan = false;
+  try {
+    const small = url.replace("/media/public/original/", "/media/public/small/");
+    const r = await fetch(small, { signal: AbortSignal.timeout(10000), cache: "no-store" });
+    if (r.ok) {
+      const sharp = (await import("sharp")).default;
+      const { data, info } = await sharp(Buffer.from(await r.arrayBuffer())).resize(96, 64, { fit: "fill" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+      let light = 0, sat = 0;
+      const n = info.width * info.height;
+      for (let i = 0; i < data.length; i += 3) {
+        const R = data[i], G = data[i + 1], B = data[i + 2];
+        const mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+        if (mn > 200) light++;
+        sat += mx === 0 ? 0 : (mx - mn) / mx;
+      }
+      plan = looksLikeFloorPlan({ lightFraction: light / n, meanSaturation: sat / n });
+    }
+  } catch { plan = false; } // unreadable → treated as a photo (it was one before this check existed)
+  qobrixPlanCache.set(url, plan);
+  return plan;
+}
+/** The subset of urls that are floor-plan drawings. */
+export async function floorPlanUrls(urls: string[], isPlan: (u: string) => Promise<boolean> = qobrixIsPlan): Promise<Set<string>> {
+  const uniq = Array.from(new Set(urls));
+  const out = new Set<string>();
+  for (let i = 0; i < uniq.length; i += 8) {
+    const batch = uniq.slice(i, i + 8);
+    const res = await Promise.all(batch.map((u) => isPlan(u)));
+    batch.forEach((u, j) => { if (res[j]) out.add(u); });
+  }
+  return out;
+}
+
 type QobrixRow = Record<string, any>;
 const q = (p: QobrixRow, k: string) => clean(p?.[k]);
 const qNum = (p: QobrixRow, k: string) => { const n = Number(q(p, k)); return Number.isFinite(n) && n > 0 ? n : null; };
@@ -1084,6 +1133,7 @@ async function imperio(id: string): Promise<ProjectVM | null> {
   const name = q(group[0], "short_description");
   const canon = await canonicalizeByContentLength(group.flatMap((p) => qMedia(p, "img").map((m) => m.url)));
   const c = (u: string) => canon.get(u) ?? u;
+  const planImgs = await floorPlanUrls(Array.from(new Set(canon.values())));
 
   const units: UnitVM[] = group
     .slice()
@@ -1111,7 +1161,7 @@ async function imperio(id: string): Promise<ProjectVM | null> {
         areaVeranda: m2(qNum(p, "covered_verandas_amount")),
         floor: floor === "0" ? "Ground" : floor,
         attrs, features,
-        photos: Array.from(new Set([...imgs.filter((m) => m.cat === "featured_photo"), ...imgs.filter((m) => m.cat !== "featured_photo")].map((m) => c(m.url)))),
+        photos: Array.from(new Set([...imgs.filter((m) => m.cat === "featured_photo"), ...imgs.filter((m) => m.cat !== "featured_photo")].map((m) => c(m.url)))).filter((u) => !planImgs.has(u)),
         plans: qMedia(p, "document").filter((m) => m.cat === "floor_plans").map((m) => m.url),
         coords: Number.isFinite(lat) && Number.isFinite(lng) && lat ? { lat, lng } : null,
         description: "",
@@ -1128,6 +1178,9 @@ async function imperio(id: string): Promise<ProjectVM | null> {
     const imgs = qMedia(p, "img");
     return [...imgs.filter((m) => m.cat === "featured_photo"), ...imgs.filter((m) => m.cat !== "featured_photo")].map((m) => c(m.url));
   })));
+  // Plan drawings that arrived as photos: out of the gallery, into the project's plans.
+  const photoGallery = gallery.filter((u) => !planImgs.has(u));
+  const imagePlans = gallery.filter((u) => planImgs.has(u));
   const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
   const all = (k: string, v = "1") => group.every((p) => q(p, k) === v);
   const amenities = [
@@ -1149,7 +1202,7 @@ async function imperio(id: string): Promise<ProjectVM | null> {
     completion: qobrixCompletion(group.map((p) => ({ quarter: q(p, "custom_delivery_quarter"), year: q(p, "custom_delivery_year"), built: q(p, "construction_year") }))),
     energy: grade && /^[A-G]\+?$/.test(grade) ? grade : "",
     description: desc,
-    gallery, plans: [], renders: [], amenities, heroVideo: ov.heroVideo, center, units,
+    gallery: photoGallery, plans: imagePlans, renders: [], amenities, heroVideo: ov.heroVideo, center, units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: "EUR",
   };
 }

@@ -8,7 +8,10 @@ import {
   qobrixStage,
   qobrixCompletion,
   canonicalizeByContentLength,
+  floorPlanUrls,
+  looksLikeFloorPlan,
 } from "@/app/preview-project/feeds";
+import sharp from "sharp";
 
 /* Imperio Properties (2026-10-10): Qobrix native feed. Project identity is
    <short_description>; images are re-uploaded per unit under fresh UUIDs and
@@ -118,4 +121,40 @@ test("status, stage, completion and id helpers", () => {
   assert.equal(qobrixCompletion([{ quarter: "", year: "", built: "2028" }]), "2028");
   assert.equal(qobrixCompletion([{ quarter: "", year: "", built: "" }]), "");
   assert.equal(qobrixProjectId("Imperio Skyline"), "imperio-skyline");
+});
+
+test("floor-plan thresholds: line drawing on white yes, render or interior no", () => {
+  assert.equal(looksLikeFloorPlan({ lightFraction: 0.9, meanSaturation: 0.006 }), true);
+  assert.equal(looksLikeFloorPlan({ lightFraction: 0.36, meanSaturation: 0.157 }), false); // brightest real photo measured
+  assert.equal(looksLikeFloorPlan({ lightFraction: 0.95, meanSaturation: 0.3 }), false); // bright but colourful
+});
+
+test("floorPlanUrls keeps only what the classifier calls a plan", async () => {
+  const set = await floorPlanUrls(["a", "b", "a", "c"], async (u) => u !== "b");
+  assert.deepEqual(Array.from(set).sort(), ["a", "c"]);
+});
+
+test("plan drawings delivered as photos go to plans, out of the gallery and unit photos", async () => {
+  const white = await sharp({ create: { width: 120, height: 80, channels: 3, background: { r: 250, g: 250, b: 250 } } })
+    .composite([{ input: await sharp({ create: { width: 120, height: 4, channels: 3, background: { r: 120, g: 120, b: 120 } } }).png().toBuffer(), top: 38, left: 0 }])
+    .png().toBuffer();
+  const blue = await sharp({ create: { width: 120, height: 80, channels: 3, background: { r: 40, g: 110, b: 200 } } }).png().toBuffer();
+  const feed = `<?xml version="1.0"?><properties><qobrix><version>0.5</version></qobrix>${unit({ ref: "9", unit_number: "P1", short_description: "Plan Test", list_selling_price_amount: "300000.00" },
+    `<img category="featured_photo">${IMG("pt-photo")}</img><img category="photos">${IMG("pt-plan")}</img>`)}</properties>`;
+  globalThis.fetch = (async (input: any, init?: any) => {
+    const url = String(input);
+    if (url.includes("/api/v2/feeds/")) return new Response(feed, { status: 200 });
+    if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-length": url.endsWith("pt-plan") ? "11" : "22" } });
+    if (url.includes("/public/small/pt-plan")) return new Response(new Uint8Array(white), { status: 200 });
+    if (url.includes("/public/small/pt-photo")) return new Response(new Uint8Array(blue), { status: 200 });
+    throw new Error(`unexpected fetch ${url}`);
+  }) as typeof fetch;
+  try {
+    const { __resetFeedCacheForTests } = await import("@/app/preview-project/feeds");
+    __resetFeedCacheForTests();
+    const vm = (await getPreviewProject("imperio", "plan-test"))!;
+    assert.deepEqual(vm.gallery, [IMG("pt-photo")]);
+    assert.deepEqual(vm.plans, [IMG("pt-plan")]);
+    assert.deepEqual(vm.units[0].photos, [IMG("pt-photo")]);
+  } finally { globalThis.fetch = realFetch; }
 });
