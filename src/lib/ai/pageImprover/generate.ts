@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL } from "../anthropic";
+import { anthropic, AI_MODEL, createToolCall } from "../anthropic";
 import { PROJECT_BRIEF } from "../projectBrief";
 import { copyViolation } from "../copyRules";
 import { IMPROVER_TITLE_BUDGET, IMPROVER_DESC_BUDGET, type ImprovementProposal } from "./types";
@@ -88,7 +88,7 @@ export async function generateProposal(input: ImprovementInput): Promise<Improve
   };
 
   const attempt = async (correction?: string): Promise<Partial<ImprovementProposal>> => {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL,
       max_tokens: 4096,
       system: [{ type: "text", text: `${PROJECT_BRIEF}\n\n${ROLE}` }],

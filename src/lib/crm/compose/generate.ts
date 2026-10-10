@@ -1,6 +1,6 @@
 import { resolveRelativeCompletion } from "@/lib/completionDate";
 import { prisma } from "@/lib/prisma";
-import { anthropic } from "@/lib/ai/anthropic";
+import { anthropic, createToolCall } from "@/lib/ai/anthropic";
 import { matchDevelopmentsForLead, type DevelopmentMatch } from "@/lib/crm/matching";
 import { determineLeadState, type LeadState } from "./leadState";
 import { loadPlaybook } from "./loadPlaybook";
@@ -11,17 +11,14 @@ import { buildEmailClosing } from "./closing";
 // data (never let it invent or reformat a phone number), see call-offer.md.
 export const CONTACT_PHONE = "+357 99278285";
 
-// Pinned to Sonnet 5 specifically for this feature (2026-07 — confirmed with
-// the user so the SEO Advisor, which also calls Anthropic, stays on its own
-// existing model independently). Sonnet 5's tokenizer runs ~30% more tokens
-// for the same text than the previous generation, hence the higher MAX_TOKENS
-// below versus what a naive port of the seoAdvisor call would use. Sonnet 5
-// also rejects non-default temperature/top_p — this call deliberately sets
-// neither. A newer "effort" (low/medium/high/xhigh/max) output-quality knob
-// exists for this model but is beta-only in @anthropic-ai/sdk 0.110.0
-// (BetaOutputConfig, client.beta.messages.create) — left out for now to stay
-// on the stable API surface; revisit if the draft quality needs tuning.
-const COMPOSE_MODEL = process.env.ANTHROPIC_MODEL_COMPOSE || "claude-sonnet-5";
+// Own env var for this feature (2026-07 — confirmed with the user) so the SEO
+// Advisor, which also calls Anthropic, can move models independently. Sonnet 5
+// and later run ~30% more tokens for the same text than the previous
+// generation, hence the higher MAX_TOKENS below versus what a naive port of the
+// seoAdvisor call would use. They also reject non-default temperature/top_p, so
+// this call sets neither. Moved to Sonnet 5.5 on 2026-10-10; it rejects a
+// forced tool_choice, which createToolCall translates.
+const COMPOSE_MODEL = process.env.ANTHROPIC_MODEL_COMPOSE || "claude-sonnet-5-5";
 
 export type ComposeChannel = "EMAIL" | "WHATSAPP";
 
@@ -305,7 +302,7 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
 
   let msg;
   try {
-    msg = await client.messages.create({
+    msg = await createToolCall(client, {
       model: COMPOSE_MODEL,
       max_tokens: MAX_TOKENS[channel],
       system: systemPrompt,

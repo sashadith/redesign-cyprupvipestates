@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL } from "./anthropic";
+import { anthropic, AI_MODEL, createToolCall } from "./anthropic";
 import { tuningBlock, type Tuning } from "./tuning";
 
 /* Extract structured project data from developer PDFs (brochure + price list).
@@ -103,7 +103,7 @@ export async function extractProjectFromPdfs(pdfs: { base64: string }[], tuning?
   }));
   content.push({ type: "text", text: PROMPT + tuningBlock(tuning) });
 
-  const msg = await client.messages.create({
+  const msg = await createToolCall(client, {
     model: AI_MODEL,
     max_tokens: 8000,
     tools: [{ name: "project_data", description: "Structured data for one residential project.", input_schema: SCHEMA as any }],

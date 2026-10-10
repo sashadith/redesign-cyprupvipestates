@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL } from "./anthropic";
+import { anthropic, AI_MODEL, createToolCall } from "./anthropic";
 import { tuningBlock } from "./tuning";
 import { LOCALES } from "@/lib/locale";
 import { scriptLeaks, type LocaleText } from "./localeTextGuards";
@@ -116,7 +116,7 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
   // `correction` is only set on the retry — naming what went wrong beats sending
   // the identical prompt again and hoping for a different sample.
   const attempt = async (correction?: string): Promise<LocaleText> => {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL,
       max_tokens: 4000,
       // The shared project brief plus the Hebrew style guide/glossary ride as the

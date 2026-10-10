@@ -3,7 +3,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import crypto from "node:crypto";
-import { anthropic, AI_MODEL_FAST } from "./anthropic";
+import { anthropic, AI_MODEL_FAST, createToolCall } from "./anthropic";
 
 /* Availability-list PDF → units (Korantina Homes, 2026-08-26).
 
@@ -507,12 +507,12 @@ export async function mapTableColumns(table: RawTable, context: string): Promise
       `Sample rows:\n${sample}\n`;
 
     for (let attempt = 0; attempt < 3 && !memo; attempt++) {
-      const msg = await client.messages.create({
+      const msg = await createToolCall(client, {
         model: AI_MODEL_FAST,
         max_tokens: 2000,
-        // temperature 0: this is a classification with one right answer, and the
-        // mapping must not drift between weekly runs for an unchanged document.
-        temperature: 0,
+        // No temperature: Haiku 5.5 rejects anything but the default (400). It was
+        // 0 so the mapping wouldn't drift between weekly runs; the memo above and
+        // the column-index validation below are what actually hold it steady.
         tools: [{ name: "mapping", description: "Column mapping for one availability table.", input_schema: SCHEMA as any }],
         tool_choice: { type: "tool", name: "mapping" },
         messages: [{ role: "user", content: prompt }],

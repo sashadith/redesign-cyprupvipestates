@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { anthropic, AI_MODEL } from "@/lib/ai/anthropic";
+import { anthropic, AI_MODEL, createToolCall } from "@/lib/ai/anthropic";
 import { PROJECT_BRIEF } from "@/lib/ai/projectBrief";
 import type { AdvisorPayload } from "./gather";
 
@@ -83,7 +83,7 @@ export async function analyzePayload(payload: AdvisorPayload): Promise<Suggestio
   const client = anthropic();
   if (!client) throw new Error("ANTHROPIC_API_KEY not configured");
 
-  const msg = await client.messages.create({
+  const msg = await createToolCall(client, {
     model: AI_MODEL,
     max_tokens: 4096,
     // Brief first, role second: the brief is the shared ground every AI feature

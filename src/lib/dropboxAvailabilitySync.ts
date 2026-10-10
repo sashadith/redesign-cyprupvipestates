@@ -6,7 +6,7 @@ import { extractUnitsForSection, extractAmenitiesForSection, buildCanonicalMatch
 import { extractColoredRowsFromPdf } from "./ai/pdfPricelistColors";
 import { extractTextFromPdf } from "./ai/projectInfoExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
-import { anthropic, AI_MODEL_FAST } from "./ai/anthropic";
+import { anthropic, AI_MODEL_FAST, createToolCall } from "./ai/anthropic";
 import { toTitleCaseName } from "@/lib/textCase";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
@@ -181,7 +181,7 @@ export async function extractAmenitiesFromText(sourceText: string): Promise<stri
   const client = anthropic();
   if (!client) return [];
   try {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL_FAST,
       max_tokens: 500,
       tools: [{ name: "data", description: "Extracted amenities.", input_schema: { type: "object", properties: { amenities: { type: "array", items: { type: "string" } } }, required: ["amenities"] } }],

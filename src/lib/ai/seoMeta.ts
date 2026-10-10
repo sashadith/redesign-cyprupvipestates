@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL } from "./anthropic";
+import { anthropic, AI_MODEL, createToolCall } from "./anthropic";
 import { PROJECT_BRIEF } from "./projectBrief";
 import { copyViolation } from "./copyRules";
 import { tuningBlock } from "./tuning";
@@ -282,7 +282,7 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
   // On the retry, tell the model exactly which fields broke the rule — a blind
   // second call with the identical prompt mostly reproduces the same mistake.
   const attempt = async (correction?: string): Promise<Partial<SeoMetaResult>> => {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL,
       // Raised from 1024: five languages (was four) means five title/description
       // pairs per response, and the Hebrew style guide + glossary in the system

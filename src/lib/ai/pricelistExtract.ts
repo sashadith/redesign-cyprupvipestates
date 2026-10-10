@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL_FAST } from "./anthropic";
+import { anthropic, AI_MODEL_FAST, createToolCall } from "./anthropic";
 import { toTitleCaseName } from "@/lib/textCase";
 
 /* Extract project + per-unit data from a developer's master price list (a flattened
@@ -160,7 +160,7 @@ export async function extractAmenitiesForSection(sectionText: string): Promise<{
   const client = anthropic();
   if (!client) return { amenities: [], notes: "" };
   try {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL_FAST,
       max_tokens: 800,
       tools: [{ name: "data", description: "Extracted amenities.", input_schema: SCHEMA_AMEN_SECTION }],
@@ -180,7 +180,7 @@ export async function extractAmenitiesForSection(sectionText: string): Promise<{
 
 async function callTool(client: any, prompt: string, schema: any): Promise<any[]> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL_FAST,
       max_tokens: 16000,
       tools: [{ name: "data", description: "Extracted items.", input_schema: schema }],

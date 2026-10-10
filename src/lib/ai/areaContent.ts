@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL } from "./anthropic";
+import { anthropic, AI_MODEL, createToolCall } from "./anthropic";
 import { tuningBlock } from "./tuning";
 import { LOCALES, type Locale } from "@/lib/locale";
 import { PROJECT_BRIEF } from "./projectBrief";
@@ -56,7 +56,7 @@ Return ONLY a JSON object with the description written NATIVELY (idiomatic, not 
   // the identical prompt again and hoping for a different sample. Mirrors the
   // retry pattern in generateProjectDescription.
   const attempt = async (correction?: string): Promise<LocaleText> => {
-    const msg = await client.messages.create({
+    const msg = await createToolCall(client, {
       model: AI_MODEL,
       max_tokens: 4000,
       // The shared project brief plus the Hebrew style guide/glossary ride as the

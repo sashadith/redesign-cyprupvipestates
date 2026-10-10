@@ -25,7 +25,11 @@ export async function extractTextFromPdf(base64: string): Promise<string> {
   try {
     const msg = await client.messages.create({
       model: AI_MODEL,
-      max_tokens: 1500,
+      // Sonnet 5.5 thinks before answering and that thinking counts against
+      // max_tokens; low effort keeps it short for plain extraction, and the
+      // extra room keeps a long PDF from ending in thinking with no text.
+      max_tokens: 6000,
+      output_config: { effort: "low" },
       messages: [{
         role: "user",
         content: [
