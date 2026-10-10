@@ -972,6 +972,189 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
 }
 
 // ==================================================================
+// Imperio Properties (Qobrix native feed, <properties><qobrix><version>0.5).
+// NOT the Kyero layout Mito's Qobrix feed uses: this one names its project in
+// <short_description> ("Silicon Park"), numbers each unit (<unit_number>) and
+// carries a real <status>, construction stage, delivery quarter and areas.
+// Project identity is therefore the slug of that name — no clustering.
+//
+// Two feed habits shape the code:
+//  - Every unit re-uploads the project's renders under fresh file UUIDs
+//    (2026-10-10: Silicon Park 260 image URLs, 35 distinct files). Mirrored
+//    by URL that is 85 % duplicates in the gallery and ~440 needless
+//    downloads. Images are collapsed to one canonical URL per distinct file,
+//    identified by Content-Length (HEAD, memoised per process). The canonical
+//    URL is the lexicographically smallest of its group, so it stays stable
+//    while the group's members come and go.
+//  - Floor plans are one-page PDFs (no image variant exists). They go into
+//    `plans` as-is; the mirror rasterises a PDF plan's first page
+//    (mirrorImage's pdfFirstPage option, used for plan arrays only).
+// ==================================================================
+const IMPERIO_URL = "https://imperio.eu1.qobrix.com/api/v2/feeds/1a13d714a5edd6e0f2ba1beb296e724750b2d6c35bc394d4b5c6b2599ba231d6";
+
+export const qobrixProjectId = (name: string) =>
+  name.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+/** Qobrix unit status → ours. Unknown values never read as "available". */
+export function qobrixStatus(s: string): "available" | "reserved" | "sold" {
+  const v = s.trim().toLowerCase();
+  if (v === "available") return "available";
+  if (v === "sold" || v === "rented") return "sold";
+  return "reserved"; // reserved, under_offer, and anything unrecognised
+}
+
+export function qobrixStage(s: string): string {
+  const v = s.trim().toLowerCase();
+  if (v === "offplans" || v === "off_plan" || v === "offplan") return "Off Plan";
+  if (v === "construction_phase" || v === "under_construction") return "Under Construction";
+  if (v === "completed" || v === "ready" || v === "resale") return "Completed";
+  return "";
+}
+
+/** "Q2 2029" from the custom delivery fields; the LATEST when units differ
+    (Silicon Park's two phases: Q1 and Q2 2029) — the conservative promise. */
+export function qobrixCompletion(rows: { quarter: string; year: string; built: string }[]): string {
+  const dated = rows
+    .map((r) => ({ q: Number(r.quarter.replace(/\D/g, "")) || 0, y: Number(r.year) || 0 }))
+    .filter((d) => d.y > 0)
+    .sort((a, b) => a.y - b.y || a.q - b.q);
+  const last = dated[dated.length - 1];
+  if (last) return last.q ? `Q${last.q} ${last.y}` : String(last.y);
+  const built = rows.map((r) => Number(r.built) || 0).filter(Boolean).sort((a, b) => a - b);
+  return built.length ? String(built[built.length - 1]) : "";
+}
+
+const qobrixSizeCache = new Map<string, string>();
+async function qobrixContentLength(url: string): Promise<string> {
+  const hit = qobrixSizeCache.get(url);
+  if (hit !== undefined) return hit;
+  let key = "";
+  try {
+    const r = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10000), cache: "no-store" });
+    const len = r.ok ? r.headers.get("content-length") ?? "" : "";
+    key = len && Number(len) > 0 ? `len:${len}` : "";
+  } catch { key = ""; }
+  qobrixSizeCache.set(url, key);
+  return key;
+}
+/** url → canonical url (smallest url among files of identical size). A url
+    whose size cannot be read keys on itself — never merged with anything. */
+export async function canonicalizeByContentLength(urls: string[], lengthOf: (u: string) => Promise<string> = qobrixContentLength): Promise<Map<string, string>> {
+  const uniq = Array.from(new Set(urls));
+  const keys = new Map<string, string>();
+  for (let i = 0; i < uniq.length; i += 8) {
+    const batch = uniq.slice(i, i + 8);
+    const ks = await Promise.all(batch.map((u) => lengthOf(u)));
+    batch.forEach((u, j) => keys.set(u, ks[j] || `url:${u}`));
+  }
+  const best = new Map<string, string>();
+  for (const u of uniq) {
+    const k = keys.get(u)!;
+    const cur = best.get(k);
+    if (!cur || u < cur) best.set(k, u);
+  }
+  return new Map(uniq.map((u) => [u, best.get(keys.get(u)!)!]));
+}
+
+type QobrixRow = Record<string, any>;
+const q = (p: QobrixRow, k: string) => clean(p?.[k]);
+const qNum = (p: QobrixRow, k: string) => { const n = Number(q(p, k)); return Number.isFinite(n) && n > 0 ? n : null; };
+const m2 = (n: number | null) => (n ? `${Number.isInteger(n) ? n : n.toFixed(1)} m²` : "");
+const qMedia = (p: QobrixRow, kind: "img" | "document") =>
+  arr(p?.media?.[kind]).map((m: any) => ({ url: secure(txt(m)), cat: String(m?.$?.category ?? "") })).filter((m) => /^https?:\/\//.test(m.url));
+
+async function imperioRows(): Promise<QobrixRow[]> {
+  const all = arr((await cachedParse(IMPERIO_URL))?.properties?.property);
+  // Only sale listings the developer itself publishes on its website. An
+  // "unpublished" unit is one Imperio deliberately keeps off its own site.
+  return all.filter((p: QobrixRow) => q(p, "sale_rent") === "for_sale" && q(p, "website_status") !== "unpublished" && q(p, "short_description"));
+}
+
+function qobrixUnitType(p: QobrixRow): string {
+  const sub = q(p, "property_subtype").toLowerCase();
+  if (sub === "penthouse") return "Penthouse";
+  if (sub === "studio") return "Studio";
+  const t = q(p, "property_type").toLowerCase();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, " ") : "Apartment";
+}
+
+async function imperio(id: string): Promise<ProjectVM | null> {
+  const group = (await imperioRows()).filter((p) => qobrixProjectId(q(p, "short_description")) === id);
+  if (!group.length) return null;
+  const name = q(group[0], "short_description");
+  const canon = await canonicalizeByContentLength(group.flatMap((p) => qMedia(p, "img").map((m) => m.url)));
+  const c = (u: string) => canon.get(u) ?? u;
+
+  const units: UnitVM[] = group
+    .slice()
+    .sort((a, b) => q(a, "unit_number").localeCompare(q(b, "unit_number"), "en", { numeric: true }))
+    .map((p) => {
+      const ref = q(p, "unit_number") || q(p, "ref");
+      const status = qobrixStatus(q(p, "status"));
+      const type = qobrixUnitType(p);
+      const [lat, lng] = q(p, "coordinates").split(",").map(Number);
+      const floor = q(p, "floor_number");
+      const imgs = qMedia(p, "img");
+      const attrs = [
+        ["Uncovered veranda", m2(qNum(p, "uncovered_verandas_amount"))],
+        ["Roof garden", m2(qNum(p, "roof_garden_area_amount"))],
+        ["Parking", q(p, "parking") === "1" ? "Yes" : ""],
+        ["Storage", q(p, "storage_space") === "1" ? "Yes" : ""],
+      ].filter(([, v]) => v).map(([n, v]) => ({ name: String(n), value: String(v) }));
+      const features = [q(p, "sea_view") === "1" && "Sea view", q(p, "mountain_view") === "1" && "Mountain view"].filter(Boolean) as string[];
+      return {
+        ref, name: `Nr. ${ref}`, label: `Nr. ${ref}`, type, status, statusLabel: unitStatusLabel(status),
+        price: qNum(p, "list_selling_price_amount"), currency: "EUR",
+        beds: type === "Studio" ? "0" : q(p, "bedrooms"), baths: q(p, "bathrooms") !== "0" ? q(p, "bathrooms") : "",
+        // Interior only: Covered is derived as interior + covered veranda downstream (formatArea.coveredArea).
+        areaBuilt: m2(qNum(p, "internal_area_amount")), areaPlot: "",
+        areaVeranda: m2(qNum(p, "covered_verandas_amount")),
+        floor: floor === "0" ? "Ground" : floor,
+        attrs, features,
+        photos: Array.from(new Set([...imgs.filter((m) => m.cat === "featured_photo"), ...imgs.filter((m) => m.cat !== "featured_photo")].map((m) => c(m.url)))),
+        plans: qMedia(p, "document").filter((m) => m.cat === "floor_plans").map((m) => m.url),
+        coords: Number.isFinite(lat) && Number.isFinite(lng) && lat ? { lat, lng } : null,
+        description: "",
+      };
+    });
+
+  const center = units.find((u) => u.coords)?.coords ?? null;
+  const ov = OVERRIDES[`imperio:${id}`] ?? {};
+  const district = districtFor(center) || districtFromText(q(group[0], "city")) || "Limassol";
+  const munic = q(group[0], "municipality") || q(group[0], "city");
+  const area = ov.area ?? (munic && munic.toLowerCase() !== district.toLowerCase() ? munic : "");
+  // Featured photos first, then the rest; one entry per distinct file.
+  const gallery = Array.from(new Set(group.flatMap((p) => {
+    const imgs = qMedia(p, "img");
+    return [...imgs.filter((m) => m.cat === "featured_photo"), ...imgs.filter((m) => m.cat !== "featured_photo")].map((m) => c(m.url));
+  })));
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+  const all = (k: string, v = "1") => group.every((p) => q(p, k) === v);
+  const amenities = [
+    all("common_swimming_pool") && "Communal swimming pool",
+    all("elevator") && "Elevator",
+    all("air_condition") && "A/C split units",
+    all("storage_space") && "Storage room",
+    group.every((p) => q(p, "heating_medium") === "underfloor_heating") && "Underfloor heating",
+  ].filter(Boolean) as string[];
+  const grade = q(group[0], "energy_efficiency_grade").toUpperCase();
+  // The unit texts are per-apartment sales copy; the longest is the most complete
+  // fallback until the operator's own description replaces it.
+  const desc = group.map((p) => tidyDesc(q(p, "description"))).sort((a, b) => b.length - a.length)[0] ?? "";
+  return {
+    id, dev: "imperio", publicName: ov.name ?? name, developerName: name, developer: "Imperio Properties",
+    area, district, town: "", location: joinLoc(district, area),
+    status: "Available", category: "Residential",
+    stage: qobrixStage(q(group[0], "construction_stage")),
+    completion: qobrixCompletion(group.map((p) => ({ quarter: q(p, "custom_delivery_quarter"), year: q(p, "custom_delivery_year"), built: q(p, "construction_year") }))),
+    energy: grade && /^[A-G]\+?$/.test(grade) ? grade : "",
+    description: desc,
+    gallery, plans: [], renders: [], amenities, heroVideo: ov.heroVideo, center, units,
+    priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: "EUR",
+  };
+}
+
+// ==================================================================
 // Mito (Qobrix) — clustering. The feed carries no project id, no project name
 // field and no <url> — the hook squareOne uses. Projects are therefore derived
 // by grouping properties, and NEITHER available signal is sufficient on its own.
@@ -1598,6 +1781,7 @@ const DEVELOPERS: Record<string, { label: string; default: string }> = {
   medousa: { label: "Medousa", default: "PRJ-10034" },
   squareone: { label: "Square One", default: "neon" },
   leptos: { label: "Leptos Estates", default: "BAG" },
+  imperio: { label: "Imperio Properties", default: "silicon-park" },
 };
 export const DEV_LIST = Object.entries(DEVELOPERS).map(([id, d]) => ({ id, ...d }));
 
@@ -1621,6 +1805,11 @@ export async function listProjectIds(dev: string): Promise<string[]> {
     catch { return []; }
   }
   if (dev === "squareone") return uniq(arr((await cachedParse(SQUAREONE_URL))?.kyero?.property).map((p: any) => projectSlugFrom(p.url)));
+  if (dev === "imperio") {
+    // try/catch for the same reason as leptos below: a failed fetch must not throw out of syncAll.
+    try { return uniq((await imperioRows()).map((p) => qobrixProjectId(q(p, "short_description")))); }
+    catch { return []; }
+  }
   if (dev === "leptos") {
     // try/catch as in the medousa branch above: a failed fetch here must not
     // throw out of syncAll, which would skip every later developer's log row,
@@ -1638,6 +1827,7 @@ export async function getPreviewProject(dev = "island-blue", id?: string): Promi
   if (dev === "pafilia" || dev === "domenica") return xml2u(dev, target);
   if (dev === "medousa") return medousa(target);
   if (dev === "squareone") return squareOne(target);
+  if (dev === "imperio") return imperio(target);
   if (dev === "leptos") {
     const g = (await leptosGroups()).find((x) => x.key === target);
     return g ? leptosVm(g) : null;

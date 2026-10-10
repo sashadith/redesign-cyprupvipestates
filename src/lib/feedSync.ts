@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoCluster, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
-import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
+import { mirrorAll, mirrorImage, type MirrorOpts, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
@@ -46,6 +46,9 @@ export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   leptos: { slug: "leptos-xml", name: "Leptos Estates (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
+  // Qobrix native feed (2026-10-10). No account existed; the public page
+  // /developers/imperio-properties did (group d53daa1e-…), linked by hand.
+  imperio: { slug: "imperio-properties", name: "Imperio Properties" },
 };
 
 async function ensureAccount(dev: string): Promise<string> {
@@ -218,7 +221,7 @@ export type SyncResult = {
 // would buy here is a shorter window of a thinner catalogue, and inventing one
 // to claim a safety property the shared thresholds already provide would be
 // cargo cult with a comment attached.
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos"];
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos", "imperio"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;
@@ -433,11 +436,14 @@ async function classifyFreshUrls(
 // to tell which input they belonged to) — needed here to reconstruct a
 // gallery/plans/photos array that mixes reused-as-is duplicates with newly
 // mirrored genuine content, in the original order.
-async function mirrorEachTracked(urls: string[], devKey: string, concurrency = 4): Promise<Map<string, string>> {
+// Plan arrays accept one-page PDF plans (rasterised by mirrorImage); galleries and photos do not.
+const PLAN_MIRROR: MirrorOpts = { pdfFirstPage: true };
+
+async function mirrorEachTracked(urls: string[], devKey: string, concurrency = 4, opts: MirrorOpts = {}): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   for (let i = 0; i < urls.length; i += concurrency) {
     const batch = urls.slice(i, i + concurrency);
-    const results = await Promise.all(batch.map((u) => mirrorImage(u, devKey)));
+    const results = await Promise.all(batch.map((u) => mirrorImage(u, devKey, opts)));
     batch.forEach((u, j) => { const r = results[j]; if (r) map.set(u, r.url); });
   }
   return map;
@@ -523,7 +529,7 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       const galleryClass = await classifyFreshUrls(vm.gallery, resolvedStoredGallery);
       const plansClass = await classifyFreshUrls(vm.plans, (existing?.plans as string[] | null) ?? []);
       const galleryNewMap = await mirrorEachTracked(galleryClass.genuinelyNew, dk);
-      const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk);
+      const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk, 4, PLAN_MIRROR);
       mirroredNewFiles = galleryNewMap.size > 0 || plansNewMap.size > 0;
       // gallery/plans stay frozen in the DB write below regardless (an
       // admin's curated set must never be silently replaced — see
@@ -544,7 +550,7 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       // Draft/ready/archived — unaffected by any drift/dedup bookkeeping,
       // full normal mirror exactly as before this feature existed.
       const gallery = await mirrorAll(vm.gallery, dk);
-      const plans = await mirrorAll(vm.plans, dk);
+      const plans = await mirrorAll(vm.plans, dk, 4, PLAN_MIRROR);
       mirroredNewFiles = gallery.anyNew || plans.anyNew;
       vm.gallery = gallery.urls;
       vm.plans = plans.urls;
@@ -611,14 +617,14 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
         const photosClass = await classifyFreshUrls(u.photos, (match.photos as string[] | null) ?? []);
         const plansClass = await classifyFreshUrls(u.plans, (match.plans as string[] | null) ?? []);
         const photosNewMap = await mirrorEachTracked(photosClass.genuinelyNew, dk);
-        const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk);
+        const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk, 4, PLAN_MIRROR);
         u.photos = u.photos.map((p) => photosClass.reuse.get(p) ?? photosNewMap.get(p)).filter((p): p is string => !!p);
         u.plans = u.plans.map((p) => plansClass.reuse.get(p) ?? plansNewMap.get(p)).filter((p): p is string => !!p);
         if (photosNewMap.size > 0 || plansNewMap.size > 0) mirroredNewFiles = true;
       } else {
         const photos = await mirrorAll(u.photos, dk);
         u.photos = photos.urls;
-        const uPlans = await mirrorAll(u.plans, dk);
+        const uPlans = await mirrorAll(u.plans, dk, 4, PLAN_MIRROR);
         u.plans = uPlans.urls;
         if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
       }

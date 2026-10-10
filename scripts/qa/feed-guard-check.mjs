@@ -34,7 +34,7 @@ writeFileSync(f, out.outputFiles[0].text);
 const F = await import(f);
 
 const prisma = new PrismaClient();
-const DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos"];
+const DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos", "imperio"];
 let blockedAny = false;
 
 for (const dev of DEVS) {

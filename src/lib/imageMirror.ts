@@ -394,8 +394,17 @@ export async function classifyByContent(
   return { genuinelyNew, duplicateOf };
 }
 
-export async function mirrorImage(src: string, devKey: string): Promise<MirrorResult | null> {
+// pdfFirstPage (plan arrays only): a floor plan a feed ships as a PDF
+// (Imperio/Qobrix, 2026-10-10: one-page A3 per unit, no image variant) is
+// rasterised to its first page and stored under the SOURCE url's hash like
+// any image, so the next sync's allVariantsPresent() skip and feedSync's
+// hash-first drift check both treat it as already mirrored. Galleries never
+// pass it: a stray brochure PDF there should still be dropped, not shown.
+export type MirrorOpts = { pdfFirstPage?: boolean };
+
+export async function mirrorImage(src: string, devKey: string, opts: MirrorOpts = {}): Promise<MirrorResult | null> {
   if (!src || !/^https?:\/\//i.test(src)) return null;
+  const usable = (ct: string) => /image\//i.test(ct) || (!!opts.pdfFirstPage && /application\/pdf/i.test(ct));
   const h = sourceUrlHash(src);
   const large = toLargeVariant(src);
   const dir = join(root(), devKey);
@@ -403,15 +412,20 @@ export async function mirrorImage(src: string, devKey: string): Promise<MirrorRe
   if (await allVariantsPresent(dir, h)) return { url: mediumUrl, wasNew: false }; // already mirrored → skip download
   try {
     let res = await fetch(large, { signal: AbortSignal.timeout(20000), cache: "no-store" });
-    if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) {
+    if (!res.ok || !usable(res.headers.get("content-type") ?? "")) {
       if (large !== src) {
         console.warn(`[imageMirror] large-variant fetch failed (${res.status}) for ${large} (devKey=${devKey}) — falling back to ${src}`);
         res = await fetch(src, { signal: AbortSignal.timeout(20000), cache: "no-store" });
       }
       if (!res.ok) return null;
-      if (!/image\//i.test(res.headers.get("content-type") ?? "")) return null; // e.g. Cloudflare HTML
+      if (!usable(res.headers.get("content-type") ?? "")) return null; // e.g. Cloudflare HTML
     }
-    const buf = Buffer.from(await res.arrayBuffer());
+    let buf: Buffer = Buffer.from(await res.arrayBuffer());
+    if (/application\/pdf/i.test(res.headers.get("content-type") ?? "")) {
+      const [first] = await pdfPagesToJpegs(buf, 1);
+      if (!first) { console.error(`[imageMirror] PDF plan could not be rasterised: ${src} (devKey=${devKey})`); return null; }
+      buf = first;
+    }
     await mkdir(dir, { recursive: true });
     await writeAllVariants(buf, dir, h);
     return { url: mediumUrl, wasNew: true };
@@ -484,11 +498,11 @@ export async function pdfPagesToJpegs(buf: Buffer, maxPages = 6): Promise<Buffer
 // entry is assumed to be an external URL — use this for feed-sourced arrays
 // (feedSync.ts), where a failed mirror is simply omitted (the feed remains
 // the source of truth next sync).
-export async function mirrorAll(urls: string[], devKey: string, concurrency = 4): Promise<{ urls: string[]; anyNew: boolean }> {
+export async function mirrorAll(urls: string[], devKey: string, concurrency = 4, opts: MirrorOpts = {}): Promise<{ urls: string[]; anyNew: boolean }> {
   const out: string[] = [];
   let anyNew = false;
   for (let i = 0; i < urls.length; i += concurrency) {
-    const batch = await Promise.all(urls.slice(i, i + concurrency).map((u) => mirrorImage(u, devKey)));
+    const batch = await Promise.all(urls.slice(i, i + concurrency).map((u) => mirrorImage(u, devKey, opts)));
     for (const r of batch) if (r) { out.push(r.url); if (r.wasNew) anyNew = true; }
   }
   return { urls: out, anyNew };
