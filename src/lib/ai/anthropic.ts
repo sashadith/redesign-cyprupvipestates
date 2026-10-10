@@ -35,8 +35,12 @@ export const AI_MODEL_FAST = process.env.ANTHROPIC_MODEL_FAST || "claude-haiku-5
 // Sonnet 5.5, Opus 5.5 and Fable/Mythos 5.1 answer a forced tool_choice
 // ({type:"tool"} or {type:"any"}) with a 400. Found the hard way on 2026-10-10:
 // switching prod's ANTHROPIC_MODEL to claude-sonnet-5-5 broke every structured
-// call in the app at once, while a plain-prompt smoke test passed.
-const rejectsForcedTool = (model: string) => /^claude-(sonnet-5-5|opus-5-5|fable-5-1|mythos-5-1)/.test(model);
+// call in the app at once, while a plain-prompt smoke test passed. So this is an
+// allow-list of models known to ACCEPT forcing: an unlisted model ID put in an
+// env var gets the steered path, which every current model accepts, instead of
+// a 400 on every call.
+const acceptsForcedTool = (model: string) =>
+  /^claude-(haiku-5-5|haiku-4-5|sonnet-5(?!-5)|sonnet-4|opus-5(?!-5)|opus-4)/.test(model);
 
 type ForcedToolParams = Anthropic.MessageCreateParamsNonStreaming & {
   tool_choice: { type: "tool"; name: string };
@@ -56,7 +60,7 @@ type ForcedToolParams = Anthropic.MessageCreateParamsNonStreaming & {
  * setting; they think at low effort with extra token room instead.
  */
 export async function createToolCall(client: Anthropic, params: ForcedToolParams): Promise<Anthropic.Message> {
-  if (!rejectsForcedTool(params.model)) return client.messages.create(params);
+  if (acceptsForcedTool(params.model)) return client.messages.create(params);
 
   const instruction = `Answer only by calling the \`${params.tool_choice.name}\` tool exactly once. Write no text before or after the call.`;
   // Appended after any cache_control block, so the cached prefix is unchanged.
@@ -71,7 +75,8 @@ export async function createToolCall(client: Anthropic, params: ForcedToolParams
     req.thinking = { type: "between_tools" };
   } else {
     req.output_config = { ...(params.output_config ?? {}), effort: "low" };
-    req.max_tokens = params.max_tokens + 8000;
+    // Capped below the ~21k tokens at which the SDK refuses a non-streaming call.
+    req.max_tokens = Math.min(params.max_tokens + 8000, 21000);
   }
 
   const once = () => client.messages.create(req as unknown as Anthropic.MessageCreateParamsNonStreaming);

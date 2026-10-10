@@ -162,7 +162,7 @@ export async function extractAmenitiesForSection(sectionText: string): Promise<{
   try {
     const msg = await createToolCall(client, {
       model: AI_MODEL_FAST,
-      max_tokens: 800,
+      max_tokens: 1100, // 800 on Haiku 4.5; Haiku 5.5 counts ~30% more tokens for the same text
       tools: [{ name: "data", description: "Extracted amenities.", input_schema: SCHEMA_AMEN_SECTION }],
       tool_choice: { type: "tool", name: "data" },
       messages: [{ role: "user", content: PROMPT_AMEN_SECTION + sectionText.slice(0, 20000) }],
@@ -182,11 +182,19 @@ async function callTool(client: any, prompt: string, schema: any): Promise<any[]
   for (let attempt = 0; attempt < 3; attempt++) {
     const msg = await createToolCall(client, {
       model: AI_MODEL_FAST,
-      max_tokens: 16000,
+      // 16000 on Haiku 4.5; +30% for Haiku 5.5's tokenizer. Stays under the
+      // ~21k ceiling above which the SDK refuses a non-streaming request.
+      max_tokens: 20000,
       tools: [{ name: "data", description: "Extracted items.", input_schema: schema }],
       tool_choice: { type: "tool", name: "data" },
       messages: [{ role: "user", content: prompt }],
     });
+    // A cut-off reply will be cut off again: retrying the identical request
+    // only hid it, and the section came back as zero units with no trace.
+    if (msg.stop_reason === "max_tokens") {
+      console.error(`[pricelistExtract] tool output hit max_tokens (${msg.usage?.output_tokens} tokens) — section skipped`);
+      return [];
+    }
     const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
     let items: any = tool?.input?.items;
     if (typeof items === "string") { try { items = JSON.parse(items); } catch { items = null; } }

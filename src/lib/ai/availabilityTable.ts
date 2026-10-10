@@ -509,7 +509,7 @@ export async function mapTableColumns(table: RawTable, context: string): Promise
     for (let attempt = 0; attempt < 3 && !memo; attempt++) {
       const msg = await createToolCall(client, {
         model: AI_MODEL_FAST,
-        max_tokens: 2000,
+        max_tokens: 2600, // 2000 on Haiku 4.5; Haiku 5.5 counts ~30% more tokens
         // No temperature: Haiku 5.5 rejects anything but the default (400). It was
         // 0 so the mapping wouldn't drift between weekly runs; the memo above and
         // the column-index validation below are what actually hold it steady.

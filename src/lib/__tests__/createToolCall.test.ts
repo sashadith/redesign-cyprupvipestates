@@ -69,7 +69,8 @@ test("the instruction is appended after the system blocks, leaving the cached pr
 
   const s = fakeClient([toolReply]);
   await createToolCall(s.client, base("claude-sonnet-5-5", { system: "role" }));
-  assert.match(s.sent[0].system, /^role\n\n.*exactly once/s);
+  assert.ok(s.sent[0].system.startsWith("role\n\n"));
+  assert.match(s.sent[0].system, /exactly once/);
 });
 
 test("Opus 5.5 can't take between_tools: low effort and extra room for thinking instead", async () => {
@@ -98,4 +99,17 @@ test("a max_tokens cut or a refusal is not retried — the caller reports it", a
     await createToolCall(client, base("claude-sonnet-5-5"));
     assert.equal(sent.length, 1, stop_reason);
   }
+});
+
+test("an unknown model ID gets the steered path, not a forced tool_choice", async () => {
+  const { client, sent } = fakeClient([toolReply]);
+  await createToolCall(client, base("claude-sonnet-6"));
+  assert.equal(sent[0].tool_choice.type, "auto");
+  assert.equal(sent[0].thinking, undefined, "between_tools is Sonnet 5.5-only");
+});
+
+test("the extra thinking room stays under the SDK's non-streaming ceiling", async () => {
+  const { client, sent } = fakeClient([toolReply]);
+  await createToolCall(client, base("claude-opus-5-5", { max_tokens: 20000 }));
+  assert.equal(sent[0].max_tokens, 21000);
 });

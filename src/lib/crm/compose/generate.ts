@@ -26,7 +26,9 @@ export type ComposeResult =
   | { ok: true; channel: ComposeChannel; subject: string | null; body: string; leadState: LeadState; matchedDevelopmentNames: string[] }
   | { ok: false; error: string };
 
-const MAX_TOKENS: Record<ComposeChannel, number> = { WHATSAPP: 400, EMAIL: 1100 };
+// WhatsApp was 400 under a forced tool call. Sonnet 5.5 can only be steered to
+// the tool (createToolCall), so leave room for a stray sentence before it.
+const MAX_TOKENS: Record<ComposeChannel, number> = { WHATSAPP: 600, EMAIL: 1100 };
 const TOP_MATCHES = 3;
 const MIN_SCORE_TO_MENTION = 40; // below this, a "match" is too weak to be worth naming — treat as no real match
 

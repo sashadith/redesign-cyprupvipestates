@@ -183,7 +183,7 @@ export async function extractAmenitiesFromText(sourceText: string): Promise<stri
   try {
     const msg = await createToolCall(client, {
       model: AI_MODEL_FAST,
-      max_tokens: 500,
+      max_tokens: 700, // 500 on Haiku 4.5; Haiku 5.5 counts ~30% more tokens
       tools: [{ name: "data", description: "Extracted amenities.", input_schema: { type: "object", properties: { amenities: { type: "array", items: { type: "string" } } }, required: ["amenities"] } }],
       tool_choice: { type: "tool", name: "data" },
       messages: [{ role: "user", content: `Extract a short list of real included amenities/features from this marketing text (e.g. "Infinity pool", "Underfloor heating", "Concealed A/C", "Private parking"). Short noun phrases, no sentences. Empty list if none found — never invent.\n\n${sourceText.slice(0, 8000)}` }],
