@@ -19,6 +19,7 @@ import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
+import { publicDeveloperLabel } from "./developerPublicLabel";
 
 /* Korantina Homes' SharePoint sync (2026-08-26).
 
@@ -693,7 +694,7 @@ export async function writeKorantinaDraft(
 
         const description = needsContent && sourceText
           ? await generateProjectDescription({
-              publicName: t.projectName, developer: acct.name,
+              publicName: t.projectName, developer: await publicDeveloperLabel(acct.id, acct.name),
               district: "", town: "", area: "",
               projectAmenities: amenities, unitAmenities: [],
               unitSummary: `${units.length} units, ${avail} available`,
@@ -705,7 +706,7 @@ export async function writeKorantinaDraft(
           where: { feedKey: t.feedKey },
           create: {
             developerAccountId, dev: "sharepoint", feedProjectId: t.feedProjectId, feedKey: t.feedKey,
-            developerName: t.projectName, publicName: t.projectName, developer: acct.name,
+            developerName: t.projectName, publicName: t.projectName, developer: await publicDeveloperLabel(acct.id, acct.name),
             publishStatus: "draft",
             unitsTotal: units.length, unitsAvailable: avail,
             priceFrom: prices.length ? Math.min(...prices) : null,
