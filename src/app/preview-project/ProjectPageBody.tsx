@@ -94,6 +94,17 @@ export default async function ProjectPageBody({
   // claim more units than the list underneath it actually shows
   // (GALAXY RESIDENCES: "29 Units" over a list of 27, 2026-08-19).
   const listed = listedUnits(p.units);
+  /* What UnitsView actually draws. It renders available units only (sold and
+     reserved contribute a number to the line under the heading and nothing
+     else), and it is the page's only client component that takes units — so
+     anything handed to it crosses into the RSC payload. Passing p.units meant
+     shipping every sold unit's photos, plans, attrs and description to a
+     browser that would never draw them: 1,027 unit-photo URLs across 127
+     published, still-selling projects when this was measured on 2026-10-09,
+     worst case avalon-residences at 492 URLs for 34 unrendered units.
+     UnitsView still filters internally, so this is an optimisation, not a new
+     precondition — see the note on its unavailableCount prop. */
+  const renderableUnits = listed.filter((u) => u.status === "available");
   // p.priceFrom is already fully resolved (override -> Development.priceFrom ->
   // cheapest available unit) by resolveDevelopmentPrice() in mapRowToVM — see
   // src/lib/developmentCard.ts, the single source of truth every surface
@@ -336,7 +347,7 @@ export default async function ProjectPageBody({
           <section className="pp-wrap pp-section pp-units-sec" id="units">
             {/* Heading + availability line live inside UnitsView, which renders
                 them in one row with the view switch. */}
-            <UnitsView units={p.units} lang={lang} projectName={p.publicName} />
+            <UnitsView units={renderableUnits} unavailableCount={listed.length - renderableUnits.length} lang={lang} projectName={p.publicName} />
           </section>
         )}
 
