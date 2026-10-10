@@ -13,7 +13,8 @@ import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
 import { localizedHref, LOCALES, isLocale, PUBLIC_LOCALES } from "@/lib/locale";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
-import { developerImpact, deactivateDeveloperGroup, reactivateDeveloperGroup, deleteDeveloperGroup, type DeveloperImpact } from "@/lib/developerLifecycle";
+import { developerImpact, deactivateDeveloperGroup, reactivateDeveloperGroup, deleteDeveloperGroup, deleteConfirmationMatches, type DeveloperImpact } from "@/lib/developerLifecycle";
+import { developerAccountDeleteImpact, type AccountDeleteImpact } from "@/lib/developerAccountDelete";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
@@ -2099,8 +2100,21 @@ export async function saveDeveloperContact(id: string, _prev: any, formData: For
   return { ok: true };
 }
 
-export async function deleteDeveloperAccount(id: string) {
+// What the delete dialog shows before it asks for the typed name.
+export async function getDeveloperAccountDeleteImpact(id: string): Promise<AccountDeleteImpact> {
   await requireSession();
+  return developerAccountDeleteImpact(prisma, id);
+}
+
+export async function deleteDeveloperAccount(id: string, typedName: string) {
+  await requireSession();
+  // The dialog only enables Delete once the typed name matches; checked here
+  // too, so no other caller can skip it.
+  const named = await prisma.developerAccount.findUnique({ where: { id }, select: { name: true } });
+  if (!named) return { error: "This developer no longer exists." };
+  if (!deleteConfirmationMatches(typedName, named.name)) {
+    return { error: `Type the developer name "${named.name}" to confirm.` };
+  }
   // The comment here used to read "cascades analyses". It also cascades every
   // Development of this account (schema: onDelete: Cascade), and that makes it
   // the one way to take a developer off CVE that the Xellex bridge cannot

@@ -301,7 +301,7 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
       </div>
 
       {/* Danger */}
-      <DeleteDeveloperButton id={dev.id} name={dev.name} developmentCount={dev.developments.length} />
+      <DeleteDeveloperButton id={dev.id} name={dev.name} />
     </div>
   );
 }
