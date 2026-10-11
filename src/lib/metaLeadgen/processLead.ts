@@ -24,14 +24,11 @@ type Claim = { ok: true } | { ok: false; reason: "done" | "in-flight" };
 async function claim(leadgenId: string): Promise<Claim> {
   const row = await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId } });
   if (!row) {
-    try {
-      await prisma.metaLeadgenEvent.create({ data: { leadgenId, status: "PROCESSING", attempts: 1 } });
-      return { ok: true };
-    } catch (e) {
-      // The other path (webhook vs poller) claimed it a moment ago.
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return { ok: false, reason: "in-flight" };
-      throw e;
-    }
+    // skipDuplicates (ON CONFLICT DO NOTHING) rather than catching P2002: the
+    // other path (webhook vs poller) claiming it a moment ago is expected, not
+    // an error worth Prisma's error log.
+    const { count } = await prisma.metaLeadgenEvent.createMany({ data: [{ leadgenId, status: "PROCESSING", attempts: 1 }], skipDuplicates: true });
+    return count === 1 ? { ok: true } : { ok: false, reason: "in-flight" };
   }
   if (row.status === "DONE") return { ok: false, reason: "done" };
   if (row.status === "PROCESSING" && Date.now() - row.updatedAt.getTime() < STALE_CLAIM_MS) return { ok: false, reason: "in-flight" };
