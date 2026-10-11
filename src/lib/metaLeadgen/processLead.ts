@@ -2,7 +2,8 @@
 // (src/app/api/webhooks/meta-leadgen) and the fallback poller
 // (src/app/api/cron/meta-leadgen-poll). Idempotent on leadgen_id via
 // MetaLeadgenEvent; see the schema comment there for the claim/DONE contract.
-import { Prisma } from "@prisma/client";
+import { Prisma, type LeadStatus } from "@prisma/client";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { canonicalizeEmail } from "@/lib/emailInbound/matchLead";
@@ -19,7 +20,9 @@ export type ProcessResult =
   | { status: "skipped"; reason: "done" | "in-flight" }
   | { status: "failed"; error: string; tokenError: boolean };
 
-type Claim = { ok: true } | { ok: false; reason: "done" | "in-flight" };
+// `attempts` is the fencing token: the final DONE write only lands if the row
+// still carries the attempt number this run claimed it with.
+type Claim = { ok: true; attempts: number } | { ok: false; reason: "done" | "in-flight" };
 
 async function claim(leadgenId: string): Promise<Claim> {
   const row = await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId } });
@@ -28,7 +31,7 @@ async function claim(leadgenId: string): Promise<Claim> {
     // other path (webhook vs poller) claiming it a moment ago is expected, not
     // an error worth Prisma's error log.
     const { count } = await prisma.metaLeadgenEvent.createMany({ data: [{ leadgenId, status: "PROCESSING", attempts: 1 }], skipDuplicates: true });
-    return count === 1 ? { ok: true } : { ok: false, reason: "in-flight" };
+    return count === 1 ? { ok: true, attempts: 1 } : { ok: false, reason: "in-flight" };
   }
   if (row.status === "DONE") return { ok: false, reason: "done" };
   if (row.status === "PROCESSING" && Date.now() - row.updatedAt.getTime() < STALE_CLAIM_MS) return { ok: false, reason: "in-flight" };
@@ -38,18 +41,28 @@ async function claim(leadgenId: string): Promise<Claim> {
     where: { leadgenId, status: row.status, updatedAt: row.updatedAt },
     data: { status: "PROCESSING", attempts: { increment: 1 } },
   });
-  return taken.count === 1 ? { ok: true } : { ok: false, reason: "in-flight" };
+  return taken.count === 1 ? { ok: true, attempts: row.attempts + 1 } : { ok: false, reason: "in-flight" };
 }
 
-async function findExistingLeadId(email: string | null): Promise<string | null> {
+type Db = Prisma.TransactionClient | typeof prisma;
+type ExistingLead = { id: string; status: LeadStatus };
+
+/** Same person = same canonical email on a live, non-newsletter lead (the
+ *  MCP create-lead duplicate check's rule): a newsletter subscriber filling in
+ *  the form becomes a real lead, not a note on a row nobody's lists show. */
+async function findExistingLead(db: Db, email: string | null): Promise<ExistingLead | null> {
   const key = canonicalizeEmail(email);
   if (!key) return null;
   // Gmail-aware canonicalisation can't be a SQL filter — same in-JS compare the
   // inbound-email matcher and the MCP duplicate check already make.
-  const leads = await prisma.lead.findMany({ where: { deletedAt: null, email: { not: null } }, select: { id: true, email: true, createdAt: true } });
+  const leads = await db.lead.findMany({
+    where: { deletedAt: null, email: { not: null }, ...EXCLUDE_NEWSLETTER },
+    select: { id: true, email: true, createdAt: true, status: true },
+  });
   const hits = leads.filter((l) => canonicalizeEmail(l.email) === key);
   if (!hits.length) return null;
-  return hits.reduce((a, b) => (a.createdAt > b.createdAt ? a : b)).id;
+  const hit = hits.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
+  return { id: hit.id, status: hit.status };
 }
 
 function timelineBody(lead: MetaLead, formName: string | null, m: MappedLead, outcome: "CREATED" | "ATTACHED"): string {
@@ -90,24 +103,36 @@ async function markFailed(leadgenId: string, error: unknown, tokenError: boolean
   }
 }
 
-/** Sends a stored notification and stamps telegramSentAt. Never throws. */
+/** Sends a stored notification exactly once: telegramSentAt is CLAIMED
+ *  before the send (only one caller can flip it from null) and released
+ *  again if the send fails, so the poller retries. Never throws. */
 export async function sendOwedNotification(leadgenId: string, text: string, leadId: string | null, outcome: string | null): Promise<boolean> {
+  const claimed = await prisma.metaLeadgenEvent
+    .updateMany({ where: { leadgenId, status: "DONE", telegramSentAt: null }, data: { telegramSentAt: new Date() } })
+    .catch(() => ({ count: 0 }));
+  if (claimed.count !== 1) return false;
   try {
     const res = await sendTelegramMessage(text);
-    if (!res) return false; // Telegram not configured in this environment
-    await prisma.metaLeadgenEvent.update({ where: { leadgenId }, data: { telegramSentAt: new Date() } });
+    if (!res) throw new Error("Telegram not configured");
     if (leadId && outcome === "CREATED") await prisma.lead.update({ where: { id: leadId }, data: { telegramNotified: true } }).catch(() => {});
     return true;
   } catch (e) {
     console.error(`meta-leadgen: telegram for ${leadgenId} failed (poller will resend)`, e);
+    await prisma.metaLeadgenEvent.update({ where: { leadgenId }, data: { telegramSentAt: null } }).catch(() => {});
     return false;
   }
 }
 
 export async function processLeadgen(opts: { leadgenId: string; formId?: string | null; prefetched?: MetaLead; via: "webhook" | "poller" }): Promise<ProcessResult> {
   const { leadgenId } = opts;
-  const c = await claim(leadgenId);
+  let c: Claim;
+  try {
+    c = await claim(leadgenId);
+  } catch (e) {
+    return { status: "failed", error: `claim failed: ${e instanceof Error ? e.message : String(e)}`, tokenError: false };
+  }
   if (!c.ok) return { status: "skipped", reason: c.reason };
+  const claimedAttempts = c.attempts;
 
   try {
     const lead = opts.prefetched ?? (await fetchLead(leadgenId));
@@ -115,11 +140,9 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
     const form = formId ? await fetchForm(formId) : null;
     const formName = form?.name ?? null;
     const m = mapFieldData(lead.field_data ?? [], formName, form?.locale);
-    const existingId = await findExistingLeadId(m.email);
-    const outcome = existingId ? "ATTACHED" : "CREATED";
     const occurredAt = lead.created_time ? new Date(lead.created_time) : new Date();
-    const body = timelineBody(lead, formName, m, outcome);
-    const metadata = {
+    const emailKey = canonicalizeEmail(m.email);
+    const metaBase = {
       source: "meta_leadgen",
       via: opts.via,
       leadgenId,
@@ -138,8 +161,14 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
       fieldData: lead.field_data ?? [],
     } satisfies Prisma.InputJsonObject;
 
-    const leadId = await prisma.$transaction(async (tx) => {
-      let id = existingId;
+    const { leadId, outcome } = await prisma.$transaction(async (tx) => {
+      // Two different leadgen_ids with the same email arriving together (the
+      // form sent twice, or two forms) must not both CREATE: serialise on the
+      // email, then look up again under the lock.
+      if (emailKey) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"meta-leadgen:" + emailKey}))`;
+      const existing = await findExistingLead(tx, m.email);
+      const outcome: "CREATED" | "ATTACHED" = existing ? "ATTACHED" : "CREATED";
+      let id = existing?.id ?? null;
       if (!id) {
         const created = await tx.lead.create({
           data: {
@@ -165,7 +194,17 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         });
         id = created.id;
         await tx.leadActivity.create({ data: { leadId: id, type: "INBOUND", content: "Lead received via Meta lead form", createdBy: ACTOR } });
+      } else if (existing?.status === "LOST") {
+        // A lost lead asking again is a live lead again — back to NEW so it
+        // shows up in the active lists and the Action Center. CLOSED (a deal
+        // done) is left alone; the Telegram names the status instead.
+        await tx.lead.update({ where: { id }, data: { status: "NEW" } });
+        await tx.leadInteraction.create({
+          data: { leadId: id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (submitted the Meta lead form again)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "meta_leadgen", leadgenId } },
+        });
       }
+      const body = timelineBody(lead, formName, m, outcome);
+      const metadata = { ...metaBase, outcome };
       await tx.leadInteraction.create({
         data: { leadId: id, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", subject: "Meta lead form submitted", body, occurredAt, createdByName: ACTOR, metadata },
       });
@@ -182,12 +221,16 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         placeholderReason: m.placeholderReason,
         unmatchedCount: m.unmatched.length,
         leadId: id,
+        priorStatus: existing && existing.status !== "LOST" ? existing.status : null,
+        reopened: existing?.status === "LOST",
       });
-      await tx.metaLeadgenEvent.update({
-        where: { leadgenId },
+      const done = await tx.metaLeadgenEvent.updateMany({
+        where: { leadgenId, status: "PROCESSING", attempts: claimedAttempts },
         data: { status: "DONE", outcome, leadId: id, formId, formName, lastError: null, notification },
       });
-      return id;
+      // Fenced: another run took this claim over meanwhile — roll back ours.
+      if (done.count !== 1) throw new Error(`claim on ${leadgenId} was taken over by another run; rolled back`);
+      return { leadId: id, outcome };
     });
 
     const row = await prisma.metaLeadgenEvent.findUniqueOrThrow({ where: { leadgenId }, select: { notification: true } });
@@ -203,10 +246,26 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
 /** DONE rows whose Telegram never went out (Telegram down at the time). */
 export async function resendOwedNotifications(): Promise<number> {
   const owed = await prisma.metaLeadgenEvent.findMany({
-    where: { status: "DONE", telegramSentAt: null, notification: { not: null }, updatedAt: { gte: new Date(Date.now() - 7 * 86_400_000) } },
+    // Older than 2 min: a row that just turned DONE is still being sent by
+    // the run that processed it.
+    where: { status: "DONE", telegramSentAt: null, notification: { not: null }, updatedAt: { gte: new Date(Date.now() - 7 * 86_400_000), lt: new Date(Date.now() - 2 * 60_000) } },
     select: { leadgenId: true, notification: true, leadId: true, outcome: true },
   });
   let sent = 0;
   for (const r of owed) if (await sendOwedNotification(r.leadgenId, r.notification!, r.leadId, r.outcome)) sent++;
   return sent;
+}
+
+/** Every unfinished leadgen_id of any age (FAILED, or a PROCESSING claim
+ *  whose run died) — retried by id, independent of the poller's time window,
+ *  so a lead that failed or got stuck is never aged out. Bounded by Meta's
+ *  90-day retention. */
+export async function unfinishedLeadgenIds(): Promise<{ leadgenId: string; formId: string | null }[]> {
+  return prisma.metaLeadgenEvent.findMany({
+    where: {
+      createdAt: { gte: new Date(Date.now() - 90 * 86_400_000) },
+      OR: [{ status: "FAILED" }, { status: "PROCESSING", updatedAt: { lt: new Date(Date.now() - STALE_CLAIM_MS) } }],
+    },
+    select: { leadgenId: true, formId: true },
+  });
 }

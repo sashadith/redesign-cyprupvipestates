@@ -58,6 +58,7 @@ const graphLead = (d: L) => ({
 });
 let graphMode: "ok" | "token" = "ok";
 const failingLeads = new Set<string>();
+const unlisted = new Set<string>(); // fetchable by id, but outside any listing window
 let telegramCalls = 0;
 const telegramTexts: string[] = [];
 const realFetch = globalThis.fetch;
@@ -75,7 +76,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const parts = url.pathname.split("/").filter(Boolean).slice(1); // drop version
   if (parts[0] === PAGE && parts[1] === "leadgen_forms") return json({ data: FORMS });
   const form = FORMS.find((f) => f.id === parts[0]);
-  if (form && parts[1] === "leads") return json({ data: leadDefs.filter((d) => d.form === form.id && !failingLeads.has(d.id)).map(graphLead) });
+  if (form && parts[1] === "leads") return json({ data: leadDefs.filter((d) => d.form === form.id && !failingLeads.has(d.id) && !unlisted.has(d.id)).map(graphLead) });
   if (form) return json(form);
   const d = leadDefs.find((x) => x.id === parts[0]);
   if (d && failingLeads.has(d.id)) return json({ error: { code: 2, message: "Service temporarily unavailable" } }, 500);
@@ -248,6 +249,63 @@ step("10. auth + sinceHours");
 assert.equal((await pollRoute.GET(new NextRequest(`${base}/api/cron/meta-leadgen-poll?key=wrong`))).status, 401);
 assert.equal((await poll("&sinceHours=168")).sinceHours, 168);
 console.log("✓ wrong key → 401; sinceHours=168 honoured");
+
+step("11. aged-out FAILED lead: not in any listing any more → swept by id");
+const agedDef = { ...leadDefs[0], id: `${RUN}-11`, name: "Test Aged", email: mail("aged") };
+leadDefs.push(agedDef);
+failingLeads.add(agedDef.id);
+const ab = event([agedDef.id]);
+assert.equal((await (await post(ab, sign(ab))).json()).results[0].status, "failed");
+failingLeads.delete(agedDef.id);
+unlisted.add(agedDef.id);
+const p11 = await poll();
+assert.equal(p11.swept, 1, JSON.stringify(p11));
+assert.equal(p11.created, 1);
+assert.equal((await leadsFor(agedDef.email)).length, 1);
+console.log("✓ FAILED row outside the window retried by id and imported");
+
+step("12. newsletter subscriber with the same email → new real lead, not a note on the newsletter row");
+await prisma.lead.create({ data: { firstName: "News", lastName: "Letter", email: mail("news"), source: "NEWSLETTER" } });
+const newsDef = { ...leadDefs[0], id: `${RUN}-12`, name: "Test Newsletter", email: mail("news") };
+leadDefs.push(newsDef);
+const nb = event([newsDef.id]);
+assert.equal((await (await post(nb, sign(nb))).json()).results[0].status, "created");
+assert.deepEqual((await leadsFor(mail("news"))).map((l) => l.source).sort(), ["META_LEAD_AD", "NEWSLETTER"]);
+console.log("✓ newsletter row ignored for matching, META_LEAD_AD lead created");
+
+step("13. LOST lead submits again → attached and reopened as NEW; CLOSED left alone");
+const lost = await prisma.lead.create({ data: { firstName: "Lost", lastName: "Lead", email: mail("lost"), source: "MANUAL", status: "LOST" } });
+const closed = await prisma.lead.create({ data: { firstName: "Closed", lastName: "Lead", email: mail("closed"), source: "MANUAL", status: "CLOSED" } });
+const lostDef = { ...leadDefs[0], id: `${RUN}-13a`, name: "Lost Lead", email: mail("lost") };
+const closedDef = { ...leadDefs[0], id: `${RUN}-13b`, name: "Closed Lead", email: mail("closed") };
+leadDefs.push(lostDef, closedDef);
+const lb = event([lostDef.id, closedDef.id]);
+const j13 = await (await post(lb, sign(lb))).json();
+assert.deepEqual(j13.results.map((x: { status: string }) => x.status), ["attached", "attached"]);
+assert.equal((await prisma.lead.findUnique({ where: { id: lost.id } }))!.status, "NEW");
+assert.equal((await prisma.lead.findUnique({ where: { id: closed.id } }))!.status, "CLOSED");
+assert.match(telegramTexts.join("\n"), /was LOST — reopened as NEW/);
+assert.match(telegramTexts.join("\n"), /lead status is CLOSED/);
+console.log("✓ LOST → NEW with STATUS_CHANGE entry; CLOSED untouched and named in Telegram");
+
+step("14. same email, two different leadgen_ids at the same moment → one lead");
+const twinA = { ...leadDefs[0], id: `${RUN}-14a`, name: "Twin Submit", email: mail("twin") };
+const twinB = { ...leadDefs[2], id: `${RUN}-14b`, name: "Twin Submit", email: mail("twin") };
+leadDefs.push(twinA, twinB);
+const ta = event([twinA.id]);
+const tb = event([twinB.id]);
+const tw = await Promise.all([post(ta, sign(ta)), post(tb, sign(tb))]);
+const twStatuses = (await Promise.all(tw.map((x) => x.json()))).map((x) => x.results[0].status).sort();
+assert.deepEqual(twStatuses, ["attached", "created"], String(twStatuses));
+assert.equal((await leadsFor(mail("twin"))).length, 1);
+console.log("✓ advisory lock: 1 created + 1 attached");
+
+step("15. after an outage the window widens automatically");
+await prisma.cronRunLog.updateMany({ where: { job: "meta-leadgen-poll" }, data: { ranAt: new Date(Date.now() - 5 * 86_400_000) } });
+const p15 = await poll();
+assert.ok(p15.sinceHours >= 120 && p15.sinceHours <= 122, String(p15.sinceHours));
+assert.equal((await poll()).sinceHours, 48, "back to 48 h once a run listed the forms again");
+console.log(`✓ window ${p15.sinceHours} h after a 5-day gap, then 48 h again`);
 
 const rows = await prisma.cronRunLog.findMany({ where: { job: "meta-leadgen-poll" }, orderBy: { ranAt: "desc" }, take: 3 });
 console.log("\ncron log:", rows.map((x) => `${x.ok ? "ok" : "FAIL"} ${x.message}`));

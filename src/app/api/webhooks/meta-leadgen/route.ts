@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyMetaSignature } from "@/lib/metaLeadgen/signature";
 import { processLeadgen } from "@/lib/metaLeadgen/processLead";
 import { alertBoth, tokenAlertText, TOKEN_ALERT_SUBJECT } from "@/lib/metaLeadgen/notify";
-import { shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
+import { markTokenAlerted, tokenAlertDue } from "@/lib/metaLeadgen/watchdog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -54,10 +54,10 @@ export async function POST(req: NextRequest) {
   const work = (async () => {
     const results = [];
     for (const ev of events) results.push(await processLeadgen({ ...ev, via: "webhook" }));
-    if (results.some((r) => r.status === "failed" && r.tokenError) && (await shouldNotifyFailureStreak("meta-leadgen-poll", 1))) {
+    if (results.some((r) => r.status === "failed" && r.tokenError) && (await tokenAlertDue())) {
       const detail = results.find((r) => r.status === "failed" && r.tokenError);
       await alertBoth(TOKEN_ALERT_SUBJECT, tokenAlertText(detail && detail.status === "failed" ? detail.error : ""));
-      await markFailureStreakNotified("meta-leadgen-poll");
+      await markTokenAlerted();
     }
     return results;
   })().catch((e) => {

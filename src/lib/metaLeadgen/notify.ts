@@ -27,6 +27,8 @@ export function buildLeadMessage(o: {
   placeholderReason: string | null;
   unmatchedCount: number;
   leadId: string;
+  priorStatus?: string | null; // existing lead's status when it isn't an active one worth stating (e.g. CLOSED)
+  reopened?: boolean; // existing lead was LOST and has been set back to NEW
 }): string {
   const region = o.language ? ` (${REGION_BY_LANGUAGE[o.language]})` : "";
   const head =
@@ -39,6 +41,8 @@ export function buildLeadMessage(o: {
     `Budget: ${esc(o.budget ? BUDGETS[o.budget].label : "not answered")} · Prefers: ${esc(o.preferredChannel ? CHANNEL_LABEL[o.preferredChannel] : "not answered")}`,
   ];
   if (o.budget === "<2") lines.push("⚠️ below Private Collection threshold");
+  if (o.reopened) lines.push("↩️ was LOST — reopened as NEW");
+  if (o.priorStatus === "CLOSED") lines.push("ℹ️ lead status is CLOSED (left unchanged)");
   lines.push([o.email, o.phone].filter(Boolean).map(esc).join(" · ") || "-");
   if (o.placeholderReason) lines.push(`⚠️ phone looks like a placeholder (${esc(o.placeholderReason)})`);
   if (o.unmatchedCount) lines.push(`⚠️ ${o.unmatchedCount} answer(s) could not be mapped — see timeline`);
@@ -73,6 +77,6 @@ export function tokenAlertText(detail: string): string {
   return [
     `⚠️ ${TOKEN_ALERT_SUBJECT}`,
     detail,
-    "Renew the system-user Page access token (docs/META-LEADGEN.md, step 5) and update META_PAGE_ACCESS_TOKEN. Leads are not lost — Meta keeps them 90 days and the poller picks them up once the token works.",
+    "Renew the system-user Page access token (docs/META-LEADGEN.md, step 5) and update META_PAGE_ACCESS_TOKEN. Leads are not lost: Meta keeps them 90 days, and once the token works again the poller automatically looks back to its last successful run.",
   ].join("\n");
 }
