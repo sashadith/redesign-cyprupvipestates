@@ -237,8 +237,15 @@ assert.equal(telegramCalls, t0 + 1, "throttled: no repeat within a day");
 graphMode = "ok";
 console.log("✓ token alert sent once, not repeated");
 
-step("9. Telegram owed after an outage → poller re-sends");
-const owed = await prisma.metaLeadgenEvent.update({ where: { leadgenId: leadDefs[1].id }, data: { telegramSentAt: null } });
+step("9. Telegram owed after an outage → poller re-sends (but never a row still in flight)");
+{
+  const fresh = await prisma.metaLeadgenEvent.update({ where: { leadgenId: leadDefs[2].id }, data: { telegramSentAt: null } });
+  const t = telegramCalls;
+  await poll();
+  assert.equal(telegramCalls, t, "row turned DONE < 2 min ago is left to its own run");
+  await prisma.metaLeadgenEvent.update({ where: { leadgenId: fresh.leadgenId }, data: { telegramSentAt: new Date() } });
+}
+const owed = await prisma.metaLeadgenEvent.update({ where: { leadgenId: leadDefs[1].id }, data: { telegramSentAt: null, updatedAt: new Date(Date.now() - 5 * 60_000) } }); // past the 2-min in-flight guard
 const t1 = telegramCalls;
 await poll();
 assert.equal(telegramCalls, t1 + 1);
