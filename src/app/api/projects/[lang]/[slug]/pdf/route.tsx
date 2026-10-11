@@ -259,6 +259,10 @@ const cityTranslations: Record<string, Record<string, string>> = {
   },
 };
 
+// A generated PDF must never be indexed (PDFs cannot carry a meta tag, so the
+// header is the only way) — sent on every response, including the 404s.
+const NOINDEX = { "X-Robots-Tag": "noindex" } as const;
+
 export async function GET(_request: Request, { params }: Props) {
   const { lang, slug } = await params;
 
@@ -266,13 +270,13 @@ export async function GET(_request: Request, { params }: Props) {
   // download button is already hidden on the `he` page, but the route stayed
   // reachable and rendered tofu (DejaVuSans has no Hebrew glyphs) — Pass B S23.
   if (lang === "he") {
-    return new Response("Not found", { status: 404 });
+    return new Response("Not found", { status: 404, headers: NOINDEX });
   }
 
   const project = await getProjectByLang(lang, slug);
 
   if (!project) {
-    return new Response("Project not found", { status: 404 });
+    return new Response("Project not found", { status: 404, headers: NOINDEX });
   }
 
   const previewImageUrl = project.previewImage
@@ -528,6 +532,7 @@ export async function GET(_request: Request, { params }: Props) {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${slug}.pdf"`,
+      ...NOINDEX,
     },
   });
 }

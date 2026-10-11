@@ -33,7 +33,16 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        // "/api/projects/" is carved out of the "/api" block on purpose (2026-10-11
+        // GSC "Indexed, though blocked by robots.txt"): the old project PDFs at
+        // /api/projects/<lang>/<slug>/pdf were indexed while the projects were
+        // live; every legacy project is ARCHIVED now and the route answers 404,
+        // but while the path stayed disallowed Google could never re-fetch a URL
+        // to see that, so it kept them indexed with no snippet. Google resolves
+        // Allow/Disallow by the longest matching rule, so this one wins for that
+        // path only; every other /api route stays blocked. The route also sends
+        // X-Robots-Tag: noindex on every response.
+        allow: ["/", "/api/projects/"],
         disallow: [
           "/admin",
           "/api",
