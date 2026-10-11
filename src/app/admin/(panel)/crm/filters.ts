@@ -5,7 +5,7 @@ import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_PARTNER, bucketOf } from "@/l
 import { LOCALES } from "@/lib/locale";
 
 export const LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
-export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER"];
+export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER", "META_LEAD_AD"];
 // The Leads page's own dropdown. NEWSLETTER is missing on purpose: those leads
 // live on their own page now, so filtering the leads list by it could only ever
 // return an empty list.
