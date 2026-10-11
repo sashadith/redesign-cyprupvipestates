@@ -33,8 +33,10 @@ Nur im Testbed: `NOTIFY_PREFIX="[TEST]"`.
 
 **Crontab** (VPS, `crontab -e`):
 
+Installiert am 2026-10-11 (gleiches Format wie die übrigen Einträge; die App lauscht auf Port 3000):
+
 ```
-1,16,31,46 * * * * curl -s "http://127.0.0.1:3200/api/cron/meta-leadgen-poll?key=$CRON_SECRET" > /dev/null
+1,16,31,46 * * * * SECRET=$(grep "^CRON_SECRET=" /var/www/cyprusvipestates/.env | cut -d= -f2); curl -s -m 290 "http://127.0.0.1:3000/api/cron/meta-leadgen-poll?key=$SECRET" >> /var/log/meta-leadgen-poll-prod.log 2>&1
 ```
 
 Reihenfolge: **erst deployen und die ENV-Variablen setzen, dann Schritt 3** —
@@ -149,7 +151,9 @@ Nach erfolgreichem Test die Leads der letzten 7 Tage nachholen (der normale Lauf
 nur 48 h zurück):
 
 ```bash
-curl -s "http://127.0.0.1:3200/api/cron/meta-leadgen-poll?key=$CRON_SECRET&sinceHours=168"
+# auf dem VPS:
+SECRET=$(grep "^CRON_SECRET=" /var/www/cyprusvipestates/.env | cut -d= -f2)
+curl -s -m 290 "http://127.0.0.1:3000/api/cron/meta-leadgen-poll?key=$SECRET&sinceHours=168"
 ```
 
 Bereits verarbeitete `leadgen_id`s werden übersprungen; eine schon vorhandene E-Mail
