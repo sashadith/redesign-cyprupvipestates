@@ -72,7 +72,7 @@ async function poll(sinceHours: number): Promise<Summary> {
 
 const okFrom = (s: Summary) => !s.tokenError && !s.configError && s.failed.length === 0;
 
-// Called by cron: curl -s "http://127.0.0.1:3200/api/cron/meta-leadgen-poll?key=$CRON_SECRET"
+// Called by cron: curl -s "http://127.0.0.1:3000/api/cron/meta-leadgen-poll?key=$CRON_SECRET"
 // Every 15 minutes (1,16,31,46). One-off catch-up: add &sinceHours=168.
 export async function GET(req: NextRequest) {
   const key = req.nextUrl.searchParams.get("key");
