@@ -33,8 +33,8 @@ const DEQ = { b: "welches_investitionsvolumen_planen_sie?", c: "wie_möchten_sie
 const ENQ = { b: "what_investment_volume_are_you_planning?", c: "how_would_you_prefer_to_be_contacted?" };
 type L = { id: string; form: string; name: string; email: string; phone?: string; budget: string; contact: string; q: typeof DEQ; campaign: string };
 const leadDefs: L[] = [
-  { id: `${RUN}-1`, form: "f-en2", name: "Test Richardson", email: mail("en23"), phone: "+447911123456", budget: "€2 to 3 million", contact: "WhatsApp", q: ENQ, campaign: "UK Leads" },
-  { id: `${RUN}-2`, form: "f-en2", name: "Test Thompson", email: mail("en35"), phone: "+447911654321", budget: "€3 to 5 million", contact: "Phone call", q: ENQ, campaign: "UK Leads" },
+  { id: `${RUN}-1`, form: "f-en2", name: "Test Richardson", email: mail("en23"), phone: "+447961100123", budget: "€2 to 3 million", contact: "WhatsApp", q: ENQ, campaign: "UK Leads" },
+  { id: `${RUN}-2`, form: "f-en2", name: "Test Thompson", email: mail("en35"), phone: "+447961200456", budget: "€3 to 5 million", contact: "Phone call", q: ENQ, campaign: "UK Leads" },
   { id: `${RUN}-3`, form: "f-de3", name: "Test Müller-Lüdenscheidt", email: mail("de5"), phone: "+491701234567", budget: "Über 5 Millionen Euro", contact: "E-Mail", q: DEQ, campaign: "DACH Leads" },
   { id: `${RUN}-4`, form: "f-de3", name: "Testmann", email: mail("de2"), phone: "+43699100000000", budget: "Unter 2 Millionen Euro", contact: "Telefon", q: DEQ, campaign: "DACH Leads" },
   { id: `${RUN}-5`, form: "f-en2", name: "Dup Fixture", email: mail("dup").toUpperCase(), budget: "€2 to 3 million", contact: "Email", q: ENQ, campaign: "UK Leads" },
