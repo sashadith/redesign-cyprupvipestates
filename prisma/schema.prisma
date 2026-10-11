@@ -74,6 +74,7 @@ enum LeadSource {
   ROI_CALCULATOR
   NEWSLETTER
   OTHER
+  META_LEAD_AD // 2026-10-11 — Meta Lead Ads instant forms (src/lib/metaLeadgen/)
 }
 
 enum LeadTimeline {
@@ -795,6 +796,7 @@ model Lead {
   projectInterest      Project?              @relation(fields: [projectInterestId], references: [id])
   presentations        ClientPresentation[]
   bookingRequests      BookingRequest[]
+  metaLeadgenEvents    MetaLeadgenEvent[]
   pageSource           String?
   utmSource            String?
   utmMedium            String?
@@ -909,6 +911,41 @@ model LeadInteraction {
   @@index([leadId])
   @@index([leadId, occurredAt])
   @@map("lead_interactions")
+}
+
+// Meta Lead Ads (2026-10-11, docs/META-LEADGEN.md) — one row per Meta
+// leadgen_id, the idempotency key for both the webhook and the fallback
+// poller. A row is CLAIMED as PROCESSING before any work (so the two paths
+// can't create the same lead twice) and only flips to DONE in the same
+// transaction that writes the lead/interaction — a crash leaves PROCESSING
+// or FAILED, which the poller retries. A table, not a Lead column: an
+// existing lead can submit the form more than once.
+enum MetaLeadgenStatus {
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model MetaLeadgenEvent {
+  id             String            @id @default(uuid())
+  leadgenId      String            @unique
+  status         MetaLeadgenStatus
+  outcome        String? // CREATED | ATTACHED
+  leadId         String?
+  lead           Lead?             @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  formId         String?
+  formName       String?
+  attempts       Int               @default(0)
+  lastError      String?
+  alertedAt      DateTime? // failure alert sent — once per leadgen_id, not once per retry
+  notification   String? // rendered Telegram text, kept so a failed send can be retried without refetching
+  telegramSentAt DateTime? // null on a DONE row = the notification is still owed; the poller re-sends
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([status])
+  @@index([leadId])
+  @@map("meta_leadgen_events")
 }
 
 // ─── MCP CONNECTOR (2026-09-07; see docs/superpowers/specs/2026-09-07-crm-mcp-connector-design.md) ───

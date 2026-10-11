@@ -31,6 +31,8 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   { job: "psi-sync", label: "psi-sync", expectedMs: 24 * HOUR },
   { job: "seo-advisor", label: "seo-advisor", expectedMs: 7 * 24 * HOUR },
   { job: "email-inbound", label: "email-inbound", expectedMs: 5 * MIN },
+  // 2026-10-11 — Meta Lead Ads safety-net poller (src/lib/metaLeadgen/).
+  { job: "meta-leadgen-poll", label: "meta-leadgen-poll", expectedMs: 15 * MIN },
   { job: "booking-reminders", label: "booking-reminders", expectedMs: 5 * MIN },
   // 2026-08-26 — added the day kuutio-sync got its `0 3 * * *` crontab entry,
   // exactly as that route's own comment said it would be. DAILY here even

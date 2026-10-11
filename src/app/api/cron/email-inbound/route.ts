@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { pollInboundEmailForUser, ImapNotConfiguredError } from "@/lib/emailInbound/processInbound";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
+import { checkCronFreshness } from "@/lib/metaLeadgen/watchdog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -70,6 +71,9 @@ export async function GET(req: NextRequest) {
       await sendFeedNotification(msg.text, msg.subject);
       await markFailureStreakNotified("email-inbound");
     }
+    // 2026-10-11 — mutual watchdog with the Meta lead poller (see
+    // src/lib/metaLeadgen/watchdog.ts): 3 missed 15-minute runs = alert.
+    await checkCronFreshness("meta-leadgen-poll", 45 * 60_000).catch((e) => console.error("watchdog(meta-leadgen-poll) failed", e));
     return NextResponse.json({ ok: true, results: summaries });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
