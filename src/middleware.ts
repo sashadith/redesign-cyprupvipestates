@@ -358,6 +358,26 @@ export const RU_LANDING_MERGES: Record<string, string> = {
   "doma-na-kipre-dlya-investorov": "/ru/doma-na-kipre",
 };
 
+/**
+ * Where the plain-map redirects below already send `pathname` (single-hop 301), or null.
+ * Order matters and is the order the checks always ran in: DE landing merges, retired DE blog
+ * articles, PL, RU, then EN (the unprefixed one-segment pages). Exported so the missing-page
+ * resolver (src/lib/missingPageResolve.ts) never picks one of these retired slugs as its
+ * target, which would turn its redirect into a two-hop chain.
+ */
+export function mergedTargetFor(pathname: string): string | null {
+  const de = pathname.match(/^\/de\/(.+)$/);
+  if (de && DE_LANDING_MERGES[de[1]]) return DE_LANDING_MERGES[de[1]];
+  if (de && RETIRED_BLOG_REDIRECTS[de[1]]) return RETIRED_BLOG_REDIRECTS[de[1]];
+  const pl = pathname.match(/^\/pl\/(.+)$/);
+  if (pl && PL_LANDING_MERGES[pl[1]]) return PL_LANDING_MERGES[pl[1]];
+  const ru = pathname.match(/^\/ru\/(.+)$/);
+  if (ru && RU_LANDING_MERGES[ru[1]]) return RU_LANDING_MERGES[ru[1]];
+  const en = pathname.match(/^\/([^/]+)$/);
+  if (en && EN_LANDING_MERGES[en[1]]) return EN_LANDING_MERGES[en[1]];
+  return null;
+}
+
 export default async function middleware(request: NextRequest) {
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
   // launch): answer 404 instead of letting next-intl treat "he" as a plain
@@ -371,37 +391,10 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
-  if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
+  const mergedTarget = mergedTargetFor(request.nextUrl.pathname);
+  if (mergedTarget) {
     const url = request.nextUrl.clone();
-    url.pathname = DE_LANDING_MERGES[deMergeMatch[1]];
-    url.search = "";
-    return NextResponse.redirect(url, 301);
-  }
-  if (deMergeMatch && RETIRED_BLOG_REDIRECTS[deMergeMatch[1]]) {
-    const url = request.nextUrl.clone();
-    url.pathname = RETIRED_BLOG_REDIRECTS[deMergeMatch[1]];
-    url.search = "";
-    return NextResponse.redirect(url, 301);
-  }
-  const plMergeMatch = request.nextUrl.pathname.match(/^\/pl\/(.+)$/);
-  if (plMergeMatch && PL_LANDING_MERGES[plMergeMatch[1]]) {
-    const url = request.nextUrl.clone();
-    url.pathname = PL_LANDING_MERGES[plMergeMatch[1]];
-    url.search = "";
-    return NextResponse.redirect(url, 301);
-  }
-  const ruMergeMatch = request.nextUrl.pathname.match(/^\/ru\/(.+)$/);
-  if (ruMergeMatch && RU_LANDING_MERGES[ruMergeMatch[1]]) {
-    const url = request.nextUrl.clone();
-    url.pathname = RU_LANDING_MERGES[ruMergeMatch[1]];
-    url.search = "";
-    return NextResponse.redirect(url, 301);
-  }
-  const enMergeMatch = request.nextUrl.pathname.match(/^\/([^/]+)$/);
-  if (enMergeMatch && EN_LANDING_MERGES[enMergeMatch[1]]) {
-    const url = request.nextUrl.clone();
-    url.pathname = EN_LANDING_MERGES[enMergeMatch[1]];
+    url.pathname = mergedTarget;
     url.search = "";
     return NextResponse.redirect(url, 301);
   }
