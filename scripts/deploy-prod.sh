@@ -191,6 +191,8 @@ REMOTE_SCRIPT="$STAGE/.deploy/run.sh"
 REMOTE_STATUS_FILE="/var/www/deploy-logs/.deploy-status-$RELEASE_TS"
 REMOTE_BUILD_LOG="/var/www/deploy-logs/.deploy-build-$RELEASE_TS.log"
 
+# UNQUOTED heredoc (so $RELEASE_TS etc. expand locally): backticks and $( ) run
+# on THIS machine even inside # comments. Quote commands in comments with "..".
 cat > "$REMOTE_SCRIPT" <<REMOTE
 #!/usr/bin/env bash
 set -euo pipefail
@@ -223,15 +225,15 @@ trap 'echo \$? > '"\$STATUS_FILE"'' EXIT
 #
 # The lock is held for as long as ANY process holding this descriptor lives,
 # children included. Measured rather than assumed: kill -9 on the holding shell
-# does NOT release it while its `next build` child is still running. That is the
+# does NOT release it while its "next build" child is still running. That is the
 # behaviour we want — a build still running is exactly when a second deploy must
 # not start — but it means an orphaned build keeps the lock, so the refusal below
 # names who holds it and since when instead of just saying no. To clear a lock
-# whose owner is genuinely gone: kill the pid it names, or `rm` the lock file.
+# whose owner is genuinely gone: kill the pid it names, or "rm" the lock file.
 #
 # Exit 99 is reserved for "someone else holds it", so the caller reports a
 # refusal rather than a build failure that never happened.
-# Opened for APPEND, not truncate: `exec 9>` empties the file on open, so a
+# Opened for APPEND, not truncate: "exec 9>" empties the file on open, so a
 # deploy that is about to be REFUSED would first wipe the very line naming the
 # holder it then tries to print. Measured 2026-10-10 — the line came back empty.
 exec 9>>/var/www/deploy-logs/.deploy.lock
