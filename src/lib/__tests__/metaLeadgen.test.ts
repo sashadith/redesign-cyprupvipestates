@@ -139,3 +139,45 @@ test("telegram text: new lead, below threshold, duplicate, placeholder", () => {
   assert.match(buildLeadMessage({ ...base, placeholderReason: "x" }), /phone looks like a placeholder/);
   assert.match(buildLeadMessage({ ...base, name: "<b>x</b>" }), /&lt;b&gt;x/);
 });
+
+/* 2026-10-12, first live run: Meta named the contact fields after the form's
+   own labels. These are the exact keys of the two real leads. */
+test("live field keys: EN email_address, DE e-mail-adresse / vollständiger_name", () => {
+  const en = mapFieldData([
+    { name: "email_address", values: ["richard@manchesterdrinks.com"] },
+    { name: "full_name", values: ["Richard Benjamin"] },
+    { name: "phone_number", values: ["+447961182628"] },
+    { name: "what_investment_volume_are_you_planning?", values: ["€2_to_3_million"] },
+    { name: "how_would_you_prefer_to_be_contacted?", values: ["whatsapp"] },
+  ], "CVE PC Briefing EN v2");
+  assert.equal(en.email, "richard@manchesterdrinks.com");
+  assert.deepEqual([en.firstName, en.lastName], ["Richard", "Benjamin"]);
+  assert.equal(en.budget, "2-3");
+  assert.equal(en.preferredChannel, "WHATSAPP");
+  assert.deepEqual(en.unmatched, []);
+
+  const de = mapFieldData([
+    { name: "welches_investitionsvolumen_planen_sie?", values: ["über_5_millionen_euro"] },
+    { name: "wie_möchten_sie_kontaktiert_werden?", values: ["e-mail"] },
+    { name: "e-mail-adresse", values: ["farroch86@hotmail.com"] },
+    { name: "vollständiger_name", values: ["F Schirazi"] },
+    { name: "phone_number", values: ["+43699100000000"] },
+  ], "CVE PC Briefing DE v3");
+  assert.equal(de.email, "farroch86@hotmail.com");
+  assert.deepEqual([de.firstName, de.lastName], ["F", "Schirazi"]);
+  assert.equal(de.budget, "5+");
+  assert.equal(de.preferredChannel, "EMAIL");
+  assert.ok(de.placeholderReason);
+  assert.deepEqual(de.unmatched, []);
+});
+
+test("unknown contact keys: email and phone recognised by their value", () => {
+  const m = mapFieldData([
+    { name: "adres_e-mail_kontaktowy", values: ["a.b@example.pl"] },
+    { name: "kontakt_nr", values: ["+48 601 234 567"] },
+    { name: "imię_i_nazwisko", values: ["Jan Kowalski"] },
+  ], "Kontakt PL");
+  assert.equal(m.email, "a.b@example.pl");
+  assert.equal(m.phone, "+48601234567");
+  assert.deepEqual([m.firstName, m.lastName], ["Jan", "Kowalski"]);
+});
