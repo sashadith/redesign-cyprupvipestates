@@ -3,6 +3,8 @@ import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoClust
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, mirrorImage, type MirrorOpts, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
+import { openShare, listFolder, downloadFile, isFolder } from "@/lib/sharepoint";
+import { parsePgXml, groupPgProjects, pgVm, pickNewestXml, type PgProject } from "@/lib/propertyGallery";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
 /* Feed sync (Phase 1). Pulls every development of a developer from its feed
@@ -46,6 +48,9 @@ export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   leptos: { slug: "leptos-xml", name: "Leptos Estates (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
+  // SharePoint folder with a monthly OpenCart XML export (2026-10-12). The share
+  // link is a bearer credential: it lives in this account's driveFolderUrl.
+  propertygallery: { slug: "property-gallery", name: "Property Gallery" },
   // Qobrix native feed (2026-10-10). No account existed; the public page
   // /developers/imperio-properties did (group d53daa1e-…), linked by hand.
   imperio: { slug: "imperio-properties", name: "Imperio Properties" },
@@ -221,7 +226,7 @@ export type SyncResult = {
 // would buy here is a shorter window of a thinner catalogue, and inventing one
 // to claim a safety property the shared thresholds already provide would be
 // cargo cult with a comment attached.
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos", "imperio"];
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos", "imperio", "propertygallery"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;
@@ -695,6 +700,11 @@ const FEED_INCOMPLETE_ABS_FLOOR = 20;
 // projects are unpublished and therefore on the hard-delete path, where the
 // other developers' units would merely flip to "unlisted".
 const MITO_INCOMPLETE_ABS_FLOOR = 3;
+// Property Gallery's catalogue is ~70 units, and a freshly imported project is a
+// draft, whose units take the hard-delete path. The general floor of 20 would
+// let a third of it vanish unnoticed; 5 still lets a normal month (a handful
+// of units withdrawn) through and stops a broken export.
+const PG_INCOMPLETE_ABS_FLOOR = 5;
 
 // What the completeness guard measures itself against: every feed unit the
 // sync could still touch. ARCHIVED developments are excluded, and that
@@ -851,6 +861,86 @@ async function checkFeedCompleteness(
    the old row and create an unnamed twin beside it. Mamba shows how real that
    is: it is held together by a single shared description, and one unit leaving
    plus one text edit would re-key it. */
+/* Property Gallery: no listProjectIds/getPreviewProject path — the source is a
+   file in an anonymous SharePoint folder whose link lives in the account row
+   (the only place it may live), and feeds.ts has no database access. So, like
+   Mito, the projects are built here and handed to syncOneProject as view
+   models; every downstream rule (manual-unit lock, freeze on publish, image
+   mirroring, unlisting) is the shared one. See src/lib/propertyGallery.ts for
+   what the export's fields mean. */
+async function fetchPropertyGalleryProjects(accountId: string): Promise<PgProject[]> {
+  const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { driveFolderUrl: true } });
+  if (!acct?.driveFolderUrl) throw new Error("Property Gallery account has no SharePoint folder link");
+  const ctx = await openShare(acct.driveFolderUrl);
+  const newest = pickNewestXml((await listFolder(ctx, ctx.rootId)).filter((f) => !isFolder(f)));
+  if (!newest) throw new Error("No .xml export in the Property Gallery folder");
+  const xml = (await downloadFile(ctx, newest.id)).toString("utf8");
+  await prisma.developerAccount.update({
+    where: { id: accountId },
+    data: { driveFileModified: `${newest.name}|${newest.modifiedTime}`, driveSyncedAt: new Date() },
+  });
+  return groupPgProjects(await parsePgXml(xml));
+}
+
+async function syncPropertyGalleryCore(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
+  const dev = "propertygallery";
+  const accountId = await ensureAccount(dev);
+  // A failed fetch must not throw out of syncAll (see syncMitoCore). An empty
+  // result is safe: the completeness verdict below then blocks against any
+  // existing catalogue instead of letting the loop wipe it.
+  let projects: PgProject[] = [];
+  try { projects = await fetchPropertyGalleryProjects(accountId); } catch (e) {
+    console.error("[propertygallery] fetch failed:", e instanceof Error ? e.message : e);
+    projects = [];
+  }
+
+  const rows = await prisma.development.findMany({
+    where: { dev, publishStatus: { not: "archived" } },
+    select: { feedProjectId: true, publishStatus: true },
+  });
+  const known = new Map(rows.map((r) => [r.feedProjectId, r.publishStatus === "published"]));
+  // New projects only when something can be bought; a known one keeps syncing
+  // whatever its units do (sold/reserved/unlisted are the shared rules' job).
+  const vms = projects
+    .map((p) => pgVm(p))
+    .filter((vm) => known.has(vm.id) || vm.units.some((u) => u.status === "available"));
+
+  const afterCount = vms.reduce((n, vm) => n + countableFeedUnits(vm.units, known.get(vm.id) === true), 0);
+  const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: true });
+  const verdict = completenessVerdict(beforeCount, afterCount, PG_INCOMPLETE_ABS_FLOOR);
+  if (verdict.blocked) {
+    return {
+      dev, found: projects.length, created: 0, updated: 0, failed: 0,
+      mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], createdProjects: [],
+      blocked: true,
+      blockedMessage: `${verdict.missing} of ${beforeCount} units are missing from today's export (${verdict.pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
+      blockedMissing: verdict.missing, blockedTotal: beforeCount,
+    };
+  }
+
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
+  const unitsCreatedLines: UnitChangeLine[] = [];
+  const unitsUnlisted: UnitChangeLine[] = [];
+  const createdProjects: { developmentId: string; name: string }[] = [];
+  for (const vm of vms) {
+    try {
+      const r = await syncOneProject(dev, vm.id, accountId, { ...opts, vm });
+      if (!r.ok) { failed++; continue; }
+      r.created ? created++ : updated++;
+      if (r.created && r.developmentId) createdProjects.push({ developmentId: r.developmentId, name: r.developmentName! });
+      if (r.mirroredNewFiles) mirroredNewFiles = true;
+      unitsCreated += r.unitsCreated;
+      unitsWritten += r.unitsWritten;
+      for (const u of r.unitsCreatedLines) unitsCreatedLines.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+      for (const u of r.unitsUnlisted) unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+    } catch (e) {
+      console.error(`[propertygallery] ${vm.id} failed:`, e instanceof Error ? e.message : e);
+      failed++;
+    }
+  }
+  return { dev, found: projects.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted, createdProjects };
+}
+
 async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
   const dev = "mito";
   const accountId = await ensureAccount(dev);
@@ -979,6 +1069,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
 // full run schedules exactly ONE restart at the end, not one per developer.
 async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
   if (dev === "mito") return syncMitoCore(opts);
+  if (dev === "propertygallery") return syncPropertyGalleryCore(opts);
   const accountId = await ensureAccount(dev);
   const ids = await listProjectIds(dev);
 
@@ -1090,6 +1181,16 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
       }
       if (!best) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "No cluster in today's Mito feed matches this project's location." };
       const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: mitoVm(best.cluster, development.feedProjectId) });
+      if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
+      if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
+      return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
+    }
+    // Property Gallery: same reason as Mito — no getPreviewProject path. Read
+    // today's export and pick this project by its key.
+    if (development.dev === "propertygallery") {
+      const p = (await fetchPropertyGalleryProjects(accountId)).find((x) => x.key === development.feedProjectId);
+      if (!p) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "This project is not in the current Property Gallery export." };
+      const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: pgVm(p) });
       if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
       if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
       return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
