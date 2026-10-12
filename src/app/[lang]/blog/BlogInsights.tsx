@@ -7,7 +7,7 @@
 import "@/app/fonts/vendored.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import React from "react";
-import { notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-insights/insights.css";
 
@@ -75,7 +75,12 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
   const articleMany = crossLocale ? (t.articleManyCross ?? t.articleMany) : t.articleMany;
   const total = mode.sourceLang === "he" ? heCount : await getTotalBlogPostsByLang(mode.sourceLang);
   const pages = totalPagesFor(total);
-  if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) notFound();
+  if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) {
+    // No 404 for a page number that does not exist: the last real page (or the index when
+    // the number is not a usable integer). Page 1 is the index itself, never /blog/page/1.
+    const last = Number.isInteger(page) && page > pages && pages > 1 ? `/blog/page/${pages}` : "/blog";
+    permanentRedirect(localizedHref(lang, last));
+  }
 
   // Fetch the full ordered list once — the "All" view shows this page's slice +
   // pager, while the client category filter needs every article. Sourced from

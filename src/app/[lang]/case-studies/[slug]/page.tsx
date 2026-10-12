@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
 import PropertyIntro from "@/app/components/PropertyIntro/PropertyIntro";
@@ -105,7 +105,7 @@ const CaseStudyPage = async ({ params }: Props) => {
   const caseStudy = (await getCaseStudyByLang(lang, slug)) as CaseStudy | null;
 
   if (!caseStudy) {
-    notFound();
+    return redirectMissingOrNotFound("caseStudy", lang, [slug]);
   }
 
 

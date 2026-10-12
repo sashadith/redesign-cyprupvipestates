@@ -5,7 +5,8 @@ import "@/app/preview-insights/insights.css";
 import "@/app/[lang]/developers/developer-catalog.css";
 
 import React from "react";
-import { notFound, permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import { Metadata } from "next";
 import {
   getFormStandardDocumentByLang,
@@ -134,7 +135,7 @@ const DeveloperPage = async ({ params }: Props) => {
   if (!developer) {
     const redirectTo = await getDeactivatedDeveloperRedirect(lang, slug);
     if (redirectTo) permanentRedirect(redirectTo);
-    notFound();
+    return redirectMissingOrNotFound("developer", lang, [slug]);
   }
 
   const catalog = await getDeveloperCatalogByLang(lang, developer._id);
