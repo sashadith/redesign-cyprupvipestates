@@ -57,6 +57,36 @@ const AREA_FIX: Record<string, string> = {
   "city centre": "City centre",
 };
 
+/* Plans filed as photos (2026-10-12). The export puts floor plans and site
+   plans into the same image lists as renders: 88 of 241 distinct gallery
+   images across the 12 projects. Measured on all 241, no single signal
+   separates them — coloured site plans and 3D plans on black fail a
+   lightness test, and interior renders with white walls defeat a whiteness
+   test — so three, in order:
+     1. the FILE name (not the folder: "3-rd floor/cgi03.jpg" is a render):
+        plan/floor/master/basement/layout, "AP105.png", Greenwood's "A1F.jpg";
+        unless the image is plainly a dark, saturated photo (YOO's aerial
+        "masterplan" render);
+     2. a light, colourless drawing (≥70 % light pixels, saturation ≤0.05);
+     3. four files checked by eye that neither rule catches (PG_PLAN_FILES). */
+const PLAN_NAME_RE = /plan|floor|master|basement|layout|^ap\s?\d|^\d+(st|nd|rd|th)\s|^[a-z]?(gf|\dF)\.(jpe?g|png)$/i;
+const PG_PLAN_FILES = ["Skype_Picture_2025_02_10T09_44_57_577Z", "Pissouri Forest Park/Picture1.png", "GreenwoodHouseC/GreenwoodHouseC1.", "GreenwoodHouseC/GreenwoodHouseC2."];
+export type Tone = { lightFraction: number; meanSaturation: number };
+
+/** Decided from the URL alone, or null when the image's tone is needed. */
+export function pgPlanByName(url: string): boolean | null {
+  const path = decodeURI(url);
+  if (PG_PLAN_FILES.some((f) => path.includes(f))) return true;
+  return PLAN_NAME_RE.test(path.split("/").pop() ?? "") ? true : null;
+}
+
+export function pgIsPlanImage(url: string, tone: Tone | null): boolean {
+  const byName = pgPlanByName(url);
+  const darkPhoto = !!tone && tone.lightFraction < 0.05 && tone.meanSaturation > 0.2;
+  if (byName) return !darkPhoto || PG_PLAN_FILES.some((f) => decodeURI(url).includes(f));
+  return !!tone && tone.lightFraction >= 0.7 && tone.meanSaturation <= 0.05;
+}
+
 export type PgRow = {
   productId: string;
   projectKey: string;
@@ -204,7 +234,9 @@ export function groupPgProjects(rows: PgRow[]): PgProject[] {
   return Array.from(by.entries()).map(([key, rs]) => ({ key, name: pgProjectName(key, rs), rows: rs }));
 }
 
-export function pgVm(p: PgProject): ProjectVM {
+/** planUrls: images that are plan drawings (see pgIsPlanImage) — they leave the
+    gallery and the unit photos and become the project's plans. */
+export function pgVm(p: PgProject, planUrls: Set<string> = new Set()): ProjectVM {
   const units: UnitVM[] = p.rows
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name, "en", { numeric: true }))
@@ -221,13 +253,15 @@ export function pgVm(p: PgProject): ProjectVM {
       areaBuilt: r.area, areaPlot: r.plot, areaVeranda: "",
       floor: r.floor === "0" ? "Ground" : r.floor,
       attrs: r.attrs, features: r.features,
-      photos: r.photos, plans: r.plan ? [r.plan] : [],
+      photos: r.photos.filter((u) => !planUrls.has(u)), plans: r.plan ? [r.plan] : [],
       coords: null, description: "",
     }));
   const available = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
   const loc = p.rows.map((r) => r.location).find(Boolean) ?? "";
   const area = pgArea(loc);
-  const gallery = Array.from(new Set(p.rows.flatMap((r) => r.photos)));
+  const images = Array.from(new Set(p.rows.flatMap((r) => r.photos)));
+  const gallery = images.filter((u) => !planUrls.has(u));
+  const plans = images.filter((u) => planUrls.has(u));
   const desc = p.rows.map((r) => r.projectDescription).sort((a, b) => b.length - a.length)[0]
     || p.rows.map((r) => r.description).sort((a, b) => b.length - a.length)[0] || "";
   const allPrivatePool = p.rows.length > 0 && p.rows.every((r) => r.features.includes("Private pool"));
@@ -237,7 +271,7 @@ export function pgVm(p: PgProject): ProjectVM {
     area, district: "Limassol", town: "", location: area ? `Limassol · ${area}` : "Limassol",
     status: "Available", category: "Residential", stage: "", completion: "", energy: "",
     description: desc,
-    gallery, plans: [], renders: [],
+    gallery, plans, renders: [],
     amenities: [allPrivatePool && "Private swimming pool", anyCommonPool && "Communal swimming pool"].filter(Boolean) as string[],
     center: null, units,
     priceFrom: available[0] ?? null, priceTo: available[available.length - 1] ?? null, currency: "EUR",

@@ -96,3 +96,34 @@ test("the newest export wins by modified time", () => {
   ]);
   assert.equal(f?.name, "PG XML File Sep 2026.xml");
 });
+
+test("plan drawings are told from photos by file name, tone and the checked-by-eye list", async () => {
+  const { pgIsPlanImage } = await import("@/lib/propertyGallery");
+  const base = "https://cypruspropertygallery.com/image/catalog/projects/";
+  const photo = { lightFraction: 0.1, meanSaturation: 0.25 };
+  const drawing = { lightFraction: 0.9, meanSaturation: 0.01 };
+  const colouredPlan = { lightFraction: 0.35, meanSaturation: 0.18 };
+  assert.equal(pgIsPlanImage(base + "Homer%20Residences/1-st%20floor/AP105.png", colouredPlan), true);
+  assert.equal(pgIsPlanImage(base + "Greenwood/Greenwood%20A/A1F.jpg", colouredPlan), true);
+  assert.equal(pgIsPlanImage(base + "Pissouri/MASTER%20PLAN%20Villa%20No%2027.png", colouredPlan), true);
+  // a folder called "3-rd floor" does not make a render a plan
+  assert.equal(pgIsPlanImage(base + "Homer%20Residences/3-rd%20floor/cgi03.jpg", photo), false);
+  // a "masterplan" file that is a dark, colourful aerial photo stays a photo
+  assert.equal(pgIsPlanImage(base + "YOO/masterplan-1024x768.jpg", { lightFraction: 0.01, meanSaturation: 0.26 }), false);
+  // no name hint: a light colourless drawing is a plan, a photo is not, unreadable is a photo
+  assert.equal(pgIsPlanImage(base + "YOO/G202-1024x768.jpg", drawing), true);
+  assert.equal(pgIsPlanImage(base + "Alfa/Living%20Room.jpg", photo), false);
+  assert.equal(pgIsPlanImage(base + "Alfa/Living%20Room.jpg", null), false);
+  // the checked-by-eye list wins even over a dark tone
+  assert.equal(pgIsPlanImage(base + "Pissouri%20Forest%20Park/Picture1.png", { lightFraction: 0, meanSaturation: 0.2 }), true);
+});
+
+test("plan images leave the gallery and unit photos and become project plans", async () => {
+  const rows = await parsePgXml(XML);
+  const alfa = groupPgProjects(rows).find((p) => p.key === "72")!;
+  const living = alfa.rows[0].photos[1];
+  const vm = pgVm(alfa, new Set([living]));
+  assert.ok(!vm.gallery.includes(living));
+  assert.deepEqual(vm.plans, [living]);
+  assert.ok(!vm.units.find((u) => u.ref === "1")!.photos.includes(living));
+});

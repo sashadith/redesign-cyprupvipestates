@@ -347,6 +347,38 @@ async function readLocalThumbnail(mirroredUrl: string): Promise<Buffer | null> {
   }
 }
 
+/* Colour/lightness of an image, for telling plan drawings from photos when a
+   feed files both as "photos" (Property Gallery, 2026-10-12). Reads the
+   already-mirrored small variant when there is one — the nightly sync must not
+   re-download a catalogue's images just to look at them — and fetches the
+   source only the first time. null = unreadable (callers treat it as a photo). */
+export async function imageToneForSource(src: string, devKey: string): Promise<{ lightFraction: number; meanSaturation: number } | null> {
+  let buf: Buffer | null = null;
+  try { buf = await readFile(join(root(), devKey, `${sourceUrlHash(src)}_small.webp`)); } catch { buf = null; }
+  if (!buf) {
+    for (const url of Array.from(new Set([toLargeVariant(src), src]))) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(15000), cache: "no-store" });
+        if (res.ok && /image\//i.test(res.headers.get("content-type") ?? "")) { buf = Buffer.from(await res.arrayBuffer()); break; }
+      } catch { /* try the next */ }
+    }
+  }
+  if (!buf) return null;
+  try {
+    const { data } = await sharp(buf).resize(96, 64, { fit: "fill" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    let light = 0, sat = 0;
+    const n = data.length / 3;
+    for (let i = 0; i < data.length; i += 3) {
+      const mx = Math.max(data[i], data[i + 1], data[i + 2]), mn = Math.min(data[i], data[i + 1], data[i + 2]);
+      if (mn > 200) light++;
+      sat += mx === 0 ? 0 : (mx - mn) / mx;
+    }
+    return { lightFraction: light / n, meanSaturation: sat / n };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchThumbnail(src: string): Promise<Buffer | null> {
   try {
     const large = toLargeVariant(src);

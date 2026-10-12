@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoCluster, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
-import { mirrorAll, mirrorImage, type MirrorOpts, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
+import { mirrorAll, mirrorImage, imageToneForSource, type MirrorOpts, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { openShare, listFolder, downloadFile, isFolder } from "@/lib/sharepoint";
-import { parsePgXml, groupPgProjects, pgVm, pickNewestXml, type PgProject } from "@/lib/propertyGallery";
+import { parsePgXml, groupPgProjects, pgVm, pickNewestXml, pgIsPlanImage, type PgProject } from "@/lib/propertyGallery";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
 /* Feed sync (Phase 1). Pulls every development of a developer from its feed
@@ -882,6 +882,20 @@ async function fetchPropertyGalleryProjects(accountId: string): Promise<PgProjec
   return groupPgProjects(await parsePgXml(xml));
 }
 
+/** The project's view model with plan drawings sorted out of its images. */
+async function pgVmWithPlans(p: PgProject): Promise<ProjectVM> {
+  const devKey = devKeyFor(`propertygallery:${p.key}`);
+  const urls = Array.from(new Set(p.rows.flatMap((r) => r.photos)));
+  const planUrls = new Set<string>();
+  for (let i = 0; i < urls.length; i += 6) {
+    await Promise.all(urls.slice(i, i + 6).map(async (u) => {
+      const tone = await imageToneForSource(u, devKey);
+      if (pgIsPlanImage(u, tone)) planUrls.add(u);
+    }));
+  }
+  return pgVm(p, planUrls);
+}
+
 async function syncPropertyGalleryCore(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
   const dev = "propertygallery";
   const accountId = await ensureAccount(dev);
@@ -901,9 +915,9 @@ async function syncPropertyGalleryCore(opts: { mirror?: boolean; forceMirror?: b
   const known = new Map(rows.map((r) => [r.feedProjectId, r.publishStatus === "published"]));
   // New projects only when something can be bought; a known one keeps syncing
   // whatever its units do (sold/reserved/unlisted are the shared rules' job).
-  const vms = projects
-    .map((p) => pgVm(p))
-    .filter((vm) => known.has(vm.id) || vm.units.some((u) => u.status === "available"));
+  const candidates = projects.filter((p) => known.has(p.key) || p.rows.some((r) => r.status === "available"));
+  const vms: ProjectVM[] = [];
+  for (const p of candidates) vms.push(await pgVmWithPlans(p));
 
   const afterCount = vms.reduce((n, vm) => n + countableFeedUnits(vm.units, known.get(vm.id) === true), 0);
   const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: true });
@@ -1190,7 +1204,7 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
     if (development.dev === "propertygallery") {
       const p = (await fetchPropertyGalleryProjects(accountId)).find((x) => x.key === development.feedProjectId);
       if (!p) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "This project is not in the current Property Gallery export." };
-      const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: pgVm(p) });
+      const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: await pgVmWithPlans(p) });
       if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
       if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
       return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
