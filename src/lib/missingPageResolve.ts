@@ -92,18 +92,18 @@ function settle(env: MissingEnv, path: string, self: string): string {
 export async function resolveMissing(
   repo: MissingRepo,
   env: MissingEnv,
-  req: { kind: MissingKind; lang: string; segments: string[] },
+  req: { kind: MissingKind; lang: string; segments: string[]; currentPath?: string },
 ): Promise<string | null> {
   const raw = await resolveRaw(repo, env, req);
   if (!raw) return raw;
-  const self = env.href(req.lang, req.kind === "page" ? req.segments : [SECTION_INDEX[req.kind as Exclude<MissingKind, "page">], ...req.segments]);
+  const self = req.currentPath ?? env.href(req.lang, req.kind === "page" ? req.segments : [SECTION_INDEX[req.kind as Exclude<MissingKind, "page">], ...req.segments]);
   return settle(env, raw, self);
 }
 
 async function resolveRaw(
   repo: MissingRepo,
   env: MissingEnv,
-  req: { kind: MissingKind; lang: string; segments: string[] },
+  req: { kind: MissingKind; lang: string; segments: string[]; currentPath?: string },
 ): Promise<string | null> {
   const { kind, lang, segments } = req;
 
@@ -119,7 +119,9 @@ async function resolveRaw(
   }
 
   if (!looksLikeContentPath(segments)) return null;
-  const self = env.href(lang, kind === "page" ? segments : [SECTION_INDEX[kind], ...segments]);
+  // The path that was actually requested (a legacy route like /preview-insights/<slug> passes its own),
+  // so a redirect to a different URL that happens to be the same article is not mistaken for a loop.
+  const self = req.currentPath ?? env.href(lang, kind === "page" ? segments : [SECTION_INDEX[kind], ...segments]);
   const ok = (t: string | null | undefined): string | null => (t && t !== self ? t : null);
 
   if (kind === "blog") {
