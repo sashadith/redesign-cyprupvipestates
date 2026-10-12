@@ -89,3 +89,18 @@ test("a single-slash absolute link to our own host is mapped to the page the aut
   assert.equal(await run("page", "pl", ["https:", "cyprusvipestates.com"]), "/pl");
   assert.equal(await run("page", "ru", ["https:", "evil.example", "en", "x"]), null); // other host: not ours
 });
+
+test("never ends on a page that itself redirects: merged/retired targets are followed to the end", async () => {
+  const merged: Record<string, string> = {
+    "/pl/sprzedaz-domow-na-cyprze": "/pl/domy-premium", // retired landing page, row still PUBLISHED
+    "/pl/domy-premium": "/pl/domy-flagowe",             // merged twice
+  };
+  const chainEnv: MissingEnv = { ...env, redirected: (p) => merged[p] ?? null };
+  const r = (kind: any, lang: string, segs: string[]) => resolveMissing(repo(BLOG, PAGE), chainEnv, { kind, lang, segments: segs });
+  assert.equal(await r("page", "ru", ["sprzedaz-domow-na-cyprze"]), "/pl/domy-flagowe"); // own-language page, then both hops
+  assert.equal(await r("page", "en", ["wille-na-cyprze"]), "/villas-in-cyprus"); // sibling is not retired: untouched
+  // a redirect map that points back at the requested URL must not loop
+  const loopEnv: MissingEnv = { ...env, redirected: (p) => (p === "/de/blog/steuern-auf-immobilien-in-zypern" ? "/pl/blog/steuern-auf-immobilien-in-zypern" : null) };
+  const out = await resolveMissing(repo(BLOG, PAGE), loopEnv, { kind: "blog", lang: "pl", segments: ["steuern-auf-immobilien-in-zypern"] });
+  assert.notEqual(out, "/pl/blog/steuern-auf-immobilien-in-zypern");
+});

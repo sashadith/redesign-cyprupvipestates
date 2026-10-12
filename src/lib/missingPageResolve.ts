@@ -40,6 +40,12 @@ export interface MissingRepo {
 export interface MissingEnv {
   isPublicLocale(lang: string): boolean;
   href(lang: string, segments: string[]): string;
+  /**
+   * Where `path` is already redirected by a plain map (middleware's merged/retired slugs), or null.
+   * A retired page can stay PUBLISHED in the database while its URL 301s elsewhere; picking it as a
+   * target would make this redirect a two-hop chain, so the answer is followed to its end instead.
+   */
+  redirected?(path: string): string | null;
 }
 
 const PUBLIC_LOCALE_CODES = ["en", "de", "pl", "ru", "he"];
@@ -72,7 +78,29 @@ const prefer = (rows: SlugRow[], isPublic: (l: string) => boolean): SlugRow | nu
   return ok.find((r) => r.language === "en") ?? ok[0] ?? null;
 };
 
+/** Follow plain-map redirects to their end (bounded), so the final answer is always one hop to a live page. */
+function settle(env: MissingEnv, path: string, self: string): string {
+  let cur = path;
+  for (let i = 0; i < 5; i++) {
+    const next = env.redirected?.(cur) ?? null;
+    if (!next || next === cur || next === self) break;
+    cur = next;
+  }
+  return cur;
+}
+
 export async function resolveMissing(
+  repo: MissingRepo,
+  env: MissingEnv,
+  req: { kind: MissingKind; lang: string; segments: string[] },
+): Promise<string | null> {
+  const raw = await resolveRaw(repo, env, req);
+  if (!raw) return raw;
+  const self = env.href(req.lang, req.kind === "page" ? req.segments : [SECTION_INDEX[req.kind as Exclude<MissingKind, "page">], ...req.segments]);
+  return settle(env, raw, self);
+}
+
+async function resolveRaw(
   repo: MissingRepo,
   env: MissingEnv,
   req: { kind: MissingKind; lang: string; segments: string[] },
