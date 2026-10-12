@@ -195,3 +195,56 @@ fully rewritten on 2026-10-02 (stale-facts sweep), so their 28-day GSC numbers d
 - New title: "Villa auf Zypern kaufen – Luxusvillen am Meer, Neubau" — the page's real queries are
   "villa (auf/in) zypern kaufen" variants (≈ 500 of 1,031 impressions); "luxus" appears in only ~170.
 - Meta description rewritten to lead with the same phrase. CMS content only (`Singlepage.seo`), no code.
+
+## 2026-10-08 — Developer-page rewrite: SOL Properties (onboarding, logged after the fact)
+
+**Source:** not a sweep. The whole `/developers/sol-properties` page was rewritten while onboarding the
+developer (new title, meta and body; old Sanity-era copy removed). Logged here so the CTR watchlist and the
+advisor treat it as mid-measurement. The advisor run of 2026-10-11 flagged it as "unclicked" on numbers
+that describe the old title. Baseline = GSC 28 days to 2026-10-07.
+
+| # | Locale | URL | Baseline pos | Baseline CTR |
+|---|--------|-----|--------------|--------------|
+| 1 | en | `/developers/sol-properties` | 7.0 | 0.00% |
+
+- New title: "SOL Properties: New Apartments & Villas in Limassol, Cyprus".
+
+## 2026-10-10 — Developer-page rewrite: Imperio Properties (onboarding, logged after the fact)
+
+**Source:** same as above. `/developers/imperio-properties` was rewritten from verified facts only when the
+Imperio feed connector went live. Baseline = GSC 28 days to 2026-10-09.
+
+| # | Locale | URL | Baseline pos | Baseline CTR |
+|---|--------|-----|--------------|--------------|
+| 1 | en | `/developers/imperio-properties` | 8.7 | 0.00% |
+
+- New title: "Imperio Properties: New Apartments in Limassol, Cyprus".
+
+## 2026-10-12 — Batch 4: 3 developer-profile title/meta rewrites (SEO Advisor run 2026-10-11)
+
+**Source:** advisor suggestion c40d152d ("developer profiles that rank on page 1 but get almost no clicks").
+Of its five targets, three are clean. SOL and Imperio are excluded: both were rewritten days earlier (see the
+two entries above) and also belonged to the 2026-07-18 developer-template fix, which the approved suggestion
+a7d35967 says not to re-litigate.
+
+**What the data says:** the queries are almost all navigational brand searches ("cybarco", "leptos estates",
+"island blue paphos"), so the developer's own site takes most clicks by design. The rewrite tests whether a
+title that promises all current projects with prices and availability earns some of them. It also removes
+false and off-brand claims from the old snippets: Larnaca for Cybarco and Leptos (no published project there),
+"leading luxury developer", "exclusive prices", "direct-from-builder conditions" and "buy direct".
+Count-free on purpose: project counts drift (see the Batch 1 note).
+
+**Re-measure after:** 2026-11-09 to 2026-11-23 (4–6 weeks). Baseline = GSC 28 days to 2026-10-09.
+Small sample (≈1,260 impressions, 1 click in the baseline), so treat the result as directional at best.
+
+| # | Locale | URL | Baseline pos | Baseline CTR |
+|---|--------|-----|--------------|--------------|
+| 1 | en | `/developers/cybarco` | 7.9 | 0.00% |
+| 2 | en | `/developers/island-blue` | 9.6 | 0.17% |
+| 3 | en | `/developers/leptos-estates` | 9.8 | 0.00% |
+
+- Cybarco: "Cybarco – Luxury Property in Cyprus" → "Cybarco Projects in Limassol & Paphos: Prices, Availability"
+- Island Blue: "Island Blue Cyprus – Property Developer in Paphos & Limassol" → "Island Blue Paphos & Limassol: New Projects, Prices, Plans"
+- Leptos Estates: "Leptos Estates Cyprus – Luxury New Homes for Sale" → "Leptos Estates Cyprus: New Projects in Paphos & Limassol"
+- Meta descriptions rewritten to name the real districts and "live prices, floor plans and available homes".
+  EN only; the DE/PL/RU rows of these pages were not touched. CMS content only (`Developer.seo`), no code.
