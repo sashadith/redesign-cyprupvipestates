@@ -50,10 +50,51 @@ export function matchChannel(raw: string): LeadPreferredChannel | null {
   return null;
 }
 
-const STANDARD_FIELDS = new Set(["email", "full_name", "first_name", "last_name", "phone_number"]);
+// Contact-field keys are NOT fixed: Meta derives them from the question label
+// in the form's language. Seen live 2026-10-12: EN "email_address", DE
+// "e-mail-adresse" / "vollständiger_name" — never the documented "email" /
+// "full_name". So keys are compared normalised (lower-case, accents and
+// punctuation stripped), and email/phone fall back to recognising the VALUE.
+export type ContactRole = "email" | "fullName" | "firstName" | "lastName" | "phone";
+const ROLE_KEYS: Record<ContactRole, string[]> = {
+  email: ["email", "emailaddress", "emailadresse", "mail", "eaddress"],
+  fullName: ["fullname", "vollstandigername", "name", "vollername", "nameundvorname", "vornameundnachname", "imieinazwisko", "imie", "fio"],
+  firstName: ["firstname", "vorname", "givenname"],
+  lastName: ["lastname", "nachname", "surname", "familienname", "nazwisko"],
+  phone: ["phonenumber", "phone", "telefon", "telefonnummer", "handynummer", "mobilnummer", "mobile", "mobilephone", "numertelefonu"],
+};
+export const normalizeKey = (k: string) =>
+  k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\+?[\d\s().-]{7,}$/;
 
-function first(fd: MetaFieldDatum[], name: string): string | null {
-  const v = fd.find((f) => f.name === name)?.values?.[0];
+/** Which contact field each answer is (by key, then by value shape); custom
+ *  questions get no role. */
+export function classifyContactFields(fd: MetaFieldDatum[]): Map<string, ContactRole> {
+  const roles = new Map<string, ContactRole>();
+  const taken = new Set<ContactRole>();
+  for (const f of fd) {
+    const k = normalizeKey(f.name);
+    for (const role of Object.keys(ROLE_KEYS) as ContactRole[]) {
+      if (!taken.has(role) && ROLE_KEYS[role].includes(k)) {
+        roles.set(f.name, role);
+        taken.add(role);
+        break;
+      }
+    }
+  }
+  for (const f of fd) {
+    if (roles.has(f.name)) continue;
+    const v = (f.values?.[0] ?? "").trim();
+    if (!taken.has("email") && EMAIL_RE.test(v)) { roles.set(f.name, "email"); taken.add("email"); }
+    else if (!taken.has("phone") && PHONE_RE.test(v)) { roles.set(f.name, "phone"); taken.add("phone"); }
+  }
+  return roles;
+}
+
+function valueFor(fd: MetaFieldDatum[], roles: Map<string, ContactRole>, role: ContactRole): string | null {
+  const f = fd.find((x) => roles.get(x.name) === role);
+  const v = f?.values?.[0];
   return v && v.trim() ? v.trim() : null;
 }
 
@@ -120,15 +161,17 @@ export type MappedLead = {
 };
 
 export function mapFieldData(fd: MetaFieldDatum[], formName: string | null, formLocale?: string | null): MappedLead {
-  const fullName = first(fd, "full_name") ?? [first(fd, "first_name"), first(fd, "last_name")].filter(Boolean).join(" ");
+  const roles = classifyContactFields(fd);
+  const first = (role: ContactRole) => valueFor(fd, roles, role);
+  const fullName = first("fullName") ?? [first("firstName"), first("lastName")].filter(Boolean).join(" ");
   const { firstName, lastName } = splitFullName(fullName);
-  const phone = checkPhone(first(fd, "phone_number"));
+  const phone = checkPhone(first("phone"));
   let budget: BudgetKey | null = null;
   let preferredChannel: LeadPreferredChannel | null = null;
   const unmatched: { name: string; value: string }[] = [];
   const answers = fd.map((f) => ({ name: f.name, value: (f.values ?? []).join(", ") }));
   for (const f of fd) {
-    if (STANDARD_FIELDS.has(f.name)) continue;
+    if (roles.has(f.name)) continue;
     const value = (f.values ?? []).join(", ");
     const b = matchBudget(value);
     const c = b ? null : matchChannel(value);
@@ -139,7 +182,7 @@ export function mapFieldData(fd: MetaFieldDatum[], formName: string | null, form
   return {
     firstName,
     lastName,
-    email: first(fd, "email"),
+    email: first("email"),
     phone: phone.e164,
     countryOfResidence: phone.country,
     languagePreference: formLanguage(formName, formLocale),

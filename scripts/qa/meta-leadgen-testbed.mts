@@ -48,9 +48,10 @@ const graphLead = (d: L) => ({
   ad_name: "PC Ad 1",
   adset_name: "PC Adset",
   campaign_name: d.campaign,
+  // The real keys Meta sent on 2026-10-12 (they follow the form's own labels).
   field_data: [
-    { name: "email", values: [d.email] },
-    { name: "full_name", values: [d.name] },
+    { name: d.q === DEQ ? "e-mail-adresse" : "email_address", values: [d.email] },
+    { name: d.q === DEQ ? "vollständiger_name" : "full_name", values: [d.name] },
     ...(d.phone ? [{ name: "phone_number", values: [d.phone] }] : []),
     { name: d.q.b, values: [d.budget] },
     { name: d.q.c, values: [d.contact] },
