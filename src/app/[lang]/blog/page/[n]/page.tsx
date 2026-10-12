@@ -2,7 +2,8 @@
 // /[lang]/blog, so /page/1 and non-numeric → 404 (avoids duplicate content).
 import React from "react";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+import { localizedHref } from "@/lib/locale";
 import {
   staticAlternates,
   DEFAULT_OG_IMAGE,
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const PageBlogPaged = async ({ params }: Props) => {
   const page = parse(params.n);
-  if (page === null) notFound();
+  if (page === null) permanentRedirect(localizedHref(params.lang, "blog"));
   return <BlogInsights lang={params.lang} page={page} />;
 };
 

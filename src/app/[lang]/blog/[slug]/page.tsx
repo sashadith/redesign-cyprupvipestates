@@ -14,7 +14,7 @@ import "@/app/preview-insights/articleForm.css";
 import "@/app/preview-projects/projects.css";
 
 import React from "react";
-import { notFound } from "next/navigation";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import { Metadata } from "next";
 
 import {
@@ -176,7 +176,7 @@ const projectsBlockRenders = (b: any): boolean => {
 const PagePost = async ({ params }: Props) => {
   const { lang, slug } = params;
   const blog = await getBlogPostByLang(lang, slug);
-  if (!blog) notFound();
+  if (!blog) return redirectMissingOrNotFound("blog", lang, [slug]);
 
   const t = blogStrings(lang);
 

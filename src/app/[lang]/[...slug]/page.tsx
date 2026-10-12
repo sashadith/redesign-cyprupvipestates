@@ -1,6 +1,7 @@
 // app/[lang]/[[...slug]]/page.tsx
 import React from "react";
-import { notFound, permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import AccordionContainer from "@/app/components/AccordionContainer/AccordionContainer";
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
@@ -334,7 +335,8 @@ const SinglePage = async ({ params, searchParams }: Props) => {
 
   const requested = parseRequestedPage(searchParams?.page);
   if (requested.kind === "invalid") {
-    notFound();
+    // ?page=abc / ?page=0: no 404, back to the canonical page (house rule: never a 404 on a content URL)
+    permanentRedirect(pagePath);
   }
   if (requested.kind === "redirectToCanonical") {
     // 308, not a literal 301 -- Next's permanentRedirect() issues 308
@@ -349,11 +351,12 @@ const SinglePage = async ({ params, searchParams }: Props) => {
   const page = (await getSinglePageByLang(lang, current, requestedPage)) as Singlepage | null;
 
   if (!page) {
-    notFound();
+    return redirectMissingOrNotFound("page", lang, slug);
   }
 
   if (slug.length === 1 && page?.parentPage) {
-    notFound();
+    // A child page reached without its parent segment: the resolver finds its nested path.
+    return redirectMissingOrNotFound("page", lang, slug);
   }
 
   // if (!page) {

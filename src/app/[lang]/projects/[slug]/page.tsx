@@ -18,7 +18,8 @@ import "@/app/preview-insights/insights.css";
 
 import React from "react";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import { Metadata } from "next";
 import { localizedHref, bcp47For } from "@/lib/locale";
 import { projectPageCopy } from "./page.copy";
@@ -188,7 +189,7 @@ const ProjectPage = async ({ params }: Props) => {
     // admin rename — see resolveDevelopmentSlugHistory in developmentRender.ts.
     const renamedTarget = await resolveDevelopmentSlugHistory(slug, lang);
     if (renamedTarget) permanentRedirect(renamedTarget);
-    notFound();
+    return redirectMissingOrNotFound("project", lang, [slug]);
   }
 
   // console.log("faq", project.faq);
