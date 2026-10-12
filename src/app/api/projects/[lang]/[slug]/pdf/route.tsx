@@ -8,7 +8,9 @@ import {
   StyleSheet,
   Font,
 } from "@react-pdf/renderer";
+import { permanentRedirect } from "next/navigation";
 import { getProjectByLang } from "@/sanity/sanity.utils";
+import { projectLandingTarget } from "@/lib/projectMissTarget";
 import { urlFor } from "@/sanity/sanity.client";
 import { formatMonthYear } from "@/lib/formatMonthYear";
 import path from "path";
@@ -270,12 +272,19 @@ export async function GET(_request: Request, { params }: Props) {
   // download button is already hidden on the `he` page, but the route stayed
   // reachable and rendered tofu (DejaVuSans has no Hebrew glyphs) — Pass B S23.
   if (lang === "he") {
+    // No Hebrew PDF, but the project may have a Hebrew page: never a dead end.
+    const target = await projectLandingTarget(lang, slug);
+    if (target) permanentRedirect(target);
     return new Response("Not found", { status: 404, headers: NOINDEX });
   }
 
   const project = await getProjectByLang(lang, slug);
 
   if (!project) {
+    // Every legacy project is archived and its PDF with it; these URLs were indexed while it was
+    // live. House rule: no 404 on a content URL, send the old PDF link to the project's page.
+    const target = await projectLandingTarget(lang, slug);
+    if (target) permanentRedirect(target);
     return new Response("Project not found", { status: 404, headers: NOINDEX });
   }
 
