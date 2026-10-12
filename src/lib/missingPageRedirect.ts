@@ -27,9 +27,9 @@ export function prismaMissingRepo(db: PrismaClient): MissingRepo {
 }
 
 /** The best live page for a URL that matches nothing, or null (scanner junk, or the lookup failed). */
-export async function missingTarget(kind: MissingKind, lang: string, segments: string[]): Promise<string | null> {
+export async function missingTarget(kind: MissingKind, lang: string, segments: string[], currentPath?: string): Promise<string | null> {
   try {
-    return await resolveMissing(prismaMissingRepo(prisma), { isPublicLocale, href: localizedHref, redirected: mergedTargetFor }, { kind, lang, segments });
+    return await resolveMissing(prismaMissingRepo(prisma), { isPublicLocale, href: localizedHref, redirected: mergedTargetFor }, { kind, lang, segments, currentPath });
   } catch (e) {
     console.error("[missing-page-redirect] lookup failed, answering 404:", e);
     return null;
@@ -41,8 +41,8 @@ export async function missingTarget(kind: MissingKind, lang: string, segments: s
  * page for a URL that matches nothing, with a permanent redirect. Falls back to
  * a real 404 only for scanner junk or if the lookup itself fails.
  */
-export async function redirectMissingOrNotFound(kind: MissingKind, lang: string, segments: string[]): Promise<never> {
-  const target = await missingTarget(kind, lang, segments);
+export async function redirectMissingOrNotFound(kind: MissingKind, lang: string, segments: string[], currentPath?: string): Promise<never> {
+  const target = await missingTarget(kind, lang, segments, currentPath);
   if (target) permanentRedirect(target);
   notFound();
 }

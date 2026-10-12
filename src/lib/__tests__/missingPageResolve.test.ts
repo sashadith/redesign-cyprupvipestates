@@ -104,3 +104,11 @@ test("never ends on a page that itself redirects: merged/retired targets are fol
   const out = await resolveMissing(repo(BLOG, PAGE), loopEnv, { kind: "blog", lang: "pl", segments: ["steuern-auf-immobilien-in-zypern"] });
   assert.notEqual(out, "/pl/blog/steuern-auf-immobilien-in-zypern");
 });
+
+test("a legacy route passes its own path: the real article is a valid target, not a loop", async () => {
+  const r = (segs: string[], currentPath?: string) => resolveMissing(repo(BLOG, PAGE), env, { kind: "blog", lang: "en", segments: segs, currentPath });
+  // /preview-insights/how-to-get-pr -> the english article that really exists
+  assert.equal(await r(["how-to-get-pr"], "/preview-insights/how-to-get-pr"), "/blog/how-to-get-pr");
+  // without the real path the article's own URL still counts as "self" (page route that 404ed for another reason)
+  assert.equal(await r(["how-to-get-pr"]), "/blog");
+});

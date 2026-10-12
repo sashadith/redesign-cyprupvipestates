@@ -5,5 +5,5 @@ import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 export const dynamic = "force-dynamic";
 
 export default async function LegacyPreviewInsightsSlug({ params }: { params: { slug: string } }) {
-  return redirectMissingOrNotFound("blog", "en", [params.slug]);
+  return redirectMissingOrNotFound("blog", "en", [params.slug], `/preview-insights/${params.slug}`);
 }
