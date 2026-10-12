@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import InsightsIndex, { insightsPageMetadata } from "../../InsightsIndex";
 
 /* Cyprus Insights — paginated pages 2+ at /preview-insights/page/N.
-   Page 1 lives at /preview-insights, so /page/1 (and non-numeric) → 404 to avoid
-   duplicate content. */
+   Page 1 lives at /preview-insights, so /page/1 (and non-numeric) → permanent redirect
+   there, which also avoids duplicate content. */
 export const dynamic = "force-dynamic";
 
 const parse = (n: string) => {
@@ -18,6 +18,6 @@ export function generateMetadata({ params }: { params: { n: string } }) {
 
 export default function InsightsPagedPage({ params }: { params: { n: string } }) {
   const page = parse(params.n);
-  if (page === null) notFound();
+  if (page === null) permanentRedirect("/preview-insights");
   return <InsightsIndex page={page} />;
 }

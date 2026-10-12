@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import { PortableText } from "@portabletext/react";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
 import Header from "@/app/components/Header/Header";
@@ -100,7 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CaseStudyDetailPage({ params }: Props) {
   const { lang, slug } = params;
   const cs = await getCaseStudyByLang(lang, slug);
-  if (!cs) notFound();
+  if (!cs) return redirectMissingOrNotFound("caseStudy", lang, [slug]);
 
   const t = caseStudiesCopy(lang);
   const labels = CASE_CATEGORY_LABELS[lang as Locale] ?? CASE_CATEGORY_LABELS.en;

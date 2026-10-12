@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import {
   getBlogPageByLang,
   getBlogPostsByLangWithPagination,
@@ -60,7 +60,10 @@ export async function insightsPageMetadata(page: number): Promise<Metadata> {
 export default async function InsightsIndex({ page }: { page: number }) {
   const total = await getTotalBlogPostsByLang(LANG);
   const pages = totalPagesFor(total);
-  if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) notFound();
+  if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) {
+    // The last real page (or the index): never a 404 for a page number that does not exist.
+    permanentRedirect(Number.isInteger(page) && page > pages && pages > 1 ? `/preview-insights/page/${pages}` : "/preview-insights");
+  }
 
   // Fetch the full ordered list once: the "All" view shows this page's slice +
   // server pager, while the category filter (client-side) needs every article so

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { localizedHref, localesForStaticRoute, UNLOCALIZED_ROUTES } from "@/lib/locale";
 import { abs, staticAlternates, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
@@ -79,7 +79,7 @@ const HERO_IMAGE = "/uploads/files/b2b577b92f5d66696f53125853d50ba3784f912d.webp
 const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e6.png";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  if (!partnersOfferedIn(params.lang)) notFound();
+  if (!partnersOfferedIn(params.lang)) return {}; // the page itself redirects to the English one
   const t = partnersCopy(params.lang);
   const { canonical } = staticAlternates(params.lang, "partners");
   const ogImage = abs(HERO_IMAGE);
@@ -124,7 +124,10 @@ const Star = () => (
 
 export default async function PartnersPage({ params }: Props) {
   const { lang } = params;
-  if (!partnersOfferedIn(lang)) notFound();
+  if (!partnersOfferedIn(lang)) {
+    if (lang !== "en") permanentRedirect("/partners"); // not offered in this language: the English page
+    notFound();
+  }
   const t = partnersCopy(lang);
   const { languages } = staticAlternates(lang, "partners");
 
