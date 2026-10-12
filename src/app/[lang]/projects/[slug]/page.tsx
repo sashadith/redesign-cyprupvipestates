@@ -18,8 +18,8 @@ import "@/app/preview-insights/insights.css";
 
 import React from "react";
 import Link from "next/link";
-import { permanentRedirect } from "next/navigation";
-import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
+import { notFound, permanentRedirect } from "next/navigation";
+import { projectMissTarget } from "@/lib/projectMissTarget";
 import { Metadata } from "next";
 import { localizedHref, bcp47For } from "@/lib/locale";
 import { projectPageCopy } from "./page.copy";
@@ -27,7 +27,6 @@ import {
   getFormStandardDocumentByLang,
   getNotFoundPageByLang,
   getProjectByLang,
-  getLegacyProjectRedirect,
 } from "@/sanity/sanity.utils";
 
 // Cutover: this route now serves BOTH systems at one shared path — a published
@@ -49,7 +48,7 @@ export const dynamic = "force-dynamic";
 
 import ProjectPageBody from "@/app/preview-project/ProjectPageBody";
 import DevelopmentSchema from "@/app/components/DevelopmentSchema/DevelopmentSchema";
-import { getDbProjectBySlug, resolveDevelopmentSlugHistory } from "@/lib/developmentRender";
+import { getDbProjectBySlug } from "@/lib/developmentRender";
 import { resolveMetaTitle, resolveMetaDescription, NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
 import { abs, staticAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
@@ -183,13 +182,9 @@ const ProjectPage = async ({ params }: Props) => {
   const project = await getProjectByLang(lang, slug);
 
   if (!project) {
-    const redirectTarget = await getLegacyProjectRedirect(lang, slug);
-    if (redirectTarget) permanentRedirect(redirectTarget);
-    // Last resort: a slug this Development USED to have, before a manual
-    // admin rename — see resolveDevelopmentSlugHistory in developmentRender.ts.
-    const renamedTarget = await resolveDevelopmentSlugHistory(slug, lang);
-    if (renamedTarget) permanentRedirect(renamedTarget);
-    return redirectMissingOrNotFound("project", lang, [slug]);
+    const target = await projectMissTarget(lang, slug);
+    if (target) permanentRedirect(target);
+    notFound();
   }
 
   // console.log("faq", project.faq);

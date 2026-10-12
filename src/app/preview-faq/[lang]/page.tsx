@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { i18n } from "@/i18n.config";
 import { localizedHref, BCP47, isLocale } from "@/lib/locale";
 import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT, ogLocale } from "@/lib/seo";
@@ -51,7 +51,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FaqPage({ params }: Props) {
   const { lang } = params;
   const faqPage = await getFaqPageByLang(lang);
-  if (!faqPage) notFound();
+  if (!faqPage) {
+    if (lang !== "en") permanentRedirect("/faq"); // no FAQ in this language yet: the English one
+    notFound();
+  }
   const { categories } = faqPage;
   const t = faqCopy(lang);
 
