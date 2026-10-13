@@ -397,7 +397,12 @@ export default async function ProjectPageBody({
         {/* ---------- MAP ---------- */}
         {p.center && (
           <section className="pp-mapsection">
-            <PropertyMapBlock lat={p.center.lat} lng={p.center.lng} locale={lang} />
+            <PropertyMapBlock
+              lat={p.center.lat}
+              lng={p.center.lng}
+              locale={lang}
+              card={{ title: p.publicName, image: p.gallery.find(Boolean) ?? null, price: priceFrom ?? null, city: locationLabel }}
+            />
           </section>
         )}
 

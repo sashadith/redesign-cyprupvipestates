@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapContainer, Marker } from "@/app/components/map/MapLibre";
-import { pinMarkup, POI_CATS, PoiLayers, gestureLocale } from "@/app/preview-projects/ProjectsMap";
+import { MapContainer, Marker, Popup } from "@/app/components/map/MapLibre";
+import { pinMarkup, POI_CATS, PoiLayers, gestureLocale, MapCard } from "@/app/preview-projects/ProjectsMap";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 
 /* Full-width map block for a SINGLE property: centred on the unit, the property
@@ -15,18 +15,25 @@ import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/pro
    to name:latin) — the old raster labels were stuck in the local language, which
    the previous comment here noted would need "a vector provider + key". The
    vector provider turned out not to need a key. */
+export type PropertyMapCard = { title: string; image?: string | null; price: number | null; city?: string | null };
+
 export default function PropertyMap({
   lat,
   lng,
   locale = "de",
+  card,
 }: {
   lat: number;
   lng: number;
   locale?: string;
+  /** The same card as on the projects map, hidden until the pin is clicked (no link: it
+   *  would point at this very page). Each click on the pin toggles it. */
+  card?: PropertyMapCard;
 }) {
   const s: ProjectsStrings = projectsStrings(locale);
   const [poiActive, setPoiActive] = useState<Set<string>>(new Set());
   const [poiState, setPoiState] = useState<"idle" | "loading" | "zoom">("idle");
+  const [cardOpen, setCardOpen] = useState(false);
   const togglePoi = (k: string) =>
     setPoiActive((prev) => {
       const next = new Set(prev);
@@ -48,7 +55,17 @@ export default function PropertyMap({
         style={{ height: "100%", width: "100%" }}
       >
         {/* the property itself — our glowing emblem, prominent (active variant) */}
-        <Marker lngLat={[lng, lat]} className={pin.className} html={pin.html} />
+        <Marker
+          lngLat={[lng, lat]}
+          className={pin.className}
+          html={pin.html}
+          onClick={card ? () => setCardOpen((o) => !o) : undefined}
+        />
+        {card && cardOpen && (
+          <Popup className="px-pop px-pop--nav" lngLat={[lng, lat]} closeButton={false} closeOnClick={false}>
+            <MapCard {...card} lat={lat} lng={lng} locale={locale} s={s} />
+          </Popup>
+        )}
         <PoiLayers active={poiActive} onState={setPoiState} />
       </MapContainer>
 

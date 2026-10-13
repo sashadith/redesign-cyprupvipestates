@@ -19,12 +19,61 @@ import Supercluster from "supercluster";
 import { MapContainer, Marker, Popup, useMap, maplibregl } from "@/app/components/map/MapLibre";
 import { CYPRUS_BOUNDS, CYPRUS_CENTER } from "@/app/components/map/cveMapStyle";
 import type { MapMarker } from "./ProjectsExplorer";
-import { topDistances } from "./ProjectCard";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { fmtPrice } from "@/lib/locale";
 import Bdi from "@/app/components/Bdi";
 
 const cyprusBounds = () => new maplibregl.LngLatBounds(CYPRUS_BOUNDS[0], CYPRUS_BOUNDS[1]);
+
+/** Turn-by-turn links for the map card. Both open the app on a phone and the
+ *  web planner on a desktop; coordinates are the project's pin. */
+export const googleNavUrl = (lat: number, lng: number) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+export const wazeNavUrl = (lat: number, lng: number) =>
+  `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+
+/** The card inside a map popup: image, price, title, place, plus the G/W
+ *  navigation shortcuts. Shared by the projects explorer, the developer page
+ *  and the single-project map. Without `href` (the project's own page) the card
+ *  is not a link, since it would only point back at the page it sits on.
+ *  Distances are deliberately not shown here (Sascha, 2026-10-13). */
+export function MapCard({
+  href, image, title, price, city, lat, lng, locale, s,
+}: {
+  href?: string;
+  image?: string | null;
+  title: string;
+  price: number | null;
+  city?: string | null;
+  lat: number;
+  lng: number;
+  locale: string;
+  s: ProjectsStrings;
+}) {
+  const inner = (
+    <>
+      {image && <img className="px-pop__img" src={image} alt={title} />}
+      <span className="px-pop__body">
+        <span className="px-pop__price">
+          {price != null ? <Bdi ltr>{fmtPrice(price, locale)}</Bdi> : s.priceOnRequest}
+        </span>
+        <span className="px-pop__title">{title}</span>
+        {city && <span className="px-pop__city">{city}</span>}
+      </span>
+    </>
+  );
+  return (
+    <>
+      {href ? <a className="px-pop__card" href={href}>{inner}</a> : <div className="px-pop__card">{inner}</div>}
+      {/* Siblings of the card link, not inside it: a link inside a link is
+          invalid HTML and browsers split the outer one apart. */}
+      <span className="px-pop__nav">
+        <a href={googleNavUrl(lat, lng)} target="_blank" rel="noopener noreferrer" aria-label="Google Maps" title="Google Maps">G</a>
+        <a href={wazeNavUrl(lat, lng)} target="_blank" rel="noopener noreferrer" aria-label="Waze" title="Waze">W</a>
+      </span>
+    </>
+  );
+}
 
 const validMarkers = (items: MapMarker[]) =>
   (items || []).filter((m) => typeof m.lat === "number" && typeof m.lng === "number" && !Number.isNaN(m.lat) && !Number.isNaN(m.lng));
@@ -584,7 +633,7 @@ export default function ProjectsMap({
             (selected wins). Open/close is driven purely by React state. */}
         {active && (
           <Popup
-            className="px-pop"
+            className="px-pop px-pop--nav"
             lngLat={[active.lng, active.lat]}
             closeButton={false}
             closeOnClick={false}
@@ -593,23 +642,17 @@ export default function ProjectsMap({
             onMouseEnter={canHover ? cancelHide : undefined}
             onMouseLeave={canHover ? scheduleHide : undefined}
           >
-            <a className="px-pop__card" href={active.href}>
-              {active.image && <img className="px-pop__img" src={active.image} alt={active.title} />}
-              <span className="px-pop__body">
-                <span className="px-pop__price">
-                  {active.price != null ? <Bdi ltr>{fmtPrice(active.price, locale)}</Bdi> : s.priceOnRequest}
-                </span>
-                <span className="px-pop__title">{active.title}</span>
-                {active.city && <span className="px-pop__city">{active.city}</span>}
-                {topDistances(active.distances, s, 3).length > 0 && (
-                  <span className="px-pop__dist">
-                    {topDistances(active.distances, s, 3).map((x) => (
-                      <span key={x.label}><i>{x.label}</i> {x.v}<small>{s.minShort}</small></span>
-                    ))}
-                  </span>
-                )}
-              </span>
-            </a>
+            <MapCard
+              href={active.href}
+              image={active.image}
+              title={active.title}
+              price={active.price}
+              city={active.city}
+              lat={active.lat}
+              lng={active.lng}
+              locale={locale}
+              s={s}
+            />
           </Popup>
         )}
 
