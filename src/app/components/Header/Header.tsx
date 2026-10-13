@@ -58,7 +58,10 @@ const cssUrl = (u?: string) => {
 };
 
 const Header = async ({ translations, params }: Props) => {
-  const data = await getHeaderByLang(params.lang);
+  // getHeaderByLang answers null for a lang that is not a locale (a mistyped or
+  // scanned URL that reached a tree with its own [lang] segment). Render the bare
+  // chrome instead of throwing, which used to turn that request into a 500.
+  const data = (await getHeaderByLang(params.lang)) ?? ({} as Awaited<ReturnType<typeof getHeaderByLang>>);
   const logo = safeUrl(data.logo);
   const logoMobile = safeUrl(data.logoMobile) ?? logo;
   const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(params.lang);
