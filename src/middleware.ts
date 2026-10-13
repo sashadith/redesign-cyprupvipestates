@@ -378,6 +378,22 @@ export function mergedTargetFor(pathname: string): string | null {
   return null;
 }
 
+/**
+ * A flat or wrong-parent URL of a nested singlepage ("/leaf", "/ru/leaf") -> its canonical nested path, or null.
+ * Shared by the middleware redirect below and by the missing-page resolver, so a redirect never lands on a
+ * URL that this table would redirect once more.
+ */
+export function nestedCanonicalFor(pathname: string): string | null {
+  const segs = pathname.split("/").filter(Boolean);
+  if (!segs.length) return null;
+  const lang = ALL_LOCALES.includes(segs[0]) ? segs[0] : "en";
+  const rest = ALL_LOCALES.includes(segs[0]) ? segs.slice(1) : segs;
+  if (!rest.length || RESERVED.has(rest[0])) return null;
+  const canonical = (nestedPageRedirects as Record<string, Record<string, string>>)[lang]?.[rest[rest.length - 1]];
+  if (!canonical || canonical === rest.join("/")) return null;
+  return lang === "en" ? `/${canonical}` : `/${lang}/${canonical}`;
+}
+
 export default async function middleware(request: NextRequest) {
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
   // launch): answer 404 instead of letting next-intl treat "he" as a plain
@@ -502,19 +518,12 @@ export default async function middleware(request: NextRequest) {
   // alone, so a nested page (parent/child) also resolves at a flat "/leaf" or wrong-parent URL —
   // duplicate content. Map each nested leaf to its canonical path and 308-redirect anything else.
   // (Same reason as above: this must be a middleware redirect, not a page-level one.)
-  const segs = request.nextUrl.pathname.split("/").filter(Boolean);
-  if (segs.length) {
-    const lang = ALL_LOCALES.includes(segs[0]) ? segs[0] : "en";
-    const rest = ALL_LOCALES.includes(segs[0]) ? segs.slice(1) : segs;
-    if (rest.length && !RESERVED.has(rest[0])) {
-      const canonical = (nestedPageRedirects as Record<string, Record<string, string>>)[lang]?.[rest[rest.length - 1]];
-      if (canonical && canonical !== rest.join("/")) {
-        const url = request.nextUrl.clone();
-        url.pathname = lang === "en" ? `/${canonical}` : `/${lang}/${canonical}`;
-        url.search = "";
-        return NextResponse.redirect(url, 308);
-      }
-    }
+  const nestedTarget = nestedCanonicalFor(request.nextUrl.pathname);
+  if (nestedTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = nestedTarget;
+    url.search = "";
+    return NextResponse.redirect(url, 308);
   }
 
   // EN migration equity (SEO Growth Roadmap P1 #1/#38) — /en/{path} duplicate-
