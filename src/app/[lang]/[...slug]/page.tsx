@@ -351,6 +351,13 @@ const SinglePage = async ({ params, searchParams }: Props) => {
   const page = (await getSinglePageByLang(lang, current, requestedPage)) as Singlepage | null;
 
   if (!page) {
+    // ?page=N (N > 1) on a page that exists but has no page N -- it has no paginated block, or N is past
+    // its last page. The page itself is the right answer; the resolver would not find a different page and
+    // would fall back to the homepage, which Google reads as a soft 404.
+    if (requestedPage > 1) {
+      const first = (await getSinglePageByLang(lang, current, 1)) as Singlepage | null;
+      if (first && !(slug.length === 1 && first.parentPage)) permanentRedirect(pagePath);
+    }
     return redirectMissingOrNotFound("page", lang, slug);
   }
 
