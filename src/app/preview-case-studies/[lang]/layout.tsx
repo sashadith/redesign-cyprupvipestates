@@ -1,7 +1,8 @@
 import "@/app/fonts/vendored.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { localeDir } from "@/lib/locale";
+import { localeDir, isLocale } from "@/lib/locale";
+import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
 import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
@@ -55,13 +56,15 @@ export const metadata: Metadata = {
   title: "Case Studies | Cyprus VIP Estates",
 };
 
-export default function CaseStudiesLayout({
+export default async function CaseStudiesLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: { lang: string };
 }) {
+  // /preview-case-studies/<slug> (no language segment) lands here with lang=<slug>: find the case study, else the index.
+  if (!isLocale(params.lang)) await redirectMissingOrNotFound("caseStudy", "en", [params.lang]);
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>

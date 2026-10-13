@@ -30,7 +30,8 @@ const Nav = async ({
   translations?: Translation[];
   homeHref?: string;
 }) => {
-  const data = await getHeaderByLang(lang);
+  // null for a lang that is not a locale: render the bare chrome, don't throw.
+  const data = (await getHeaderByLang(lang)) ?? ({} as Awaited<ReturnType<typeof getHeaderByLang>>);
   const logo = (() => {
     try {
       return urlFor(data.logo).url();

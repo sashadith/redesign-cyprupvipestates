@@ -1,7 +1,8 @@
 import "@/app/fonts/vendored.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { localeDir } from "@/lib/locale";
+import { localeDir, isLocale } from "@/lib/locale";
+import { permanentRedirect } from "next/navigation";
 import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
@@ -45,6 +46,8 @@ export default function ContactsLayout({
   children: React.ReactNode;
   params: { lang: string };
 }) {
+  // /preview-contacts/<not a locale> used to render with lang=<that segment> and crash the header (500).
+  if (!isLocale(params.lang)) permanentRedirect("/contacts");
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>

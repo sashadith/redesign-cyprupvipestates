@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { i18n } from "@/i18n.config";
 import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale, isPublicLocale, BCP47 } from "@/lib/locale";
 import { languageAlternates, ogLocale } from "@/lib/seo";
@@ -86,10 +86,12 @@ export default async function LegalPage({ params }: Props) {
   const { lang, doc } = params;
   if (!isLegalDocKey(doc)) notFound();
 
+  const page: CorporatePage = doc === "privacy" ? "privacy" : "terms";
+  // /preview-legal/<not a locale>/terms: send it to the English public page instead of rendering with a bogus lang.
+  if (!isLocale(lang)) permanentRedirect(`/${CORPORATE_SLUGS[page].en}`);
+
   const t = getLegalDoc(doc, lang);
   if (!t) notFound();
-
-  const page: CorporatePage = doc === "privacy" ? "privacy" : "terms";
 
   const translations: Translation[] = i18n.languages.map((l) => ({
     language: l.id,
