@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { logout } from "../actions";
 import Sidebar, { type NavModule } from "./Sidebar";
-import { getActionCenterItems } from "@/lib/actionCenter";
+import AdminPerfProbe from "./AdminPerfProbe";
 import ActivityTracker from "./ActivityTracker";
 import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_NEWSLETTER, ONLY_PARTNER } from "@/lib/crm/leadBucket";
 
@@ -15,7 +15,7 @@ const LOGO_SRC = "/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x
 // The admin is organised into application MODULES. The primary rail shows the
 // modules; multi-page modules (CRM, Website) open a secondary sidebar with their
 // pages. `isAdmin` gates ADMIN-only pages (Footer/site settings, Users module).
-function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, activeLeadCount: number, activePartnerCount: number, newsletterCount: number, actionCenterCount: number): NavModule[] {
+function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, activeLeadCount: number, activePartnerCount: number, newsletterCount: number): NavModule[] {
   const websitePages = [
     { href: "/admin/content/featured", label: "Homepage" },
     { href: "/admin/content/projects", label: "Projects" },
@@ -37,7 +37,11 @@ function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, ac
   ];
 
   return [
-    { key: "dashboard", label: "Dashboard", pages: [{ href: "/admin", label: "Dashboard", count: actionCenterCount || undefined }] },
+    // No count here: the Action Center number is fetched by the sidebar after
+    // the page renders. See src/app/api/admin/action-center-count/route.ts —
+    // computing it inline cost every admin page ~2 s, against 72 ms for all of
+    // this layout's own queries combined.
+    { key: "dashboard", label: "Dashboard", pages: [{ href: "/admin", label: "Dashboard" }] },
     {
       key: "crm",
       label: "CRM",
@@ -84,6 +88,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!session || !uid) redirect("/admin/login");
   // Re-validate against the DB so a deactivated user loses access immediately,
   // not only when their JWT expires (audit M3).
+  // Measured so the console probe below can say how much of a slow page is
+  // this layout's data gathering and how much is render, network or browser.
+  const t0 = Date.now();
   const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true, isOwner: true } });
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
   const user = session.user as any;
@@ -93,8 +100,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, ...ONLY_PARTNER } }),
     prisma.lead.count({ where: { deletedAt: null, ...ONLY_NEWSLETTER } }),
   ]);
-  const actionCenterCount = (await getActionCenterItems()).length;
-  const modules = buildModules(user?.role === "ADMIN", dbUser.isOwner, trashCount, activeLeadCount, activePartnerCount, newsletterCount, actionCenterCount);
+  const modules = buildModules(user?.role === "ADMIN", dbUser.isOwner, trashCount, activeLeadCount, activePartnerCount, newsletterCount);
 
   // Developer-grouped nav for the Developments module: WITH FEED vs NO FEED, A-Z.
   // "With feed" = the developer has at least one live (URL/API) feed analysis.
@@ -135,8 +141,11 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     units: await prisma.developmentUnit.count({ where: { status: "available" } }),
   };
 
+  const serverMs = Date.now() - t0;
+
   return (
     <div className="min-h-screen md:flex bg-[#F8F9FA] font-sans text-[#111827]">
+      <AdminPerfProbe serverMs={serverMs} />
       <Sidebar
         modules={modules}
         developersNav={developersNav}

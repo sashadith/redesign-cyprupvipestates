@@ -128,8 +128,52 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
   );
 }
 
-export default function Sidebar({ modules, developersNav, devTotals, user, logoSrc, signOut }: Props) {
+/**
+ * The Action Center's item count, fetched AFTER the page has rendered.
+ *
+ * It used to come down as a prop, which meant the admin layout awaited
+ * getActionCenterItems() before anything reached the browser — measured on the
+ * server 2026-10-13 at 1835/2491/2065 ms, against 72 ms for every other query
+ * the layout runs. Two seconds on every admin page for one number in the nav.
+ *
+ * Deliberately NOT React's `use()` with a promise passed from the layout: this
+ * project is on React 18.3.1, where `use` is undefined. And deliberately not
+ * <Suspense> streaming either — nginx proxies /admin with proxy_buffering at its
+ * default (on) plus gzip, so a streamed shell would be buffered up and arrive
+ * with the slow part anyway. Fetching after mount is immune to both.
+ *
+ * No placeholder while it loads (operator's call): the badge is absent until the
+ * number exists, then appears. A spinner in a nav item reads as something being
+ * wrong rather than something being counted.
+ */
+function useActionCenterCount(): number | undefined {
+  const [count, setCount] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    // AbortController so navigating away mid-flight does not leave a pending
+    // request resolving into an unmounted tree.
+    const ac = new AbortController();
+    fetch("/api/admin/action-center-count", { signal: ac.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && typeof d?.count === "number") setCount(d.count); })
+      .catch(() => { /* a failed badge must never break the panel it decorates */ });
+    return () => { cancelled = true; ac.abort(); };
+  }, []);
+  return count;
+}
+
+export default function Sidebar({ modules: modulesProp, developersNav, devTotals, user, logoSrc, signOut }: Props) {
   const pathname = usePathname() || "";
+  const actionCenterCount = useActionCenterCount();
+  // Injected into the Dashboard entry once it arrives. Kept out of the layout's
+  // own render so the number's cost never delays the page.
+  const modules = useMemo(
+    () => modulesProp.map((m) => m.key !== "dashboard" ? m : {
+      ...m,
+      pages: m.pages.map((p) => p.href === "/admin" ? { ...p, count: actionCenterCount || undefined } : p),
+    }),
+    [modulesProp, actionCenterCount],
+  );
   const { activeModuleKey, activePage } = useMemo(() => resolveActive(pathname, modules), [pathname, modules]);
 
   /* Collapsed secondary sidebar. Starts expanded on every render so the server
