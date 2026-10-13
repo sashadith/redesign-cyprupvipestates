@@ -12,6 +12,7 @@ import "@/app/preview-projects/projects.css";
 
 import React from "react";
 import { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 import {
   getFilteredProjects,
   getFilteredProjectsCount,
@@ -22,6 +23,7 @@ import {
 import { urlFor } from "@/sanity/sanity.client";
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
+import { outOfRangePageTarget } from "@/lib/projectsPaging";
 import {
   staticAlternates,
   DEFAULT_OG_IMAGE,
@@ -126,6 +128,11 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     getFilteredProjectLocationsByLang(lang, filters),
     getProjectsPageByLang(lang),
   ]);
+
+  // A page past the last real one (a filter with fewer pages than an old link assumes) is an empty 200,
+  // which Google reports as a soft 404: send it to the last real page, keeping the filters.
+  const pastEnd = outOfRangePageTarget(localizedHref(lang, ["projects"]), searchParams as Record<string, string | string[] | undefined>, page, Math.ceil(total / PAGE_SIZE));
+  if (pastEnd) permanentRedirect(pastEnd);
 
   // distances (minutes to beach/airport/…) for the visible cards + map markers
   const distIds = Array.from(

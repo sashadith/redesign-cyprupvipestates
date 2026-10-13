@@ -2,7 +2,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isPublicLocale, localizedHref } from "@/lib/locale";
-import { mergedTargetFor } from "@/middleware";
+import { mergedTargetFor, nestedCanonicalFor } from "@/middleware";
 import { resolveMissing, type MissingKind, type MissingRepo, type SlugRow } from "@/lib/missingPageResolve";
 
 const sel = { language: true, slug: true, translationGroupId: true } as const;
@@ -29,7 +29,7 @@ export function prismaMissingRepo(db: PrismaClient): MissingRepo {
 /** The best live page for a URL that matches nothing, or null (scanner junk, or the lookup failed). */
 export async function missingTarget(kind: MissingKind, lang: string, segments: string[], currentPath?: string): Promise<string | null> {
   try {
-    return await resolveMissing(prismaMissingRepo(prisma), { isPublicLocale, href: localizedHref, redirected: mergedTargetFor }, { kind, lang, segments, currentPath });
+    return await resolveMissing(prismaMissingRepo(prisma), { isPublicLocale, href: localizedHref, redirected: (p) => mergedTargetFor(p) ?? nestedCanonicalFor(p) }, { kind, lang, segments, currentPath });
   } catch (e) {
     console.error("[missing-page-redirect] lookup failed, answering 404:", e);
     return null;

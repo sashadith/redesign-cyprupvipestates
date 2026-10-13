@@ -112,3 +112,24 @@ test("a legacy route passes its own path: the real article is a valid target, no
   // without the real path the article's own URL still counts as "self" (page route that 404ed for another reason)
   assert.equal(await r(["how-to-get-pr"]), "/blog");
 });
+
+test("page: a nested URL whose last segment is a flat page of its own goes to that page, not the homepage", async () => {
+  const pages = [
+    row("ru", "doma-na-kipre-s-basseinom", null), // only in ru
+    row("en", "apartments-in-paphos", "q1"), // english only, no ru sibling
+    row("pl", "domy-z-basenem-na-cyprze", null),
+    row("ru", "villy-v-limassole", "q2"),
+    row("en", "villas-limassol", "q2"),
+  ];
+  const r = repo([], pages);
+  const run2 = (lang: string, segments: string[]) => resolveMissing(r, env, { kind: "page", lang, segments });
+  assert.equal(await run2("en", ["doma-na-kipre", "doma-na-kipre-s-basseinom"]), "/ru/doma-na-kipre-s-basseinom"); // own-language page
+  assert.equal(await run2("ru", ["apartments-in-cyprus", "apartments-in-paphos"]), "/apartments-in-paphos"); // english sibling-less page
+  assert.equal(await run2("en", ["sprzedaz-domow-na-cyprze", "domy-z-basenem-na-cyprze"]), "/pl/domy-z-basenem-na-cyprze");
+  assert.equal(await run2("ru", ["apartments-in-cyprus", "villas-limassol"]), "/ru/villy-v-limassole"); // translation sibling in the requested language
+  assert.equal(await run2("pl", ["x", "villas-limassol"]), "/villas-limassol"); // no pl sibling: english
+  assert.equal(await run2("en", ["parent", "nothing-here"]), "/"); // still falls through when no page matches
+  // a flat page in the SAME language is reached by dropping the stray parent
+  const same = repo([], [row("ru", "doma-na-kipre-s-basseinom", null)]);
+  assert.equal(await resolveMissing(same, env, { kind: "page", lang: "ru", segments: ["old-parent", "doma-na-kipre-s-basseinom"] }), "/ru/doma-na-kipre-s-basseinom");
+});

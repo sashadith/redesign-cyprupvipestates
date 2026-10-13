@@ -152,8 +152,7 @@ async function resolveRaw(
       const t = ok(env.href(lang, child.slug.split("/")));
       if (t) return t;
     }
-    const row = prefer((await repo.pagesBySlug(full)).filter((r) => r.language !== lang), env.isPublicLocale);
-    if (row) {
+    const viaRow = async (row: SlugRow): Promise<string | null> => {
       if (row.translationGroupId && env.isPublicLocale(lang)) {
         const sib = await repo.pageSibling(row.translationGroupId, lang);
         const t = sib && ok(env.href(lang, sib.slug.split("/")));
@@ -164,8 +163,24 @@ async function resolveRaw(
         const t = en && ok(env.href("en", en.slug.split("/")));
         if (t) return t;
       }
-      const own = ok(env.href(row.language, row.slug.split("/")));
-      if (own) return own;
+      return ok(env.href(row.language, row.slug.split("/")));
+    };
+    const row = prefer((await repo.pagesBySlug(full)).filter((r) => r.language !== lang), env.isPublicLocale);
+    if (row) {
+      const t = await viaRow(row);
+      if (t) return t;
+    }
+    // A nested URL whose last segment is a page of its own ("/doma-na-kipre/doma-na-kipre-s-basseinom" where only
+    // "doma-na-kipre-s-basseinom" exists): that page beats falling back to a parent or the homepage.
+    if (segments.length > 1) {
+      const last = segments[segments.length - 1];
+      const leaf = await repo.pagesBySlug(last);
+      const same = leaf.find((r) => r.language === lang);
+      const t = same ? ok(env.href(lang, last.split("/"))) : null;
+      if (t) return t;
+      const other = prefer(leaf.filter((r) => r.language !== lang), env.isPublicLocale);
+      const t2 = other && (await viaRow(other));
+      if (t2) return t2;
     }
     for (let i = segments.length - 1; i >= 1; i--) {
       const parent = segments.slice(0, i);
