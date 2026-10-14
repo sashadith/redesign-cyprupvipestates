@@ -20,7 +20,8 @@ test("token: valid for its guide and language, rejected for anything else", () =
   assert.equal(verifyGuideToken("cost-of-buying", "en", t, now + 1000), false);
   assert.equal(verifyGuideToken("residency", "de", t, now + 1000), false);
   assert.equal(verifyGuideToken("cost-of-buying", "de", t, now + GUIDE_TOKEN_TTL_MS + 1), false);
-  assert.equal(verifyGuideToken("cost-of-buying", "de", t.slice(0, -2) + "xx", now + 1000), false);
+  const last = t[t.length - 1];
+  assert.equal(verifyGuideToken("cost-of-buying", "de", t.slice(0, -1) + (last === "A" ? "B" : "A"), now + 1000), false);
   assert.equal(verifyGuideToken("cost-of-buying", "de", "", now), false);
   assert.equal(verifyGuideToken("cost-of-buying", "de", null, now), false);
   assert.equal(verifyGuideToken("cost-of-buying", "de", "a.b.c", now), false);
@@ -120,4 +121,49 @@ test("request: message, note and link only change for guide requests", () => {
   assert.ok(link.startsWith("/api/guides/rent-or-buy?lang=pl&t="));
   const t = new URL("https://x.test" + link).searchParams.get("t");
   assert.equal(verifyGuideToken("rent-or-buy", "pl", t), true);
+});
+
+import { GET } from "../../app/api/guides/[id]/route";
+
+const call = (id: string, qs: string) => GET(new Request(`https://x.test/api/guides/${id}${qs}`), { params: { id } });
+
+test("route: serves the PDF only for a valid token; unknown guide/language 404; bad token gets a localised 403 page", async () => {
+  const t = signGuideToken("residency", "pl");
+  const ok = await call("residency", `?lang=pl&t=${t}`);
+  assert.equal(ok.status, 200);
+  assert.equal(ok.headers.get("content-type"), "application/pdf");
+  assert.match(ok.headers.get("content-disposition") ?? "", /^attachment; filename="cyprus-vip-estates-residency-pl\.pdf"$/);
+  assert.equal(ok.headers.get("x-robots-tag"), "noindex, nofollow");
+  const body = Buffer.from(await ok.arrayBuffer());
+  assert.equal(body.subarray(0, 5).toString(), "%PDF-");
+  assert.deepEqual(body, readGuidePdf("residency", "pl"));
+
+  assert.equal((await call("nope", `?lang=pl&t=${t}`)).status, 404);
+  assert.equal((await call("residency", `?lang=he&t=${t}`)).status, 404);
+  assert.equal((await call("../../etc/passwd", `?lang=pl&t=${t}`)).status, 404);
+
+  for (const qs of ["?lang=pl", `?lang=en&t=${t}`, "?lang=pl&t=garbage"]) {
+    const bad = await call("residency", qs);
+    assert.equal(bad.status, 403, qs);
+    assert.match(bad.headers.get("content-type") ?? "", /text\/html/);
+  }
+  const pl = await (await call("residency", "?lang=pl")).text();
+  assert.ok(pl.includes("wygasł"), "the 403 page speaks the visitor's language");
+});
+
+test("route: with no signing secret configured it answers 503 instead of serving or crashing", async () => {
+  const t = signGuideToken("residency", "en");
+  const saved = { a: process.env.AUTH_SECRET, g: process.env.GUIDE_TOKEN_SECRET };
+  delete process.env.AUTH_SECRET; delete process.env.GUIDE_TOKEN_SECRET;
+  const errors: unknown[] = [];
+  const orig = console.error; console.error = (...a: unknown[]) => { errors.push(a); };
+  try {
+    assert.equal((await call("residency", `?lang=en&t=${t}`)).status, 503);
+    assert.equal(guideLink(parseGuideRequest({ guide: "residency" }, "en")), null); // the lead flow degrades, it does not throw
+    assert.ok(errors.length >= 2);
+  } finally {
+    console.error = orig;
+    process.env.GUIDE_TOKEN_SECRET = saved.g ?? "test-secret";
+    if (saved.a !== undefined) process.env.AUTH_SECRET = saved.a;
+  }
 });

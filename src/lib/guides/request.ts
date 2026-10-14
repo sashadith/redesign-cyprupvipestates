@@ -28,5 +28,5 @@ export function guideNote(guide: GuideRequest | null): string {
 /** The signed relative download link for the response and the e-mail; null when signing is not configured. */
 export function guideLink(guide: GuideRequest | null): string | null {
   if (!guide) return null;
-  try { return guideDownloadPath(guide.id, guide.lang); } catch (e) { console.error("Guide token error:", e); return null; }
+  try { return guideDownloadPath(guide.id, guide.lang); } catch (e) { console.error("GUIDE_LINK_FAILED lead asked for a guide but the download link could not be signed:", e); return null; }
 }

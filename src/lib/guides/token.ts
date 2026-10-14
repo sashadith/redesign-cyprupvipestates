@@ -11,8 +11,13 @@ function secret(): string {
   return s;
 }
 
+/** The signing key is derived from the secret for this one purpose, so a token can never double as anything else signed with AUTH_SECRET. */
+function key(): Buffer {
+  return crypto.createHmac("sha256", secret()).update("cvp-guide-download-v1").digest();
+}
+
 function mac(id: string, lang: string, exp: string): string {
-  return crypto.createHmac("sha256", secret()).update(`${id}|${lang}|${exp}`).digest("base64url").slice(0, 32);
+  return crypto.createHmac("sha256", key()).update(`${id}|${lang}|${exp}`).digest("base64url").slice(0, 32);
 }
 
 export function signGuideToken(id: string, lang: GuideLang, now = Date.now()): string {
