@@ -13,6 +13,8 @@ import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, 
 import nodemailer from "nodemailer";
 import { PROPERTY_VALUES, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { LOCALES } from "@/lib/locale";
+import { parseGuideRequest, messageWithGuide, guideNote, guideLink } from "@/lib/guides/request";
+import { getGuideEmail } from "@/lib/guides/email";
 
 const ALLOWED_LANGS = new Set<string>(LOCALES);  // locally named ALLOWED_LANGS to avoid shadowing the imported LOCALES constant
 
@@ -65,6 +67,10 @@ export async function POST(request: Request) {
     const messageNorm = String(message ?? question ?? "").trim();
     const langNorm = String(lang ?? "").toLowerCase();
 
+    // Lead magnet: the visitor asked for a PDF guide. Unknown ids are ignored (treated as a plain enquiry).
+    const guide = parseGuideRequest(body, langNorm);
+    const messageFinal = messageWithGuide(messageNorm, guide);
+
     if (!firstName || !phoneNorm || !emailNorm) return blocked("missing_fields");
     if (preferred && !["phone", "whatsapp", "email"].includes(preferred)) return blocked("preferredContact");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return blocked("email");
@@ -110,8 +116,8 @@ export async function POST(request: Request) {
         lastName: lastName || "",
         email: emailNorm,
         phone: phoneNorm,
-        message: messageNorm || null,
-        notes: preferred ? `Preferred contact: ${preferred}` : null,
+        message: messageFinal || null,
+        notes: [preferred ? `Preferred contact: ${preferred}` : "", guideNote(guide)].filter(Boolean).join(" | ") || null,
         source: source as any,
         status: "NEW",
         nationality,
@@ -180,7 +186,7 @@ export async function POST(request: Request) {
       `Preferred: ${escapeHtml(preferred)}\n` +
       (langTag ? `Language: ${escapeHtml(langTag)}\n` : "") +
       tgQualification +
-      (messageNorm ? `Message: ${escapeHtml(messageNorm)}\n` : "") +
+      (messageFinal ? `Message: ${escapeHtml(messageFinal)}\n` : "") +
       `Page: ${escapeHtml(page)}\n` +
       matchLines +
       `\n<a href="${crmLink}">Open in CRM</a>`;
@@ -204,7 +210,7 @@ export async function POST(request: Request) {
           <p><b>Phone:</b> ${escapeHtml(phoneNorm)}</p>
           <p><b>Preferred:</b> ${escapeHtml(preferred)}</p>
           ${mailQualification}
-          ${messageNorm ? `<p><b>Message:</b><br/>${escapeHtml(messageNorm).replace(/\n/g, "<br/>")}</p>` : ""}
+          ${messageFinal ? `<p><b>Message:</b><br/>${escapeHtml(messageFinal).replace(/\n/g, "<br/>")}</p>` : ""}
           <hr/><p><b>Page:</b> ${escapeHtml(page)}</p>
           <p><a href="${crmLink}">Open in CRM</a></p>`,
         replyTo: emailNorm,
@@ -220,12 +226,19 @@ export async function POST(request: Request) {
     }
 
     // Auto-reply to client (non-fatal)
+    // A guide request gets the guide e-mail (with the download link) instead of the generic auto-reply.
+    const guideUrl = guideLink(guide);
     try {
-      const { subject, html } = getAutoReplyEmail({ name: firstName, lang: langNorm });
-      await transporter.sendMail({ from: `"Cyprus VIP Estates" <office@cyprusvipestates.com>`, to: emailNorm, subject, html });
+      if (guide && guideUrl) {
+        const { subject, html } = getGuideEmail({ name: firstName, lang: guide.lang, title: guide.title, url: `https://cyprusvipestates.com${guideUrl}` });
+        await transporter.sendMail({ from: `"Cyprus VIP Estates" <office@cyprusvipestates.com>`, to: emailNorm, subject, html });
+      } else {
+        const { subject, html } = getAutoReplyEmail({ name: firstName, lang: langNorm });
+        await transporter.sendMail({ from: `"Cyprus VIP Estates" <office@cyprusvipestates.com>`, to: emailNorm, subject, html });
+      }
     } catch (e) { console.error("Auto-reply error:", e); }
 
-    return NextResponse.json({ ok: true, created: true, id: lead.id }, { status: 200 });
+    return NextResponse.json({ ok: true, created: true, id: lead.id, ...(guide && guideUrl ? { guide: { id: guide.id, url: guideUrl } } : {}) }, { status: 200 });
   } catch (err) {
     console.error("Lead capture error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

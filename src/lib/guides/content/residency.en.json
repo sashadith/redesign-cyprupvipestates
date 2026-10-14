@@ -1,0 +1,391 @@
+{
+  "id": "residency",
+  "lang": "en",
+  "title": "Permanent Residence in Cyprus through Property (Category 6.2): Requirements, Process and Costs (2026)",
+  "subtitle": "What the rules require today, who qualifies, and what health cover and tax come with it.",
+  "edition": "Edition: October 2026",
+  "keyNumbers": [
+    {
+      "value": "€300,000",
+      "label": "Minimum investment in a new-build home, plus VAT"
+    },
+    {
+      "value": "€50,000",
+      "label": "Annual income from abroad for the main applicant"
+    },
+    {
+      "value": "2–3 months",
+      "label": "Typical review time for a complete file"
+    },
+    {
+      "value": "Every 2 years",
+      "label": "Minimum entry to Cyprus for the permit holder"
+    }
+  ],
+  "intro": "Category 6.2 (Regulation 6(2)) is the fast-track permanent residence permit for non-EU investors who buy a new-build home in Cyprus. The rules were revised on 2 May 2023, and many websites still quote older figures. This guide sets out the requirements as of October 2026, the application steps and costs, and what the permit does and does not give you, including GeSY health cover, tax and the road to citizenship.",
+  "sections": [
+    {
+      "heading": "Category 6.2 requirements at a glance (as of October 2026)",
+      "blocks": [
+        {
+          "type": "table",
+          "head": [
+            "Requirement",
+            "Rule"
+          ],
+          "rows": [
+            [
+              "Investment",
+              "New residential property in its first sale, worth at least €300,000 plus VAT, bought directly from a development company"
+            ],
+            [
+              "Source of funds",
+              "The money comes from abroad, and the bank transfers are documented"
+            ],
+            [
+              "Income",
+              "At least €50,000 a year from abroad for the main applicant, plus €15,000 for a spouse and €10,000 for each child or dependent student"
+            ],
+            [
+              "Employment",
+              "No salaried employment in Cyprus; dividends, rent and pension income are allowed"
+            ],
+            [
+              "Entry rule",
+              "Every family member on the permit enters Cyprus at least once every 2 years; there is no obligation to live on the island"
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Check the date of every source",
+          "text": "The current conditions apply since 2 May 2023, and parents have not been covered by this route since that date. Older articles may show earlier conditions, so confirm the figures with a lawyer before you pay a reservation deposit."
+        }
+      ]
+    },
+    {
+      "heading": "Who qualifies: the investment, the applicant and the family",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The permit rests on two separate tests: a qualifying investment of at least €300,000 and a secure income from abroad. The investment can take four forms:"
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "New residential property: a house or apartment in its first sale, bought directly from a development company, for at least €300,000 plus VAT. Resale homes do not qualify on this route.",
+            "Commercial property worth at least €300,000. Resale is allowed here.",
+            "At least €300,000 in the share capital of a Cyprus company with a real presence on the island and at least 5 employees.",
+            "At least €300,000 in units of a Cyprus-regulated investment fund."
+          ]
+        },
+        {
+          "type": "table",
+          "head": [
+            "Family member",
+            "Covered by the permit",
+            "Income added"
+          ],
+          "rows": [
+            [
+              "Spouse",
+              "Yes",
+              "+ €15,000 a year"
+            ],
+            [
+              "Child under 18",
+              "Yes",
+              "+ €10,000 a year"
+            ],
+            [
+              "Dependent adult student up to 25",
+              "Yes",
+              "+ €10,000 a year"
+            ],
+            [
+              "Parents and in-laws",
+              "No, a separate permit is needed",
+              "None"
+            ]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Income test for a family of four",
+          "rows": [
+            [
+              "Main applicant",
+              "€50,000"
+            ],
+            [
+              "Spouse",
+              "+ €15,000"
+            ],
+            [
+              "Child aged 8",
+              "+ €10,000"
+            ],
+            [
+              "Child aged 12",
+              "+ €10,000"
+            ]
+          ],
+          "total": [
+            "Documented foreign income required per year",
+            "€85,000"
+          ],
+          "note": "The income test, more than the purchase price, is what rules out many families. The income is shown with tax returns, an accountant's certificate or documented dividend, rental or pension income."
+        }
+      ]
+    },
+    {
+      "heading": "Application process for Category 6.2, step by step",
+      "blocks": [
+        {
+          "type": "steps",
+          "items": [
+            {
+              "title": "Check eligibility with a lawyer",
+              "text": "Use a lawyer registered with the Cyprus Bar Association. The lawyer reviews the developer and confirms that the unit is a qualifying first sale."
+            },
+            {
+              "title": "Reserve and sign",
+              "text": "Reserve the unit, then sign the sale contract. Your lawyer registers it with the district Land Registry, and the registration number becomes part of your application."
+            },
+            {
+              "title": "Transfer the funds from abroad",
+              "text": "Pay from your own account abroad. Keep the SWIFT copies and the receiving bank's confirmation that foreign funds arrived."
+            },
+            {
+              "title": "Assemble the file",
+              "text": "For each applicant: Form MIP1, certified passport copies, criminal record certificates (apostilled or embassy-certified) and marriage and birth certificates where relevant. For the family: proof of the investment and proof of income. Documents not in English need certified translations."
+            },
+            {
+              "title": "Submit the application",
+              "text": "File with the Civil Registry and Migration Department (CRMD), in person or through your lawyer, and pay the fee. You receive a proof-of-submission receipt that lets you track the case."
+            },
+            {
+              "title": "Wait for the decision",
+              "text": "A complete file takes about 2–3 months, and up to 5–6 months if the department asks follow-up questions. You do not need to be in Cyprus during the review."
+            },
+            {
+              "title": "Collect the permit",
+              "text": "After approval, a short visit to Cyprus for biometrics and the card takes about 2–3 weeks. Afterwards, apply for a Cyprus tax identification number and arrange health cover."
+            }
+          ]
+        },
+        {
+          "type": "p",
+          "text": "From the signed purchase contract to the permit in your hand, a clean case takes roughly 3–4 months in practice. Apostilled certificates usually take the longest to obtain."
+        }
+      ]
+    },
+    {
+      "heading": "Costs to budget for a Category 6.2 purchase",
+      "blocks": [
+        {
+          "type": "table",
+          "head": [
+            "Item",
+            "Amount",
+            "Comment"
+          ],
+          "rows": [
+            [
+              "Purchase price",
+              "At least €300,000 plus VAT",
+              "New first-sale residential property"
+            ],
+            [
+              "VAT",
+              "5% reduced rate or 19% standard rate",
+              "The reduced rate has limits (first 130 m², value cap €350,000); ask your lawyer which rate applies to your unit"
+            ],
+            [
+              "Reservation deposit",
+              "€5,000–10,000",
+              "Paid when you reserve the unit"
+            ],
+            [
+              "Government application fee",
+              "€500",
+              "Reported fee; confirm whether it is charged per applicant"
+            ],
+            [
+              "Lawyer, certified translations, apostilles",
+              "Not quantified here",
+              "Ask for a written quote before you sign"
+            ],
+            [
+              "Health cover",
+              "GeSY contribution or private plan",
+              "See the health cover section below"
+            ]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "A €300,000 apartment: price with VAT (as of October 2026)",
+          "rows": [
+            [
+              "Price before VAT",
+              "€300,000"
+            ],
+            [
+              "VAT at the reduced 5% rate (€300,000 × 5%)",
+              "€15,000"
+            ]
+          ],
+          "total": [
+            "Total at the reduced rate",
+            "€315,000"
+          ],
+          "note": "At the standard 19% rate the VAT is €57,000 and the total €357,000, which is €42,000 more. The reduced rate applies only when its conditions are met."
+        }
+      ]
+    },
+    {
+      "heading": "Health cover under GeSY: who qualifies and what it costs",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "GeSY, the Cyprus General Healthcare System, started in 2019 and is run by the Health Insurance Organisation. It is an insurance scheme funded by a percentage of income, built around a personal doctor who treats you and refers you to specialists. Owning a property does not give access. GeSY requires habitual residence in the government-controlled areas of the Republic of Cyprus and membership of a contributing category such as employee, self-employed or pensioner."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "Holders of permanent residence under Category 6.2 can register once they can show habitual residence.",
+            "A holder who visits Cyprus only once every 2 years is not habitually resident and needs private or travel insurance.",
+            "A holiday-home owner who lives abroad is not covered."
+          ]
+        },
+        {
+          "type": "table",
+          "head": [
+            "Contributor",
+            "Rate (2026)"
+          ],
+          "rows": [
+            [
+              "Employee, on gross salary",
+              "2.65%"
+            ],
+            [
+              "Self-employed, on profit",
+              "4.00%"
+            ],
+            [
+              "Pensioner, on pension income",
+              "2.65%"
+            ],
+            [
+              "Rental, dividend and interest income",
+              "2.65%"
+            ],
+            [
+              "Annual income ceiling for contributions",
+              "€180,000"
+            ]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "GeSY contribution of a resident retiree",
+          "rows": [
+            [
+              "Pension",
+              "€24,000"
+            ],
+            [
+              "Rental income",
+              "€12,000"
+            ],
+            [
+              "Income counted",
+              "€36,000"
+            ],
+            [
+              "Rate",
+              "2.65%"
+            ]
+          ],
+          "total": [
+            "Contribution per year",
+            "€954"
+          ],
+          "note": "That is €79.50 a month. A basic private plan costs about €80–150 a month (€960–1,800 a year) for narrower cover."
+        },
+        {
+          "type": "p",
+          "text": "Copayments in 2026: €0 for the personal doctor and for a hospital stay, €6 for a specialist with a referral (€25 without), €1 per laboratory test, €1 per prescription item and €10 for accident and emergency. Outpatient copayments are waived once they reach €150 in a calendar year."
+        }
+      ]
+    },
+    {
+      "heading": "Permanent residence, tax residence and citizenship are three different things",
+      "blocks": [
+        {
+          "type": "table",
+          "head": [
+            "Question",
+            "Answer"
+          ],
+          "rows": [
+            [
+              "Can I work as an employee in Cyprus?",
+              "No. You can be a shareholder or director of a company and receive dividends, rent or a pension."
+            ],
+            [
+              "Does the permit give rights in other EU countries?",
+              "No. It is residence in Cyprus only, and your passport decides where you can travel."
+            ],
+            [
+              "Does it make me a Cyprus tax resident?",
+              "No. Tax residence follows the 183-day or 60-day test, assessed separately from immigration status."
+            ],
+            [
+              "Do I keep the permit whatever I do?",
+              "No. You keep the qualifying investment, keep meeting the conditions and enter Cyprus at least once every 2 years."
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Tax figures as of October 2026, after the 2026 reform: corporate tax is 15%. Income tax is 0% up to €22,000, 20% to €32,000, 25% to €42,000, 30% to €72,000 and 35% above. Foreign pensions are taxed at 5% above €5,000 or under the scale. Cyprus has no inheritance tax."
+        },
+        {
+          "type": "callout",
+          "title": "Citizenship is a separate application",
+          "text": "Under the law in force since December 2023, naturalisation requires 7 of the last 10 years of legal residence plus 12 continuous months of legal stay immediately before applying, with absences of no more than 90 days in that final year, and Greek at level B1 for general applicants. A holder who only makes the minimum visit every 2 years cannot naturalise without actually living on the island first. How years abroad count toward the 7 is decided by the Migration Department, so confirm your position with a lawyer."
+        }
+      ]
+    },
+    {
+      "heading": "Checklist: what to confirm before you buy",
+      "blocks": [
+        {
+          "type": "checklist",
+          "title": "Before you reserve a unit",
+          "items": [
+            "The unit is a new, first-sale residential property of at least €300,000 plus VAT, bought from a development company.",
+            "The money will arrive from abroad, and every transfer is documented. If any part is borrowed, your lawyer has confirmed whether it is accepted.",
+            "Documented foreign income reaches €50,000, plus €15,000 for a spouse and €10,000 for each child or student.",
+            "Every person you want on the permit is covered; parents and in-laws are not.",
+            "Everyone on the permit can enter Cyprus at least once every 2 years.",
+            "You do not plan salaried employment in Cyprus.",
+            "Your lawyer has confirmed which VAT rate applies to the unit.",
+            "The budget includes the €500 fee, translations, apostilles and legal fees.",
+            "You have a plan for health cover: GeSY only with habitual residence, otherwise private insurance.",
+            "You do not plan to sell the property without replacing it while you hold the permit.",
+            "If citizenship is a goal, you have planned the 12 continuous months of residence."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Talk to us before you reserve",
+    "text": "If you want us to check a specific new-build unit against the Category 6.2 requirements, ask Cyprus VIP Estates for a personal consultation. We help you sequence the purchase, the residence application and the health cover so that none of them blocks the others."
+  },
+  "disclaimer": "This guide gives general information as of October 2026 and is not legal or tax advice. Rules and figures can change, so check your case with a licensed lawyer or tax adviser."
+}

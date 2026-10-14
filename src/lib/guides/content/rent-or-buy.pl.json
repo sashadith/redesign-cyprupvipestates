@@ -1,0 +1,473 @@
+{
+  "id": "rent-or-buy",
+  "lang": "pl",
+  "title": "Wynajem czy zakup na Cyprze (2026): kalkulacja według miasta i typu nieruchomości",
+  "subtitle": "Wyniki naszego modelu w jednym dokumencie, ze wszystkimi założeniami",
+  "edition": "Wydanie: październik 2026",
+  "keyNumbers": [
+    {
+      "value": "124 340 €",
+      "label": "gotówka potrzebna w przykładzie z Limassol, rynek wtórny (kredyt 70 %)"
+    },
+    {
+      "value": "+34 040 €",
+      "label": "kupujący przed najemcą po 10 latach, przy stałych cenach"
+    },
+    {
+      "value": "0,2 %",
+      "label": "roczny wzrost cen potrzebny do wyjścia na zero w 5 lat, rynek wtórny w Limassol"
+    },
+    {
+      "value": "2–6 %",
+      "label": "roczny wzrost cen potrzebny w Pafos i przy nowych mieszkaniach z VAT"
+    }
+  ],
+  "intro": "W przypadku mieszkania z rynku wtórnego w Limassol, Nikozji lub Larnace zakup i wynajem kosztują co miesiąc mniej więcej tyle samo. Po pięciu latach zakup wychodzi mniej więcej na zero, po dziesięciu wyraźnie korzystniej, nawet jeśli ceny prawie się nie zmieniają. W Pafos oraz przy nowych mieszkaniach, gdy doliczyć VAT, taniej wychodzi wynajem, chyba że ceny nadal rosną o mniej więcej 2–6 % rocznie. Twierdzenie, że kredyt na Cyprze zawsze kosztuje mniej niż czynsz, bierze się z porównywania samej raty. Wszystkie dane na październik 2026, ze wszystkimi założeniami.",
+  "sections": [
+    {
+      "heading": "Werdykt: wynajem czy zakup, według typu nieruchomości i miasta",
+      "blocks": [
+        {
+          "type": "table",
+          "head": [
+            "Sytuacja",
+            "Lepszy wybór",
+            "Uzasadnienie"
+          ],
+          "rows": [
+            [
+              "Mieszkanie z rynku wtórnego w Limassol, Nikozji lub Larnace; pobyt od pięciu do dziesięciu lat",
+              "Zakup",
+              "Po pięciu latach mniej więcej na zero przy stałych cenach, po dziesięciu wyraźnie na plus, a przy rosnących cenach znacznie szybciej."
+            ],
+            [
+              "Dowolna nieruchomość; pobyt krótszy niż dwa–trzy lata",
+              "Wynajem",
+              "Koszty transakcji i sprzedaży, łącznie około 7 % ceny, potrzebują czasu, żeby się zwrócić."
+            ],
+            [
+              "Mieszkanie z rynku wtórnego w Pafos",
+              "Raczej wynajem",
+              "Kupujący ponosi różnicę 280–380 € miesięcznie i potrzebuje wzrostu cen o około 2 % rocznie w ciągu pięciu lat."
+            ],
+            [
+              "Nowe mieszkanie z VAT",
+              "Wynajem, chyba że ceny nadal rosną",
+              "Zakup to zakład na wzrost cen o mniej więcej 2–6 % rocznie."
+            ],
+            [
+              "Dom lub willa",
+              "Bez rankingu",
+              "Brak wiarygodnych, porównywalnych danych o czynszach."
+            ],
+            [
+              "Zakup z myślą o pozwoleniu na pobyt",
+              "Porównaj koszt statusu",
+              "Porównanie wynajmu z zakupem nie ma tu zastosowania."
+            ]
+          ],
+          "note": "Dane na październik 2026."
+        },
+        {
+          "type": "callout",
+          "title": "Nie przenoś ostatniego tempa wzrostu na przyszłość",
+          "text": "Ceny mieszkań rosły o 8,9–10,8 % rocznie w pierwszej połowie 2026 roku, ale nikt nie gwarantuje, że choćby połowa tego tempa utrzyma się przez dekadę."
+        }
+      ]
+    },
+    {
+      "heading": "Założenia stojące za modelem",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Model zostawia najemcy gotówkę, którą kupujący musiałby zamrozić, inwestuje ją i porównuje majątek obu stron po sprzedaży nieruchomości."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Założenie",
+            "Przyjęta wartość"
+          ],
+          "rows": [
+            [
+              "Kredyt",
+              "70 % ceny, 25 lat"
+            ],
+            [
+              "Oprocentowanie",
+              "3,5 % w scenariuszu bazowym, 4,5 % w scenariuszu stresowym"
+            ],
+            [
+              "Wzrost cen",
+              "Scenariusze: 0 %, 2 %, 4 % i 6 % rocznie"
+            ],
+            [
+              "Wzrost czynszu",
+              "2 % rocznie"
+            ],
+            [
+              "Zwrot z gotówki najemcy",
+              "3 % rocznie"
+            ],
+            [
+              "Koszty sprzedaży",
+              "3 % ceny sprzedaży"
+            ],
+            [
+              "Koszty utrzymania nieruchomości",
+              "Około 110 € miesięcznie (opłaty wspólnotowe, wywóz odpadów, kanalizacja, opłaty gminne: 935–1 650 € rocznie)"
+            ],
+            [
+              "Horyzont",
+              "5 i 10 lat; 2 i 3 lata do sprawdzenia wyjścia na zero"
+            ],
+            [
+              "Czynsz",
+              "Środek przedziału dla 2 sypialni podanego na 2026 rok przez Radę Rejestracji Nieruchomości; w tym roku czynsze jak dotąd nie wzrosły"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Na rynku wtórnym opłata przeniesienia własności wynosi 3 % do 85 000 €, 5 % do 170 000 € i 8 % powyżej (przy 363 000 €: 2 550 € + 4 250 € + 15 440 €), po zmniejszeniu o połowę dzięki obecnie stosowanej zniżce. Koszty prawne wynoszą około 1 % ceny plus 19 % VAT od honorarium."
+        },
+        {
+          "type": "example",
+          "title": "Koszty transakcji przy mieszkaniu z rynku wtórnego za 363 000 €",
+          "rows": [
+            [
+              "Opłata przeniesienia własności po zniżce 50 % (połowa z 22 240 €)",
+              "11 120 €"
+            ],
+            [
+              "Koszty prawne",
+              "4 320 €"
+            ]
+          ],
+          "total": [
+            "Koszty transakcji (4,25 % ceny)",
+            "15 440 €"
+          ],
+          "note": "Na rynku wtórnym nie ma VAT. Przy nowej inwestycji od dewelopera płacisz natomiast VAT i nie płacisz opłaty przeniesienia własności; te dwa obciążenia nigdy nie występują razem."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "VAT przy nowej inwestycji wynosi 5 % wyłącznie dla głównego miejsca zamieszkania, w odniesieniu do pierwszych 130 m² i pierwszych 350 000 €. Powyżej 190 m² lub 475 000 € obowiązuje pełne 19 % od całej ceny.",
+            "Opłata skarbowa od umów została zniesiona od 1 stycznia 2026 roku."
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Przykład obliczeniowy: mieszkanie z dwiema sypialniami z rynku wtórnego w Limassol",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Przeciętne mieszkanie sprzedane w Limassol w pierwszej połowie 2026 roku kosztowało około 363 000 € (dane transakcyjne zestawione przez Ask Wire); mieszkanie z dwiema sypialniami o powierzchni 75–90 m² plasuje się blisko tej średniej. Czynsz za mieszkanie z dwiema sypialniami to około 1 450 € miesięcznie."
+        },
+        {
+          "type": "example",
+          "title": "Gotówka potrzebna przy zakupie z kredytem 70 % na 25 lat",
+          "rows": [
+            [
+              "Wkład własny (cena 363 000 € minus kredyt 254 100 €)",
+              "108 900 €"
+            ],
+            [
+              "Koszty transakcji",
+              "15 440 €"
+            ]
+          ],
+          "total": [
+            "Gotówka potrzebna przy zawarciu transakcji",
+            "124 340 €"
+          ]
+        },
+        {
+          "type": "table",
+          "head": [
+            "Oprocentowanie kredytu",
+            "Rata miesięczna",
+            "Koszt posiadania z 110 € kosztów utrzymania",
+            "Czynsz miesięczny",
+            "Tańsza opcja"
+          ],
+          "rows": [
+            [
+              "3,5 %",
+              "1 272 €",
+              "1 382 €",
+              "1 450 €",
+              "Zakup, o 68 € miesięcznie"
+            ],
+            [
+              "4,5 %",
+              "1 412 €",
+              "1 522 €",
+              "1 450 €",
+              "Wynajem, o 72 € miesięcznie"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Z miesiąca na miesiąc to remis, a różnica miesięczna to zła liczba, na której warto opierać decyzję. Około 6 475 € rat z pierwszego roku spłaca kapitał i buduje majątek, natomiast 124 340 € gotówki to prawdziwa cena posiadania. Uczciwe porównanie zakłada, że ta gotówka zostaje u najemcy i jest zainwestowana na 3 % rocznie, a następnie zestawia majątek obu stron po sprzedaży (koszty sprzedaży 3 %, czynsz rosnący o 2 % rocznie)."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Wzrost cen rocznie",
+            "Po 5 latach: kupujący minus najemca",
+            "Po 10 latach: kupujący minus najemca"
+          ],
+          "rows": [
+            [
+              "0 %",
+              "−3 565 €",
+              "+34 040 €"
+            ],
+            [
+              "2 %",
+              "+33 083 €",
+              "+111 150 €"
+            ],
+            [
+              "4 %",
+              "+72 721 €",
+              "+203 139 €"
+            ],
+            [
+              "6 %",
+              "+115 527 €",
+              "+312 506 €"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Przy stałych cenach kupujący jest po pięciu latach około 3 600 € do tyłu, a po dziesięciu latach około 34 000 € do przodu. Wzrost zaledwie o 0,2 % rocznie zamyka pięcioletnią lukę. Przy krótszym pobycie ten sam kupujący potrzebuje wzrostu cen o 2,6 % rocznie, żeby wyjść na zero po dwóch latach, i o 1,3 % po trzech. Jeśli możesz wyjechać w ciągu dwóch lat, wynajmuj."
+        }
+      ]
+    },
+    {
+      "heading": "Wyniki według miast: mieszkania z rynku wtórnego i nowe inwestycje",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Różnica miesięczna to czynsz minus rata kredytu i koszty utrzymania; plus oznacza, że zakup jest tańszy."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Miasto",
+            "Średnia cena / czynsz (2 sypialnie)",
+            "Rentowność brutto",
+            "Różnica miesięczna przy 3,5 % / 4,5 %",
+            "Wzrost cen potrzebny do wyjścia na zero, 5 lat (3,5 % / 4,5 %)"
+          ],
+          "rows": [
+            [
+              "Limassol",
+              "363 000 € / 1 450 €",
+              "4,79 %",
+              "+68 € / −72 €",
+              "0,2 % / 0,9 %"
+            ],
+            [
+              "Nikozja",
+              "183 000 € / 850 €",
+              "5,57 %",
+              "+99 € / +28 €",
+              "−0,5 % / 0,2 %"
+            ],
+            [
+              "Larnaka",
+              "171 000 € / 750 €",
+              "5,26 %",
+              "+41 € / −25 €",
+              "−0,1 % / 0,6 %"
+            ],
+            [
+              "Pafos",
+              "262 000 € / 750 €",
+              "3,44 %",
+              "−278 € / −379 €",
+              "1,8 % / 2,5 %"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Limassol, Nikozja i Larnaka oscylują wokół zera, a Larnaka i Limassol przechylają się ku wynajmowi przy oprocentowaniu kredytu 4,5 %. Pafos jest wyjątkiem: średnia cena jest tam wysoka w stosunku do czynszów, więc kupujący ponosi różnicę 280–380 € miesięcznie. Szacunki rentowności dla Pafos różnią się w zależności od źródła (nasze dane dają 3,4 %, Global Property Guide podaje 4,4–4,8 % dla mieszkań z dwiema i trzema sypialniami), dlatego pytanie pozostaje otwarte."
+        },
+        {
+          "type": "p",
+          "text": "Ceny deweloperskie podawane są plus VAT. Powyżej 475 000 € obowiązuje pełne 19 %, a VAT nie wraca przy odsprzedaży. Przypadek z Limassol to mediana mieszkań z dwiema sypialniami z naszej własnej oferty."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Przypadek nowej inwestycji, 2 sypialnie",
+            "Cena z VAT",
+            "Różnica miesięczna przy 3,5 %",
+            "Czynsz potrzebny do wyjścia na zero",
+            "Wzrost cen potrzebny do wyjścia na zero, 5 / 10 lat"
+          ],
+          "rows": [
+            [
+              "Limassol, 550 000 € + 19 % VAT, 107 m²",
+              "654 500 €",
+              "−954 €",
+              "2 404 €",
+              "5,3 % / 2,9 %"
+            ],
+            [
+              "Larnaka, 315 000 € + 5 % VAT (główne miejsce zamieszkania)",
+              "330 750 €",
+              "−519 €",
+              "1 269 €",
+              "2,8 % / 1,8 %"
+            ],
+            [
+              "Larnaka, 315 000 € + 19 % VAT (inwestycja lub dom wakacyjny)",
+              "374 850 €",
+              "−674 €",
+              "1 424 €",
+              "5,7 % / 3,4 %"
+            ]
+          ],
+          "note": "Różnice opierają się na średnim czynszu za mieszkanie z dwiema sypialniami w danym mieście: 1 450 € w Limassol i 750 € w Larnace."
+        },
+        {
+          "type": "p",
+          "text": "Nowe mieszkanie może zostać wynajęte drożej niż średnia, dlatego tabela pokazuje też czynsz, przy którym posiadanie i wynajem kosztują tyle samo: około 2 400 € miesięcznie dla przykładu z Limassol, znacznie powyżej średniej 1 400–1 500 €. Zanim założysz taką premię, sprawdź prawdziwe oferty najmu w danym budynku. Niektórzy kupujący wybierają nową inwestycję ze względu na ścieżkę pobytu stałego, która wymaga pierwszej sprzedaży nowej nieruchomości mieszkalnej za co najmniej 300 000 € plus VAT; wtedy istotna jest cena statusu."
+        }
+      ]
+    },
+    {
+      "heading": "Domy a mieszkania: co potwierdzają dane",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Nie znaleźliśmy wiarygodnych, porównywalnych danych o czynszach za domy i wille, dlatego nie zestawiamy ich z mieszkaniami pod względem przepływów pieniężnych. Jedyna mierzalna różnica dotyczy wzrostu cen."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Typ nieruchomości",
+            "Q1 2026, rok do roku",
+            "Q2 2026, rok do roku"
+          ],
+          "rows": [
+            [
+              "Mieszkania",
+              "+10,8 %",
+              "+8,9 %"
+            ],
+            [
+              "Domy",
+              "+3,0 %",
+              "+5,8 %"
+            ]
+          ],
+          "note": "Źródło: Bank Centralny Cypru."
+        },
+        {
+          "type": "p",
+          "text": "Dom wiąże się też z wartością gruntu i wyższymi kosztami utrzymania. Zanim oprzesz się na jakiejkolwiek średniej, poproś o porównywalne czynsze i ceny sprzedaży dla konkretnego domu."
+        }
+      ]
+    },
+    {
+      "heading": "Wrażliwość wyniku: oprocentowanie kredytu, udział kredytu w wartości i inne założenia",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Po wzroście cen najważniejsze jest oprocentowanie kredytu. Bank Centralny Cypru podał średnie oprocentowanie nowych kredytów mieszkaniowych na poziomie 3,24 % w lipcu 2026 roku (3,18 % w czerwcu), a oferty dla zagranicznych kupujących są zwykle wyższe; jako scenariusz bazowy przyjmujemy 3,5 %, a jako stresowy 4,5 %. Każdy dodatkowy punkt procentowy to około 140 € miesięcznie więcej przy kredycie 254 100 €."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Udział kredytu w wartości",
+            "Typowe finansowanie",
+            "Gotówka potrzebna przy zawarciu transakcji"
+          ],
+          "rows": [
+            [
+              "80 %",
+              "Rezydenci: banki zwykle udzielają kredytu do 80 % wartości",
+              "88 040 €"
+            ],
+            [
+              "70 %",
+              "Nierezydenci: zwykle 60–70 %",
+              "124 340 €"
+            ],
+            [
+              "60 %",
+              "Nierezydenci: zwykle 60–70 %",
+              "160 640 €"
+            ]
+          ],
+          "note": "Przykład z Limassol, mieszkanie za 363 000 €."
+        },
+        {
+          "type": "p",
+          "text": "Wniosek dla mieszkania z rynku wtórnego w Limassol jest stabilny przy wszystkich testowanych założeniach."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Zmienione założenie",
+            "Wzrost cen potrzebny do wyjścia na zero, 5 lat"
+          ],
+          "rows": [
+            [
+              "Scenariusz bazowy",
+              "0,2 % rocznie"
+            ],
+            [
+              "Najemca zarabia 5 % na swoich pieniądzach",
+              "1,0 %"
+            ],
+            [
+              "Czynsze pozostają bez zmian",
+              "0,4 %"
+            ],
+            [
+              "Koszty utrzymania 200 € miesięcznie",
+              "0,5 %"
+            ],
+            [
+              "Oprocentowanie kredytu 5 %",
+              "1,3 %"
+            ]
+          ],
+          "note": "W horyzoncie dziesięciu lat wzrost cen potrzebny do wyjścia na zero mieści się w przedziale od −1,7 % do 1,2 %."
+        }
+      ]
+    },
+    {
+      "heading": "Lista kontrolna: pięć pytań, na które warto odpowiedzieć przed decyzją",
+      "blocks": [
+        {
+          "type": "checklist",
+          "title": "Odpowiedz przed wyborem",
+          "items": [
+            "Jak długo zostajesz? Krócej niż dwa–trzy lata przemawia za wynajmem; od pięciu do dziesięciu lat przemawia za mieszkaniem z rynku wtórnego w Limassol, Nikozji lub Larnace.",
+            "Rynek wtórny czy nowa inwestycja? Rynek wtórny oznacza opłatę przeniesienia własności i brak VAT. Nowa inwestycja oznacza VAT (5 % tylko dla głównego miejsca zamieszkania w ramach limitów, w pozostałych przypadkach 19 %) i brak opłaty przeniesienia własności.",
+            "Które miasto i jak cena ma się do lokalnego czynszu za mieszkanie z dwiema sypialniami? W Pafos różnica wynosi 280–380 € miesięcznie, w pozostałych miastach oscyluje wokół zera.",
+            "Jakie masz warunki kredytu i ile gotówki potrzebujesz przy zawarciu transakcji? Każdy dodatkowy punkt procentowy to około 140 € miesięcznie więcej przy kredycie 254 100 €; gotówka przy zawarciu transakcji waha się od 88 040 € przy 80 % do 160 640 € przy 60 %.",
+            "Jaki czynsz nieruchomość naprawdę może przynieść i ile kosztuje jej utrzymanie? Sprawdź prawdziwe oferty najmu i przyjmij około 110 € miesięcznie."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Przeliczmy Twój przypadek",
+    "text": "Aby uruchomić ten model dla konkretnego mieszkania, poproś Cyprus VIP Estates o osobistą konsultację. Prześlij cenę, oczekiwany czynsz i warunki kredytu, a my policzymy Twój przypadek."
+  },
+  "disclaimer": "Informacje ogólne, stan na październik 2026, oparte na naszych własnych obliczeniach przy założeniach podanych powyżej. Nie stanowią porady prawnej ani podatkowej; przed zakupem skonsultuj swoją sytuację z licencjonowanym prawnikiem lub doradcą podatkowym."
+}

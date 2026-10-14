@@ -1,0 +1,220 @@
+{
+  "id": "residency",
+  "lang": "pl",
+  "title": "Pobyt stały na Cyprze przez zakup nieruchomości (kategoria 6.2): wymagania, procedura i koszty (2026)",
+  "subtitle": "Czego wymagają dziś przepisy, kto je spełnia i jakie ubezpieczenie zdrowotne oraz podatki się z tym wiążą.",
+  "edition": "Wydanie: październik 2026",
+  "keyNumbers": [
+    { "value": "300 000 €", "label": "Minimalna inwestycja w nową nieruchomość, plus VAT" },
+    { "value": "50 000 €", "label": "Roczny dochód z zagranicy głównego wnioskodawcy" },
+    { "value": "2–3 miesiące", "label": "Typowy czas rozpatrzenia kompletnego wniosku" },
+    { "value": "Co 2 lata", "label": "Minimalny wjazd na Cypr posiadacza zezwolenia" }
+  ],
+  "intro": "Kategoria 6.2 (przepis 6(2)) to przyspieszone zezwolenie na pobyt stały dla inwestorów spoza UE, którzy kupują na Cyprze nową nieruchomość. Zasady zmieniono 2 maja 2023 r., a wiele stron wciąż podaje starsze liczby. Ten przewodnik przedstawia wymagania według stanu na październik 2026, kolejne kroki wniosku i koszty oraz to, co zezwolenie daje, a czego nie daje, w tym ubezpieczenie GeSY, podatki i drogę do obywatelstwa.",
+  "sections": [
+    {
+      "heading": "Wymagania kategorii 6.2 w skrócie (stan na październik 2026)",
+      "blocks": [
+        {
+          "type": "table",
+          "head": ["Wymaganie", "Zasada"],
+          "rows": [
+            ["Inwestycja", "Nowa nieruchomość mieszkalna z pierwszej sprzedaży o wartości co najmniej 300 000 € plus VAT, kupiona bezpośrednio od dewelopera"],
+            ["Źródło środków", "Pieniądze pochodzą z zagranicy, a przelewy bankowe są udokumentowane"],
+            ["Dochód", "Co najmniej 50 000 € rocznie z zagranicy dla głównego wnioskodawcy, plus 15 000 € na małżonka i 10 000 € na każde dziecko lub studiującego członka rodziny na utrzymaniu"],
+            ["Zatrudnienie", "Brak pracy najemnej na Cyprze; dywidendy, najem i emerytura są dozwolone"],
+            ["Obowiązek wjazdu", "Każdy członek rodziny objęty zezwoleniem wjeżdża na Cypr co najmniej raz na 2 lata; nie ma obowiązku mieszkania na wyspie"]
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Sprawdź datę każdego źródła",
+          "text": "Obecne warunki obowiązują od 2 maja 2023 r., a rodzice od tej daty nie są objęci tą ścieżką. Starsze artykuły mogą podawać wcześniejsze warunki, dlatego potwierdź liczby z prawnikiem, zanim wpłacisz zadatek rezerwacyjny."
+        }
+      ]
+    },
+    {
+      "heading": "Kto się kwalifikuje: inwestycja, wnioskodawca i rodzina",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Zezwolenie opiera się na dwóch osobnych warunkach: kwalifikowanej inwestycji od 300 000 € i stabilnym dochodzie z zagranicy. Inwestycja może mieć cztery formy:"
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "Nowa nieruchomość mieszkalna: dom lub mieszkanie z pierwszej sprzedaży, kupione bezpośrednio od dewelopera, za co najmniej 300 000 € plus VAT. Nieruchomości z rynku wtórnego nie kwalifikują się na tej ścieżce.",
+            "Nieruchomość komercyjna o wartości co najmniej 300 000 €. Tutaj rynek wtórny jest dozwolony.",
+            "Co najmniej 300 000 € w kapitale zakładowym cypryjskiej spółki, która faktycznie działa na wyspie i zatrudnia co najmniej 5 osób.",
+            "Co najmniej 300 000 € w jednostkach regulowanego na Cyprze funduszu inwestycyjnego."
+          ]
+        },
+        {
+          "type": "table",
+          "head": ["Członek rodziny", "Objęty zezwoleniem", "Dodatkowy dochód"],
+          "rows": [
+            ["Małżonek", "Tak", "+ 15 000 € rocznie"],
+            ["Dziecko poniżej 18 lat", "Tak", "+ 10 000 € rocznie"],
+            ["Dorosły student na utrzymaniu do 25 lat", "Tak", "+ 10 000 € rocznie"],
+            ["Rodzice i teściowie", "Nie, potrzebne jest osobne zezwolenie", "Brak"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Test dochodu dla czteroosobowej rodziny",
+          "rows": [
+            ["Główny wnioskodawca", "50 000 €"],
+            ["Małżonek", "+ 15 000 €"],
+            ["Dziecko w wieku 8 lat", "+ 10 000 €"],
+            ["Dziecko w wieku 12 lat", "+ 10 000 €"]
+          ],
+          "total": ["Wymagany udokumentowany dochód z zagranicy rocznie", "85 000 €"],
+          "note": "Test dochodu częściej niż cena zakupu wyklucza wiele rodzin. Dochód potwierdza się zeznaniami podatkowymi, zaświadczeniem księgowego lub udokumentowanymi dochodami z dywidend, najmu albo emerytury."
+        }
+      ]
+    },
+    {
+      "heading": "Procedura wniosku w kategorii 6.2 krok po kroku",
+      "blocks": [
+        {
+          "type": "steps",
+          "items": [
+            { "title": "Sprawdź uprawnienia z prawnikiem", "text": "Skorzystaj z prawnika wpisanego do Cyprus Bar Association. Prawnik weryfikuje dewelopera i potwierdza, że lokal pochodzi z kwalifikującej się pierwszej sprzedaży." },
+            { "title": "Zarezerwuj i podpisz", "text": "Zarezerwuj lokal, a następnie podpisz umowę sprzedaży. Prawnik rejestruje ją w okręgowym Land Registry, a numer rejestracyjny staje się częścią wniosku." },
+            { "title": "Przelej środki z zagranicy", "text": "Zapłać z własnego rachunku za granicą. Zachowaj potwierdzenia SWIFT oraz potwierdzenie banku odbiorcy, że środki z zagranicy wpłynęły." },
+            { "title": "Skompletuj dokumenty", "text": "Dla każdego wnioskodawcy: formularz MIP1, poświadczone kopie paszportów, zaświadczenia o niekaralności (z apostille lub poświadczone przez ambasadę) oraz akty małżeństwa i urodzenia, jeśli są potrzebne. Dla rodziny: dowód inwestycji i dowód dochodu. Dokumenty w innym języku niż angielski wymagają tłumaczeń przysięgłych." },
+            { "title": "Złóż wniosek", "text": "Złóż go w Civil Registry and Migration Department (CRMD), osobiście lub przez prawnika, i opłać należność. Otrzymasz potwierdzenie złożenia, które pozwala śledzić sprawę." },
+            { "title": "Poczekaj na decyzję", "text": "Kompletny wniosek jest rozpatrywany około 2–3 miesięcy, a przy pytaniach uzupełniających urzędu nawet 5–6 miesięcy. W trakcie rozpatrywania nie musisz być na Cyprze." },
+            { "title": "Odbierz zezwolenie", "text": "Po zatwierdzeniu krótka wizyta na Cyprze na dane biometryczne i kartę zajmuje około 2–3 tygodni. Potem wystąp o cypryjski numer identyfikacji podatkowej i zadbaj o ubezpieczenie zdrowotne." }
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Od podpisanej umowy zakupu do zezwolenia w ręku bezproblemowa sprawa trwa w praktyce około 3–4 miesięcy. Najdłużej zwykle czeka się na dokumenty z apostille."
+        }
+      ]
+    },
+    {
+      "heading": "Koszty do uwzględnienia przy zakupie w kategorii 6.2",
+      "blocks": [
+        {
+          "type": "table",
+          "head": ["Pozycja", "Kwota", "Uwagi"],
+          "rows": [
+            ["Cena zakupu", "Co najmniej 300 000 € plus VAT", "Nowa nieruchomość mieszkalna z pierwszej sprzedaży"],
+            ["VAT", "5 % stawka obniżona lub 19 % stawka podstawowa", "Stawka obniżona ma limity (pierwsze 130 m², limit wartości 350 000 €); zapytaj prawnika, jaka stawka dotyczy Twojego lokalu"],
+            ["Zadatek rezerwacyjny", "5 000–10 000 €", "Płatny przy rezerwacji lokalu"],
+            ["Opłata urzędowa za wniosek", "500 €", "Podawana opłata; potwierdź, czy jest naliczana od każdego wnioskodawcy"],
+            ["Prawnik, tłumaczenia przysięgłe, apostille", "Nie wyceniono tutaj", "Poproś o pisemną wycenę przed podpisaniem"],
+            ["Ubezpieczenie zdrowotne", "Składka GeSY lub plan prywatny", "Zobacz część o ubezpieczeniu zdrowotnym poniżej"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Mieszkanie za 300 000 €: cena z VAT (stan na październik 2026)",
+          "rows": [
+            ["Cena bez VAT", "300 000 €"],
+            ["VAT według obniżonej stawki 5 % (300 000 € × 5 %)", "15 000 €"]
+          ],
+          "total": ["Razem według stawki obniżonej", "315 000 €"],
+          "note": "Przy stawce podstawowej 19 % VAT wynosi 57 000 €, a razem 357 000 €, czyli o 42 000 € więcej. Stawka obniżona obowiązuje tylko wtedy, gdy spełnione są jej warunki."
+        }
+      ]
+    },
+    {
+      "heading": "Ubezpieczenie zdrowotne GeSY: kto może z niego korzystać i ile kosztuje",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "GeSY, czyli Powszechny System Opieki Zdrowotnej Cypru, działa od 2019 r. i jest prowadzony przez Organizację Ubezpieczeń Zdrowotnych. To system ubezpieczeniowy finansowany procentem dochodu, zbudowany wokół lekarza osobistego, który leczy Cię i kieruje do specjalistów. Posiadanie nieruchomości nie daje dostępu. GeSY wymaga stałego miejsca zamieszkania na terenach Republiki Cypru kontrolowanych przez rząd oraz przynależności do grupy płacącej składki, takiej jak pracownicy, osoby samozatrudnione lub emeryci."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "Posiadacze pobytu stałego w kategorii 6.2 mogą się zarejestrować, gdy wykażą stałe miejsce zamieszkania.",
+            "Osoba, która odwiedza Cypr tylko raz na 2 lata, nie mieszka tam stale i potrzebuje ubezpieczenia prywatnego lub podróżnego.",
+            "Właściciel domu wakacyjnego, który mieszka za granicą, nie jest objęty systemem."
+          ]
+        },
+        {
+          "type": "table",
+          "head": ["Płatnik", "Stawka (2026)"],
+          "rows": [
+            ["Pracownik, od wynagrodzenia brutto", "2,65 %"],
+            ["Osoba samozatrudniona, od zysku", "4,00 %"],
+            ["Emeryt, od dochodu z emerytury", "2,65 %"],
+            ["Dochody z najmu, dywidend i odsetek", "2,65 %"],
+            ["Roczny limit dochodu dla składek", "180 000 €"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Składka GeSY emeryta mieszkającego na Cyprze",
+          "rows": [
+            ["Emerytura", "24 000 €"],
+            ["Dochód z najmu", "12 000 €"],
+            ["Dochód uwzględniany", "36 000 €"],
+            ["Stawka", "2,65 %"]
+          ],
+          "total": ["Składka rocznie", "954 €"],
+          "note": "To 79,50 € miesięcznie. Podstawowy plan prywatny kosztuje około 80–150 € miesięcznie (960–1 800 € rocznie) przy węższym zakresie ochrony."
+        },
+        {
+          "type": "p",
+          "text": "Dopłaty w 2026 r.: 0 € za lekarza osobistego i za pobyt w szpitalu, 6 € za specjalistę ze skierowaniem (25 € bez skierowania), 1 € za badanie laboratoryjne, 1 € za pozycję recepty i 10 € za pogotowie i izbę przyjęć. Dopłaty za świadczenia ambulatoryjne przestają obowiązywać, gdy w roku kalendarzowym osiągną 150 €."
+        }
+      ]
+    },
+    {
+      "heading": "Pobyt stały, rezydencja podatkowa i obywatelstwo to trzy różne rzeczy",
+      "blocks": [
+        {
+          "type": "table",
+          "head": ["Pytanie", "Odpowiedź"],
+          "rows": [
+            ["Czy mogę pracować na Cyprze na etacie?", "Nie. Możesz być wspólnikiem lub dyrektorem spółki i otrzymywać dywidendy, dochód z najmu lub emeryturę."],
+            ["Czy zezwolenie daje prawa w innych krajach UE?", "Nie. To pobyt wyłącznie na Cyprze, a o tym, dokąd możesz podróżować, decyduje Twój paszport."],
+            ["Czy zostanę dzięki niemu rezydentem podatkowym Cypru?", "Nie. Rezydencja podatkowa wynika z testu 183 dni lub 60 dni i jest oceniana osobno od statusu imigracyjnego."],
+            ["Czy zachowam zezwolenie niezależnie od tego, co zrobię?", "Nie. Utrzymujesz kwalifikującą inwestycję, nadal spełniasz warunki i wjeżdżasz na Cypr co najmniej raz na 2 lata."]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Liczby podatkowe według stanu na październik 2026, po reformie 2026: podatek od osób prawnych wynosi 15 %. Podatek dochodowy to 0 % do 22 000 €, 20 % do 32 000 €, 25 % do 42 000 €, 30 % do 72 000 € i 35 % powyżej. Zagraniczne emerytury są opodatkowane stawką 5 % powyżej 5 000 € albo według skali. Cypr nie ma podatku spadkowego."
+        },
+        {
+          "type": "callout",
+          "title": "Obywatelstwo to osobny wniosek",
+          "text": "Według ustawy obowiązującej od grudnia 2023 r. naturalizacja wymaga 7 z ostatnich 10 lat legalnego pobytu oraz 12 nieprzerwanych miesięcy legalnego pobytu bezpośrednio przed wnioskiem, z nieobecnościami nie dłuższymi niż 90 dni w tym ostatnim roku, a dla zwykłych wnioskodawców greckiego na poziomie B1. Osoba, która odwiedza wyspę tylko minimalnie co 2 lata, nie uzyska obywatelstwa, dopóki faktycznie tam nie zamieszka. O tym, jak lata za granicą liczą się do tych 7, decyduje Departament Migracji, więc potwierdź swoją sytuację z prawnikiem."
+        }
+      ]
+    },
+    {
+      "heading": "Lista kontrolna: co potwierdzić przed zakupem",
+      "blocks": [
+        {
+          "type": "checklist",
+          "title": "Zanim zarezerwujesz lokal",
+          "items": [
+            "Lokal to nowa nieruchomość mieszkalna z pierwszej sprzedaży za co najmniej 300 000 € plus VAT, kupiona od dewelopera.",
+            "Pieniądze wpłyną z zagranicy, a każdy przelew jest udokumentowany. Jeśli część kwoty jest pożyczona, prawnik potwierdził, czy jest to akceptowane.",
+            "Udokumentowany dochód z zagranicy sięga 50 000 €, plus 15 000 € na małżonka i 10 000 € na każde dziecko lub studenta.",
+            "Każda osoba, którą chcesz objąć zezwoleniem, jest objęta; rodzice i teściowie nie są.",
+            "Wszyscy objęci zezwoleniem mogą wjeżdżać na Cypr co najmniej raz na 2 lata.",
+            "Nie planujesz pracy najemnej na Cyprze.",
+            "Prawnik potwierdził, jaka stawka VAT dotyczy lokalu.",
+            "Budżet obejmuje opłatę 500 €, tłumaczenia, apostille i koszty prawnika.",
+            "Masz plan na ubezpieczenie zdrowotne: GeSY tylko przy stałym miejscu zamieszkania, w przeciwnym razie ubezpieczenie prywatne.",
+            "Nie planujesz sprzedać nieruchomości bez zastąpienia jej inną, dopóki masz zezwolenie.",
+            "Jeśli celem jest obywatelstwo, zaplanowano 12 nieprzerwanych miesięcy pobytu."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Porozmawiaj z nami przed rezerwacją",
+    "text": "Jeśli chcesz, żebyśmy sprawdzili konkretny nowy lokal pod kątem wymagań kategorii 6.2, poproś Cyprus VIP Estates o osobistą konsultację. Pomagamy ułożyć w czasie zakup, wniosek o pobyt i ubezpieczenie zdrowotne tak, by żaden z tych kroków nie blokował pozostałych."
+  },
+  "disclaimer": "Ten przewodnik zawiera informacje ogólne według stanu na październik 2026 i nie stanowi porady prawnej ani podatkowej. Przepisy i liczby mogą się zmieniać, dlatego skonsultuj swoją sprawę z licencjonowanym prawnikiem lub doradcą podatkowym."
+}

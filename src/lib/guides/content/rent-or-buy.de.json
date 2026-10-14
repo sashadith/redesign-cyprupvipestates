@@ -1,0 +1,473 @@
+{
+  "id": "rent-or-buy",
+  "lang": "de",
+  "title": "Mieten oder Kaufen auf Zypern (2026): Die Rechnung nach Stadt und Immobilientyp",
+  "subtitle": "Unsere Modellergebnisse in einem Dokument, mit allen Annahmen",
+  "edition": "Ausgabe: Oktober 2026",
+  "keyNumbers": [
+    {
+      "value": "124.340 €",
+      "label": "Bargeld für das Limassoler Bestandsbeispiel (Kredit über 70 %)"
+    },
+    {
+      "value": "+34.040 €",
+      "label": "Käufer nach 10 Jahren vor dem Mieter, bei gleichbleibenden Preisen"
+    },
+    {
+      "value": "0,2 %",
+      "label": "Preissteigerung pro Jahr für den Break-even über 5 Jahre, Bestand in Limassol"
+    },
+    {
+      "value": "2–6 %",
+      "label": "Preissteigerung pro Jahr in Paphos und bei Neubauten mit Mehrwertsteuer"
+    }
+  ],
+  "intro": "Bei einer Bestandswohnung in Limassol, Nikosia oder Larnaka kosten Mieten und Kaufen im Monat etwa gleich viel. Nach fünf Jahren ist der Kauf ungefähr gleichauf, nach zehn Jahren klar im Vorteil, selbst wenn sich die Preise kaum bewegen. In Paphos und bei Neubauwohnungen, sobald die Mehrwertsteuer eingerechnet ist, ist Mieten günstiger, es sei denn, die Preise steigen weiter um etwa 2–6 % pro Jahr. Die Behauptung, ein Kredit auf Zypern sei immer günstiger als die Miete, entsteht, wenn man nur die Kreditrate vergleicht. Alle Angaben Stand Oktober 2026, mit allen Annahmen.",
+  "sections": [
+    {
+      "heading": "Fazit: Mieten oder Kaufen, nach Immobilientyp und Stadt",
+      "blocks": [
+        {
+          "type": "table",
+          "head": [
+            "Situation",
+            "Bessere Wahl",
+            "Begründung"
+          ],
+          "rows": [
+            [
+              "Bestandswohnung in Limassol, Nikosia oder Larnaka; Aufenthalt von fünf bis zehn Jahren",
+              "Kaufen",
+              "Nach fünf Jahren bei gleichbleibenden Preisen ungefähr ausgeglichen, nach zehn Jahren klar im Vorteil, bei steigenden Preisen deutlich früher."
+            ],
+            [
+              "Jede Immobilie; Aufenthalt unter zwei bis drei Jahren",
+              "Mieten",
+              "Kauf- und Verkaufskosten von zusammen etwa 7 % des Preises brauchen Zeit, um wieder hereinzukommen."
+            ],
+            [
+              "Bestandswohnung in Paphos",
+              "Tendenz zum Mieten",
+              "Der Käufer trägt einen Unterschied von 280–380 € im Monat und braucht über fünf Jahre etwa 2 % jährliches Wachstum."
+            ],
+            [
+              "Neubauwohnung mit Mehrwertsteuer",
+              "Mieten, es sei denn, die Preise steigen weiter",
+              "Der Kauf ist eine Wette auf eine Preissteigerung von etwa 2–6 % pro Jahr."
+            ],
+            [
+              "Haus oder Villa",
+              "Keine Rangfolge",
+              "Keine verlässlichen, vergleichbaren Mietdaten."
+            ],
+            [
+              "Kauf für die Aufenthaltsgenehmigung",
+              "Kosten des Status vergleichen",
+              "Die Rechnung Mieten oder Kaufen gilt hier nicht."
+            ]
+          ],
+          "note": "Angaben Stand Oktober 2026."
+        },
+        {
+          "type": "callout",
+          "title": "Das jüngste Wachstum nicht fortschreiben",
+          "text": "Die Wohnungspreise stiegen im ersten Halbjahr 2026 um 8,9–10,8 % im Jahr, aber es gibt keine Garantie, dass sich auch nur die Hälfte dieses Tempos ein Jahrzehnt lang hält."
+        }
+      ]
+    },
+    {
+      "heading": "Die Annahmen hinter dem Modell",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Das Modell gibt dem Mieter das Geld, das ein Käufer binden würde, legt es an und vergleicht das Vermögen beider Seiten nach dem Verkauf der Immobilie."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Annahme",
+            "Verwendeter Wert"
+          ],
+          "rows": [
+            [
+              "Kredit",
+              "70 % des Preises, 25 Jahre"
+            ],
+            [
+              "Zinssatz",
+              "3,5 % im Basisfall, 4,5 % im Stressfall"
+            ],
+            [
+              "Preissteigerung",
+              "Szenarien mit 0 %, 2 %, 4 % und 6 % pro Jahr"
+            ],
+            [
+              "Mietsteigerung",
+              "2 % pro Jahr"
+            ],
+            [
+              "Rendite auf das Geld des Mieters",
+              "3 % pro Jahr"
+            ],
+            [
+              "Verkaufskosten",
+              "3 % des Verkaufspreises"
+            ],
+            [
+              "Laufende Kosten des Eigentums",
+              "Rund 110 € im Monat (Gemeinschaftsgebühren, Müll, Abwasser, kommunale Abgaben: 935–1.650 € im Jahr)"
+            ],
+            [
+              "Zeithorizont",
+              "5 und 10 Jahre; 2 und 3 Jahre für die Break-even-Prüfung"
+            ],
+            [
+              "Miete",
+              "Mitte der vom Real Estate Registration Council für 2026 genannten Spanne für 2 Schlafzimmer; die Mieten sind in diesem Jahr bisher nicht gestiegen"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Beim Bestandskauf beträgt die Grundbuchgebühr 3 % bis 85.000 €, 5 % bis 170.000 € und 8 % darüber (bei 363.000 €: 2.550 € + 4.250 € + 15.440 €), halbiert durch die derzeit angewandte Ermäßigung. Die Anwaltskosten liegen bei etwa 1 % des Preises zuzüglich 19 % Mehrwertsteuer auf das Honorar."
+        },
+        {
+          "type": "example",
+          "title": "Kaufnebenkosten bei einer Bestandswohnung für 363.000 €",
+          "rows": [
+            [
+              "Grundbuchgebühr nach der Ermäßigung um 50 % (die Hälfte von 22.240 €)",
+              "11.120 €"
+            ],
+            [
+              "Anwaltskosten",
+              "4.320 €"
+            ]
+          ],
+          "total": [
+            "Kaufnebenkosten (4,25 % des Preises)",
+            "15.440 €"
+          ],
+          "note": "Beim Bestandskauf fällt keine Mehrwertsteuer an. Beim Neubau vom Bauträger zahlen Sie stattdessen Mehrwertsteuer und keine Grundbuchgebühr; beides fällt nie zusammen an."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "Die Mehrwertsteuer beim Neubau beträgt nur für einen Hauptwohnsitz 5 %, und zwar auf die ersten 130 m² und die ersten 350.000 €. Über 190 m² oder 475.000 € gelten 19 % auf den gesamten Preis.",
+            "Die Stempelsteuer auf Verträge ist zum 1. Januar 2026 abgeschafft worden."
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Rechenbeispiel: Bestandswohnung mit zwei Schlafzimmern in Limassol",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Die durchschnittliche Wohnung wurde in Limassol im ersten Halbjahr 2026 für rund 363.000 € verkauft (Transaktionsdaten, zusammengestellt von Ask Wire); eine Wohnung mit zwei Schlafzimmern und 75–90 m² liegt nahe an diesem Durchschnitt. Die Miete für zwei Schlafzimmer beträgt etwa 1.450 € im Monat."
+        },
+        {
+          "type": "example",
+          "title": "Bargeldbedarf beim Kauf mit einem Kredit über 70 % auf 25 Jahre",
+          "rows": [
+            [
+              "Anzahlung (Preis 363.000 € minus Kredit 254.100 €)",
+              "108.900 €"
+            ],
+            [
+              "Kaufnebenkosten",
+              "15.440 €"
+            ]
+          ],
+          "total": [
+            "Bargeldbedarf beim Abschluss",
+            "124.340 €"
+          ]
+        },
+        {
+          "type": "table",
+          "head": [
+            "Kreditzins",
+            "Monatliche Rate",
+            "Kosten des Eigentums mit 110 € laufenden Kosten",
+            "Monatliche Miete",
+            "Günstigere Option"
+          ],
+          "rows": [
+            [
+              "3,5 %",
+              "1.272 €",
+              "1.382 €",
+              "1.450 €",
+              "Kaufen, um 68 € im Monat"
+            ],
+            [
+              "4,5 %",
+              "1.412 €",
+              "1.522 €",
+              "1.450 €",
+              "Mieten, um 72 € im Monat"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Monat für Monat ist das ein Unentschieden, und der monatliche Unterschied ist die falsche Zahl für die Entscheidung. Rund 6.475 € der Zahlungen im ersten Jahr tilgen Kapital und bauen Eigenkapital auf, während die 124.340 € Bargeld der eigentliche Preis des Eigentums sind. Der faire Vergleich legt dieses Geld dem Mieter zu 3 % im Jahr an und vergleicht das Vermögen beider Seiten nach dem Verkauf (Verkaufskosten 3 %, Miete steigt um 2 % pro Jahr)."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Preissteigerung pro Jahr",
+            "Nach 5 Jahren: Käufer minus Mieter",
+            "Nach 10 Jahren: Käufer minus Mieter"
+          ],
+          "rows": [
+            [
+              "0 %",
+              "−3.565 €",
+              "+34.040 €"
+            ],
+            [
+              "2 %",
+              "+33.083 €",
+              "+111.150 €"
+            ],
+            [
+              "4 %",
+              "+72.721 €",
+              "+203.139 €"
+            ],
+            [
+              "6 %",
+              "+115.527 €",
+              "+312.506 €"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Bei gleichbleibenden Preisen liegt der Käufer nach fünf Jahren etwa 3.600 € zurück und nach zehn Jahren 34.000 € vorn. Ein Anstieg von nur 0,2 % pro Jahr schließt die Lücke nach fünf Jahren. Bei kürzerem Aufenthalt braucht derselbe Käufer einen Preisanstieg von 2,6 % pro Jahr, um nach zwei Jahren auf null zu kommen, und 1,3 % nach drei Jahren. Wenn Sie möglicherweise innerhalb von zwei Jahren wieder wegziehen, mieten Sie."
+        }
+      ]
+    },
+    {
+      "heading": "Ergebnisse nach Stadt: Bestandswohnungen und Neubauten",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Der monatliche Unterschied ist die Miete minus Kreditrate und laufende Kosten; ein Plus heißt, dass der Kauf günstiger ist."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Stadt",
+            "Durchschnittspreis / Miete 2 Schlafzimmer",
+            "Bruttorendite",
+            "Monatlicher Unterschied bei 3,5 % / 4,5 %",
+            "Break-even-Preissteigerung, 5 Jahre (3,5 % / 4,5 %)"
+          ],
+          "rows": [
+            [
+              "Limassol",
+              "363.000 € / 1.450 €",
+              "4,79 %",
+              "+68 € / −72 €",
+              "0,2 % / 0,9 %"
+            ],
+            [
+              "Nikosia",
+              "183.000 € / 850 €",
+              "5,57 %",
+              "+99 € / +28 €",
+              "−0,5 % / 0,2 %"
+            ],
+            [
+              "Larnaka",
+              "171.000 € / 750 €",
+              "5,26 %",
+              "+41 € / −25 €",
+              "−0,1 % / 0,6 %"
+            ],
+            [
+              "Paphos",
+              "262.000 € / 750 €",
+              "3,44 %",
+              "−278 € / −379 €",
+              "1,8 % / 2,5 %"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Limassol, Nikosia und Larnaka liegen um null, und Larnaka und Limassol kippen bei einem Kreditzins von 4,5 % in Richtung Miete. Paphos ist der Ausreißer: Der Durchschnittspreis ist dort im Vergleich zu den Mieten hoch, sodass ein Käufer einen Unterschied von 280–380 € im Monat trägt. Die Renditeschätzungen für Paphos weichen je nach Quelle voneinander ab (unsere Daten ergeben 3,4 %, Global Property Guide nennt 4,4–4,8 % für Wohnungen mit zwei und drei Schlafzimmern); die Frage bleibt daher offen."
+        },
+        {
+          "type": "p",
+          "text": "Die Preise der Bauträger verstehen sich zuzüglich Mehrwertsteuer. Über 475.000 € gelten die vollen 19 %, und die Mehrwertsteuer kommt beim Wiederverkauf nicht zurück. Der Fall Limassol ist die Median-Wohnung mit zwei Schlafzimmern aus unserem eigenen Angebot."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Neubau-Fall mit 2 Schlafzimmern",
+            "Preis inkl. Mehrwertsteuer",
+            "Monatlicher Unterschied bei 3,5 %",
+            "Miete für den Break-even",
+            "Break-even-Preissteigerung, 5 / 10 Jahre"
+          ],
+          "rows": [
+            [
+              "Limassol, 550.000 € + 19 % Mehrwertsteuer, 107 m²",
+              "654.500 €",
+              "−954 €",
+              "2.404 €",
+              "5,3 % / 2,9 %"
+            ],
+            [
+              "Larnaka, 315.000 € + 5 % Mehrwertsteuer (Hauptwohnsitz)",
+              "330.750 €",
+              "−519 €",
+              "1.269 €",
+              "2,8 % / 1,8 %"
+            ],
+            [
+              "Larnaka, 315.000 € + 19 % Mehrwertsteuer (Kapitalanlage oder Ferienhaus)",
+              "374.850 €",
+              "−674 €",
+              "1.424 €",
+              "5,7 % / 3,4 %"
+            ]
+          ],
+          "note": "Die Unterschiede verwenden die durchschnittliche Miete für zwei Schlafzimmer in der Stadt: 1.450 € in Limassol und 750 € in Larnaka."
+        },
+        {
+          "type": "p",
+          "text": "Eine neue Wohnung kann sich für mehr als den Durchschnitt vermieten lassen, deshalb zeigt die Tabelle auch die Miete, bei der Eigentum und Mieten gleich viel kosten: etwa 2.400 € im Monat für das Limassoler Beispiel, deutlich über dem Durchschnitt von 1.400–1.500 €. Prüfen Sie die tatsächlichen Mietangebote für das Gebäude, bevor Sie von einem Aufschlag ausgehen. Manche Käufer wählen einen Neubau wegen des Wegs zur Daueraufenthaltsgenehmigung, der eine neue Wohnimmobilie im Erstverkauf von mindestens 300.000 € zuzüglich Mehrwertsteuer verlangt; dann ist die maßgebliche Zahl der Preis des Status."
+        }
+      ]
+    },
+    {
+      "heading": "Häuser und Wohnungen im Vergleich: Was die Daten hergeben",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Verlässliche, vergleichbare Mietdaten für Häuser und Villen haben wir nicht gefunden; deshalb stellen wir sie beim Cashflow nicht den Wohnungen gegenüber. Der einzige messbare Unterschied ist die Preisentwicklung."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Immobilientyp",
+            "Q1 2026, im Jahresvergleich",
+            "Q2 2026, im Jahresvergleich"
+          ],
+          "rows": [
+            [
+              "Wohnungen",
+              "+10,8 %",
+              "+8,9 %"
+            ],
+            [
+              "Häuser",
+              "+3,0 %",
+              "+5,8 %"
+            ]
+          ],
+          "note": "Quelle: Zentralbank von Zypern."
+        },
+        {
+          "type": "p",
+          "text": "Ein Haus bringt zudem Grundstückswert und höhere Unterhaltskosten mit. Lassen Sie sich Miet- und Verkaufsvergleichswerte für das konkrete Haus geben, bevor Sie sich auf einen Durchschnitt verlassen."
+        }
+      ]
+    },
+    {
+      "heading": "Empfindlichkeit: Kreditzins, Beleihungsauslauf und weitere Annahmen",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Der Kreditzins zählt nach der Preisentwicklung am meisten. Die Zentralbank von Zypern meldete für Juli 2026 einen durchschnittlichen Zinssatz auf neue Wohnbaukredite von 3,24 % (im Juni 3,18 %), und die Angebote an ausländische Käufer liegen typischerweise höher; wir verwenden 3,5 % als Basisfall und 4,5 % als Stressfall. Jeder zusätzliche Prozentpunkt kostet bei dem Kredit von 254.100 € etwa 140 € im Monat mehr."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Beleihungsauslauf",
+            "Übliche Kreditvergabe",
+            "Bargeldbedarf beim Abschluss"
+          ],
+          "rows": [
+            [
+              "80 %",
+              "Gebietsansässige: Banken beleihen in der Regel bis zu 80 % des Werts",
+              "88.040 €"
+            ],
+            [
+              "70 %",
+              "Nichtansässige: meist 60–70 %",
+              "124.340 €"
+            ],
+            [
+              "60 %",
+              "Nichtansässige: meist 60–70 %",
+              "160.640 €"
+            ]
+          ],
+          "note": "Limassoler Beispiel, Wohnung für 363.000 €."
+        },
+        {
+          "type": "p",
+          "text": "Die Schlussfolgerung für eine Bestandswohnung in Limassol bleibt über alle getesteten Annahmen stabil."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Geänderte Annahme",
+            "Break-even-Preissteigerung, 5 Jahre"
+          ],
+          "rows": [
+            [
+              "Basisfall",
+              "0,2 % pro Jahr"
+            ],
+            [
+              "Der Mieter erzielt 5 % auf sein Geld",
+              "1,0 %"
+            ],
+            [
+              "Die Mieten bleiben gleich",
+              "0,4 %"
+            ],
+            [
+              "Laufende Kosten von 200 € im Monat",
+              "0,5 %"
+            ],
+            [
+              "Kreditzins von 5 %",
+              "1,3 %"
+            ]
+          ],
+          "note": "Über zehn Jahre bleibt die Break-even-Preissteigerung zwischen −1,7 % und 1,2 %."
+        }
+      ]
+    },
+    {
+      "heading": "Checkliste: fünf Fragen, die Sie vor der Entscheidung beantworten sollten",
+      "blocks": [
+        {
+          "type": "checklist",
+          "title": "Vor der Entscheidung klären",
+          "items": [
+            "Wie lange bleiben Sie? Unter zwei bis drei Jahren spricht das fürs Mieten; fünf bis zehn Jahre sprechen für eine Bestandswohnung in Limassol, Nikosia oder Larnaka.",
+            "Bestand oder Neubau? Beim Bestandskauf fällt eine Grundbuchgebühr an, aber keine Mehrwertsteuer. Beim Neubau fällt Mehrwertsteuer an (5 % nur für einen Hauptwohnsitz innerhalb der Grenzen, sonst 19 %) und keine Grundbuchgebühr.",
+            "Welche Stadt, und wie verhält sich der Preis zur örtlichen Miete für zwei Schlafzimmer? In Paphos beträgt der Unterschied 280–380 € im Monat, sonst liegt er um null.",
+            "Welche Kreditkonditionen haben Sie, und wie viel Bargeld brauchen Sie beim Abschluss? Jeder zusätzliche Prozentpunkt kostet bei einem Kredit von 254.100 € etwa 140 € im Monat mehr; das Bargeld beim Abschluss reicht von 88.040 € bei 80 % bis 160.640 € bei 60 %.",
+            "Welche Miete kann die Immobilie wirklich erzielen, und was kostet der Unterhalt? Prüfen Sie tatsächliche Mietangebote und rechnen Sie mit etwa 110 € im Monat."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Lassen Sie Ihren Fall berechnen",
+    "text": "Um dieses Modell auf eine konkrete Wohnung anzuwenden, bitten Sie Cyprus VIP Estates um eine persönliche Beratung. Senden Sie uns den Preis, die erwartete Miete und Ihre Kreditkonditionen, und wir rechnen Ihren Fall durch."
+  },
+  "disclaimer": "Allgemeine Informationen, Stand Oktober 2026, auf Grundlage unserer eigenen Berechnungen mit den oben genannten Annahmen. Dies ist keine Rechts- oder Steuerberatung; lassen Sie Ihre Situation vor dem Kauf von einem zugelassenen Rechtsanwalt oder Steuerberater prüfen."
+}
