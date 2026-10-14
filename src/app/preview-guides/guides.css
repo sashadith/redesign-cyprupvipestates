@@ -30,18 +30,9 @@
 .gds__cover { grid-column: 2; grid-row: 1 / span 6; justify-self: stretch; align-self: end; margin-bottom: calc(-1 * (var(--pad) + var(--bleed))); transform: rotate(3deg); transform-origin: bottom center; transition: transform 0.35s ease; }
 .gds__card:hover .gds__cover { transform: rotate(0) translateY(-6px); }
 .gds__cover img { display: block; width: 100%; height: auto; border-radius: 3px; box-shadow: -8px 0 28px -10px rgba(0, 0, 0, 0.7), 0 20px 40px -16px rgba(0, 0, 0, 0.8); }
-/* Form open or download ready: the panel spans the card, so the cover stops at the text above it and stops bleeding. */
-.gds__card .guidecta__formbox, .gds__card .guidecta__ready { grid-column: 1 / -1; justify-self: stretch; margin: 18px var(--pad) 0 0; padding: 20px; border-radius: 14px;
-  --bg: var(--paper); --surface: var(--paper-2); --surface-raised: #fbf9f3; --text: var(--ink-warm); --text-soft: rgba(34, 28, 21, 0.74); --text-faint: rgba(34, 28, 21, 0.48);
-  --accent: var(--bronze); --accent-ink: #fff; --accent-soft: rgba(142, 107, 61, 0.1); --hairline: rgba(34, 28, 21, 0.14); --hairline-strong: rgba(34, 28, 21, 0.24); color-scheme: light;
-  background: var(--paper); color: var(--ink-warm); }
-.gds__card:has(.guidecta__formbox, .guidecta__ready) { padding-bottom: var(--pad); }
-.gds__card:has(.guidecta__formbox, .guidecta__ready) .gds__cover { grid-row: 1 / span 4; margin-bottom: 0; align-self: start; }
-.gds .artform { grid-template-columns: minmax(0, 1fr); margin-block: 0; border-radius: 12px; }
 @media (max-width: 560px) {
   .gds__card { grid-template-columns: minmax(0, 1fr); padding: var(--pad); min-height: 0; }
   .gds__cover { grid-column: 1; grid-row: auto; justify-self: center; width: min(220px, 70%); margin: 22px 0 0; align-self: start; }
-  .gds__card .guidecta__formbox, .gds__card .guidecta__ready { margin-right: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .gds__cover, .gds__btn { transition: none; } .gds__card:hover .gds__cover { transform: rotate(3deg); } }
 .gds__note { margin: clamp(28px, 3vw, 44px) 0 0; max-width: 70ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-faint); }

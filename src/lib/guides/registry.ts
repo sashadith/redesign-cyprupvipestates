@@ -85,6 +85,7 @@ export type GuideUi = {
   readArticle: string;
   stripTitle: string;
   stripText: string;
+  close: string;
 };
 
 export const GUIDE_UI: Record<GuideLang, GuideUi> = {
@@ -102,6 +103,7 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readArticle: "Read the article",
     stripTitle: "Free PDF guides on buying in Cyprus",
     stripText: "Costs, the buying process, rent or buy, and residence rules, each in one document.",
+    close: "Close",
   },
   de: {
     eyebrow: "Kostenloser PDF-Ratgeber",
@@ -117,6 +119,7 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readArticle: "Artikel lesen",
     stripTitle: "Kostenlose PDF-Ratgeber zum Kauf auf Zypern",
     stripText: "Kosten, Kaufablauf, Mieten oder Kaufen und Aufenthaltsrecht, jeweils in einem Dokument.",
+    close: "Schließen",
   },
   pl: {
     eyebrow: "Bezpłatny przewodnik PDF",
@@ -132,6 +135,7 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readArticle: "Przeczytaj artykuł",
     stripTitle: "Bezpłatne przewodniki PDF o zakupie na Cyprze",
     stripText: "Koszty, proces zakupu, wynajem czy zakup oraz zasady pobytu, każdy temat w jednym dokumencie.",
+    close: "Zamknij",
   },
   ru: {
     eyebrow: "Бесплатный PDF-гайд",
@@ -147,5 +151,6 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readArticle: "Читать статью",
     stripTitle: "Бесплатные PDF-гайды по покупке на Кипре",
     stripText: "Расходы, процесс покупки, аренда или покупка и правила ПМЖ, каждая тема в одном документе.",
+    close: "Закрыть",
   },
 };
