@@ -8,6 +8,7 @@ import {
 } from "@/sanity/sanity.utils";
 import { urlFor } from "@/sanity/sanity.client";
 import InsightsList, { type InsightsCard } from "./InsightsList";
+import GuidesStrip from "@/app/components/GuideCta/GuidesStrip";
 import InsightsSeo from "./InsightsSeo";
 import LightHeroFlag from "./LightHeroFlag";
 import InsightsMotion from "./InsightsMotion";
@@ -119,6 +120,7 @@ export default async function InsightsIndex({ page }: { page: number }) {
           </div>
         </header>
 
+        <div className="wrap"><GuidesStrip lang="en" /></div>
         <InsightsList allCards={allCards} page={page} totalPages={pages} />
 
         {page === 1 && blogPage?.content && <InsightsSeo content={blogPage.content} />}

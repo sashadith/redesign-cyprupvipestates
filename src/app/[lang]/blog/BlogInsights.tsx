@@ -29,6 +29,7 @@ import Footer from "@/app/components/Footer/Footer";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 
 import InsightsList, { type InsightsCard } from "@/app/preview-insights/InsightsList";
+import GuidesStrip from "@/app/components/GuideCta/GuidesStrip";
 import InsightsSeo from "@/app/preview-insights/InsightsSeo";
 import InsightsMotion from "@/app/preview-insights/InsightsMotion";
 import Form from "@/app/preview-home/sections/Form";
@@ -186,6 +187,7 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
           </div>
         </header>
 
+        {lang !== "he" && <div className="wrap"><GuidesStrip lang={lang} /></div>}
         <InsightsList
           allCards={allCards}
           page={page}

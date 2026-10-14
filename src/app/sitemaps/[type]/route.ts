@@ -8,6 +8,8 @@ import {
   getTotalBlogPostsByLang,
 } from "@/sanity/sanity.utils";
 import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute, type Locale } from "@/lib/locale";
+import { guidesPageAlternates, guidesPagePath } from "@/lib/guidesPage";
+import { isGuideLang } from "@/lib/guides/registry";
 import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
@@ -323,6 +325,17 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
       priority: 0.6,
       alternates: listingAlts("faq"),
     });
+
+    // The free guides page (preview-guides/[lang]): a fixed page with a TRANSLATED slug per language
+    // (guides, ratgeber, poradniki, gajdy), so its alternates are built from the slug map, not listingAlts().
+    if (isGuideLang(lang)) {
+      pages.push({
+        route: guidesPagePath(lang),
+        changefreq: "monthly",
+        priority: 0.6,
+        alternates: guidesPageAlternates(buildUrl),
+      });
+    }
 
     const merged = MERGED_SLUGS_BY_LANG[lang] ?? {};
     const allPaths = (await getAllPathsForLang(lang)).filter(

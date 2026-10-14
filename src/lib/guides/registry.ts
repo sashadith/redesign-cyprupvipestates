@@ -59,6 +59,12 @@ export function guideForArticle(lang: string, slug: string): GuideId | null {
   return ARTICLE_TO_GUIDE.get(`${lang}:${slug}`) ?? null;
 }
 
+/** The main article of a guide in one language (its first mapped article), as a site-relative blog path. */
+export function guideMainArticleSlug(id: GuideId, lang: string): string | null {
+  const per = (articles as Record<string, Record<string, string[]>>)[id] ?? {};
+  return per[guideLangFor(lang)]?.[0] ?? null;
+}
+
 export type GuideTeaser = { id: GuideId; lang: GuideLang; title: string; subtitle: string; edition: string; inside: string[] };
 export function guideTeaser(id: GuideId, lang: string): GuideTeaser {
   const c = getGuideContent(id, lang);
@@ -75,6 +81,10 @@ export type GuideUi = {
   readyText: string;
   download: string;
   fileMeta: string;
+  allGuides: string;
+  readArticle: string;
+  stripTitle: string;
+  stripText: string;
 };
 
 export const GUIDE_UI: Record<GuideLang, GuideUi> = {
@@ -88,6 +98,10 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readyText: "We have also sent a copy to your e-mail. The link works for 30 days.",
     download: "Download the PDF",
     fileMeta: "PDF, English",
+    allGuides: "All free guides →",
+    readArticle: "Read the article",
+    stripTitle: "Free PDF guides on buying in Cyprus",
+    stripText: "Costs, the buying process, rent or buy, and residence rules, each in one document.",
   },
   de: {
     eyebrow: "Kostenloser PDF-Ratgeber",
@@ -99,6 +113,10 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readyText: "Eine Kopie haben wir Ihnen auch per E-Mail geschickt. Der Link ist 30 Tage gültig.",
     download: "PDF herunterladen",
     fileMeta: "PDF, Deutsch",
+    allGuides: "Alle kostenlosen Ratgeber →",
+    readArticle: "Artikel lesen",
+    stripTitle: "Kostenlose PDF-Ratgeber zum Kauf auf Zypern",
+    stripText: "Kosten, Kaufablauf, Mieten oder Kaufen und Aufenthaltsrecht, jeweils in einem Dokument.",
   },
   pl: {
     eyebrow: "Bezpłatny przewodnik PDF",
@@ -110,6 +128,10 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readyText: "Kopię wysłaliśmy także e-mailem. Link działa przez 30 dni.",
     download: "Pobierz PDF",
     fileMeta: "PDF, polski",
+    allGuides: "Wszystkie bezpłatne przewodniki →",
+    readArticle: "Przeczytaj artykuł",
+    stripTitle: "Bezpłatne przewodniki PDF o zakupie na Cyprze",
+    stripText: "Koszty, proces zakupu, wynajem czy zakup oraz zasady pobytu, każdy temat w jednym dokumencie.",
   },
   ru: {
     eyebrow: "Бесплатный PDF-гайд",
@@ -121,5 +143,9 @@ export const GUIDE_UI: Record<GuideLang, GuideUi> = {
     readyText: "Копию мы также отправили на вашу почту. Ссылка действует 30 дней.",
     download: "Скачать PDF",
     fileMeta: "PDF, русский",
+    allGuides: "Все бесплатные гайды →",
+    readArticle: "Читать статью",
+    stripTitle: "Бесплатные PDF-гайды по покупке на Кипре",
+    stripText: "Расходы, процесс покупки, аренда или покупка и правила ПМЖ, каждая тема в одном документе.",
   },
 };
