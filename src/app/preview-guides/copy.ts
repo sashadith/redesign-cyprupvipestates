@@ -13,8 +13,6 @@ export type GuidesPageCopy = {
   stepsTitle: string;
   steps: { title: string; text: string }[];
   note: string;
-  ctaTitle: string;
-  ctaText: string;
   ctaButton: string;
   breadcrumbHome: string;
 };
@@ -39,8 +37,6 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
       { title: "Download at once", text: "The PDF opens immediately and a copy goes to your e-mail. The link works for 30 days." },
     ],
     note: "General information as of October 2026, not legal or tax advice. Check every figure with a licensed lawyer or tax adviser before you commit.",
-    ctaTitle: "Prefer to talk it through?",
-    ctaText: "Tell us your budget and what the property is for. We show what it reaches as a new-build or a resale, with or without a mortgage.",
     ctaButton: "Ask for a consultation",
     breadcrumbHome: "Home",
   },
@@ -63,8 +59,6 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
       { title: "Sofort herunterladen", text: "Das PDF öffnet sich sofort, eine Kopie geht an Ihre E-Mail-Adresse. Der Link ist 30 Tage gültig." },
     ],
     note: "Allgemeine Informationen mit Stand Oktober 2026, keine Rechts- oder Steuerberatung. Prüfen Sie jede Zahl vor dem Kauf mit einem zugelassenen Rechtsanwalt oder Steuerberater.",
-    ctaTitle: "Lieber persönlich besprechen?",
-    ctaText: "Nennen Sie uns Ihr Budget und den Zweck der Immobilie. Wir zeigen, was es als Neubau oder Wiederverkauf erreicht, mit oder ohne Hypothek.",
     ctaButton: "Beratung anfragen",
     breadcrumbHome: "Startseite",
   },
@@ -87,8 +81,6 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
       { title: "Pobierz od razu", text: "PDF otwiera się natychmiast, a kopia trafia na Twój e-mail. Link działa przez 30 dni." },
     ],
     note: "Informacje ogólne według stanu na październik 2026, nie stanowią porady prawnej ani podatkowej. Przed decyzją sprawdź każdą liczbę z licencjonowanym prawnikiem lub doradcą podatkowym.",
-    ctaTitle: "Wolisz porozmawiać?",
-    ctaText: "Podaj budżet i cel zakupu. Pokażemy, co daje on w nowej inwestycji lub na rynku wtórnym, z kredytem lub bez.",
     ctaButton: "Zamów konsultację",
     breadcrumbHome: "Strona główna",
   },
@@ -111,8 +103,6 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
       { title: "Скачайте сразу", text: "PDF открывается сразу, а копия приходит на вашу почту. Ссылка действует 30 дней." },
     ],
     note: "Общая информация на октябрь 2026 года, не юридическая и не налоговая консультация. Перед решением проверьте каждую цифру у лицензированного юриста или налогового консультанта.",
-    ctaTitle: "Удобнее обсудить лично?",
-    ctaText: "Сообщите бюджет и цель покупки. Мы покажем, чего он достигает в новостройке или на вторичном рынке, с ипотекой или без неё.",
     ctaButton: "Запросить консультацию",
     breadcrumbHome: "Главная",
   },
