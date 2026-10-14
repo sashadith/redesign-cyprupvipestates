@@ -167,3 +167,14 @@ test("route: with no signing secret configured it answers 503 instead of serving
     if (saved.a !== undefined) process.env.AUTH_SECRET = saved.a;
   }
 });
+
+import { CONTACT } from "../guides/html";
+
+test("contacts: the PDFs print exactly the contact details the site shows", () => {
+  const channels = fs.readFileSync(path.join(ROOT, "src/app/components/ContactChannels/ContactChannels.tsx"), "utf8");
+  assert.ok(channels.includes(`"${CONTACT.phone}"`), "phone differs from ContactChannels");
+  assert.ok(channels.includes(`"${CONTACT.whatsapp}"`), "WhatsApp number differs from ContactChannels");
+  assert.ok(channels.includes(`"${CONTACT.email}"`), "e-mail differs from ContactChannels");
+  const layout = fs.readFileSync(path.join(ROOT, "src/app/[lang]/layout.tsx"), "utf8");
+  assert.ok(layout.includes(`telephone: "${CONTACT.phone.replace(/\s/g, "")}"`), "phone differs from the site's structured data");
+});
