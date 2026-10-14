@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type { GuideBlock, GuideContent } from "./types";
+import type { GuideBlock, GuideContent, GuideLang } from "./types";
 import { corporatePath } from "@/lib/corporatePageSlugs";
 
 /* Lead-magnet guide layout, in the site's own brand: deep Maison green and champagne gold, Fraunces for
@@ -12,6 +12,68 @@ import { corporatePath } from "@/lib/corporatePageSlugs";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const SITE = "https://cyprusvipestates.com";
+
+/** The contact details the site itself shows (footer and /contacts, the same in every language).
+ *  A test compares them with src/app/components/ContactChannels so the PDFs cannot drift from the site. */
+export const CONTACT = {
+  phone: "+357 99 278 285",
+  whatsapp: "+357 99 278 285",
+  email: "office@cyprusvipestates.com",
+  /** As printed in the site footer. */
+  company: "Cyprus VIP Estates is a project of SecretBrand Solutions LTD, Palaion Patron Germanou 11, 8011 Paphos, Cyprus",
+};
+
+const CONTACT_UI: Record<GuideLang, { heading: string; phone: string; whatsapp: string; email: string; waText: (title: string) => string }> = {
+  en: {
+    heading: "Contact us",
+    phone: "Phone",
+    whatsapp: "WhatsApp",
+    email: "E-mail",
+    waText: (t) => `Hello, I have a question about the guide "${t}"`,
+  },
+  de: {
+    heading: "Kontakt",
+    phone: "Telefon",
+    whatsapp: "WhatsApp",
+    email: "E-Mail",
+    waText: (t) => `Guten Tag, ich habe eine Frage zum Ratgeber „${t}“`,
+  },
+  pl: {
+    heading: "Kontakt",
+    phone: "Telefon",
+    whatsapp: "WhatsApp",
+    email: "E-mail",
+    waText: (t) => `Dzień dobry, mam pytanie dotyczące przewodnika „${t}”`,
+  },
+  ru: {
+    heading: "Контакты",
+    phone: "Телефон",
+    whatsapp: "WhatsApp",
+    email: "Эл. почта",
+    waText: (t) => `Здравствуйте, у меня вопрос по гайду «${t}»`,
+  },
+};
+
+const digits = (s: string) => s.replace(/[^\d]/g, "");
+const ICON = {
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  whatsapp: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+};
+const icon = (k: keyof typeof ICON) => `<svg class="ct__i" viewBox="0 0 24 24" fill="none" stroke="#C29A5E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+
+function contactHtml(c: GuideContent): string {
+  const u = CONTACT_UI[c.lang];
+  const wa = `https://wa.me/${digits(CONTACT.whatsapp)}?text=${encodeURIComponent(u.waText(c.title))}`;
+  const item = (k: keyof typeof ICON, label: string, value: string, href: string) =>
+    `<a class="ct__c" href="${esc(href)}">${icon(k)}<span class="ct__l">${esc(label)}</span><span class="ct__v">${esc(value)}</span></a>`;
+  return `<div class="ct"><p class="ct__h">${esc(u.heading)}</p><div class="ct__row">${item("phone", u.phone, CONTACT.phone, `tel:+${digits(CONTACT.phone)}`)}${item(
+    "whatsapp",
+    u.whatsapp,
+    CONTACT.whatsapp,
+    wa,
+  )}${item("mail", u.email, CONTACT.email, `mailto:${CONTACT.email}`)}</div></div>`;
+}
 
 /** The @font-face rules of the three brand families, with the relative woff2 paths turned into file:// URLs. */
 export function brandFontCss(root: string): string {
@@ -150,12 +212,22 @@ tbody tr:nth-child(even) td{background:#F1ECDF}
 .chk ul{list-style:none}
 .chk li{position:relative;padding-left:6mm;margin-bottom:1.6mm;font-size:9pt;line-height:1.45;break-inside:avoid}
 .chk li::before{content:"";position:absolute;left:0;top:.8mm;width:3mm;height:3mm;border:1px solid var(--bronze);background:var(--raised)}
-.next{margin-top:8mm;padding:6mm 7mm;color:var(--ivory);break-inside:avoid;
-  background:radial-gradient(90% 120% at 100% 0%,rgba(194,154,94,.2),rgba(194,154,94,0) 60%),linear-gradient(160deg,#081512,#102826)}
-.next .next__h{font-weight:400;font-size:16pt;line-height:1.2;color:var(--champagne);margin-bottom:2.8mm}
-.next p{color:rgba(239,233,219,.88);font-size:9.4pt;line-height:1.55;margin-bottom:4mm}
+.back{page:cover;width:210mm;height:297mm;padding:22mm 20mm 18mm;display:flex;flex-direction:column;justify-content:space-between;color:var(--ivory);break-before:page;
+  background:radial-gradient(120% 70% at 85% 8%,rgba(194,154,94,.22) 0%,rgba(194,154,94,0) 55%),linear-gradient(170deg,#081512 0%,#102826 100%)}
+.back__h{font-family:'Fraunces','Playfair Display',Georgia,serif;font-weight:300;font-size:25pt;line-height:1.15;color:var(--champagne);max-width:150mm}
+.back .stripe{width:62mm;height:1.4pt;border:0;margin:7mm 0 6mm;background:linear-gradient(90deg,#C29A5E,rgba(194,154,94,0))}
+.back__p{font-size:11pt;line-height:1.6;color:rgba(239,233,219,.86);max-width:150mm;margin-bottom:7mm}
+.back__disc{font-size:7.4pt;line-height:1.5;color:rgba(239,233,219,.5);margin:0 0 1.6mm;max-width:160mm}
 .btn{display:inline-block;background:var(--champagne);color:var(--sea-deep);text-decoration:none;font-weight:800;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;padding:2.4mm 5mm}
+.ct{margin-top:12mm;padding-top:7mm;border-top:1px solid rgba(239,233,219,.22)}
+.ct__h{font-family:'Fraunces','Playfair Display',Georgia,serif;font-size:13pt;color:var(--ivory);margin:0 0 4mm;letter-spacing:.01em}
+.ct__row{display:flex;gap:4mm}
+.ct__c{flex:1;display:block;text-decoration:none;color:var(--ivory);padding:4.4mm 4mm;border:1px solid rgba(194,154,94,.45);background:rgba(239,233,219,.04)}
+.ct__i{width:6mm;height:6mm;display:block;margin-bottom:3mm}
+.ct__l{display:block;font-size:6.6pt;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--champagne);margin-bottom:.8mm}
+.ct__v{display:block;font-size:10pt;font-weight:700;color:var(--ivory);white-space:nowrap}
 .disc{margin-top:5mm;font-size:7.4pt;line-height:1.45;color:#6b6252}
+.disc--co{margin-top:1.6mm}
 `;
 
 export function renderGuideHtml(c: GuideContent, id: string, root: string): string {
@@ -180,7 +252,20 @@ export function renderGuideHtml(c: GuideContent, id: string, root: string): stri
 <main>
   <p class="intro">${esc(c.intro)}</p>
   ${c.sections.map((s) => sectionHtml(s.heading, s.blocks)).join("\n")}
-  <section class="next"><p class="next__h">${esc(c.nextSteps.heading)}</p><p>${esc(c.nextSteps.text)}</p><a class="btn" href="${esc(contactUrl)}">cyprusvipestates.com</a></section>
-  <p class="disc">${esc(c.disclaimer)}</p>
-</main></body></html>`;
+</main>
+<section class="back">
+  <img class="cover__logo" src="${logo}" alt="Cyprus VIP Estates">
+  <div>
+    <p class="back__h">${esc(c.nextSteps.heading)}</p>
+    <hr class="stripe">
+    <p class="back__p">${esc(c.nextSteps.text)}</p>
+    <a class="btn" href="${esc(contactUrl)}">cyprusvipestates.com</a>
+    ${contactHtml(c)}
+  </div>
+  <div>
+    <p class="back__disc">${esc(c.disclaimer)}</p>
+    <p class="back__disc back__co">${esc(CONTACT.company)}</p>
+  </div>
+</section>
+</body></html>`;
 }
