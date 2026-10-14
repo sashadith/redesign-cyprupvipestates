@@ -9,22 +9,42 @@
 .gds__list { padding-block: var(--section-y); }
 .gds__grid { display: grid; grid-template-columns: 1fr; gap: clamp(20px, 2.4vw, 32px); }
 @media (min-width: 980px) { .gds__grid { grid-template-columns: 1fr 1fr; } }
-.gds__card { display: grid; grid-template-columns: 1fr; gap: 20px; padding: clamp(18px, 2.4vw, 28px); background: var(--surface-raised, #fbf9f3); border: 1px solid var(--hairline); border-radius: 18px; }
-@media (min-width: 560px) { .gds__card { grid-template-columns: 150px minmax(0, 1fr); align-items: start; } }
-.gds__cover img { display: block; width: 150px; height: auto; border-radius: 3px; box-shadow: 6px 6px 0 #d9b36f, 0 18px 30px -18px rgba(11, 22, 32, 0.55); }
-.gds__body { min-width: 0; }
-.gds__meta { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
-.gds__card-title { margin: 8px 0 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem); line-height: 1.18; color: var(--text); text-wrap: balance; }
-.gds__sub { margin: 8px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.55; color: var(--text-soft); }
-.gds__label { margin: 16px 0 6px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
-.gds__inside { margin: 0 0 18px; padding-left: 18px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.5; color: var(--text); }
-.gds__inside li { margin-bottom: 3px; }
+/* The guide card: deep green, text on the left, the cover tilted out of the bottom-right corner and cut by the card edge.
+   Flat grid (no wrapper) so the form that replaces the button can span the full card width. */
+.gds__card { --pad: clamp(22px, 2.8vw, 34px); --bleed: 46px; position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) 230px; column-gap: 28px; align-content: start;
+  padding: var(--pad) 0 var(--pad) var(--pad); min-height: 400px; border-radius: 18px; color: var(--ivory); border: 1px solid rgba(194, 154, 94, 0.28);
+  background: radial-gradient(120% 90% at 100% 0%, rgba(194, 154, 94, 0.22) 0%, rgba(194, 154, 94, 0) 60%), var(--sea); }
+.gds__card > * { grid-column: 1; justify-self: start; min-width: 0; }
+.gds__meta { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: var(--champagne); }
+.gds__card-title { margin: 8px 0 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.2rem, 1.1rem + 0.5vw, 1.45rem); line-height: 1.2; color: var(--ivory); text-wrap: balance; }
+.gds__sub { margin: 8px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.5; color: rgba(239, 233, 219, 0.74); }
+.gds__fact { margin: 16px 0 20px; padding: 12px 14px; border-left: 2px solid var(--champagne); border-radius: 0 8px 8px 0; background: rgba(239, 233, 219, 0.05); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.45; color: rgba(239, 233, 219, 0.86); }
+.gds__fact b { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 500; font-size: 1.05em; color: var(--champagne); }
+.gds__btn { display: inline-flex; align-items: center; justify-content: center; padding: 13px 24px; border: 0; border-radius: 999px; cursor: pointer; text-decoration: none;
+  font-family: var(--font-body), sans-serif; font-size: 15px; font-weight: 700; background: var(--champagne); color: var(--sea-deep); transition: background 0.2s; }
+.gds__btn:hover { background: #d3ab6f; }
+.gds__btn:focus-visible { outline: 2px solid var(--ivory); outline-offset: 3px; }
 .gds__read { margin: 14px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); }
-.gds__read a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.gds__read a { color: var(--champagne); text-decoration: none; font-weight: 600; }
 .gds__read a:hover { text-decoration: underline; }
-.gds__note { margin: clamp(28px, 3vw, 44px) 0 0; max-width: 70ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-faint); }
-.gds .guidecta__formbox, .gds .guidecta__ready { grid-column: 1 / -1; }
+.gds__cover { grid-column: 2; grid-row: 1 / span 6; justify-self: stretch; align-self: end; margin-bottom: calc(-1 * (var(--pad) + var(--bleed))); transform: rotate(3deg); transform-origin: bottom center; transition: transform 0.35s ease; }
+.gds__card:hover .gds__cover { transform: rotate(0) translateY(-6px); }
+.gds__cover img { display: block; width: 100%; height: auto; border-radius: 3px; box-shadow: -8px 0 28px -10px rgba(0, 0, 0, 0.7), 0 20px 40px -16px rgba(0, 0, 0, 0.8); }
+/* Form open or download ready: the panel spans the card, so the cover stops at the text above it and stops bleeding. */
+.gds__card .guidecta__formbox, .gds__card .guidecta__ready { grid-column: 1 / -1; justify-self: stretch; margin: 18px var(--pad) 0 0; padding: 20px; border-radius: 14px;
+  --bg: var(--paper); --surface: var(--paper-2); --surface-raised: #fbf9f3; --text: var(--ink-warm); --text-soft: rgba(34, 28, 21, 0.74); --text-faint: rgba(34, 28, 21, 0.48);
+  --accent: var(--bronze); --accent-ink: #fff; --accent-soft: rgba(142, 107, 61, 0.1); --hairline: rgba(34, 28, 21, 0.14); --hairline-strong: rgba(34, 28, 21, 0.24); color-scheme: light;
+  background: var(--paper); color: var(--ink-warm); }
+.gds__card:has(.guidecta__formbox, .guidecta__ready) { padding-bottom: var(--pad); }
+.gds__card:has(.guidecta__formbox, .guidecta__ready) .gds__cover { grid-row: 1 / span 4; margin-bottom: 0; align-self: start; }
 .gds .artform { grid-template-columns: minmax(0, 1fr); margin-block: 0; border-radius: 12px; }
+@media (max-width: 560px) {
+  .gds__card { grid-template-columns: minmax(0, 1fr); padding: var(--pad); min-height: 0; }
+  .gds__cover { grid-column: 1; grid-row: auto; justify-self: center; width: min(220px, 70%); margin: 22px 0 0; align-self: start; }
+  .gds__card .guidecta__formbox, .gds__card .guidecta__ready { margin-right: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .gds__cover, .gds__btn { transition: none; } .gds__card:hover .gds__cover { transform: rotate(3deg); } }
+.gds__note { margin: clamp(28px, 3vw, 44px) 0 0; max-width: 70ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-faint); }
 .gds__steps { padding-block: var(--section-y); background: var(--bg); }
 .gds__steplist { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(20px, 2.4vw, 36px); grid-template-columns: 1fr; }
 @media (min-width: 820px) { .gds__steplist { grid-template-columns: repeat(3, 1fr); } }
