@@ -11,7 +11,7 @@ type Props = {
   lang: string;
 };
 
-/** In-article offer of a free PDF guide: the form is revealed in place, the signed download link appears after submit. */
+/** In-article offer of a free PDF guide: the form opens in a popup (like the cards on the guides page), the signed download link appears there after submit. */
 export default function GuideCta({ teaser, ui, form, lang }: Props) {
   return (
     <section className="guidecta" aria-labelledby={`guidecta-${teaser.id}`} data-guide={teaser.id}>
@@ -31,6 +31,7 @@ export default function GuideCta({ teaser, ui, form, lang }: Props) {
           ui={ui}
           form={form}
           lang={lang}
+          popup={{ title: teaser.title }}
           closedExtra={
             <>
               <p className="guidecta__label">{ui.insideLabel}</p>
