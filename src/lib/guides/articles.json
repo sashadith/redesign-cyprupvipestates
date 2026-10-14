@@ -1,0 +1,125 @@
+{
+  "cost-of-buying": {
+    "en": [
+      "cost-of-buying-property-in-cyprus",
+      "cyprus-property-tax-calculator",
+      "cyprus-property-vat-explained",
+      "how-much-money-do-you-need-to-buy-property-in-cyprus",
+      "taxes-on-real-estate-in-cyprus",
+      "choosing-property-lawyer-cyprus"
+    ],
+    "de": [
+      "kosten-immobilienkauf-zypern",
+      "zypern-immobiliensteuer-rechner",
+      "vat-beim-immobilienkauf-auf-zypern",
+      "wie-viel-geld-benoetigt-man-fuer-den-kauf-einer-immobilie-auf-zypern",
+      "steuern-auf-immobilien-in-zypern",
+      "anwalt-immobilienkauf-zypern"
+    ],
+    "pl": [
+      "koszt-zakupu-nieruchomosci-na-cyprze",
+      "kalkulator-podatku-od-nieruchomosci-cypr",
+      "vat-przy-zakupie-nieruchomosci-na-cyprze",
+      "ile-pieniedzy-potrzeba-na-zakup-nieruchomosci-na-cyprze",
+      "podatki-od-nieruchomosci-na-cyprze",
+      "prawnik-zakup-nieruchomosci-cypr"
+    ],
+    "ru": [
+      "stoimost-pokupki-nedvizhimosti-na-kipre",
+      "kalkulator-naloga-na-nedvizhimost-kipr",
+      "vat-pri-pokupke-nedvizhimosti-na-kipre",
+      "skolko-deneg-nuzhno-dlya-pokupki-nedvizhimosti-na-kipre",
+      "nalogi-na-nedvizhimost-na-kipre",
+      "yurist-pokupka-nedvizhimosti-kipr"
+    ]
+  },
+  "buying-process": {
+    "en": [
+      "how-to-buy-property-in-cyprus",
+      "what-is-a-title-deed",
+      "snagging-new-build-cyprus",
+      "how-to-vet-cyprus-developer",
+      "cyprus-off-plan-deposit-protection",
+      "top-10-mistakes-first-time-buyers",
+      "buying-property-cyprus-remotely",
+      "new-build-or-resale-in-cyprus"
+    ],
+    "de": [
+      "immobilien-auf-zypern-kaufen-strategischer-leitfaden",
+      "was-ist-ein-title-deed",
+      "neubau-abnahme-zypern-maengel",
+      "bautraeger-zypern-pruefen",
+      "off-plan-zypern-anzahlung-absichern",
+      "die-10-haeufigsten-fehler-beim-immobilienkauf-auf-zypern",
+      "immobilie-zypern-fernkauf-vollmacht",
+      "was-sollten-sie-auf-zypern"
+    ],
+    "pl": [
+      "jak-kupic-nieruchomosc-na-cyprze",
+      "czym-jest-title-deed-na-cyprze-i-dlaczego-jest-wazny",
+      "odbior-nieruchomosci-cypr-usterki",
+      "jak-sprawdzic-dewelopera-na-cyprze",
+      "zakup-off-plan-cypr-ochrona-wplat",
+      "10-najczestszych-bledow-przy-zakupie-pierwszej-nieruchomosci-na-cyprze",
+      "zakup-nieruchomosci-cypr-zdalnie",
+      "nowa-inwestycje-czy-rynek-wtorny"
+    ],
+    "ru": [
+      "kak-kupit-nedvizhimost-na-kipre",
+      "chto-takoe-title-deed-na-kipre-i-zachem-on-nuzhen",
+      "priyomka-novostroyki-kipr-defekty",
+      "kak-proverit-zastroyshchika-na-kipre",
+      "pokupka-na-etape-stroitelstva-kipr-zashchita",
+      "top-oshibok-pri-pokupke-pervoi-nedvizhimosti-na-kipre",
+      "pokupka-nedvizhimosti-kipr-udalenno",
+      "chto-pokupat-na-kipre-novostroyku-ili-vtorichku"
+    ]
+  },
+  "rent-or-buy": {
+    "en": [
+      "rent-or-buy-property-in-cyprus",
+      "apartment-or-villa-in-cyprus"
+    ],
+    "de": [
+      "mieten-oder-kaufen-zypern",
+      "wohnung-oder-villa-auf-zypern"
+    ],
+    "pl": [
+      "wynajem-czy-zakup-nieruchomosci-na-cyprze",
+      "mieszkanie-czy-willa-na-cyprze"
+    ],
+    "ru": [
+      "arenda-ili-pokupka-nedvizhimosti-na-kipre",
+      "apartamenty-ili-villa-na-kipre"
+    ]
+  },
+  "residency": {
+    "en": [
+      "how-to-get-permanent-residence-in-cyprus",
+      "how-to-get-cyprus-residency-if-you-re-not-an-eu-citizen",
+      "gesy-cyprus-explained",
+      "health-insurance-in-cyprus",
+      "how-to-immigrate-to-cyprus"
+    ],
+    "de": [
+      "wie-man-eine-daueraufenthaltserlaubnis-auf-zypern-erhaelt",
+      "zypern-aufenthaltsgenehmigung-nicht-eu-buerger",
+      "gesy-zypern-erklaert",
+      "krankenversicherung-auf-zypern",
+      "wie-nach-zypern-auswandern"
+    ],
+    "pl": [
+      "jak-uzyskac-pobyt-staly-na-cyprze",
+      "rezydencja-cypr-obywatele-spoza-ue",
+      "ubezpieczenie-zdrowotne-na-cyprze",
+      "jak-wyemigrowac-na-cypr"
+    ],
+    "ru": [
+      "kak-poluchit-pmzh-na-kipre-polnoe-rukovodstvo",
+      "kak-poluchit-vid-na-zhitelstvo-na-kipre-esli-u-vas-ne-evropeiskii-pasport",
+      "gesy-na-kipre-gosudarstvennaya-meditsina",
+      "medicinskoe-strakhovanie-na-kipre-rukovodstvo-dlya-ekspatov",
+      "kak-emigrirovat-na-kipr"
+    ]
+  }
+}

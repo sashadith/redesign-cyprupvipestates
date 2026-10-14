@@ -1,0 +1,206 @@
+{
+  "id": "buying-process",
+  "lang": "en",
+  "title": "How to Buy Property in Cyprus: Step-by-Step Guide and Due-Diligence Checklist (2026)",
+  "subtitle": "From reservation to title deed, and what to check before you pay",
+  "edition": "Edition: October 2026",
+  "keyNumbers": [
+    { "value": "8 steps", "label": "from budget to transfer of title, in a fixed order" },
+    { "value": "6 months", "label": "to lodge the signed contract at the Land Registry" },
+    { "value": "€50", "label": "Land Registry fee for lodging the contract" },
+    { "value": "5 working days", "label": "maximum age of the seller's search certificate at signing" }
+  ],
+  "intro": "Buying property in Cyprus follows eight steps in a fixed order, and the order is what protects you. The paperwork is routine. Losses come from a step that was skipped or done late: a lawyer chosen by the seller, a contract never lodged at the Land Registry, a defects list never written down. All figures are as of October 2026.",
+  "sections": [
+    {
+      "heading": "How to buy property in Cyprus: eight steps in order, with typical timing",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "EU citizens buy on the same terms as Cypriots. Non-EU citizens, including British buyers since Brexit, need permission from the Council of Ministers (step 7). Foreign-ownership rules were under review in 2026, so confirm the current position with your lawyer before buying land or more than one property."
+        },
+        {
+          "type": "steps",
+          "items": [
+            { "title": "Fix your budget and prove your funds", "text": "Assemble passport, proof of address and bank statements showing where the money came from before you wire anything. Typical time: 1-6 weeks." },
+            { "title": "Appoint your own lawyer", "text": "Independent of the seller and the developer, and before you reserve anything. The fee is usually 1% plus VAT. Typical time: a few days." },
+            { "title": "Reserve the property", "text": "A written reservation agreement takes the unit off the market. The fee is roughly €3,000-€10,000; agree in writing what is refunded if due diligence finds a defect. Typical time: 1-3 days." },
+            { "title": "Run due diligence", "text": "Your lawyer checks title and registered charges, the seller's right to sell, permits and unpaid municipal charges. Typical time: 1-3 weeks." },
+            { "title": "Sign the sale contract", "text": "Standard developer contracts favour the seller, so your lawyer negotiates changes. The deposit is commonly 20-40% on a resale. No stamp duty applies to contracts signed from 1 January 2026. Typical time: weeks 3-6." },
+            { "title": "Lodge the contract at the Land Registry", "text": "Within 6 months of signing, for a €50 fee. It gives you an enforceable right to be registered as owner, even if the seller becomes insolvent or sells the unit twice. Get written confirmation." },
+            { "title": "Obtain permission (non-EU buyers only)", "text": "Your lawyer files the Council of Ministers application right after signing. No government fee. Typical time: weeks to months." },
+            { "title": "Pay the balance and transfer title", "text": "Resale: you pay the balance and the transfer fee, currently €8,600 on a €300,000 resale after the 50% reduction. New-build: VAT is invoiced instead and no transfer fee applies. A resale typically takes 2-4 months from signing (indicative)." }
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Lodge the contract in the first week",
+          "text": "The legal window is 6 months, and there is no reason to use it. Lodging in the first week protects you for the whole period in which something could go wrong."
+        }
+      ]
+    },
+    {
+      "heading": "Property documents in Cyprus and what each one proves",
+      "blocks": [
+        {
+          "type": "table",
+          "head": ["Document", "What it proves", "What to ask for"],
+          "rows": [
+            ["Title deed", "The registered owner and any registered mortgage or charge", "Whether an individual deed exists yet and, if not, which stage of registration has been reached"],
+            ["Land Registry search certificate", "The current owner and all charges on the plot", "A date no more than 5 working days before signing (rule since 12 December 2023)"],
+            ["Contract of sale", "Price, payment dates, completion date, specification and remedies", "The changes your lawyer negotiated, and proof of Land Registry lodging"],
+            ["Building and planning permits", "The project is approved to be built as sold", "Copies, matched against your unit"],
+            ["Certificate of final approval", "A completed building matches its approved plans", "A copy on every completed project"]
+          ],
+          "note": "Rules as of October 2026."
+        },
+        {
+          "type": "p",
+          "text": "New-builds are often sold before individual title deeds exist. The land is first registered as one plot, and separate deeds follow after completion, final approvals and the registration of each unit, with no universal timeframe. A missing deed is common and is no automatic warning sign; judge the project by its permits, its progress and the developer's record."
+        },
+        {
+          "type": "p",
+          "text": "One thing does hold a deed up. If the developer borrowed against the land, the Land Registry cannot issue individual deeds to buyers until that charge is released. The unit is then yours in practice and not yet on paper, which blocks a mortgage and complicates a sale."
+        }
+      ]
+    },
+    {
+      "heading": "How to check the developer and the project before you pay",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The title search, permits and contract belong to your lawyer. Judging the company belongs to you. A building can match the brochure and still leave you in difficulty if the developer's finances fail."
+        },
+        {
+          "type": "checklist",
+          "title": "Ask the developer before paying a reservation fee",
+          "items": [
+            "On your last three completed projects, were individual title deeds issued to buyers, and how long did it take from handover?",
+            "Is a mortgage or charge registered over this land, and what does the contract say about releasing it from my unit?",
+            "What is the contractual completion date, and what happens if it is missed?",
+            "Is the payment schedule tied to calendar dates or to construction milestones?",
+            "Do you hold the building permit and, for finished projects, the certificate of final approval?"
+          ]
+        },
+        {
+          "type": "checklist",
+          "title": "Verify independently",
+          "items": [
+            "Your lawyer requests the search certificate for the plot and reads every registered charge.",
+            "Deeds issued on past projects are public record at the Department of Lands and Surveys, so the answer can be checked.",
+            "Visit a development finished three to five years ago and speak to residents."
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Red flags",
+          "text": "Pressure to pay a reservation fee before your lawyer has seen anything. Payments tied to dates instead of building stages. Steering towards a specific lawyer. Vague answers about deeds on past projects. A price well below comparable nearby projects."
+        }
+      ]
+    },
+    {
+      "heading": "Off-plan payments and deposit protection in Cyprus",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Cyprus does not mandate performance guarantees on off-plan purchases. Safeguards exist, and each one has to be written into the contract. Until handover your money is with the developer unless an escrow arrangement is agreed."
+        },
+        {
+          "type": "example",
+          "title": "Typical off-plan instalments on a €300,000 price (excluding VAT)",
+          "rows": [
+            ["On signing the contract (25%)", "€75,000"],
+            ["Stage payments during construction (45%)", "€135,000"],
+            ["On completion and handover (30%)", "€90,000"]
+          ],
+          "total": ["Price excluding VAT", "€300,000"],
+          "note": "Market range: 20-30% on signing, 40-50% in stages, 20-30% at handover. VAT is added: €15,000 at the reduced 5% rate if you qualify, €57,000 at the standard 19% rate."
+        },
+        {
+          "type": "table",
+          "head": ["Safeguard", "What it does", "Position in Cyprus"],
+          "rows": [
+            ["Milestone-linked instalments", "You pay when frame, roof or fit-out is verifiably reached", "Negotiate it and name who certifies, ideally an independent surveyor"],
+            ["Bank guarantee or performance bond", "Covers deposit and instalments until title is delivered", "Not a legal requirement; ask for it in the contract"],
+            ["Escrow account", "Payments go to a third party and are released at milestones", "Not compulsory; some developers offer it"],
+            ["Contract lodged at the Land Registry", "Enforceable right to registration, also against a double sale", "Within 6 months of signing; the most valuable single step"]
+          ]
+        },
+        {
+          "type": "checklist",
+          "title": "Clauses to negotiate in an off-plan contract",
+          "items": [
+            "A firm completion date plus a long-stop date after which you may rescind and recover your deposit in full",
+            "Liquidated damages for delay beyond a defined grace period",
+            "A defects liability period of at least 24 months from handover, including structural and waterproofing defects",
+            "A bank waiver letter or a binding timetable to discharge the developer's mortgage before handover",
+            "A specification of materials and finishes, with remedies for deviation"
+          ]
+        },
+        {
+          "type": "p",
+          "text": "If the developer becomes insolvent, a lodged contract gives you an enforceable right to registration, a stronger position than an ordinary creditor. A bank guarantee covers the payments you made. With neither, you join the queue of creditors, and those processes take years and rarely pay out in full."
+        }
+      ]
+    },
+    {
+      "heading": "Snagging and handover: inspecting a new-build before the final payment",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The final instalment is your moment of most leverage: the developer wants it and you have not yet paid it. Holding part of it back until a defects list is cleared is common, but Cyprus has no mandatory handover procedure with automatic retention rights. The right to inspect and to retain a defined sum has to be in the contract before you sign."
+        },
+        {
+          "type": "checklist",
+          "title": "Handover inspection checklist",
+          "items": [
+            "Waterproofing and damp: roofs, terraces, balconies, window and door edges",
+            "Tiling and finishes: uneven or hollow-sounding tiles, grouting, paint",
+            "Electrical: every socket and switch tested, the consumer unit, extractor fans",
+            "Plumbing: every tap and drain, water pressure, leaks, hot water at every outlet",
+            "Doors, windows and joinery: all open, close and lock squarely",
+            "Villas: pool and pump, external drainage, boundary walls",
+            "Specification: finishes, fittings and layout match the contract"
+          ]
+        },
+        {
+          "type": "steps",
+          "items": [
+            { "title": "Photograph and describe", "text": "Photograph and date every defect and list the items room by room." },
+            { "title": "Get written acknowledgement", "text": "The developer acknowledges the list in writing and agrees a time frame for repairs." },
+            { "title": "Tie the retention to the list", "text": "State which items must be cleared before which part of the retained sum is released." },
+            { "title": "Re-inspect before paying", "text": "Verify the repairs yourself or through your surveyor before you release the retained amount." }
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Buying from abroad",
+          "text": "Use an independent snagging surveyor who acts for you. Sources give the warranty periods for hidden defects inconsistently, so confirm the periods in your own contract with your lawyer."
+        }
+      ]
+    },
+    {
+      "heading": "Common first-time buyer mistakes and how to avoid them",
+      "blocks": [
+        {
+          "type": "table",
+          "head": ["Mistake", "Consequence", "How to avoid it"],
+          "rows": [
+            ["Using the seller's or developer's lawyer", "No safeguard independent of the sale", "Appoint your own lawyer before you reserve"],
+            ["Never confirming the contract was lodged", "A private agreement without an enforceable right against third parties", "Get written confirmation, ideally in the first week"],
+            ["Paying a reservation fee without written terms", "Money at risk with no refund rule", "Pay only under a written agreement your lawyer has reviewed"],
+            ["Assuming the 5% VAT is automatic", "The most expensive surprise in the process", "The reduced rate covers the first 130 m² of a main residence, with a value cap of €350,000; above 190 m² or €475,000 the whole price carries 19%"],
+            ["Agreeing date-linked payments", "You pre-fund a build that may have stalled", "Insist on milestone payments with a named certifier"],
+            ["Budgeting from the advertised price", "The price may exclude VAT", "Budget VAT or the transfer fee, plus legal fees of about 1% plus VAT"]
+          ],
+          "note": "Rates and thresholds as of October 2026."
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Ask for a personal consultation",
+    "text": "If you would like to go through the buying process for your own budget, or learn which safeguards a particular new-build project typically accepts, ask Cyprus VIP Estates for a personal consultation. We can connect you with independent professionals, and the legal advice itself comes from your own lawyer."
+  },
+  "disclaimer": "General information as of October 2026. It is not legal or tax advice; have a licensed Cyprus lawyer or tax adviser check your own situation before you sign or pay."
+}

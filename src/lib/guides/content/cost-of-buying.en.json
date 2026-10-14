@@ -1,0 +1,224 @@
+{
+  "id": "cost-of-buying",
+  "lang": "en",
+  "title": "The True Cost of Buying Property in Cyprus (2026)",
+  "subtitle": "Every tax, fee and running cost from reservation to keys, with a worked example",
+  "edition": "Edition: October 2026",
+  "keyNumbers": [
+    { "value": "4% to 20%", "label": "extra cost on top of the price, from a resale to a new-build at 19% VAT" },
+    { "value": "€42,000", "label": "VAT difference between 5% and 19% on a €300,000 new-build" },
+    { "value": "€8,600", "label": "transfer fee on a €300,000 resale, after the 50% reduction" },
+    { "value": "€0", "label": "stamp duty on contracts signed from 1 January 2026" }
+  ],
+  "intro": "On a €300,000 purchase in Cyprus, the costs on top of the price run from about 4% for a resale to about 20% for a new-build at 19% VAT, as of October 2026. The category of the property sets the bill more than the price does. This guide lists every one-off and recurring cost, shows when each is paid and works through one realistic budget. Where a figure is a planning figure and not a statutory rate, the text says so.",
+  "sections": [
+    {
+      "heading": "One-off costs at a glance: what you pay on top of the price, and when",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A new-build bought from a developer carries VAT and no transfer fee. A resale carries a transfer fee and no VAT. You never pay both on the same purchase. The table shows each item as of October 2026."
+        },
+        {
+          "type": "table",
+          "head": ["Cost item", "New-build (from developer)", "Resale"],
+          "rows": [
+            ["VAT", "5% (main residence, within the limits) or 19%", "None"],
+            ["Land Registry transfer fee", "None when VAT is charged", "3% / 5% / 8% scale, halved by the current 50% reduction"],
+            ["Stamp duty", "None: abolished for contracts signed from 1 January 2026", "None: abolished for contracts signed from 1 January 2026"],
+            ["Legal fee", "Planning figure: 1% plus 19% VAT on the fee", "Planning figure: 1% plus 19% VAT on the fee"],
+            ["Land Registry charges", "A few hundred euros; the contract deposit is €50", "A few hundred euros; the contract deposit is €50"],
+            ["Agent's commission", "Normally paid by the developer", "Normally paid by the seller"],
+            ["Mortgage costs (if financed)", "Registration 1%, arrangement about 1%, valuation about €400", "Registration 1%, arrangement about 1%, valuation about €400"]
+          ],
+          "note": "Legal fee, registry charges and bank fees are planning figures, not quotes."
+        },
+        {
+          "type": "p",
+          "text": "Timing follows the type of purchase. Published guidance puts a reservation fee at roughly €3,000 to €10,000, followed by a deposit of 20% to 40% at contract signing. On a resale the balance is due when title transfers. A new-build, especially off-plan, is paid in instalments, commonly 20-30% on signing, 40-50% in stage payments and 20-30% at handover, and the developer invoices VAT with each instalment."
+        }
+      ]
+    },
+    {
+      "heading": "VAT on a new-build: the 5% and 19% rates, the limits and a worked example",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The reduced rate of 5% applies only when an individual buys a new-build as a main and permanent residence, and it must be applied for. Investment property, a second home and purchases by a company pay 19%."
+        },
+        {
+          "type": "table",
+          "head": ["Property", "VAT"],
+          "rows": [
+            ["Main residence, first 130 m², value up to €350,000", "5%"],
+            ["Home above 190 m² or a transaction above €475,000", "19% on the whole price"],
+            ["Between the two limits (130 to 190 m², or €350,000 to €475,000)", "Not set out in this guide: ask your lawyer in writing for the figure the Tax Department will apply, before you sign"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "VAT on a €300,000 new-build within the limits",
+          "rows": [
+            ["Price before VAT", "€300,000"],
+            ["VAT at 5% (main residence)", "€15,000"],
+            ["Price including 5% VAT", "€315,000"],
+            ["VAT at 19% (investment or second home)", "€57,000"],
+            ["Price including 19% VAT", "€357,000"]
+          ],
+          "total": ["Difference between the two", "€42,000"],
+          "note": "A €600,000 villa is above €475,000, so 19% applies to the whole price: €114,000 of VAT."
+        },
+        {
+          "type": "callout",
+          "title": "Check before you compare prices",
+          "text": "Developers often quote a price plus VAT, so confirm whether a figure includes it. Since 1 September 2026, whether a building counts as new for VAT depends on first use (systematic use for at least 18 months). The former test was five years from completion. A finished but never-occupied unit can therefore still carry VAT. The reduced rate also has a use condition: if the home stops being your main residence, the saving can be clawed back. Ask your lawyer to confirm in writing which regime applies to the exact unit."
+        }
+      ]
+    },
+    {
+      "heading": "Transfer fee and stamp duty: what applies to a new-build and to a resale",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A resale pays a Land Registry transfer fee on a progressive scale, applied to market value. The statutory rates are 3%, 5% and 8%. A 50% reduction currently applies, so the effective rates are 1.5%, 2.5% and 4% (as of October 2026). A new-build that carries VAT pays no transfer fee."
+        },
+        {
+          "type": "table",
+          "head": ["Property value", "Statutory rate", "Effective rate (after 50% reduction)"],
+          "rows": [
+            ["Up to €85,000", "3%", "1.5%"],
+            ["€85,001 to €170,000", "5%", "2.5%"],
+            ["Over €170,000", "8%", "4%"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Transfer fee on a €300,000 resale",
+          "rows": [
+            ["1.5% × €85,000", "€1,275"],
+            ["2.5% × €85,000", "€2,125"],
+            ["4% × €130,000", "€5,200"]
+          ],
+          "total": ["Transfer fee", "€8,600"],
+          "note": "The statutory scale without the reduction would give €17,200."
+        },
+        {
+          "type": "p",
+          "text": "The fee is charged on each buyer's share. Two buyers holding 50% each of a €300,000 flat pay about €5,800 in total instead of €8,600, a difference of about €2,800. Decide ownership on inheritance and family grounds first; your lawyer confirms the arithmetic."
+        },
+        {
+          "type": "callout",
+          "title": "Stamp duty",
+          "text": "Stamp duty on property contracts is abolished for documents signed from 1 January 2026. A document signed by at least one party by 31 December 2025 stays under the old rules, even if completion comes later. A cost list that still shows a stamp duty line is out of date. Ask your bank to confirm that no charge applies to a mortgage deed."
+        }
+      ]
+    },
+    {
+      "heading": "Legal fees, Land Registry charges, mortgage costs and currency exchange",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every purchase needs a lawyer who is independent of the seller and the developer. Published fee guidance runs from 1% to 2% of the price, or a flat fee, and 19% VAT is added to the fee. This guide uses 1% plus VAT as a planning figure: on €300,000 that is €3,000 plus €570 of VAT, or €3,570. Ask for a fixed quote in writing, and ask whether the contract deposit, the permit application for non-EU buyers and the transfer are included or billed separately."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "Land Registry charges: the contract deposit costs €50, and search and registration certificates are small fixed fees. This guide budgets about €300 in total; the lawyer handles them at completion.",
+            "Agent's commission: normally paid by the seller, or by the developer on a new-build. Confirm in writing whom the agent represents and that no fee falls on you.",
+            "Currency: every 1% of margin taken on an international transfer costs €3,000 on €300,000. Get a quote for the full amount before you choose a route."
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Mortgage costs on a €195,000 loan (35% deposit on €300,000, assumption)",
+          "rows": [
+            ["Registration fee, 1% of the loan", "€1,950"],
+            ["Bank arrangement fee, about 1% of the loan", "€1,950"],
+            ["Valuation fee, about", "€400"]
+          ],
+          "total": ["Loan costs", "€4,300"],
+          "note": "Typical deposits are 30-40% for non-EU non-residents and about 25-30% for EU/EEA non-residents. The deposit itself comes on top of these costs."
+        }
+      ]
+    },
+    {
+      "heading": "Running costs of owning a property in Cyprus",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Cyprus has had no annual immovable property tax since 2017. Recurring costs are community or management fees on complexes with shared amenities, municipal and community charges, waste, sewerage and building insurance. Our rent-or-buy calculation puts them at roughly €935 to €1,650 a year for a typical apartment."
+        },
+        {
+          "type": "p",
+          "text": "Rental income is added to your other income and taxed on the 2026 bands (as of October 2026):"
+        },
+        {
+          "type": "table",
+          "head": ["Annual income", "Rate"],
+          "rows": [
+            ["Up to €22,000", "0%"],
+            ["€22,000 to €32,000", "20%"],
+            ["€32,000 to €42,000", "25%"],
+            ["€42,000 to €72,000", "30%"],
+            ["Above €72,000", "35%"]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "If you later sell at a profit, capital gains tax is 20%. For contracts signed from 1 January 2026, lifetime exemptions are €150,000 on a main residence you have lived in for five years or more and €30,000 on any other property."
+        }
+      ]
+    },
+    {
+      "heading": "Total budget for a €300,000 purchase: four routes, a full example and a checklist",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The same €300,000 property costs different amounts depending on its category. The table assumes a cash purchase, a legal fee of €3,570 and €300 of Land Registry charges."
+        },
+        {
+          "type": "table",
+          "head": ["Route", "Extras on top", "Total cash", "Extras as share of price"],
+          "rows": [
+            ["New-build, main residence (5% VAT)", "€18,870", "€318,870", "6.3%"],
+            ["New-build, investment or second home (19% VAT)", "€60,870", "€360,870", "20.3%"],
+            ["Resale, one buyer", "€12,470", "€312,470", "4.2%"],
+            ["Resale, two buyers 50/50", "€9,670", "€309,670", "3.2%"]
+          ],
+          "note": "Mortgage costs, furnishing and a reserve are not included."
+        },
+        {
+          "type": "example",
+          "title": "Full budget: €300,000 resale in one name, cash purchase",
+          "rows": [
+            ["Purchase price", "€300,000"],
+            ["Closing costs (transfer fee €8,600, legal fee €3,570, registry €300)", "€12,470"],
+            ["Furnishing and appliances (assumption, two-bedroom flat)", "€15,000"],
+            ["First-year running costs (about)", "€1,300"],
+            ["Reserve, 2% of the price (assumption)", "€6,000"]
+          ],
+          "total": ["Total budget", "€334,770"],
+          "note": "About 11.6% above the price. Furnishing and reserve are assumptions; replace them with your own figures. The running costs are the midpoint of the €935 to €1,650 range."
+        },
+        {
+          "type": "checklist",
+          "title": "Budgeting checklist",
+          "items": [
+            "Confirm whether the property is a new-build or a resale for VAT purposes, and whether the quoted price includes VAT.",
+            "Check floor area and price against the 5% VAT limits before you make an offer, and get your lawyer's confirmation in writing.",
+            "Get a fixed legal fee quote in writing, including VAT, with a list of what it covers.",
+            "On a resale, ask your lawyer to calculate the transfer fee for single and for joint ownership.",
+            "If you finance the purchase, ask the bank for registration, arrangement and valuation costs, and whether it funds stage payments or only the final balance.",
+            "Get an exchange-rate quote for the full amount before you transfer the money.",
+            "Add furnishing, first-year running costs and a reserve to the total."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Get a personal cost calculation",
+    "text": "Tell Cyprus VIP Estates your total cash and what the property is for: living, letting or residence. We will show what that budget reaches as a new-build or a resale, with or without a mortgage. Ask for a personal consultation."
+  },
+  "disclaimer": "This guide gives general information as of October 2026. It is not legal or tax advice; check every figure with a licensed lawyer or tax adviser before you commit."
+}

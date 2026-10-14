@@ -1,0 +1,224 @@
+{
+  "id": "cost-of-buying",
+  "lang": "de",
+  "title": "Die wahren Kosten beim Immobilienkauf auf Zypern (2026)",
+  "subtitle": "Alle Steuern, Gebühren und laufenden Kosten von der Reservierung bis zur Schlüsselübergabe, mit Rechenbeispiel",
+  "edition": "Ausgabe: Oktober 2026",
+  "keyNumbers": [
+    { "value": "4 % bis 20 %", "label": "Nebenkosten auf den Kaufpreis, vom Bestandskauf bis zum Neubau mit 19 % MwSt" },
+    { "value": "42.000 €", "label": "MwSt-Unterschied zwischen 5 % und 19 % bei einem Neubau für 300.000 €" },
+    { "value": "8.600 €", "label": "Grundbuchgebühr bei einem Bestandskauf für 300.000 €, nach der 50-%-Ermäßigung" },
+    { "value": "0 €", "label": "Stempelsteuer bei Verträgen, die ab dem 1. Januar 2026 unterzeichnet werden" }
+  ],
+  "intro": "Bei einem Kauf für 300.000 € auf Zypern liegen die Kosten zusätzlich zum Kaufpreis zwischen rund 4 % bei einer Bestandsimmobilie und rund 20 % bei einem Neubau mit 19 % MwSt (Stand: Oktober 2026). Die Kategorie der Immobilie bestimmt die Rechnung stärker als der Preis. Dieser Ratgeber listet alle einmaligen und laufenden Kosten auf, zeigt, wann welche Zahlung fällig wird, und rechnet ein realistisches Budget durch. Wo eine Zahl ein Planwert und kein gesetzlicher Satz ist, steht das im Text.",
+  "sections": [
+    {
+      "heading": "Einmalige Kosten im Überblick: was zusätzlich zum Kaufpreis anfällt und wann",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Ein Neubau vom Bauträger unterliegt der Mehrwertsteuer und zahlt keine Grundbuchgebühr. Eine Bestandsimmobilie zahlt Grundbuchgebühr und keine Mehrwertsteuer. Beides zusammen fällt bei einem Kauf nie an. Die Tabelle zeigt jeden Posten mit Stand Oktober 2026."
+        },
+        {
+          "type": "table",
+          "head": ["Kostenposten", "Neubau (vom Bauträger)", "Bestandsimmobilie"],
+          "rows": [
+            ["Mehrwertsteuer", "5 % (Hauptwohnsitz, innerhalb der Grenzen) oder 19 %", "Entfällt"],
+            ["Grundbuchgebühr (Transfer Fee)", "Entfällt, wenn MwSt erhoben wird", "Staffel 3 % / 5 % / 8 %, halbiert durch die aktuelle 50-%-Ermäßigung"],
+            ["Stempelsteuer", "Entfällt: abgeschafft für Verträge ab dem 1. Januar 2026", "Entfällt: abgeschafft für Verträge ab dem 1. Januar 2026"],
+            ["Anwaltskosten", "Planwert: 1 % zuzüglich 19 % MwSt auf das Honorar", "Planwert: 1 % zuzüglich 19 % MwSt auf das Honorar"],
+            ["Grundbuchamt-Auslagen", "Wenige hundert Euro; die Hinterlegung des Vertrags kostet 50 €", "Wenige hundert Euro; die Hinterlegung des Vertrags kostet 50 €"],
+            ["Maklerprovision", "In der Regel vom Bauträger bezahlt", "In der Regel vom Verkäufer bezahlt"],
+            ["Kreditkosten (bei Finanzierung)", "Eintragung 1 %, Bearbeitung etwa 1 %, Bewertung etwa 400 €", "Eintragung 1 %, Bearbeitung etwa 1 %, Bewertung etwa 400 €"]
+          ],
+          "note": "Anwaltshonorar, Grundbuchauslagen und Bankgebühren sind Planwerte und keine Angebote."
+        },
+        {
+          "type": "p",
+          "text": "Der Zahlungszeitpunkt hängt von der Art des Kaufs ab. Nach veröffentlichten Richtwerten beträgt die Reservierungsgebühr etwa 3.000 bis 10.000 €, danach folgt bei Vertragsunterzeichnung eine Anzahlung von 20 bis 40 %. Bei einem Bestandskauf wird der Restbetrag fällig, wenn das Eigentum übergeht. Ein Neubau, besonders auf dem Plan gekauft, wird in Raten bezahlt, üblich sind 20-30 % bei Unterzeichnung, 40-50 % in Baufortschrittsraten und 20-30 % bei Übergabe. Der Bauträger stellt die MwSt mit jeder Rate in Rechnung."
+        }
+      ]
+    },
+    {
+      "heading": "Mehrwertsteuer beim Neubau: die Sätze 5 % und 19 %, die Grenzen und ein Rechenbeispiel",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Der ermäßigte Satz von 5 % gilt nur, wenn eine Privatperson einen Neubau als Haupt- und ständigen Wohnsitz kauft, und er muss beantragt werden. Kapitalanlage, Zweitwohnsitz und Kauf durch eine Firma zahlen 19 %."
+        },
+        {
+          "type": "table",
+          "head": ["Immobilie", "MwSt"],
+          "rows": [
+            ["Hauptwohnsitz, die ersten 130 m², Wert bis 350.000 €", "5 %"],
+            ["Wohnung oder Haus über 190 m² oder Transaktion über 475.000 €", "19 % auf den gesamten Preis"],
+            ["Zwischen den beiden Grenzen (130 bis 190 m² bzw. 350.000 bis 475.000 €)", "In diesem Ratgeber nicht festgelegt: Lassen Sie sich vor der Unterschrift von Ihrem Anwalt schriftlich den Betrag nennen, den das Steueramt ansetzt"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "MwSt bei einem Neubau für 300.000 € innerhalb der Grenzen",
+          "rows": [
+            ["Preis ohne MwSt", "300.000 €"],
+            ["MwSt zu 5 % (Hauptwohnsitz)", "15.000 €"],
+            ["Preis inklusive 5 % MwSt", "315.000 €"],
+            ["MwSt zu 19 % (Kapitalanlage oder Zweitwohnsitz)", "57.000 €"],
+            ["Preis inklusive 19 % MwSt", "357.000 €"]
+          ],
+          "total": ["Unterschied zwischen beiden", "42.000 €"],
+          "note": "Eine Villa für 600.000 € liegt über 475.000 €, daher gelten 19 % auf den gesamten Preis: 114.000 € MwSt."
+        },
+        {
+          "type": "callout",
+          "title": "Prüfen Sie das vor dem Preisvergleich",
+          "text": "Bauträger nennen oft einen Preis zuzüglich MwSt. Klären Sie daher, ob eine Zahl die MwSt enthält. Seit dem 1. September 2026 hängt es von der Erstnutzung ab (systematische Nutzung über mindestens 18 Monate), ob ein Gebäude für die MwSt als neu gilt. Zuvor galten fünf Jahre ab Fertigstellung. Eine fertige, aber nie bewohnte Einheit kann daher weiterhin MwSt-pflichtig sein. Der ermäßigte Satz ist zudem an eine Nutzungsbedingung geknüpft: Wird das Haus nicht mehr als Hauptwohnsitz genutzt, kann die Ersparnis zurückgefordert werden. Lassen Sie sich von Ihrem Anwalt schriftlich bestätigen, welche Regelung für die konkrete Einheit gilt."
+        }
+      ]
+    },
+    {
+      "heading": "Grundbuchgebühr und Stempelsteuer: was beim Neubau und beim Bestandskauf gilt",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Bei einer Bestandsimmobilie fällt eine Grundbuchgebühr (Transfer Fee) nach einer progressiven Staffel an, berechnet auf den Marktwert. Die gesetzlichen Sätze betragen 3 %, 5 % und 8 %. Derzeit gilt eine Ermäßigung von 50 %, sodass die effektiven Sätze 1,5 %, 2,5 % und 4 % betragen (Stand: Oktober 2026). Ein Neubau mit MwSt zahlt keine Grundbuchgebühr."
+        },
+        {
+          "type": "table",
+          "head": ["Immobilienwert", "Gesetzlicher Satz", "Effektiver Satz (nach 50-%-Ermäßigung)"],
+          "rows": [
+            ["Bis 85.000 €", "3 %", "1,5 %"],
+            ["85.001 bis 170.000 €", "5 %", "2,5 %"],
+            ["Über 170.000 €", "8 %", "4 %"]
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Grundbuchgebühr bei einem Bestandskauf für 300.000 €",
+          "rows": [
+            ["1,5 % × 85.000 €", "1.275 €"],
+            ["2,5 % × 85.000 €", "2.125 €"],
+            ["4 % × 130.000 €", "5.200 €"]
+          ],
+          "total": ["Grundbuchgebühr", "8.600 €"],
+          "note": "Die gesetzliche Staffel ohne Ermäßigung ergäbe 17.200 €."
+        },
+        {
+          "type": "p",
+          "text": "Die Gebühr wird auf den Anteil jedes Käufers berechnet. Zwei Käufer, die je 50 % einer Wohnung für 300.000 € erwerben, zahlen zusammen etwa 5.800 € statt 8.600 €, also rund 2.800 € weniger. Entscheiden Sie die Eigentumsform zuerst nach Erbschafts- und Familiengesichtspunkten; Ihr Anwalt prüft die Rechnung."
+        },
+        {
+          "type": "callout",
+          "title": "Stempelsteuer",
+          "text": "Die Stempelsteuer auf Immobilienverträge ist für Dokumente abgeschafft, die ab dem 1. Januar 2026 unterzeichnet werden. Ein Dokument, das bis zum 31. Dezember 2025 von mindestens einer Partei unterzeichnet wurde, bleibt den alten Regeln unterworfen, auch wenn der Abschluss später erfolgt. Eine Kostenaufstellung, die noch eine Zeile Stempelsteuer enthält, ist veraltet. Lassen Sie sich von Ihrer Bank bestätigen, dass für eine Hypothekenurkunde keine Abgabe anfällt."
+        }
+      ]
+    },
+    {
+      "heading": "Anwaltskosten, Grundbuchauslagen, Kreditkosten und Währungsumtausch",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Jeder Kauf braucht einen Anwalt, der vom Verkäufer und vom Bauträger unabhängig ist. Veröffentlichte Honorarrichtwerte liegen bei 1 bis 2 % des Preises oder bei einer Pauschale, hinzu kommen 19 % MwSt auf das Honorar. Dieser Ratgeber rechnet mit 1 % zuzüglich MwSt als Planwert: Bei 300.000 € sind das 3.000 € plus 570 € MwSt, also 3.570 €. Verlangen Sie ein verbindliches schriftliches Angebot und fragen Sie, ob Vertragshinterlegung, Genehmigungsantrag für Käufer aus Nicht-EU-Ländern und Eigentumsübertragung enthalten sind oder gesondert berechnet werden."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "Grundbuchauslagen: Die Hinterlegung des Vertrags kostet 50 €, Auszüge und Eintragungsbescheinigungen sind kleine Festgebühren. Dieser Ratgeber plant insgesamt etwa 300 € ein; der Anwalt erledigt sie beim Abschluss.",
+            "Maklerprovision: In der Regel zahlt sie der Verkäufer, beim Neubau der Bauträger. Lassen Sie sich schriftlich bestätigen, wen der Makler vertritt und dass Ihnen keine Gebühr entsteht.",
+            "Währung: Jedes 1 % Marge bei einer internationalen Überweisung kostet bei 300.000 € den Betrag von 3.000 €. Holen Sie vor der Wahl des Weges ein Angebot für den vollen Betrag ein."
+          ]
+        },
+        {
+          "type": "example",
+          "title": "Kreditkosten bei einem Darlehen von 195.000 € (35 % Anzahlung auf 300.000 €, Annahme)",
+          "rows": [
+            ["Eintragungsgebühr, 1 % des Darlehens", "1.950 €"],
+            ["Bearbeitungsgebühr der Bank, etwa 1 % des Darlehens", "1.950 €"],
+            ["Bewertungsgebühr, etwa", "400 €"]
+          ],
+          "total": ["Kreditkosten", "4.300 €"],
+          "note": "Übliche Anzahlungen betragen 30-40 % für Nicht-EU-Käufer ohne Wohnsitz in Zypern und etwa 25-30 % für EU/EWR-Käufer ohne Wohnsitz in Zypern. Die Anzahlung selbst kommt zu diesen Kosten hinzu."
+        }
+      ]
+    },
+    {
+      "heading": "Laufende Kosten einer Immobilie auf Zypern",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Zypern erhebt seit 2017 keine jährliche Grundsteuer mehr. Laufende Kosten sind Gemeinschafts- oder Verwaltungsgebühren in Anlagen mit gemeinsamen Einrichtungen, kommunale Abgaben, Müll, Abwasser und die Gebäudeversicherung. Unsere Rechnung \"Mieten oder Kaufen\" setzt sie bei einer typischen Wohnung mit etwa 935 bis 1.650 € pro Jahr an."
+        },
+        {
+          "type": "p",
+          "text": "Mieteinnahmen werden zu Ihren übrigen Einkünften addiert und nach den Stufen von 2026 besteuert (Stand: Oktober 2026):"
+        },
+        {
+          "type": "table",
+          "head": ["Jahreseinkommen", "Satz"],
+          "rows": [
+            ["Bis 22.000 €", "0 %"],
+            ["22.000 bis 32.000 €", "20 %"],
+            ["32.000 bis 42.000 €", "25 %"],
+            ["42.000 bis 72.000 €", "30 %"],
+            ["Über 72.000 €", "35 %"]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Verkaufen Sie später mit Gewinn, beträgt die Kapitalertragsteuer 20 %. Für Verträge ab dem 1. Januar 2026 gelten lebenslange Freibeträge von 150.000 € auf einen Hauptwohnsitz, in dem Sie mindestens fünf Jahre gewohnt haben, und von 30.000 € auf jede andere Immobilie."
+        }
+      ]
+    },
+    {
+      "heading": "Gesamtbudget für einen Kauf über 300.000 €: vier Wege, ein vollständiges Beispiel und eine Checkliste",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Dieselbe Immobilie für 300.000 € kostet je nach Kategorie unterschiedlich viel. Die Tabelle geht von einem Barkauf, einem Anwaltshonorar von 3.570 € und 300 € Grundbuchauslagen aus."
+        },
+        {
+          "type": "table",
+          "head": ["Weg", "Nebenkosten", "Gesamtsumme bar", "Nebenkosten in % des Preises"],
+          "rows": [
+            ["Neubau, Hauptwohnsitz (5 % MwSt)", "18.870 €", "318.870 €", "6,3 %"],
+            ["Neubau, Kapitalanlage oder Zweitwohnsitz (19 % MwSt)", "60.870 €", "360.870 €", "20,3 %"],
+            ["Bestandsimmobilie, ein Käufer", "12.470 €", "312.470 €", "4,2 %"],
+            ["Bestandsimmobilie, zwei Käufer (50/50)", "9.670 €", "309.670 €", "3,2 %"]
+          ],
+          "note": "Kreditkosten, Möblierung und eine Reserve sind nicht enthalten."
+        },
+        {
+          "type": "example",
+          "title": "Gesamtbudget: Bestandskauf für 300.000 € auf einen Namen, Barkauf",
+          "rows": [
+            ["Kaufpreis", "300.000 €"],
+            ["Erwerbsnebenkosten (Grundbuchgebühr 8.600 €, Anwalt 3.570 €, Grundbuchamt 300 €)", "12.470 €"],
+            ["Möblierung und Geräte (Annahme, Zweizimmerwohnung)", "15.000 €"],
+            ["Laufende Kosten im ersten Jahr (etwa)", "1.300 €"],
+            ["Reserve, 2 % des Preises (Annahme)", "6.000 €"]
+          ],
+          "total": ["Gesamtbudget", "334.770 €"],
+          "note": "Rund 11,6 % über dem Preis. Möblierung und Reserve sind Annahmen; ersetzen Sie sie durch Ihre eigenen Werte. Die laufenden Kosten entsprechen der Mitte der Spanne von 935 bis 1.650 €."
+        },
+        {
+          "type": "checklist",
+          "title": "Checkliste für die Budgetplanung",
+          "items": [
+            "Klären Sie, ob die Immobilie für die MwSt ein Neubau oder eine Bestandsimmobilie ist und ob der genannte Preis die MwSt enthält.",
+            "Prüfen Sie Wohnfläche und Preis anhand der Grenzen für 5 % MwSt, bevor Sie ein Angebot abgeben, und lassen Sie sich das von Ihrem Anwalt schriftlich bestätigen.",
+            "Holen Sie ein verbindliches schriftliches Honorarangebot inklusive MwSt ein, mit einer Liste der enthaltenen Leistungen.",
+            "Lassen Sie bei einem Bestandskauf die Grundbuchgebühr für Einzel- und für gemeinsames Eigentum berechnen.",
+            "Fragen Sie bei einer Finanzierung die Bank nach Eintragungs-, Bearbeitungs- und Bewertungskosten und danach, ob sie Baufortschrittsraten finanziert oder nur den Restbetrag.",
+            "Holen Sie vor der Überweisung ein Wechselkursangebot für den vollen Betrag ein.",
+            "Rechnen Sie Möblierung, laufende Kosten im ersten Jahr und eine Reserve zum Gesamtbetrag hinzu."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Persönliche Kostenrechnung anfordern",
+    "text": "Nennen Sie Cyprus VIP Estates Ihr verfügbares Kapital und den Zweck der Immobilie: Eigennutzung, Vermietung oder Aufenthaltstitel. Wir zeigen, was dieses Budget als Neubau oder als Bestandsimmobilie ergibt, mit oder ohne Finanzierung. Fordern Sie ein persönliches Beratungsgespräch an."
+  },
+  "disclaimer": "Dieser Ratgeber enthält allgemeine Informationen mit Stand Oktober 2026. Er ist keine Rechts- oder Steuerberatung; lassen Sie jede Zahl vor Ihrer Entscheidung von einem zugelassenen Anwalt oder Steuerberater prüfen."
+}

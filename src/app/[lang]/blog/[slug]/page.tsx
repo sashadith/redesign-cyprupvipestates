@@ -56,6 +56,8 @@ import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracke
 import ProjectsSectionSlider from "@/app/components/ProjectsSectionSlider/ProjectsSectionSlider";
 import ProjectsSectionBlockComponent from "@/app/components/ProjectsSectionBlockComponent/ProjectsSectionBlockComponent";
 import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
+import GuideCta from "@/app/components/GuideCta/GuideCta";
+import { guideForArticle, guideTeaser, GUIDE_UI, guideLangFor } from "@/lib/guides/registry";
 import BlogVideo from "@/app/components/BlogVideo/BlogVideo";
 
 type Props = { params: { lang: string; slug: string } };
@@ -214,6 +216,10 @@ const PagePost = async ({ params }: Props) => {
           `${blog.title ?? ""} ${slug}`.toLowerCase().includes(token),
         ),
       ) ?? null;
+  // Lead magnet: some articles offer a free PDF guide on the same topic (see src/lib/guides/articles.json).
+  const offeredGuide = guideForArticle(lang, slug);
+  const guideForm = offeredGuide ? await getFormStandardDocumentByLang(lang) : null;
+
   const fallbackProjects = hasProjectsBlock
     ? []
     : await (async () => {
@@ -387,6 +393,10 @@ const PagePost = async ({ params }: Props) => {
                 {contentBlocks.map((b: any) => (
                   <React.Fragment key={b._key}>{renderArticleBlock(b)}</React.Fragment>
                 ))}
+
+                {offeredGuide && guideForm && (
+                  <GuideCta teaser={guideTeaser(offeredGuide, lang)} ui={GUIDE_UI[guideLangFor(lang)]} form={guideForm} lang={lang} />
+                )}
 
                 {/* Only when the article carries no Projects block of its own —
                     see the resolution above. Rendered through the same component

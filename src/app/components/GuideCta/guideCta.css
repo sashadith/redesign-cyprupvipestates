@@ -1,0 +1,48 @@
+/* In-article lead-magnet card. Tokens come from preview-home/tokens.css (the same ones the article uses);
+   the form inside reuses the .artform skin from preview-insights/articleForm.css. */
+.guidecta {
+  margin-block: clamp(32px, 4vw, 56px);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-6, 24px);
+  padding: clamp(20px, 3vw, 36px);
+  background: var(--surface-raised, #fbf9f3);
+  border: 1px solid var(--hairline, #ddd5c4);
+  border-radius: 18px;
+}
+@media (min-width: 720px) {
+  .guidecta { grid-template-columns: 170px minmax(0, 1fr); align-items: start; }
+}
+.guidecta__doc {
+  display: flex; flex-direction: column; justify-content: space-between;
+  aspect-ratio: 3 / 4; width: 150px; padding: 16px 14px;
+  background: #0b1620; color: #e8edf2; border-radius: 4px;
+  box-shadow: 6px 6px 0 #d9b36f, 0 18px 30px -18px rgba(11, 22, 32, 0.6);
+}
+.guidecta__doc-brand { font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; color: #d9b36f; }
+.guidecta__doc-title {
+  font-family: var(--font-display, serif), serif; font-size: 15px; line-height: 1.2; color: #fff;
+  display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
+}
+.guidecta__doc-rule { width: 34px; height: 3px; background: #b07d3a; }
+.guidecta__doc-edition { font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: #9fb0bf; }
+.guidecta__body { min-width: 0; }
+.guidecta__eyebrow { margin: 0; font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-caption, 12px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent, #9a6d2f); }
+.guidecta__title { margin: 8px 0 0; font-family: var(--font-display, serif), serif; font-weight: 400; font-size: clamp(1.3rem, 2.4vw, 1.75rem); line-height: 1.15; color: var(--text, #221c15); text-wrap: balance; }
+.guidecta__sub { margin: 8px 0 0; font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-sm, 15px); line-height: 1.55; color: var(--text-soft, #5b5348); max-width: 60ch; }
+.guidecta__label { margin: 18px 0 6px; font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-caption, 12px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint, #8a8174); }
+.guidecta__list { margin: 0 0 20px; padding-left: 18px; font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-sm, 15px); line-height: 1.55; color: var(--text, #221c15); }
+.guidecta__list li { margin-bottom: 3px; }
+.guidecta__btn {
+  display: inline-block; cursor: pointer; border: 0; text-decoration: none;
+  padding: 13px 26px; border-radius: 3px; background: #b07d3a; color: #fff;
+  font-family: var(--font-body, sans-serif), sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0.02em;
+  transition: background-color 0.2s ease;
+}
+.guidecta__btn:hover { background: #946a2f; }
+.guidecta__btn:focus-visible { outline: 2px solid var(--text, #221c15); outline-offset: 3px; }
+.guidecta__formtitle { margin: 18px 0 4px; font-family: var(--font-display, serif), serif; font-weight: 400; font-size: 1.2rem; color: var(--text, #221c15); }
+.guidecta__hint { margin: 0 0 14px; font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-sm, 15px); line-height: 1.55; color: var(--text-soft, #5b5348); }
+/* The form card is the article's .artform; inside the offer it is a single column, flush with the card. */
+.guidecta .artform { grid-template-columns: minmax(0, 1fr); margin-block: 0; border-radius: 12px; }
+@media (prefers-reduced-motion: reduce) { .guidecta__btn { transition: none; } }

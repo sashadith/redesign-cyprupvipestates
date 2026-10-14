@@ -43,7 +43,8 @@ export type FormData = {
    are linked now, matching the contact modal word for word. Every href below
    was verified live (2026-09-06). */
 export interface ContactFormProps {
-  onFormSubmitSuccess?: () => void;
+  /** Receives the server's JSON answer, so a caller can use e.g. the guide download link. */
+  onFormSubmitSuccess?: (data?: any) => void;
   form: any;
   lang: string;
   offerButtonCustomText?: string;
@@ -52,6 +53,8 @@ export interface ContactFormProps {
      where the article itself is the context and a message box only lengthens
      the form. */
   hideMessage?: boolean;
+  /** Lead-magnet id: the lead is recorded as a guide request and the answer carries the signed download link. */
+  guideId?: string;
 }
 
 const FormMinimalBlockComponent: FC<ContactFormProps> = ({
@@ -60,6 +63,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
   lang,
   offerButtonCustomText,
   hideMessage = false,
+  guideId,
 }) => {
   const uid = useId();
   const [message, setMessage] = useState<string | null>(null);
@@ -164,6 +168,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         formStartTime,
         currentPage,
         lang,
+        ...(guideId ? { guide: guideId } : {}),
         ...getAttribution(),
       });
 
@@ -174,7 +179,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       ) {
         if (typeof window !== "undefined" && window.fbq) {
           window.fbq("track", "Lead", {
-            form_name: "form_minimal",
+            form_name: guideId ? `guide_${guideId}` : "form_minimal",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
           });
@@ -193,12 +198,12 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         if (typeof window !== "undefined" && window.dataLayer) {
           window.dataLayer.push({
             event: "form_submission_success",
-            form_name: "form_minimal",
+            form_name: guideId ? `guide_${guideId}` : "form_minimal",
             page_url: window.location.href,
           });
         }
 
-        onFormSubmitSuccess && onFormSubmitSuccess();
+        onFormSubmitSuccess && onFormSubmitSuccess(response.data);
 
         setMessageIsError(false);
         setMessage(

@@ -1,0 +1,473 @@
+{
+  "id": "rent-or-buy",
+  "lang": "en",
+  "title": "Rent or Buy in Cyprus (2026): The Calculation by City and Property Type",
+  "subtitle": "Our model results in one document, with every assumption stated",
+  "edition": "Edition: October 2026",
+  "keyNumbers": [
+    {
+      "value": "€124,340",
+      "label": "cash needed for the Limassol resale example (70% mortgage)"
+    },
+    {
+      "value": "+€34,040",
+      "label": "buyer ahead of renter after 10 years, flat prices"
+    },
+    {
+      "value": "0.2%",
+      "label": "yearly growth to break even over 5 years, Limassol resale"
+    },
+    {
+      "value": "2–6%",
+      "label": "yearly growth needed in Paphos and for VAT new builds"
+    }
+  ],
+  "intro": "For a resale apartment in Limassol, Nicosia or Larnaca, buying and renting cost about the same each month. Buying is roughly even after five years and clearly ahead after ten, even if prices barely move. In Paphos, and for new-build apartments once VAT is counted, renting is cheaper unless prices keep rising by roughly 2–6% a year. The claim that a Cyprus mortgage always costs less than rent comes from comparing the loan payment alone. All figures as of October 2026, with every assumption stated.",
+  "sections": [
+    {
+      "heading": "Verdict: rent or buy, by property type and city",
+      "blocks": [
+        {
+          "type": "table",
+          "head": [
+            "Situation",
+            "Better choice",
+            "Reason"
+          ],
+          "rows": [
+            [
+              "Resale apartment in Limassol, Nicosia or Larnaca; stay of five to ten years",
+              "Buy",
+              "Roughly break-even after five years if prices stay flat, clearly ahead after ten, ahead much sooner if prices rise."
+            ],
+            [
+              "Any property; stay of under two to three years",
+              "Rent",
+              "Closing and selling costs of about 7% of the price need time to be earned back."
+            ],
+            [
+              "Resale apartment in Paphos",
+              "Leans towards renting",
+              "The buyer carries a gap of €280–380 a month and needs about 2% annual growth over five years."
+            ],
+            [
+              "New-build apartment with VAT",
+              "Rent, unless prices keep rising",
+              "Buying is a bet on price growth of roughly 2–6% a year."
+            ],
+            [
+              "House or villa",
+              "No ranking",
+              "No reliable like-for-like rent data."
+            ],
+            [
+              "Purchase for the residence permit",
+              "Compare the cost of the status",
+              "The rent-or-buy arithmetic does not apply."
+            ]
+          ],
+          "note": "Figures as of October 2026."
+        },
+        {
+          "type": "callout",
+          "title": "Do not extrapolate recent growth",
+          "text": "Apartment prices rose 8.9–10.8% a year in the first half of 2026, but there is no guarantee that even half of that pace lasts a decade."
+        }
+      ]
+    },
+    {
+      "heading": "The assumptions behind the model",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The model gives the renter the cash that a buyer would tie up, invests it, and compares both sides' wealth after the property is sold."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Assumption",
+            "Value used"
+          ],
+          "rows": [
+            [
+              "Mortgage",
+              "70% of the price, 25 years"
+            ],
+            [
+              "Interest rate",
+              "3.5% base case, 4.5% stress case"
+            ],
+            [
+              "Price growth",
+              "Scenarios of 0%, 2%, 4% and 6% a year"
+            ],
+            [
+              "Rent growth",
+              "2% a year"
+            ],
+            [
+              "Return on the renter's cash",
+              "3% a year"
+            ],
+            [
+              "Selling costs",
+              "3% of the sale price"
+            ],
+            [
+              "Running costs of ownership",
+              "About €110 a month (communal fees, waste, sewerage, municipal charges: €935–1,650 a year)"
+            ],
+            [
+              "Horizon",
+              "5 and 10 years; 2 and 3 years for the break-even check"
+            ],
+            [
+              "Rent",
+              "Middle of the 2-bedroom range quoted for 2026 by the Real Estate Registration Council; rents have not risen so far this year"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "On a resale the transfer fee is 3% up to €85,000, 5% up to €170,000 and 8% above (on €363,000: €2,550 + €4,250 + €15,440), cut by half under the reduction currently applied. Legal fees run at about 1% of the price plus 19% VAT on the fee."
+        },
+        {
+          "type": "example",
+          "title": "Closing costs on a €363,000 resale apartment",
+          "rows": [
+            [
+              "Transfer fee after the 50% reduction (half of €22,240)",
+              "€11,120"
+            ],
+            [
+              "Legal fees",
+              "€4,320"
+            ]
+          ],
+          "total": [
+            "Closing costs (4.25% of the price)",
+            "€15,440"
+          ],
+          "note": "On a resale there is no VAT. On a new build from a developer you pay VAT instead and no transfer fee; the two never apply together."
+        },
+        {
+          "type": "bullets",
+          "items": [
+            "VAT on a new build is 5% only for a main residence, on the first 130 m² and the first €350,000. Above 190 m² or €475,000 the full 19% applies to the whole price.",
+            "Stamp duty on contracts was abolished from 1 January 2026."
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Worked example: a two-bedroom resale apartment in Limassol",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The average apartment sold in Limassol in the first half of 2026 for about €363,000 (transaction data compiled by Ask Wire); a two-bedroom of 75–90 m² sits close to that average. Rent for a two-bedroom is about €1,450 a month."
+        },
+        {
+          "type": "example",
+          "title": "Cash needed to buy with a 70% mortgage over 25 years",
+          "rows": [
+            [
+              "Deposit (price €363,000 minus mortgage €254,100)",
+              "€108,900"
+            ],
+            [
+              "Closing costs",
+              "€15,440"
+            ]
+          ],
+          "total": [
+            "Cash needed at closing",
+            "€124,340"
+          ]
+        },
+        {
+          "type": "table",
+          "head": [
+            "Mortgage rate",
+            "Monthly payment",
+            "Owning cost with €110 running costs",
+            "Monthly rent",
+            "Cheaper option"
+          ],
+          "rows": [
+            [
+              "3.5%",
+              "€1,272",
+              "€1,382",
+              "€1,450",
+              "Buying, by €68 a month"
+            ],
+            [
+              "4.5%",
+              "€1,412",
+              "€1,522",
+              "€1,450",
+              "Renting, by €72 a month"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Month to month this is a draw, and the monthly gap is the wrong number to decide on. About €6,475 of the first year's payments repays principal and builds equity, while the €124,340 of cash is the real price of owning. The fair comparison puts that cash in the renter's pocket at 3% a year and compares both sides' wealth after selling (selling costs 3%, rent rising 2% a year)."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Price growth per year",
+            "After 5 years: buyer minus renter",
+            "After 10 years: buyer minus renter"
+          ],
+          "rows": [
+            [
+              "0%",
+              "−€3,565",
+              "+€34,040"
+            ],
+            [
+              "2%",
+              "+€33,083",
+              "+€111,150"
+            ],
+            [
+              "4%",
+              "+€72,721",
+              "+€203,139"
+            ],
+            [
+              "6%",
+              "+€115,527",
+              "+€312,506"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "With flat prices the buyer is about €3,600 behind after five years and €34,000 ahead after ten. A rise of just 0.2% a year closes the five-year gap. For a shorter stay, the same buyer needs prices to rise 2.6% a year to break even after two years and 1.3% after three. If you may leave within two years, rent."
+        }
+      ]
+    },
+    {
+      "heading": "Results by city: resale apartments and new builds",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The monthly gap is rent minus the mortgage payment and running costs; a plus means buying is cheaper."
+        },
+        {
+          "type": "table",
+          "head": [
+            "City",
+            "Average price / 2-bedroom rent",
+            "Gross yield",
+            "Monthly gap at 3.5% / 4.5%",
+            "Break-even growth, 5 years (3.5% / 4.5%)"
+          ],
+          "rows": [
+            [
+              "Limassol",
+              "€363,000 / €1,450",
+              "4.79%",
+              "+€68 / −€72",
+              "0.2% / 0.9%"
+            ],
+            [
+              "Nicosia",
+              "€183,000 / €850",
+              "5.57%",
+              "+€99 / +€28",
+              "−0.5% / 0.2%"
+            ],
+            [
+              "Larnaca",
+              "€171,000 / €750",
+              "5.26%",
+              "+€41 / −€25",
+              "−0.1% / 0.6%"
+            ],
+            [
+              "Paphos",
+              "€262,000 / €750",
+              "3.44%",
+              "−€278 / −€379",
+              "1.8% / 2.5%"
+            ]
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Limassol, Nicosia and Larnaca sit around zero, and Larnaca and Limassol tip towards renting at a 4.5% mortgage rate. Paphos is the outlier: its average price is high compared with local rents, so a buyer there carries a gap of €280–380 a month. Yield estimates for Paphos differ between sources (our data gives 3.4%, Global Property Guide shows 4.4–4.8% for two- and three-bedroom flats), so the question is still open."
+        },
+        {
+          "type": "p",
+          "text": "New-build prices from developers are quoted plus VAT. Above €475,000 the full 19% applies, and the VAT does not come back on resale. The Limassol case is the median two-bedroom in our own inventory."
+        },
+        {
+          "type": "table",
+          "head": [
+            "New-build 2-bedroom case",
+            "Price with VAT",
+            "Monthly gap at 3.5%",
+            "Rent needed to break even",
+            "Break-even growth, 5 / 10 years"
+          ],
+          "rows": [
+            [
+              "Limassol, €550,000 + 19% VAT, 107 m²",
+              "€654,500",
+              "−€954",
+              "€2,404",
+              "5.3% / 2.9%"
+            ],
+            [
+              "Larnaca, €315,000 + 5% VAT (main residence)",
+              "€330,750",
+              "−€519",
+              "€1,269",
+              "2.8% / 1.8%"
+            ],
+            [
+              "Larnaca, €315,000 + 19% VAT (investment or holiday home)",
+              "€374,850",
+              "−€674",
+              "€1,424",
+              "5.7% / 3.4%"
+            ]
+          ],
+          "note": "The gaps use the average two-bedroom rent for the city: €1,450 in Limassol and €750 in Larnaca."
+        },
+        {
+          "type": "p",
+          "text": "A new apartment can rent for more than the average, so the table also shows the rent at which owning and renting cost the same: about €2,400 a month for the Limassol example, well above the €1,400–1,500 average. Check real rental listings for the building before assuming a premium. Some buyers choose a new build for the permanent-residence route, which requires a first-sale new residential property of at least €300,000 plus VAT; then the relevant figure is the cost of the status."
+        }
+      ]
+    },
+    {
+      "heading": "Houses versus apartments: what the data supports",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "We found no reliable like-for-like rent data for houses and villas, so we do not rank them against apartments on cash flow. The one measurable difference is price growth."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Property type",
+            "Q1 2026, year on year",
+            "Q2 2026, year on year"
+          ],
+          "rows": [
+            [
+              "Apartments",
+              "+10.8%",
+              "+8.9%"
+            ],
+            [
+              "Houses",
+              "+3.0%",
+              "+5.8%"
+            ]
+          ],
+          "note": "Source: Central Bank of Cyprus."
+        },
+        {
+          "type": "p",
+          "text": "A house also carries land value and higher upkeep. Ask for rent and sale comparables for the specific house before relying on any average."
+        }
+      ]
+    },
+    {
+      "heading": "Sensitivity: mortgage rate, loan-to-value and other assumptions",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The mortgage rate matters most after price growth. The Central Bank of Cyprus reported an average rate on new housing loans of 3.24% in July 2026 (3.18% in June), and offers to foreign buyers are typically higher; we use 3.5% as the base case and 4.5% as a stress case. Each extra percentage point adds about €140 a month on the €254,100 loan."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Loan-to-value",
+            "Typical lending",
+            "Cash needed at closing"
+          ],
+          "rows": [
+            [
+              "80%",
+              "Residents: banks usually lend up to 80% of the value",
+              "€88,040"
+            ],
+            [
+              "70%",
+              "Non-residents: usually 60–70%",
+              "€124,340"
+            ],
+            [
+              "60%",
+              "Non-residents: usually 60–70%",
+              "€160,640"
+            ]
+          ],
+          "note": "Limassol example, €363,000 apartment."
+        },
+        {
+          "type": "p",
+          "text": "The conclusion for a Limassol resale is stable across the assumptions we tested."
+        },
+        {
+          "type": "table",
+          "head": [
+            "Input changed",
+            "Break-even growth, 5 years"
+          ],
+          "rows": [
+            [
+              "Base case",
+              "0.2% a year"
+            ],
+            [
+              "Renter earns 5% on the money",
+              "1.0%"
+            ],
+            [
+              "Rents stay flat",
+              "0.4%"
+            ],
+            [
+              "Running costs of €200 a month",
+              "0.5%"
+            ],
+            [
+              "Mortgage rate of 5%",
+              "1.3%"
+            ]
+          ],
+          "note": "Over ten years the break-even growth stays between −1.7% and 1.2%."
+        }
+      ]
+    },
+    {
+      "heading": "Checklist: five questions to answer before you decide",
+      "blocks": [
+        {
+          "type": "checklist",
+          "title": "Answer these before choosing",
+          "items": [
+            "How long will you stay? Under two to three years favours renting; five to ten years favours a resale apartment in Limassol, Nicosia or Larnaca.",
+            "Resale or new build? A resale carries a transfer fee and no VAT. A new build carries VAT (5% only for a main residence within the limits, otherwise 19%) and no transfer fee.",
+            "Which city, and how does the price compare with the local two-bedroom rent? In Paphos the gap is €280–380 a month; elsewhere it sits around zero.",
+            "What are your mortgage terms and cash at closing? Each extra percentage point adds about €140 a month on a €254,100 loan; cash at closing ranges from €88,040 at 80% to €160,640 at 60%.",
+            "What rent can the property really achieve, and what does it cost to run? Check real rental listings and budget about €110 a month."
+          ]
+        }
+      ]
+    }
+  ],
+  "nextSteps": {
+    "heading": "Have your own case calculated",
+    "text": "To run this model on a specific apartment, ask Cyprus VIP Estates for a personal consultation. Send the price, the expected rent and your mortgage terms, and we will calculate your case."
+  },
+  "disclaimer": "General information as of October 2026, based on our own calculations with the assumptions stated above. It is not legal or tax advice; check your situation with a licensed lawyer or tax adviser before you buy."
+}
