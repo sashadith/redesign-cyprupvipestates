@@ -6,7 +6,7 @@ import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import { getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
 import GuideGet from "@/app/components/GuideCta/GuideGet";
-import { GUIDE_IDS, GUIDE_UI, getGuideContent, guideMainArticleSlug, guideTeaser, type GuideId } from "@/lib/guides/registry";
+import { GUIDE_IDS, GUIDE_UI, getGuideContent, guideMainArticleSlug, guideTeaser, isGuideLang, type GuideId } from "@/lib/guides/registry";
 import { GUIDES_PAGE_SLUG, guidesPagePath, guidesPageTranslations } from "@/lib/guidesPage";
 import { localizedHref } from "@/lib/locale";
 import { corporatePath } from "@/lib/corporatePageSlugs";
@@ -22,6 +22,8 @@ type Props = { params: { lang: GuideLang } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
+  // Not a guide language (a direct hit on /preview-guides/xx): the layout redirects, no metadata to build.
+  if (!isGuideLang(lang)) return {};
   const t = guidesPageCopy(lang);
   const { canonical, languages } = languageAlternates({
     lang,
@@ -114,21 +116,33 @@ export default async function GuidesPage({ params }: Props) {
                     <p className="gds__meta">{ui.eyebrow} · {ui.fileMeta} · {c.teaser.edition}</p>
                     <h3 className="gds__card-title">{c.teaser.title}</h3>
                     <p className="gds__sub">{c.teaser.subtitle}</p>
-                    <GuideGet
-                      id={c.id}
-                      ui={ui}
-                      form={form}
-                      lang={lang}
-                      buttonClass="guidecta__btn"
-                      closedExtra={
-                        <>
-                          <p className="gds__label">{ui.insideLabel}</p>
-                          <ul className="gds__inside">
-                            {c.teaser.inside.map((h) => <li key={h}>{h}</li>)}
-                          </ul>
-                        </>
-                      }
-                    />
+                    {form ? (
+                      <GuideGet
+                        id={c.id}
+                        ui={ui}
+                        form={form}
+                        lang={lang}
+                        buttonClass="guidecta__btn"
+                        closedExtra={
+                          <>
+                            <p className="gds__label">{ui.insideLabel}</p>
+                            <ul className="gds__inside">
+                              {c.teaser.inside.map((h) => <li key={h}>{h}</li>)}
+                            </ul>
+                          </>
+                        }
+                      />
+                    ) : (
+                      // The form document is missing for this language: a button that opens it would throw on the
+                      // client, so offer the contact page instead of a blank page.
+                      <>
+                        <p className="gds__label">{ui.insideLabel}</p>
+                        <ul className="gds__inside">
+                          {c.teaser.inside.map((h) => <li key={h}>{h}</li>)}
+                        </ul>
+                        <a className="guidecta__btn" href={corporatePath("contacts", lang)}>{t.ctaButton}</a>
+                      </>
+                    )}
                     {c.articleHref && <p className="gds__read"><a href={c.articleHref}>{ui.readArticle} →</a></p>}
                   </div>
                 </article>

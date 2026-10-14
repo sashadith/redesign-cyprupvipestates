@@ -47,3 +47,28 @@ test("sitemap alternates: four languages plus x-default, no Hebrew", () => {
   assert.equal(alts.find((a) => a.hreflang === "x-default")!.href, "https://cyprusvipestates.com/guides");
   assert.equal(alts.find((a) => a.hreflang === "ru")!.href, "https://cyprusvipestates.com/ru/gajdy");
 });
+
+import fs from "node:fs";
+import path from "node:path";
+import { CORPORATE_SLUGS } from "../corporatePageSlugs";
+import nestedPageRedirects from "../nestedPageRedirects.json";
+
+const ROOT = path.resolve(__dirname, "../../..");
+
+test("wiring: middleware rewrites the guides page and its tree is excluded from the matcher", () => {
+  const mw = fs.readFileSync(path.join(ROOT, "src/middleware.ts"), "utf8");
+  assert.match(mw, /guidesPageLang\(request\.nextUrl\.pathname\)/, "the rewrite block is missing");
+  assert.match(mw, /url\.pathname = `\/preview-guides\/\$\{guidesLang\}`/, "the rewrite target changed");
+  const matcher = mw.slice(mw.indexOf("matcher:"));
+  assert.ok(matcher.includes("preview-guides"), "preview-guides must be excluded from the middleware matcher (else the rewrite target is rewritten again)");
+  // the rewrite must come before the singlepage catch-all logic, so no page with this slug can shadow it
+  assert.ok(mw.indexOf("guidesPageLang(request") < mw.indexOf("Singlepage canonicalisation"), "guides rewrite must run before the singlepage canonicalisation");
+});
+
+test("slugs: none collides with a corporate page, a reserved section or a nested-page redirect", () => {
+  const taken = new Set<string>();
+  for (const bySlug of Object.values(CORPORATE_SLUGS)) for (const s of Object.values(bySlug)) taken.add(s);
+  for (const r of ["projects", "blog", "developers", "case-studies", "files", "partners", "faq"]) taken.add(r);
+  for (const perLang of Object.values(nestedPageRedirects as Record<string, Record<string, string>>)) for (const [leaf, canonical] of Object.entries(perLang)) { taken.add(leaf); taken.add(canonical.split("/")[0]); }
+  for (const [lang, slug] of Object.entries(GUIDES_PAGE_SLUG)) assert.equal(taken.has(slug), false, `${lang}: "${slug}" is already used`);
+});
