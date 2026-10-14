@@ -4,6 +4,7 @@ import { abs, languageAlternates, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
+import Form from "../../preview-home/sections/Form";
 import { getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
 import GuideGet from "@/app/components/GuideCta/GuideGet";
 import { GUIDE_IDS, GUIDE_UI, getGuideContent, guideMainArticleSlug, guideTeaser, isGuideLang, type GuideId } from "@/lib/guides/registry";
@@ -170,17 +171,10 @@ export default async function GuidesPage({ params }: Props) {
             </ol>
           </div>
         </section>
-
-        <section className="section is-light gds__cta">
-          <div className="wrap gds__cta-inner">
-            <div>
-              <h2 className="gds__title">{t.ctaTitle}</h2>
-              <p className="gds__ctatext">{t.ctaText}</p>
-            </div>
-            <a className="btn btn--primary" href={corporatePath("contacts", lang)}><span>{t.ctaButton}</span></a>
-          </div>
-        </section>
       </main>
+
+      {/* The standard consultant form, same as the other pages (replaces the old "contact us" block). */}
+      <Form lang={lang} />
 
       <Footer lang={lang} />
     </>

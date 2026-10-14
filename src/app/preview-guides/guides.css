@@ -6,7 +6,7 @@
 .gds__title { margin: 10px 0 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; color: var(--text); text-wrap: balance; }
 .gds__title--dark { color: var(--ivory); }
 .gds__stripe { margin: var(--s-5) 0 clamp(32px, 4vw, 56px); max-width: 200px; }
-.gds__list, .gds__cta { padding-block: var(--section-y); }
+.gds__list { padding-block: var(--section-y); }
 .gds__grid { display: grid; grid-template-columns: 1fr; gap: clamp(20px, 2.4vw, 32px); }
 @media (min-width: 980px) { .gds__grid { grid-template-columns: 1fr 1fr; } }
 .gds__card { display: grid; grid-template-columns: 1fr; gap: 20px; padding: clamp(18px, 2.4vw, 28px); background: var(--surface-raised, #fbf9f3); border: 1px solid var(--hairline); border-radius: 18px; }
@@ -32,5 +32,3 @@
 .gds__stepn { flex: none; width: 38px; height: 38px; border: 1px solid var(--accent); border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display), var(--font-display-cyr), serif; font-size: 1.05rem; color: var(--accent); }
 .gds__steptitle { margin: 4px 0 6px; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.25rem; color: var(--ivory); }
 .gds__steptext { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
-.gds__cta-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px 48px; }
-.gds__ctatext { margin: 12px 0 0; max-width: 60ch; font-family: var(--font-body), sans-serif; font-size: var(--text-body); line-height: 1.6; color: var(--text-soft); }
