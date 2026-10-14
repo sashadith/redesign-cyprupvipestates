@@ -1119,6 +1119,13 @@ model PageView {
   isPrefetch Boolean @default(false) // Sec-Purpose/Purpose: prefetch header at ingestion (Chrome/Google Search speculative prerender that never activated for a real user), or backfilled from the dominant prefetch UA+referrer profile (see migration note)
   isTest     Boolean @default(false) // our own synthetic verification beacons (?test=1 / X-Analytics-Test header)
 
+  // Campaign tags of the viewed URL (2026-10-14). ONLY these three, max 100 chars
+  // each, read by src/lib/analytics/pageViewUtm.ts; every other query parameter
+  // is dropped at ingestion. NULL on rows before the migration and on untagged views.
+  utmSource   String? @db.VarChar(100)
+  utmMedium   String? @db.VarChar(100)
+  utmCampaign String? @db.VarChar(100)
+
   @@index([path])
   @@index([createdAt])
   @@index([visitorHash])
