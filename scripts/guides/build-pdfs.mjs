@@ -28,6 +28,9 @@ for (const id of IDS) for (const lang of LANGS) {
   if (current) { console.log(`ok     ${key}`); continue; }
   const r = spawnSync(process.execPath, ["--import", "tsx", "scripts/guides/render-one.ts", id, lang, file], { cwd: root, stdio: "inherit" });
   if (r.status !== 0) { console.error(`FAILED ${key}`); process.exit(1); }
+  // Chrome's PDFs are about twice the size they need to be; the lossless pass is verified (same pages and text) before it replaces the file.
+  const o = spawnSync("python3", ["scripts/guides/optimize-pdf.py", file], { cwd: root, stdio: "inherit" });
+  if (o.status !== 0) { console.error(`FAILED to optimize ${key} (needs python3 with PyMuPDF)`); process.exit(1); }
   manifest[key] = want;
   console.log(`built  ${key} ${(fs.statSync(file).size / 1024).toFixed(0)} KB`);
 }
