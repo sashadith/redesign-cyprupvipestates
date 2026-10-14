@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import { signGuideToken, verifyGuideToken, GUIDE_TOKEN_TTL_MS, guideDownloadPath } from "../guides/token";
 import { GUIDE_IDS, guideForArticle, getGuideContent, guideTeaser, isGuideId, guideLangFor } from "../guides/registry";
 import { GUIDE_LANGS } from "../guides/types";
@@ -81,14 +82,18 @@ test("email: guide e-mail has the absolute link, escapes the name and is localis
   }
 });
 
-test("pdf: every built PDF is current for its content and layout, and is a real multi-page PDF", () => {
+test("pdf: every built PDF is current for its content and layout, is a real multi-page PDF, and stays small", async () => {
   // Fails when a content file or the layout changed without `node scripts/guides/build-pdfs.mjs`.
   execFileSync("node", [path.join(ROOT, "scripts/guides/build-pdfs.mjs"), "--check"], { stdio: "pipe" });
+  // The packed PDFs keep their page tree inside object streams, so count pages with a real reader, not a regex.
+  const pdfjs = createRequire(import.meta.url)("pdfjs-dist/legacy/build/pdf.js");
   for (const id of GUIDE_IDS) for (const lang of GUIDE_LANGS) {
     const buf = readGuidePdf(id, lang);
     assert.equal(buf.subarray(0, 5).toString(), "%PDF-");
-    const pages = (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;
-    assert.ok(pages >= 5 && pages <= 9, `${id}.${lang}: ${pages} pages`);
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(buf), verbosity: 0 }).promise;
+    assert.ok(doc.numPages >= 5 && doc.numPages <= 9, `${id}.${lang}: ${doc.numPages} pages`);
+    // Chrome's raw output is 740-920 KB; scripts/guides/optimize-pdf.py brings it to 330-390 KB. Visitors download these on any connection.
+    assert.ok(buf.length < 450 * 1024, `${id}.${lang}: ${Math.round(buf.length / 1024)} KB, run scripts/guides/optimize-pdf.py`);
   }
 });
 
