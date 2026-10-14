@@ -2,13 +2,26 @@
   "id": "buying-process",
   "lang": "de",
   "title": "Immobilienkauf auf Zypern: Schritt-für-Schritt-Anleitung und Prüfliste (2026)",
+  "titleAccent": "Schritt-für-Schritt-Anleitung",
   "subtitle": "Von der Reservierung bis zur Eigentumsurkunde, und was Sie vor der Zahlung prüfen sollten",
   "edition": "Ausgabe: Oktober 2026",
   "keyNumbers": [
-    { "value": "8 Schritte", "label": "vom Budget bis zur Eigentumsübertragung, in fester Reihenfolge" },
-    { "value": "6 Monate", "label": "Frist, um den unterzeichneten Vertrag beim Grundbuchamt zu hinterlegen" },
-    { "value": "50 €", "label": "Gebühr des Grundbuchamts für die Hinterlegung des Vertrags" },
-    { "value": "5 Werktage", "label": "maximales Alter des Grundbuchauszugs des Verkäufers bei Vertragsschluss" }
+    {
+      "value": "8 Schritte",
+      "label": "vom Budget bis zur Eigentumsübertragung, in fester Reihenfolge"
+    },
+    {
+      "value": "6 Monate",
+      "label": "Frist, um den unterzeichneten Vertrag beim Grundbuchamt zu hinterlegen"
+    },
+    {
+      "value": "50 €",
+      "label": "Gebühr des Grundbuchamts für die Hinterlegung des Vertrags"
+    },
+    {
+      "value": "5 Werktage",
+      "label": "maximales Alter des Grundbuchauszugs des Verkäufers bei Vertragsschluss"
+    }
   ],
   "intro": "Der Immobilienkauf auf Zypern folgt acht Schritten in fester Reihenfolge, und diese Reihenfolge schützt Sie. Der Papierkram ist Routine. Verluste entstehen, wenn ein Schritt fehlt oder zu spät kommt: ein vom Verkäufer gestellter Anwalt, ein Vertrag, der nie beim Grundbuchamt hinterlegt wurde, eine Mängelliste, die nie schriftlich vorlag. Alle Angaben gelten mit Stand Oktober 2026.",
   "sections": [
@@ -22,14 +35,38 @@
         {
           "type": "steps",
           "items": [
-            { "title": "Budget festlegen und Herkunft der Mittel belegen", "text": "Stellen Sie Reisepass, Wohnsitznachweis und Kontoauszüge zusammen, die zeigen, woher das Geld stammt, bevor Sie etwas überweisen. Typische Dauer: 1-6 Wochen." },
-            { "title": "Eigenen Anwalt beauftragen", "text": "Unabhängig von Verkäufer und Bauträger, und bevor Sie etwas reservieren. Das Honorar beträgt meist 1 % zuzüglich Mehrwertsteuer. Typische Dauer: wenige Tage." },
-            { "title": "Immobilie reservieren", "text": "Eine schriftliche Reservierungsvereinbarung nimmt die Einheit vom Markt. Die Gebühr liegt bei etwa 3.000-10.000 €; halten Sie schriftlich fest, was erstattet wird, falls die Prüfung einen Mangel ergibt. Typische Dauer: 1-3 Tage." },
-            { "title": "Rechtliche Prüfung durchführen", "text": "Ihr Anwalt prüft Eigentum und eingetragene Belastungen, die Verfügungsbefugnis des Verkäufers, die Genehmigungen und offene kommunale Gebühren. Typische Dauer: 1-3 Wochen." },
-            { "title": "Kaufvertrag unterzeichnen", "text": "Standardverträge der Bauträger begünstigen den Verkäufer, deshalb verhandelt Ihr Anwalt Änderungen. Die Anzahlung beträgt bei einem Wiederverkauf üblicherweise 20-40 %. Für Verträge ab dem 1. Januar 2026 fällt keine Stempelsteuer mehr an. Typische Dauer: Woche 3-6." },
-            { "title": "Vertrag beim Grundbuchamt hinterlegen", "text": "Innerhalb von 6 Monaten nach Unterzeichnung, für 50 € Gebühr. Damit erhalten Sie einen durchsetzbaren Anspruch auf Eintragung als Eigentümer, selbst wenn der Verkäufer zahlungsunfähig wird oder die Einheit doppelt verkauft. Lassen Sie sich die Hinterlegung schriftlich bestätigen." },
-            { "title": "Genehmigung einholen (nur Nicht-EU-Käufer)", "text": "Ihr Anwalt reicht den Antrag beim Ministerrat gleich nach der Unterzeichnung ein. Es fällt keine staatliche Gebühr an. Typische Dauer: Wochen bis Monate." },
-            { "title": "Restzahlung leisten und Eigentum übertragen", "text": "Wiederverkauf: Sie zahlen den Restbetrag und die Übertragungsgebühr, derzeit 8.600 € bei einem Wiederverkauf für 300.000 € nach der Ermäßigung von 50 %. Neubau: Stattdessen wird Mehrwertsteuer berechnet, eine Übertragungsgebühr entfällt. Ein Wiederverkauf dauert ab Vertragsschluss typischerweise 2-4 Monate (Richtwert)." }
+            {
+              "title": "Budget festlegen und Herkunft der Mittel belegen",
+              "text": "Stellen Sie Reisepass, Wohnsitznachweis und Kontoauszüge zusammen, die zeigen, woher das Geld stammt, bevor Sie etwas überweisen. Typische Dauer: 1-6 Wochen."
+            },
+            {
+              "title": "Eigenen Anwalt beauftragen",
+              "text": "Unabhängig von Verkäufer und Bauträger, und bevor Sie etwas reservieren. Das Honorar beträgt meist 1 % zuzüglich Mehrwertsteuer. Typische Dauer: wenige Tage."
+            },
+            {
+              "title": "Immobilie reservieren",
+              "text": "Eine schriftliche Reservierungsvereinbarung nimmt die Einheit vom Markt. Die Gebühr liegt bei etwa 3.000-10.000 €; halten Sie schriftlich fest, was erstattet wird, falls die Prüfung einen Mangel ergibt. Typische Dauer: 1-3 Tage."
+            },
+            {
+              "title": "Rechtliche Prüfung durchführen",
+              "text": "Ihr Anwalt prüft Eigentum und eingetragene Belastungen, die Verfügungsbefugnis des Verkäufers, die Genehmigungen und offene kommunale Gebühren. Typische Dauer: 1-3 Wochen."
+            },
+            {
+              "title": "Kaufvertrag unterzeichnen",
+              "text": "Standardverträge der Bauträger begünstigen den Verkäufer, deshalb verhandelt Ihr Anwalt Änderungen. Die Anzahlung beträgt bei einem Wiederverkauf üblicherweise 20-40 %. Für Verträge ab dem 1. Januar 2026 fällt keine Stempelsteuer mehr an. Typische Dauer: Woche 3-6."
+            },
+            {
+              "title": "Vertrag beim Grundbuchamt hinterlegen",
+              "text": "Innerhalb von 6 Monaten nach Unterzeichnung, für 50 € Gebühr. Damit erhalten Sie einen durchsetzbaren Anspruch auf Eintragung als Eigentümer, selbst wenn der Verkäufer zahlungsunfähig wird oder die Einheit doppelt verkauft. Lassen Sie sich die Hinterlegung schriftlich bestätigen."
+            },
+            {
+              "title": "Genehmigung einholen (nur Nicht-EU-Käufer)",
+              "text": "Ihr Anwalt reicht den Antrag beim Ministerrat gleich nach der Unterzeichnung ein. Es fällt keine staatliche Gebühr an. Typische Dauer: Wochen bis Monate."
+            },
+            {
+              "title": "Restzahlung leisten und Eigentum übertragen",
+              "text": "Wiederverkauf: Sie zahlen den Restbetrag und die Übertragungsgebühr, derzeit 8.600 € bei einem Wiederverkauf für 300.000 € nach der Ermäßigung von 50 %. Neubau: Stattdessen wird Mehrwertsteuer berechnet, eine Übertragungsgebühr entfällt. Ein Wiederverkauf dauert ab Vertragsschluss typischerweise 2-4 Monate (Richtwert)."
+            }
           ]
         },
         {
@@ -44,13 +81,37 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Dokument", "Was es belegt", "Wonach Sie fragen sollten"],
+          "head": [
+            "Dokument",
+            "Was es belegt",
+            "Wonach Sie fragen sollten"
+          ],
           "rows": [
-            ["Eigentumsurkunde (Title Deed)", "Den eingetragenen Eigentümer sowie jede eingetragene Hypothek und Belastung", "Ob bereits eine individuelle Urkunde existiert und, falls nicht, welche Stufe der Registrierung erreicht ist"],
-            ["Grundbuchauszug (Search Certificate)", "Den aktuellen Eigentümer und alle Belastungen des Grundstücks", "Ein Datum höchstens 5 Werktage vor Vertragsschluss (Regel seit dem 12. Dezember 2023)"],
-            ["Kaufvertrag", "Preis, Zahlungstermine, Fertigstellungstermin, Ausstattung und Rechtsfolgen", "Die von Ihrem Anwalt ausgehandelten Änderungen und den Nachweis der Hinterlegung"],
-            ["Bau- und Planungsgenehmigungen", "Das Projekt ist so genehmigt, wie es verkauft wird", "Kopien, abgeglichen mit Ihrer Einheit"],
-            ["Abnahmebescheinigung (Certificate of Final Approval)", "Ein fertiges Gebäude entspricht den genehmigten Plänen", "Eine Kopie bei jedem fertiggestellten Projekt"]
+            [
+              "Eigentumsurkunde (Title Deed)",
+              "Den eingetragenen Eigentümer sowie jede eingetragene Hypothek und Belastung",
+              "Ob bereits eine individuelle Urkunde existiert und, falls nicht, welche Stufe der Registrierung erreicht ist"
+            ],
+            [
+              "Grundbuchauszug (Search Certificate)",
+              "Den aktuellen Eigentümer und alle Belastungen des Grundstücks",
+              "Ein Datum höchstens 5 Werktage vor Vertragsschluss (Regel seit dem 12. Dezember 2023)"
+            ],
+            [
+              "Kaufvertrag",
+              "Preis, Zahlungstermine, Fertigstellungstermin, Ausstattung und Rechtsfolgen",
+              "Die von Ihrem Anwalt ausgehandelten Änderungen und den Nachweis der Hinterlegung"
+            ],
+            [
+              "Bau- und Planungsgenehmigungen",
+              "Das Projekt ist so genehmigt, wie es verkauft wird",
+              "Kopien, abgeglichen mit Ihrer Einheit"
+            ],
+            [
+              "Abnahmebescheinigung (Certificate of Final Approval)",
+              "Ein fertiges Gebäude entspricht den genehmigten Plänen",
+              "Eine Kopie bei jedem fertiggestellten Projekt"
+            ]
           ],
           "note": "Regeln mit Stand Oktober 2026."
         },
@@ -109,21 +170,53 @@
           "type": "example",
           "title": "Typische Ratenzahlung beim Off-Plan-Kauf bei einem Preis von 300.000 € (ohne Mehrwertsteuer)",
           "rows": [
-            ["Bei Vertragsunterzeichnung (25 %)", "75.000 €"],
-            ["Raten während der Bauphase (45 %)", "135.000 €"],
-            ["Bei Fertigstellung und Übergabe (30 %)", "90.000 €"]
+            [
+              "Bei Vertragsunterzeichnung (25 %)",
+              "75.000 €"
+            ],
+            [
+              "Raten während der Bauphase (45 %)",
+              "135.000 €"
+            ],
+            [
+              "Bei Fertigstellung und Übergabe (30 %)",
+              "90.000 €"
+            ]
           ],
-          "total": ["Preis ohne Mehrwertsteuer", "300.000 €"],
+          "total": [
+            "Preis ohne Mehrwertsteuer",
+            "300.000 €"
+          ],
           "note": "Marktüblich: 20-30 % bei Unterzeichnung, 40-50 % in Raten, 20-30 % bei Übergabe. Hinzu kommt die Mehrwertsteuer: 15.000 € beim ermäßigten Satz von 5 %, sofern Sie ihn beanspruchen können, 57.000 € beim Normalsatz von 19 %."
         },
         {
           "type": "table",
-          "head": ["Absicherung", "Was sie leistet", "Lage auf Zypern"],
+          "head": [
+            "Absicherung",
+            "Was sie leistet",
+            "Lage auf Zypern"
+          ],
           "rows": [
-            ["Raten nach Baufortschritt", "Sie zahlen, wenn Rohbau, Dach oder Ausbau nachweislich erreicht sind", "Verhandeln Sie das und benennen Sie, wer bestätigt, idealerweise ein unabhängiger Gutachter"],
-            ["Bankgarantie oder Performance Bond", "Deckt Anzahlung und Raten bis zur Eigentumsübertragung", "Nicht gesetzlich vorgeschrieben; verlangen Sie sie im Vertrag"],
-            ["Treuhandkonto (Escrow)", "Zahlungen gehen an einen Dritten und werden bei Meilensteinen freigegeben", "Nicht verpflichtend; manche Bauträger bieten es an"],
-            ["Beim Grundbuchamt hinterlegter Vertrag", "Durchsetzbarer Anspruch auf Eintragung, auch gegen einen Doppelverkauf", "Innerhalb von 6 Monaten nach Unterzeichnung; der wertvollste Einzelschritt"]
+            [
+              "Raten nach Baufortschritt",
+              "Sie zahlen, wenn Rohbau, Dach oder Ausbau nachweislich erreicht sind",
+              "Verhandeln Sie das und benennen Sie, wer bestätigt, idealerweise ein unabhängiger Gutachter"
+            ],
+            [
+              "Bankgarantie oder Performance Bond",
+              "Deckt Anzahlung und Raten bis zur Eigentumsübertragung",
+              "Nicht gesetzlich vorgeschrieben; verlangen Sie sie im Vertrag"
+            ],
+            [
+              "Treuhandkonto (Escrow)",
+              "Zahlungen gehen an einen Dritten und werden bei Meilensteinen freigegeben",
+              "Nicht verpflichtend; manche Bauträger bieten es an"
+            ],
+            [
+              "Beim Grundbuchamt hinterlegter Vertrag",
+              "Durchsetzbarer Anspruch auf Eintragung, auch gegen einen Doppelverkauf",
+              "Innerhalb von 6 Monaten nach Unterzeichnung; der wertvollste Einzelschritt"
+            ]
           ]
         },
         {
@@ -166,10 +259,22 @@
         {
           "type": "steps",
           "items": [
-            { "title": "Fotografieren und beschreiben", "text": "Fotografieren und datieren Sie jeden Mangel und listen Sie die Punkte Raum für Raum auf." },
-            { "title": "Schriftliche Bestätigung einholen", "text": "Der Bauträger bestätigt die Liste schriftlich und vereinbart eine Frist für die Behebung." },
-            { "title": "Einbehalt an die Liste koppeln", "text": "Legen Sie fest, welche Punkte erledigt sein müssen, bevor welcher Teil des einbehaltenen Betrags freigegeben wird." },
-            { "title": "Vor der Zahlung erneut prüfen", "text": "Kontrollieren Sie die Reparaturen selbst oder über Ihren Gutachter, bevor Sie den einbehaltenen Betrag zahlen." }
+            {
+              "title": "Fotografieren und beschreiben",
+              "text": "Fotografieren und datieren Sie jeden Mangel und listen Sie die Punkte Raum für Raum auf."
+            },
+            {
+              "title": "Schriftliche Bestätigung einholen",
+              "text": "Der Bauträger bestätigt die Liste schriftlich und vereinbart eine Frist für die Behebung."
+            },
+            {
+              "title": "Einbehalt an die Liste koppeln",
+              "text": "Legen Sie fest, welche Punkte erledigt sein müssen, bevor welcher Teil des einbehaltenen Betrags freigegeben wird."
+            },
+            {
+              "title": "Vor der Zahlung erneut prüfen",
+              "text": "Kontrollieren Sie die Reparaturen selbst oder über Ihren Gutachter, bevor Sie den einbehaltenen Betrag zahlen."
+            }
           ]
         },
         {
@@ -184,14 +289,42 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Fehler", "Folge", "So vermeiden Sie ihn"],
+          "head": [
+            "Fehler",
+            "Folge",
+            "So vermeiden Sie ihn"
+          ],
           "rows": [
-            ["Den Anwalt des Verkäufers oder Bauträgers nutzen", "Keine vom Verkauf unabhängige Absicherung", "Beauftragen Sie Ihren eigenen Anwalt, bevor Sie reservieren"],
-            ["Die Hinterlegung des Vertrags nie bestätigen lassen", "Eine private Vereinbarung ohne durchsetzbaren Anspruch gegenüber Dritten", "Lassen Sie sich die Hinterlegung schriftlich bestätigen, idealerweise in der ersten Woche"],
-            ["Reservierung zahlen ohne schriftliche Bedingungen", "Geld im Risiko ohne Erstattungsregel", "Zahlen Sie nur auf Grundlage einer schriftlichen Vereinbarung, die Ihr Anwalt geprüft hat"],
-            ["Die 5 % Mehrwertsteuer für selbstverständlich halten", "Die teuerste Überraschung im ganzen Ablauf", "Der ermäßigte Satz gilt für die ersten 130 m² einer Hauptwohnung mit einer Wertgrenze von 350.000 €; ab 190 m² oder 475.000 € gelten 19 % auf den gesamten Preis"],
-            ["Terminbezogene Zahlungen vereinbaren", "Sie finanzieren einen Bau vor, der stillstehen kann", "Bestehen Sie auf Raten nach Baufortschritt mit benanntem Prüfer"],
-            ["Vom Angebotspreis aus budgetieren", "Der Preis kann die Mehrwertsteuer ausschließen", "Planen Sie Mehrwertsteuer oder Übertragungsgebühr ein, dazu Anwaltskosten von etwa 1 % zuzüglich Mehrwertsteuer"]
+            [
+              "Den Anwalt des Verkäufers oder Bauträgers nutzen",
+              "Keine vom Verkauf unabhängige Absicherung",
+              "Beauftragen Sie Ihren eigenen Anwalt, bevor Sie reservieren"
+            ],
+            [
+              "Die Hinterlegung des Vertrags nie bestätigen lassen",
+              "Eine private Vereinbarung ohne durchsetzbaren Anspruch gegenüber Dritten",
+              "Lassen Sie sich die Hinterlegung schriftlich bestätigen, idealerweise in der ersten Woche"
+            ],
+            [
+              "Reservierung zahlen ohne schriftliche Bedingungen",
+              "Geld im Risiko ohne Erstattungsregel",
+              "Zahlen Sie nur auf Grundlage einer schriftlichen Vereinbarung, die Ihr Anwalt geprüft hat"
+            ],
+            [
+              "Die 5 % Mehrwertsteuer für selbstverständlich halten",
+              "Die teuerste Überraschung im ganzen Ablauf",
+              "Der ermäßigte Satz gilt für die ersten 130 m² einer Hauptwohnung mit einer Wertgrenze von 350.000 €; ab 190 m² oder 475.000 € gelten 19 % auf den gesamten Preis"
+            ],
+            [
+              "Terminbezogene Zahlungen vereinbaren",
+              "Sie finanzieren einen Bau vor, der stillstehen kann",
+              "Bestehen Sie auf Raten nach Baufortschritt mit benanntem Prüfer"
+            ],
+            [
+              "Vom Angebotspreis aus budgetieren",
+              "Der Preis kann die Mehrwertsteuer ausschließen",
+              "Planen Sie Mehrwertsteuer oder Übertragungsgebühr ein, dazu Anwaltskosten von etwa 1 % zuzüglich Mehrwertsteuer"
+            ]
           ],
           "note": "Sätze und Schwellenwerte mit Stand Oktober 2026."
         }

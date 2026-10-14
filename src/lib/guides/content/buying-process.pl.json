@@ -2,13 +2,26 @@
   "id": "buying-process",
   "lang": "pl",
   "title": "Jak kupić nieruchomość na Cyprze: przewodnik krok po kroku i lista kontrolna (2026)",
+  "titleAccent": "przewodnik krok po kroku",
   "subtitle": "Od rezerwacji do aktu własności i co sprawdzić, zanim zapłacisz",
   "edition": "Wydanie: październik 2026",
   "keyNumbers": [
-    { "value": "8 kroków", "label": "od budżetu do przeniesienia własności, w ustalonej kolejności" },
-    { "value": "6 miesięcy", "label": "na złożenie podpisanej umowy w Księdze Wieczystej" },
-    { "value": "50 €", "label": "opłata za złożenie umowy w Księdze Wieczystej" },
-    { "value": "5 dni roboczych", "label": "maksymalny wiek zaświadczenia sprzedającego w dniu podpisania" }
+    {
+      "value": "8 kroków",
+      "label": "od budżetu do przeniesienia własności, w ustalonej kolejności"
+    },
+    {
+      "value": "6 miesięcy",
+      "label": "na złożenie podpisanej umowy w Księdze Wieczystej"
+    },
+    {
+      "value": "50 €",
+      "label": "opłata za złożenie umowy w Księdze Wieczystej"
+    },
+    {
+      "value": "5 dni roboczych",
+      "label": "maksymalny wiek zaświadczenia sprzedającego w dniu podpisania"
+    }
   ],
   "intro": "Zakup nieruchomości na Cyprze to osiem kroków w ustalonej kolejności i to ta kolejność Cię chroni. Formalności są rutynowe. Straty biorą się z kroku pominiętego albo wykonanego za późno: prawnika wskazanego przez sprzedającego, umowy, której nigdy nie złożono w Księdze Wieczystej, listy usterek, której nigdy nie spisano. Wszystkie dane obowiązują według stanu na październik 2026.",
   "sections": [
@@ -22,14 +35,38 @@
         {
           "type": "steps",
           "items": [
-            { "title": "Ustal budżet i udokumentuj źródło środków", "text": "Zbierz paszport, potwierdzenie adresu i wyciągi z konta pokazujące, skąd pochodzą pieniądze, zanim cokolwiek przelejesz. Typowy czas: 1–6 tygodni." },
-            { "title": "Zatrudnij własnego prawnika", "text": "Niezależnego od sprzedającego i dewelopera, zanim cokolwiek zarezerwujesz. Honorarium to zwykle 1 % plus VAT. Typowy czas: kilka dni." },
-            { "title": "Zarezerwuj nieruchomość", "text": "Pisemna umowa rezerwacyjna zdejmuje lokal z rynku. Opłata to około 3 000–10 000 €; ustal na piśmie, co zostanie zwrócone, jeśli weryfikacja wykaże wadę. Typowy czas: 1–3 dni." },
-            { "title": "Przeprowadź weryfikację prawną", "text": "Prawnik sprawdza tytuł własności i wpisane obciążenia, prawo sprzedającego do zbycia, pozwolenia oraz nieopłacone opłaty komunalne. Typowy czas: 1–3 tygodnie." },
-            { "title": "Podpisz umowę sprzedaży", "text": "Standardowe umowy deweloperskie sprzyjają sprzedającemu, więc prawnik negocjuje zmiany. Zadatek przy rynku wtórnym to zwykle 20–40 %. Dla umów podpisanych od 1 stycznia 2026 nie obowiązuje już opłata stemplowa. Typowy czas: tygodnie 3–6." },
-            { "title": "Złóż umowę w Księdze Wieczystej", "text": "W ciągu 6 miesięcy od podpisania, za opłatą 50 €. Daje to egzekwowalne prawo do wpisu Ciebie jako właściciela, nawet jeśli sprzedający upadnie lub sprzeda lokal dwa razy. Poproś o pisemne potwierdzenie." },
-            { "title": "Uzyskaj zgodę (tylko kupujący spoza UE)", "text": "Prawnik składa wniosek do Rady Ministrów zaraz po podpisaniu. Nie ma opłaty państwowej. Typowy czas: od tygodni do miesięcy." },
-            { "title": "Zapłać resztę i przenieś własność", "text": "Rynek wtórny: płacisz saldo i opłatę za przeniesienie, obecnie 8 600 € przy zakupie za 300 000 € po obniżce o 50 %. Nowa inwestycja: zamiast tego naliczany jest VAT, opłaty za przeniesienie nie ma. Rynek wtórny trwa zwykle 2–4 miesiące od podpisania (orientacyjnie)." }
+            {
+              "title": "Ustal budżet i udokumentuj źródło środków",
+              "text": "Zbierz paszport, potwierdzenie adresu i wyciągi z konta pokazujące, skąd pochodzą pieniądze, zanim cokolwiek przelejesz. Typowy czas: 1–6 tygodni."
+            },
+            {
+              "title": "Zatrudnij własnego prawnika",
+              "text": "Niezależnego od sprzedającego i dewelopera, zanim cokolwiek zarezerwujesz. Honorarium to zwykle 1 % plus VAT. Typowy czas: kilka dni."
+            },
+            {
+              "title": "Zarezerwuj nieruchomość",
+              "text": "Pisemna umowa rezerwacyjna zdejmuje lokal z rynku. Opłata to około 3 000–10 000 €; ustal na piśmie, co zostanie zwrócone, jeśli weryfikacja wykaże wadę. Typowy czas: 1–3 dni."
+            },
+            {
+              "title": "Przeprowadź weryfikację prawną",
+              "text": "Prawnik sprawdza tytuł własności i wpisane obciążenia, prawo sprzedającego do zbycia, pozwolenia oraz nieopłacone opłaty komunalne. Typowy czas: 1–3 tygodnie."
+            },
+            {
+              "title": "Podpisz umowę sprzedaży",
+              "text": "Standardowe umowy deweloperskie sprzyjają sprzedającemu, więc prawnik negocjuje zmiany. Zadatek przy rynku wtórnym to zwykle 20–40 %. Dla umów podpisanych od 1 stycznia 2026 nie obowiązuje już opłata stemplowa. Typowy czas: tygodnie 3–6."
+            },
+            {
+              "title": "Złóż umowę w Księdze Wieczystej",
+              "text": "W ciągu 6 miesięcy od podpisania, za opłatą 50 €. Daje to egzekwowalne prawo do wpisu Ciebie jako właściciela, nawet jeśli sprzedający upadnie lub sprzeda lokal dwa razy. Poproś o pisemne potwierdzenie."
+            },
+            {
+              "title": "Uzyskaj zgodę (tylko kupujący spoza UE)",
+              "text": "Prawnik składa wniosek do Rady Ministrów zaraz po podpisaniu. Nie ma opłaty państwowej. Typowy czas: od tygodni do miesięcy."
+            },
+            {
+              "title": "Zapłać resztę i przenieś własność",
+              "text": "Rynek wtórny: płacisz saldo i opłatę za przeniesienie, obecnie 8 600 € przy zakupie za 300 000 € po obniżce o 50 %. Nowa inwestycja: zamiast tego naliczany jest VAT, opłaty za przeniesienie nie ma. Rynek wtórny trwa zwykle 2–4 miesiące od podpisania (orientacyjnie)."
+            }
           ]
         },
         {
@@ -44,13 +81,37 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Dokument", "Co potwierdza", "O co poprosić"],
+          "head": [
+            "Dokument",
+            "Co potwierdza",
+            "O co poprosić"
+          ],
           "rows": [
-            ["Akt własności (Title Deed)", "Wpisanego właściciela oraz każdą wpisaną hipotekę i obciążenie", "Czy indywidualny dokument już istnieje, a jeśli nie, na jakim etapie jest rejestracja"],
-            ["Zaświadczenie z Księgi Wieczystej (search certificate)", "Aktualnego właściciela i wszystkie obciążenia działki", "Datę nie wcześniejszą niż 5 dni roboczych przed podpisaniem (zasada od 12 grudnia 2023)"],
-            ["Umowa sprzedaży", "Cenę, terminy płatności, termin zakończenia, specyfikację i skutki naruszeń", "Zmiany wynegocjowane przez prawnika oraz dowód złożenia w Księdze Wieczystej"],
-            ["Pozwolenia budowlane i planistyczne", "Projekt jest zatwierdzony tak, jak jest sprzedawany", "Kopie porównane z Twoim lokalem"],
-            ["Świadectwo końcowego odbioru (certificate of final approval)", "Gotowy budynek odpowiada zatwierdzonym planom", "Kopię przy każdej ukończonej inwestycji"]
+            [
+              "Akt własności (Title Deed)",
+              "Wpisanego właściciela oraz każdą wpisaną hipotekę i obciążenie",
+              "Czy indywidualny dokument już istnieje, a jeśli nie, na jakim etapie jest rejestracja"
+            ],
+            [
+              "Zaświadczenie z Księgi Wieczystej (search certificate)",
+              "Aktualnego właściciela i wszystkie obciążenia działki",
+              "Datę nie wcześniejszą niż 5 dni roboczych przed podpisaniem (zasada od 12 grudnia 2023)"
+            ],
+            [
+              "Umowa sprzedaży",
+              "Cenę, terminy płatności, termin zakończenia, specyfikację i skutki naruszeń",
+              "Zmiany wynegocjowane przez prawnika oraz dowód złożenia w Księdze Wieczystej"
+            ],
+            [
+              "Pozwolenia budowlane i planistyczne",
+              "Projekt jest zatwierdzony tak, jak jest sprzedawany",
+              "Kopie porównane z Twoim lokalem"
+            ],
+            [
+              "Świadectwo końcowego odbioru (certificate of final approval)",
+              "Gotowy budynek odpowiada zatwierdzonym planom",
+              "Kopię przy każdej ukończonej inwestycji"
+            ]
           ],
           "note": "Przepisy według stanu na październik 2026."
         },
@@ -109,21 +170,53 @@
           "type": "example",
           "title": "Typowe raty przy zakupie off-plan przy cenie 300 000 € (bez VAT)",
           "rows": [
-            ["Przy podpisaniu umowy (25 %)", "75 000 €"],
-            ["Transze w trakcie budowy (45 %)", "135 000 €"],
-            ["Przy zakończeniu i odbiorze (30 %)", "90 000 €"]
+            [
+              "Przy podpisaniu umowy (25 %)",
+              "75 000 €"
+            ],
+            [
+              "Transze w trakcie budowy (45 %)",
+              "135 000 €"
+            ],
+            [
+              "Przy zakończeniu i odbiorze (30 %)",
+              "90 000 €"
+            ]
           ],
-          "total": ["Cena bez VAT", "300 000 €"],
+          "total": [
+            "Cena bez VAT",
+            "300 000 €"
+          ],
           "note": "Standard rynkowy: 20–30 % przy podpisaniu, 40–50 % w transzach, 20–30 % przy odbiorze. Dolicza się VAT: 15 000 € przy obniżonej stawce 5 %, jeśli przysługuje, 57 000 € przy stawce podstawowej 19 %."
         },
         {
           "type": "table",
-          "head": ["Zabezpieczenie", "Co daje", "Sytuacja na Cyprze"],
+          "head": [
+            "Zabezpieczenie",
+            "Co daje",
+            "Sytuacja na Cyprze"
+          ],
           "rows": [
-            ["Raty powiązane z etapami budowy", "Płacisz, gdy potwierdzono stan surowy, dach lub wykończenie", "Wynegocjuj to i wskaż, kto potwierdza, najlepiej niezależny inspektor"],
-            ["Gwarancja bankowa lub gwarancja wykonania", "Pokrywa zadatek i raty do przeniesienia własności", "Nie jest wymogiem ustawowym; zażądaj jej w umowie"],
-            ["Rachunek powierniczy (escrow)", "Wpłaty trafiają do osoby trzeciej i są uwalniane po etapach", "Nieobowiązkowy; część deweloperów go oferuje"],
-            ["Umowa złożona w Księdze Wieczystej", "Egzekwowalne prawo do wpisu, także wobec podwójnej sprzedaży", "W ciągu 6 miesięcy od podpisania; najcenniejszy pojedynczy krok"]
+            [
+              "Raty powiązane z etapami budowy",
+              "Płacisz, gdy potwierdzono stan surowy, dach lub wykończenie",
+              "Wynegocjuj to i wskaż, kto potwierdza, najlepiej niezależny inspektor"
+            ],
+            [
+              "Gwarancja bankowa lub gwarancja wykonania",
+              "Pokrywa zadatek i raty do przeniesienia własności",
+              "Nie jest wymogiem ustawowym; zażądaj jej w umowie"
+            ],
+            [
+              "Rachunek powierniczy (escrow)",
+              "Wpłaty trafiają do osoby trzeciej i są uwalniane po etapach",
+              "Nieobowiązkowy; część deweloperów go oferuje"
+            ],
+            [
+              "Umowa złożona w Księdze Wieczystej",
+              "Egzekwowalne prawo do wpisu, także wobec podwójnej sprzedaży",
+              "W ciągu 6 miesięcy od podpisania; najcenniejszy pojedynczy krok"
+            ]
           ]
         },
         {
@@ -166,10 +259,22 @@
         {
           "type": "steps",
           "items": [
-            { "title": "Sfotografuj i opisz", "text": "Sfotografuj i opatrz datą każdą usterkę, a pozycje wypisz pomieszczenie po pomieszczeniu." },
-            { "title": "Uzyskaj pisemne potwierdzenie", "text": "Deweloper potwierdza listę na piśmie i uzgadnia termin napraw." },
-            { "title": "Powiąż zatrzymaną kwotę z listą", "text": "Określ, które pozycje muszą być usunięte, zanim zostanie uwolniona określona część zatrzymanej kwoty." },
-            { "title": "Skontroluj ponownie przed zapłatą", "text": "Sprawdź naprawy samodzielnie lub przez rzeczoznawcę, zanim wypłacisz zatrzymaną kwotę." }
+            {
+              "title": "Sfotografuj i opisz",
+              "text": "Sfotografuj i opatrz datą każdą usterkę, a pozycje wypisz pomieszczenie po pomieszczeniu."
+            },
+            {
+              "title": "Uzyskaj pisemne potwierdzenie",
+              "text": "Deweloper potwierdza listę na piśmie i uzgadnia termin napraw."
+            },
+            {
+              "title": "Powiąż zatrzymaną kwotę z listą",
+              "text": "Określ, które pozycje muszą być usunięte, zanim zostanie uwolniona określona część zatrzymanej kwoty."
+            },
+            {
+              "title": "Skontroluj ponownie przed zapłatą",
+              "text": "Sprawdź naprawy samodzielnie lub przez rzeczoznawcę, zanim wypłacisz zatrzymaną kwotę."
+            }
           ]
         },
         {
@@ -184,14 +289,42 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Błąd", "Skutek", "Jak go uniknąć"],
+          "head": [
+            "Błąd",
+            "Skutek",
+            "Jak go uniknąć"
+          ],
           "rows": [
-            ["Korzystanie z prawnika sprzedającego lub dewelopera", "Brak zabezpieczenia niezależnego od sprzedaży", "Zatrudnij własnego prawnika, zanim zarezerwujesz"],
-            ["Brak potwierdzenia, że umowę złożono", "Prywatna umowa bez egzekwowalnego prawa wobec osób trzecich", "Poproś o pisemne potwierdzenie, najlepiej w pierwszym tygodniu"],
-            ["Wpłata rezerwacji bez pisemnych warunków", "Pieniądze zagrożone bez zasady zwrotu", "Płać wyłącznie na podstawie pisemnej umowy sprawdzonej przez prawnika"],
-            ["Przyjęcie, że 5 % VAT przysługuje automatycznie", "Najdroższa niespodzianka w całym procesie", "Stawka obniżona obejmuje pierwsze 130 m² lokalu głównego miejsca zamieszkania, z limitem wartości 350 000 €; powyżej 190 m² lub 475 000 € cała cena podlega stawce 19 %"],
-            ["Zgoda na płatności powiązane z datami", "Finansujesz z góry budowę, która może stanąć", "Nalegaj na płatności po etapach z wyznaczonym potwierdzającym"],
-            ["Budżetowanie od ceny z ogłoszenia", "Cena może nie zawierać VAT", "Uwzględnij VAT lub opłatę za przeniesienie oraz koszty prawnika około 1 % plus VAT"]
+            [
+              "Korzystanie z prawnika sprzedającego lub dewelopera",
+              "Brak zabezpieczenia niezależnego od sprzedaży",
+              "Zatrudnij własnego prawnika, zanim zarezerwujesz"
+            ],
+            [
+              "Brak potwierdzenia, że umowę złożono",
+              "Prywatna umowa bez egzekwowalnego prawa wobec osób trzecich",
+              "Poproś o pisemne potwierdzenie, najlepiej w pierwszym tygodniu"
+            ],
+            [
+              "Wpłata rezerwacji bez pisemnych warunków",
+              "Pieniądze zagrożone bez zasady zwrotu",
+              "Płać wyłącznie na podstawie pisemnej umowy sprawdzonej przez prawnika"
+            ],
+            [
+              "Przyjęcie, że 5 % VAT przysługuje automatycznie",
+              "Najdroższa niespodzianka w całym procesie",
+              "Stawka obniżona obejmuje pierwsze 130 m² lokalu głównego miejsca zamieszkania, z limitem wartości 350 000 €; powyżej 190 m² lub 475 000 € cała cena podlega stawce 19 %"
+            ],
+            [
+              "Zgoda na płatności powiązane z datami",
+              "Finansujesz z góry budowę, która może stanąć",
+              "Nalegaj na płatności po etapach z wyznaczonym potwierdzającym"
+            ],
+            [
+              "Budżetowanie od ceny z ogłoszenia",
+              "Cena może nie zawierać VAT",
+              "Uwzględnij VAT lub opłatę za przeniesienie oraz koszty prawnika około 1 % plus VAT"
+            ]
           ],
           "note": "Stawki i progi według stanu na październik 2026."
         }

@@ -2,13 +2,26 @@
   "id": "cost-of-buying",
   "lang": "de",
   "title": "Die wahren Kosten beim Immobilienkauf auf Zypern (2026)",
+  "titleAccent": "wahren Kosten",
   "subtitle": "Alle Steuern, Gebühren und laufenden Kosten von der Reservierung bis zur Schlüsselübergabe, mit Rechenbeispiel",
   "edition": "Ausgabe: Oktober 2026",
   "keyNumbers": [
-    { "value": "4 % bis 20 %", "label": "Nebenkosten auf den Kaufpreis, vom Bestandskauf bis zum Neubau mit 19 % MwSt" },
-    { "value": "42.000 €", "label": "MwSt-Unterschied zwischen 5 % und 19 % bei einem Neubau für 300.000 €" },
-    { "value": "8.600 €", "label": "Grundbuchgebühr bei einem Bestandskauf für 300.000 €, nach der 50-%-Ermäßigung" },
-    { "value": "0 €", "label": "Stempelsteuer bei Verträgen, die ab dem 1. Januar 2026 unterzeichnet werden" }
+    {
+      "value": "4 % bis 20 %",
+      "label": "Nebenkosten auf den Kaufpreis, vom Bestandskauf bis zum Neubau mit 19 % MwSt"
+    },
+    {
+      "value": "42.000 €",
+      "label": "MwSt-Unterschied zwischen 5 % und 19 % bei einem Neubau für 300.000 €"
+    },
+    {
+      "value": "8.600 €",
+      "label": "Grundbuchgebühr bei einem Bestandskauf für 300.000 €, nach der 50-%-Ermäßigung"
+    },
+    {
+      "value": "0 €",
+      "label": "Stempelsteuer bei Verträgen, die ab dem 1. Januar 2026 unterzeichnet werden"
+    }
   ],
   "intro": "Bei einem Kauf für 300.000 € auf Zypern liegen die Kosten zusätzlich zum Kaufpreis zwischen rund 4 % bei einer Bestandsimmobilie und rund 20 % bei einem Neubau mit 19 % MwSt (Stand: Oktober 2026). Die Kategorie der Immobilie bestimmt die Rechnung stärker als der Preis. Dieser Ratgeber listet alle einmaligen und laufenden Kosten auf, zeigt, wann welche Zahlung fällig wird, und rechnet ein realistisches Budget durch. Wo eine Zahl ein Planwert und kein gesetzlicher Satz ist, steht das im Text.",
   "sections": [
@@ -21,15 +34,47 @@
         },
         {
           "type": "table",
-          "head": ["Kostenposten", "Neubau (vom Bauträger)", "Bestandsimmobilie"],
+          "head": [
+            "Kostenposten",
+            "Neubau (vom Bauträger)",
+            "Bestandsimmobilie"
+          ],
           "rows": [
-            ["Mehrwertsteuer", "5 % (Hauptwohnsitz, innerhalb der Grenzen) oder 19 %", "Entfällt"],
-            ["Grundbuchgebühr (Transfer Fee)", "Entfällt, wenn MwSt erhoben wird", "Staffel 3 % / 5 % / 8 %, halbiert durch die aktuelle 50-%-Ermäßigung"],
-            ["Stempelsteuer", "Entfällt: abgeschafft für Verträge ab dem 1. Januar 2026", "Entfällt: abgeschafft für Verträge ab dem 1. Januar 2026"],
-            ["Anwaltskosten", "Planwert: 1 % zuzüglich 19 % MwSt auf das Honorar", "Planwert: 1 % zuzüglich 19 % MwSt auf das Honorar"],
-            ["Grundbuchamt-Auslagen", "Wenige hundert Euro; die Hinterlegung des Vertrags kostet 50 €", "Wenige hundert Euro; die Hinterlegung des Vertrags kostet 50 €"],
-            ["Maklerprovision", "In der Regel vom Bauträger bezahlt", "In der Regel vom Verkäufer bezahlt"],
-            ["Kreditkosten (bei Finanzierung)", "Eintragung 1 %, Bearbeitung etwa 1 %, Bewertung etwa 400 €", "Eintragung 1 %, Bearbeitung etwa 1 %, Bewertung etwa 400 €"]
+            [
+              "Mehrwertsteuer",
+              "5 % (Hauptwohnsitz, innerhalb der Grenzen) oder 19 %",
+              "Entfällt"
+            ],
+            [
+              "Grundbuchgebühr (Transfer Fee)",
+              "Entfällt, wenn MwSt erhoben wird",
+              "Staffel 3 % / 5 % / 8 %, halbiert durch die aktuelle 50-%-Ermäßigung"
+            ],
+            [
+              "Stempelsteuer",
+              "Entfällt: abgeschafft für Verträge ab dem 1. Januar 2026",
+              "Entfällt: abgeschafft für Verträge ab dem 1. Januar 2026"
+            ],
+            [
+              "Anwaltskosten",
+              "Planwert: 1 % zuzüglich 19 % MwSt auf das Honorar",
+              "Planwert: 1 % zuzüglich 19 % MwSt auf das Honorar"
+            ],
+            [
+              "Grundbuchamt-Auslagen",
+              "Wenige hundert Euro; die Hinterlegung des Vertrags kostet 50 €",
+              "Wenige hundert Euro; die Hinterlegung des Vertrags kostet 50 €"
+            ],
+            [
+              "Maklerprovision",
+              "In der Regel vom Bauträger bezahlt",
+              "In der Regel vom Verkäufer bezahlt"
+            ],
+            [
+              "Kreditkosten (bei Finanzierung)",
+              "Eintragung 1 %, Bearbeitung etwa 1 %, Bewertung etwa 400 €",
+              "Eintragung 1 %, Bearbeitung etwa 1 %, Bewertung etwa 400 €"
+            ]
           ],
           "note": "Anwaltshonorar, Grundbuchauslagen und Bankgebühren sind Planwerte und keine Angebote."
         },
@@ -48,24 +93,54 @@
         },
         {
           "type": "table",
-          "head": ["Immobilie", "MwSt"],
+          "head": [
+            "Immobilie",
+            "MwSt"
+          ],
           "rows": [
-            ["Hauptwohnsitz, die ersten 130 m², Wert bis 350.000 €", "5 %"],
-            ["Wohnung oder Haus über 190 m² oder Transaktion über 475.000 €", "19 % auf den gesamten Preis"],
-            ["Zwischen den beiden Grenzen (130 bis 190 m² bzw. 350.000 bis 475.000 €)", "In diesem Ratgeber nicht festgelegt: Lassen Sie sich vor der Unterschrift von Ihrem Anwalt schriftlich den Betrag nennen, den das Steueramt ansetzt"]
+            [
+              "Hauptwohnsitz, die ersten 130 m², Wert bis 350.000 €",
+              "5 %"
+            ],
+            [
+              "Wohnung oder Haus über 190 m² oder Transaktion über 475.000 €",
+              "19 % auf den gesamten Preis"
+            ],
+            [
+              "Zwischen den beiden Grenzen (130 bis 190 m² bzw. 350.000 bis 475.000 €)",
+              "In diesem Ratgeber nicht festgelegt: Lassen Sie sich vor der Unterschrift von Ihrem Anwalt schriftlich den Betrag nennen, den das Steueramt ansetzt"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "MwSt bei einem Neubau für 300.000 € innerhalb der Grenzen",
           "rows": [
-            ["Preis ohne MwSt", "300.000 €"],
-            ["MwSt zu 5 % (Hauptwohnsitz)", "15.000 €"],
-            ["Preis inklusive 5 % MwSt", "315.000 €"],
-            ["MwSt zu 19 % (Kapitalanlage oder Zweitwohnsitz)", "57.000 €"],
-            ["Preis inklusive 19 % MwSt", "357.000 €"]
+            [
+              "Preis ohne MwSt",
+              "300.000 €"
+            ],
+            [
+              "MwSt zu 5 % (Hauptwohnsitz)",
+              "15.000 €"
+            ],
+            [
+              "Preis inklusive 5 % MwSt",
+              "315.000 €"
+            ],
+            [
+              "MwSt zu 19 % (Kapitalanlage oder Zweitwohnsitz)",
+              "57.000 €"
+            ],
+            [
+              "Preis inklusive 19 % MwSt",
+              "357.000 €"
+            ]
           ],
-          "total": ["Unterschied zwischen beiden", "42.000 €"],
+          "total": [
+            "Unterschied zwischen beiden",
+            "42.000 €"
+          ],
           "note": "Eine Villa für 600.000 € liegt über 475.000 €, daher gelten 19 % auf den gesamten Preis: 114.000 € MwSt."
         },
         {
@@ -84,22 +159,50 @@
         },
         {
           "type": "table",
-          "head": ["Immobilienwert", "Gesetzlicher Satz", "Effektiver Satz (nach 50-%-Ermäßigung)"],
+          "head": [
+            "Immobilienwert",
+            "Gesetzlicher Satz",
+            "Effektiver Satz (nach 50-%-Ermäßigung)"
+          ],
           "rows": [
-            ["Bis 85.000 €", "3 %", "1,5 %"],
-            ["85.001 bis 170.000 €", "5 %", "2,5 %"],
-            ["Über 170.000 €", "8 %", "4 %"]
+            [
+              "Bis 85.000 €",
+              "3 %",
+              "1,5 %"
+            ],
+            [
+              "85.001 bis 170.000 €",
+              "5 %",
+              "2,5 %"
+            ],
+            [
+              "Über 170.000 €",
+              "8 %",
+              "4 %"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Grundbuchgebühr bei einem Bestandskauf für 300.000 €",
           "rows": [
-            ["1,5 % × 85.000 €", "1.275 €"],
-            ["2,5 % × 85.000 €", "2.125 €"],
-            ["4 % × 130.000 €", "5.200 €"]
+            [
+              "1,5 % × 85.000 €",
+              "1.275 €"
+            ],
+            [
+              "2,5 % × 85.000 €",
+              "2.125 €"
+            ],
+            [
+              "4 % × 130.000 €",
+              "5.200 €"
+            ]
           ],
-          "total": ["Grundbuchgebühr", "8.600 €"],
+          "total": [
+            "Grundbuchgebühr",
+            "8.600 €"
+          ],
           "note": "Die gesetzliche Staffel ohne Ermäßigung ergäbe 17.200 €."
         },
         {
@@ -132,11 +235,23 @@
           "type": "example",
           "title": "Kreditkosten bei einem Darlehen von 195.000 € (35 % Anzahlung auf 300.000 €, Annahme)",
           "rows": [
-            ["Eintragungsgebühr, 1 % des Darlehens", "1.950 €"],
-            ["Bearbeitungsgebühr der Bank, etwa 1 % des Darlehens", "1.950 €"],
-            ["Bewertungsgebühr, etwa", "400 €"]
+            [
+              "Eintragungsgebühr, 1 % des Darlehens",
+              "1.950 €"
+            ],
+            [
+              "Bearbeitungsgebühr der Bank, etwa 1 % des Darlehens",
+              "1.950 €"
+            ],
+            [
+              "Bewertungsgebühr, etwa",
+              "400 €"
+            ]
           ],
-          "total": ["Kreditkosten", "4.300 €"],
+          "total": [
+            "Kreditkosten",
+            "4.300 €"
+          ],
           "note": "Übliche Anzahlungen betragen 30-40 % für Nicht-EU-Käufer ohne Wohnsitz in Zypern und etwa 25-30 % für EU/EWR-Käufer ohne Wohnsitz in Zypern. Die Anzahlung selbst kommt zu diesen Kosten hinzu."
         }
       ]
@@ -146,7 +261,7 @@
       "blocks": [
         {
           "type": "p",
-          "text": "Zypern erhebt seit 2017 keine jährliche Grundsteuer mehr. Laufende Kosten sind Gemeinschafts- oder Verwaltungsgebühren in Anlagen mit gemeinsamen Einrichtungen, kommunale Abgaben, Müll, Abwasser und die Gebäudeversicherung. Unsere Rechnung \"Mieten oder Kaufen\" setzt sie bei einer typischen Wohnung mit etwa 935 bis 1.650 € pro Jahr an."
+          "text": "Die staatliche Grundsteuer wurde 2017 abgeschafft, doch die Gemeinden erheben weiterhin eine eigene Immobiliensteuer, deren Satz jede Gemeinde festlegt; fragen Sie nach dem Betrag für Ihre Immobilie. Laufende Kosten sind außerdem Gemeinschafts- oder Verwaltungsgebühren in Anlagen mit gemeinsamen Einrichtungen, kommunale Abgaben, Müll, Abwasser und die Gebäudeversicherung. Unsere Rechnung \"Mieten oder Kaufen\" setzt sie bei einer typischen Wohnung mit etwa 935 bis 1.650 € pro Jahr an."
         },
         {
           "type": "p",
@@ -154,13 +269,31 @@
         },
         {
           "type": "table",
-          "head": ["Jahreseinkommen", "Satz"],
+          "head": [
+            "Jahreseinkommen",
+            "Satz"
+          ],
           "rows": [
-            ["Bis 22.000 €", "0 %"],
-            ["22.000 bis 32.000 €", "20 %"],
-            ["32.000 bis 42.000 €", "25 %"],
-            ["42.000 bis 72.000 €", "30 %"],
-            ["Über 72.000 €", "35 %"]
+            [
+              "Bis 22.000 €",
+              "0 %"
+            ],
+            [
+              "22.000 bis 32.000 €",
+              "20 %"
+            ],
+            [
+              "32.000 bis 42.000 €",
+              "25 %"
+            ],
+            [
+              "42.000 bis 72.000 €",
+              "30 %"
+            ],
+            [
+              "Über 72.000 €",
+              "35 %"
+            ]
           ]
         },
         {
@@ -178,12 +311,37 @@
         },
         {
           "type": "table",
-          "head": ["Weg", "Nebenkosten", "Gesamtsumme bar", "Nebenkosten in % des Preises"],
+          "head": [
+            "Weg",
+            "Nebenkosten",
+            "Gesamtsumme bar",
+            "Nebenkosten in % des Preises"
+          ],
           "rows": [
-            ["Neubau, Hauptwohnsitz (5 % MwSt)", "18.870 €", "318.870 €", "6,3 %"],
-            ["Neubau, Kapitalanlage oder Zweitwohnsitz (19 % MwSt)", "60.870 €", "360.870 €", "20,3 %"],
-            ["Bestandsimmobilie, ein Käufer", "12.470 €", "312.470 €", "4,2 %"],
-            ["Bestandsimmobilie, zwei Käufer (50/50)", "9.670 €", "309.670 €", "3,2 %"]
+            [
+              "Neubau, Hauptwohnsitz (5 % MwSt)",
+              "18.870 €",
+              "318.870 €",
+              "6,3 %"
+            ],
+            [
+              "Neubau, Kapitalanlage oder Zweitwohnsitz (19 % MwSt)",
+              "60.870 €",
+              "360.870 €",
+              "20,3 %"
+            ],
+            [
+              "Bestandsimmobilie, ein Käufer",
+              "12.470 €",
+              "312.470 €",
+              "4,2 %"
+            ],
+            [
+              "Bestandsimmobilie, zwei Käufer (50/50)",
+              "9.670 €",
+              "309.670 €",
+              "3,2 %"
+            ]
           ],
           "note": "Kreditkosten, Möblierung und eine Reserve sind nicht enthalten."
         },
@@ -191,13 +349,31 @@
           "type": "example",
           "title": "Gesamtbudget: Bestandskauf für 300.000 € auf einen Namen, Barkauf",
           "rows": [
-            ["Kaufpreis", "300.000 €"],
-            ["Erwerbsnebenkosten (Grundbuchgebühr 8.600 €, Anwalt 3.570 €, Grundbuchamt 300 €)", "12.470 €"],
-            ["Möblierung und Geräte (Annahme, Zweizimmerwohnung)", "15.000 €"],
-            ["Laufende Kosten im ersten Jahr (etwa)", "1.300 €"],
-            ["Reserve, 2 % des Preises (Annahme)", "6.000 €"]
+            [
+              "Kaufpreis",
+              "300.000 €"
+            ],
+            [
+              "Erwerbsnebenkosten (Grundbuchgebühr 8.600 €, Anwalt 3.570 €, Grundbuchamt 300 €)",
+              "12.470 €"
+            ],
+            [
+              "Möblierung und Geräte (Annahme, Zweizimmerwohnung)",
+              "15.000 €"
+            ],
+            [
+              "Laufende Kosten im ersten Jahr (etwa)",
+              "1.300 €"
+            ],
+            [
+              "Reserve, 2 % des Preises (Annahme)",
+              "6.000 €"
+            ]
           ],
-          "total": ["Gesamtbudget", "334.770 €"],
+          "total": [
+            "Gesamtbudget",
+            "334.770 €"
+          ],
           "note": "Rund 11,6 % über dem Preis. Möblierung und Reserve sind Annahmen; ersetzen Sie sie durch Ihre eigenen Werte. Die laufenden Kosten entsprechen der Mitte der Spanne von 935 bis 1.650 €."
         },
         {

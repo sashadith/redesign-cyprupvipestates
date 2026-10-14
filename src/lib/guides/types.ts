@@ -21,6 +21,8 @@ export type GuideContent = {
   id: string;
   lang: GuideLang;
   title: string;
+  /** A phrase inside `title` shown in italic champagne on the cover, like the accent words in the site's headings. */
+  titleAccent?: string;
   subtitle: string;
   /** Short edition line shown on the cover, e.g. "Edition October 2026". */
   edition: string;

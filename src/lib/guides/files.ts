@@ -4,7 +4,7 @@ import type { GuideId } from "./registry";
 import type { GuideLang } from "./types";
 
 /** The guide PDFs are built ahead of time (scripts/guides/build-pdfs.mjs) and read from disk here.
- *  They are never rendered inside the server process: see render-one.tsx for why. */
+ *  They are never rendered inside the server process: see scripts/guides/render-one.ts. */
 const DIR = path.join(process.cwd(), "src", "lib", "guides", "pdf-files");
 const cache = new Map<string, Buffer>();
 

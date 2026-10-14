@@ -2,13 +2,26 @@
   "id": "cost-of-buying",
   "lang": "en",
   "title": "The True Cost of Buying Property in Cyprus (2026)",
+  "titleAccent": "True Cost",
   "subtitle": "Every tax, fee and running cost from reservation to keys, with a worked example",
   "edition": "Edition: October 2026",
   "keyNumbers": [
-    { "value": "4% to 20%", "label": "extra cost on top of the price, from a resale to a new-build at 19% VAT" },
-    { "value": "€42,000", "label": "VAT difference between 5% and 19% on a €300,000 new-build" },
-    { "value": "€8,600", "label": "transfer fee on a €300,000 resale, after the 50% reduction" },
-    { "value": "€0", "label": "stamp duty on contracts signed from 1 January 2026" }
+    {
+      "value": "4% to 20%",
+      "label": "extra cost on top of the price, from a resale to a new-build at 19% VAT"
+    },
+    {
+      "value": "€42,000",
+      "label": "VAT difference between 5% and 19% on a €300,000 new-build"
+    },
+    {
+      "value": "€8,600",
+      "label": "transfer fee on a €300,000 resale, after the 50% reduction"
+    },
+    {
+      "value": "€0",
+      "label": "stamp duty on contracts signed from 1 January 2026"
+    }
   ],
   "intro": "On a €300,000 purchase in Cyprus, the costs on top of the price run from about 4% for a resale to about 20% for a new-build at 19% VAT, as of October 2026. The category of the property sets the bill more than the price does. This guide lists every one-off and recurring cost, shows when each is paid and works through one realistic budget. Where a figure is a planning figure and not a statutory rate, the text says so.",
   "sections": [
@@ -21,15 +34,47 @@
         },
         {
           "type": "table",
-          "head": ["Cost item", "New-build (from developer)", "Resale"],
+          "head": [
+            "Cost item",
+            "New-build (from developer)",
+            "Resale"
+          ],
           "rows": [
-            ["VAT", "5% (main residence, within the limits) or 19%", "None"],
-            ["Land Registry transfer fee", "None when VAT is charged", "3% / 5% / 8% scale, halved by the current 50% reduction"],
-            ["Stamp duty", "None: abolished for contracts signed from 1 January 2026", "None: abolished for contracts signed from 1 January 2026"],
-            ["Legal fee", "Planning figure: 1% plus 19% VAT on the fee", "Planning figure: 1% plus 19% VAT on the fee"],
-            ["Land Registry charges", "A few hundred euros; the contract deposit is €50", "A few hundred euros; the contract deposit is €50"],
-            ["Agent's commission", "Normally paid by the developer", "Normally paid by the seller"],
-            ["Mortgage costs (if financed)", "Registration 1%, arrangement about 1%, valuation about €400", "Registration 1%, arrangement about 1%, valuation about €400"]
+            [
+              "VAT",
+              "5% (main residence, within the limits) or 19%",
+              "None"
+            ],
+            [
+              "Land Registry transfer fee",
+              "None when VAT is charged",
+              "3% / 5% / 8% scale, halved by the current 50% reduction"
+            ],
+            [
+              "Stamp duty",
+              "None: abolished for contracts signed from 1 January 2026",
+              "None: abolished for contracts signed from 1 January 2026"
+            ],
+            [
+              "Legal fee",
+              "Planning figure: 1% plus 19% VAT on the fee",
+              "Planning figure: 1% plus 19% VAT on the fee"
+            ],
+            [
+              "Land Registry charges",
+              "A few hundred euros; the contract deposit is €50",
+              "A few hundred euros; the contract deposit is €50"
+            ],
+            [
+              "Agent's commission",
+              "Normally paid by the developer",
+              "Normally paid by the seller"
+            ],
+            [
+              "Mortgage costs (if financed)",
+              "Registration 1%, arrangement about 1%, valuation about €400",
+              "Registration 1%, arrangement about 1%, valuation about €400"
+            ]
           ],
           "note": "Legal fee, registry charges and bank fees are planning figures, not quotes."
         },
@@ -48,24 +93,54 @@
         },
         {
           "type": "table",
-          "head": ["Property", "VAT"],
+          "head": [
+            "Property",
+            "VAT"
+          ],
           "rows": [
-            ["Main residence, first 130 m², value up to €350,000", "5%"],
-            ["Home above 190 m² or a transaction above €475,000", "19% on the whole price"],
-            ["Between the two limits (130 to 190 m², or €350,000 to €475,000)", "Not set out in this guide: ask your lawyer in writing for the figure the Tax Department will apply, before you sign"]
+            [
+              "Main residence, first 130 m², value up to €350,000",
+              "5%"
+            ],
+            [
+              "Home above 190 m² or a transaction above €475,000",
+              "19% on the whole price"
+            ],
+            [
+              "Between the two limits (130 to 190 m², or €350,000 to €475,000)",
+              "Not set out in this guide: ask your lawyer in writing for the figure the Tax Department will apply, before you sign"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "VAT on a €300,000 new-build within the limits",
           "rows": [
-            ["Price before VAT", "€300,000"],
-            ["VAT at 5% (main residence)", "€15,000"],
-            ["Price including 5% VAT", "€315,000"],
-            ["VAT at 19% (investment or second home)", "€57,000"],
-            ["Price including 19% VAT", "€357,000"]
+            [
+              "Price before VAT",
+              "€300,000"
+            ],
+            [
+              "VAT at 5% (main residence)",
+              "€15,000"
+            ],
+            [
+              "Price including 5% VAT",
+              "€315,000"
+            ],
+            [
+              "VAT at 19% (investment or second home)",
+              "€57,000"
+            ],
+            [
+              "Price including 19% VAT",
+              "€357,000"
+            ]
           ],
-          "total": ["Difference between the two", "€42,000"],
+          "total": [
+            "Difference between the two",
+            "€42,000"
+          ],
           "note": "A €600,000 villa is above €475,000, so 19% applies to the whole price: €114,000 of VAT."
         },
         {
@@ -84,22 +159,50 @@
         },
         {
           "type": "table",
-          "head": ["Property value", "Statutory rate", "Effective rate (after 50% reduction)"],
+          "head": [
+            "Property value",
+            "Statutory rate",
+            "Effective rate (after 50% reduction)"
+          ],
           "rows": [
-            ["Up to €85,000", "3%", "1.5%"],
-            ["€85,001 to €170,000", "5%", "2.5%"],
-            ["Over €170,000", "8%", "4%"]
+            [
+              "Up to €85,000",
+              "3%",
+              "1.5%"
+            ],
+            [
+              "€85,001 to €170,000",
+              "5%",
+              "2.5%"
+            ],
+            [
+              "Over €170,000",
+              "8%",
+              "4%"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Transfer fee on a €300,000 resale",
           "rows": [
-            ["1.5% × €85,000", "€1,275"],
-            ["2.5% × €85,000", "€2,125"],
-            ["4% × €130,000", "€5,200"]
+            [
+              "1.5% × €85,000",
+              "€1,275"
+            ],
+            [
+              "2.5% × €85,000",
+              "€2,125"
+            ],
+            [
+              "4% × €130,000",
+              "€5,200"
+            ]
           ],
-          "total": ["Transfer fee", "€8,600"],
+          "total": [
+            "Transfer fee",
+            "€8,600"
+          ],
           "note": "The statutory scale without the reduction would give €17,200."
         },
         {
@@ -132,11 +235,23 @@
           "type": "example",
           "title": "Mortgage costs on a €195,000 loan (35% deposit on €300,000, assumption)",
           "rows": [
-            ["Registration fee, 1% of the loan", "€1,950"],
-            ["Bank arrangement fee, about 1% of the loan", "€1,950"],
-            ["Valuation fee, about", "€400"]
+            [
+              "Registration fee, 1% of the loan",
+              "€1,950"
+            ],
+            [
+              "Bank arrangement fee, about 1% of the loan",
+              "€1,950"
+            ],
+            [
+              "Valuation fee, about",
+              "€400"
+            ]
           ],
-          "total": ["Loan costs", "€4,300"],
+          "total": [
+            "Loan costs",
+            "€4,300"
+          ],
           "note": "Typical deposits are 30-40% for non-EU non-residents and about 25-30% for EU/EEA non-residents. The deposit itself comes on top of these costs."
         }
       ]
@@ -146,7 +261,7 @@
       "blocks": [
         {
           "type": "p",
-          "text": "Cyprus has had no annual immovable property tax since 2017. Recurring costs are community or management fees on complexes with shared amenities, municipal and community charges, waste, sewerage and building insurance. Our rent-or-buy calculation puts them at roughly €935 to €1,650 a year for a typical apartment."
+          "text": "The state immovable property tax was abolished in 2017, but municipalities still charge their own property tax at a rate each municipality sets; ask for the figure for your property. Recurring costs also include community or management fees on complexes with shared amenities, community charges, waste, sewerage and building insurance. Our rent-or-buy calculation puts them at roughly €935 to €1,650 a year for a typical apartment."
         },
         {
           "type": "p",
@@ -154,13 +269,31 @@
         },
         {
           "type": "table",
-          "head": ["Annual income", "Rate"],
+          "head": [
+            "Annual income",
+            "Rate"
+          ],
           "rows": [
-            ["Up to €22,000", "0%"],
-            ["€22,000 to €32,000", "20%"],
-            ["€32,000 to €42,000", "25%"],
-            ["€42,000 to €72,000", "30%"],
-            ["Above €72,000", "35%"]
+            [
+              "Up to €22,000",
+              "0%"
+            ],
+            [
+              "€22,000 to €32,000",
+              "20%"
+            ],
+            [
+              "€32,000 to €42,000",
+              "25%"
+            ],
+            [
+              "€42,000 to €72,000",
+              "30%"
+            ],
+            [
+              "Above €72,000",
+              "35%"
+            ]
           ]
         },
         {
@@ -178,12 +311,37 @@
         },
         {
           "type": "table",
-          "head": ["Route", "Extras on top", "Total cash", "Extras as share of price"],
+          "head": [
+            "Route",
+            "Extras on top",
+            "Total cash",
+            "Extras as share of price"
+          ],
           "rows": [
-            ["New-build, main residence (5% VAT)", "€18,870", "€318,870", "6.3%"],
-            ["New-build, investment or second home (19% VAT)", "€60,870", "€360,870", "20.3%"],
-            ["Resale, one buyer", "€12,470", "€312,470", "4.2%"],
-            ["Resale, two buyers 50/50", "€9,670", "€309,670", "3.2%"]
+            [
+              "New-build, main residence (5% VAT)",
+              "€18,870",
+              "€318,870",
+              "6.3%"
+            ],
+            [
+              "New-build, investment or second home (19% VAT)",
+              "€60,870",
+              "€360,870",
+              "20.3%"
+            ],
+            [
+              "Resale, one buyer",
+              "€12,470",
+              "€312,470",
+              "4.2%"
+            ],
+            [
+              "Resale, two buyers 50/50",
+              "€9,670",
+              "€309,670",
+              "3.2%"
+            ]
           ],
           "note": "Mortgage costs, furnishing and a reserve are not included."
         },
@@ -191,13 +349,31 @@
           "type": "example",
           "title": "Full budget: €300,000 resale in one name, cash purchase",
           "rows": [
-            ["Purchase price", "€300,000"],
-            ["Closing costs (transfer fee €8,600, legal fee €3,570, registry €300)", "€12,470"],
-            ["Furnishing and appliances (assumption, two-bedroom flat)", "€15,000"],
-            ["First-year running costs (about)", "€1,300"],
-            ["Reserve, 2% of the price (assumption)", "€6,000"]
+            [
+              "Purchase price",
+              "€300,000"
+            ],
+            [
+              "Closing costs (transfer fee €8,600, legal fee €3,570, registry €300)",
+              "€12,470"
+            ],
+            [
+              "Furnishing and appliances (assumption, two-bedroom flat)",
+              "€15,000"
+            ],
+            [
+              "First-year running costs (about)",
+              "€1,300"
+            ],
+            [
+              "Reserve, 2% of the price (assumption)",
+              "€6,000"
+            ]
           ],
-          "total": ["Total budget", "€334,770"],
+          "total": [
+            "Total budget",
+            "€334,770"
+          ],
           "note": "About 11.6% above the price. Furnishing and reserve are assumptions; replace them with your own figures. The running costs are the midpoint of the €935 to €1,650 range."
         },
         {

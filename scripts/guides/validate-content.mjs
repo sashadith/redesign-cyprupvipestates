@@ -24,6 +24,7 @@ export function validateFile(f) {
   if (c.id !== m[1]) err(f, `id "${c.id}" does not match file name`);
   if (c.lang !== m[2]) err(f, `lang "${c.lang}" does not match file name`);
   for (const k of ["title", "subtitle", "edition", "intro", "disclaimer"]) if (!str(c[k])) err(f, `missing ${k}`);
+  if (c.titleAccent !== undefined && !(str(c.titleAccent) && String(c.title).includes(c.titleAccent))) err(f, "titleAccent must be a phrase that appears in title");
   if (!Array.isArray(c.keyNumbers) || c.keyNumbers.length < 3 || c.keyNumbers.length > 4) err(f, "keyNumbers must have 3-4 entries");
   else c.keyNumbers.forEach((k, i) => { if (!str(k.value) || !str(k.label)) err(f, `keyNumbers[${i}] needs value and label`); else if (k.value.length > 18) err(f, `keyNumbers[${i}].value too long (${k.value.length}); keep it short`); });
   if (!Array.isArray(c.sections) || c.sections.length < 4 || c.sections.length > 7) err(f, "sections must have 4-7 entries");

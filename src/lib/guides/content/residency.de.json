@@ -2,13 +2,26 @@
   "id": "residency",
   "lang": "de",
   "title": "Daueraufenthalt auf Zypern durch Immobilienkauf (Kategorie 6.2): Voraussetzungen, Ablauf und Kosten (2026)",
+  "titleAccent": "Daueraufenthalt",
   "subtitle": "Was die Regeln heute verlangen, wer sie erfüllt und welche Krankenversicherung und Steuern dazugehören.",
   "edition": "Ausgabe: Oktober 2026",
   "keyNumbers": [
-    { "value": "300.000 €", "label": "Mindestinvestition in eine Neubauimmobilie, zzgl. MwSt." },
-    { "value": "50.000 €", "label": "Jahreseinkommen aus dem Ausland für den Hauptantragsteller" },
-    { "value": "2–3 Monate", "label": "Übliche Bearbeitungszeit bei vollständigem Antrag" },
-    { "value": "Alle 2 Jahre", "label": "Mindestens erforderliche Einreise nach Zypern" }
+    {
+      "value": "300.000 €",
+      "label": "Mindestinvestition in eine Neubauimmobilie, zzgl. MwSt."
+    },
+    {
+      "value": "50.000 €",
+      "label": "Jahreseinkommen aus dem Ausland für den Hauptantragsteller"
+    },
+    {
+      "value": "2–3 Monate",
+      "label": "Übliche Bearbeitungszeit bei vollständigem Antrag"
+    },
+    {
+      "value": "Alle 2 Jahre",
+      "label": "Mindestens erforderliche Einreise nach Zypern"
+    }
   ],
   "intro": "Kategorie 6.2 (Regelung 6(2)) ist die beschleunigte Daueraufenthaltserlaubnis für Nicht-EU-Investoren, die auf Zypern eine Neubauimmobilie kaufen. Die Regeln wurden am 2. Mai 2023 überarbeitet, und viele Websites nennen noch ältere Zahlen. Dieser Ratgeber zeigt die Voraussetzungen mit Stand Oktober 2026, die Antragsschritte und Kosten sowie das, was die Erlaubnis ermöglicht und was nicht, einschließlich GeSY-Krankenversicherung, Steuern und dem Weg zur Staatsbürgerschaft.",
   "sections": [
@@ -17,13 +30,31 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Voraussetzung", "Regel"],
+          "head": [
+            "Voraussetzung",
+            "Regel"
+          ],
           "rows": [
-            ["Investition", "Neue Wohnimmobilie im Erstverkauf im Wert von mindestens 300.000 € zzgl. MwSt., direkt von einem Bauträger gekauft"],
-            ["Herkunft der Mittel", "Das Geld kommt aus dem Ausland, und die Banküberweisungen sind dokumentiert"],
-            ["Einkommen", "Mindestens 50.000 € im Jahr aus dem Ausland für den Hauptantragsteller, dazu 15.000 € für den Ehepartner und 10.000 € für jedes Kind oder jeden unterhaltsberechtigten Studierenden"],
-            ["Erwerbstätigkeit", "Keine nichtselbstständige Beschäftigung auf Zypern; Dividenden, Mieten und Renteneinkünfte sind zulässig"],
-            ["Einreisepflicht", "Jedes Familienmitglied mit Aufenthaltserlaubnis reist mindestens alle 2 Jahre nach Zypern ein; eine Wohnpflicht auf der Insel besteht nicht"]
+            [
+              "Investition",
+              "Neue Wohnimmobilie im Erstverkauf im Wert von mindestens 300.000 € zzgl. MwSt., direkt von einem Bauträger gekauft"
+            ],
+            [
+              "Herkunft der Mittel",
+              "Das Geld kommt aus dem Ausland, und die Banküberweisungen sind dokumentiert"
+            ],
+            [
+              "Einkommen",
+              "Mindestens 50.000 € im Jahr aus dem Ausland für den Hauptantragsteller, dazu 15.000 € für den Ehepartner und 10.000 € für jedes Kind oder jeden unterhaltsberechtigten Studierenden"
+            ],
+            [
+              "Erwerbstätigkeit",
+              "Keine nichtselbstständige Beschäftigung auf Zypern; Dividenden, Mieten und Renteneinkünfte sind zulässig"
+            ],
+            [
+              "Einreisepflicht",
+              "Jedes Familienmitglied mit Aufenthaltserlaubnis reist mindestens alle 2 Jahre nach Zypern ein; eine Wohnpflicht auf der Insel besteht nicht"
+            ]
           ]
         },
         {
@@ -51,24 +82,59 @@
         },
         {
           "type": "table",
-          "head": ["Familienmitglied", "Von der Erlaubnis erfasst", "Zusätzliches Einkommen"],
+          "head": [
+            "Familienmitglied",
+            "Von der Erlaubnis erfasst",
+            "Zusätzliches Einkommen"
+          ],
           "rows": [
-            ["Ehepartner", "Ja", "+ 15.000 € pro Jahr"],
-            ["Kind unter 18 Jahren", "Ja", "+ 10.000 € pro Jahr"],
-            ["Unterhaltsberechtigter erwachsener Studierender bis 25", "Ja", "+ 10.000 € pro Jahr"],
-            ["Eltern und Schwiegereltern", "Nein, eine eigene Genehmigung ist nötig", "Keines"]
+            [
+              "Ehepartner",
+              "Ja",
+              "+ 15.000 € pro Jahr"
+            ],
+            [
+              "Kind unter 18 Jahren",
+              "Ja",
+              "+ 10.000 € pro Jahr"
+            ],
+            [
+              "Unterhaltsberechtigter erwachsener Studierender bis 25",
+              "Ja",
+              "+ 10.000 € pro Jahr"
+            ],
+            [
+              "Eltern und Schwiegereltern",
+              "Nein, eine eigene Genehmigung ist nötig",
+              "Keines"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Einkommensprüfung für eine vierköpfige Familie",
           "rows": [
-            ["Hauptantragsteller", "50.000 €"],
-            ["Ehepartner", "+ 15.000 €"],
-            ["Kind, 8 Jahre", "+ 10.000 €"],
-            ["Kind, 12 Jahre", "+ 10.000 €"]
+            [
+              "Hauptantragsteller",
+              "50.000 €"
+            ],
+            [
+              "Ehepartner",
+              "+ 15.000 €"
+            ],
+            [
+              "Kind, 8 Jahre",
+              "+ 10.000 €"
+            ],
+            [
+              "Kind, 12 Jahre",
+              "+ 10.000 €"
+            ]
           ],
-          "total": ["Nachzuweisendes Auslandseinkommen pro Jahr", "85.000 €"],
+          "total": [
+            "Nachzuweisendes Auslandseinkommen pro Jahr",
+            "85.000 €"
+          ],
           "note": "Die Einkommensprüfung schließt viele Familien eher aus als der Kaufpreis. Das Einkommen wird durch Steuererklärungen, eine Bescheinigung eines Buchhalters oder dokumentierte Dividenden-, Miet- oder Renteneinkünfte belegt."
         }
       ]
@@ -79,13 +145,34 @@
         {
           "type": "steps",
           "items": [
-            { "title": "Berechtigung mit einem Anwalt prüfen", "text": "Beauftragen Sie einen bei der Cyprus Bar Association zugelassenen Anwalt. Er prüft den Bauträger und bestätigt, dass es sich bei der Einheit um einen qualifizierten Erstverkauf handelt." },
-            { "title": "Reservieren und unterzeichnen", "text": "Reservieren Sie die Einheit und unterzeichnen Sie dann den Kaufvertrag. Ihr Anwalt lässt ihn beim zuständigen Land Registry eintragen, und die Registrierungsnummer wird Teil Ihres Antrags." },
-            { "title": "Mittel aus dem Ausland überweisen", "text": "Zahlen Sie von Ihrem eigenen Konto im Ausland. Bewahren Sie die SWIFT-Belege und die Bestätigung der empfangenden Bank über den Eingang ausländischer Mittel auf." },
-            { "title": "Antragsunterlagen zusammenstellen", "text": "Für jeden Antragsteller: Formular MIP1, beglaubigte Passkopien, Führungszeugnisse (mit Apostille oder konsularisch beglaubigt) sowie Heirats- und Geburtsurkunden, soweit relevant. Für die Familie: Nachweis der Investition und Einkommensnachweis. Nicht englische Dokumente brauchen beglaubigte Übersetzungen." },
-            { "title": "Antrag einreichen", "text": "Reichen Sie ihn beim Civil Registry and Migration Department (CRMD) ein, persönlich oder über Ihren Anwalt, und zahlen Sie die Gebühr. Sie erhalten eine Eingangsbestätigung, mit der Sie den Vorgang verfolgen können." },
-            { "title": "Entscheidung abwarten", "text": "Ein vollständiger Antrag dauert etwa 2–3 Monate, bei Rückfragen der Behörde bis zu 5–6 Monate. Während der Prüfung müssen Sie nicht auf Zypern sein." },
-            { "title": "Erlaubnis abholen", "text": "Nach der Genehmigung folgt ein kurzer Besuch auf Zypern für Biometrie und Karte, der etwa 2–3 Wochen dauert. Danach beantragen Sie eine zyprische Steueridentifikationsnummer und kümmern sich um die Krankenversicherung." }
+            {
+              "title": "Berechtigung mit einem Anwalt prüfen",
+              "text": "Beauftragen Sie einen bei der Cyprus Bar Association zugelassenen Anwalt. Er prüft den Bauträger und bestätigt, dass es sich bei der Einheit um einen qualifizierten Erstverkauf handelt."
+            },
+            {
+              "title": "Reservieren und unterzeichnen",
+              "text": "Reservieren Sie die Einheit und unterzeichnen Sie dann den Kaufvertrag. Ihr Anwalt lässt ihn beim zuständigen Land Registry eintragen, und die Registrierungsnummer wird Teil Ihres Antrags."
+            },
+            {
+              "title": "Mittel aus dem Ausland überweisen",
+              "text": "Zahlen Sie von Ihrem eigenen Konto im Ausland. Bewahren Sie die SWIFT-Belege und die Bestätigung der empfangenden Bank über den Eingang ausländischer Mittel auf."
+            },
+            {
+              "title": "Antragsunterlagen zusammenstellen",
+              "text": "Für jeden Antragsteller: Formular MIP1, beglaubigte Passkopien, Führungszeugnisse (mit Apostille oder konsularisch beglaubigt) sowie Heirats- und Geburtsurkunden, soweit relevant. Für die Familie: Nachweis der Investition und Einkommensnachweis. Nicht englische Dokumente brauchen beglaubigte Übersetzungen."
+            },
+            {
+              "title": "Antrag einreichen",
+              "text": "Reichen Sie ihn beim Civil Registry and Migration Department (CRMD) ein, persönlich oder über Ihren Anwalt, und zahlen Sie die Gebühr. Sie erhalten eine Eingangsbestätigung, mit der Sie den Vorgang verfolgen können."
+            },
+            {
+              "title": "Entscheidung abwarten",
+              "text": "Ein vollständiger Antrag dauert etwa 2–3 Monate, bei Rückfragen der Behörde bis zu 5–6 Monate. Während der Prüfung müssen Sie nicht auf Zypern sein."
+            },
+            {
+              "title": "Erlaubnis abholen",
+              "text": "Nach der Genehmigung folgt ein kurzer Besuch auf Zypern für Biometrie und Karte, der etwa 2–3 Wochen dauert. Danach beantragen Sie eine zyprische Steueridentifikationsnummer und kümmern sich um die Krankenversicherung."
+            }
           ]
         },
         {
@@ -99,24 +186,61 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Position", "Betrag", "Anmerkung"],
+          "head": [
+            "Position",
+            "Betrag",
+            "Anmerkung"
+          ],
           "rows": [
-            ["Kaufpreis", "Mindestens 300.000 € zzgl. MwSt.", "Neue Wohnimmobilie im Erstverkauf"],
-            ["MwSt.", "5 % ermäßigter Satz oder 19 % Normalsatz", "Der ermäßigte Satz hat Grenzen (die ersten 130 m², Wertgrenze 350.000 €); fragen Sie Ihren Anwalt, welcher Satz für Ihre Einheit gilt"],
-            ["Reservierungsanzahlung", "5.000–10.000 €", "Fällig bei der Reservierung der Einheit"],
-            ["Behördengebühr für den Antrag", "500 €", "Genannte Gebühr; klären Sie, ob sie pro Antragsteller anfällt"],
-            ["Anwalt, beglaubigte Übersetzungen, Apostillen", "Hier nicht beziffert", "Holen Sie vor der Unterschrift ein schriftliches Angebot ein"],
-            ["Krankenversicherung", "GeSY-Beitrag oder privater Tarif", "Siehe den Abschnitt zur Krankenversicherung weiter unten"]
+            [
+              "Kaufpreis",
+              "Mindestens 300.000 € zzgl. MwSt.",
+              "Neue Wohnimmobilie im Erstverkauf"
+            ],
+            [
+              "MwSt.",
+              "5 % ermäßigter Satz oder 19 % Normalsatz",
+              "Der ermäßigte Satz hat Grenzen (die ersten 130 m², Wertgrenze 350.000 €); fragen Sie Ihren Anwalt, welcher Satz für Ihre Einheit gilt"
+            ],
+            [
+              "Reservierungsanzahlung",
+              "5.000–10.000 €",
+              "Fällig bei der Reservierung der Einheit"
+            ],
+            [
+              "Behördengebühr für den Antrag",
+              "500 €",
+              "Genannte Gebühr; klären Sie, ob sie pro Antragsteller anfällt"
+            ],
+            [
+              "Anwalt, beglaubigte Übersetzungen, Apostillen",
+              "Hier nicht beziffert",
+              "Holen Sie vor der Unterschrift ein schriftliches Angebot ein"
+            ],
+            [
+              "Krankenversicherung",
+              "GeSY-Beitrag oder privater Tarif",
+              "Siehe den Abschnitt zur Krankenversicherung weiter unten"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Eine Wohnung für 300.000 €: Preis mit MwSt. (Stand Oktober 2026)",
           "rows": [
-            ["Preis ohne MwSt.", "300.000 €"],
-            ["MwSt. zum ermäßigten Satz von 5 % (300.000 € × 5 %)", "15.000 €"]
+            [
+              "Preis ohne MwSt.",
+              "300.000 €"
+            ],
+            [
+              "MwSt. zum ermäßigten Satz von 5 % (300.000 € × 5 %)",
+              "15.000 €"
+            ]
           ],
-          "total": ["Gesamtpreis beim ermäßigten Satz", "315.000 €"],
+          "total": [
+            "Gesamtpreis beim ermäßigten Satz",
+            "315.000 €"
+          ],
           "note": "Beim Normalsatz von 19 % beträgt die MwSt. 57.000 € und der Gesamtpreis 357.000 €, also 42.000 € mehr. Der ermäßigte Satz gilt nur, wenn seine Bedingungen erfüllt sind."
         }
       ]
@@ -138,25 +262,58 @@
         },
         {
           "type": "table",
-          "head": ["Beitragszahler", "Satz (2026)"],
+          "head": [
+            "Beitragszahler",
+            "Satz (2026)"
+          ],
           "rows": [
-            ["Arbeitnehmer, auf das Bruttogehalt", "2,65 %"],
-            ["Selbstständige, auf den Gewinn", "4,00 %"],
-            ["Rentner, auf das Renteneinkommen", "2,65 %"],
-            ["Miet-, Dividenden- und Zinseinkünfte", "2,65 %"],
-            ["Jährliche Einkommensobergrenze für Beiträge", "180.000 €"]
+            [
+              "Arbeitnehmer, auf das Bruttogehalt",
+              "2,65 %"
+            ],
+            [
+              "Selbstständige, auf den Gewinn",
+              "4,00 %"
+            ],
+            [
+              "Rentner, auf das Renteneinkommen",
+              "2,65 %"
+            ],
+            [
+              "Miet-, Dividenden- und Zinseinkünfte",
+              "2,65 %"
+            ],
+            [
+              "Jährliche Einkommensobergrenze für Beiträge",
+              "180.000 €"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "GeSY-Beitrag eines Rentners mit Wohnsitz auf Zypern",
           "rows": [
-            ["Rente", "24.000 €"],
-            ["Mieteinnahmen", "12.000 €"],
-            ["Angerechnetes Einkommen", "36.000 €"],
-            ["Satz", "2,65 %"]
+            [
+              "Rente",
+              "24.000 €"
+            ],
+            [
+              "Mieteinnahmen",
+              "12.000 €"
+            ],
+            [
+              "Angerechnetes Einkommen",
+              "36.000 €"
+            ],
+            [
+              "Satz",
+              "2,65 %"
+            ]
           ],
-          "total": ["Beitrag pro Jahr", "954 €"],
+          "total": [
+            "Beitrag pro Jahr",
+            "954 €"
+          ],
           "note": "Das sind 79,50 € im Monat. Ein privater Basistarif kostet etwa 80–150 € im Monat (960–1.800 € im Jahr) bei engerem Leistungsumfang."
         },
         {
@@ -170,12 +327,27 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Frage", "Antwort"],
+          "head": [
+            "Frage",
+            "Antwort"
+          ],
           "rows": [
-            ["Darf ich auf Zypern als Angestellter arbeiten?", "Nein. Sie können Gesellschafter oder Direktor einer Firma sein und Dividenden, Mieten oder eine Rente beziehen."],
-            ["Gibt die Erlaubnis Rechte in anderen EU-Ländern?", "Nein. Sie bedeutet nur Aufenthalt auf Zypern, und Ihr Reisepass entscheidet, wohin Sie reisen dürfen."],
-            ["Werde ich damit auf Zypern steuerlich ansässig?", "Nein. Die steuerliche Ansässigkeit richtet sich nach dem 183-Tage- oder 60-Tage-Test und wird getrennt vom Aufenthaltsstatus beurteilt."],
-            ["Behalte ich die Erlaubnis, egal was ich tue?", "Nein. Sie behalten die qualifizierende Investition, erfüllen weiterhin die Bedingungen und reisen mindestens alle 2 Jahre nach Zypern ein."]
+            [
+              "Darf ich auf Zypern als Angestellter arbeiten?",
+              "Nein. Sie können Gesellschafter oder Direktor einer Firma sein und Dividenden, Mieten oder eine Rente beziehen."
+            ],
+            [
+              "Gibt die Erlaubnis Rechte in anderen EU-Ländern?",
+              "Nein. Sie bedeutet nur Aufenthalt auf Zypern, und Ihr Reisepass entscheidet, wohin Sie reisen dürfen."
+            ],
+            [
+              "Werde ich damit auf Zypern steuerlich ansässig?",
+              "Nein. Die steuerliche Ansässigkeit richtet sich nach dem 183-Tage- oder 60-Tage-Test und wird getrennt vom Aufenthaltsstatus beurteilt."
+            ],
+            [
+              "Behalte ich die Erlaubnis, egal was ich tue?",
+              "Nein. Sie behalten die qualifizierende Investition, erfüllen weiterhin die Bedingungen und reisen mindestens alle 2 Jahre nach Zypern ein."
+            ]
           ]
         },
         {
