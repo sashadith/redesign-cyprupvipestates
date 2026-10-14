@@ -12,9 +12,8 @@ const outDir = path.join(root, "src/lib/guides/pdf-files");
 const IDS = ["cost-of-buying", "buying-process", "rent-or-buy", "residency"];
 const LANGS = ["en", "de", "pl", "ru"];
 const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
-const layout = fs.readFileSync(path.join(root, "src/lib/guides/pdf.tsx"));
-const fonts = ["Regular", "Bold", "Italic", "BoldItalic"].map((f) => fs.readFileSync(path.join(root, `public/fonts/LiberationSans-${f}.ttf`)));
-const layoutHash = sha(Buffer.concat([layout, ...fonts]));
+const layoutFiles = ["src/lib/guides/html.ts", "src/lib/guides/assets/logo-full.png", "src/lib/guides/assets/logo-mark.png", "src/app/fonts/vendored.css"];
+const layoutHash = sha(Buffer.concat(layoutFiles.map((f) => fs.readFileSync(path.join(root, f)))));
 const hashFor = (id, lang) => sha(Buffer.concat([fs.readFileSync(path.join(root, `src/lib/guides/content/${id}.${lang}.json`)), Buffer.from(layoutHash)]));
 const manifestPath = path.join(outDir, "manifest.json");
 
@@ -27,7 +26,7 @@ for (const id of IDS) for (const lang of LANGS) {
   const current = fs.existsSync(file) && manifest[key] === want;
   if (check) { if (!current) { console.error(`STALE: ${key}`); stale++; } continue; }
   if (current) { console.log(`ok     ${key}`); continue; }
-  const r = spawnSync(process.execPath, ["--import", "tsx", "scripts/guides/render-one.tsx", id, lang, file], { cwd: root, stdio: "inherit" });
+  const r = spawnSync(process.execPath, ["--import", "tsx", "scripts/guides/render-one.ts", id, lang, file], { cwd: root, stdio: "inherit" });
   if (r.status !== 0) { console.error(`FAILED ${key}`); process.exit(1); }
   manifest[key] = want;
   console.log(`built  ${key} ${(fs.statSync(file).size / 1024).toFixed(0)} KB`);

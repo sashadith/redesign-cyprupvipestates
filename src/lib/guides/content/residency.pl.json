@@ -2,13 +2,26 @@
   "id": "residency",
   "lang": "pl",
   "title": "Pobyt stały na Cyprze przez zakup nieruchomości (kategoria 6.2): wymagania, procedura i koszty (2026)",
+  "titleAccent": "Pobyt stały",
   "subtitle": "Czego wymagają dziś przepisy, kto je spełnia i jakie ubezpieczenie zdrowotne oraz podatki się z tym wiążą.",
   "edition": "Wydanie: październik 2026",
   "keyNumbers": [
-    { "value": "300 000 €", "label": "Minimalna inwestycja w nową nieruchomość, plus VAT" },
-    { "value": "50 000 €", "label": "Roczny dochód z zagranicy głównego wnioskodawcy" },
-    { "value": "2–3 miesiące", "label": "Typowy czas rozpatrzenia kompletnego wniosku" },
-    { "value": "Co 2 lata", "label": "Minimalny wjazd na Cypr posiadacza zezwolenia" }
+    {
+      "value": "300 000 €",
+      "label": "Minimalna inwestycja w nową nieruchomość, plus VAT"
+    },
+    {
+      "value": "50 000 €",
+      "label": "Roczny dochód z zagranicy głównego wnioskodawcy"
+    },
+    {
+      "value": "2–3 miesiące",
+      "label": "Typowy czas rozpatrzenia kompletnego wniosku"
+    },
+    {
+      "value": "Co 2 lata",
+      "label": "Minimalny wjazd na Cypr posiadacza zezwolenia"
+    }
   ],
   "intro": "Kategoria 6.2 (przepis 6(2)) to przyspieszone zezwolenie na pobyt stały dla inwestorów spoza UE, którzy kupują na Cyprze nową nieruchomość. Zasady zmieniono 2 maja 2023 r., a wiele stron wciąż podaje starsze liczby. Ten przewodnik przedstawia wymagania według stanu na październik 2026, kolejne kroki wniosku i koszty oraz to, co zezwolenie daje, a czego nie daje, w tym ubezpieczenie GeSY, podatki i drogę do obywatelstwa.",
   "sections": [
@@ -17,13 +30,31 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Wymaganie", "Zasada"],
+          "head": [
+            "Wymaganie",
+            "Zasada"
+          ],
           "rows": [
-            ["Inwestycja", "Nowa nieruchomość mieszkalna z pierwszej sprzedaży o wartości co najmniej 300 000 € plus VAT, kupiona bezpośrednio od dewelopera"],
-            ["Źródło środków", "Pieniądze pochodzą z zagranicy, a przelewy bankowe są udokumentowane"],
-            ["Dochód", "Co najmniej 50 000 € rocznie z zagranicy dla głównego wnioskodawcy, plus 15 000 € na małżonka i 10 000 € na każde dziecko lub studiującego członka rodziny na utrzymaniu"],
-            ["Zatrudnienie", "Brak pracy najemnej na Cyprze; dywidendy, najem i emerytura są dozwolone"],
-            ["Obowiązek wjazdu", "Każdy członek rodziny objęty zezwoleniem wjeżdża na Cypr co najmniej raz na 2 lata; nie ma obowiązku mieszkania na wyspie"]
+            [
+              "Inwestycja",
+              "Nowa nieruchomość mieszkalna z pierwszej sprzedaży o wartości co najmniej 300 000 € plus VAT, kupiona bezpośrednio od dewelopera"
+            ],
+            [
+              "Źródło środków",
+              "Pieniądze pochodzą z zagranicy, a przelewy bankowe są udokumentowane"
+            ],
+            [
+              "Dochód",
+              "Co najmniej 50 000 € rocznie z zagranicy dla głównego wnioskodawcy, plus 15 000 € na małżonka i 10 000 € na każde dziecko lub studiującego członka rodziny na utrzymaniu"
+            ],
+            [
+              "Zatrudnienie",
+              "Brak pracy najemnej na Cyprze; dywidendy, najem i emerytura są dozwolone"
+            ],
+            [
+              "Obowiązek wjazdu",
+              "Każdy członek rodziny objęty zezwoleniem wjeżdża na Cypr co najmniej raz na 2 lata; nie ma obowiązku mieszkania na wyspie"
+            ]
           ]
         },
         {
@@ -51,24 +82,59 @@
         },
         {
           "type": "table",
-          "head": ["Członek rodziny", "Objęty zezwoleniem", "Dodatkowy dochód"],
+          "head": [
+            "Członek rodziny",
+            "Objęty zezwoleniem",
+            "Dodatkowy dochód"
+          ],
           "rows": [
-            ["Małżonek", "Tak", "+ 15 000 € rocznie"],
-            ["Dziecko poniżej 18 lat", "Tak", "+ 10 000 € rocznie"],
-            ["Dorosły student na utrzymaniu do 25 lat", "Tak", "+ 10 000 € rocznie"],
-            ["Rodzice i teściowie", "Nie, potrzebne jest osobne zezwolenie", "Brak"]
+            [
+              "Małżonek",
+              "Tak",
+              "+ 15 000 € rocznie"
+            ],
+            [
+              "Dziecko poniżej 18 lat",
+              "Tak",
+              "+ 10 000 € rocznie"
+            ],
+            [
+              "Dorosły student na utrzymaniu do 25 lat",
+              "Tak",
+              "+ 10 000 € rocznie"
+            ],
+            [
+              "Rodzice i teściowie",
+              "Nie, potrzebne jest osobne zezwolenie",
+              "Brak"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Test dochodu dla czteroosobowej rodziny",
           "rows": [
-            ["Główny wnioskodawca", "50 000 €"],
-            ["Małżonek", "+ 15 000 €"],
-            ["Dziecko w wieku 8 lat", "+ 10 000 €"],
-            ["Dziecko w wieku 12 lat", "+ 10 000 €"]
+            [
+              "Główny wnioskodawca",
+              "50 000 €"
+            ],
+            [
+              "Małżonek",
+              "+ 15 000 €"
+            ],
+            [
+              "Dziecko w wieku 8 lat",
+              "+ 10 000 €"
+            ],
+            [
+              "Dziecko w wieku 12 lat",
+              "+ 10 000 €"
+            ]
           ],
-          "total": ["Wymagany udokumentowany dochód z zagranicy rocznie", "85 000 €"],
+          "total": [
+            "Wymagany udokumentowany dochód z zagranicy rocznie",
+            "85 000 €"
+          ],
           "note": "Test dochodu częściej niż cena zakupu wyklucza wiele rodzin. Dochód potwierdza się zeznaniami podatkowymi, zaświadczeniem księgowego lub udokumentowanymi dochodami z dywidend, najmu albo emerytury."
         }
       ]
@@ -79,13 +145,34 @@
         {
           "type": "steps",
           "items": [
-            { "title": "Sprawdź uprawnienia z prawnikiem", "text": "Skorzystaj z prawnika wpisanego do Cyprus Bar Association. Prawnik weryfikuje dewelopera i potwierdza, że lokal pochodzi z kwalifikującej się pierwszej sprzedaży." },
-            { "title": "Zarezerwuj i podpisz", "text": "Zarezerwuj lokal, a następnie podpisz umowę sprzedaży. Prawnik rejestruje ją w okręgowym Land Registry, a numer rejestracyjny staje się częścią wniosku." },
-            { "title": "Przelej środki z zagranicy", "text": "Zapłać z własnego rachunku za granicą. Zachowaj potwierdzenia SWIFT oraz potwierdzenie banku odbiorcy, że środki z zagranicy wpłynęły." },
-            { "title": "Skompletuj dokumenty", "text": "Dla każdego wnioskodawcy: formularz MIP1, poświadczone kopie paszportów, zaświadczenia o niekaralności (z apostille lub poświadczone przez ambasadę) oraz akty małżeństwa i urodzenia, jeśli są potrzebne. Dla rodziny: dowód inwestycji i dowód dochodu. Dokumenty w innym języku niż angielski wymagają tłumaczeń przysięgłych." },
-            { "title": "Złóż wniosek", "text": "Złóż go w Civil Registry and Migration Department (CRMD), osobiście lub przez prawnika, i opłać należność. Otrzymasz potwierdzenie złożenia, które pozwala śledzić sprawę." },
-            { "title": "Poczekaj na decyzję", "text": "Kompletny wniosek jest rozpatrywany około 2–3 miesięcy, a przy pytaniach uzupełniających urzędu nawet 5–6 miesięcy. W trakcie rozpatrywania nie musisz być na Cyprze." },
-            { "title": "Odbierz zezwolenie", "text": "Po zatwierdzeniu krótka wizyta na Cyprze na dane biometryczne i kartę zajmuje około 2–3 tygodni. Potem wystąp o cypryjski numer identyfikacji podatkowej i zadbaj o ubezpieczenie zdrowotne." }
+            {
+              "title": "Sprawdź uprawnienia z prawnikiem",
+              "text": "Skorzystaj z prawnika wpisanego do Cyprus Bar Association. Prawnik weryfikuje dewelopera i potwierdza, że lokal pochodzi z kwalifikującej się pierwszej sprzedaży."
+            },
+            {
+              "title": "Zarezerwuj i podpisz",
+              "text": "Zarezerwuj lokal, a następnie podpisz umowę sprzedaży. Prawnik rejestruje ją w okręgowym Land Registry, a numer rejestracyjny staje się częścią wniosku."
+            },
+            {
+              "title": "Przelej środki z zagranicy",
+              "text": "Zapłać z własnego rachunku za granicą. Zachowaj potwierdzenia SWIFT oraz potwierdzenie banku odbiorcy, że środki z zagranicy wpłynęły."
+            },
+            {
+              "title": "Skompletuj dokumenty",
+              "text": "Dla każdego wnioskodawcy: formularz MIP1, poświadczone kopie paszportów, zaświadczenia o niekaralności (z apostille lub poświadczone przez ambasadę) oraz akty małżeństwa i urodzenia, jeśli są potrzebne. Dla rodziny: dowód inwestycji i dowód dochodu. Dokumenty w innym języku niż angielski wymagają tłumaczeń przysięgłych."
+            },
+            {
+              "title": "Złóż wniosek",
+              "text": "Złóż go w Civil Registry and Migration Department (CRMD), osobiście lub przez prawnika, i opłać należność. Otrzymasz potwierdzenie złożenia, które pozwala śledzić sprawę."
+            },
+            {
+              "title": "Poczekaj na decyzję",
+              "text": "Kompletny wniosek jest rozpatrywany około 2–3 miesięcy, a przy pytaniach uzupełniających urzędu nawet 5–6 miesięcy. W trakcie rozpatrywania nie musisz być na Cyprze."
+            },
+            {
+              "title": "Odbierz zezwolenie",
+              "text": "Po zatwierdzeniu krótka wizyta na Cyprze na dane biometryczne i kartę zajmuje około 2–3 tygodni. Potem wystąp o cypryjski numer identyfikacji podatkowej i zadbaj o ubezpieczenie zdrowotne."
+            }
           ]
         },
         {
@@ -99,24 +186,61 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Pozycja", "Kwota", "Uwagi"],
+          "head": [
+            "Pozycja",
+            "Kwota",
+            "Uwagi"
+          ],
           "rows": [
-            ["Cena zakupu", "Co najmniej 300 000 € plus VAT", "Nowa nieruchomość mieszkalna z pierwszej sprzedaży"],
-            ["VAT", "5 % stawka obniżona lub 19 % stawka podstawowa", "Stawka obniżona ma limity (pierwsze 130 m², limit wartości 350 000 €); zapytaj prawnika, jaka stawka dotyczy Twojego lokalu"],
-            ["Zadatek rezerwacyjny", "5 000–10 000 €", "Płatny przy rezerwacji lokalu"],
-            ["Opłata urzędowa za wniosek", "500 €", "Podawana opłata; potwierdź, czy jest naliczana od każdego wnioskodawcy"],
-            ["Prawnik, tłumaczenia przysięgłe, apostille", "Nie wyceniono tutaj", "Poproś o pisemną wycenę przed podpisaniem"],
-            ["Ubezpieczenie zdrowotne", "Składka GeSY lub plan prywatny", "Zobacz część o ubezpieczeniu zdrowotnym poniżej"]
+            [
+              "Cena zakupu",
+              "Co najmniej 300 000 € plus VAT",
+              "Nowa nieruchomość mieszkalna z pierwszej sprzedaży"
+            ],
+            [
+              "VAT",
+              "5 % stawka obniżona lub 19 % stawka podstawowa",
+              "Stawka obniżona ma limity (pierwsze 130 m², limit wartości 350 000 €); zapytaj prawnika, jaka stawka dotyczy Twojego lokalu"
+            ],
+            [
+              "Zadatek rezerwacyjny",
+              "5 000–10 000 €",
+              "Płatny przy rezerwacji lokalu"
+            ],
+            [
+              "Opłata urzędowa za wniosek",
+              "500 €",
+              "Podawana opłata; potwierdź, czy jest naliczana od każdego wnioskodawcy"
+            ],
+            [
+              "Prawnik, tłumaczenia przysięgłe, apostille",
+              "Nie wyceniono tutaj",
+              "Poproś o pisemną wycenę przed podpisaniem"
+            ],
+            [
+              "Ubezpieczenie zdrowotne",
+              "Składka GeSY lub plan prywatny",
+              "Zobacz część o ubezpieczeniu zdrowotnym poniżej"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Mieszkanie za 300 000 €: cena z VAT (stan na październik 2026)",
           "rows": [
-            ["Cena bez VAT", "300 000 €"],
-            ["VAT według obniżonej stawki 5 % (300 000 € × 5 %)", "15 000 €"]
+            [
+              "Cena bez VAT",
+              "300 000 €"
+            ],
+            [
+              "VAT według obniżonej stawki 5 % (300 000 € × 5 %)",
+              "15 000 €"
+            ]
           ],
-          "total": ["Razem według stawki obniżonej", "315 000 €"],
+          "total": [
+            "Razem według stawki obniżonej",
+            "315 000 €"
+          ],
           "note": "Przy stawce podstawowej 19 % VAT wynosi 57 000 €, a razem 357 000 €, czyli o 42 000 € więcej. Stawka obniżona obowiązuje tylko wtedy, gdy spełnione są jej warunki."
         }
       ]
@@ -138,25 +262,58 @@
         },
         {
           "type": "table",
-          "head": ["Płatnik", "Stawka (2026)"],
+          "head": [
+            "Płatnik",
+            "Stawka (2026)"
+          ],
           "rows": [
-            ["Pracownik, od wynagrodzenia brutto", "2,65 %"],
-            ["Osoba samozatrudniona, od zysku", "4,00 %"],
-            ["Emeryt, od dochodu z emerytury", "2,65 %"],
-            ["Dochody z najmu, dywidend i odsetek", "2,65 %"],
-            ["Roczny limit dochodu dla składek", "180 000 €"]
+            [
+              "Pracownik, od wynagrodzenia brutto",
+              "2,65 %"
+            ],
+            [
+              "Osoba samozatrudniona, od zysku",
+              "4,00 %"
+            ],
+            [
+              "Emeryt, od dochodu z emerytury",
+              "2,65 %"
+            ],
+            [
+              "Dochody z najmu, dywidend i odsetek",
+              "2,65 %"
+            ],
+            [
+              "Roczny limit dochodu dla składek",
+              "180 000 €"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Składka GeSY emeryta mieszkającego na Cyprze",
           "rows": [
-            ["Emerytura", "24 000 €"],
-            ["Dochód z najmu", "12 000 €"],
-            ["Dochód uwzględniany", "36 000 €"],
-            ["Stawka", "2,65 %"]
+            [
+              "Emerytura",
+              "24 000 €"
+            ],
+            [
+              "Dochód z najmu",
+              "12 000 €"
+            ],
+            [
+              "Dochód uwzględniany",
+              "36 000 €"
+            ],
+            [
+              "Stawka",
+              "2,65 %"
+            ]
           ],
-          "total": ["Składka rocznie", "954 €"],
+          "total": [
+            "Składka rocznie",
+            "954 €"
+          ],
           "note": "To 79,50 € miesięcznie. Podstawowy plan prywatny kosztuje około 80–150 € miesięcznie (960–1 800 € rocznie) przy węższym zakresie ochrony."
         },
         {
@@ -170,12 +327,27 @@
       "blocks": [
         {
           "type": "table",
-          "head": ["Pytanie", "Odpowiedź"],
+          "head": [
+            "Pytanie",
+            "Odpowiedź"
+          ],
           "rows": [
-            ["Czy mogę pracować na Cyprze na etacie?", "Nie. Możesz być wspólnikiem lub dyrektorem spółki i otrzymywać dywidendy, dochód z najmu lub emeryturę."],
-            ["Czy zezwolenie daje prawa w innych krajach UE?", "Nie. To pobyt wyłącznie na Cyprze, a o tym, dokąd możesz podróżować, decyduje Twój paszport."],
-            ["Czy zostanę dzięki niemu rezydentem podatkowym Cypru?", "Nie. Rezydencja podatkowa wynika z testu 183 dni lub 60 dni i jest oceniana osobno od statusu imigracyjnego."],
-            ["Czy zachowam zezwolenie niezależnie od tego, co zrobię?", "Nie. Utrzymujesz kwalifikującą inwestycję, nadal spełniasz warunki i wjeżdżasz na Cypr co najmniej raz na 2 lata."]
+            [
+              "Czy mogę pracować na Cyprze na etacie?",
+              "Nie. Możesz być wspólnikiem lub dyrektorem spółki i otrzymywać dywidendy, dochód z najmu lub emeryturę."
+            ],
+            [
+              "Czy zezwolenie daje prawa w innych krajach UE?",
+              "Nie. To pobyt wyłącznie na Cyprze, a o tym, dokąd możesz podróżować, decyduje Twój paszport."
+            ],
+            [
+              "Czy zostanę dzięki niemu rezydentem podatkowym Cypru?",
+              "Nie. Rezydencja podatkowa wynika z testu 183 dni lub 60 dni i jest oceniana osobno od statusu imigracyjnego."
+            ],
+            [
+              "Czy zachowam zezwolenie niezależnie od tego, co zrobię?",
+              "Nie. Utrzymujesz kwalifikującą inwestycję, nadal spełniasz warunki i wjeżdżasz na Cypr co najmniej raz na 2 lata."
+            ]
           ]
         },
         {

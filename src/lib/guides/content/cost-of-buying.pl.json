@@ -2,13 +2,26 @@
   "id": "cost-of-buying",
   "lang": "pl",
   "title": "Prawdziwy koszt zakupu nieruchomości na Cyprze (2026)",
+  "titleAccent": "Prawdziwy koszt",
   "subtitle": "Wszystkie podatki, opłaty i koszty utrzymania od rezerwacji do odbioru kluczy, z przykładem obliczeń",
   "edition": "Wydanie: październik 2026",
   "keyNumbers": [
-    { "value": "4 % do 20 %", "label": "dodatkowe koszty ponad cenę, od rynku wtórnego do nowej inwestycji z 19 % VAT" },
-    { "value": "42 000 €", "label": "różnica w VAT między 5 % a 19 % przy nowym mieszkaniu za 300 000 €" },
-    { "value": "8 600 €", "label": "opłata przeniesienia własności przy zakupie z rynku wtórnego za 300 000 €, po obniżce o 50 %" },
-    { "value": "0 €", "label": "opłata skarbowa przy umowach podpisanych od 1 stycznia 2026" }
+    {
+      "value": "4 % do 20 %",
+      "label": "dodatkowe koszty ponad cenę, od rynku wtórnego do nowej inwestycji z 19 % VAT"
+    },
+    {
+      "value": "42 000 €",
+      "label": "różnica w VAT między 5 % a 19 % przy nowym mieszkaniu za 300 000 €"
+    },
+    {
+      "value": "8 600 €",
+      "label": "opłata przeniesienia własności przy zakupie z rynku wtórnego za 300 000 €, po obniżce o 50 %"
+    },
+    {
+      "value": "0 €",
+      "label": "opłata skarbowa przy umowach podpisanych od 1 stycznia 2026"
+    }
   ],
   "intro": "Przy zakupie za 300 000 € na Cyprze koszty ponad cenę wynoszą od około 4 % na rynku wtórnym do około 20 % przy nowej inwestycji z 19 % VAT (stan na październik 2026). Rachunek zależy bardziej od kategorii nieruchomości niż od ceny. Ten przewodnik wymienia wszystkie koszty jednorazowe i stałe, pokazuje, kiedy każdy z nich jest płatny, i przelicza jeden realistyczny budżet. Tam, gdzie liczba jest wartością planistyczną, a nie ustawową stawką, tekst o tym informuje.",
   "sections": [
@@ -21,15 +34,47 @@
         },
         {
           "type": "table",
-          "head": ["Pozycja kosztowa", "Nowa inwestycja (od dewelopera)", "Rynek wtórny"],
+          "head": [
+            "Pozycja kosztowa",
+            "Nowa inwestycja (od dewelopera)",
+            "Rynek wtórny"
+          ],
           "rows": [
-            ["VAT", "5 % (główne miejsce zamieszkania, w granicach limitów) lub 19 %", "Brak"],
-            ["Opłata przeniesienia własności w Rejestrze Gruntów", "Brak, gdy naliczany jest VAT", "Skala 3 % / 5 % / 8 %, obniżona o obecne 50 %"],
-            ["Opłata skarbowa", "Brak: zniesiona dla umów od 1 stycznia 2026", "Brak: zniesiona dla umów od 1 stycznia 2026"],
-            ["Koszty prawne", "Wartość planistyczna: 1 % plus 19 % VAT od honorarium", "Wartość planistyczna: 1 % plus 19 % VAT od honorarium"],
-            ["Opłaty w Rejestrze Gruntów", "Kilkaset euro; depozyt umowy kosztuje 50 €", "Kilkaset euro; depozyt umowy kosztuje 50 €"],
-            ["Prowizja pośrednika", "Zwykle płaci deweloper", "Zwykle płaci sprzedający"],
-            ["Koszty kredytu (przy finansowaniu)", "Wpis 1 %, prowizja za udzielenie około 1 %, wycena około 400 €", "Wpis 1 %, prowizja za udzielenie około 1 %, wycena około 400 €"]
+            [
+              "VAT",
+              "5 % (główne miejsce zamieszkania, w granicach limitów) lub 19 %",
+              "Brak"
+            ],
+            [
+              "Opłata przeniesienia własności w Rejestrze Gruntów",
+              "Brak, gdy naliczany jest VAT",
+              "Skala 3 % / 5 % / 8 %, obniżona o obecne 50 %"
+            ],
+            [
+              "Opłata skarbowa",
+              "Brak: zniesiona dla umów od 1 stycznia 2026",
+              "Brak: zniesiona dla umów od 1 stycznia 2026"
+            ],
+            [
+              "Koszty prawne",
+              "Wartość planistyczna: 1 % plus 19 % VAT od honorarium",
+              "Wartość planistyczna: 1 % plus 19 % VAT od honorarium"
+            ],
+            [
+              "Opłaty w Rejestrze Gruntów",
+              "Kilkaset euro; depozyt umowy kosztuje 50 €",
+              "Kilkaset euro; depozyt umowy kosztuje 50 €"
+            ],
+            [
+              "Prowizja pośrednika",
+              "Zwykle płaci deweloper",
+              "Zwykle płaci sprzedający"
+            ],
+            [
+              "Koszty kredytu (przy finansowaniu)",
+              "Wpis 1 %, prowizja za udzielenie około 1 %, wycena około 400 €",
+              "Wpis 1 %, prowizja za udzielenie około 1 %, wycena około 400 €"
+            ]
           ],
           "note": "Honorarium prawnika, opłaty w rejestrze i opłaty bankowe to wartości planistyczne, a nie oferty."
         },
@@ -48,24 +93,54 @@
         },
         {
           "type": "table",
-          "head": ["Nieruchomość", "VAT"],
+          "head": [
+            "Nieruchomość",
+            "VAT"
+          ],
           "rows": [
-            ["Główne miejsce zamieszkania, pierwsze 130 m², wartość do 350 000 €", "5 %"],
-            ["Dom lub mieszkanie powyżej 190 m² albo transakcja powyżej 475 000 €", "19 % od całej ceny"],
-            ["Między tymi limitami (130 do 190 m² lub 350 000 do 475 000 €)", "Nie określono w tym przewodniku: przed podpisaniem poproś prawnika o pisemną kwotę, którą zastosuje urząd skarbowy"]
+            [
+              "Główne miejsce zamieszkania, pierwsze 130 m², wartość do 350 000 €",
+              "5 %"
+            ],
+            [
+              "Dom lub mieszkanie powyżej 190 m² albo transakcja powyżej 475 000 €",
+              "19 % od całej ceny"
+            ],
+            [
+              "Między tymi limitami (130 do 190 m² lub 350 000 do 475 000 €)",
+              "Nie określono w tym przewodniku: przed podpisaniem poproś prawnika o pisemną kwotę, którą zastosuje urząd skarbowy"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "VAT przy nowej inwestycji za 300 000 € w granicach limitów",
           "rows": [
-            ["Cena bez VAT", "300 000 €"],
-            ["VAT 5 % (główne miejsce zamieszkania)", "15 000 €"],
-            ["Cena z VAT 5 %", "315 000 €"],
-            ["VAT 19 % (inwestycja lub drugi dom)", "57 000 €"],
-            ["Cena z VAT 19 %", "357 000 €"]
+            [
+              "Cena bez VAT",
+              "300 000 €"
+            ],
+            [
+              "VAT 5 % (główne miejsce zamieszkania)",
+              "15 000 €"
+            ],
+            [
+              "Cena z VAT 5 %",
+              "315 000 €"
+            ],
+            [
+              "VAT 19 % (inwestycja lub drugi dom)",
+              "57 000 €"
+            ],
+            [
+              "Cena z VAT 19 %",
+              "357 000 €"
+            ]
           ],
-          "total": ["Różnica między nimi", "42 000 €"],
+          "total": [
+            "Różnica między nimi",
+            "42 000 €"
+          ],
           "note": "Willa za 600 000 € przekracza 475 000 €, więc 19 % obowiązuje od całej ceny: 114 000 € VAT."
         },
         {
@@ -84,22 +159,50 @@
         },
         {
           "type": "table",
-          "head": ["Wartość nieruchomości", "Stawka ustawowa", "Stawka efektywna (po obniżce o 50 %)"],
+          "head": [
+            "Wartość nieruchomości",
+            "Stawka ustawowa",
+            "Stawka efektywna (po obniżce o 50 %)"
+          ],
           "rows": [
-            ["Do 85 000 €", "3 %", "1,5 %"],
-            ["85 001 do 170 000 €", "5 %", "2,5 %"],
-            ["Powyżej 170 000 €", "8 %", "4 %"]
+            [
+              "Do 85 000 €",
+              "3 %",
+              "1,5 %"
+            ],
+            [
+              "85 001 do 170 000 €",
+              "5 %",
+              "2,5 %"
+            ],
+            [
+              "Powyżej 170 000 €",
+              "8 %",
+              "4 %"
+            ]
           ]
         },
         {
           "type": "example",
           "title": "Opłata przeniesienia własności przy zakupie z rynku wtórnego za 300 000 €",
           "rows": [
-            ["1,5 % × 85 000 €", "1 275 €"],
-            ["2,5 % × 85 000 €", "2 125 €"],
-            ["4 % × 130 000 €", "5 200 €"]
+            [
+              "1,5 % × 85 000 €",
+              "1 275 €"
+            ],
+            [
+              "2,5 % × 85 000 €",
+              "2 125 €"
+            ],
+            [
+              "4 % × 130 000 €",
+              "5 200 €"
+            ]
           ],
-          "total": ["Opłata przeniesienia własności", "8 600 €"],
+          "total": [
+            "Opłata przeniesienia własności",
+            "8 600 €"
+          ],
           "note": "Skala ustawowa bez obniżki dałaby 17 200 €."
         },
         {
@@ -132,11 +235,23 @@
           "type": "example",
           "title": "Koszty kredytu przy pożyczce 195 000 € (wkład własny 35 % przy 300 000 €, założenie)",
           "rows": [
-            ["Opłata za wpis, 1 % kredytu", "1 950 €"],
-            ["Prowizja banku za udzielenie, około 1 % kredytu", "1 950 €"],
-            ["Opłata za wycenę, około", "400 €"]
+            [
+              "Opłata za wpis, 1 % kredytu",
+              "1 950 €"
+            ],
+            [
+              "Prowizja banku za udzielenie, około 1 % kredytu",
+              "1 950 €"
+            ],
+            [
+              "Opłata za wycenę, około",
+              "400 €"
+            ]
           ],
-          "total": ["Koszty kredytu", "4 300 €"],
+          "total": [
+            "Koszty kredytu",
+            "4 300 €"
+          ],
           "note": "Typowy wkład własny wynosi 30-40 % dla nierezydentów spoza UE i około 25-30 % dla nierezydentów z UE/EOG. Sam wkład własny dochodzi do tych kosztów."
         }
       ]
@@ -146,7 +261,7 @@
       "blocks": [
         {
           "type": "p",
-          "text": "Cypr nie pobiera rocznego podatku od nieruchomości od 2017 roku. Koszty stałe to opłaty wspólnotowe lub zarządcze w kompleksach ze wspólnymi udogodnieniami, opłaty gminne i lokalne, odpady, kanalizacja oraz ubezpieczenie budynku. Nasze obliczenie „wynajem czy zakup” szacuje je na około 935 do 1 650 € rocznie dla typowego mieszkania."
+          "text": "Państwowy podatek od nieruchomości zniesiono w 2017 roku, ale gminy nadal pobierają własny podatek od nieruchomości w stawce ustalanej przez każdą gminę; zapytaj o kwotę dla swojej nieruchomości. Koszty stałe to także opłaty wspólnotowe lub zarządcze w kompleksach ze wspólnymi udogodnieniami, opłaty lokalne, odpady, kanalizacja oraz ubezpieczenie budynku. Nasze obliczenie „wynajem czy zakup” szacuje je na około 935 do 1 650 € rocznie dla typowego mieszkania."
         },
         {
           "type": "p",
@@ -154,13 +269,31 @@
         },
         {
           "type": "table",
-          "head": ["Dochód roczny", "Stawka"],
+          "head": [
+            "Dochód roczny",
+            "Stawka"
+          ],
           "rows": [
-            ["Do 22 000 €", "0 %"],
-            ["22 000 do 32 000 €", "20 %"],
-            ["32 000 do 42 000 €", "25 %"],
-            ["42 000 do 72 000 €", "30 %"],
-            ["Powyżej 72 000 €", "35 %"]
+            [
+              "Do 22 000 €",
+              "0 %"
+            ],
+            [
+              "22 000 do 32 000 €",
+              "20 %"
+            ],
+            [
+              "32 000 do 42 000 €",
+              "25 %"
+            ],
+            [
+              "42 000 do 72 000 €",
+              "30 %"
+            ],
+            [
+              "Powyżej 72 000 €",
+              "35 %"
+            ]
           ]
         },
         {
@@ -178,12 +311,37 @@
         },
         {
           "type": "table",
-          "head": ["Droga zakupu", "Koszty dodatkowe", "Razem gotówką", "Koszty dodatkowe jako % ceny"],
+          "head": [
+            "Droga zakupu",
+            "Koszty dodatkowe",
+            "Razem gotówką",
+            "Koszty dodatkowe jako % ceny"
+          ],
           "rows": [
-            ["Nowa inwestycja, główne miejsce zamieszkania (5 % VAT)", "18 870 €", "318 870 €", "6,3 %"],
-            ["Nowa inwestycja, inwestycja lub drugi dom (19 % VAT)", "60 870 €", "360 870 €", "20,3 %"],
-            ["Rynek wtórny, jeden kupujący", "12 470 €", "312 470 €", "4,2 %"],
-            ["Rynek wtórny, dwóch kupujących (50/50)", "9 670 €", "309 670 €", "3,2 %"]
+            [
+              "Nowa inwestycja, główne miejsce zamieszkania (5 % VAT)",
+              "18 870 €",
+              "318 870 €",
+              "6,3 %"
+            ],
+            [
+              "Nowa inwestycja, inwestycja lub drugi dom (19 % VAT)",
+              "60 870 €",
+              "360 870 €",
+              "20,3 %"
+            ],
+            [
+              "Rynek wtórny, jeden kupujący",
+              "12 470 €",
+              "312 470 €",
+              "4,2 %"
+            ],
+            [
+              "Rynek wtórny, dwóch kupujących (50/50)",
+              "9 670 €",
+              "309 670 €",
+              "3,2 %"
+            ]
           ],
           "note": "Koszty kredytu, wyposażenie i rezerwa nie są uwzględnione."
         },
@@ -191,13 +349,31 @@
           "type": "example",
           "title": "Pełny budżet: zakup z rynku wtórnego za 300 000 € na jedno nazwisko, gotówka",
           "rows": [
-            ["Cena zakupu", "300 000 €"],
-            ["Koszty zakupu (opłata przeniesienia własności 8 600 €, prawnik 3 570 €, rejestr 300 €)", "12 470 €"],
-            ["Meble i sprzęt (założenie, mieszkanie dwupokojowe)", "15 000 €"],
-            ["Koszty utrzymania w pierwszym roku (około)", "1 300 €"],
-            ["Rezerwa, 2 % ceny (założenie)", "6 000 €"]
+            [
+              "Cena zakupu",
+              "300 000 €"
+            ],
+            [
+              "Koszty zakupu (opłata przeniesienia własności 8 600 €, prawnik 3 570 €, rejestr 300 €)",
+              "12 470 €"
+            ],
+            [
+              "Meble i sprzęt (założenie, mieszkanie dwupokojowe)",
+              "15 000 €"
+            ],
+            [
+              "Koszty utrzymania w pierwszym roku (około)",
+              "1 300 €"
+            ],
+            [
+              "Rezerwa, 2 % ceny (założenie)",
+              "6 000 €"
+            ]
           ],
-          "total": ["Całkowity budżet", "334 770 €"],
+          "total": [
+            "Całkowity budżet",
+            "334 770 €"
+          ],
           "note": "Około 11,6 % ponad cenę. Wyposażenie i rezerwa to założenia; zastąp je własnymi kwotami. Koszty utrzymania to środek przedziału od 935 do 1 650 €."
         },
         {
