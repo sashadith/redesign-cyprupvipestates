@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { captureAttribution } from "@/lib/attribution";
+import { extractUtm } from "@/lib/analytics/pageViewUtm";
 
 // Cookieless first-party page-view beacon. Fires on first load and on every
 // client navigation. No cookies, no consent required (no PII is stored).
@@ -13,10 +14,14 @@ export default function AnalyticsTracker({ locale }: { locale: string }) {
 
     const send = () => {
       captureAttribution(); // first-touch UTM / click-id / referrer, persisted for the session
+      // Only utm_source / utm_medium / utm_campaign of the current URL are sent —
+      // never the raw query string (it can carry click ids and other tokens).
+      const utm = extractUtm(window.location.search);
       const payload = JSON.stringify({
         path: pathname,
         locale,
         referrer: document.referrer || "",
+        ...utm,
       });
       try {
         if (typeof navigator !== "undefined" && navigator.sendBeacon) {

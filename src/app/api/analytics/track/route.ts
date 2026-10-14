@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import crypto from "node:crypto";
 import { detectDeviceType } from "@/lib/deviceType";
 import { lookupCountry } from "@/lib/geoCountry";
+import { extractUtm, hasUtm, utmFromBody } from "@/lib/analytics/pageViewUtm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,12 @@ export async function POST(req: NextRequest) {
     let path = String(body.path ?? "").trim();
     if (!path.startsWith("/")) return new NextResponse(null, { status: 204 });
     if (/^\/(admin|api|_next|uploads)\b/.test(path)) return new NextResponse(null, { status: 204 });
+    // Campaign tags: the tracker sends the three fields explicitly; a client that
+    // still sends the path with its query string gets them read from it BEFORE
+    // the query is stripped. Either way only utm_source/medium/campaign survive
+    // (pageViewUtm.ts) — no other parameter is ever stored.
+    const sentUtm = utmFromBody(body);
+    const utm = hasUtm(sentUtm) ? sentUtm : extractUtm(path);
     path = path.split("?")[0].split("#")[0].slice(0, 512);
 
     const locale = String(body.locale ?? "").trim().slice(0, 8) || null;
@@ -91,6 +98,7 @@ export async function POST(req: NextRequest) {
     await prisma.pageView.create({
       data: {
         path, locale, referrer, userAgent: ua.slice(0, 512), visitorHash,
+        utmSource: utm.utmSource, utmMedium: utm.utmMedium, utmCampaign: utm.utmCampaign,
         deviceType: detectDeviceType(ua),
         country: lookupCountry(ip),
         isBot: isBotUA(ua),

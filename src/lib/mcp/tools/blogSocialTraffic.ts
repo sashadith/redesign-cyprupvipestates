@@ -10,16 +10,16 @@ const DAY = 86_400_000;
 const Input = z.object({
   from: z.string().datetime({ offset: true }).describe("ISO 8601 start (inclusive)."),
   to: z.string().datetime({ offset: true }).describe("ISO 8601 end (inclusive)."),
-  slug: z.string().trim().min(1).max(200).optional().describe("Any locale's slug of one article; omitted = every article with at least one social visit in the range."),
+  slug: z.string().trim().min(1).max(200).optional().describe("Any locale's slug of one article; omitted = every article with at least one social or UTM-tagged visit in the range."),
 });
 
 export function registerBlogSocialTraffic(server: McpServer) {
   server.registerTool(
     "blog_social_traffic",
     {
-      title: "Blog traffic from LinkedIn and X",
+      title: "Blog traffic from social networks and UTM campaigns",
       description:
-        `Per article: visits and unique visitors whose referrer was LinkedIn (linkedin.com, lnkd.in) or X (x.com, twitter.com, t.co) in a date range (max ${MAX_RANGE_DAYS} days), bot/prefetch/test rows excluded exactly as in the admin Analytics page, with a per-locale breakdown. Also leadsWithFirstTouchUtm — LEADS (not visits) whose first-touch utm_source was linkedin/x/twitter and who landed on the article; per-view UTM is not stored. Zero is a valid answer. Quote figures as returned.`,
+        `Per article: visits and unique visitors in a date range (max ${MAX_RANGE_DAYS} days), bot/prefetch/test rows excluded exactly as in the admin Analytics page. Untagged views are grouped by referrer network — linkedin, x, threads, bluesky, substack (each with its Android app) — with a per-locale breakdown. Views that carried utm_source/utm_medium/utm_campaign (stored per page view since 2026-10-14) count only under utm.bySource and utm.byCampaign, never also by referrer. Also leadsWithFirstTouchUtm — LEADS (not visits) whose first-touch utm_source named one of the networks and who landed on the article. Zero is a valid answer. Quote figures as returned.`,
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
