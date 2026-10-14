@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* Guard for the feed-completeness block (src/lib/feedSync.ts:
    countableFeedUnits + completenessVerdict, used by checkFeedCompleteness and
-   syncMitoCore).
+   syncMitoCore; since 2026-10-14 checkFeedCompleteness counts missing units by
+   ref via unitsMissingFromFeed).
 
    Why it changed on 2026-09-24: Island Blue stopped shipping sold-out projects
    in their units document. Their feed went from ~220 units to 107, our 144
@@ -160,10 +161,21 @@ check("Mito explicitly does NOT",
   /feedUnitsAtRisk\(dev, \{ excludeSoldOnPublished: false \}\)/.test(src), true);
 check("the db side excludes sold ONLY on published developments",
   /NOT:\s*\{\s*AND:\s*\[\s*\{\s*status:\s*"sold"\s*\}\s*,\s*\{\s*development:\s*\{\s*publishStatus:\s*"published"/.test(src), true);
-check("the after side goes through countableFeedUnits",
-  /afterCount \+= vm \? countableFeedUnits\(vm\.units, publishedByFeedId\.get\(id\) === true\)/.test(src), true);
-check("a project we do not hold yet counts as unpublished",
-  /publishedByFeedId\.get\(id\) === true/.test(src), true);
+// 2026-10-14: checkFeedCompleteness no longer compares counts. Each stored
+// at-risk unit is looked up by (feed project id, ref) in today's feed, so a
+// unit that merely turned sold there is not "missing" (Medousa, 42 reservations
+// → sales, blocked from 2026-10-13). countableFeedUnits stays for Plus.
+check("checkFeedCompleteness reads the same at-risk set, per ref",
+  /atRiskUnitRefs\(dev, \{ excludeSoldOnPublished: true \}\)/.test(src), true);
+check("…and counts missing by ref, not by status",
+  /unitsMissingFromFeed\(atRisk, feedRefsByProject\)/.test(src), true);
+check("the count and the ref list share one WHERE",
+  /prisma\.developmentUnit\.count\(\{ where: atRiskWhere\(dev, opts\)/.test(src) && /findMany\(\{\s*where: atRiskWhere\(dev, opts\)/.test(src), true);
+const m = (o) => new Map(Object.entries(o).map(([k, v]) => [k, new Set(v)]));
+check("a unit still in the feed is never missing (status is irrelevant)",
+  F.unitsMissingFromFeed([{ feedProjectId: "A", ref: "1" }], m({ A: ["1"] })), 0);
+check("a vanished project still counts every stored unit",
+  F.unitsMissingFromFeed([{ feedProjectId: "B", ref: "1" }, { feedProjectId: "B", ref: "2" }], m({ A: ["1"] })), 2);
 check("the unit-diff hard rule this all rests on is still there",
   /if \(old\.status === "sold" \|\| old\.status === "unlisted"\) continue;/.test(src), true);
 

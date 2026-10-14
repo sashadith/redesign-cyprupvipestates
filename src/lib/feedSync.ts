@@ -797,48 +797,83 @@ export function completenessVerdict(
   };
 }
 
+// The WHERE both feedUnitsAtRisk and atRiskUnitRefs count over — one place, so
+// the count and the per-ref list can never describe different sets.
+function atRiskWhere(dev: string, opts: { excludeSoldOnPublished: boolean }) {
+  return {
+    source: "feed",
+    status: { not: "unlisted" },
+    development: { dev, publishStatus: { not: "archived" } },
+    ...(opts.excludeSoldOnPublished
+      ? { NOT: { AND: [{ status: "sold" }, { development: { publishStatus: "published" } }] } }
+      : {}),
+  } as const;
+}
+
 async function feedUnitsAtRisk(
   dev: string,
   opts: { excludeSoldOnPublished: boolean },
 ): Promise<number> {
-  return prisma.developmentUnit.count({
-    where: {
-      source: "feed",
-      status: { not: "unlisted" },
-      development: { dev, publishStatus: { not: "archived" } },
-      ...(opts.excludeSoldOnPublished
-        ? { NOT: { AND: [{ status: "sold" }, { development: { publishStatus: "published" } }] } }
-        : {}),
-    },
-  });
+  return prisma.developmentUnit.count({ where: atRiskWhere(dev, opts) as any });
 }
 
-async function checkFeedCompleteness(
+async function atRiskUnitRefs(
+  dev: string,
+  opts: { excludeSoldOnPublished: boolean },
+): Promise<{ feedProjectId: string | null; ref: string | null }[]> {
+  const rows = await prisma.developmentUnit.findMany({
+    where: atRiskWhere(dev, opts) as any,
+    select: { ref: true, development: { select: { feedProjectId: true } } },
+  });
+  return rows.map((r) => ({ feedProjectId: r.development.feedProjectId, ref: r.ref }));
+}
+
+/* 2026-10-14 — "missing" now means missing, not "no longer countable".
+   The count comparison (stored at-risk units vs countable feed units) read a
+   unit that turned sold in the feed as a missing unit: sold units on a
+   published development are not countable on the after side, but the same unit
+   was still reserved on the before side. Medousa's Cypress Park Living
+   converted 42 reservations into sales overnight; together with two projects
+   leaving the feed that read as "56 of 161 missing, 35 %" and blocked every
+   Medousa sync from 2026-10-13, so the 43 sales never reached the site.
+
+   So the before side stays exactly as it was (atRiskWhere), and each of those
+   units is looked up by (feed project id, ref) in today's feed, whatever its
+   status there. A unit that is still in the feed is not missing, whatever its
+   status is now; one whose ref is gone is missing. A whole project that
+   vanished still counts in full (its id has no refs at all), which is the
+   catastrophe the guard exists to catch. Every feed unit we store carries a
+   ref (measured the same day: 0 without one across all synced developers). */
+export function unitsMissingFromFeed(
+  atRisk: { feedProjectId: string | null; ref: string | null }[],
+  feedRefsByProject: Map<string, Set<string>>,
+): number {
+  let missing = 0;
+  for (const u of atRisk) {
+    const refs = u.feedProjectId ? feedRefsByProject.get(u.feedProjectId) : undefined;
+    if (!refs || !u.ref || !refs.has(u.ref)) missing++;
+  }
+  return missing;
+}
+
+export async function checkFeedCompleteness(
   dev: string,
   ids: string[],
 ): Promise<{ blocked: boolean; message?: string; missing?: number; total?: number; vmsById: Map<string, ProjectVM | null> }> {
-  // Which of this developer's projects are published, keyed the way the feed
-  // identifies them. A project the feed offers that we do not hold yet is
-  // absent from this map and therefore counted as unpublished — correct, since
-  // syncOneProject creates it as a draft.
-  const publishedByFeedId = new Map<string, boolean>();
-  for (const row of await prisma.development.findMany({
-    where: { dev, publishStatus: { not: "archived" } },
-    select: { feedProjectId: true, publishStatus: true },
-  })) {
-    if (row.feedProjectId) publishedByFeedId.set(row.feedProjectId, row.publishStatus === "published");
-  }
-
   const vmsById = new Map<string, ProjectVM | null>();
-  let afterCount = 0;
+  const feedRefsByProject = new Map<string, Set<string>>();
   for (const id of ids) {
     let vm: ProjectVM | null = null;
     try { vm = await getPreviewProject(dev, id); } catch { vm = null; }
     vmsById.set(id, vm);
-    afterCount += vm ? countableFeedUnits(vm.units, publishedByFeedId.get(id) === true) : 0;
+    // A project whose fetch failed contributes no refs, so all of its stored
+    // units count as missing — same as before, when it contributed 0 units.
+    if (vm) feedRefsByProject.set(id, new Set(vm.units.map((u) => u.ref).filter((r): r is string => !!r)));
   }
-  const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: true });
-  const verdict = completenessVerdict(beforeCount, afterCount, FEED_INCOMPLETE_ABS_FLOOR);
+  const atRisk = await atRiskUnitRefs(dev, { excludeSoldOnPublished: true });
+  const beforeCount = atRisk.length;
+  const missing = unitsMissingFromFeed(atRisk, feedRefsByProject);
+  const verdict = completenessVerdict(beforeCount, beforeCount - missing, FEED_INCOMPLETE_ABS_FLOOR);
   if (verdict.blocked) {
     return {
       blocked: true,
