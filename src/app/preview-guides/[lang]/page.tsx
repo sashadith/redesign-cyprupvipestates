@@ -111,7 +111,7 @@ export default async function GuidesPage({ params }: Props) {
             <div className="gds__grid">
               {cards.map((c) => (
                 <article className="gds__card" key={c.id} data-guide={c.id}>
-                  <p className="gds__meta">{ui.eyebrow} · {ui.fileMeta} · {c.teaser.edition}</p>
+                  <p className="gds__meta">{ui.eyebrow} · {ui.fileMeta}</p>
                   <h3 className="gds__card-title">{c.teaser.title}</h3>
                   <p className="gds__sub">{c.teaser.subtitle}</p>
                   <p className="gds__fact">{c.fact.before}<b>{c.fact.bold}</b>{c.fact.after}</p>
