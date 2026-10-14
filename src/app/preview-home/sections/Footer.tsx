@@ -13,6 +13,9 @@ import type {
 import FooterContact from "./FooterContact";
 import FooterNewsletter from "./FooterNewsletter";
 import { footerCopy } from "./Footer.copy";
+import { GUIDE_LANGS, type GuideLang } from "@/lib/guides/types";
+import { guidesPagePath } from "@/lib/guidesPage";
+import { guidesPageCopy } from "@/app/preview-guides/copy";
 
 /* Footer — restyled to the redesign (dark). Reuses getFooterByLang + the
    contact/newsletter logic (via preview FooterContact / FooterNewsletter).
@@ -48,6 +51,7 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
   } = data;
 
   const logoUrl = safeUrl(logo);
+  const hasGuides = (GUIDE_LANGS as readonly string[]).includes(lang);
 
   return (
     <footer className="pf" id="footer">
@@ -123,11 +127,13 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
         <div className="pf__bottom">
           <div className="pf__bottom-row">
             {copyright && <p className="pf__copy">{copyright}</p>}
-            {policyLinks?.length > 0 && (
+            {(policyLinks?.length > 0 || hasGuides) && (
               <div className="pf__policy">
-                {policyLinks.map((p: FooterLink) => (
+                {policyLinks?.map((p: FooterLink) => (
                   <Link key={p._key} href={p.link}>{p.label}</Link>
                 ))}
+                {/* The free guides page; no Hebrew version exists, so Hebrew gets no link. */}
+                {hasGuides && <Link href={guidesPagePath(lang)}>{guidesPageCopy(lang as GuideLang).heroEyebrow}</Link>}
               </div>
             )}
           </div>

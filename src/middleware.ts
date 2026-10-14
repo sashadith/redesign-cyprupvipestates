@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
+import { guidesPageLang } from "@/lib/guidesPage";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
 import { retiredProjectTarget } from "@/lib/retiredProjectRedirects";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
@@ -483,6 +484,15 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
+  // Free guides page: /guides, /de/ratgeber, /pl/poradniki, /ru/gajdy -> preview-guides/[lang]
+  // (translated slug per language, see src/lib/guidesPage.ts; the visible URL does not change).
+  const guidesLang = guidesPageLang(request.nextUrl.pathname);
+  if (guidesLang) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/preview-guides/${guidesLang}`;
+    return NextResponse.rewrite(url);
+  }
+
   // Corporate pages redesign (About / Contacts / Privacy / Terms) — these
   // four differ from every rewrite above in one important way: their slug is
   // TRANSLATED per locale (about-us / ueber-uns / o-nas / o-nas, …), so the
@@ -631,6 +641,6 @@ export const config = {
   // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
   // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
   matcher: [
-    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

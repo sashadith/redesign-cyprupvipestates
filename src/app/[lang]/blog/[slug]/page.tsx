@@ -57,6 +57,7 @@ import ProjectsSectionSlider from "@/app/components/ProjectsSectionSlider/Projec
 import ProjectsSectionBlockComponent from "@/app/components/ProjectsSectionBlockComponent/ProjectsSectionBlockComponent";
 import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
 import GuideCta from "@/app/components/GuideCta/GuideCta";
+import GuidesStrip from "@/app/components/GuideCta/GuidesStrip";
 import { guideForArticle, guideTeaser, GUIDE_UI, guideLangFor } from "@/lib/guides/registry";
 import BlogVideo from "@/app/components/BlogVideo/BlogVideo";
 
@@ -394,9 +395,11 @@ const PagePost = async ({ params }: Props) => {
                   <React.Fragment key={b._key}>{renderArticleBlock(b)}</React.Fragment>
                 ))}
 
-                {offeredGuide && guideForm && (
+                {offeredGuide && guideForm ? (
                   <GuideCta teaser={guideTeaser(offeredGuide, lang)} ui={GUIDE_UI[guideLangFor(lang)]} form={guideForm} lang={lang} />
-                )}
+                ) : lang !== "he" ? (
+                  <GuidesStrip lang={lang} />
+                ) : null}
 
                 {/* Only when the article carries no Projects block of its own —
                     see the resolution above. Rendered through the same component
