@@ -72,3 +72,21 @@ test("slugs: none collides with a corporate page, a reserved section or a nested
   for (const perLang of Object.values(nestedPageRedirects as Record<string, Record<string, string>>)) for (const [leaf, canonical] of Object.entries(perLang)) { taken.add(leaf); taken.add(canonical.split("/")[0]); }
   for (const [lang, slug] of Object.entries(GUIDES_PAGE_SLUG)) assert.equal(taken.has(slug), false, `${lang}: "${slug}" is already used`);
 });
+
+import { GUIDE_FACTS } from "../../app/preview-guides/facts";
+import { GUIDE_IDS, getGuideContent } from "../guides/registry";
+
+const numbersIn = (text: string): string[] => Array.from(new Set((text.match(/\d[\d.,\u00a0\u202f ]*\d|\d/g) ?? []).map((n) => n.replace(/\D/g, ""))));
+
+test("card facts: every figure is in the guide of the same language, and all languages say the same numbers", () => {
+  for (const id of GUIDE_IDS) {
+    const reference = numbersIn(Object.values(GUIDE_FACTS[id].en).join(" ")).sort().join(",");
+    for (const lang of Object.keys(GUIDE_FACTS[id]) as (keyof (typeof GUIDE_FACTS)[typeof id])[]) {
+      const f = GUIDE_FACTS[id][lang];
+      const mine = numbersIn(`${f.before} ${f.bold} ${f.after}`);
+      assert.equal(mine.slice().sort().join(","), reference, `${id}/${lang}: figures differ from the English card`);
+      const inGuide = numbersIn(JSON.stringify(getGuideContent(id, lang)));
+      for (const n of mine) assert.ok(inGuide.includes(n), `${id}/${lang}: ${n} is not in the guide`);
+    }
+  }
+});

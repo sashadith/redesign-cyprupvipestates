@@ -14,6 +14,7 @@ import { corporatePath } from "@/lib/corporatePageSlugs";
 import type { GuideLang } from "@/lib/guides/types";
 import { guidesPageCopy } from "../copy";
 import { GUIDE_COVERS } from "../covers";
+import { GUIDE_FACTS } from "../facts";
 
 /* Cyprus VIP Estates — the free guides page. Same shell as About/Contacts (shared Header and Footer, the design
    system's hero, eyebrow, stripe and button classes); the cards use the same "get this guide" mechanism as the
@@ -63,7 +64,7 @@ export default async function GuidesPage({ params }: Props) {
   const cards = GUIDE_IDS.map((id: GuideId) => {
     const teaser = guideTeaser(id, lang);
     const article = guideMainArticleSlug(id, lang);
-    return { id, teaser, articleHref: article ? localizedHref(lang, ["blog", article]) : null, cover: GUIDE_COVERS[id][lang], accent: getGuideContent(id, lang).titleAccent };
+    return { id, teaser, articleHref: article ? localizedHref(lang, ["blog", article]) : null, cover: GUIDE_COVERS[id][lang], fact: GUIDE_FACTS[id][lang], accent: getGuideContent(id, lang).titleAccent };
   });
 
   const jsonLd = {
@@ -110,41 +111,20 @@ export default async function GuidesPage({ params }: Props) {
             <div className="gds__grid">
               {cards.map((c) => (
                 <article className="gds__card" key={c.id} data-guide={c.id}>
+                  <p className="gds__meta">{ui.eyebrow} · {ui.fileMeta} · {c.teaser.edition}</p>
+                  <h3 className="gds__card-title">{c.teaser.title}</h3>
+                  <p className="gds__sub">{c.teaser.subtitle}</p>
+                  <p className="gds__fact">{c.fact.before}<b>{c.fact.bold}</b>{c.fact.after}</p>
+                  {form ? (
+                    <GuideGet id={c.id} ui={ui} form={form} lang={lang} buttonClass="gds__btn" />
+                  ) : (
+                    // The form document is missing for this language: a button that opens it would throw on the
+                    // client, so offer the contact page instead of a blank page.
+                    <a className="gds__btn" href={corporatePath("contacts", lang)}>{t.ctaButton}</a>
+                  )}
+                  {c.articleHref && <p className="gds__read"><a href={c.articleHref}>{ui.readArticle} →</a></p>}
                   <div className="gds__cover">
                     <img src={c.cover.src} width={c.cover.width} height={c.cover.height} alt={c.teaser.title} loading="lazy" />
-                  </div>
-                  <div className="gds__body">
-                    <p className="gds__meta">{ui.eyebrow} · {ui.fileMeta} · {c.teaser.edition}</p>
-                    <h3 className="gds__card-title">{c.teaser.title}</h3>
-                    <p className="gds__sub">{c.teaser.subtitle}</p>
-                    {form ? (
-                      <GuideGet
-                        id={c.id}
-                        ui={ui}
-                        form={form}
-                        lang={lang}
-                        buttonClass="guidecta__btn"
-                        closedExtra={
-                          <>
-                            <p className="gds__label">{ui.insideLabel}</p>
-                            <ul className="gds__inside">
-                              {c.teaser.inside.map((h) => <li key={h}>{h}</li>)}
-                            </ul>
-                          </>
-                        }
-                      />
-                    ) : (
-                      // The form document is missing for this language: a button that opens it would throw on the
-                      // client, so offer the contact page instead of a blank page.
-                      <>
-                        <p className="gds__label">{ui.insideLabel}</p>
-                        <ul className="gds__inside">
-                          {c.teaser.inside.map((h) => <li key={h}>{h}</li>)}
-                        </ul>
-                        <a className="guidecta__btn" href={corporatePath("contacts", lang)}>{t.ctaButton}</a>
-                      </>
-                    )}
-                    {c.articleHref && <p className="gds__read"><a href={c.articleHref}>{ui.readArticle} →</a></p>}
                   </div>
                 </article>
               ))}
