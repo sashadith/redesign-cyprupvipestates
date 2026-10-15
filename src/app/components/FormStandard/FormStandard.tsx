@@ -64,10 +64,15 @@ export type FormData = {
 };
 
 export interface ContactFormProps {
-  onFormSubmitSuccess?: () => void; // Функция обратного вызова для успешной отправки
+  /** Called after a successful send with the server's JSON answer (callers that ignore it are unaffected). */
+  onFormSubmitSuccess?: (data?: any) => void;
   form: any;
   lang: string;
   offerButtonCustomText?: string;
+  /** Lead-magnet id: the lead is recorded as a guide request and the answer carries the signed download link. */
+  guideId?: string;
+  /** Do not show the shared success banner (the caller replaces the form with its own confirmation). */
+  hideMessage?: boolean;
 }
 
 const FormStandard: FC<ContactFormProps> = ({
@@ -75,6 +80,8 @@ const FormStandard: FC<ContactFormProps> = ({
   form,
   lang,
   offerButtonCustomText,
+  guideId,
+  hideMessage = false,
 }) => {
   const uid = useId();
   const [message, setMessage] = useState<string | null>(null);
@@ -281,6 +288,7 @@ const FormStandard: FC<ContactFormProps> = ({
         formStartTime: formStartTime, // используем фиксированное время
         currentPage,
         lang,
+        ...(guideId ? { guide: guideId } : {}),
         ...getAttribution(),
       });
 
@@ -292,7 +300,7 @@ const FormStandard: FC<ContactFormProps> = ({
         // Meta Pixel Lead
         if (typeof window !== "undefined" && window.fbq) {
           window.fbq("track", "Lead", {
-            form_name: "standard_form",
+            form_name: guideId ? `guide_${guideId}` : "standard_form",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
           });
@@ -312,12 +320,12 @@ const FormStandard: FC<ContactFormProps> = ({
         if (typeof window !== "undefined" && window.dataLayer) {
           window.dataLayer.push({
             event: "form_submission_success",
-            form_name: "standard_form",
+            form_name: guideId ? `guide_${guideId}` : "standard_form",
             page_url: window.location.href,
           });
         }
 
-        onFormSubmitSuccess && onFormSubmitSuccess();
+        onFormSubmitSuccess && onFormSubmitSuccess(response.data);
         setMessageIsError(false);
         setMessage(
           dataForm.successMessage ||
@@ -616,7 +624,7 @@ const FormStandard: FC<ContactFormProps> = ({
                   section: the visitor is looking there when they press Send.
                   Above the whole form it can sit off-screen on a long form or,
                   in the modal, above the scroll position (2026-09-28). */}
-              {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
+              {message && !hideMessage && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
               <div>
                 <button
                   type="submit"

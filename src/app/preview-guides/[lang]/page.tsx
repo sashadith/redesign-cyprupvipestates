@@ -116,7 +116,7 @@ export default async function GuidesPage({ params }: Props) {
                   <p className="gds__sub">{c.teaser.subtitle}</p>
                   <p className="gds__fact">{c.fact.before}<b>{c.fact.bold}</b>{c.fact.after}</p>
                   {form ? (
-                    <GuideGet id={c.id} ui={ui} form={form} lang={lang} buttonClass="gds__btn" popup={{ title: c.teaser.title, cover: c.cover }} />
+                    <GuideGet id={c.id} ui={ui} title={c.teaser.title} form={form} lang={lang} buttonClass="gds__btn" />
                   ) : (
                     // The form document is missing for this language: a button that opens it would throw on the
                     // client, so offer the contact page instead of a blank page.

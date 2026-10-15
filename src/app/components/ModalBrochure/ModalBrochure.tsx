@@ -29,7 +29,7 @@ type Props = {
    shown wider than 462 CSS px, and the 1024x1536 PNG originals were ~1.6 MB
    each — 6.2 MB fetched across the set, on every page carrying a contact
    button. Same images at 452 KB total, alpha intact. */
-const ART: Record<string, string> = {
+export const ART: Record<string, string> = {
   en: "/img/contact/iphone-en.webp",
   de: "/img/contact/iphone-de.webp",
   pl: "/img/contact/iphone-pl.webp",

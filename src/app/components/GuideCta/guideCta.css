@@ -65,29 +65,11 @@
 .guidestrip__link { font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-sm, 15px); font-weight: 600; color: var(--accent, #9a6d2f); text-decoration: none; white-space: nowrap; }
 .guidestrip__link:hover { text-decoration: underline; }
 
-/* The "get this guide" popup (cards on the guides page). react-modal portals it to <body>, outside any themed
-   section, so the panel carries its own light tokens: the article form skin (.artform) reads them. */
-.gdm-overlay { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: clamp(12px, 3vw, 40px);
-  background: rgba(4, 11, 9, 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.2s ease; }
-.gdm-overlay--open { opacity: 1; }
-.gdm-overlay--closing { opacity: 0; }
-.gdm { width: min(520px, 100%); max-height: 100%; outline: none; opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 0.25s ease, transform 0.25s ease; }
-.gdm--open { opacity: 1; transform: none; }
-.gdm--closing { opacity: 0; transform: translateY(8px) scale(0.99); }
-.gdm__panel { position: relative; max-height: calc(100vh - clamp(24px, 6vw, 80px)); overflow-y: auto; padding: clamp(22px, 3vw, 32px); border-radius: 18px; background: #fbf9f3; color: #221c15;
-  box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(194, 154, 94, 0.3);
-  --bg: #f5f1e8; --surface: #ede7d9; --surface-raised: #fbf9f3; --text: #221c15; --text-soft: rgba(34, 28, 21, 0.74); --text-faint: rgba(34, 28, 21, 0.48);
-  --accent: #8e6b3d; --accent-ink: #fff; --accent-soft: rgba(142, 107, 61, 0.1); --hairline: rgba(34, 28, 21, 0.14); --hairline-strong: rgba(34, 28, 21, 0.24); color-scheme: light; }
-.gdm__close { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid rgba(34, 28, 21, 0.2); border-radius: 50%; background: transparent; color: #221c15; cursor: pointer; transition: border-color 0.2s, transform 0.2s; }
-.gdm__close:hover { border-color: #8e6b3d; transform: rotate(90deg); }
-.gdm__close:focus-visible { outline: 2px solid #8e6b3d; outline-offset: 2px; }
-.gdm__head { display: flex; align-items: center; gap: 14px; margin: 0 40px 18px 0; }
-.gdm__cover { flex: none; width: 52px; height: auto; border-radius: 2px; box-shadow: 3px 3px 0 #d9b36f, 0 8px 16px -8px rgba(11, 22, 32, 0.5); }
-.gdm__title { margin: 0; font-family: var(--font-display, serif), var(--font-display-cyr, serif), serif; font-size: 1.05rem; line-height: 1.25; color: #221c15; text-wrap: balance; }
-.gdm__panel .guidecta__formtitle { margin-top: 0; }
-.gdm__panel .artform { grid-template-columns: minmax(0, 1fr); margin-block: 0; border-radius: 12px; }
-.gdm__download { display: inline-flex; align-items: center; justify-content: center; padding: 13px 24px; border-radius: 999px; background: #8e6b3d; color: #fff; text-decoration: none;
-  font-family: var(--font-body, sans-serif), sans-serif; font-size: 15px; font-weight: 700; }
-.gdm__download:hover { background: #765628; }
-.gdm__download:focus-visible { outline: 2px solid #221c15; outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { .gdm-overlay, .gdm, .gdm__close { transition: none; } }
+/* The guide popup is the header's green consultant popup (.cvpm, contactModal.css); these are its only additions.
+   The headline there is forced onto one line, which suits "Speak to an adviser" but not a longer guide question. */
+.cvpm--guide .cvpm__title { white-space: normal; text-wrap: balance; }
+.cvpm__guide { margin: 0 0 10px; padding-inline-end: 40px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.4; color: var(--cvpm-gold); }
+.cvpm__download { display: flex; align-items: center; justify-content: center; height: 56px; padding: 0 26px; border-radius: 10px; border: 1px solid var(--cvpm-gold); background: var(--cvpm-gold);
+  color: #10201b; font-size: 13px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: box-shadow 0.25s, background 0.2s; }
+.cvpm__download:hover { background: #d3ae74; border-color: #d3ae74; box-shadow: 0 12px 40px -14px rgba(194, 154, 94, 0.85); }
+.cvpm__download:focus-visible { outline: 2px solid var(--cvpm-ivory); outline-offset: 3px; }
