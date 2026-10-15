@@ -6,6 +6,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
 import { BUDGETS, CHANNEL_LABEL, REGION_BY_LANGUAGE, type BudgetKey } from "./mapFields";
 import type { LeadPreferredChannel } from "@prisma/client";
+import { teamWhatsAppChat, telegramHtmlToWhatsApp } from "@/lib/teamWhatsApp";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -68,16 +69,10 @@ export function buildLeadEmail(notification: string, o: { outcome: "CREATED" | "
 
 /** The WhatsApp twin of a new-lead Telegram (2026-10-15), for the team group:
  *  same content, WhatsApp markup (*bold*, bare URLs, no HTML). */
-export function buildLeadWhatsApp(notification: string): string {
-  return notification
-    .replace(/<b>([^<]*)<\/b>/g, "*$1*")
-    .replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
-}
+export const buildLeadWhatsApp = (notification: string): string => telegramHtmlToWhatsApp(notification);
 
 /** The group chat (…@g.us) new Meta leads are announced to, or null = off. */
-export const leadWhatsAppChat = (env: NodeJS.ProcessEnv = process.env): string | null => env.META_LEAD_WHATSAPP_CHAT?.trim() || null;
+export const leadWhatsAppChat = (env: NodeJS.ProcessEnv = process.env): string | null => teamWhatsAppChat(env);
 
 /** Telegram AND email, independently — a failure alert must reach at least
  *  one channel even when the other is the thing that's broken. */

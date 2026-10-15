@@ -4,6 +4,7 @@
 // /api/monday-newsletter so notification behaviour is consistent across sources.
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { isLocale, LOCALE_LABELS, type Locale } from "@/lib/locale";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -94,4 +95,6 @@ export async function recordInboundLead(opts: {
   } catch (e) {
     console.error("lead telegram error:", e);
   }
+  // Same text to the team WhatsApp group (2026-10-15) — independent of Telegram.
+  await notifyTeamWhatsApp(msg);
 }

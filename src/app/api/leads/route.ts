@@ -7,6 +7,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { getAutoReplyEmail } from "@/lib/emailTemplates";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead, telegramLanguageTag } from "@/lib/leadNotify";
+import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { resolveProjectInterest } from "@/lib/leads/projectInterest";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
@@ -194,6 +195,9 @@ export async function POST(request: Request) {
     try { const tgResult = await sendTelegramMessage(tg); if (tgResult) { tgOk = true; await prisma.lead.update({ where: { id: lead.id }, data: { telegramNotified: true } }); } }
     catch (e) { console.error("Telegram error:", e); }
 
+    // Same text to the team WhatsApp group (2026-10-15; non-fatal, independent of Telegram).
+    const waOk = await notifyTeamWhatsApp(tg);
+
     // Email notification to team (non-fatal)
     let emailOk = false;
     try {
@@ -219,10 +223,10 @@ export async function POST(request: Request) {
       await prisma.lead.update({ where: { id: lead.id }, data: { emailNotified: true } });
     } catch (e) { console.error("Email error:", e); }
 
-    if (!tgOk && !emailOk) {
-      // Both channels failed: the lead is safely stored but no one was pinged. Emit a
+    if (!tgOk && !emailOk && !waOk) {
+      // Every channel failed: the lead is safely stored but no one was pinged. Emit a
       // greppable marker so a log-based monitor can alert on it (audit item L4).
-      console.error(`LEAD_NOTIFY_FAILED lead=${lead.id} email=${emailNorm} — Telegram AND email both failed; lead saved, no notification delivered`);
+      console.error(`LEAD_NOTIFY_FAILED lead=${lead.id} email=${emailNorm} — Telegram, email AND WhatsApp all failed; lead saved, no notification delivered`);
     }
 
     // Auto-reply to client (non-fatal)
