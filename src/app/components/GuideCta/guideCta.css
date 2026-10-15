@@ -114,4 +114,6 @@
 .cvpm.cvpm--guide .cvpm__form input[type="checkbox"] + div { position: absolute; top: 100%; bottom: auto; left: 0; right: 0; width: auto; margin-top: 3px; transform: none; text-align: start; order: 0; pointer-events: none; }
 @media (max-width: 520px) {
   .cvpm.cvpm--guide .cvpm__form div:has(> input[type="checkbox"]) { margin-bottom: 42px; }
+  /* A phone-height window just fits the form, so a few px of padding decide whether a scrollbar appears. */
+  .cvpm.cvpm--guide .cvpm__panel { padding-block: 16px; }
 }

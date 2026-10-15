@@ -404,6 +404,22 @@
   color: var(--cvpm-ivory);
 }
 .cvpm__form fieldset input[type="radio"] { accent-color: var(--cvpm-gold); }
+/* The module sets line-height: 0 on these pills (fine while the label is one line). In a narrow popup "E-Mail" broke after the hyphen and the two
+   lines were drawn on top of each other. One line, a real line-height, and tighter spacing on phones so three pills fit the popup width. */
+.cvpm__form fieldset label { line-height: 1.2; white-space: nowrap; min-width: 0; }
+@media (max-width: 520px) {
+  .cvpm__form fieldset label { gap: 6px; padding-inline: 8px; font-size: 13px; }
+  /* Equal thirds were too narrow for "WhatsApp"; each pill takes what its label needs and the three spread across the row. */
+  .cvpm__form fieldset [class*="radioGroupWrapper"] { grid-template-columns: repeat(3, auto); justify-content: space-between; }
+}
+@media (max-width: 360px) {
+  /* Three pills with a dot each do not fit a 320px phone. The dot goes (the chosen pill is already marked by its gold border and fill), the
+     input stays in the page for keyboards and screen readers, and a focused pill shows a ring. */
+  .cvpm__form fieldset label { gap: 0; padding-inline: 8px; font-size: 12px; }
+  .cvpm__form fieldset input[type="radio"] { position: absolute; opacity: 0; width: 1px; height: 1px; min-width: 0; min-height: 0; margin: 0; pointer-events: none; }
+  .cvpm__form fieldset label { position: relative; }
+  .cvpm__form fieldset label:has(input:focus-visible) { outline: 2px solid var(--cvpm-gold); outline-offset: 2px; }
+}
 
 /* FormStandard sizes this button for a full-width page section: 20/28 padding
    and a clamp that reaches 30px of type. At modal width that reads as a slab,
