@@ -195,6 +195,17 @@ connections than Postgres's `max_connections` allows. Only the one-off build
 invocation is capped; the real `.env` on disk, and pm2's serving processes,
 are never touched.
 
+**Quiet windows (2026-10-15).** `deploy-prod.sh` refuses to *start* (exit 98)
+between **03:40–04:40 UTC** (feed-sync 04:00, drive-sync 04:30) and
+**05:10–05:40 UTC** (gsc-sync 05:30). The build runs on the 2-core VPS and
+saturates it for ~15 min; on 2026-10-14 a build overlapping gsc-sync slowed
+every query until the app's 5-connection Prisma pool timed out and the sync
+failed. The refusal names the next allowed start. `--dry-run` only warns.
+Override for an urgent fix: `CVP_DEPLOY_IGNORE_QUIET=1`. Check without
+deploying: `./scripts/deploy-prod.sh --check-window`. Tests:
+`scripts/qa/__tests__/deployQuietWindow.test.mjs` (fakes the clock with
+`CVP_DEPLOY_NOW_UTC=HHMM`).
+
 ## Production release structure
 
 Rewritten 2026-07-24 from an in-place build (which ran `npm run build`

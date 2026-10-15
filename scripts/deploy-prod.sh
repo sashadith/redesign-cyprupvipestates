@@ -70,14 +70,58 @@ HEALTH_URL="${CVP_HEALTH_URL:-https://cyprusvipestates.com/projects}"
 KEEP_RELEASES="${CVP_KEEP_RELEASES:-3}"             # releases kept on top of whichever is currently live
 # ----------------------------------------------------------------------------
 
-DRY=0; ASSUME_YES=0
+DRY=0; ASSUME_YES=0; CHECK_WINDOW_ONLY=0
 for a in "$@"; do
   case "$a" in
     --dry-run) DRY=1 ;;
     --yes)     ASSUME_YES=1 ;;
+    --check-window) CHECK_WINDOW_ONLY=1 ;;   # only evaluate the quiet windows below, then exit
     *) echo "unknown flag: $a"; exit 2 ;;
   esac
 done
+
+# ---- Quiet windows (2026-10-15) ---------------------------------------------
+# The build runs ON the production VPS (2 cores) and saturates both for ~15 min.
+# On 2026-10-14 05:30 UTC a deploy's build overlapped gsc-sync: queries slowed
+# until all 5 Prisma pool connections were busy and the sync died with
+# "Timed out fetching a new connection from the connection pool". So a deploy
+# may not START in the 20 min before the two heavy nightly syncs, nor while
+# they typically still run. Times are UTC (crontab on the VPS is UTC).
+#   03:40–04:40  feed-sync 04:00 (~4 min) and drive-sync 04:30 (~4.5 min)
+#   05:10–05:40  gsc-sync 05:30 (~1–2 min)
+# Override (an outage fix can't wait): CVP_DEPLOY_IGNORE_QUIET=1.
+# CVP_DEPLOY_NOW_UTC=HHMM fakes the clock (tests: scripts/qa/__tests__).
+QUIET_WINDOWS="0340-0440:feed-sync 04:00 + drive-sync 04:30 0510-0540:gsc-sync 05:30"
+quiet_window_hit() {
+  local now="${CVP_DEPLOY_NOW_UTC:-$(date -u +%H%M)}"
+  local n=$((10#${now:0:2} * 60 + 10#${now:2:2}))
+  local w range why from to f t
+  local IFS=$'\n'
+  for w in $(echo "$QUIET_WINDOWS" | sed -E 's/ ([0-9]{4}-[0-9]{4}:)/\n\1/g'); do
+    range="${w%%:*}"; why="${w#*:}"
+    from="${range%-*}"; to="${range#*-}"
+    f=$((10#${from:0:2} * 60 + 10#${from:2:2})); t=$((10#${to:0:2} * 60 + 10#${to:2:2}))
+    if [ "$n" -ge "$f" ] && [ "$n" -lt "$t" ]; then
+      echo "${from:0:2}:${from:2:2}–${to:0:2}:${to:2:2} UTC (${why})|${to:0:2}:${to:2:2}"
+      return 0
+    fi
+  done
+  return 1
+}
+if hit="$(quiet_window_hit)"; then
+  if [ "${CVP_DEPLOY_IGNORE_QUIET:-0}" = 1 ]; then
+    echo "⚠️  inside the quiet window ${hit%|*} — CVP_DEPLOY_IGNORE_QUIET=1, deploying anyway"
+  elif [ "$DRY" = 1 ] && [ "$CHECK_WINDOW_ONLY" != 1 ]; then
+    echo "⚠️  inside the quiet window ${hit%|*} — a real deploy would be refused now (dry run continues)"
+  else
+    echo "✗ deploy refused: inside the quiet window ${hit%|*}."
+    echo "  The build would compete with that sync for the VPS's 2 cores (gsc-sync failed this way 2026-10-14)."
+    echo "  Next allowed start: ${hit#*|} UTC. Urgent fix? CVP_DEPLOY_IGNORE_QUIET=1"
+    exit 98
+  fi
+fi
+[ "$CHECK_WINDOW_ONLY" = 1 ] && { echo "✓ outside every quiet window"; exit 0; }
+# ----------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
