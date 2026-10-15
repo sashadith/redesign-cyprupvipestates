@@ -9,7 +9,8 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { canonicalizeEmail } from "@/lib/emailInbound/matchLead";
 import { fetchForm, fetchLead, MetaTokenError, type MetaLead } from "./graph";
 import { mapFieldData, BUDGETS, CHANNEL_LABEL, type MappedLead } from "./mapFields";
-import { alertBoth, buildLeadMessage } from "./notify";
+import { alertBoth, buildLeadEmail, buildLeadMessage } from "./notify";
+import { sendEmail } from "@/lib/sendEmail";
 
 // A PROCESSING claim older than this belongs to a run that died mid-way.
 export const STALE_CLAIM_MS = 5 * 60_000;
@@ -143,6 +144,27 @@ export async function sendOwedNotification(leadgenId: string, text: string, lead
   }
 }
 
+/** The e-mail twin of sendOwedNotification (2026-10-15): to EMAIL_TO (office@,
+ *  like website leads), reply-to the lead. emailSentAt is CLAIMED before the
+ *  send and released if it fails, so the poller retries. Never throws. */
+export async function sendOwedEmail(leadgenId: string, text: string, leadId: string | null, outcome: string | null): Promise<boolean> {
+  const claimed = await prisma.metaLeadgenEvent
+    .updateMany({ where: { leadgenId, status: "DONE", emailSentAt: null }, data: { emailSentAt: new Date() } })
+    .catch(() => ({ count: 0 }));
+  if (claimed.count !== 1) return false;
+  try {
+    const lead = leadId ? await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true, email: true } }) : null;
+    const mail = buildLeadEmail(text, { outcome, name: `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}` });
+    await sendEmail({ ...mail, ...(lead?.email ? { replyTo: lead.email } : {}) });
+    if (leadId && outcome === "CREATED") await prisma.lead.update({ where: { id: leadId }, data: { emailNotified: true } }).catch(() => {});
+    return true;
+  } catch (e) {
+    console.error(`meta-leadgen: e-mail for ${leadgenId} failed (poller will resend)`, e);
+    await prisma.metaLeadgenEvent.update({ where: { leadgenId }, data: { emailSentAt: null } }).catch(() => {});
+    return false;
+  }
+}
+
 export async function processLeadgen(opts: { leadgenId: string; formId?: string | null; prefetched?: MetaLead; via: "webhook" | "poller" }): Promise<ProcessResult> {
   const { leadgenId } = opts;
   let c: Claim;
@@ -255,6 +277,7 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
 
     const row = await prisma.metaLeadgenEvent.findUniqueOrThrow({ where: { leadgenId }, select: { notification: true } });
     const notified = await sendOwedNotification(leadgenId, row.notification!, leadId, outcome);
+    await sendOwedEmail(leadgenId, row.notification!, leadId, outcome);
     return { status: outcome === "CREATED" ? "created" : "attached", leadId, notified };
   } catch (e) {
     const tokenError = e instanceof MetaTokenError;
@@ -263,16 +286,20 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
   }
 }
 
-/** DONE rows whose Telegram never went out (Telegram down at the time). */
+/** DONE rows whose Telegram or e-mail never went out (channel down at the
+ *  time). Counts every notification re-sent, Telegram and e-mail alike. */
 export async function resendOwedNotifications(): Promise<number> {
-  const owed = await prisma.metaLeadgenEvent.findMany({
-    // Older than 2 min: a row that just turned DONE is still being sent by
-    // the run that processed it.
-    where: { status: "DONE", telegramSentAt: null, notification: { not: null }, updatedAt: { gte: new Date(Date.now() - 7 * 86_400_000), lt: new Date(Date.now() - 2 * 60_000) } },
-    select: { leadgenId: true, notification: true, leadId: true, outcome: true },
-  });
+  // Older than 2 min: a row that just turned DONE is still being sent by the
+  // run that processed it. Within 7 days: older owed rows are history.
+  const window = { gte: new Date(Date.now() - 7 * 86_400_000), lt: new Date(Date.now() - 2 * 60_000) };
+  const select = { leadgenId: true, notification: true, leadId: true, outcome: true } as const;
+  const [owedTelegram, owedEmail] = await Promise.all([
+    prisma.metaLeadgenEvent.findMany({ where: { status: "DONE", telegramSentAt: null, notification: { not: null }, updatedAt: window }, select }),
+    prisma.metaLeadgenEvent.findMany({ where: { status: "DONE", emailSentAt: null, notification: { not: null }, updatedAt: window }, select }),
+  ]);
   let sent = 0;
-  for (const r of owed) if (await sendOwedNotification(r.leadgenId, r.notification!, r.leadId, r.outcome)) sent++;
+  for (const r of owedTelegram) if (await sendOwedNotification(r.leadgenId, r.notification!, r.leadId, r.outcome)) sent++;
+  for (const r of owedEmail) if (await sendOwedEmail(r.leadgenId, r.notification!, r.leadId, r.outcome)) sent++;
   return sent;
 }
 

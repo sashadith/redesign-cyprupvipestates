@@ -11,6 +11,8 @@
 // counted and recorded, but answered locally with { ok: true }.
 import assert from "node:assert/strict";
 import { createHmac } from "crypto";
+import net from "node:net";
+import { simpleParser } from "mailparser";
 import { assertNotProdDb } from "../assert-not-prod-db.mjs";
 
 assertNotProdDb();
@@ -23,6 +25,55 @@ Object.assign(process.env, {
   NOTIFY_PREFIX: "[TEST]",
   CRON_SECRET: "testbed-cron",
 });
+
+// ── Local SMTP sink (2026-10-15) ─────────────────────────────────────────────
+// Meta leads are also e-mailed (sendOwedEmail). This minimal SMTP server on
+// 127.0.0.1 accepts and records every message — nothing leaves the machine.
+type SinkMail = { subject: string; to: string; replyTo: string | null };
+const emails: SinkMail[] = [];
+const smtp = net.createServer((sock) => {
+  let buf = "", data = "", inData = false;
+  const reply = (s: string) => sock.write(`${s}\r\n`);
+  reply("220 qa-sink ESMTP");
+  sock.on("data", async (chunk) => {
+    buf += chunk.toString("utf8");
+    let i: number;
+    while ((i = buf.indexOf("\r\n")) >= 0) {
+      const line = buf.slice(0, i);
+      buf = buf.slice(i + 2);
+      if (inData) {
+        if (line === ".") {
+          inData = false;
+          const raw = data;
+          data = "";
+          const m = await simpleParser(raw);
+          const addr = (a: any) => (Array.isArray(a) ? a : a ? [a] : []).flatMap((x: any) => x.value.map((v: any) => v.address)).join(",");
+          emails.push({ subject: m.subject ?? "", to: addr(m.to), replyTo: addr(m.replyTo) || null });
+          reply("250 OK");
+        } else data += (line.startsWith("..") ? line.slice(1) : line) + "\r\n";
+        continue;
+      }
+      const cmd = line.slice(0, 4).toUpperCase();
+      if (cmd === "EHLO") reply("250-qa-sink\r\n250-AUTH PLAIN\r\n250 8BITMIME");
+      else if (cmd === "HELO") reply("250 qa-sink");
+      else if (cmd === "AUTH") reply("235 OK");
+      else if (cmd === "DATA") { inData = true; reply("354 go"); }
+      else if (cmd === "QUIT") { reply("221 bye"); sock.end(); }
+      else reply("250 OK"); // MAIL, RCPT, RSET, NOOP
+    }
+  });
+});
+await new Promise<void>((r) => smtp.listen(0, "127.0.0.1", () => r()));
+smtp.unref();
+Object.assign(process.env, {
+  EMAIL_HOST: "127.0.0.1",
+  EMAIL_PORT: String((smtp.address() as net.AddressInfo).port),
+  EMAIL_SECURE: "false",
+  EMAIL_USER: "qa-sender@example.com",
+  EMAIL_PASSWORD: "qa",
+  EMAIL_TO: "qa-office@example.com",
+});
+const leadMails = () => emails.filter((e) => /New Meta lead: |Meta lead \(existing lead/.test(e.subject)); // not the failure/token alerts
 
 const RUN = Date.now().toString(36);
 const mail = (n: string) => `meta-test-${RUN}-${n}@example.com`;
@@ -172,6 +223,17 @@ assert.match(telegramTexts.join("\n"), /New Private Collection lead \(UK\)/);
 assert.equal(telegramCalls, 4);
 assert.ok(telegramTexts.every((t) => t.startsWith("[TEST]")), "every testbed Telegram carries [TEST]");
 console.log("✓ placeholder flagged in timeline + kept; 4 Telegram messages, all [TEST]");
+// The same four leads by e-mail: once each, to EMAIL_TO, reply-to the lead.
+assert.equal(leadMails().length, 4, JSON.stringify(emails));
+for (const d of leadDefs.slice(0, 4)) {
+  const m = leadMails().find((e) => e.subject.includes(d.name.split(" ").slice(-1)[0]));
+  assert.ok(m, `e-mail for ${d.name}`);
+  assert.match(m!.subject, /^\[TEST\] New Meta lead: /);
+  assert.equal(m!.to, "qa-office@example.com");
+  assert.equal(m!.replyTo, d.email);
+}
+assert.ok((await prisma.metaLeadgenEvent.findMany({ where: { leadgenId: { in: leadDefs.slice(0, 4).map((d) => d.id) } } })).every((r) => r.emailSentAt), "emailSentAt stamped");
+console.log("✓ 4 lead e-mails to EMAIL_TO, reply-to the lead, emailSentAt stamped");
 
 step("4. idempotency: same event twice → one lead, one Telegram");
 const again = event([leadDefs[0].id]);
@@ -187,6 +249,7 @@ const statuses = [(await ra.json()).results[0].status, (await rb.json()).results
 assert.deepEqual(statuses, ["created", "skipped"], `race: ${statuses}`);
 assert.equal((await leadsFor(raceDef.email)).length, 1);
 assert.equal(telegramCalls, 5);
+assert.equal(leadMails().length, 5, "repeat → no second e-mail; race → exactly one");
 console.log("✓ repeat → skipped; concurrent double delivery → 1 created + 1 skipped; archived 'Kontakt' form processed");
 
 step("5. duplicate by email → interaction on the existing lead, no new lead");
@@ -202,6 +265,7 @@ assert.equal(dupLeads[0].source, "MANUAL", "source untouched");
 assert.ok(dupLeads[0].interactions.some((i) => i.subject === "Meta lead form submitted"));
 assert.equal((await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: leadDefs[4].id } }))!.outcome, "ATTACHED");
 assert.match(telegramTexts.at(-1)!, /Existing lead submitted the form again/);
+assert.match(leadMails().at(-1)!.subject, /existing lead, form submitted again/);
 console.log("✓ attached to existing lead, status/source unchanged, Telegram says 'Existing lead…'");
 
 step("6. poller over everything → all already done, nothing new, no Telegram");
@@ -212,6 +276,7 @@ assert.equal(p6.forms, 3);
 assert.equal(p6.created + p6.attached, 0, JSON.stringify(p6));
 assert.equal(p6.skipped, 6);
 assert.equal(telegramCalls, before);
+assert.equal(leadMails().length, 6, "poller over done leads sends no e-mail");
 console.log(`✓ ${JSON.stringify({ forms: p6.forms, seen: p6.seen, skipped: p6.skipped })}`);
 
 step("7. Graph failure → FAILED, NO alert from the webhook; still failing at the end of a poll run → one alert; again → none; recovery → created");
@@ -286,6 +351,16 @@ await poll();
 assert.equal(telegramCalls, t1 + 1);
 assert.ok((await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: owed.leadgenId } }))!.telegramSentAt);
 console.log("✓ owed notification re-sent and stamped");
+{
+  const m0 = leadMails().length;
+  const owedMail = await prisma.metaLeadgenEvent.update({ where: { leadgenId: leadDefs[1].id }, data: { emailSentAt: null, updatedAt: new Date(Date.now() - 5 * 60_000) } });
+  const tg0 = telegramCalls;
+  await poll();
+  assert.equal(leadMails().length, m0 + 1, "owed e-mail re-sent once");
+  assert.equal(telegramCalls, tg0, "…without a second Telegram");
+  assert.ok((await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: owedMail.leadgenId } }))!.emailSentAt);
+  console.log("✓ owed e-mail re-sent and stamped, Telegram not repeated");
+}
 
 step("10. auth + sinceHours");
 assert.equal((await pollRoute.GET(new NextRequest(`${base}/api/cron/meta-leadgen-poll?key=wrong`))).status, 401);

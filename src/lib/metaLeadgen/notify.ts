@@ -51,6 +51,21 @@ export function buildLeadMessage(o: {
   return lines.join("\n");
 }
 
+/** The e-mail twin of a new-lead Telegram (2026-10-15): same content, built
+ *  from the stored Telegram text so both channels always say the same thing.
+ *  That text is Telegram HTML (<b>, <a>, escaped entities, \n line breaks). */
+export function buildLeadEmail(notification: string, o: { outcome: "CREATED" | "ATTACHED" | string | null; name: string }): { subject: string; text: string; html: string } {
+  const p = notifyPrefix();
+  const who = o.name.trim() || "unknown";
+  const subject = o.outcome === "ATTACHED" ? `${p}Meta lead (existing lead, form submitted again): ${who}` : `${p}New Meta lead: ${who}`;
+  const html = notification.split("\n").join("<br/>\n");
+  const text = notification
+    .replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+  return { subject, text, html };
+}
+
 /** Telegram AND email, independently — a failure alert must reach at least
  *  one channel even when the other is the thing that's broken. */
 export async function alertBoth(subject: string, text: string): Promise<{ telegram: boolean; email: boolean }> {
