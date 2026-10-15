@@ -73,3 +73,15 @@
   color: #10201b; font-size: 13px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: box-shadow 0.25s, background 0.2s; }
 .cvpm__download:hover { background: #d3ae74; border-color: #d3ae74; box-shadow: 0 12px 40px -14px rgba(194, 154, 94, 0.85); }
 .cvpm__download:focus-visible { outline: 2px solid var(--cvpm-ivory); outline-offset: 3px; }
+
+/* Validation messages in the guide popup float under their field instead of opening a row (FormStandard animates a grid row open, which
+   made the whole popup grow and shrink while the visitor typed). Each field keeps a fixed gap that has room for one line of message, so
+   the popup keeps its height whether or not an error is showing. The class names are hashed CSS-module names, hence the [class*=] match. */
+.cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 24px; }
+.cvpm--guide .cvpm__form [class*="errorSlot"] { position: absolute; top: 100%; inset-inline: 0; z-index: 2; display: block; margin-top: 3px; pointer-events: none; transition: none; }
+.cvpm--guide .cvpm__form [class*="errorSlot"] > * { overflow: visible; margin-top: 0; }
+@media (max-width: 520px) {
+  /* A narrow popup wraps the longest message (German, Polish, Russian phone-length text) onto a second line. */
+  .cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 34px; }
+  .cvpm--guide .cvpm__form [class*="errorSlot"] > * { font-size: 12px; line-height: 1.25; }
+}
