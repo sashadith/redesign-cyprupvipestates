@@ -75,6 +75,7 @@ enum LeadSource {
   NEWSLETTER
   OTHER
   META_LEAD_AD // 2026-10-11 — Meta Lead Ads instant forms (src/lib/metaLeadgen/)
+  PRIVATE_COLLECTION // 2026-10-15 — private.cyprusvipestates.com enquiry form (src/lib/privateCollectionLead.ts)
 }
 
 enum LeadTimeline {
