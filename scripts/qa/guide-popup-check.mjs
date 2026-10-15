@@ -1,14 +1,16 @@
 #!/usr/bin/env node
-/* Guard for the guide popup (src/app/components/GuideCta/GuideGet.tsx, popup mode), used by the cards on the guides page.
+/* Guard for the guide popup (src/app/components/GuideCta/GuideGet.tsx), used by the cards on the guides page and the offer at
+   the end of an article.
 
-   Asked 2026-10-14: clicking "get the guide" must open the form in a popup, not expand the card in place. Mounts the real
-   component in jsdom (the form itself is a stand-in that records its props, it has its own checks) and drives it:
+   Asked 2026-10-14/15: "get the guide" must open a popup, not expand the card, and the popup must be the same green popup as the
+   consultant button in the header (the .cvpm skin of ModalBrochure, the standard form). Mounts the real component in jsdom (the
+   form itself is a stand-in that records its props, it has its own checks) and drives it:
 
-     - the button opens a dialog in <body> with the form, the card itself does not grow;
+     - the button opens a .cvpm dialog in <body> with the form; the card itself does not grow;
+     - the form is the STANDARD form, wired to the guide, with the success banner suppressed;
      - the close button closes it, and reopening shows the form again;
-     - a successful submit (a /api/guides/ link) swaps the popup to the download, and reopening after a close keeps it;
-     - a link that is not under /api/guides/ is ignored;
-     - without the `popup` prop the old in-place behaviour is unchanged (the in-article offer relies on it).
+     - a successful submit (a /api/guides/ link) turns the popup into the download, and reopening after a close keeps it;
+     - a link that is not under /api/guides/ is ignored.
 
      node scripts/qa/guide-popup-check.mjs
 
@@ -52,16 +54,16 @@ import { handle } from ${JSON.stringify(formStub)};
 export { React, createRoot, act, GuideGet, GUIDE_UI, handle };
 `);
 const out = await build({
-  entryPoints: [entryPath], bundle: true, platform: "browser", format: "esm", write: false, jsx: "automatic", loader: { ".js": "jsx" },
+  entryPoints: [entryPath], bundle: true, platform: "browser", format: "esm", write: false, jsx: "automatic", loader: { ".js": "jsx", ".css": "empty" },
   define: { "process.env.NODE_ENV": '"development"' },
-  plugins: [{ name: "stubs", setup(b) { b.onResolve({ filter: /FormMinimalBlockComponent$/ }, () => ({ path: formStub })); } }],
+  plugins: [{ name: "stubs", setup(b) { b.onResolve({ filter: /FormStandard$/ }, () => ({ path: formStub })); } }],
 });
 writeFileSync(bundlePath, out.outputFiles[0].text);
 
 const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>", { url: "https://example.test/guides", pretendToBeVisual: true });
 const win = dom.window;
 win.matchMedia = () => ({ matches: false, media: "", addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent() { return false; } });
-for (const k of ["window", "document", "HTMLElement", "Event", "KeyboardEvent", "MouseEvent", "Node", "getComputedStyle", "matchMedia", "requestAnimationFrame", "cancelAnimationFrame", "MutationObserver"]) {
+for (const k of ["window", "document", "HTMLElement", "Event", "KeyboardEvent", "MouseEvent", "Node", "getComputedStyle", "matchMedia", "requestAnimationFrame", "cancelAnimationFrame", "MutationObserver", "SVGElement", "Element", "HTMLImageElement", "HTMLInputElement", "CustomEvent"]) {
   Object.defineProperty(globalThis, k, { value: k === "window" ? win : win[k], configurable: true, writable: true });
 }
 Object.defineProperty(globalThis, "navigator", { value: win.navigator, configurable: true });
@@ -80,7 +82,6 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ui = GUIDE_UI.en;
 const doc = win.document;
 const host = () => doc.getElementById("root");
-const dialog = () => doc.querySelector(".gdm");
 const click = async (el) => { await act(async () => { el.dispatchEvent(new win.MouseEvent("click", { bubbles: true })); }); };
 let root;
 async function mount(props) {
@@ -88,35 +89,32 @@ async function mount(props) {
 }
 async function unmount() { await act(async () => { root.unmount(); }); await sleep(30); }
 
-console.log("popup mode");
-await mount({ popup: { title: "The True Cost", cover: { src: "/c.jpg", width: 10, height: 14 } } });
+console.log("popup");
+const TITLE = "The True Cost of Buying Property in Cyprus";
+const dialog = () => doc.querySelector(".cvpm");
+await mount({ title: TITLE });
 check("closed: only the button, no dialog", [host().querySelectorAll("button").length, dialog() === null], [1, true]);
 await click(host().querySelector("button.gds__btn"));
-check("click opens a dialog in body, outside the card", [dialog() !== null, host().contains(dialog())], [true, false]);
-check("dialog holds the form and the guide title", [!!doc.querySelector("[data-testid=form]"), doc.querySelector(".gdm__title")?.textContent], [true, "The True Cost"]);
-check("form is wired to the guide", handle.props.guideId, "cost-of-buying");
-check("the card did not expand", host().querySelectorAll("[data-testid=form], .guidecta__formbox").length, 0);
-await click(doc.querySelector(".gdm__close"));
+check("click opens the green dialog in body, outside the card", [dialog() !== null, host().contains(dialog())], [true, false]);
+check("same shell as the header popup", [!!doc.querySelector(".cvpm-overlay .cvpm-content .cvpm__panel .cvpm__form"), !!doc.querySelector(".cvpm__art")], [true, true]);
+check("guide name above the headline, headline from the guide copy", [doc.querySelector(".cvpm__guide")?.textContent, doc.querySelector(".cvpm__title")?.textContent], [TITLE, "Where should we send the guide?"]);
+check("the standard form is wired to the guide, banner suppressed", [!!doc.querySelector("[data-testid=form]"), handle.props.guideId, handle.props.hideMessage], [true, "cost-of-buying", true]);
+check("the card did not expand", host().querySelectorAll("[data-testid=form]").length, 0);
+await click(doc.querySelector(".cvpm__close"));
 await sleep(400);
 check("close removes the dialog", dialog(), null);
 await click(host().querySelector("button.gds__btn"));
 check("reopen shows the form again", !!doc.querySelector("[data-testid=form]"), true);
 await act(async () => { handle.props.onFormSubmitSuccess({ guide: { url: "https://evil.test/x.pdf" } }); });
-check("a link outside /api/guides/ is ignored", [!!doc.querySelector("[data-testid=form]"), doc.querySelector(".gdm__download") === null], [true, true]);
+check("a link outside /api/guides/ is ignored", [!!doc.querySelector("[data-testid=form]"), doc.querySelector(".cvpm__download") === null], [true, true]);
 await act(async () => { handle.props.onFormSubmitSuccess({ guide: { url: "/api/guides/cost-of-buying?lang=en&t=abc" } }); });
-check("success swaps to the download", [doc.querySelector(".gdm__download")?.getAttribute("href"), doc.querySelector("[data-testid=form]") === null], ["/api/guides/cost-of-buying?lang=en&t=abc", true]);
-await click(doc.querySelector(".gdm__close"));
+check("success turns the popup into the download", [doc.querySelector(".cvpm__download")?.getAttribute("href"), doc.querySelector("[data-testid=form]") === null, doc.querySelector(".cvpm__title")?.textContent], ["/api/guides/cost-of-buying?lang=en&t=abc", true, "Your guide is ready"]);
+await click(doc.querySelector(".cvpm__close"));
 await sleep(400);
 await click(host().querySelector("button.gds__btn"));
-check("reopening after success keeps the download", doc.querySelector(".gdm__download") !== null, true);
+check("reopening after success keeps the download", doc.querySelector(".cvpm__download") !== null, true);
 await unmount();
 await sleep(400);
-
-console.log("inline mode (no popup prop)");
-await mount({});
-await click(host().querySelector("button.gds__btn"));
-check("click expands in place, no dialog", [host().querySelector("[data-testid=form]") !== null, dialog()], [true, null]);
-await unmount();
 
 console.log(failures ? `\n${failures} check(s) failed` : "\nall checks passed");
 process.exit(failures ? 1 : 0);
