@@ -65,19 +65,30 @@
 .guidestrip__link { font-family: var(--font-body, sans-serif), sans-serif; font-size: var(--text-sm, 15px); font-weight: 600; color: var(--accent, #9a6d2f); text-decoration: none; white-space: nowrap; }
 .guidestrip__link:hover { text-decoration: underline; }
 
-/* The guide popup is the header's green consultant popup (.cvpm, contactModal.css); these are its only additions.
-   The headline there is forced onto one line, which suits "Speak to an adviser" but not a longer guide question. */
-.cvpm--guide .cvpm__title { white-space: normal; text-wrap: balance; }
-.cvpm__guide { margin: 0 0 10px; padding-inline-end: 40px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.4; color: var(--cvpm-gold); }
-.cvpm__download { display: flex; align-items: center; justify-content: center; height: 56px; padding: 0 26px; border-radius: 10px; border: 1px solid var(--cvpm-gold); background: var(--cvpm-gold);
+/* The guide popup is the header's green consultant popup (.cvpm, contactModal.css); these are its only additions. contactModal.css is
+   loaded after this file, so the overrides double the class (.cvpm.cvpm--guide) to win ties.
+   - The headline there is forced onto one line, which suits "Speak to an adviser" but not a longer guide question.
+   - Scrolling: .cvpm used to scroll as a whole (max-height + overflow-y:auto) while its panel, which also has overflow-y:auto, never got a
+     height limit. The adviser artwork, which bleeds past the bottom edge by design, then counted as overflow too. Now the popup itself
+     clips, the row is clamped by max-height and only the form column scrolls, and only when the form really does not fit the window. */
+.cvpm.cvpm--guide { overflow: hidden; grid-template-rows: minmax(0, 1fr); }
+.cvpm.cvpm--guide .cvpm__panel { min-height: 0; padding-block: clamp(22px, 2.4vw, 36px); }
+.cvpm.cvpm--guide .cvpm__title { white-space: normal; text-wrap: balance; }
+.cvpm.cvpm--guide .cvpm__stripe { margin: 14px 0 12px; }
+.cvpm.cvpm--guide .cvpm__lead { margin-bottom: 18px; }
+.cvpm.cvpm--guide .cvpm__guide { margin: 0 0 6px; padding-inline-end: 40px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.4; color: var(--cvpm-gold); }
+/* After a send: same height as the form had, the confirmation centred in it. */
+.cvpm.cvpm--ready .cvpm__panel { display: flex; flex-direction: column; justify-content: center; }
+/* The download button is a link, and ".cvpm__form a" colours links gold: the text must beat it (it is on a gold button). */
+.cvpm.cvpm--guide .cvpm__form a.cvpm__download { display: flex; align-items: center; justify-content: center; height: 56px; padding: 0 26px; border-radius: 10px; border: 1px solid var(--cvpm-gold); background: var(--cvpm-gold);
   color: #10201b; font-size: 13px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: box-shadow 0.25s, background 0.2s; }
-.cvpm__download:hover { background: #d3ae74; border-color: #d3ae74; box-shadow: 0 12px 40px -14px rgba(194, 154, 94, 0.85); }
-.cvpm__download:focus-visible { outline: 2px solid var(--cvpm-ivory); outline-offset: 3px; }
+.cvpm.cvpm--guide .cvpm__form a.cvpm__download:hover { background: #d3ae74; border-color: #d3ae74; color: #10201b; box-shadow: 0 12px 40px -14px rgba(194, 154, 94, 0.85); }
+.cvpm.cvpm--guide .cvpm__form a.cvpm__download:focus-visible { outline: 2px solid var(--cvpm-ivory); outline-offset: 3px; }
 
 /* Validation messages in the guide popup float under their field instead of opening a row (FormStandard animates a grid row open, which
    made the whole popup grow and shrink while the visitor typed). Each field keeps a fixed gap that has room for one line of message, so
    the popup keeps its height whether or not an error is showing. The class names are hashed CSS-module names, hence the [class*=] match. */
-.cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 24px; }
+.cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 22px; }
 .cvpm--guide .cvpm__form [class*="errorSlot"] { position: absolute; top: 100%; inset-inline: 0; z-index: 2; display: block; margin-top: 3px; pointer-events: none; transition: none; }
 .cvpm--guide .cvpm__form [class*="errorSlot"] > * { overflow: visible; margin-top: 0; }
 @media (max-width: 520px) {

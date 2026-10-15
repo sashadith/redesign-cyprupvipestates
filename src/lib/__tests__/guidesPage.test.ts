@@ -90,3 +90,11 @@ test("card facts: every figure is in the guide of the same language, and all lan
     }
   }
 });
+
+test("guide popup css: the download link beats the gold link colour, and only the form column scrolls", () => {
+  const css = fs.readFileSync(path.join(ROOT, "src/app/components/GuideCta/guideCta.css"), "utf8");
+  // ".cvpm__form a" (contactModal.css) colours links gold; on a gold button that made the label invisible.
+  const rule = css.match(/\.cvpm\.cvpm--guide \.cvpm__form a\.cvpm__download \{[^}]*\}/)?.[0] ?? "";
+  assert.match(rule, /color: #10201b/, "download button text colour");
+  assert.match(css, /\.cvpm\.cvpm--guide \{[^}]*overflow: hidden[^}]*grid-template-rows: minmax\(0, 1fr\)/, "popup clips, the row is clamped so the panel scrolls");
+});

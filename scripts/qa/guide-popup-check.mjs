@@ -10,7 +10,8 @@
      - the form is the STANDARD form, wired to the guide, with the success banner suppressed;
      - the close button closes it, and reopening shows the form again;
      - a successful submit (a /api/guides/ link) turns the popup into the download, and reopening after a close keeps it;
-     - a link that is not under /api/guides/ is ignored.
+     - a link that is not under /api/guides/ is ignored;
+     - the confirmation keeps the height of the popup with the form.
 
      node scripts/qa/guide-popup-check.mjs
 
@@ -107,8 +108,10 @@ await click(host().querySelector("button.gds__btn"));
 check("reopen shows the form again", !!doc.querySelector("[data-testid=form]"), true);
 await act(async () => { handle.props.onFormSubmitSuccess({ guide: { url: "https://evil.test/x.pdf" } }); });
 check("a link outside /api/guides/ is ignored", [!!doc.querySelector("[data-testid=form]"), doc.querySelector(".cvpm__download") === null], [true, true]);
+Object.defineProperty(win.HTMLElement.prototype, "offsetHeight", { configurable: true, get() { return 640; } }); // jsdom has no layout
 await act(async () => { handle.props.onFormSubmitSuccess({ guide: { url: "/api/guides/cost-of-buying?lang=en&t=abc" } }); });
 check("success turns the popup into the download", [doc.querySelector(".cvpm__download")?.getAttribute("href"), doc.querySelector("[data-testid=form]") === null, doc.querySelector(".cvpm__title")?.textContent], ["/api/guides/cost-of-buying?lang=en&t=abc", true, "Your guide is ready"]);
+check("the confirmation keeps the height the form had (the artwork must not be cut)", [doc.querySelector(".cvpm").style.minHeight, doc.querySelector(".cvpm").classList.contains("cvpm--ready")], ["640px", true]);
 await click(doc.querySelector(".cvpm__close"));
 await sleep(400);
 await click(host().querySelector("button.gds__btn"));
