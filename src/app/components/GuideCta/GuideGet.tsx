@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Modal from "react-modal";
 import { motion, AnimatePresence } from "framer-motion";
 import FormStandard from "@/app/components/FormStandard/FormStandard";
@@ -32,6 +32,10 @@ export default function GuideGet({ id, ui, title, form, lang, closedExtra, butto
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [artFailed, setArtFailed] = useState(false);
+  // The popup is as tall as its form; the confirmation after a send is much shorter and the adviser artwork next to it would be cut. The height
+  // the popup had with the form is kept for the confirmation.
+  const shell = useRef<HTMLDivElement>(null);
+  const [lockedHeight, setLockedHeight] = useState<number | null>(null);
   const art = ART[lang] ?? ART.en;
 
   // Same scroll lock as the header modal.
@@ -61,7 +65,9 @@ export default function GuideGet({ id, ui, title, form, lang, closedExtra, butto
           contentLabel={title}
         >
           <motion.div
-            className="cvpm cvpm--guide"
+            ref={shell}
+            className={`cvpm cvpm--guide${url ? " cvpm--ready" : ""}`}
+            style={lockedHeight ? { minHeight: lockedHeight } : undefined}
             data-lenis-prevent
             initial={{ opacity: 0, y: 26, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -96,7 +102,7 @@ export default function GuideGet({ id, ui, title, form, lang, closedExtra, butto
                     offerButtonCustomText={ui.button}
                     onFormSubmitSuccess={(data) => {
                       const link = data?.guide?.url;
-                      if (typeof link === "string" && link.startsWith("/api/guides/")) { setUrl(link); track("guide_download_ready", id); }
+                      if (typeof link === "string" && link.startsWith("/api/guides/")) { setLockedHeight(shell.current?.offsetHeight || null); setUrl(link); track("guide_download_ready", id); }
                     }}
                   />
                 </div>
