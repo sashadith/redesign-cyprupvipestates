@@ -60,7 +60,7 @@ export default function GuideGet({ id, ui, title, form, lang, closedExtra, butto
           isOpen={open}
           onRequestClose={() => setOpen(false)}
           ariaHideApp={false}
-          overlayClassName="cvpm-overlay"
+          overlayClassName="cvpm-overlay cvpm-overlay--guide"
           className="cvpm-content"
           contentLabel={title}
         >
