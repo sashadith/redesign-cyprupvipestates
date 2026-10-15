@@ -72,11 +72,11 @@
      height limit. The adviser artwork, which bleeds past the bottom edge by design, then counted as overflow too. Now the popup itself
      clips, the row is clamped by max-height and only the form column scrolls, and only when the form really does not fit the window. */
 .cvpm.cvpm--guide { overflow: hidden; grid-template-rows: minmax(0, 1fr); }
-.cvpm.cvpm--guide .cvpm__panel { min-height: 0; padding-block: clamp(22px, 2.4vw, 36px); }
+.cvpm.cvpm--guide .cvpm__panel { min-height: 0; padding-block: 22px; }
 .cvpm.cvpm--guide .cvpm__title { white-space: normal; text-wrap: balance; }
 .cvpm.cvpm--guide .cvpm__stripe { margin: 14px 0 12px; }
-.cvpm.cvpm--guide .cvpm__lead { margin-bottom: 18px; }
-.cvpm.cvpm--guide .cvpm__guide { margin: 0 0 6px; padding-inline-end: 40px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.4; color: var(--cvpm-gold); }
+.cvpm.cvpm--guide .cvpm__lead { margin-bottom: 14px; }
+.cvpm.cvpm--guide .cvpm__guide { margin: 0 0 6px; padding-inline-end: 40px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.4; color: var(--cvpm-gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* After a send: same height as the form had, the confirmation centred in it. */
 .cvpm.cvpm--ready .cvpm__panel { display: flex; flex-direction: column; justify-content: center; }
 /* The download button is a link, and ".cvpm__form a" colours links gold: the text must beat it (it is on a gold button). */
@@ -95,4 +95,23 @@
   /* A narrow popup wraps the longest message (German, Polish, Russian phone-length text) onto a second line. */
   .cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 34px; }
   .cvpm--guide .cvpm__form [class*="errorSlot"] > * { font-size: 12px; line-height: 1.25; }
+}
+/* Compact fields: the popup is about 80px lower than before, so it fits the window of a 13" laptop without scrolling. */
+.cvpm.cvpm--guide .cvpm__form input[type="text"],
+.cvpm.cvpm--guide .cvpm__form input[type="email"],
+.cvpm.cvpm--guide .cvpm__form input[type="tel"],
+.cvpm.cvpm--guide .cvpm__form .PhoneInput,
+.cvpm.cvpm--guide .cvpm__form button[type="submit"],
+.cvpm.cvpm--guide .cvpm__form a.cvpm__download { height: 52px; }
+.cvpm.cvpm--guide .cvpm__form button[type="submit"] { margin-bottom: 0; }
+/* Closer to the window edges than the header popup (16px instead of up to 40px), so the form needs less window height before it scrolls. */
+.cvpm-overlay.cvpm-overlay--guide { padding: 16px; }
+.cvpm.cvpm--guide { max-height: calc(100vh - 32px); }
+.cvpm.cvpm--guide .cvpm__title { font-size: clamp(22px, 2.2vw, 32px); }
+/* The consent message sat on top of the submit button (it hangs 40px below the checkbox row, over the button). It floats under the row like the
+   field messages do, in a gap of its own above the button. */
+.cvpm.cvpm--guide .cvpm__form div:has(> input[type="checkbox"]) { margin-bottom: 26px; }
+.cvpm.cvpm--guide .cvpm__form input[type="checkbox"] + div { position: absolute; top: 100%; bottom: auto; left: 0; right: 0; width: auto; margin-top: 3px; transform: none; text-align: start; order: 0; pointer-events: none; }
+@media (max-width: 520px) {
+  .cvpm.cvpm--guide .cvpm__form div:has(> input[type="checkbox"]) { margin-bottom: 42px; }
 }
