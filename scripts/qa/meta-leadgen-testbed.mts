@@ -5,6 +5,10 @@
 //
 //   /opt/cvp-testbed/with-shared-secret.sh TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID -- \
 //     npx tsx scripts/qa/meta-leadgen-testbed.mts
+//
+// Without the real bot (nothing reaches the operator's chat): META_QA_FAKE_TELEGRAM=1
+// with dummy TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID — every Telegram call is still
+// counted and recorded, but answered locally with { ok: true }.
 import assert from "node:assert/strict";
 import { createHmac } from "crypto";
 import { assertNotProdDb } from "../assert-not-prod-db.mjs";
@@ -43,7 +47,7 @@ const leadDefs: L[] = [
 const graphLead = (d: L) => ({
   id: d.id,
   created_time: new Date().toISOString().replace("Z", "+0000"),
-  form_id: d.form,
+  form_id: formIdOverride.get(d.id) ?? d.form,
   ad_id: "ad-1",
   ad_name: "PC Ad 1",
   adset_name: "PC Adset",
@@ -59,6 +63,12 @@ const graphLead = (d: L) => ({
 });
 let graphMode: "ok" | "token" = "ok";
 const failingLeads = new Set<string>();
+// Step 7b: a lead listed normally whose form_id points at a form whose FIRST
+// fetch fails (500) and every later one succeeds — the first attempt fails,
+// the same run's retry by id recovers it (the 2026-10-14 pattern).
+const formIdOverride = new Map<string, string>();
+const FLAKY_FORM = { id: "f-flaky", name: "CVE PC Briefing EN v2 (flaky)", locale: "en_GB", status: "ACTIVE" };
+let flakyFormFetches = 0;
 const unlisted = new Set<string>(); // fetchable by id, but outside any listing window
 let telegramCalls = 0;
 const telegramTexts: string[] = [];
@@ -68,6 +78,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.hostname === "api.telegram.org") {
     telegramCalls++;
     telegramTexts.push(JSON.parse(String(init?.body)).text);
+    if (process.env.META_QA_FAKE_TELEGRAM === "1") return new Response(JSON.stringify({ ok: true, result: { message_id: telegramCalls } }), { status: 200, headers: { "Content-Type": "application/json" } });
     return realFetch(input, init);
   }
   if (url.hostname !== "graph.facebook.com") return realFetch(input, init);
@@ -76,6 +87,7 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (graphMode === "token") return json({ error: { code: 190, message: "Error validating access token: Session has expired" } }, 400);
   const parts = url.pathname.split("/").filter(Boolean).slice(1); // drop version
   if (parts[0] === PAGE && parts[1] === "leadgen_forms") return json({ data: FORMS });
+  if (parts[0] === FLAKY_FORM.id) return ++flakyFormFetches === 1 ? json({ error: { code: 2, message: "Service temporarily unavailable" } }, 500) : json(FLAKY_FORM);
   const form = FORMS.find((f) => f.id === parts[0]);
   if (form && parts[1] === "leads") return json({ data: leadDefs.filter((d) => d.form === form.id && !failingLeads.has(d.id) && !unlisted.has(d.id)).map(graphLead) });
   if (form) return json(form);
@@ -202,28 +214,50 @@ assert.equal(p6.skipped, 6);
 assert.equal(telegramCalls, before);
 console.log(`✓ ${JSON.stringify({ forms: p6.forms, seen: p6.seen, skipped: p6.skipped })}`);
 
-step("7. Graph failure for one lead → FAILED + one alert; retry → no 2nd alert; recovery → created");
+step("7. Graph failure → FAILED, NO alert from the webhook; still failing at the end of a poll run → one alert; again → none; recovery → created");
 const failDef = { ...leadDefs[0], id: `${RUN}-7`, name: "Test Failing", email: mail("fail") };
 leadDefs.push(failDef);
 failingLeads.add(failDef.id);
 const fb = event([failDef.id]);
+const t7 = telegramCalls;
 const j7 = await (await post(fb, sign(fb))).json();
 assert.equal(j7.results[0].status, "failed");
 let ev = await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: failDef.id } });
 assert.equal(ev!.status, "FAILED");
-assert.ok(ev!.alertedAt, "alert sent");
-const afterAlert = telegramCalls;
-assert.match(telegramTexts.at(-1)!, new RegExp(`leadgen_id: ${failDef.id}`));
+assert.equal(ev!.alertedAt, null, "the webhook never alerts — the next poll run retries first");
 await post(fb, sign(fb)); // Meta retry, still failing
-assert.equal(telegramCalls, afterAlert, "no second alert for the same leadgen_id");
+assert.equal(telegramCalls, t7, "no alert from webhook attempts");
+await poll(); // retried in this run, still failing at its end → one alert
+ev = await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: failDef.id } });
+assert.equal(ev!.status, "FAILED");
+assert.ok(ev!.alertedAt, "alerted at the end of the run");
+assert.equal(telegramCalls, t7 + 1);
+assert.match(telegramTexts.at(-1)!, new RegExp(`leadgen_id: ${failDef.id}`));
+assert.match(telegramTexts.at(-1)!, /retried in the same run and failed again/);
+await poll(); // still failing
+assert.equal(telegramCalls, t7 + 1, "no second alert for the same leadgen_id");
 failingLeads.delete(failDef.id);
 const p7 = await poll();
 assert.equal(p7.created, 1, JSON.stringify(p7));
 ev = await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: failDef.id } });
 assert.equal(ev!.status, "DONE");
-assert.equal(ev!.attempts, 3);
 assert.equal((await leadsFor(failDef.email)).length, 1);
-console.log("✓ failed → alerted once → poller recovered it (attempts 3)");
+console.log(`✓ webhook failure silent → alerted once at the end of a failing poll run → recovered (attempts ${ev!.attempts})`);
+
+step("7b. a lead whose first attempt fails but the same run's retry succeeds → NO alert (the 2026-10-14 false alarm)");
+{
+  const flaky = { ...leadDefs[0], id: `${RUN}-7b`, name: "Test Flaky", email: mail("flaky") };
+  leadDefs.push(flaky);
+  formIdOverride.set(flaky.id, FLAKY_FORM.id); // its form's first fetch fails, later ones succeed
+  const t = telegramCalls;
+  const p = await poll();
+  const row = await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: flaky.id } });
+  assert.equal(row!.status, "DONE", JSON.stringify(p));
+  assert.equal(row!.alertedAt, null, "recovered in the same run → never alerted");
+  assert.ok(row!.attempts >= 2, `first attempt failed, retry by id succeeded (attempts ${row!.attempts})`);
+  assert.ok(telegramTexts.slice(t).every((x) => !/import failed/.test(x)), "no failure alert");
+  console.log(`✓ flaky lead recovered in the same run, no alert (attempts ${row!.attempts})`);
+}
 
 step("8. token invalid (code 190) → dedicated alert, once");
 graphMode = "token";

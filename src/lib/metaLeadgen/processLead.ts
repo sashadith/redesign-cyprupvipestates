@@ -83,24 +83,44 @@ function timelineBody(lead: MetaLead, formName: string | null, m: MappedLead, ou
   return lines.join("\n");
 }
 
-async function markFailed(leadgenId: string, error: unknown, tokenError: boolean): Promise<void> {
+async function markFailed(leadgenId: string, error: unknown): Promise<void> {
   const message = error instanceof Error ? error.message : String(error);
-  const row = await prisma.metaLeadgenEvent
+  await prisma.metaLeadgenEvent
     .update({ where: { leadgenId }, data: { status: "FAILED", lastError: message.slice(0, 2000) } })
+    .catch((e) => console.error(`meta-leadgen: could not mark ${leadgenId} FAILED`, e));
+  // No alert here (2026-10-15). A first attempt that fails is often
+  // recovered seconds later by the same poll run's retry-by-id sweep — on
+  // 2026-10-14 the operator got "import failed" for a lead that was created 9 s
+  // after the mail. The poller alerts at the END of its run, only for leads
+  // that are still FAILED then (alertUnresolvedFailures). A webhook failure is
+  // retried by the next poll run (≤15 min) and alerted only if that fails too.
+}
+
+export const failureAlertText = (leadgenId: string, error: string | null) =>
+  `⚠️ Meta lead import failed\nleadgen_id: ${leadgenId}\n${error ?? "unknown error"}\nThe import was retried in the same run and failed again. The poller keeps retrying every 15 minutes; you won't be alerted again for this lead.`;
+
+/** End of a poll run: one alert per leadgen_id that this run tried and that is
+ *  STILL failed now, never one already alerted. Token and config failures are
+ *  excluded by the caller (they have their own throttled alert). Returns the
+ *  ids alerted. Never throws. */
+export async function alertUnresolvedFailures(triedLeadgenIds: string[]): Promise<string[]> {
+  const ids = Array.from(new Set(triedLeadgenIds.filter((id) => !id.startsWith("form:"))));
+  if (!ids.length) return [];
+  const rows = await prisma.metaLeadgenEvent
+    .findMany({ where: { leadgenId: { in: ids }, status: "FAILED", alertedAt: null }, select: { leadgenId: true, lastError: true } })
     .catch((e) => {
-      console.error(`meta-leadgen: could not mark ${leadgenId} FAILED`, e);
-      return null;
+      console.error("meta-leadgen: could not read failed rows for alerting", e);
+      return [] as { leadgenId: string; lastError: string | null }[];
     });
-  // Token problems get their own, throttled alert from the caller — not one
-  // per lead. Everything else: one alert per leadgen_id, not one per retry.
-  if (tokenError || (row && row.alertedAt)) return;
-  const sent = await alertBoth(
-    `Meta lead import failed: ${leadgenId}`,
-    `⚠️ Meta lead import failed\nleadgen_id: ${leadgenId}\n${message}\nThe poller retries every 15 minutes; you won't be alerted again for this lead.`,
-  );
-  if (row && (sent.telegram || sent.email)) {
-    await prisma.metaLeadgenEvent.update({ where: { leadgenId }, data: { alertedAt: new Date() } }).catch(() => {});
+  const alerted: string[] = [];
+  for (const r of rows) {
+    const sent = await alertBoth(`Meta lead import failed: ${r.leadgenId}`, failureAlertText(r.leadgenId, r.lastError));
+    if (sent.telegram || sent.email) {
+      await prisma.metaLeadgenEvent.update({ where: { leadgenId: r.leadgenId }, data: { alertedAt: new Date() } }).catch(() => {});
+      alerted.push(r.leadgenId);
+    }
   }
+  return alerted;
 }
 
 /** Sends a stored notification exactly once: telegramSentAt is CLAIMED
@@ -238,7 +258,7 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
     return { status: outcome === "CREATED" ? "created" : "attached", leadId, notified };
   } catch (e) {
     const tokenError = e instanceof MetaTokenError;
-    await markFailed(leadgenId, e, tokenError);
+    await markFailed(leadgenId, e);
     return { status: "failed", error: e instanceof Error ? e.message : String(e), tokenError };
   }
 }

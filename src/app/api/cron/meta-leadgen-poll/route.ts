@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { listForms, listLeadsSince, parseSinceHours, MetaConfigError, MetaTokenError } from "@/lib/metaLeadgen/graph";
-import { processLeadgen, resendOwedNotifications, unfinishedLeadgenIds, type ProcessResult } from "@/lib/metaLeadgen/processLead";
+import { alertUnresolvedFailures, processLeadgen, resendOwedNotifications, unfinishedLeadgenIds, type ProcessResult } from "@/lib/metaLeadgen/processLead";
 import { alertBoth, tokenAlertText, TOKEN_ALERT_SUBJECT } from "@/lib/metaLeadgen/notify";
 import { autoSinceHours, checkCronFreshness, markTokenAlerted, tokenAlertDue } from "@/lib/metaLeadgen/watchdog";
 
@@ -90,11 +90,16 @@ export async function GET(req: NextRequest) {
         (r.tokenError ? `token invalid: ${r.tokenError}` : `${r.forms} form(s), ${r.seen} lead(s) in ${r.sinceHours}h — ${r.created} created, ${r.attached} attached, ${r.skipped} already done, ${r.failed.length} failed, ${r.swept} retried by id, ${r.resent} notification(s) re-sent`),
       okFrom,
     );
-    // Per-lead failures already alerted once each inside processLeadgen. The
-    // token gets its own message, at most daily while it stays broken. A
-    // missing config is left to the Action Center (ok:false row) — expected
-    // between deploy and the Meta-side setup.
+    // Per-lead failures: alerted HERE, after the whole run — the retry-by-id
+    // sweep above often recovers a lead whose first attempt failed (2026-10-14).
+    // Only leads still FAILED now, once per leadgen_id. The token gets its own
+    // message, at most daily while it stays broken. A missing config is left to
+    // the Action Center (ok:false row) — expected between deploy and the
+    // Meta-side setup.
     const formErrors = s.failed.filter((f) => f.leadgenId.startsWith("form:"));
+    if (!s.tokenError && !s.configError) {
+      await alertUnresolvedFailures(s.failed.map((f) => f.leadgenId)).catch((e) => console.error("meta-leadgen: end-of-run alert failed", e));
+    }
     if (s.tokenError) {
       if (await tokenAlertDue()) {
         await alertBoth(TOKEN_ALERT_SUBJECT, tokenAlertText(s.tokenError));

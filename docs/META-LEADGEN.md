@@ -166,9 +166,13 @@ wird nicht als neuer Lead angelegt, sondern bekommt einen Timeline-Eintrag
 
 - **Dublette:** normalisierte E-Mail (Gmail-aware, wie Email Inbound) eines nicht
   gelöschten Leads → kein neuer Lead, nur Timeline-Eintrag; Status/Quelle bleiben.
-- **Fehler bei einem Lead** (Graph, Mapping, DB): sofort Telegram **und** E-Mail mit
-  `leadgen_id` und Fehlertext, **einmal pro Lead**; der Poller versucht es alle 15 min
-  erneut.
+- **Fehler bei einem Lead** (Graph, Mapping, DB): Telegram **und** E-Mail mit
+  `leadgen_id` und Fehlertext, **einmal pro Lead** — seit 2026-10-15 erst **am Ende eines
+  Poller-Laufs** und nur, wenn der Lead dann **immer noch** fehlgeschlagen ist. Der Lauf
+  versucht fehlgeschlagene Leads per ID erneut; ein Lead, den diese Wiederholung rettet,
+  löst keine Meldung aus (Fehlalarm vom 2026-10-14: Lead 9 s nach der Mail angelegt). Ein
+  Fehler im Webhook meldet nichts selbst; der nächste Poller-Lauf (≤ 15 min) versucht es
+  erneut und meldet nur, wenn auch das scheitert. Danach weiter alle 15 min.
 - **Token abgelaufen / Rechte fehlen** (Graph-Codes 190, 10, 200–299): eigene Meldung
   „Meta lead token invalid — leads are not being imported“, höchstens täglich wiederholt.
 - **Telegram nicht erreichbar:** Der Lead ist trotzdem gespeichert; der Poller schickt
