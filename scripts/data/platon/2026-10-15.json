@@ -1,5 +1,5 @@
 {
- "_source": "Platon Properties Drive 'Platon Properties' (1-ENjvA90rn_bJuTumx_9KkOC57l2uBAl), read 2026-10-15. Apartments: 'Platon_Apartments_Price_List_unbranded.pdf' (2026-08-18, text PDF, identical to the branded copy of 06-29). Triangle: 'Platon_Triangle_Price_List_2026 copy.pdf' (2026-06-29, text PDF). Suites: 'Price_Suites_ENG_Unbranded.pdf' (2026-09-25, NO text layer — transcribed from the rendered page; identical to the branded 'Price Suites ENG.pdf' of 08-04). Villas: 'Villas_Price_List_2026_EN_Unbranded.pdf' (2026-10-13, text PDF, identical to the branded EN list). Project facts from the brochures in the same folders (Suites/Villas: EN unbranded brochures; Apartments: 'PLATON APARTMENTS ENG copy.pdf'; Triangle: only a RU brochure exists).",
+ "_source": "Platon Properties Drive 'Platon Properties' (1-ENjvA90rn_bJuTumx_9KkOC57l2uBAl), read 2026-10-15. Apartments: 'Platon_Apartments_Price_List_unbranded.pdf' (2026-08-18, text PDF, identical to the branded copy of 06-29). Triangle: 'Platon_Triangle_Price_List_2026 copy.pdf' (2026-06-29, text PDF). Suites: 'Price_Suites_ENG_Unbranded.pdf' (2026-09-25, NO text layer — transcribed from the rendered page; identical to the branded 'Price Suites ENG.pdf' of 08-04). Villas: 'Villas_Price_List_2026_EN_Unbranded.pdf' (2026-10-13, text PDF, identical to the branded EN list). Project facts from the brochures in the same folders (Suites/Villas: EN unbranded brochures; Apartments: 'PLATON APARTMENTS ENG copy.pdf'; Triangle: only a RU brochure exists). Pins (2026-10-15): the developer website's per-project Google Maps links (public Sanity dataset a5xhuwx4, field mapLink); its unit data is stale (May 2026, no prices) and is NOT used.",
  "account": {
   "slug": "platon",
   "name": "Platon Properties",
@@ -21,8 +21,8 @@
    "district": "Limassol",
    "town": "Limassol",
    "area": "Neapolis",
-   "latitude": null,
-   "longitude": null,
+   "latitude": 34.692073,
+   "longitude": 33.066144,
    "amenities": [
     "Heated swimming pool",
     "Jacuzzi",
@@ -36,7 +36,7 @@
     "Covered parking",
     "Private storage room"
    ],
-   "notes": "10 apartments on floors 1-4 (2-3 per floor), pool/Jacuzzi terrace on floor 1. Construction starts autumn 2026, completion Q3 2028 (price list; brochure: 2028). Underfloor heating included as a 'gift'. Opposite Alphamega, ~8 min walk to Columbia Beach. Pin NOT set: no street address anywhere in the Drive — set it in the admin. Brochure's yield/+30% growth figures are developer projections, not facts.",
+   "notes": "10 apartments on floors 1-4 (2-3 per floor), pool/Jacuzzi terrace on floor 1. Construction starts autumn 2026, completion Q3 2028 (price list; brochure: 2028). Underfloor heating included as a 'gift'. Opposite Alphamega, ~8 min walk to Columbia Beach. Pin from the developer's own website (platonproperties.com project page map link, Sanity mapLink). Brochure's yield/+30% growth figures are developer projections, not facts.",
    "units": [
     {
      "ref": "101",
@@ -193,15 +193,15 @@
    "district": "Limassol",
    "town": "Limassol",
    "area": "Agios Ioannis",
-   "latitude": 34.6753,
-   "longitude": 33.0218,
+   "latitude": 34.6751429,
+   "longitude": 33.022087,
    "amenities": [
     "Covered verandas",
     "Private storage room",
     "Parking space",
     "Commercial unit on the ground floor"
    ],
-   "notes": "14 Pallados Street, Limassol 3016 (brochure). Pin = middle of Pallados Street (OSM), street-level accuracy. 5 apartments, flat 301 has a roof terrace (covered + uncovered veranda 31 m²). Each unit 1 bathroom + WC (brochure unit pages). Stage/completion are not stated anywhere in the Drive — ask the developer.",
+   "notes": "14 Pallados Street, Limassol 3016 (brochure). Pin = Google Maps place '14 Pallados' from the developer's website map link. 5 apartments, flat 301 has a roof terrace (covered + uncovered veranda 31 m²). Each unit 1 bathroom + WC (brochure unit pages). Stage/completion are not stated anywhere in the Drive — ask the developer.",
    "units": [
     {
      "ref": "101",
@@ -291,14 +291,14 @@
    "district": "Limassol",
    "town": "Limassol",
    "area": "Agios Ioannis",
-   "latitude": 34.6753,
-   "longitude": 33.0218,
+   "latitude": 34.6762876,
+   "longitude": 33.0219136,
    "amenities": [
     "Covered verandas",
     "Private storage room",
     "Parking space"
    ],
-   "notes": "4 Pallados Street, Limassol 3016 (RU brochure; its intro text says Trion Ierarchon Street — the two streets are ~450 m apart, Pallados used). Pin = middle of Pallados Street, street-level. One 3-bed/3-bath flat per floor (101-104). Renders show a roof terrace with pool and BBQ, but no document confirms it — NOT listed as an amenity until the developer confirms. Stage/completion not stated — ask the developer. Only a RU brochure exists.",
+   "notes": "4 Pallados Street, Limassol 3016 (RU brochure; its intro text says Trion Ierarchon Street — the two streets are ~450 m apart, Pallados used). Pin = Google Maps place '4 Pallados' from the developer's website map link. One 3-bed/3-bath flat per floor (101-104). Renders show a roof terrace with pool and BBQ, but no document confirms it — NOT listed as an amenity until the developer confirms. Stage/completion not stated — ask the developer. Only a RU brochure exists.",
    "units": [
     {
      "ref": "101",
@@ -368,8 +368,8 @@
    "district": "Larnaca",
    "town": null,
    "area": "Agios Theodoros",
-   "latitude": null,
-   "longitude": null,
+   "latitude": 34.751892,
+   "longitude": 33.403569,
    "amenities": [
     "Private swimming pool",
     "Landscaped private garden",
@@ -380,7 +380,7 @@
     "Air conditioning",
     "Two parking spaces per villa"
    ],
-   "notes": "Drive folder is called 'Zygi Villas'; the price list and brochure call it 'Platon Villas' (the unbranded copies say 'Exclusive Villas'). Agios Theodoros (Larnaca) near Pentaschoinos, 2 min walk to the beach across the coastal road, Zygi 14 min. Construction start 'to be announced', completion 2029. 13 villas, types A-D; C and D (single-storey, Nos. 5-8) sold out. Pin NOT set: only a satellite overview map in the Drive — set it in the admin.",
+   "notes": "Drive folder is called 'Zygi Villas'; the price list and brochure call it 'Platon Villas' (the unbranded copies say 'Exclusive Villas'). Agios Theodoros (Larnaca) near Pentaschoinos, 2 min walk to the beach across the coastal road, Zygi 14 min. Construction start 'to be announced', completion 2029. 13 villas, types A-D; C and D (single-storey, Nos. 5-8) sold out. Pin from the developer's own website map link (coast south of Agios Theodoros).",
    "units": [
     {
      "ref": "V1",
