@@ -7,6 +7,7 @@ import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
+import { selectionPriceFrom } from "@/lib/crm/selectionPriceFrom";
 
 type Locale = (typeof PUBLIC_LOCALES)[number];
 const PROPERTY_TYPES = PROPERTY_VALUES;
@@ -319,7 +320,7 @@ export default function PresentationEditor({
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs text-[#9CA3AF]">{it.publicName}</span>
                       {it.isNew && <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] rounded-full px-2 py-0.5">NEW</span>}
-                      <span className="text-xs text-[#9CA3AF] ml-auto">{[it.district || it.town, it.area].filter(Boolean).join(" · ")} · {fmtPrice(it.priceFrom)}</span>
+                      <span className="text-xs text-[#9CA3AF] ml-auto">{[it.district || it.town, it.area].filter(Boolean).join(" · ")} · {fmtPrice(selectionPriceFrom(it.units, it.checkedUnitIds, it.priceFrom))}</span>
                     </div>
                     {it.units.length > 0 && allAvailableIds.length === 0 && (
                       <p className="text-xs text-[#92400E] bg-[#FFFBEB] border border-[#FCD34D] rounded px-2 py-1">
@@ -475,7 +476,7 @@ export default function PresentationEditor({
                           </td>
                           <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
                           <td className="px-3 py-2 text-[#6B7280]">{d.completion || "—"}</td>
-                          <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(d.priceFrom)}</td>
+                          <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(selectionPriceFrom(m.matchedUnits, checkedUnits ?? null, d.priceFrom))}</td>
                           <td className="px-3 py-2 text-right"><span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: scoreBg(m.score), color: scoreColor(m.score) }}>{m.score}%</span></td>
                           <td className="px-3 py-2 text-center"><button type="button" onClick={() => toggleAddExpand(d.id)} className="text-[#6B7280] hover:text-[#111827]">{isOpen ? "▾" : "▸"}</button></td>
                         </tr>
