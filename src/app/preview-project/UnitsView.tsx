@@ -118,6 +118,9 @@ function UnitDetails({ u, t, projectName, withPhotos = true, withFeatures = fals
      expanding a row drew one lone spec line under a full-width rule and read
      as a layout fault rather than as information. */
   const attrs = u.attrs.filter((a) => !hideAttrs.some((h) => h.toLowerCase() === a.name.trim().toLowerCase()));
+  // The unit's floor plans open in the same lightbox as every other image on
+  // the page — they used to be plain links to the file in a new tab (2026-10-15).
+  const [planLb, setPlanLb] = useState<number | null>(null);
   return (
     <div className="pp-uc__more">
       {attrs.length > 0 && (
@@ -155,11 +158,12 @@ function UnitDetails({ u, t, projectName, withPhotos = true, withFeatures = fals
           <div className="pp-uc__plans-label">{t.plansHeading}</div>
           <div className="pp-uc__strip">
             {u.plans.map((s, i) => (
-              <a key={i} href={s} target="_blank" rel="noopener noreferrer" className="pp-uc__thumb pp-uc__thumb--plan">
+              <button key={i} type="button" className="pp-uc__thumb pp-uc__thumb--plan" onClick={() => setPlanLb(i)} aria-label={`${unitLabel(u)} — ${t.plansHeading} ${i + 1}`}>
                 <img src={atSize(s, "small")} alt={`${unitLabel(u)} — ${t.plansHeading}`} loading="lazy" />
-              </a>
+              </button>
             ))}
           </div>
+          <Lightbox images={u.plans} index={planLb} onIndex={setPlanLb} onClose={() => setPlanLb(null)} alt={`${unitLabel(u)} — ${t.plansHeading}`} />
         </div>
       )}
       {/* Only where the collapsed state has no call to action of its own. The
