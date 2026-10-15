@@ -66,6 +66,19 @@ export function buildLeadEmail(notification: string, o: { outcome: "CREATED" | "
   return { subject, text, html };
 }
 
+/** The WhatsApp twin of a new-lead Telegram (2026-10-15), for the team group:
+ *  same content, WhatsApp markup (*bold*, bare URLs, no HTML). */
+export function buildLeadWhatsApp(notification: string): string {
+  return notification
+    .replace(/<b>([^<]*)<\/b>/g, "*$1*")
+    .replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+}
+
+/** The group chat (…@g.us) new Meta leads are announced to, or null = off. */
+export const leadWhatsAppChat = (env: NodeJS.ProcessEnv = process.env): string | null => env.META_LEAD_WHATSAPP_CHAT?.trim() || null;
+
 /** Telegram AND email, independently — a failure alert must reach at least
  *  one channel even when the other is the thing that's broken. */
 export async function alertBoth(subject: string, text: string): Promise<{ telegram: boolean; email: boolean }> {

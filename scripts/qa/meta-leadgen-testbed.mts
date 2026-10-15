@@ -73,6 +73,17 @@ Object.assign(process.env, {
   EMAIL_PASSWORD: "qa",
   EMAIL_TO: "qa-office@example.com",
 });
+// OpenWA (WhatsApp) is faked in the fetch stub below: the team-group message
+// is recorded, never sent (2026-10-15).
+const WA_GROUP = "120363000000000000@g.us";
+Object.assign(process.env, {
+  OPENWA_BASE_URL: "http://openwa.qa.invalid",
+  OPENWA_API_KEY: "owa_k1_qa",
+  OPENWA_SESSION_ID: "qa-session",
+  OPENWA_DAILY_SEND_CAP: "5",
+  META_LEAD_WHATSAPP_CHAT: WA_GROUP,
+});
+const waMessages: { chatId: string; text: string }[] = [];
 const leadMails = () => emails.filter((e) => /New Meta lead: |Meta lead \(existing lead/.test(e.subject)); // not the failure/token alerts
 
 const RUN = Date.now().toString(36);
@@ -126,6 +137,10 @@ const telegramTexts: string[] = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
+  if (url.hostname === "openwa.qa.invalid") {
+    if (url.pathname.endsWith("/messages/send-text")) waMessages.push(JSON.parse(String(init?.body)));
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }
   if (url.hostname === "api.telegram.org") {
     telegramCalls++;
     telegramTexts.push(JSON.parse(String(init?.body)).text);
@@ -234,6 +249,11 @@ for (const d of leadDefs.slice(0, 4)) {
 }
 assert.ok((await prisma.metaLeadgenEvent.findMany({ where: { leadgenId: { in: leadDefs.slice(0, 4).map((d) => d.id) } } })).every((r) => r.emailSentAt), "emailSentAt stamped");
 console.log("✓ 4 lead e-mails to EMAIL_TO, reply-to the lead, emailSentAt stamped");
+assert.equal(waMessages.length, 4, JSON.stringify(waMessages));
+assert.ok(waMessages.every((m) => m.chatId === WA_GROUP), "only to the configured group");
+assert.ok(waMessages.every((m) => /^\[TEST\] 🏛 \*/.test(m.text) && !/<[a-z/]/.test(m.text)), "WhatsApp markup, no HTML");
+assert.ok((await prisma.metaLeadgenEvent.findMany({ where: { leadgenId: { in: leadDefs.slice(0, 4).map((d) => d.id) } } })).every((r) => r.whatsappSentAt), "whatsappSentAt stamped");
+console.log("✓ 4 WhatsApp messages to the team group, WhatsApp markup, whatsappSentAt stamped");
 
 step("4. idempotency: same event twice → one lead, one Telegram");
 const again = event([leadDefs[0].id]);
@@ -250,6 +270,7 @@ assert.deepEqual(statuses, ["created", "skipped"], `race: ${statuses}`);
 assert.equal((await leadsFor(raceDef.email)).length, 1);
 assert.equal(telegramCalls, 5);
 assert.equal(leadMails().length, 5, "repeat → no second e-mail; race → exactly one");
+assert.equal(waMessages.length, 5, "repeat → no second WhatsApp; race → exactly one");
 console.log("✓ repeat → skipped; concurrent double delivery → 1 created + 1 skipped; archived 'Kontakt' form processed");
 
 step("5. duplicate by email → interaction on the existing lead, no new lead");
@@ -277,6 +298,7 @@ assert.equal(p6.created + p6.attached, 0, JSON.stringify(p6));
 assert.equal(p6.skipped, 6);
 assert.equal(telegramCalls, before);
 assert.equal(leadMails().length, 6, "poller over done leads sends no e-mail");
+assert.equal(waMessages.length, 6, "…and no WhatsApp");
 console.log(`✓ ${JSON.stringify({ forms: p6.forms, seen: p6.seen, skipped: p6.skipped })}`);
 
 step("7. Graph failure → FAILED, NO alert from the webhook; still failing at the end of a poll run → one alert; again → none; recovery → created");
@@ -360,6 +382,34 @@ console.log("✓ owed notification re-sent and stamped");
   assert.equal(telegramCalls, tg0, "…without a second Telegram");
   assert.ok((await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: owedMail.leadgenId } }))!.emailSentAt);
   console.log("✓ owed e-mail re-sent and stamped, Telegram not repeated");
+}
+{
+  const w0 = waMessages.length;
+  const owedWa = await prisma.metaLeadgenEvent.update({ where: { leadgenId: leadDefs[1].id }, data: { whatsappSentAt: null, updatedAt: new Date(Date.now() - 5 * 60_000) } });
+  const tg0 = telegramCalls, m0 = leadMails().length;
+  await poll();
+  assert.equal(waMessages.length, w0 + 1, "owed WhatsApp re-sent once");
+  assert.equal(telegramCalls, tg0, "…without a second Telegram");
+  assert.equal(leadMails().length, m0, "…or a second e-mail");
+  assert.ok((await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: owedWa.leadgenId } }))!.whatsappSentAt);
+  // Older than a day: a late team announcement helps nobody — not re-sent.
+  await prisma.metaLeadgenEvent.update({ where: { leadgenId: owedWa.leadgenId }, data: { whatsappSentAt: null, updatedAt: new Date(Date.now() - 2 * 86_400_000) } });
+  await poll();
+  assert.equal(waMessages.length, w0 + 1, "an owed WhatsApp older than a day is dropped");
+  await prisma.metaLeadgenEvent.update({ where: { leadgenId: owedWa.leadgenId }, data: { whatsappSentAt: new Date() } });
+  // Off switch: without META_LEAD_WHATSAPP_CHAT nothing is claimed or sent.
+  const saved = process.env.META_LEAD_WHATSAPP_CHAT;
+  delete process.env.META_LEAD_WHATSAPP_CHAT;
+  const offDef = { ...leadDefs[0], id: `${RUN}-wa-off`, name: "Test Whatsoff", email: mail("waoff") };
+  leadDefs.push(offDef);
+  const ob = event([offDef.id]);
+  const jo = await (await post(ob, sign(ob))).json();
+  assert.equal(jo.results[0].status, "created");
+  assert.equal(waMessages.length, w0 + 1, "off → no WhatsApp");
+  assert.equal((await prisma.metaLeadgenEvent.findUnique({ where: { leadgenId: offDef.id } }))!.whatsappSentAt, null, "off → nothing claimed");
+  process.env.META_LEAD_WHATSAPP_CHAT = saved;
+  await prisma.metaLeadgenEvent.update({ where: { leadgenId: offDef.id }, data: { whatsappSentAt: new Date() } }); // keep later steps' counts clean
+  console.log("✓ owed WhatsApp re-sent once (not after a day), Telegram/e-mail not repeated; unset chat = off");
 }
 
 step("10. auth + sinceHours");

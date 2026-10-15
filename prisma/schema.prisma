@@ -941,6 +941,7 @@ model MetaLeadgenEvent {
   notification   String? // rendered Telegram text, kept so a failed send can be retried without refetching
   telegramSentAt DateTime? // null on a DONE row = the notification is still owed; the poller re-sends
   emailSentAt    DateTime? // same for the e-mail to EMAIL_TO (office@) — since 2026-10-15; earlier DONE rows backfilled
+  whatsappSentAt DateTime? // same for the WhatsApp group (META_LEAD_WHATSAPP_CHAT via OpenWA) — since 2026-10-15; earlier DONE rows backfilled
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 

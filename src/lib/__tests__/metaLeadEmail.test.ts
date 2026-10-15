@@ -37,3 +37,21 @@ test("the testbed prefix reaches the subject too", () => {
     delete process.env.NOTIFY_PREFIX;
   }
 });
+
+/* …and to the team WhatsApp group (2026-10-15). */
+import { buildLeadWhatsApp, leadWhatsAppChat } from "@/lib/metaLeadgen/notify";
+
+test("WhatsApp text: *bold* instead of <b>, bare CRM link, no tags or entities", () => {
+  const wa = buildLeadWhatsApp(tg);
+  assert.match(wa, /\*New Private Collection lead \(UK\)\*/);
+  assert.match(wa, /\*Stephen Pattichis\*/);
+  assert.match(wa, /https?:\/\/\S+\/admin\/crm\/lead-1/);
+  assert.match(wa, /Campaign: CVE Private Collection — UK Leads \(Instant Form\)/);
+  assert.doesNotMatch(wa, /<[a-z/]|&amp;|&lt;|&gt;/);
+});
+
+test("WhatsApp is off unless META_LEAD_WHATSAPP_CHAT is set", () => {
+  assert.equal(leadWhatsAppChat({} as any), null);
+  assert.equal(leadWhatsAppChat({ META_LEAD_WHATSAPP_CHAT: "  " } as any), null);
+  assert.equal(leadWhatsAppChat({ META_LEAD_WHATSAPP_CHAT: "120363430110854997@g.us" } as any), "120363430110854997@g.us");
+});

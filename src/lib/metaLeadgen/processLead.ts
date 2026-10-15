@@ -9,7 +9,8 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { canonicalizeEmail } from "@/lib/emailInbound/matchLead";
 import { fetchForm, fetchLead, MetaTokenError, type MetaLead } from "./graph";
 import { mapFieldData, BUDGETS, CHANNEL_LABEL, type MappedLead } from "./mapFields";
-import { alertBoth, buildLeadEmail, buildLeadMessage } from "./notify";
+import { alertBoth, buildLeadEmail, buildLeadMessage, buildLeadWhatsApp, leadWhatsAppChat } from "./notify";
+import { createOpenWaClient } from "@/lib/openwa/client";
 import { sendEmail } from "@/lib/sendEmail";
 
 // A PROCESSING claim older than this belongs to a run that died mid-way.
@@ -165,6 +166,27 @@ export async function sendOwedEmail(leadgenId: string, text: string, leadId: str
   }
 }
 
+/** The WhatsApp twin (2026-10-15): one message to the team group set in
+ *  META_LEAD_WHATSAPP_CHAT, sent from our own number via OpenWA. Unset = off
+ *  (nothing claimed, nothing owed). whatsappSentAt is CLAIMED before the send
+ *  and released if it fails, so the poller retries. Never throws. */
+export async function sendOwedWhatsApp(leadgenId: string, text: string): Promise<boolean> {
+  const chat = leadWhatsAppChat();
+  if (!chat) return false;
+  const claimed = await prisma.metaLeadgenEvent
+    .updateMany({ where: { leadgenId, status: "DONE", whatsappSentAt: null }, data: { whatsappSentAt: new Date() } })
+    .catch(() => ({ count: 0 }));
+  if (claimed.count !== 1) return false;
+  try {
+    await createOpenWaClient().sendText(chat, buildLeadWhatsApp(text));
+    return true;
+  } catch (e) {
+    console.error(`meta-leadgen: WhatsApp for ${leadgenId} failed (poller will resend)`, e);
+    await prisma.metaLeadgenEvent.update({ where: { leadgenId }, data: { whatsappSentAt: null } }).catch(() => {});
+    return false;
+  }
+}
+
 export async function processLeadgen(opts: { leadgenId: string; formId?: string | null; prefetched?: MetaLead; via: "webhook" | "poller" }): Promise<ProcessResult> {
   const { leadgenId } = opts;
   let c: Claim;
@@ -278,6 +300,7 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
     const row = await prisma.metaLeadgenEvent.findUniqueOrThrow({ where: { leadgenId }, select: { notification: true } });
     const notified = await sendOwedNotification(leadgenId, row.notification!, leadId, outcome);
     await sendOwedEmail(leadgenId, row.notification!, leadId, outcome);
+    await sendOwedWhatsApp(leadgenId, row.notification!);
     return { status: outcome === "CREATED" ? "created" : "attached", leadId, notified };
   } catch (e) {
     const tokenError = e instanceof MetaTokenError;
@@ -300,6 +323,15 @@ export async function resendOwedNotifications(): Promise<number> {
   let sent = 0;
   for (const r of owedTelegram) if (await sendOwedNotification(r.leadgenId, r.notification!, r.leadId, r.outcome)) sent++;
   for (const r of owedEmail) if (await sendOwedEmail(r.leadgenId, r.notification!, r.leadId, r.outcome)) sent++;
+  // WhatsApp only when the group is configured, and only for a day: a lead
+  // announcement that arrives days late in the team chat helps nobody.
+  if (leadWhatsAppChat()) {
+    const owedWhatsApp = await prisma.metaLeadgenEvent.findMany({
+      where: { status: "DONE", whatsappSentAt: null, notification: { not: null }, updatedAt: { gte: new Date(Date.now() - 86_400_000), lt: window.lt } },
+      select,
+    });
+    for (const r of owedWhatsApp) if (await sendOwedWhatsApp(r.leadgenId, r.notification!)) sent++;
+  }
   return sent;
 }
 
