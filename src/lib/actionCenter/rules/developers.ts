@@ -8,6 +8,7 @@ import { WARM_CONTACT_STATUSES } from "./crm";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { developerGroupExists } from "@/lib/developerLink";
 import { isDropboxShareUrl } from "@/lib/dropbox";
+import { AWAITED_FOLDERS, AWAITED_JOB_PREFIX } from "@/lib/korantinaAwaited";
 import type { ActionItem } from "../types";
 
 // Standalone rather than imported from lib/sharepoint: that module belongs to
@@ -880,11 +881,42 @@ async function duplicateDevelopments(): Promise<ActionItem[]> {
   return out;
 }
 
+// (s) A Korantina project we maintain by hand now has its own folder on their
+// SharePoint share (2026-10-15, src/lib/korantinaAwaited.ts). korantina-sync logs
+// one `korantina-awaited:<developmentId>` row per awaited project every night;
+// the newest row decides. Only ids still listed in AWAITED_FOLDERS count, so
+// removing the entry after the switch clears the item.
+export function awaitedFolderItems(rows: { job: string; ok: boolean; ranAt: Date; message: string | null }[]): ActionItem[] {
+  const latest = new Map<string, (typeof rows)[number]>();
+  for (const r of rows) if (!latest.has(r.job)) latest.set(r.job, r); // rows newest-first
+  const out: ActionItem[] = [];
+  for (const a of AWAITED_FOLDERS) {
+    const row = latest.get(`${AWAITED_JOB_PREFIX}${a.developmentId}`);
+    if (!row || row.ok) continue;
+    out.push({
+      id: `${AWAITED_JOB_PREFIX}${a.developmentId}`,
+      severity: "ACTION",
+      category: "DEVELOPERS",
+      title: `Korantina created the folder for ${a.label} — switch it from manual to the sync`,
+      description: row.message ?? "",
+      deepLink: `/admin/developments/${a.developmentId}`,
+      since: row.ranAt,
+    });
+  }
+  return out;
+}
+
+async function awaitedFolderAppeared(): Promise<ActionItem[]> {
+  if (!AWAITED_FOLDERS.length) return [];
+  const rows = await prisma.cronRunLog.findMany({ where: { job: { startsWith: AWAITED_JOB_PREFIX } }, orderBy: { ranAt: "desc" }, take: 200 });
+  return awaitedFolderItems(rows);
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(), duplicateDevelopments(),
+    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(), duplicateDevelopments(), awaitedFolderAppeared(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p, ...q];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p, ...q, ...r];
 }

@@ -20,8 +20,9 @@
 // whose driveFolderUrl isSharePointShareUrl(); it must NOT be left to drive-sync.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeKorantinaDraft, dryRunKorantinaSync } from "@/lib/sharepointAvailabilitySync";
-import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
+import { writeKorantinaDraft, dryRunKorantinaSync, checkAwaitedFolders } from "@/lib/sharepointAvailabilitySync";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified, logCronRun } from "@/lib/cronLog";
+import { AWAITED_JOB_PREFIX, awaitedMessage } from "@/lib/korantinaAwaited";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,32 @@ async function run(force: boolean, scheduled: boolean) {
   const acct = await prisma.developerAccount.findFirst({ where: ACCOUNT });
   if (!acct) return { ok: false as const, message: "Korantina developer account not found" };
   const result = await writeKorantinaDraft(acct.id, { force, respectInterval: scheduled });
+  await logAwaitedFolders(acct.id, result.awaitedHeld ?? []);
   return { ok: true as const, ...result };
+}
+
+// Projects maintained by hand until Korantina adds their folder
+// (korantinaAwaited.ts): checked on EVERY run, also the nights the weekly
+// interval skips the sync itself — one share open + one root listing, plus
+// whatever the full sync held back deeper in the tree. One row per awaited
+// project: ok while nothing is there, NOT ok (Action Center) once it is.
+// Never allowed to fail the sync job itself.
+async function logAwaitedFolders(accountId: string, heldPaths: string[]) {
+  try {
+    for (const c of await checkAwaitedFolders(accountId, heldPaths)) {
+      const job = `${AWAITED_JOB_PREFIX}${c.awaited.developmentId}`;
+      if (!c.folderName) {
+        // Sticky: a find deeper in the tree is only visible on the weekly full
+        // run, so the root-only nights in between must not "clear" it. Once
+        // found, the item stays until the entry leaves korantinaAwaited.ts.
+        const last = await prisma.cronRunLog.findFirst({ where: { job }, orderBy: { ranAt: "desc" }, select: { ok: true } });
+        if (last && !last.ok) continue;
+      }
+      await logCronRun(job, !c.folderName, awaitedMessage(c));
+    }
+  } catch (e) {
+    console.error("korantina-sync: awaited-folder check failed", e);
+  }
 }
 
 // The crontab calls this with &scheduled=1 — the ONLY caller that lets the

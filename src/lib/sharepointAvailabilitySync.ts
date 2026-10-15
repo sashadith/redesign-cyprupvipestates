@@ -20,6 +20,7 @@ import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { publicDeveloperLabel } from "./developerPublicLabel";
+import { awaitedFolderFor, checkAwaited, type AwaitedCheck } from "./korantinaAwaited";
 
 /* Korantina Homes' SharePoint sync (2026-08-26).
 
@@ -220,6 +221,8 @@ export type KorantinaPreview = {
   /** "<file> page N" entries that look like a table we could not read. */
   unreadablePages: string[];
   skippedFolders: string[];
+  /** Root folders standing for a project we maintain by hand (korantinaAwaited.ts) — never synced. */
+  awaitedFolders: string[];
 };
 
 export async function previewKorantinaSync(developerAccountId: string): Promise<KorantinaPreview> {
@@ -241,15 +244,22 @@ export async function previewKorantinaSync(developerAccountId: string): Promise<
   const foldersWithoutList: string[] = [];
   const unreadablePages: string[] = [];
   const skippedFolders: string[] = [];
+  const awaitedFolders: string[] = [];
 
   for (const folder of projectFolders) {
     if (isNonProjectFolder(folder.name)) { skippedFolders.push(folder.name); continue; }
+    // A project we maintain by hand until this folder appeared: never auto-create
+    // a second, synced draft next to it (see korantinaAwaited.ts).
+    if (awaitedFolderFor(folder.name)) { awaitedFolders.push(folder.name); continue; }
 
     const tree = await listTree(ctx, folder.id, { basePath: `/${folder.name}`, maxDepth: 3 });
     const sources = findAvailabilitySources(tree, folder);
     if (!sources.length) { foldersWithoutList.push(folder.name); continue; }
 
     for (const src of sources) {
+      // The awaited project's list dropped into an EXISTING folder (or a subfolder
+      // named for it): held back, never read under that folder's feedKey.
+      if (awaitedFolderFor(src.filePath)) { awaitedFolders.push(src.filePath); continue; }
       const buf = await downloadFile(ctx, src.file.id);
       const { tables: rawTables, unparsedPages } = await extractPdfTables(buf);
       for (const p of unparsedPages) unreadablePages.push(`${src.filePath} page ${p}`);
@@ -300,7 +310,20 @@ export async function previewKorantinaSync(developerAccountId: string): Promise<
     }
   }
 
-  return { tables, foldersWithoutList, unreadablePages, skippedFolders };
+  return { tables, foldersWithoutList, unreadablePages, skippedFolders, awaitedFolders };
+}
+
+/** Cheap (one share open + one root listing): which awaited projects now have a
+ *  folder. Run on every night, also when the weekly interval skips the sync
+ *  itself, so the Action Center hears about a new root folder the next morning.
+ *  `heldPaths` adds what a full sync run held back deeper in the tree (a
+ *  subfolder or AL_HR2.pdf inside an existing folder) — seen on its weekly run. */
+export async function checkAwaitedFolders(developerAccountId: string, heldPaths: string[] = []): Promise<AwaitedCheck[]> {
+  const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
+  if (!acct?.driveFolderUrl) throw new Error("Developer account or its SharePoint link not found");
+  const ctx = await openShare(acct.driveFolderUrl);
+  const root = await listFolder(ctx, ctx.rootId);
+  return checkAwaited([...root.filter(isFolder).map((f) => f.name), ...heldPaths]);
 }
 
 /* ── Dry run (read-only, diffed against the database) ───────────────────── */
@@ -389,6 +412,7 @@ export async function dryRunKorantinaSync(developerAccountId: string): Promise<{
 
   const notes = [
     ...preview.skippedFolders.map((f) => `Skipped (not a project): ${f}`),
+    ...preview.awaitedFolders.map((f) => `Held (project maintained by hand, see korantinaAwaited.ts): ${f}`),
     ...preview.foldersWithoutList.map((f) => `No availability list: ${f}`),
     ...preview.unreadablePages.map((p) => `Page looks like a table but could not be read: ${p}`),
   ];
@@ -545,6 +569,8 @@ export type KorantinaWriteResult = {
   skippedEmpty: string[];
   notes: string[];
   notDue?: string;
+  /** Paths held back for a project maintained by hand (korantinaAwaited.ts). */
+  awaitedHeld?: string[];
 };
 
 // Same vocabulary as every other adapter's per-developer interval (the admin
@@ -817,13 +843,14 @@ export async function writeKorantinaDraft(
 
     const notes = [
       ...preview.skippedFolders.map((f) => `Skipped (not a project): ${f}`),
+    ...preview.awaitedFolders.map((f) => `Held (project maintained by hand, see korantinaAwaited.ts): ${f}`),
       ...preview.foldersWithoutList.map((f) => `No availability list: ${f}`),
       ...preview.unreadablePages.map((p) => `Page looks like a table but could not be read: ${p}`),
       ...preview.tables.filter((t) => t.dropped.length).map((t) => `${t.projectName}: ${t.dropped.length} row(s) not imported (${t.dropped.slice(0, 3).map((d) => d.reason).join("; ")})`),
       ...preview.tables.filter((t) => t.mappingCorrections.length).map((t) => `${t.projectName}: column mapping corrected — ${t.mappingCorrections.join("; ")}`),
       ...unlistedNotes,
     ];
-    return { created, updated, skippedExisting, skippedEmpty, notes };
+    return { created, updated, skippedExisting, skippedEmpty, notes, awaitedHeld: preview.awaitedFolders };
   } finally {
     releaseSyncWindow();
   }
