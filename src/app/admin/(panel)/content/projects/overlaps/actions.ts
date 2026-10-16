@@ -2,8 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { localizedHref } from "@/lib/locale";
+
+// Server Actions are reachable as a plain POST regardless of the (panel)
+// layout's login check — middleware skips /admin and nginx only proxies — so
+// every action here checks the session itself. Same contract as
+// requireSession() in src/app/admin/actions.ts: a session with a user id, and
+// that user still active in the DB (a deactivated user's JWT stays valid).
+async function requireActiveUser() {
+  const session = await auth();
+  const uid = (session?.user as any)?.id;
+  if (!session || !uid) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  if (!user || !user.isActive) throw new Error("Unauthorized");
+  return session;
+}
 
 // Mirrors revalidateProjectPublic in ../../../actions.ts (not exported from
 // there) — revert can flip status/redirects, which are public-facing.
@@ -36,6 +51,7 @@ async function groupIds(legacyProjectId: string): Promise<string[]> {
 // project group; visibility of the legacy project itself is untouched here —
 // that's the separate ACTIVATE/DEACTIVATE toggle (Phase 5.3, also cascaded).
 export async function confirmOverlap(legacyProjectId: string, developmentId: string) {
+  await requireActiveUser();
   const ids = await groupIds(legacyProjectId);
   await prisma.project.updateMany({
     where: { id: { in: ids } },
@@ -50,6 +66,7 @@ export async function confirmOverlap(legacyProjectId: string, developmentId: str
 // heuristic list. Each row keeps its own array (Json field, can't updateMany
 // a computed append), so this reads and writes each row individually.
 export async function rejectOverlap(legacyProjectId: string, developmentId: string) {
+  await requireActiveUser();
   const ids = await groupIds(legacyProjectId);
   const rows = await prisma.project.findMany({ where: { id: { in: ids } }, select: { id: true, overlapRejectedDevelopmentIds: true } });
   await Promise.all(
@@ -84,6 +101,7 @@ export async function revertOverlap(
   disposition: "pending" | "rejected",
   reactivate: boolean,
 ) {
+  await requireActiveUser();
   const ids = await groupIds(legacyProjectId);
   const rows = await prisma.project.findMany({
     where: { id: { in: ids } },

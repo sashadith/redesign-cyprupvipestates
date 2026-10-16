@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { extractProjectFromPdfs } from "@/lib/ai/pdfExtract";
 import { generateProjectDescription } from "@/lib/ai/projectDescription";
@@ -21,6 +22,20 @@ import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
+
+// Server Actions are reachable as a plain POST regardless of the (panel)
+// layout's login check — middleware skips /admin and nginx only proxies — so
+// every action here checks the session itself. Same contract as
+// requireSession() in src/app/admin/actions.ts: a session with a user id, and
+// that user still active in the DB (a deactivated user's JWT stays valid).
+async function requireActiveUser() {
+  const session = await auth();
+  const uid = (session?.user as any)?.id;
+  if (!session || !uid) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  if (!user || !user.isActive) throw new Error("Unauthorized");
+  return session;
+}
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 
@@ -70,9 +85,10 @@ function promoBlocksFromForm(formData: FormData, field: string): any {
 // "Sync with Drive" on a single development's own page — full re-import (rich data +
 // description + images), but scoped to just this project so its siblings aren't touched.
 export async function syncThisDevelopmentAction(developmentId: string): Promise<DriveSyncResult> {
-  const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { developerAccountId: true, feedProjectId: true, dev: true } });
-  if (!d || d.dev !== "drive") return { ok: false, message: "This development isn't Drive-synced." };
   try {
+    await requireActiveUser();
+    const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { developerAccountId: true, feedProjectId: true, dev: true } });
+    if (!d || d.dev !== "drive") return { ok: false, message: "This development isn't Drive-synced." };
     const r = await syncDeveloperDrive(d.developerAccountId, { force: true, content: true, onlyFeedProjectId: d.feedProjectId });
     revalidatePath(`/admin/developments/${developmentId}`);
     revalidatePath("/admin/developments");
@@ -86,9 +102,10 @@ export async function syncThisDevelopmentAction(developmentId: string): Promise<
 // same light path the nightly cron uses. No image download, no PDF conversion, no
 // document analysis, so this stays fast regardless of how large the media folder is.
 export async function syncThisDevelopmentUnitsAction(developmentId: string): Promise<DriveSyncResult> {
-  const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { developerAccountId: true, feedProjectId: true, dev: true } });
-  if (!d || d.dev !== "drive") return { ok: false, message: "This development isn't Drive-synced." };
   try {
+    await requireActiveUser();
+    const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { developerAccountId: true, feedProjectId: true, dev: true } });
+    if (!d || d.dev !== "drive") return { ok: false, message: "This development isn't Drive-synced." };
     const r = await syncDeveloperDrive(d.developerAccountId, { force: true, content: false, richUnits: true, onlyFeedProjectId: d.feedProjectId });
     revalidatePath(`/admin/developments/${developmentId}`);
     revalidatePath("/admin/developments");
@@ -101,6 +118,7 @@ export async function syncThisDevelopmentUnitsAction(developmentId: string): Pro
 // (C) Generate a fresh 4-language description from ALL project data, naming the project/developer.
 export async function generateDescription(developmentId: string, words: number, tuning?: { emphasize?: string; avoid?: string }): Promise<{ ok: boolean; texts?: FourLang; error?: string }> {
   try {
+    await requireActiveUser();
     const d = await prisma.development.findUnique({ where: { id: developmentId }, include: { override: true, units: true } });
     if (!d) return { ok: false, error: "Not found" };
     const ov = d.override;
@@ -153,6 +171,7 @@ export async function generateDescription(developmentId: string, words: number, 
 // auto-template both read, so "what Claude sees" matches "what's actually live".
 export async function generateSeoMetaAction(developmentId: string, tuning?: { emphasize?: string; avoid?: string }): Promise<{ ok: boolean; result?: SeoMetaResult; error?: string }> {
   try {
+    await requireActiveUser();
     const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
     if (!d) return { ok: false, error: "Not found" };
     const vm = await getDbProjectByFeedKey(d.feedKey);
@@ -167,6 +186,7 @@ export async function generateSeoMetaAction(developmentId: string, tuning?: { em
 // The prompt behind "Generate with Claude" in the SEO section — ONE shared row,
 // editable from any project's page, applies to every future generation everywhere.
 export async function saveSeoPromptAction(text: string): Promise<void> {
+  await requireActiveUser();
   await saveSeoPromptTemplate(text);
 }
 
@@ -178,6 +198,7 @@ function shingles(s: string): Set<string> {
   return out;
 }
 export async function checkDescriptionUniqueness(developmentId: string, text: string): Promise<{ uniqueness: number; sim: number; mostSimilar: string }> {
+  await requireActiveUser();
   const mine = shingles(text);
   if (mine.size === 0) return { uniqueness: 100, sim: 0, mostSimilar: "" };
   const others = await prisma.developmentOverride.findMany({
@@ -205,10 +226,12 @@ export async function checkDescriptionUniqueness(developmentId: string, text: st
 // (bit us for feed-sync's image mirroring — see feedSync.ts). The client calls
 // scheduleUploadsRestartAction() itself exactly ONCE after the whole batch finishes.
 export async function scheduleUploadsRestartAction() {
+  await requireActiveUser();
   scheduleAppRestart();
 }
 
 export async function uploadDevImages(developmentId: string, formData: FormData): Promise<string[]> {
+  await requireActiveUser();
   const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
   const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
   if (!dev) return [];
@@ -223,6 +246,7 @@ export async function uploadDevImages(developmentId: string, formData: FormData)
 
 // Upload images for a single UNIT → return their public URLs.
 export async function uploadUnitImages(unitId: string, formData: FormData): Promise<string[]> {
+  await requireActiveUser();
   const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
   const unit = await prisma.developmentUnit.findUnique({ where: { id: unitId }, select: { development: { select: { feedKey: true } } } });
   if (!unit) return [];
@@ -242,6 +266,7 @@ export async function uploadUnitImages(unitId: string, formData: FormData): Prom
 // URLs already under /uploads/ (the common case: reordering an existing
 // gallery), so this only costs real time for genuinely new/external images.
 export async function setUnitPhotos(unitId: string, photos: string[]) {
+  await requireActiveUser();
   const clean = photos.map((u) => String(u).trim()).filter(Boolean);
   const unit = await prisma.developmentUnit.findUnique({ where: { id: unitId }, select: { developmentId: true, development: { select: { feedKey: true } } } });
   if (!unit) return;
@@ -254,6 +279,7 @@ export async function setUnitPhotos(unitId: string, photos: string[]) {
 // Copy this unit's photos to every OTHER unit in the development that is 100%
 // identical (same type / beds / baths / areas). Returns how many were updated.
 export async function applyPhotosToIdentical(unitId: string): Promise<number> {
+  await requireActiveUser();
   const u = await prisma.developmentUnit.findUnique({ where: { id: unitId }, include: { development: { select: { feedKey: true } } } });
   if (!u) return 0;
   const twins = await prisma.developmentUnit.findMany({
@@ -296,6 +322,7 @@ async function dropFromNewFromFeed(developmentId: string, key: "gallery" | "plan
 }
 
 export async function saveGallery(developmentId: string, gallery: string[], mainImage: string | null) {
+  await requireActiveUser();
   const clean = gallery.map((u) => String(u).trim()).filter(Boolean);
   const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
   if (!dev) return;
@@ -318,6 +345,7 @@ export async function saveGallery(developmentId: string, gallery: string[], main
 // is rasterized to JPEG page(s) so the public site (which only renders <img>) always
 // gets an image; if conversion isn't available it falls back to storing the raw PDF.
 export async function uploadDevPlans(developmentId: string, formData: FormData): Promise<string[]> {
+  await requireActiveUser();
   const files = formData.getAll("plans").filter((f): f is File => f instanceof File && f.size > 0);
   const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
   if (!dev) return [];
@@ -344,6 +372,7 @@ export async function uploadDevPlans(developmentId: string, formData: FormData):
 
 // Persist the admin-managed floor-plan order / deletions.
 export async function savePlans(developmentId: string, plans: string[]) {
+  await requireActiveUser();
   const clean = plans.map((u) => String(u).trim()).filter(Boolean);
   const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
   if (!dev) return;
@@ -358,6 +387,7 @@ export async function savePlans(developmentId: string, plans: string[]) {
 // (re)creates the manually-sourced units. Never overwrites existing admin values;
 // the sync never touches "manual" units. Human reviews before publishing.
 export async function importFromPdfs(formData: FormData) {
+  await requireActiveUser();
   const id = String(formData.get("id"));
   const files = formData.getAll("pdfs").filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) return;
@@ -438,6 +468,7 @@ export async function saveMapLocationAction(developmentId: string, rawGeo: strin
   const text = rawGeo.trim();
   if (!text) return { ok: false, message: "Paste a Google Maps link or \"lat, lng\" first." };
   try {
+    await requireActiveUser();
     const geo = await resolveMapsUrlToGeo(text);
     if (!geo) {
       return { ok: false, message: "Couldn't extract coordinates from that — try the full google.com/maps link (not a shortened share link), or paste \"lat, lng\" directly." };
@@ -460,6 +491,7 @@ export async function saveMapLocationAction(developmentId: string, rawGeo: strin
 }
 
 export async function saveOverride(formData: FormData) {
+  await requireActiveUser();
   const id = String(formData.get("id"));
   const amenities = formData.getAll("amenities").map((v) => String(v).trim()).filter(Boolean);
   // SEO title/description overrides — only stored if at least one is actually
@@ -549,6 +581,7 @@ export async function saveOverride(formData: FormData) {
 // Bulk-save the unit list from the editor. All units become manually managed
 // (source "manual") so the sync stops overwriting them.
 export async function saveUnits(developmentId: string, units: any[]) {
+  await requireActiveUser();
   const num = (v: any) => {
     const n = Math.round(Number(String(v ?? "").replace(/[^\d.]/g, "")));
     return Number.isFinite(n) && n > 0 ? n : null;
@@ -671,6 +704,7 @@ export async function saveUnits(developmentId: string, units: any[]) {
 // data-loss numbers themselves are computed client-side from data already
 // on the page (SyncControlPanel.tsx) — this action only flips the flag.
 export async function setDevelopmentSyncMode(developmentId: string, mode: "manual" | "feed") {
+  await requireActiveUser();
   await prisma.developmentUnit.updateMany({ where: { developmentId }, data: { source: mode } });
   revalidatePath(`/admin/developments/${developmentId}`);
 }
@@ -685,6 +719,7 @@ export async function setDevelopmentSyncMode(developmentId: string, mode: "manua
 // only fires when something was actually written (see feedSync.ts/
 // imageMirror.ts), so a routine click stays fast and restart-free.
 export async function syncOneDevelopmentAction(developmentId: string): Promise<SyncOneDevelopmentResult> {
+  await requireActiveUser();
   // forceMirror (2026-08-08): admin-initiated click, deliberately bypasses
   // the published-project mirror freeze the nightly cron respects — see
   // feedSync.ts's syncOneProject for the freeze itself.
@@ -696,6 +731,7 @@ export async function syncOneDevelopmentAction(developmentId: string): Promise<S
 // Publication lifecycle. Publishing requires the gate to pass (checked here too,
 // not only in the UI). The required-field list is extensible.
 export async function setStatus(formData: FormData) {
+  await requireActiveUser();
   const id = String(formData.get("id"));
   const status = String(formData.get("status"));
   let slug: string | undefined;
