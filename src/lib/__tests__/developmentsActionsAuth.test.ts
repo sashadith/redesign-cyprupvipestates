@@ -17,7 +17,7 @@ const src = readFileSync(join(process.cwd(), "src/app/admin/(panel)/developments
 /** Body of each `export async function` — up to the next top-level declaration. */
 function exportedBodies(): { name: string; body: string }[] {
   const re = /^export async function (\w+)\(/gm;
-  const starts = [...src.matchAll(re)];
+  const starts = Array.from(src.matchAll(re)); // not a spread: the build typechecks tests without downlevelIteration (TS2802)
   return starts.map((m, i) => {
     const end = i + 1 < starts.length ? starts[i + 1].index! : src.length;
     return { name: m[1], body: src.slice(m.index!, end) };
