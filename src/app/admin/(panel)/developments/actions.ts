@@ -90,24 +90,24 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
 }
 
-// Manual-sync reminder cadence (days). 0/empty clears it (null = no reminder).
-// Read by the manualSyncDue() Action Center rule. For hand-synced developers like
-// AGG whose prod cron can't reach the source (Cloudflare) — see the field's note
-// in schema.prisma.
-export async function setManualSyncReminder(developerAccountId: string, days: number) {
+// The monthly manual-sync round (2026-10-16; first Monday of every month, one
+// Action Center item — see src/lib/monthlyManualSync.ts). Replaces the old
+// per-account reminder cadence (manualSyncReminderDays, no longer read).
+export async function setMonthlyManualSync(developerAccountId: string, on: boolean) {
   await requireActiveUser();
-  const value = Number.isFinite(days) && days > 0 ? Math.round(days) : null;
-  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { manualSyncReminderDays: value } });
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { monthlyManualSync: !!on } });
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+  revalidatePath("/admin");
 }
 
-// Stamps driveSyncedAt = now — the manual-sync reminder anchors on this, so it's
-// the "I've just synced this by hand" override. The sync scripts update it too, so
-// this button is only for confirming a sync done outside them.
-export async function markDeveloperSyncedNow(developerAccountId: string) {
+// "This month's manual sync is done" — takes the account off the round's
+// Action Center item. Deliberately NOT driveSyncedAt: an automatic sync of a
+// mixed account stamps that every week.
+export async function markMonthlySyncDone(developerAccountId: string) {
   await requireActiveUser();
-  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { driveSyncedAt: new Date() } });
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { manualSyncedAt: new Date() } });
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+  revalidatePath("/admin");
 }
 
 // Mirrors images now (2026-08-04) — previously data-only, which meant a
