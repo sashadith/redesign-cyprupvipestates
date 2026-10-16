@@ -9,7 +9,8 @@ import DeveloperPageLink from "./DeveloperPageLink";
 import DriveSyncButton from "./DriveSyncButton";
 import DriveFolderPreviewButton from "./DriveFolderPreviewButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
-import ManualReminderSelect from "./ManualReminderSelect";
+import MonthlySyncControl from "./MonthlySyncControl";
+import { currentRound, doneForRound, nextRound } from "@/lib/monthlyManualSync";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveLinkedDeveloper, developerGroupExists, listDeveloperPageOptions } from "@/lib/developerLink";
@@ -219,36 +220,30 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
         </div>
       )}
 
-      {/* Manual-sync status — sits under the Drive-sync card. For hand-synced
-          developers (e.g. AGG, whose source is behind Cloudflare so the prod cron
-          can't reach it — synced from Claude Code). The cadence feeds the Action
-          Center's manualSyncDue() rule; the badge here renders the same condition. */}
-      {dev.driveFolderUrl && (() => {
-        const DAY = 86_400_000;
-        const last = dev.driveSyncedAt;
-        const cadence = dev.manualSyncReminderDays;
+      {/* Monthly manual-sync round (2026-10-16) — first Monday of every month,
+          one Action Center item (src/lib/monthlyManualSync.ts). Shown for every
+          account: hand-maintained ones need not have a Drive folder. */}
+      {(() => {
+        const inRound = dev.monthlyManualSync;
         const now = new Date();
-        const daysSince = last ? Math.round((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), last.getUTCDate())) / DAY) : null;
-        const overdue = cadence != null && daysSince != null && daysSince >= cadence;
-        const nextDue = cadence != null && last ? new Date(last.getTime() + cadence * DAY) : null;
-        const shortDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+        const round = currentRound(now);
+        const done = doneForRound(dev.manualSyncedAt, round);
+        const fmtDay = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
         return (
           <div className="flex items-center justify-between gap-3 flex-wrap rounded-lg border border-[#E5E7EB] bg-white px-4 py-2.5">
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium text-[#111827]">Manual sync</span>
-              {overdue ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-2.5 py-0.5 text-xs font-medium text-[#92400E]">
-                  ⚠ Sync due{daysSince != null ? ` — last synced ${daysSince}d ago` : ""}
-                </span>
-              ) : cadence != null ? (
-                <span className="text-xs text-[#6B7280]">
-                  {last ? `synced ${daysSince === 0 ? "today" : `${daysSince}d ago`}` : "never synced"}{nextDue ? ` · next reminder ${shortDate(nextDue)}` : ""}
-                </span>
+              <span className="font-medium text-[#111827]">Monthly manual sync</span>
+              {!inRound ? (
+                <span className="text-xs text-[#9CA3AF]">not in the round</span>
+              ) : done ? (
+                <span className="text-xs text-[#6B7280]">done for the {fmtDay(round)} round · next round {fmtDay(nextRound(round))}</span>
               ) : (
-                <span className="text-xs text-[#9CA3AF]">no reminder set</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-2.5 py-0.5 text-xs font-medium text-[#92400E]">
+                  ⚠ Open since {fmtDay(round)}
+                </span>
               )}
             </div>
-            <ManualReminderSelect developerAccountId={dev.id} value={dev.manualSyncReminderDays} />
+            <MonthlySyncControl developerAccountId={dev.id} inRound={inRound} />
           </div>
         );
       })()}

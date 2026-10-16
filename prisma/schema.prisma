@@ -1218,6 +1218,13 @@ model DeveloperAccount {
   // manual sync updates driveSyncedAt, so the reminder clears itself. Set via the
   // developer admin (ManualReminderSelect). 30 = monthly.
   manualSyncReminderDays Int?
+  // Monthly manual-sync round (2026-10-16): first Monday of every month, ONE Action
+  // Center item listing the accounts still open (src/lib/monthlyManualSync.ts). The
+  // round replaces manualSyncReminderDays above, which nothing reads any more.
+  // manualSyncedAt is separate from driveSyncedAt because an automatic sync of a
+  // mixed account (Korantina, Motive Point) stamps driveSyncedAt every week.
+  monthlyManualSync Boolean   @default(false)
+  manualSyncedAt    DateTime?
   notes             String?
   // Xellex bridge (2026-10-09) — which developers are deliverable to the second
   // portal. Default OFF: a developer account created next year must not appear

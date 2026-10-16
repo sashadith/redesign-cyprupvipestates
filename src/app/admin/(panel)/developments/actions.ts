@@ -9,6 +9,7 @@ import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type Dri
 import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
+import { auth } from "@/auth";
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
 // try/catch added 2026-08-11 — DriveSyncButton.tsx's own catch only ever sees Next's
@@ -71,22 +72,33 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
 }
 
-// Manual-sync reminder cadence (days). 0/empty clears it (null = no reminder).
-// Read by the manualSyncDue() Action Center rule. For hand-synced developers like
-// AGG whose prod cron can't reach the source (Cloudflare) — see the field's note
-// in schema.prisma.
-export async function setManualSyncReminder(developerAccountId: string, days: number) {
-  const value = Number.isFinite(days) && days > 0 ? Math.round(days) : null;
-  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { manualSyncReminderDays: value } });
-  revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+// The monthly manual-sync round (2026-10-16; first Monday of every month, one
+// Action Center item — see src/lib/monthlyManualSync.ts). Replaces the old
+// per-account reminder cadence (manualSyncReminderDays, no longer read).
+// A valid, still-active session — server actions are plain POST endpoints.
+async function requireActiveUser() {
+  const session = await auth();
+  const uid = (session?.user as { id?: string } | undefined)?.id;
+  if (!uid) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  if (!user?.isActive) throw new Error("Unauthorized");
 }
 
-// Stamps driveSyncedAt = now — the manual-sync reminder anchors on this, so it's
-// the "I've just synced this by hand" override. The sync scripts update it too, so
-// this button is only for confirming a sync done outside them.
-export async function markDeveloperSyncedNow(developerAccountId: string) {
-  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { driveSyncedAt: new Date() } });
+export async function setMonthlyManualSync(developerAccountId: string, on: boolean) {
+  await requireActiveUser();
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { monthlyManualSync: !!on } });
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+  revalidatePath("/admin");
+}
+
+// "This month's manual sync is done" — takes the account off the round's
+// Action Center item. Deliberately NOT driveSyncedAt: an automatic sync of a
+// mixed account stamps that every week.
+export async function markMonthlySyncDone(developerAccountId: string) {
+  await requireActiveUser();
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { manualSyncedAt: new Date() } });
+  revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+  revalidatePath("/admin");
 }
 
 // Mirrors images now (2026-08-04) — previously data-only, which meant a

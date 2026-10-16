@@ -9,6 +9,7 @@ import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { developerGroupExists } from "@/lib/developerLink";
 import { isDropboxShareUrl } from "@/lib/dropbox";
 import { AWAITED_FOLDERS, AWAITED_JOB_PREFIX } from "@/lib/korantinaAwaited";
+import { roundStatus } from "@/lib/monthlyManualSync";
 import type { ActionItem } from "../types";
 
 // Standalone rather than imported from lib/sharepoint: that module belongs to
@@ -790,37 +791,37 @@ async function manualDataStaleReminders(): Promise<ActionItem[]> {
   return items;
 }
 
-// (p) Per-ACCOUNT manual-sync reminder on a configurable cadence
-// (DeveloperAccount.manualSyncReminderDays, set in the developer admin). Distinct
-// from manualDataStaleReminders (o) above — that one is per-development and only
-// for dev:"manual" projects, whereas this is ONE item per ACCOUNT that is synced
-// by hand. AGG is the case it was built for: its source sits behind Cloudflare, so
-// the prod cron cannot reach it and it is synced from Claude Code. The manual sync
-// refreshes driveSyncedAt, so this item clears itself once the sync has run.
-async function manualSyncDue(): Promise<ActionItem[]> {
-  const accts = await prisma.developerAccount.findMany({
-    where: { manualSyncReminderDays: { not: null } },
-    select: { id: true, name: true, manualSyncReminderDays: true, driveSyncedAt: true, createdAt: true },
+// (p) The monthly manual-sync round (2026-10-16, replaces the per-account
+// manualSyncReminderDays cadence, whose items fell due on scattered days). Every
+// account flagged monthlyManualSync is synced once a month, on the FIRST MONDAY:
+// ONE item lists the accounts not yet marked done for the round in force
+// (src/lib/monthlyManualSync.ts). Marking an account done (admin developer page,
+// or the sync itself stamping manualSyncedAt) takes it off the list; when the
+// last one is done the item is gone. An unfinished round stays until it is done.
+export function monthlyManualSyncItem(
+  accounts: { id: string; name: string; manualSyncedAt: Date | null }[],
+  now: Date,
+): ActionItem | null {
+  if (!accounts.length) return null;
+  const { round, open } = roundStatus(accounts, now);
+  if (!open.length) return null;
+  const [y, m, d] = round.split("-").map(Number);
+  return {
+    id: `monthly-manual-sync:${round}`, severity: "ACTION", category: "DEVELOPERS",
+    title: `Monthly manual sync: ${open.length} of ${accounts.length} developer${accounts.length === 1 ? "" : "s"} open`,
+    description: `Round of ${round} (first Monday). Still open: ${open.map((a) => a.name).join(", ")}. Mark each one done on its developer page once synced.`,
+    deepLink: open.length === 1 ? `/admin/developments/developers/${open[0].id}` : "/admin/developments",
+    since: new Date(Date.UTC(y, m - 1, d)),
+  };
+}
+
+async function monthlyManualSyncDue(): Promise<ActionItem[]> {
+  const accounts = await prisma.developerAccount.findMany({
+    where: { monthlyManualSync: true },
+    select: { id: true, name: true, manualSyncedAt: true },
   });
-  const items: ActionItem[] = [];
-  for (const a of accts) {
-    const cadence = a.manualSyncReminderDays!;
-    const last = a.driveSyncedAt ?? a.createdAt;
-    const days = daysSinceCalendar(last);
-    if (days < cadence) continue;
-    // `since` is the day it BECAME due (last synced + cadence): a fixed real
-    // timestamp, never "today" or a resetting countdown (see soldOutReminders' note
-    // on why a resetting countdown quietly broke the archive reminder).
-    const since = new Date(last.getTime() + cadence * DAY);
-    const cadenceLabel = cadence === 7 ? "weekly" : cadence === 14 ? "2-weekly" : cadence >= 28 && cadence <= 31 ? "monthly" : `${cadence}-day`;
-    items.push({
-      id: `manual-sync-due:${a.id}`, severity: "ACTION", category: "DEVELOPERS",
-      title: `${a.name}: sync due`,
-      description: `${a.driveSyncedAt ? `Last synced ${days} days ago` : "Never synced"} — ${cadenceLabel} manual sync. Run it from Claude Code; it clears once driveSyncedAt updates.`,
-      deepLink: `/admin/developments/developers/${a.id}`, since,
-    });
-  }
-  return items;
+  const item = monthlyManualSyncItem(accounts, new Date());
+  return item ? [item] : [];
 }
 
 /* (q) The SAME building present twice as two Developments (2026-09-16, the
@@ -916,7 +917,7 @@ export async function developerRules(): Promise<ActionItem[]> {
   const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(), duplicateDevelopments(), awaitedFolderAppeared(),
+    emptyDraftReminders(), manualDataStaleReminders(), monthlyManualSyncDue(), duplicateDevelopments(), awaitedFolderAppeared(),
   ]);
   return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p, ...q, ...r];
 }
