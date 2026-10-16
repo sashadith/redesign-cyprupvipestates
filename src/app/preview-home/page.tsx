@@ -16,7 +16,7 @@ import ParallaxBand from "./sections/ParallaxBand";
 import Form from "./sections/Form";
 import Footer from "./sections/Footer";
 import PreviewMotion from "./anim/PreviewMotion";
-import { buildTrackRecordBlock } from "./sections/trackRecord.copy";
+import { buildTrackRecordBlock, TRACK_RECORD_TITLE } from "./sections/trackRecord.copy";
 import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
 
 /* Homepage redesign preview — built section by section.
@@ -41,7 +41,7 @@ export default async function PreviewHome() {
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} />}
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
         <LatestDevelopments lang="en" />
-        <Benefits block={buildTrackRecordBlock("en", trackProjects, trackUnits, homePage.benefitsBlock?.title ?? "")} locale="en-US" />
+        <Benefits block={buildTrackRecordBlock("en", trackProjects, trackUnits)} locale="en-US" accent={TRACK_RECORD_TITLE.en.accent} />
         {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
         {homePage.featuredCaseStudiesBlock && (
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang="en" />

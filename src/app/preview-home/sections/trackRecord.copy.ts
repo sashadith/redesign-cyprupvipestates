@@ -69,21 +69,45 @@ export const TRACK_RECORD: Record<Lang, TrackRecordStat[]> = {
   ],
 };
 
+/* The band's own heading, added 2026-10-16 (Sascha). It used to take whatever
+   title the CMS row carried, which on every live homepage was empty — the
+   numbers opened the section with nothing above them.
+   `accent` is the single word set in the gold shimmer, matched as a whole token
+   (see Benefits.tsx), so it has to appear in `text` exactly as written here.
+
+   "On the ground" is the claim: ten years present in the market, not ten years
+   of existing. German and Polish carry that literally. Russian does not —
+   "на месте" reads as "standing still" — so it names the place instead, which
+   is the same claim in the idiom the language actually uses.
+
+   Hebrew is deliberately absent: writing he copy needs a reader who can check
+   it, and the band simply keeps rendering without a heading there, exactly as
+   it does today for every language. */
+export const TRACK_RECORD_TITLE: Record<Lang, { text: string; accent: string }> = {
+  en: { text: "Ten years on the ground", accent: "years" },
+  de: { text: "Zehn Jahre vor Ort", accent: "Jahre" },
+  pl: { text: "Dziesięć lat na miejscu", accent: "lat" },
+  ru: { text: "Десять лет на Кипре", accent: "лет" },
+  he: { text: "", accent: "" },
+};
+
 export function hasTrackRecord(lang: string): lang is Lang {
   return lang === "en" || lang === "de" || lang === "pl" || lang === "ru" || lang === "he";
 }
 
-/** Shaped like the CMS block so the unchanged Benefits component renders it. */
+/** Shaped like the CMS block so the unchanged Benefits component renders it.
+    The heading comes from TRACK_RECORD_TITLE above rather than from the CMS
+    row: this band's copy lives here in full, and taking half of it from the
+    database was how the three surfaces drifted apart in the first place. */
 export function buildTrackRecordBlock(
   lang: Lang,
   projectCount: number,
   availableUnits: number,
-  title: string,
 ): BenefitsBlock {
   return {
     _key: "home-track-record",
     _type: "benefitsBlock",
-    title,
+    title: TRACK_RECORD_TITLE[lang].text,
     benefits: TRACK_RECORD[lang].map((s, i) => ({
       _key: `stat-${i}`,
       _type: "benefits",

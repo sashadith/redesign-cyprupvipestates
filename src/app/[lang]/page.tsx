@@ -40,7 +40,7 @@ import Cities from "@/app/preview-home/sections/Cities";
 import Description from "@/app/preview-home/sections/Description";
 import LatestDevelopments from "@/app/preview-home/sections/LatestDevelopments";
 import Benefits from "@/app/preview-home/sections/Benefits";
-import { buildTrackRecordBlock, hasTrackRecord } from "@/app/preview-home/sections/trackRecord.copy";
+import { buildTrackRecordBlock, hasTrackRecord, TRACK_RECORD_TITLE } from "@/app/preview-home/sections/trackRecord.copy";
 import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
 import { bcp47For } from "@/lib/locale";
 import HowWeWork from "@/app/preview-home/sections/HowWeWork";
@@ -158,7 +158,7 @@ export default async function Home({ params }: Props) {
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} lang={lang} />}
         <LatestDevelopments lang={lang} />
         {hasTrackRecord(lang) ? (
-          <Benefits block={buildTrackRecordBlock(lang, trackProjects, trackUnits, homePage.benefitsBlock?.title ?? "")} locale={bcp47For(lang)} />
+          <Benefits block={buildTrackRecordBlock(lang, trackProjects, trackUnits)} locale={bcp47For(lang)} accent={TRACK_RECORD_TITLE[lang].accent} />
         ) : (
           homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />
         )}

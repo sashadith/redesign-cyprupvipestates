@@ -714,6 +714,53 @@ img { max-width: 100%; display: block; }
   font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 300;
   font-size: clamp(3rem, 2.3rem + 2.9vw, 4.35rem); letter-spacing: -0.02em;
 }
+/* A soft champagne glow behind each figure — the same light the project page's
+   trust strip puts behind its numbers (.pp-trust__item::before, project.css),
+   brought here on request (Sascha, 2026-10-16). One rule covers all three
+   surfaces that render this band: the homepage track record, the About stats
+   and the Partners stats.
+
+   Anchored on the FIGURE, not on the card. The project page can hang its halo
+   off the card's top-left because its figures sit left-aligned at the top of a
+   tall panel; these are centred above a label and a note, so a card-anchored
+   halo would sit low and wash the description instead of lifting the number.
+
+   Sized in em, which here resolves against the figure's own
+   clamp(3rem … 4.35rem) — so it tracks the number through every breakpoint
+   instead of needing a second set of media queries. Fixed rather than relative
+   to each number's width on purpose: four halos of one size read as a row,
+   four halos hugging "323", "2,937", "10" and "360°" read as four accidents.
+
+   No z-index anywhere. A negative one would not sit between the number and the
+   band — it would drop the halo behind `.section`'s own opaque background and
+   vanish. The number is lifted above the positioned pseudo-element instead,
+   the same way .pp-trust__item > * does it. */
+/* 0.20, up from 0.14 (Sascha, 2026-10-16). Still above the project page's own
+   0.10 for the same reason as before: there the halo lies on a glass panel that
+   carries light of its own, here it sits on the bare dark band. */
+.bstat { --bstat-glow: rgba(194,154,94,0.20); }
+/* Partners renders this band on paper (.pnr__stats-section.is-light), where a
+   champagne radial reads as a smudge rather than as light. Two classes beat
+   one, so this holds regardless of bundle order — see the note in about.css
+   about .section's background winning on order alone. */
+.is-light .bstat { --bstat-glow: transparent; }
+.bstat__num { position: relative; }
+.bstat__num::before {
+  content: ""; position: absolute; pointer-events: none;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 3.4em; height: 2.4em;
+  background: radial-gradient(closest-side, var(--bstat-glow), transparent);
+}
+/* Everything that carries text joins the positioned layer, so it paints ABOVE
+   the halo rather than under it. The figure's own spans need this because the
+   pseudo-element is their parent's; the label and note need it because
+   `.bstat__num` is now positioned and would otherwise paint over them — the
+   halo's lower edge reaches into the label's line. Its alpha there is
+   effectively zero, which is exactly the kind of "probably fine" that turns
+   into a hazy heading on somebody's screen. */
+.bstat__num > span,
+.bstat__title,
+.bstat__desc { position: relative; }
 .bstat__sign { font-size: 0.62em; margin-inline-start: 0.04em; }
 .bstat__title { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); font-weight: 500; color: var(--text); }
 .bstat__desc { margin: 0; max-width: 30ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.55; color: var(--text-soft); }
