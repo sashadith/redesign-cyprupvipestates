@@ -3,12 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { syncAll, syncDeveloper } from "@/lib/feedSync";
 import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type DriveFolderPreview } from "@/lib/driveAvailabilitySync";
 import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
+
+// Server Actions are reachable as a plain POST regardless of the (panel)
+// layout's login check — middleware skips /admin and nginx only proxies — so
+// every action here checks the session itself. Same contract as
+// requireSession() in src/app/admin/actions.ts: a session with a user id, and
+// that user still active in the DB (a deactivated user's JWT stays valid).
+async function requireActiveUser() {
+  const session = await auth();
+  const uid = (session?.user as any)?.id;
+  if (!session || !uid) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  if (!user || !user.isActive) throw new Error("Unauthorized");
+  return session;
+}
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
 // try/catch added 2026-08-11 — DriveSyncButton.tsx's own catch only ever sees Next's
@@ -17,6 +32,7 @@ import { publicDeveloperLabel } from "@/lib/developerPublicLabel";
 // already guards its own drive-sync button the same way — this one was missed.
 export async function syncDeveloperDriveAction(developerAccountId: string): Promise<DriveSyncResult> {
   try {
+    await requireActiveUser();
     const r = await syncDeveloperDrive(developerAccountId, { force: true, content: true });
     revalidatePath(`/admin/developments/developers/${developerAccountId}`);
     revalidatePath("/admin/developments");
@@ -41,6 +57,7 @@ export async function syncDeveloperDriveAction(developerAccountId: string): Prom
    conscious `&force=1` call against the cron route. */
 export async function syncDeveloperDropboxAction(developerAccountId: string): Promise<DriveSyncResult> {
   try {
+    await requireActiveUser();
     const r = await writeKuutioDraft(developerAccountId);
     revalidatePath(`/admin/developments/developers/${developerAccountId}`);
     revalidatePath("/admin/developments");
@@ -59,6 +76,7 @@ export async function syncDeveloperDropboxAction(developerAccountId: string): Pr
 // the reason when it resolves to nothing.
 export async function previewDriveFoldersAction(developerAccountId: string): Promise<{ ok: boolean; message: string; rows: DriveFolderPreview[] }> {
   try {
+    await requireActiveUser();
     return await previewDriveFolders(developerAccountId);
   } catch (e) {
     return { ok: false, message: syncErrorMessage(e), rows: [] };
@@ -66,6 +84,7 @@ export async function previewDriveFoldersAction(developerAccountId: string): Pro
 }
 
 export async function setDriveSyncInterval(developerAccountId: string, interval: string) {
+  await requireActiveUser();
   const valid = ["daily", "2day", "weekly", "off"].includes(interval) ? interval : "daily";
   await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { driveSyncInterval: valid } });
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
@@ -76,6 +95,7 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
 // AGG whose prod cron can't reach the source (Cloudflare) — see the field's note
 // in schema.prisma.
 export async function setManualSyncReminder(developerAccountId: string, days: number) {
+  await requireActiveUser();
   const value = Number.isFinite(days) && days > 0 ? Math.round(days) : null;
   await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { manualSyncReminderDays: value } });
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
@@ -85,6 +105,7 @@ export async function setManualSyncReminder(developerAccountId: string, days: nu
 // the "I've just synced this by hand" override. The sync scripts update it too, so
 // this button is only for confirming a sync done outside them.
 export async function markDeveloperSyncedNow(developerAccountId: string) {
+  await requireActiveUser();
   await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { driveSyncedAt: new Date() } });
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
 }
@@ -104,6 +125,7 @@ export async function markDeveloperSyncedNow(developerAccountId: string) {
 // the nightly cron respects — an admin who clicks this wants a real re-pull,
 // images included, regardless of publish status.
 export async function runSync(formData: FormData) {
+  await requireActiveUser();
   const dev = String(formData.get("dev") ?? "");
   // Report the outcome back to the page. Without this the button was silent in
   // the one case that matters most: a sync BLOCKED by the completeness guard
@@ -146,6 +168,7 @@ export async function runSync(formData: FormData) {
 // adapter key + a synthetic feedKey; everything else (override editor, PDF import,
 // units, gallery) works exactly like a synced development.
 export async function createManualDevelopment(developerAccountId: string, formData: FormData) {
+  await requireActiveUser();
   const name = String(formData.get("name") ?? "").trim();
   if (!developerAccountId || !name) return;
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
