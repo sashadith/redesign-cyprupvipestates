@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { isPsiConfigured, fetchCwv, sleep } from "@/lib/psi/client";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
+import { runWithOneRetry } from "@/lib/psi/retryPass";
 import type { Locale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,10 @@ export const maxDuration = 200;
 const SITE_URL = "https://cyprusvipestates.com";
 const RETENTION_MONTHS = 12;
 const REQUEST_DELAY_MS = 2500; // spaces ~30 requests over ~75s — well under PSI's quota, considerate of shared free tier
+// A URL that fails is tried once more after this pause, at the end of the run
+// (2026-10-16: one Lighthouse timeout on an otherwise healthy page reported
+// the whole night as failed). Only a second failure counts.
+const RETRY_AFTER_MS = 60_000;
 const TOP_CLICKS_COUNT = 20;
 const RANDOM_DEV_COUNT = 5;
 const DAY = 86_400_000;
@@ -58,27 +63,25 @@ async function runSync() {
 
   const urls = await buildTargetUrls();
   const date = new Date(new Date().toISOString().slice(0, 10));
-  const results: { url: string; ok: boolean; source?: string; error?: string }[] = [];
-
-  for (const path of urls) {
-    const fullUrl = `${SITE_URL}${path}`;
-    try {
-      const reading = await fetchCwv(fullUrl);
+  const sourceByUrl = new Map<string, string>();
+  const { results: passes, recoveredOnRetry } = await runWithOneRetry(
+    urls,
+    async (path) => {
+      const reading = await fetchCwv(`${SITE_URL}${path}`);
       await prisma.cwvMetric.upsert({
         where: { date_url: { date, url: path } },
         create: { date, url: path, ...reading },
         update: { lcp: reading.lcp, cls: reading.cls, inp: reading.inp, perfScore: reading.perfScore, source: reading.source },
       });
-      results.push({ url: path, ok: true, source: reading.source });
-    } catch (e) {
-      results.push({ url: path, ok: false, error: e instanceof Error ? e.message : String(e) });
-    }
-    await sleep(REQUEST_DELAY_MS);
-  }
+      sourceByUrl.set(path, reading.source);
+    },
+    { betweenMs: REQUEST_DELAY_MS, retryAfterMs: RETRY_AFTER_MS, sleep },
+  );
+  const results = passes.map((p) => ({ url: p.item, ok: p.ok, retried: p.retried, source: sourceByUrl.get(p.item), error: p.error }));
 
   const purge = await purgeOldCwv();
   const okCount = results.filter((r) => r.ok).length;
-  return { skipped: false, total: urls.length, ok: okCount, failed: urls.length - okCount, results, purge };
+  return { skipped: false, total: urls.length, ok: okCount, failed: urls.length - okCount, recoveredOnRetry, results, purge };
 }
 
 // Called by cron: curl -s "http://127.0.0.1:3200/api/cron/psi-sync?key=$CRON_SECRET"
@@ -93,7 +96,7 @@ export async function GET(req: NextRequest) {
     const result = await withCronLog(
       "psi-sync",
       runSync,
-      (r) => (r.skipped ? `skipped: ${r.reason}` : `${r.ok}/${r.total} URLs synced, purged ${r.purge?.purged ?? 0}`),
+      (r) => (r.skipped ? `skipped: ${r.reason}` : `${r.ok}/${r.total} URLs synced${r.recoveredOnRetry ? ` (${r.recoveredOnRetry} on the retry)` : ""}, purged ${r.purge?.purged ?? 0}`),
       // 2026-08-11/12 — same aggregate-blindness fix as drive-sync/feed-sync/
       // booking-reminders (see withCronLog's comment in src/lib/cronLog.ts):
       // runSync() catches every per-URL fetchCwv() failure internally and
