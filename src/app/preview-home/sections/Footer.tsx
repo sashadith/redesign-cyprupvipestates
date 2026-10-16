@@ -58,7 +58,7 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
       <div className="pf__container">
         <div className="pf__top">
           <div className="pf__brand">
-            {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" />}
+            {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" loading="lazy" decoding="async" />}
           </div>
 
           <div className="pf__col">
@@ -85,7 +85,7 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
                   const icon = safeUrl(s.icon);
                   return (
                     <a key={s._key} href={s.link} target="_blank" rel="noopener nofollow" className="pf__social-link" aria-label={s.label}>
-                      {icon && <img src={icon} alt="" width={20} height={20} />}
+                      {icon && <img src={icon} alt="" width={20} height={20} loading="lazy" decoding="async" />}
                     </a>
                   );
                 })}

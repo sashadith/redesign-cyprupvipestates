@@ -9,6 +9,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { localePrefix, fmtPrice, localeDir } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
 import Bdi from "@/app/components/Bdi";
+import OptImg from "./OptImg";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -31,7 +32,7 @@ const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({
   return (
     <a className="pcard" href={url}>
       <div className="pcard__media">
-        {img && <img src={img} alt={project.title} />}
+        {img && <OptImg src={img} alt={project.title} sizes="(max-width: 768px) 85vw, 34vw" />}
         {project.isSold && <span className="pcard__sold">{t.sold}</span>}
         <div className="pcard__shade" />
       </div>

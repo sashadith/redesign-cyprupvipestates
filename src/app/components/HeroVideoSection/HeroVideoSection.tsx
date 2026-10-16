@@ -63,16 +63,30 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("error", markError);
 
-    // Важно: пробуем play сразу после монтирования
-    (async () => {
+    // The video (2.3 MB) is pure decoration under the poster. Starting it at mount made
+    // it fight the page's JS/CSS and the LCP headline for bandwidth (Lighthouse mobile
+    // 2026-10-16: LCP 17.5 s). Start after the load event, and not at all on Save-Data.
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    let started = false;
+    const start = async () => {
+      if (started || conn?.saveData) return;
+      started = true;
       try {
         await el.play();
       } catch {
         // autoplay может быть заблокирован — тогда постер останется (это ок)
       }
-    })();
+    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onWindowLoad = () => {
+      timer = setTimeout(start, 600);
+    };
+    if (document.readyState === "complete") onWindowLoad();
+    else window.addEventListener("load", onWindowLoad, { once: true });
 
     return () => {
+      window.removeEventListener("load", onWindowLoad);
+      if (timer) clearTimeout(timer);
       el.removeEventListener("loadeddata", onLoadedData);
       el.removeEventListener("playing", onPlaying);
       el.removeEventListener("timeupdate", onTimeUpdate);
@@ -105,7 +119,6 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
         <video
           ref={videoRef}
           className={styles.video}
-          autoPlay
           muted
           loop
           playsInline
