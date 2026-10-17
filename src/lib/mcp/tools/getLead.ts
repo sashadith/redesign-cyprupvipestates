@@ -5,6 +5,7 @@ import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { determineLeadState } from "@/lib/crm/compose/leadState";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 import { fmtDate, untrusted, MAX_TIMELINE_ROWS } from "../format";
 import { LEAD_ROW_SELECT, CONTACT_TYPES, leadRow } from "../leadRow";
 import { shapeInteraction, leadStateInput, LEAD_STATE_LABEL, attributionOf } from "../leadDetail";
@@ -22,9 +23,10 @@ export function registerGetLead(server: McpServer) {
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ leadId }, ctx) =>
-      runTool("crm_get_lead", contextFromAuthInfo(ctx.http?.authInfo), leadId, async () => {
+      runTool("crm_get_lead", contextFromAuthInfo(ctx.http?.authInfo), leadId, async (c) => {
+        const { where: scope } = await loadScope(c);
         const lead = await prisma.lead.findFirst({
-          where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
+          where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
           select: {
             ...LEAD_ROW_SELECT,
             nationality: true, timeline: true, financing: true, propertyTypeInterest: true, message: true, notes: true, preferredChannel: true,

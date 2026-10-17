@@ -2,6 +2,8 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
 import { createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { fullName } from "@/lib/crm/leadIdentity";
+import { canViewLead } from "@/lib/crm/access";
+import { loadCrmUser } from "@/lib/crm/accessUser";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
@@ -19,8 +21,23 @@ export function registerCreateLead(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_create_lead", contextFromAuthInfo(ctx.http?.authInfo), null, async (c) => {
+        // Creating is not scoped (the new lead is assigned to the caller), but
+        // a duplicate the caller may not view is reported without its details:
+        // only that it exists, never its name, id or row.
         const duplicate = await findDuplicateLead(input.email, input.phone);
+        let duplicateVisible = false;
+        if (duplicate) {
+          const user = await loadCrmUser(c.userId);
+          const owner = await prisma.lead.findUniqueOrThrow({ where: { id: duplicate.id }, select: { assignedToId: true } });
+          duplicateVisible = !!user && canViewLead(user, owner);
+        }
         if (duplicate && !input.allowDuplicate) {
+          if (!duplicateVisible) {
+            return {
+              created: false,
+              reason: `An active lead with the same ${duplicate.matchedOn} already exists, assigned to a colleague — you cannot view it. Ask the owner or an admin.`,
+            };
+          }
           const existing = await prisma.lead.findUniqueOrThrow({ where: { id: duplicate.id }, select: LEAD_ROW_SELECT });
           return {
             created: false,
@@ -31,7 +48,7 @@ export function registerCreateLead(server: McpServer) {
         const { allowDuplicate: _ignored, ...data } = input;
         const { id } = await createLeadRecord({ userId: c.userId, userName: c.userName }, { ...data, assignedToId: c.userId, via: "mcp" });
         const fresh = await prisma.lead.findUniqueOrThrow({ where: { id }, select: LEAD_ROW_SELECT });
-        return { created: true, lead: leadRow(fresh), ...(duplicate ? { duplicateOf: duplicate.id } : {}) };
+        return { created: true, lead: leadRow(fresh), ...(duplicate && duplicateVisible ? { duplicateOf: duplicate.id } : {}) };
       }),
   );
 }

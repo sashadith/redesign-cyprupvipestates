@@ -7,6 +7,7 @@ import { LOST_REASONS } from "@/lib/crm/leadStatus";
 import { applyLeadStatusChange, LEAD_STATUSES, standaloneLostReason } from "@/lib/crm/updateLeadStatus";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, loadScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 import { LOCALES } from "@/lib/locale";
 
@@ -43,8 +44,10 @@ export function registerUpdateLead(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_update_lead", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { id: true, status: true, hotAt: true } });
+        const { user, where: scope } = await loadScope(c);
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, status: true, hotAt: true, assignedToId: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
+        assertCanEdit(user, lead);
         if (input.lostReason && input.status !== "LOST") {
           throw new ToolError("validation", "lostReason is only allowed together with status LOST");
         }

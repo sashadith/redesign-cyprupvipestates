@@ -2,18 +2,25 @@ import { prisma } from "@/lib/prisma";
 import { sendLeadEmail, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ToolError } from "../toolWrapper";
+import { assertCanEdit, type LeadScope } from "../leadScope";
 import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
 import { checkCcRecipients } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 3. The code is checked by the pure
 // reducer; every state change here is an atomic conditional update so two
 // concurrent sends of one draft cannot both go out.
-export async function sendEmailDraft(actor: EmailActor, draftId: string, approvalCode: string) {
+export async function sendEmailDraft(actor: EmailActor, draftId: string, approvalCode: string, access: LeadScope) {
   const draft = await prisma.leadEmailDraft.findUnique({
     where: { id: draftId },
     select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
   });
   if (!draft || draft.userId !== actor.userId) throw new ToolError("not_found", "Draft not found.");
+  // The draft is the operator's own, but the lead may have been reassigned
+  // since it was made: re-check access before the code is even looked at.
+  // No deletedAt filter here — a trashed lead keeps its own message below.
+  const owner = await prisma.lead.findFirst({ where: { id: draft.leadId, ...access.where }, select: { assignedToId: true } });
+  if (!owner) throw new ToolError("not_found", "Draft not found.");
+  assertCanEdit(access.user, owner);
 
   const decision = evaluateSendAttempt(draft, approvalCode);
   if (decision.action === "reject") throw new ToolError("validation", decision.message);

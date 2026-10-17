@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
@@ -36,6 +37,7 @@ export function registerSearchLeads(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_search_leads", contextFromAuthInfo(ctx.http?.authInfo), null, async (c) => {
+        const { where: scope } = await loadScope(c);
         // Stored phone numbers are unnormalised ("+49 151 234"); a plain
         // `contains` on the input digits misses them. Normalise the column
         // side with a raw query instead, gated on a minimum digit count so
@@ -64,6 +66,9 @@ export function registerSearchLeads(server: McpServer) {
                 ],
               }
             : {}),
+          // Last: a restricted employee's scope is { assignedToId: own id }, the
+          // same value assignedToMe sets, so nothing above is overridden.
+          ...scope,
         };
         const [total, rows] = await Promise.all([
           prisma.lead.count({ where }),
