@@ -692,6 +692,15 @@ model User {
   photoPng               String? // transparent-background cutout PNG, used free-floating (no frame) in the Client Presentation closing section — distinct from the small square `avatar`
   phone                  String? // advisor's own contact number, shown large/clickable in the Client Presentation closing section (distinct from the company WhatsApp number used by the contact buttons there)
   isActive               Boolean              @default(true)
+  // CRM v2 (2026-10-18) — visibility rights, see src/lib/crm/access.ts. Existing
+  // users were backfilled to true so nobody lost access; new users start false.
+  canSeeColleagues       Boolean              @default(false)
+  canEditColleagues      Boolean              @default(false)
+  // Owner suggestion inputs for the inbox (Phase 2): spoken locales, regions or
+  // development ids, and whether the employee takes new leads right now.
+  languages              String[]             @default([])
+  specialties            String[]             @default([])
+  acceptsLeads           Boolean              @default(true)
   lastLoginAt            DateTime?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
