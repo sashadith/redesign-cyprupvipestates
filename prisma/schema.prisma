@@ -1950,7 +1950,7 @@ enum RateSource {
 model Deal {
   id                     String           @id @default(uuid())
   leadId                 String
-  lead                   Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead                   Lead             @relation(fields: [leadId], references: [id], onDelete: Restrict)
   developmentId          String?
   development            Development?     @relation(fields: [developmentId], references: [id], onDelete: SetNull)
   unitLabel              String?
@@ -1978,6 +1978,10 @@ model Deal {
 
 // Our contractual commission with a developer: developmentId null = the
 // developer-wide default; set = a project override that wins (resolveRate()).
+// The partial unique index commission_rates_one_default_per_account (one
+// developer-wide default per account, WHERE "developmentId" IS NULL) lives only
+// in migration 20261018100200_crm_v2_deals — Prisma cannot express it. Never let
+// a generated migration drop it.
 model CommissionRate {
   id                 String           @id @default(uuid())
   developerAccountId String

@@ -30,6 +30,7 @@ import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { LEAD_STATUSES as CENTRAL_LEAD_STATUSES } from "@/lib/crm/leadStatus";
+import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -729,7 +730,7 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
 // slower path for "the same operation" was exactly what point 3 of the
 // 2026-08-11 spec was written to avoid). viewingScheduledAt/contact capture
 // moved out into logStatusChangeContact below, called as an optional SECOND
-// step only for the three statuses that structurally imply contact — see
+// step only for the four statuses that structurally imply contact — see
 // StatusPopover.tsx.
 export async function updateLeadStatus(id: string, status: string) {
   const session = await requireSession();
@@ -1127,6 +1128,8 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   await prisma.$transaction([
     prisma.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
     prisma.leadInteraction.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
+    // Deals are money records and block the delete below (ON DELETE RESTRICT).
+    prisma.deal.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
     prisma.leadActivity.create({
       data: { leadId: targetId, type: "MERGE", content: summary, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
     }),
@@ -1201,12 +1204,15 @@ export async function restoreLeadAction(id: string) {
 // Hard delete — cascades to LeadActivity + ClientPresentation (and, via that,
 // ClientPresentationItem/PresentationView) per the schema's onDelete: Cascade.
 // ADMIN only — this is the one truly irreversible step in the whole flow.
-export async function permanentlyDeleteLeadAction(id: string) {
+// Refused for a lead with deals (money records, ON DELETE RESTRICT).
+export async function permanentlyDeleteLeadAction(id: string): Promise<{ error?: string }> {
   const session = await requireSession();
   if ((session.user as any)?.role !== "ADMIN") throw new Error("Forbidden");
+  if (await prisma.deal.count({ where: { leadId: id } })) return { error: LEAD_HAS_DEALS_ERROR };
   await prisma.lead.delete({ where: { id } });
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
+  return {};
 }
 
 // Bulk hard-delete of everything currently in the trash — same cascade as
@@ -1214,20 +1220,27 @@ export async function permanentlyDeleteLeadAction(id: string) {
 // audit-log row recording the count (not the individual leads).
 export async function emptyTrashAction(): Promise<{ ok?: string; error?: string }> {
   const session = await requireAdmin();
-  const trashed = await prisma.lead.findMany({ where: { deletedAt: { not: null } }, select: { id: true } });
-  if (trashed.length === 0) return { error: "Trash is already empty." };
+  const inTrash = { deletedAt: { not: null } };
+  const [trashed, keptWithDeals] = await Promise.all([
+    prisma.lead.findMany({ where: hardDeletableLeadWhere(inTrash), select: { id: true } }),
+    prisma.lead.count({ where: { ...inTrash, deals: { some: {} } } }),
+  ]);
+  if (trashed.length === 0) {
+    return keptWithDeals ? { ok: emptyTrashMessage(0, keptWithDeals) } : { error: "Trash is already empty." };
+  }
+  // Leads with deals stay in the trash (hardDeletableLeadWhere above).
   await prisma.$transaction(trashed.map((l) => prisma.lead.delete({ where: { id: l.id } })));
   const actor = session.user as any;
   await prisma.adminAuditLog.create({
     data: {
       actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
       action: "empty_trash", targetType: "Lead", targetId: "bulk",
-      detail: { count: trashed.length },
+      detail: { count: trashed.length, keptWithDeals },
     },
   });
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
-  return { ok: `${trashed.length} lead${trashed.length === 1 ? "" : "s"} permanently deleted.` };
+  return { ok: emptyTrashMessage(trashed.length, keptWithDeals) };
 }
 
 // Homepage "Featured Projects" slider — per-language curated list stored on the homepage

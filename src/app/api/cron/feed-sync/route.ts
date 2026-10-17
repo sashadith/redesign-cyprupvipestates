@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAll, statusOnlySync } from "@/lib/feedSync";
 import { prisma } from "@/lib/prisma";
+import { hardDeletableLeadWhere } from "@/lib/crm/hardDelete";
 import { withCronLog, logCronRun } from "@/lib/cronLog";
 import { sweepOverlapCandidates } from "@/lib/overlapSweep";
 import { computeAvailability } from "@/lib/developmentAvailability";
@@ -16,11 +17,12 @@ const CRON_LOG_RETENTION_DAYS = 90;
 // Hard-delete leads that have sat in the trash (soft-deleted, see
 // admin/actions.ts's softDeleteLeadAction) for over 90 days. Piggybacks on
 // this existing daily cron rather than provisioning a new VPS crontab entry.
+// Leads with deals are skipped and stay in the trash (hardDeletableLeadWhere).
 // Best-effort: a failure here must never block the actual feed sync.
 async function purgeOldTrash() {
   try {
     const cutoff = new Date(Date.now() - TRASH_RETENTION_DAYS * 86_400_000);
-    const { count } = await prisma.lead.deleteMany({ where: { deletedAt: { lt: cutoff } } });
+    const { count } = await prisma.lead.deleteMany({ where: hardDeletableLeadWhere({ deletedAt: { lt: cutoff } }) });
     return { purged: count };
   } catch (e) {
     console.error("Trash purge failed:", e);
