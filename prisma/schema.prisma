@@ -52,6 +52,9 @@ enum LeadStatus {
   COMMUNICATING
   VIEWING_SCHEDULED
   OFFER
+  // 2026-10-18 (CRM v2) — reservation fee paid or reservation agreement signed.
+  // The deal and its commission are created at this step (src/lib/crm/commission.ts).
+  RESERVED
   // 2026-08-11 — parallel to the funnel, not a stage in it: reachable from
   // any active status when the admin wants to stay in loose touch without
   // triggering stale-follow-up reminders. See ACTIVE_LEAD_STATUSES split in
@@ -60,6 +63,18 @@ enum LeadStatus {
   KEEP_CONTACT
   CLOSED
   LOST
+}
+
+// 2026-10-18 (CRM v2) — why a lead was lost. Optional server-side until the old
+// CRM is retired; the new CRM requires it when moving a lead to LOST.
+enum LostReason {
+  BUDGET
+  BOUGHT_ELSEWHERE
+  UNREACHABLE
+  NOT_INTERESTED
+  TIMING
+  INVALID
+  OTHER
 }
 
 enum LeadSource {
@@ -854,6 +869,8 @@ model Lead {
   // since — not the generic 7-day threshold, since post-viewing follow-up
   // is the single most important moment in a lead's whole lifecycle.
   viewingScheduledAt   DateTime?
+  // 2026-10-18 (CRM v2) — set together with status LOST, cleared when the lead leaves LOST.
+  lostReason           LostReason?
 
   @@index([status])
   @@index([createdAt])
