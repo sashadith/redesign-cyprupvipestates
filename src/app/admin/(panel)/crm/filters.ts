@@ -3,8 +3,9 @@
 import type { Prisma } from "@prisma/client";
 import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_PARTNER, bucketOf } from "@/lib/crm/leadBucket";
 import { LOCALES } from "@/lib/locale";
+import { LEAD_STATUSES as CENTRAL_LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
-export const LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
+export const LEAD_STATUSES: string[] = [...CENTRAL_LEAD_STATUSES];
 export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER", "META_LEAD_AD", "PRIVATE_COLLECTION"];
 // The Leads page's own dropdown. NEWSLETTER is missing on purpose: those leads
 // live on their own page now, so filtering the leads list by it could only ever

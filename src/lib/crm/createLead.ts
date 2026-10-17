@@ -12,6 +12,7 @@ import type { EmailActor } from "./sendLeadEmail";
 import type { Locale } from "@/lib/locale";
 import { EXCLUDE_NEWSLETTER } from "./leadBucket";
 import { emailKey, phoneDigits, phonesMatch, MIN_PHONE_DIGITS, PHONE_SUFFIX_DIGITS } from "./leadIdentity";
+import type { LeadStatusValue } from "@/lib/crm/leadStatus";
 
 export type CreateLeadData = {
   firstName: string;
@@ -27,7 +28,7 @@ export type CreateLeadData = {
   propertyTypeInterest?: string[];
   message?: string | null;
   notes?: string | null;
-  status?: "NEW" | "CONTACTED" | "COMMUNICATING" | "VIEWING_SCHEDULED" | "OFFER" | "KEEP_CONTACT" | "CLOSED" | "LOST";
+  status?: LeadStatusValue;
   assignedToId?: string | null;
   via?: "mcp";
 };

@@ -1,3 +1,4 @@
+import { COMMUNICATING_STATUSES as CENTRAL_COMMUNICATING } from "@/lib/crm/leadStatus";
 // Determines which section of playbook/by-state.md applies to a given lead,
 // purely from data already on hand — no guessing, no LLM call needed for this
 // part. See by-state.md for what each bucket actually instructs.
@@ -18,7 +19,7 @@ const COLD_THRESHOLD_DAYS = 14;
 // the WEAKER of the two ongoing-communication signals — a real inbound
 // message (see hasRealInboundMessage below) overrides even a NEW/CONTACTED
 // status that hasn't been manually updated yet.
-const COMMUNICATING_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"];
+const COMMUNICATING_STATUSES: string[] = [...CENTRAL_COMMUNICATING];
 
 export type LeadStateInput = {
   status: string;

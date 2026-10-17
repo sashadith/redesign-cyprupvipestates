@@ -5,13 +5,14 @@ import { prisma } from "@/lib/prisma";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
+import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 // Stored Lead.phone values keep whatever punctuation the lead typed in
 // ("+49 151 234"); reduce to digits-only so we can compare against a
 // digits-only query regardless of formatting on either side.
 export const digitsOf = (s: string) => s.replace(/\D/g, "");
 
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"] as const;
+const STATUSES = LEAD_STATUSES;
 
 const Input = z.object({
   query: z.string().trim().min(1).max(100).optional().describe("Matches first/last name, email or phone (case-insensitive contains)."),

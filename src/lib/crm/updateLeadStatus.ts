@@ -5,8 +5,8 @@
 import { prisma } from "@/lib/prisma";
 import type { EmailActor } from "./sendLeadEmail";
 
-export const LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"] as const;
-export type LeadStatusValue = (typeof LEAD_STATUSES)[number];
+export { LEAD_STATUSES, type LeadStatusValue } from "@/lib/crm/leadStatus";
+import { LEAD_STATUSES, type LeadStatusValue } from "@/lib/crm/leadStatus";
 
 export function statusChangeContent(status: string): string {
   return `Status changed to ${status.replace(/_/g, " ")}`;

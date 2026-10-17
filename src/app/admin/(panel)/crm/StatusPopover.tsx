@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { StatusBadge } from "@/app/admin/status-badge";
 import { logStatusChangeContact, updateLeadStatus } from "../../actions";
+import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 // 2026-08-11, revised — replaces StatusChangeForm entirely (detail page AND
 // lead-list table both use this one component now, so there's exactly one
@@ -22,7 +23,7 @@ import { logStatusChangeContact, updateLeadStatus } from "../../actions";
 // table's edge. The portal sidesteps that (and any table z-index/stacking
 // quirks) without touching the table's own layout.
 
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
+const STATUSES: string[] = [...LEAD_STATUSES];
 
 // Same local-datetime-input default-to-now helper UnifiedTimeline.tsx uses.
 function nowForDatetimeLocal(): string {

@@ -4,10 +4,11 @@ import { getActionCenterGrouped } from "@/lib/actionCenter";
 import ActionCenterPanel, { type ActionCenterGroupVM } from "./ActionCenterPanel";
 import { adminDateTime } from "@/lib/adminTime";
 import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
+import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 export const dynamic = "force-dynamic";
 
-const PIPELINE = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
+const PIPELINE: string[] = [...LEAD_STATUSES];
 
 // "since 3d" / "since 5h" — formatted server-side (not in the client component)
 // so relative time never depends on the client's clock or causes a hydration

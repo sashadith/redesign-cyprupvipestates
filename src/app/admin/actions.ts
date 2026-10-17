@@ -29,6 +29,7 @@ import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
+import { LEAD_STATUSES as CENTRAL_LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -124,7 +125,7 @@ function revalidateCaseStudyPublic(language: string, slug: string) {
   revalPublic(language, ["case-studies"]);
 }
 
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
+const STATUSES: string[] = [...CENTRAL_LEAD_STATUSES];
 const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 
 async function requireSession() {

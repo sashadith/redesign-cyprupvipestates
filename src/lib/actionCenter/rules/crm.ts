@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
+import { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES, STATUS_LABEL as CENTRAL_STATUS_LABEL } from "@/lib/crm/leadStatus";
 
 const DAY = 86_400_000;
 const NEW_LEAD_URGENT_HOURS = 24;
@@ -51,7 +52,8 @@ const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WH
 // deliberately NOT here (2026-08-11) — it's the one status that means "I'm
 // choosing not to be nagged about this right now", so noFollowUp() must
 // never fire for it.
-export const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
+// (list lives in @/lib/crm/leadStatus; re-exported so existing importers keep working)
+export { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES };
 // Exported — reused by developers.ts's backInStockReminders() for its "warm
 // contact" lead count. A DIFFERENT set than ACTIVE_LEAD_STATUSES on purpose:
 // a KEEP_CONTACT lead is exactly the kind of person who should hear first
@@ -118,7 +120,6 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // STATUS_CHANGE row's target status should count as contact-equivalent (see
 // parseStatusChangeTarget below): these three can't be reached without a real
 // conversation, so a transition TO one of them is itself a contact signal.
-export const ELEVATED_NO_CONTACT_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
 type ElevatedStatus = (typeof ELEVATED_NO_CONTACT_STATUSES)[number];
 const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(s);
 
@@ -152,10 +153,7 @@ function parseStatusChangeTarget(row: { metadata: unknown; body: string | null }
 // Human-readable status for the item text — was hard-coded to "New lead"
 // regardless of actual status (misleading for e.g. a VIEWING_SCHEDULED lead
 // like Konstantin); now always names the real status.
-const STATUS_LABEL: Record<string, string> = {
-  NEW: "New", CONTACTED: "Contacted", COMMUNICATING: "Communicating",
-  VIEWING_SCHEDULED: "Viewing scheduled", OFFER: "Offer",
-};
+const STATUS_LABEL: Record<string, string> = CENTRAL_STATUS_LABEL;
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({

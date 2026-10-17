@@ -4,9 +4,10 @@ import { createLead } from "../../actions";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS } from "@/app/components/qualifierFields";
 import { LEAD_LOCALES } from "./filters";
 import { LOCALE_LABELS, isLocale } from "@/lib/locale";
+import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
+const STATUSES: string[] = [...LEAD_STATUSES];
 const TIMELINES = [{ v: "", l: "—" }, ...LEAD_TIMELINE_OPTIONS];
 const FINANCING = ["", "CASH", "MORTGAGE", "UNDECIDED"];
 const PROP_TYPES = PROPERTY_VALUES;
