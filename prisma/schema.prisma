@@ -682,6 +682,7 @@ model MediaFolder {
 
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
+  dealsCreated Deal[] @relation("DealsCreated")
   id                     String               @id @default(uuid())
   email                  String               @unique
   password               String
@@ -787,6 +788,7 @@ model Session {
 
 // ─── CRM / LEADS ─────────────────────────────────────────────────────────────
 model Lead {
+  deals Deal[]
   id                   String                @id @default(uuid())
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -1258,6 +1260,7 @@ model AiGenerationQueue {
 // ─────────────────────────────────────────────────────────────────────────
 
 model DeveloperAccount {
+  commissionRates CommissionRate[]
   id                String    @id @default(uuid())
   name              String
   slug              String    @unique
@@ -1370,6 +1373,8 @@ model DeveloperFeedAnalysis {
 // mirrored to our object storage; only our URLs are stored here.
 // ─────────────────────────────────────────────────────────────────────────
 model Development {
+  deals Deal[]
+  commissionRate CommissionRate?
   id                 String  @id @default(uuid())
   developerAccountId String
   dev                String // adapter key: island-blue|inex|bbf|aristo|pafilia|domenica|medousa|agg
@@ -1923,4 +1928,67 @@ model PageImprovement {
   // the database, and renaming a live table after Task 8's deploy is its own
   // migration. The Prisma accessor stays `prisma.pageImprovement` either way.
   @@map("page_improvements")
+}
+
+// CRM v2 (2026-10-18) — commission lifecycle of one deal; transitions in src/lib/crm/commission.ts.
+enum CommissionStatus {
+  EXPECTED
+  EARNED
+  DEVELOPER_PAID
+  PAID_OUT
+  CANCELLED
+}
+
+enum RateSource {
+  PROJECT
+  DEVELOPER
+  MANUAL
+  MISSING
+}
+
+// One purchase by a lead (a lead can buy several units). Amounts are whole euros.
+model Deal {
+  id                     String           @id @default(uuid())
+  leadId                 String
+  lead                   Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  developmentId          String?
+  development            Development?     @relation(fields: [developmentId], references: [id], onDelete: SetNull)
+  unitLabel              String?
+  price                  Int
+  ourRatePercent         Decimal?         @db.Decimal(5, 2)
+  rateSource             RateSource       @default(MISSING)
+  ourCommission          Int?
+  partnerSharePercent    Decimal?         @db.Decimal(5, 2)
+  partnerCommission      Int?
+  commissionStatus       CommissionStatus @default(EXPECTED)
+  expectedAt             DateTime         @default(now())
+  earnedAt               DateTime?
+  developerPaidAt        DateTime?
+  paidOutAt              DateTime?
+  cancelledAt            DateTime?
+  createdById            String?
+  createdBy              User?            @relation("DealsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@index([leadId])
+  @@index([commissionStatus])
+  @@map("deals")
+}
+
+// Our contractual commission with a developer: developmentId null = the
+// developer-wide default; set = a project override that wins (resolveRate()).
+model CommissionRate {
+  id                 String           @id @default(uuid())
+  developerAccountId String
+  developerAccount   DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  developmentId      String?          @unique
+  development        Development?     @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  ratePercent        Decimal          @db.Decimal(5, 2)
+  note               String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([developerAccountId])
+  @@map("commission_rates")
 }
