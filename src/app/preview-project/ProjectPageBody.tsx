@@ -15,6 +15,7 @@ import PlanGrid from "@/app/preview-project/PlanGrid";
 import PropertyMapBlock from "@/app/preview-project/PropertyMapBlock";
 import UnitsView from "@/app/preview-project/UnitsView";
 import MetaViewContentTracker from "@/app/components/MetaViewContentTracker/MetaViewContentTracker";
+import EngagementTracker from "@/app/components/EngagementTracker/EngagementTracker";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
@@ -220,6 +221,7 @@ export default async function ProjectPageBody({
           tracker used to sit after that return and therefore never ran for any
           published development. Keyed on the row UUID so the id matches what a
           Meta catalog and the Xellex bridge both use. */}
+      <EngagementTracker locale={lang} contentId={p.developmentId} />
       {p.developmentId && (
         <MetaViewContentTracker
           title={p.publicName}
@@ -268,7 +270,7 @@ export default async function ProjectPageBody({
                   bare text node would sit under the sweep. */}
               {!isSold && (
                 <div className="pp-hero__cta">
-                  <a className="btn btn--glass" href="#enquiry"><span>{t.heroCtaConsult}</span></a>
+                  <a className="btn btn--glass" href="#enquiry" data-engage="cta"><span>{t.heroCtaConsult}</span></a>
                   {listed.length > 0 && <a className="btn btn--glass" href="#units"><span>{t.heroCtaUnits}</span></a>}
                 </div>
               )}
@@ -304,7 +306,7 @@ export default async function ProjectPageBody({
 
             <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />
 
-            <div id="enquiry">
+            <div id="enquiry" data-engage="form">
               <Form lang={lang} title={goldPhrase(t.offMarketCtaHeadline)} subtitle={t.offMarketCtaBody} showQuestionField showQualifiers />
             </div>
           </>
@@ -444,7 +446,11 @@ export default async function ProjectPageBody({
               </div>
             </section>
 
-            <div id="enquiry">
+            {/* data-engage: watched by EngagementTracker. An attribute, not a
+                class or a DOM path — a restyle must not silently stop the
+                measurement and make it read as "nobody sees the form".
+                Both enquiry containers carry it; only one is ever rendered. */}
+            <div id="enquiry" data-engage="form">
               <Form lang={lang} title={goldPhrase(t.enquiryHeadline(p.publicName))} showQualifiers />
             </div>
 

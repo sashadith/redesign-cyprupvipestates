@@ -52,6 +52,7 @@ const WhatsAppButton: FC<Props> = ({ lang }) => {
   return (
     <a
       href="#"
+      data-engage="wa"
       onClick={handleClick}
       className={styles.whatsappButton}
       aria-label={label}
