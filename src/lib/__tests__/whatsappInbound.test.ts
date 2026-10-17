@@ -74,5 +74,10 @@ test("the webhook is closed when its secret is unset", () => {
   const src = read("src/app/api/webhooks/whatsapp-inbound/route.ts");
   assert.ok(/if \(!expected \|\| expected\.length < 16\) return false/.test(src), "an unset or short secret must refuse");
   assert.ok(/timingSafeEqual/.test(src), "the secret must be compared in constant time");
+  // The gateway cannot send custom headers (verified against the live API
+  // 2026-10-17: a webhook created with {"headers":{...}} stores no such field),
+  // so the query fallback is what actually carries the secret in production.
+  // Removing it would make every real webhook call fail 401 — silently.
+  assert.ok(/searchParams\.get\("s"\)/.test(src), "the ?s= fallback is gone; the gateway has no other way to authenticate");
   assert.equal(/x-webhook-secret[^\n]*console\.(log|warn|error)/.test(src), false, "the presented secret must never be logged");
 });

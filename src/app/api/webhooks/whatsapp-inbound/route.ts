@@ -23,7 +23,23 @@ function secretOk(req: NextRequest): boolean {
   // Unset = closed, never open. An endpoint that writes to the CRM must not
   // fall open because a variable is missing from a release.
   if (!expected || expected.length < 16) return false;
-  const given = req.headers.get("x-webhook-secret") ?? "";
+  // Header OR query parameter.
+  //
+  // The header is the better place and was the only one at first. Then the
+  // gateway turned out not to support custom headers at all: a webhook created
+  // with {"headers":{...}} is accepted with 200 and the field is silently
+  // dropped — a GET of the stored webhook shows id/url/events/filters/active/
+  // retryCount/timestamps and nothing else (verified 2026-10-17). It would have
+  // fired, been refused 401 here, and recorded nothing, with no error on either
+  // side.
+  //
+  // So the secret also travels as `?s=`. That is normally a bad idea because
+  // query strings land in access logs — which is exactly why the webhook is
+  // registered against http://127.0.0.1:3000 instead of the public hostname:
+  // the gateway runs on the same host, the call never reaches nginx, and
+  // nothing logs the URL. The public route stays closed to anyone without the
+  // secret either way.
+  const given = req.headers.get("x-webhook-secret") || req.nextUrl.searchParams.get("s") || "";
   const a = Buffer.from(given, "utf8");
   const b = Buffer.from(expected, "utf8");
   if (a.length !== b.length) {
