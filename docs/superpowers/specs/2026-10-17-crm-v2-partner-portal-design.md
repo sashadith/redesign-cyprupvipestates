@@ -56,10 +56,11 @@ One database, two staff UIs. Hard rules:
 
 1. **Additive DB changes only** — new tables and nullable/defaulted columns. Nothing in use
    is renamed or dropped while the old CRM lives.
-2. **`RESERVED` enum value:** first ship old-CRM support for the value (lists, filters,
-   status popover, board, action-center rules, MCP tools), deploy, *then* run the enum
-   migration. Deploy with `CVP_RUN_MIGRATE=1`. (Lessons: Hebrew enum outage 2026-09-21,
-   migrate-flag outage 2026-09-17.)
+2. **`RESERVED` enum value:** schema, migration and every reader (lists, filters, status
+   popover, board, action-center rules, MCP tools) ship in ONE deploy with
+   `CVP_RUN_MIGRATE=1`. The migration only adds the value and the new code is its only
+   writer, so no row can hold it while an older client runs. (Lessons: Hebrew enum outage
+   2026-09-21 = DB ahead of the deployed client; migrate-flag outage 2026-09-17.)
 3. **Central access layer** `src/lib/crm/access.ts`: one function decides which leads a
    user may see/edit; used by new CRM, exports, search, MCP tools. The old CRM does not
    know the rules → employees with restricted visibility get **no access to `/admin/crm`**;
@@ -73,8 +74,8 @@ One database, two staff UIs. Hard rules:
    leads carry a real FK (`Lead.partnerId`) instead of a text label. Existing `?ref=`
    attribution can be mapped to a partner account (`Partner.refCode`) so website leads
    arriving through a partner link are attributed automatically (same duplicate review).
-6. **Timeline:** new code writes only `LeadInteraction`. Legacy `LeadActivity` is read for
-   history and migrated in a later cleanup.
+6. **Timeline:** new code writes only `LeadInteraction`. Legacy `LeadActivity` keeps being
+   written by old-CRM paths and is consolidated in the cutover cleanup, not in Phase 1.
 7. **Cutover:** when the new CRM is accepted, `/admin/crm/*` 308-redirects to `/crm`
    equivalents and the old UI is removed.
 
@@ -89,15 +90,16 @@ Phase 3 (note the middleware gotcha documented for `/book/[token]`).
   Role model: owner (`isOwner`), ADMIN, EDITOR = employee.
 - **LeadStatus**: add `RESERVED`. **Lead**: add `lostReason` (enum), `partnerId?`,
   `partnerMode?` (HANDOVER | FIX), `contactMode?` (DIRECT | VIA_PARTNER |
-  VIA_PARTNER_REP | VIA_CLIENT_REP) + rep name/phone, `lastRealContactAt` (maintained on
-  CALL / EMAIL_* / WHATSAPP_* interactions).
+  VIA_PARTNER_REP | VIA_CLIENT_REP) + rep name/phone. "Last real contact" is computed from
+  `LeadInteraction` (CALL / EMAIL_* / WHATSAPP_*) when needed, not stored.
 - **Deal**: leadId, developmentId, unit label, price, ourRate, ourCommission (overridable),
   partnerRate, partnerCommission (overridable), commissionStatus
   (EXPECTED | EARNED | DEVELOPER_PAID | PAID_OUT | CANCELLED) with a timestamp per stage,
   rateSource (PROJECT | DEVELOPER | MANUAL | MISSING).
 - **CommissionRate**: developer-level default + optional project-level override
-  (unique per developer / per development). Keyed on the public **Developer** entity, not
-  DeveloperAccount (see developer-label-vs-account-name).
+  (one default per account, one override per development). Keyed on **DeveloperAccount**:
+  every Development has one, while the public Developer link is optional. Rates are
+  admin-only, so the admin label is acceptable here.
 - **Partner**: company, contact name, country, phone (locked after registration), email,
   language (en/de/pl/ru), partnerType, status (PENDING | ACTIVE | SUSPENDED),
   handoverShare (default 30 %), fixShare (default 50 %), trustMode, refCode,
@@ -108,7 +110,7 @@ Phase 3 (note the middleware gotcha documented for `/book/[token]`).
 - **PartnerAgreementAcceptance**: partnerId, agreementVersion, acceptedAt, ip.
 - **PartnerClaim** (client protection): leadId, partnerId, state (ACTIVE | IN_REVIEW |
   REJECTED | EXPIRED), createdAt, reviewedBy. Expiry computed from
-  `Lead.lastRealContactAt + 6 months`.
+  the last real contact + 6 months (computed).
 - **PartnerMessage**: leadId, authorUserId, body, createdAt (the "Message to partner").
 - **CreditNote**: partnerId, dealId, number (sequential), amount, issuedAt, pdf path.
 - **Rating** (Phase 4): Season (start, end, prizes), point rules (configurable),
@@ -252,8 +254,9 @@ jsdom harness. Old-CRM `RESERVED` support verified before the enum migration shi
 
 ## 10. Phases
 
-1. **Foundation** — rights model, RESERVED (old CRM first), lost reason, Deal,
-   CommissionRate, access layer, `lastRealContactAt`, timeline write consolidation.
+1. **Foundation** — single status source, RESERVED, lost reason, rights model + access
+   layer (incl. MCP), Deal, CommissionRate, commission maths.
+   Plan: `docs/superpowers/plans/2026-10-17-crm-v2-phase1-foundation.md`.
 2. **New CRM** — design system, Today, Inbox with suggestions + notifications, Pipeline,
    Lead cockpit, Partners/Commissions/Settings screens, responsive layout, SLA timers (#9),
    Claude in cockpit (#10), ⌘K (#12).
