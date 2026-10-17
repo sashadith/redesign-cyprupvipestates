@@ -3,6 +3,8 @@ import { FUNNEL_STATUSES, STATUS_LABEL, isLeadStatus, type LeadStatusValue } fro
 // Pure view model for the /crm pipeline (2026-10-18).
 
 export const STALE_DAYS = 7;
+// The Closed column shows leads updated within this window (see boardWhere).
+export const CLOSED_WINDOW_DAYS = 90;
 
 export type BoardFilter = "all" | "mine" | "stale";
 export function isBoardFilter(x: unknown): x is BoardFilter {
@@ -14,12 +16,14 @@ export type BoardLeadInput = {
   languagePreference: string | null; assignedTo: { id: string; name: string } | null;
   projectLabel: string | null; lastContactAt: Date | null; createdAt: Date;
   deals: { price: number; ourCommission: number | null; commissionStatus: string }[];
+  // canEditLead(user, lead), decided on the server (access.ts).
+  canEdit: boolean;
 };
 
 export type BoardCard = {
   id: string; name: string; lang: string | null; project: string | null; sourceLabel: string; isPartner: boolean;
   ownerInitials: string | null; ownerName: string | null; ageLabel: string; stale: boolean;
-  dealValue: number | null; dealCommission: number | null; status: LeadStatusValue;
+  dealValue: number | null; dealCommission: number | null; status: LeadStatusValue; canEdit: boolean;
 };
 
 export type BoardColumn = { status: LeadStatusValue; label: string; cards: BoardCard[]; total: number };
@@ -61,6 +65,7 @@ export function toCard(lead: BoardLeadInput, now: Date): BoardCard {
     dealValue: open.length ? open.reduce((s, d) => s + d.price, 0) : null,
     dealCommission: open.some((d) => d.ourCommission != null) ? open.reduce((s, d) => s + (d.ourCommission ?? 0), 0) : null,
     status,
+    canEdit: lead.canEdit,
   };
 }
 

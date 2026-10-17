@@ -6,7 +6,7 @@ const now = new Date("2026-10-18T12:00:00Z");
 const base: BoardLeadInput = {
   id: "l1", firstName: "Markus", lastName: "Brenner", status: "NEW", source: "CONTACT_FORM",
   languagePreference: "de", assignedTo: { id: "u1", name: "Sophie Keller" }, projectLabel: "Eden Coast",
-  lastContactAt: null, createdAt: new Date("2026-10-18T10:00:00Z"), deals: [],
+  lastContactAt: null, createdAt: new Date("2026-10-18T10:00:00Z"), deals: [], canEdit: true,
 };
 
 test("columns follow the funnel and leave out keep-contact and lost", () => {
@@ -53,4 +53,15 @@ test("open deals add up per card and per column; cancelled deals do not count", 
 test("filters are validated", () => {
   assert.equal(isBoardFilter("mine"), true);
   assert.equal(isBoardFilter("everything"), false);
+});
+
+test("the per-card edit right is carried from the server onto the card", () => {
+  assert.equal(toCard(base, now).canEdit, true);
+  assert.equal(toCard({ ...base, canEdit: false }, now).canEdit, false);
+});
+
+test("an unassigned lead has no owner on its card", () => {
+  const c = toCard({ ...base, assignedTo: null }, now);
+  assert.equal(c.ownerInitials, null);
+  assert.equal(c.ownerName, null);
 });

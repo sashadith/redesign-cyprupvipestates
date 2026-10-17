@@ -6,14 +6,31 @@ import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 
 const now = new Date("2026-10-18T12:00:00Z");
 const user: CrmUser = { id: "u1", role: "EDITOR", isOwner: false, isActive: true, canSeeColleagues: false, canEditColleagues: false };
-const ands = (f: "all" | "mine" | "stale") => (boardWhere(user, f, now) as { AND: unknown[] }).AND;
+const admin: CrmUser = { ...user, id: "a1", role: "ADMIN" };
+const ands = (f: "all" | "mine" | "stale", u: CrmUser = user) => (boardWhere(u, f, now) as { AND: unknown[] }).AND;
 
-test("access scope, soft delete, assignment and newsletter exclusion are always applied", () => {
+test("access scope, soft delete and newsletter exclusion are always applied", () => {
   const a = ands("all");
   assert.ok(a.some((x) => JSON.stringify(x) === JSON.stringify(leadAccessWhere(user))));
   assert.ok(a.includes(EXCLUDE_NEWSLETTER));
-  const base = a.find((x) => (x as { deletedAt?: unknown }).deletedAt === null) as { assignedToId: unknown };
-  assert.deepEqual(base.assignedToId, { not: null });
+  assert.ok(a.some((x) => (x as { deletedAt?: unknown }).deletedAt === null));
+});
+
+test("unassigned leads are not filtered out: access scope alone decides", () => {
+  // A restricted employee is limited to their own leads by leadAccessWhere; a
+  // user who sees everyone also sees leads nobody owns yet.
+  for (const u of [user, admin]) {
+    assert.ok(!JSON.stringify(ands("all", u)).includes(`"assignedToId":{"not":null}`));
+  }
+  assert.ok(ands("all", user).some((x) => JSON.stringify(x) === JSON.stringify({ assignedToId: "u1" })));
+  assert.ok(!ands("all", admin).some((x) => JSON.stringify(x).includes(`"assignedToId"`)));
+});
+
+test("Closed leads only appear for 90 days after their last update", () => {
+  const w = ands("all").find((x) => Array.isArray((x as { OR?: unknown }).OR)) as { OR: [{ status: unknown }, { updatedAt: { gte: Date } }] };
+  assert.ok(w, "closed-window condition missing");
+  assert.deepEqual(w.OR[0].status, { not: "CLOSED" });
+  assert.equal(w.OR[1].updatedAt.gte.getTime(), new Date("2026-07-20T12:00:00Z").getTime());
 });
 
 test("mine adds the assignee condition", () => {
