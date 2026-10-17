@@ -17,3 +17,18 @@ test("leaving LOST clears a stale reason", () => {
 test("a reason with any other status is rejected", () => {
   assert.throws(() => lostReasonUpdate("OFFER", "BUDGET"), /only allowed with status LOST/);
 });
+
+import { standaloneLostReason } from "@/lib/crm/updateLeadStatus";
+
+test("already LOST + LOST + reason: reason is stored as a plain update", () => {
+  assert.equal(standaloneLostReason("LOST", "LOST", "BUDGET"), "BUDGET");
+});
+
+test("status really changing to LOST: reason travels with the status change, not standalone", () => {
+  assert.equal(standaloneLostReason("CONTACTED", "LOST", "BUDGET"), undefined);
+});
+
+test("no reason or no status: nothing standalone", () => {
+  assert.equal(standaloneLostReason("LOST", "LOST", undefined), undefined);
+  assert.equal(standaloneLostReason("LOST", undefined, undefined), undefined);
+});

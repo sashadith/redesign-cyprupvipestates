@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { LOST_REASONS } from "@/lib/crm/leadStatus";
-import { applyLeadStatusChange, LEAD_STATUSES } from "@/lib/crm/updateLeadStatus";
+import { applyLeadStatusChange, LEAD_STATUSES, standaloneLostReason } from "@/lib/crm/updateLeadStatus";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
@@ -66,6 +66,8 @@ export function registerUpdateLead(server: McpServer) {
 
         const data: Prisma.LeadUpdateInput = {};
         const set = <K extends keyof Prisma.LeadUpdateInput>(key: K, value: Prisma.LeadUpdateInput[K], name: string) => { data[key] = value; changed.push(name); };
+        const reasonOnly = standaloneLostReason(lead.status, input.status, input.lostReason);
+        if (reasonOnly) set("lostReason", reasonOnly, "lostReason");
         if (input.viewingScheduledAt !== undefined && !(input.status && input.status !== lead.status)) set("viewingScheduledAt", input.viewingScheduledAt ? new Date(input.viewingScheduledAt) : null, "viewingScheduledAt");
         if (input.nextFollowUpAt !== undefined) set("nextFollowUpAt", input.nextFollowUpAt ? new Date(input.nextFollowUpAt) : null, "nextFollowUpAt");
         if (input.hot !== undefined && input.hot !== (lead.hotAt != null)) set("hotAt", input.hot ? new Date() : null, "hot");

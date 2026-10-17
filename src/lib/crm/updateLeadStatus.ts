@@ -20,6 +20,16 @@ export function lostReasonUpdate(
   return lostReason === undefined ? {} : { lostReason };
 }
 
+// Pure: a reason sent with status LOST on a lead that is ALREADY LOST has no
+// status change to ride on; it is stored as a plain lead update instead.
+export function standaloneLostReason(
+  currentStatus: string,
+  inputStatus: LeadStatusValue | undefined,
+  lostReason: LostReasonValue | undefined,
+): LostReasonValue | undefined {
+  return lostReason && inputStatus === "LOST" && inputStatus === currentStatus ? lostReason : undefined;
+}
+
 export function statusChangeContent(status: string): string {
   return `Status changed to ${status.replace(/_/g, " ")}`;
 }
