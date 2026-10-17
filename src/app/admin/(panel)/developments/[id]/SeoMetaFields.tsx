@@ -14,10 +14,12 @@ const field = "w-full rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-sm f
 const label = "block text-xs font-medium text-[#6B7280] mb-1";
 
 export default function SeoMetaFields({
-  developmentId, initial, titleMax, descMax, aiReady, initialPrompt,
+  developmentId, initial, auto, titleMax, descMax, aiReady, initialPrompt,
 }: {
   developmentId: string;
   initial: Fields;
+  /** The auto-generated text, shown as each field's placeholder and never submitted. */
+  auto: Fields;
   titleMax: number;
   descMax: number;
   aiReady: boolean;
@@ -59,8 +61,10 @@ export default function SeoMetaFields({
 
   const titleKey = `title${tab.toUpperCase()}` as keyof Fields;
   const descKey = `desc${tab.toUpperCase()}` as keyof Fields;
-  const titleLen = values[titleKey].length;
-  const descLen = values[descKey].length;
+  // An empty field ships the auto text, so that is what the counter measures.
+  const titleLen = (values[titleKey] || auto[titleKey]).length;
+  const descLen = (values[descKey] || auto[descKey]).length;
+  const autoTag = (k: keyof Fields) => (values[k] ? "" : " · auto");
 
   return (
     <div className="space-y-2" ref={rootRef}>
@@ -85,12 +89,12 @@ export default function SeoMetaFields({
       </div>
 
       <div>
-        <label className={label}>Meta title <span className={titleLen > titleMax ? "text-[#DC2626]" : "text-[#9CA3AF]"}>({titleLen}/{titleMax})</span></label>
-        <input value={values[titleKey]} onChange={(e) => set(titleKey, e.target.value)} maxLength={120} dir={tab === "he" ? "rtl" : "ltr"} className={field} />
+        <label className={label}>Meta title <span className={titleLen > titleMax ? "text-[#DC2626]" : "text-[#9CA3AF]"}>({titleLen}/{titleMax}{autoTag(titleKey)})</span></label>
+        <input value={values[titleKey]} placeholder={auto[titleKey]} onChange={(e) => set(titleKey, e.target.value)} maxLength={120} dir={tab === "he" ? "rtl" : "ltr"} className={field} />
       </div>
       <div>
-        <label className={label}>Meta description <span className={descLen > descMax ? "text-[#DC2626]" : "text-[#9CA3AF]"}>({descLen}/{descMax})</span></label>
-        <textarea value={values[descKey]} onChange={(e) => set(descKey, e.target.value)} rows={2} maxLength={300} dir={tab === "he" ? "rtl" : "ltr"} className={field} />
+        <label className={label}>Meta description <span className={descLen > descMax ? "text-[#DC2626]" : "text-[#9CA3AF]"}>({descLen}/{descMax}{autoTag(descKey)})</span></label>
+        <textarea value={values[descKey]} placeholder={auto[descKey]} onChange={(e) => set(descKey, e.target.value)} rows={2} maxLength={300} dir={tab === "he" ? "rtl" : "ltr"} className={field} />
       </div>
 
       {err && <p className="text-sm text-[#DC2626]">{err}</p>}
@@ -100,7 +104,7 @@ export default function SeoMetaFields({
           Generated in {`all ${LANGS.length} languages`} — click “Save overrides” below to publish it.
         </p>
       )}
-      <p className="text-[11px] text-[#9CA3AF]">Pre-filled with the free auto-generated text; “Generate with Claude” writes a punchier alternative you can still edit before saving.</p>
+      <p className="text-[11px] text-[#9CA3AF]">Leave a field empty to use the auto-generated text shown in grey — it is rebuilt from live data on every render. “Generate with Claude” writes a punchier alternative you can still edit before saving.</p>
       {/* Saved text is never regenerated, so a figure typed in here goes stale the
           next time stock or prices move — that is how six live projects ended up
           advertising unit counts and prices that no longer existed (2026-08-20).

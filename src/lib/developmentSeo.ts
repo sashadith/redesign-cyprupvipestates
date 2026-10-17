@@ -409,6 +409,29 @@ export function applySeoPlaceholders(text: string, vm: ProjectVM, lang: string):
   return unresolved ? null : out;
 }
 
+// ---------- auto text saved back as an override ----------
+//
+// The admin editor used to pre-fill every empty SEO field with the auto text,
+// and "Save overrides" stored whatever the fields held. Any locale nobody
+// typed into was therefore saved as a frozen copy of the auto text, figures
+// and all ("3 יחידות זמינות החל מ-€1,280,000"). Hebrew is the locale content
+// work skips, so 44 of 372 published developments carried a baked price in
+// descHE by 2026-10-17 — and the HE translation queue then skipped them as
+// "already filled". The editor now shows the auto text as a placeholder; this
+// is the server-side backstop for anything that still submits it.
+//
+// Figures are masked before comparing, because the price and unit count the
+// form was rendered with may have moved by the time it is saved — that drift
+// is the whole bug, so it must not let the copy through.
+const BIDI_CONTROLS = /[⁦-⁩‎‏]/g;
+const maskFigures = (s: string) =>
+  s.replace(BIDI_CONTROLS, "").replace(/\d[\d.,\s]*\d|\d/g, "#").replace(/\s+/g, " ").trim();
+
+export function isAutoSeoText(stored: string, auto: string): boolean {
+  const s = maskFigures(stored);
+  return !!s && s === maskFigures(auto);
+}
+
 // ---------- override resolution ----------
 
 export type SeoOverride = Partial<Record<`title${Uppercase<Lang>}` | `desc${Uppercase<Lang>}`, string>>;

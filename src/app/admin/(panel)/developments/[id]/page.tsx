@@ -116,10 +116,19 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   const autoDesc = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaDescription(vmForSeo, l) : ""])) as Record<string, string>;
   const seoOv = (ov?.seo as Record<string, string> | null) ?? null;
   const slugPlaceholder = developmentSlug(ov?.alias || d.publicName);
+  // Only stored text goes into the fields; the auto text is the placeholder.
+  // Pre-filling it as a value got it saved back with its figures frozen in —
+  // see isAutoSeoText in src/lib/developmentSeo.ts.
   const seoInitial = Object.fromEntries(
     seoLangs.flatMap((l) => [
-      [`title${l.toUpperCase()}`, seoOv?.[`title${l.toUpperCase()}`] || autoTitle[l]],
-      [`desc${l.toUpperCase()}`, seoOv?.[`desc${l.toUpperCase()}`] || autoDesc[l]],
+      [`title${l.toUpperCase()}`, seoOv?.[`title${l.toUpperCase()}`] || ""],
+      [`desc${l.toUpperCase()}`, seoOv?.[`desc${l.toUpperCase()}`] || ""],
+    ]),
+  ) as Record<string, string>;
+  const seoAuto = Object.fromEntries(
+    seoLangs.flatMap((l) => [
+      [`title${l.toUpperCase()}`, autoTitle[l]],
+      [`desc${l.toUpperCase()}`, autoDesc[l]],
     ]),
   ) as Record<string, string>;
   const seoPrompt = await getSeoPromptTemplate();
@@ -362,6 +371,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
               <SeoMetaFields
                 developmentId={d.id}
                 initial={seoInitial as any}
+                auto={seoAuto as any}
                 titleMax={TITLE_MAX}
                 descMax={DESC_MAX}
                 aiReady={aiConfigured()}

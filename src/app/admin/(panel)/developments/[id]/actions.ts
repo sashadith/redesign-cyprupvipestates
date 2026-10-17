@@ -14,11 +14,11 @@ import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState"
 import { listedUnits } from "@/lib/developmentAvailability";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
 import { syncOneDevelopment, type SyncOneDevelopmentResult } from "@/lib/feedSync";
-import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
+import { uniqueDevelopmentSlug, autoMetaTitle, autoMetaDescription, isAutoSeoText } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
-import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES, LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
@@ -502,6 +502,18 @@ export async function saveOverride(formData: FormData) {
     titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"), titleHE: clean(formData, "seoTitleHE"),
     descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"), descHE: clean(formData, "seoDescHE"),
   };
+  // A field that is just the auto text is stored empty: the render path
+  // produces that text anyway, live, while a stored copy freezes its price and
+  // unit count (see isAutoSeoText in src/lib/developmentSeo.ts).
+  const devForSeo = await prisma.development.findUnique({ where: { id }, select: { feedKey: true } });
+  const vmForSeo = devForSeo ? await getDbProjectByFeedKey(devForSeo.feedKey) : null;
+  if (vmForSeo) {
+    for (const l of LOCALES) {
+      const L = l.toUpperCase() as Uppercase<typeof l>;
+      if (seoEntries[`title${L}`] && isAutoSeoText(seoEntries[`title${L}`]!, autoMetaTitle(vmForSeo, l))) seoEntries[`title${L}`] = null;
+      if (seoEntries[`desc${L}`] && isAutoSeoText(seoEntries[`desc${L}`]!, autoMetaDescription(vmForSeo, l))) seoEntries[`desc${L}`] = null;
+    }
+  }
   const seo = Object.values(seoEntries).some(Boolean) ? seoEntries : null;
   // Map location is saved independently via saveMapLocationAction (its own
   // button) — never touched here, so a re-submit of this form can't silently

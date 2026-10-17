@@ -142,6 +142,7 @@ const cases = [
     el: () => React.createElement(SeoMetaFields, {
       developmentId: "d1", titleMax: 60, descMax: 160, aiReady: true, initialPrompt: "",
       initial: { titleEN: "", titleDE: "", titlePL: "", titleRU: "", titleHE: "", descEN: "", descDE: "", descPL: "", descRU: "", descHE: "" },
+      auto: { titleEN: "Auto", titleDE: "Auto", titlePL: "Auto", titleRU: "Auto", titleHE: "Auto", descEN: "Auto", descDE: "Auto", descPL: "Auto", descRU: "Auto", descHE: "Auto" },
     }),
     idle: /Generate with Claude/, busy: /Writing/,
     success: (host) => Array.from(host.querySelectorAll("input")).some((i) => i.value === "Generated title"),
