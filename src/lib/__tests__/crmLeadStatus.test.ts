@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { LeadStatus, LostReason } from "@prisma/client";
 import {
   LEAD_STATUSES, FUNNEL_STATUSES, ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES,
   COMMUNICATING_STATUSES, STATUS_LABEL, LOST_REASONS, LOST_REASON_LABEL, isLeadStatus,
@@ -32,4 +33,13 @@ test("isLeadStatus guards unknown strings", () => {
   assert.equal(isLeadStatus("RESERVED"), true);
   assert.equal(isLeadStatus("QUALIFIED"), false);
   assert.equal(isLeadStatus(undefined), false);
+});
+
+// Drift guards: the central lists must match the Prisma enums exactly, order included.
+test("LEAD_STATUSES matches the Prisma LeadStatus enum", () => {
+  assert.deepEqual([...LEAD_STATUSES], Object.values(LeadStatus));
+});
+
+test("LOST_REASONS matches the Prisma LostReason enum", () => {
+  assert.deepEqual([...LOST_REASONS], Object.values(LostReason));
 });

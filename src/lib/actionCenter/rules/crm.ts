@@ -65,16 +65,16 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // lead can sit at NEW or CONTACTED purely because an admin flipped the
 // dropdown — no real conversation required, so "no contact logged yet" is
 // still plausibly true and stays URGENT there. COMMUNICATING/
-// VIEWING_SCHEDULED/OFFER structurally imply prior real engagement (you
-// don't reach an ongoing dialogue, a scheduled viewing, or an offer without
-// having actually talked to the lead) — Konstantin sat at VIEWING_SCHEDULED
+// VIEWING_SCHEDULED/OFFER/RESERVED structurally imply prior real engagement
+// (you don't reach an ongoing dialogue, a scheduled viewing, an offer or a
+// reservation without having actually talked to the lead) — Konstantin sat at VIEWING_SCHEDULED
 // while flagged "New lead, no contact logged yet" for 3380+ hours; the real
 // contact existed (a WhatsApp message) but was logged as a NOTE before the
 // proper WhatsApp-logging tool existed (built 2026-07-23, see
-// logWhatsAppSentAction). For these three statuses "no REAL_CONTACT_TYPES
-// row" is far more likely a logging gap than a genuinely untouched lead, so
-// it never reaches URGENT: recent activity of ANY kind (a note, or a status
-// change TO one of these three — see RECENT_ACTIVITY_TYPES below) suppresses
+// logWhatsAppSentAction). For these four statuses (RESERVED joined in
+// 2026-10) "no REAL_CONTACT_TYPES row" is far more likely a logging gap
+// than a genuinely untouched lead, so it never reaches URGENT: recent activity of ANY kind (a note, or a status
+// change TO one of these — see RECENT_ACTIVITY_TYPES below) suppresses
 // the item entirely; once that goes stale too, it's ACTION with honest
 // wording, never URGENT.
 //
@@ -89,7 +89,7 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // deliberately does not cover.
 //
 // So the elevated path is now taken for ANY no-contact lead with human-written
-// activity on file, not only for the three statuses that structurally imply it.
+// activity on file, not only for the four statuses that structurally imply it.
 // A NOTE is somebody sitting down and typing about this person. That is enough
 // to make "waiting for a FIRST response" a false statement, even though it
 // proves nothing about whether they were actually contacted — and the ACTION
@@ -118,7 +118,7 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // parseStatusChangeTarget's comment already rules out as a standing dependency.
 // Exported — also used by actions.ts's updateLeadStatus to decide whether a
 // STATUS_CHANGE row's target status should count as contact-equivalent (see
-// parseStatusChangeTarget below): these three can't be reached without a real
+// parseStatusChangeTarget below): these four can't be reached without a real
 // conversation, so a transition TO one of them is itself a contact signal.
 type ElevatedStatus = (typeof ELEVATED_NO_CONTACT_STATUSES)[number];
 const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(s);

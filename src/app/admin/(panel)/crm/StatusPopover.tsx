@@ -9,9 +9,10 @@ import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 // 2026-08-11, revised — replaces StatusChangeForm entirely (detail page AND
 // lead-list table both use this one component now, so there's exactly one
 // status-change experience, not two). Click the badge, click a status,
-// done — one click for the common case. Only for the three statuses that
+// done — one click for the common case. Only for the four statuses that
 // structurally imply contact already happened (COMMUNICATING/
-// VIEWING_SCHEDULED/OFFER — see ELEVATED_NO_CONTACT_STATUSES in crm.ts) does
+// VIEWING_SCHEDULED/OFFER/RESERVED — see ELEVATED_NO_CONTACT_STATUSES in
+// @/lib/crm/leadStatus) does
 // the popover advance to a small optional contact-capture step, calling
 // logStatusChangeContact as a SEPARATE step after the status is already
 // set — skippable, never blocks the status change itself.

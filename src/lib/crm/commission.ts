@@ -21,7 +21,10 @@ export function resolveRate(
   return { ratePercent: null, source: "MISSING" };
 }
 
-const euros = (x: number) => Math.round(x);
+// Percentages are DECIMAL(5,2), so work in integer basis points: 5.55% → 555.
+// amount * pct / 100 in floats turns exact halves like 1161.5 into
+// 1161.4999999999998 and rounds them the wrong way.
+const percentOf = (amount: number, percent: number) => Math.round((amount * Math.round(percent * 100)) / 10000);
 
 export function computeDealAmounts(input: {
   price: number;
@@ -31,11 +34,11 @@ export function computeDealAmounts(input: {
   partnerCommissionOverride?: number | null;
 }): { ourCommission: number | null; partnerCommission: number | null } {
   const ourCommission =
-    input.ourCommissionOverride ?? (input.ourRatePercent == null ? null : euros((input.price * input.ourRatePercent) / 100));
+    input.ourCommissionOverride ?? (input.ourRatePercent == null ? null : percentOf(input.price, input.ourRatePercent));
   if (ourCommission == null) return { ourCommission: null, partnerCommission: null };
   const partnerCommission =
     input.partnerCommissionOverride ??
-    (input.partnerSharePercent == null ? null : euros((ourCommission * input.partnerSharePercent) / 100));
+    (input.partnerSharePercent == null ? null : percentOf(ourCommission, input.partnerSharePercent));
   return { ourCommission, partnerCommission };
 }
 

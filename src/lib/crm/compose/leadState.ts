@@ -1,7 +1,8 @@
-import { COMMUNICATING_STATUSES as CENTRAL_COMMUNICATING } from "@/lib/crm/leadStatus";
 // Determines which section of playbook/by-state.md applies to a given lead,
 // purely from data already on hand — no guessing, no LLM call needed for this
 // part. See by-state.md for what each bucket actually instructs.
+
+import { COMMUNICATING_STATUSES as CENTRAL_COMMUNICATING } from "@/lib/crm/leadStatus";
 
 export type LeadState =
   | "NEW"

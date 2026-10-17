@@ -75,3 +75,12 @@ test("the estimate uses the budget and is absent without a budget or rate", () =
   assert.equal(estimatePartnerCommission({ budget: null, ourRatePercent: 5, partnerSharePercent: 30 }), null);
   assert.equal(estimatePartnerCommission({ budget: 400_000, ourRatePercent: null, partnerSharePercent: 30 }), null);
 });
+
+test("a two-decimal rate is computed in basis points (123,450 at 5.55% = 6,851.475 → 6,851)", () => {
+  assert.deepEqual(computeDealAmounts({ price: 123_450, ourRatePercent: 5.55, partnerSharePercent: null }), { ourCommission: 6_851, partnerCommission: null });
+});
+
+test("basis-point maths avoids float error on an exact half (101,000 at 1.15% = 1,161.5 → 1,162)", () => {
+  // Float maths gives 1161.4999999999998 and rounds down to 1,161.
+  assert.equal(computeDealAmounts({ price: 101_000, ourRatePercent: 1.15, partnerSharePercent: null }).ourCommission, 1_162);
+});
