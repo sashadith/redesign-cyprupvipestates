@@ -35,7 +35,7 @@ export function registerCreateLead(server: McpServer) {
           if (!duplicateVisible) {
             return {
               created: false,
-              reason: `An active lead with the same ${duplicate.matchedOn} already exists, assigned to a colleague — you cannot view it. Ask the owner or an admin.`,
+              reason: `An active lead with the same ${duplicate.matchedOn} already exists and is not visible to you — ask an admin.`,
             };
           }
           const existing = await prisma.lead.findUniqueOrThrow({ where: { id: duplicate.id }, select: LEAD_ROW_SELECT });

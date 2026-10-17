@@ -11,6 +11,14 @@ export function scopeFor(user: CrmUser | null): Prisma.LeadWhereInput {
   return user ? leadAccessWhere(user) : { id: "__no_access__" };
 }
 
+// Combines a query with the access scope as AND, never by spreading: a future
+// OR-shaped scope (e.g. own leads OR a partner's) spread into a query that has
+// its own OR would silently replace it. Plain id lookups may keep the spread.
+export function withScope(where: Prisma.LeadWhereInput, scope: Prisma.LeadWhereInput): Prisma.LeadWhereInput {
+  const and = where.AND == null ? [] : Array.isArray(where.AND) ? where.AND : [where.AND];
+  return { ...where, AND: [...and, scope] };
+}
+
 export type LeadScope = { user: CrmUser; where: Prisma.LeadWhereInput };
 
 export async function loadScope(ctx: McpCallContext): Promise<LeadScope> {

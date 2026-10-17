@@ -9,7 +9,7 @@ import { seesAllLeads } from "@/lib/crm/access";
 import { LAST_CONTACT_TYPES } from "@/app/admin/(panel)/crm/leadListShared";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
-import { loadScope } from "../leadScope";
+import { loadScope, withScope } from "../leadScope";
 import { fmtDate } from "../format";
 import { mapWorklistItems } from "./worklistMap";
 
@@ -50,9 +50,9 @@ export function registerWorklist(server: McpServer) {
             orderBy: { createdAt: "desc" },
             take: limit,
           }),
-          prisma.lead.count({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } }),
+          prisma.lead.count({ where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } }, scope) }),
           prisma.lead.findMany({
-            where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } },
+            where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } }, scope),
             select: { id: true, firstName: true, lastName: true, status: true, nextFollowUpAt: true },
             orderBy: { nextFollowUpAt: "asc" },
             take: limit,

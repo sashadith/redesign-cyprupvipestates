@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
-import { loadScope } from "../leadScope";
+import { loadScope, withScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
@@ -48,7 +48,7 @@ export function registerSearchLeads(server: McpServer) {
           const phoneMatches = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM leads WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${digits}%`}`;
           phoneIds = phoneMatches.map((r) => r.id);
         }
-        const where: Prisma.LeadWhereInput = {
+        const where: Prisma.LeadWhereInput = withScope({
           deletedAt: null,
           ...(input.bucket === "partner" ? { source: "PARTNER" } : { source: { notIn: ["NEWSLETTER", "PARTNER"] } }),
           ...(input.status ? { status: input.status } : {}),
@@ -66,10 +66,7 @@ export function registerSearchLeads(server: McpServer) {
                 ],
               }
             : {}),
-          // Last: a restricted employee's scope is { assignedToId: own id }, the
-          // same value assignedToMe sets, so nothing above is overridden.
-          ...scope,
-        };
+        }, scope);
         const [total, rows] = await Promise.all([
           prisma.lead.count({ where }),
           prisma.lead.findMany({ where, select: LEAD_ROW_SELECT, orderBy: { createdAt: "desc" }, skip: (input.page - 1) * input.pageSize, take: input.pageSize }),
