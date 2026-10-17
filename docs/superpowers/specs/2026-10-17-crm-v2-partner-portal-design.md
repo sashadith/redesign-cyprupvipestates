@@ -1,6 +1,6 @@
 # CRM v2 + Partner Portal — Design
 
-Date: 2026-10-17 · Status: approved in brainstorming, pending written-spec review
+Date: 2026-10-17 · Status: approved by operator 2026-10-17 (incl. section 10 additions)
 Owner: Sascha (operator) · Built on: origin/main 2f7bf063
 
 ## 1. Goal
@@ -229,16 +229,41 @@ calculation (project vs developer vs missing vs override, handover vs fix share)
 commission status transitions, IBAN-change payout block. Client components tested with the
 jsdom harness. Old-CRM `RESERVED` support verified before the enum migration ships.
 
-## 9. Phases
+## 9. Additions approved after the first draft
+
+| # | Feature | Notes | Phase |
+|---|---|---|---|
+| 1 | **Partner Telegram bot** | Notifications (stage, messages, commission), `/status`, `/provision`, client submission in chat with the same duplicate check. Account linked once via a one-time code from the portal. Per-partner channel choice: email / Telegram / both. **No WhatsApp to partners** (OpenWA is unofficial → ban risk; later only via the official Business API). | 3 |
+| 2 | Weekly partner digest (email) | Monday: clients' progress, expected commission, new projects matching their clients' budgets. Opt-out in profile. | 3 |
+| 3 | Match alert for partner clients | New unit / price drop matching a partner client's budget + interest → partner + owner notified. Reuses property matching + inventory-change data. | 3b |
+| 4 | Visible response time | Per client "contacted N min after submission"; programme average on the portal landing page. | 3 |
+| 5 | Partner tiers | e.g. Silver 30 % / Gold 35 % / Platinum 40 % by closed deals per year; thresholds and shares configurable; progress bar in portal. **System proposes the upgrade, operator confirms.** Combinable with seasonal rating. | 4 |
+| 6 | Partner-branded presentations | Partner builds a client presentation from the existing ClientPresentation system with their own name/logo and no CVE contact data; sees opens/views; enquiries from it auto-attribute to the partner. | 3b |
+| 7 | Commission calculator | Price in → partner payout per project. | 3 |
+| 8 | Partner onboarding checklist | Complete profile, connect Telegram, first client, first presentation. | 3 |
+| 9 | SLA timers + escalation | Unassigned 30 min → operator; assigned but uncontacted 2 h → owner; 4 h → operator with reassign suggestion. Thresholds configurable. | 2 |
+| 10 | Claude in the lead cockpit | Summary + next step at the top of every lead; intake from pasted text (WhatsApp chat, voice-note transcript) → fields prefilled, human confirms; reply drafts in client language (existing). Prompts carry no invented figures. | 2 |
+| 11 | Lead temperature | Hot / warm / cold from budget, timeline and behaviour (presentation opened, project page visits, replies). Dot on pipeline cards. | 4 |
+| 12 | Command palette ⌘K | Search + actions ("log call for Brenner"). | 2 |
+| 13 | Mobile app (PWA + push) | **Deferred to the very end — build only when the operator explicitly asks.** The responsive web UI is in scope from Phase 2 regardless. | last |
+| 14 | Partner quality | Per partner: submitted, reachable/valid, converted; flags low quality, proposes tier upgrades. | 4 |
+| 15 | Commission forecast | Expected commission per month from reservations, contracts and payment plans. | 4 |
+| 16 | Channel performance | Per source: leads, closes, earned commission (Meta vs partners vs web). | 4 |
+
+## 10. Phases
 
 1. **Foundation** — rights model, RESERVED (old CRM first), lost reason, Deal,
    CommissionRate, access layer, `lastRealContactAt`, timeline write consolidation.
 2. **New CRM** — design system, Today, Inbox with suggestions + notifications, Pipeline,
-   Lead cockpit, Partners/Commissions/Settings screens, mobile.
+   Lead cockpit, Partners/Commissions/Settings screens, responsive layout, SLA timers (#9),
+   Claude in cockpit (#10), ⌘K (#12).
 3. **Partner portal** — subdomain, auth, registration + agreement, approval, submit
    (handover + fix), duplicate review, tracking, emails, commissions + credit notes,
-   report, materials, 4 languages.
-4. **Polish** — analytics (revenue, conversion per source, partner ranking), automatic
-   news, rating seasons with prizes.
+   report, materials, 4 languages, Telegram bot (#1), weekly digest (#2), response time
+   (#4), calculator (#7), onboarding (#8).
+   **3b** — match alerts (#3), partner-branded presentations (#6).
+4. **Polish** — analytics, automatic news, rating seasons with prizes, tiers (#5), lead
+   temperature (#11), partner quality (#14), forecast (#15), channel performance (#16).
+5. **Mobile app** (#13) — only on the operator's explicit go.
 
 Each phase gets its own implementation plan. Production deploys remain the operator's call.
