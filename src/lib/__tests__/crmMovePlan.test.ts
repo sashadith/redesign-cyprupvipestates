@@ -54,3 +54,13 @@ test("Sold back to Reserved keeps an earned deal as it is", () => {
   const p = planMove("CLOSED", "RESERVED", [earned]);
   assert.deepEqual(p, { kind: "ok", needsDeal: false, needsLostReason: false, cancelDealIds: [], earnDealIds: [] });
 });
+
+test("a PAID_OUT deal blocks leaving too", () => {
+  const p = planMove("CLOSED", "LOST", [{ id: "d5", commissionStatus: "PAID_OUT" }]);
+  assert.equal(p.kind, "blocked");
+});
+
+test("Reserved with only settled deals does not ask for a new deal", () => {
+  const p = planMove("CLOSED", "RESERVED", [paid]);
+  assert.equal(p.kind === "ok" && p.needsDeal, false);
+});
