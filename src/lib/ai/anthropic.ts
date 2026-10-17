@@ -55,9 +55,12 @@ type ForcedToolParams = Anthropic.MessageCreateParamsNonStreaming & {
  * tool_use block by type and keep their own "no content" errors.
  *
  * On Sonnet 5.5 it also sends thinking "between_tools" (no extended thinking).
- * A forced tool call never thought on the older models either, so prompts and
- * max_tokens calibrated against them stay valid. Other models can't take that
- * setting; they think at low effort with extra token room instead.
+ * Other models can't take that setting; they think at low effort instead.
+ * Either way the steered path gets extra token room: budgets were calibrated
+ * on a forced call, and Sonnet 5.5 still writes a short text block before the
+ * call and counts more tokens for the same text — the SEO meta call (1400)
+ * came back cut off mid-tool-input with descPL/RU/HE empty (Arya, 2026-10-17).
+ * max_tokens is a ceiling, not a charge, so the room costs nothing unused.
  */
 export async function createToolCall(client: Anthropic, params: ForcedToolParams): Promise<Anthropic.Message> {
   if (acceptsForcedTool(params.model)) return client.messages.create(params);
@@ -75,9 +78,9 @@ export async function createToolCall(client: Anthropic, params: ForcedToolParams
     req.thinking = { type: "between_tools" };
   } else {
     req.output_config = { ...(params.output_config ?? {}), effort: "low" };
-    // Capped below the ~21k tokens at which the SDK refuses a non-streaming call.
-    req.max_tokens = Math.min(params.max_tokens + 8000, 21000);
   }
+  // Capped below the ~21k tokens at which the SDK refuses a non-streaming call.
+  req.max_tokens = Math.min(params.max_tokens + 8000, 21000);
 
   const once = () => client.messages.create(req as unknown as Anthropic.MessageCreateParamsNonStreaming);
   const msg = await once();

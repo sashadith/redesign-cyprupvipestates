@@ -315,6 +315,11 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
     const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
     const raw = (tool?.input ?? {}) as Partial<SeoMetaResult>;
     if (!Object.values(raw).some(Boolean)) throw new Error(`No content (stop: ${msg.stop_reason})`);
+    // A reply cut off mid-call still parses: the fields written so far come
+    // back and the rest are missing. Handing that on would blank those
+    // languages in the form, so a partial answer is a failure, not a result.
+    const missing = LANG_KEYS.filter((k) => !String(raw[k] ?? "").trim());
+    if (missing.length) throw new Error(`Incomplete reply (stop: ${msg.stop_reason}) — missing ${missing.join(", ")}. Try again.`);
     return raw;
   };
 
