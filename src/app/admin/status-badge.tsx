@@ -10,8 +10,6 @@ export const STATUS_STYLES: Record<string, string> = {
   COMMUNICATING: "bg-blue-100 text-blue-700",
   VIEWING_SCHEDULED: "bg-orange-100 text-orange-700",
   OFFER: "bg-indigo-100 text-indigo-700",
-  // 2026-10-18 (CRM v2) — reservation; amber, between offer (indigo) and closed (green).
-  RESERVED: "bg-amber-100 text-amber-800",
   // 2026-08-11 — parallel to the funnel, not a stage in it (see LeadStatus
   // comment in schema.prisma). Purple: the one hue not already claimed by a
   // neighboring status, so it reads as "a different kind of thing", not

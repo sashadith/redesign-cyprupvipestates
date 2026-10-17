@@ -56,9 +56,12 @@ One database, two staff UIs. Hard rules:
 
 1. **Additive DB changes only** — new tables and nullable/defaulted columns. Nothing in use
    is renamed or dropped while the old CRM lives.
-2. **`RESERVED` enum value:** schema, migration and every reader (lists, filters, status
-   popover, board, action-center rules, MCP tools) ship in ONE deploy with
-   `CVP_RUN_MIGRATE=1`. The migration only adds the value and the new code is its only
+2. **`RESERVED` enum value:** schema, migration and the shared readers (action-center
+   rules, MCP tools, status-change function) ship in ONE deploy with `CVP_RUN_MIGRATE=1`.
+   **The old admin CRM UI stays untouched** (operator, 2026-10-17): it keeps its own eight
+   statuses, never offers RESERVED, and a reserved lead shows there only in lists (plain
+   badge), not on the old board. Only invisible data guards were added to old code paths
+   (deals survive trash purge / merge, reopened leads drop their lost reason). The migration only adds the value and the new code is its only
    writer, so no row can hold it while an older client runs. (Lessons: Hebrew enum outage
    2026-09-21 = DB ahead of the deployed client; migrate-flag outage 2026-09-17.)
 3. **Central access layer** `src/lib/crm/access.ts`: one function decides which leads a

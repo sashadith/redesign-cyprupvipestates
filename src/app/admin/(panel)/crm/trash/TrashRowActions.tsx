@@ -22,10 +22,7 @@ export default function TrashRowActions({ id, canPermanentlyDelete }: { id: stri
           disabled={pending}
           onClick={() => {
             if (!confirm("Permanently delete this lead? This cannot be undone — all activity history and client presentations for this lead are deleted too.")) return;
-            startTransition(async () => {
-              const res = await permanentlyDeleteLeadAction(id);
-              if (res?.error) alert(res.error);
-            });
+            startTransition(() => { permanentlyDeleteLeadAction(id); });
           }}
           className="rounded-md border border-[#FECACA] text-[#DC2626] text-xs px-2 py-1 hover:bg-[#FEF2F2] disabled:opacity-50"
         >

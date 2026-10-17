@@ -4,15 +4,13 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { StatusBadge } from "@/app/admin/status-badge";
 import { logStatusChangeContact, updateLeadStatus } from "../../actions";
-import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 // 2026-08-11, revised — replaces StatusChangeForm entirely (detail page AND
 // lead-list table both use this one component now, so there's exactly one
 // status-change experience, not two). Click the badge, click a status,
-// done — one click for the common case. Only for the four statuses that
+// done — one click for the common case. Only for the three statuses that
 // structurally imply contact already happened (COMMUNICATING/
-// VIEWING_SCHEDULED/OFFER/RESERVED — see ELEVATED_NO_CONTACT_STATUSES in
-// @/lib/crm/leadStatus) does
+// VIEWING_SCHEDULED/OFFER — see ELEVATED_NO_CONTACT_STATUSES in crm.ts) does
 // the popover advance to a small optional contact-capture step, calling
 // logStatusChangeContact as a SEPARATE step after the status is already
 // set — skippable, never blocks the status change itself.
@@ -24,7 +22,7 @@ import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 // table's edge. The portal sidesteps that (and any table z-index/stacking
 // quirks) without touching the table's own layout.
 
-const STATUSES: string[] = [...LEAD_STATUSES];
+const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 
 // Same local-datetime-input default-to-now helper UnifiedTimeline.tsx uses.
 function nowForDatetimeLocal(): string {

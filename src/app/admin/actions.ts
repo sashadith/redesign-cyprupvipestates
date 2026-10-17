@@ -29,7 +29,6 @@ import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
-import { LEAD_STATUSES as CENTRAL_LEAD_STATUSES } from "@/lib/crm/leadStatus";
 import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
@@ -126,7 +125,9 @@ function revalidateCaseStudyPublic(language: string, slug: string) {
   revalPublic(language, ["case-studies"]);
 }
 
-const STATUSES: string[] = [...CENTRAL_LEAD_STATUSES];
+// The old admin CRM keeps its own eight statuses on purpose (operator, 2026-10-17:
+// "lass unser altes CRM vorerst unberührt"). The reservation stage is set only from the new CRM.
+const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 
 async function requireSession() {
@@ -730,7 +731,7 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
 // slower path for "the same operation" was exactly what point 3 of the
 // 2026-08-11 spec was written to avoid). viewingScheduledAt/contact capture
 // moved out into logStatusChangeContact below, called as an optional SECOND
-// step only for the four statuses that structurally imply contact — see
+// step only for the three statuses that structurally imply contact — see
 // StatusPopover.tsx.
 export async function updateLeadStatus(id: string, status: string) {
   const session = await requireSession();

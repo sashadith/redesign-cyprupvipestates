@@ -2,19 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
-import { LEAD_STATUSES as FILTER_STATUSES } from "@/app/admin/(panel)/crm/filters";
 import { LEAD_STATUSES as UPDATE_STATUSES } from "@/lib/crm/updateLeadStatus";
 import { ACTIVE_LEAD_STATUSES } from "@/lib/actionCenter/rules/crm";
-import { STATUS_STYLES } from "@/app/admin/status-badge";
 
-// No file may carry its own copy of the status array again.
-const FILES = [
-  "src/app/admin/(panel)/crm/filters.ts",
-  "src/app/admin/(panel)/crm/StatusPopover.tsx",
-  "src/app/admin/(panel)/crm/create-lead-form.tsx",
-  "src/app/admin/(panel)/crm/board/page.tsx",
-  "src/app/admin/(panel)/page.tsx",
-  "src/app/admin/actions.ts",
+// Shared backend code reads the one central list.
+const SHARED_FILES = [
   "src/lib/actionCenter/rules/crm.ts",
   "src/lib/crm/compose/leadState.ts",
   "src/lib/crm/createLead.ts",
@@ -22,19 +14,32 @@ const FILES = [
   "src/lib/mcp/tools/searchLeads.ts",
 ];
 
-test("no file hard-codes the status list", () => {
-  for (const f of FILES) {
+// The old admin CRM UI stays as it was until the cutover (operator, 2026-10-17):
+// it keeps its own eight statuses and never offers RESERVED.
+const OLD_CRM_FILES = [
+  "src/app/admin/(panel)/crm/filters.ts",
+  "src/app/admin/(panel)/crm/StatusPopover.tsx",
+  "src/app/admin/(panel)/crm/create-lead-form.tsx",
+  "src/app/admin/(panel)/crm/board/page.tsx",
+  "src/app/admin/(panel)/page.tsx",
+  "src/app/admin/actions.ts",
+  "src/app/admin/status-badge.tsx",
+];
+
+test("shared code does not hard-code the status list", () => {
+  for (const f of SHARED_FILES) {
     const src = readFileSync(f, "utf8");
     assert.equal(/\["NEW",\s*"CONTACTED"/.test(src), false, `${f} still has its own status array`);
   }
 });
 
-test("re-exported lists are the central list", () => {
-  assert.deepEqual([...FILTER_STATUSES], [...LEAD_STATUSES]);
-  assert.deepEqual([...UPDATE_STATUSES], [...LEAD_STATUSES]);
-  assert.ok((ACTIVE_LEAD_STATUSES as readonly string[]).includes("RESERVED"));
+test("the old admin CRM UI is untouched and never offers RESERVED", () => {
+  for (const f of OLD_CRM_FILES) {
+    assert.equal(readFileSync(f, "utf8").includes("RESERVED"), false, `${f} mentions RESERVED`);
+  }
 });
 
-test("every status has a badge style", () => {
-  for (const s of LEAD_STATUSES) assert.ok(STATUS_STYLES[s], `missing style for ${s}`);
+test("re-exported lists are the central list", () => {
+  assert.deepEqual([...UPDATE_STATUSES], [...LEAD_STATUSES]);
+  assert.ok((ACTIVE_LEAD_STATUSES as readonly string[]).includes("RESERVED"));
 });
