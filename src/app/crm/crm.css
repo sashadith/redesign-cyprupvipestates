@@ -108,3 +108,19 @@
 .crm-dialog .crm-dialog-error { margin: 0; color: var(--danger); font-size: 13px; font-weight: 600; }
 .crm-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 @media (max-width: 720px) { .crm-move { opacity: 1; } }
+
+.crm-inbox { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.crm-ib { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 8px; transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .35s; }
+.crm-ib.leaving { transform: translateX(40px) scale(.96); opacity: 0; }
+.crm-ib .t { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14.5px; }
+.crm-ib .t a { color: var(--ink); text-decoration: none; }
+.crm-ib .t .wait { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--muted); font-weight: 500; }
+.crm-ib .lang { font-family: var(--mono); font-size: 10.5px; border: 1px solid var(--line); border-radius: 5px; padding: 0 4px; color: var(--muted); }
+.crm-ib .s { font-size: 12.5px; color: var(--muted); }
+.crm-ib .src { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 6px; background: var(--srcbg); color: var(--muted); }
+.crm-ib .src.partner { background: var(--partnerbg); color: var(--partnerfg); }
+.crm-ib .sug { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--sugbg); border-radius: 10px; padding: 8px; font-size: 12.5px; }
+.crm-ib .sug .why { color: var(--muted); }
+.crm-ib .sug select { margin-left: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: 500 12.5px var(--body); background: var(--panel); color: var(--ink); }
+.crm-empty { text-align: center; color: var(--muted); padding: 32px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

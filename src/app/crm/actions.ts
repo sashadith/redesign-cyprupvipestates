@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { isLeadStatus, LOST_REASONS, type LostReasonValue } from "@/lib/crm/leadStatus";
+import { assignLead } from "@/lib/crm/assignLead";
 import { moveLead, type DealInput, type MoveResult } from "@/lib/crm/moveLead";
 
 export async function moveLeadAction(
@@ -42,4 +43,11 @@ export async function searchDevelopmentsAction(q: string): Promise<{ id: string;
     select: { id: true, publicName: true, town: true },
   });
   return rows.map((r) => ({ id: r.id, label: r.town ? `${r.publicName} · ${r.town}` : r.publicName }));
+}
+
+export async function assignLeadAction(leadId: string, userId: string): Promise<{ ok: true } | { error: string }> {
+  const user = await requireCrmUser();
+  const res = await assignLead(user, leadId, userId);
+  if ("ok" in res) { revalidatePath("/crm/inbox"); revalidatePath("/crm/pipeline"); }
+  return res;
 }
