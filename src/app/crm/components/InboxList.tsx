@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { assignLeadAction } from "../actions";
+import { assignToast, type AssignResult } from "@/lib/crm/assignMessage";
 import { useToast } from "./Toast";
 
 export type InboxItem = {
@@ -20,14 +21,27 @@ export function InboxList({ items, staff }: { items: InboxItem[]; staff: { id: s
   const router = useRouter();
   const toast = useToast();
   const [leaving, setLeaving] = useState<string | null>(null);
+  // Rows assigned in this view stay faded out until the refreshed list drops them.
+  const [assigned, setAssigned] = useState<ReadonlySet<string>>(new Set());
   const [choice, setChoice] = useState<Record<string, string>>({});
 
   async function assign(item: InboxItem, userId: string) {
     const who = staff.find((s) => s.id === userId)?.name ?? "them";
     setLeaving(item.id);
-    const res = await assignLeadAction(item.id, userId);
-    if ("ok" in res) { toast.show(`Assigned to ${who}. Notified on Telegram and email.`); router.refresh(); }
-    else { setLeaving(null); toast.show(res.error, "error"); }
+    let res: AssignResult;
+    try {
+      res = await assignLeadAction(item.id, userId);
+    } catch {
+      res = { error: "Could not assign — check your connection and try again." };
+    }
+    // Reset either way: a stuck `leaving` would hide a row that is still there.
+    setLeaving(null);
+    if ("ok" in res) {
+      setAssigned((s) => new Set(s).add(item.id));
+      toast.show(assignToast(who, res));
+      router.refresh();
+    }
+    else toast.show(res.error, "error");
   }
 
   if (!items.length) return <div className="crm-panel crm-empty">Inbox zero. New leads land here first.</div>;
@@ -36,8 +50,9 @@ export function InboxList({ items, staff }: { items: InboxItem[]; staff: { id: s
       <div className="crm-inbox">
         {items.map((it) => {
           const pick = choice[it.id] ?? it.suggestion?.userId ?? "";
+          const gone = leaving === it.id || assigned.has(it.id);
           return (
-            <article key={it.id} className={`crm-ib${leaving === it.id ? " leaving" : ""}`}>
+            <article key={it.id} className={`crm-ib${gone ? " leaving" : ""}`}>
               <div className="t"><a href={`/admin/crm/${it.id}`}>{it.name}</a>{it.lang && <span className="lang">{it.lang}</span>}<span className="wait">{waited(it.createdAt)}</span></div>
               <div className="s"><span className={`src${it.isPartner ? " partner" : ""}`}>{it.source}</span>{it.interest && <> · {it.interest}</>}</div>
               <div className="sug">
@@ -47,7 +62,7 @@ export function InboxList({ items, staff }: { items: InboxItem[]; staff: { id: s
                   <option value="" disabled>Choose…</option>
                   {staff.map((s) => <option key={s.id} value={s.id}>{s.name}{s.acceptsLeads ? "" : " (away)"}</option>)}
                 </select>
-                <button type="button" className="crm-btn primary" disabled={!pick || leaving === it.id} onClick={() => void assign(it, pick)}>Assign</button>
+                <button type="button" className="crm-btn primary" disabled={!pick || gone} onClick={() => void assign(it, pick)}>Assign</button>
               </div>
             </article>
           );

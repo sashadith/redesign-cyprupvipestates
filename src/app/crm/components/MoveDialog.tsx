@@ -8,10 +8,13 @@ import { searchDevelopmentsAction } from "../actions";
 export type DialogNeed = { need: "deal" | "lostReason" | "confirmCancel"; leadName: string; to: LeadStatusValue; cancelCount?: number; error?: string };
 export type DialogAnswer = { deal?: DealInput; lostReason?: string; confirmCancel?: boolean };
 
-export function MoveDialog({ state, busy, onSubmit, onCancel }: {
+export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
   state: DialogNeed; busy: boolean; onSubmit: (a: DialogAnswer) => void; onCancel: () => void;
+  // Called whenever the element closes by itself (not by our own unmount).
+  onClosed: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const unmounting = useRef(false);
   const [q, setQ] = useState("");
   const [options, setOptions] = useState<{ id: string; label: string }[]>([]);
   const [devId, setDevId] = useState("");
@@ -21,9 +24,15 @@ export function MoveDialog({ state, busy, onSubmit, onCancel }: {
 
   useEffect(() => {
     const d = ref.current;
-    if (d && !d.open) d.showModal();
-    return () => { if (d?.open) d.close(); };
+    return () => { unmounting.current = true; if (d?.open) d.close(); };
   }, []);
+
+  // Open on mount and after every render in which it is not open, so a retry
+  // that asks the same question again (same key, no remount) shows the modal.
+  useEffect(() => {
+    const d = ref.current;
+    if (d && !d.open) d.showModal();
+  });
 
   useEffect(() => {
     if (state.need !== "deal") return;
@@ -39,7 +48,8 @@ export function MoveDialog({ state, busy, onSubmit, onCancel }: {
   const n = state.cancelCount ?? 1;
 
   return (
-    <dialog ref={ref} className="crm-dialog" onCancel={(e) => { e.preventDefault(); onCancel(); }} aria-labelledby="crm-dialog-title">
+    <dialog ref={ref} className="crm-dialog" onCancel={(e) => { e.preventDefault(); onCancel(); }}
+      onClose={() => { if (!unmounting.current) onClosed(); }} aria-labelledby="crm-dialog-title">
       <form method="dialog" onSubmit={(e) => {
         e.preventDefault();
         if (busy) return;

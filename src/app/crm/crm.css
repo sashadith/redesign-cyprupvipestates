@@ -30,6 +30,7 @@
 .crm-headrow p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
 .crm-chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 6px 11px; font: 600 12.5px var(--body); cursor: pointer; text-decoration: none; }
 .crm-chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.crm-notice { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--muted); font-size: 13px; }
 .crm-panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
 .crm-btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 700 13px var(--body); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
 .crm-btn.primary { background: var(--accent); color: var(--onaccent); border-color: var(--accent); }
@@ -77,6 +78,7 @@
 .crm-card .age { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 .crm-card .age.warn { color: var(--warn); }
 .crm-card .av { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; color: #fff; background: var(--accent); }
+.crm-card .av.none { background: var(--colbg); color: var(--muted); font-size: 12px; }
 .crm-card .c-deal { display: flex; justify-content: space-between; gap: 6px; border-top: 1px dashed var(--line); padding-top: 7px; font-family: var(--mono); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .crm-card .c-deal .comm { color: var(--good); }
 .crm-cardwrap { position: relative; }
@@ -86,6 +88,7 @@
 .crm-move:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .crm-menu { position: absolute; top: 34px; right: 8px; z-index: 15; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px;
   box-shadow: 0 18px 40px -18px rgba(0,0,0,.35); display: flex; flex-direction: column; min-width: 180px; }
+.crm-menu.up { top: auto; bottom: calc(100% - 4px); }
 .crm-menu button { display: flex; align-items: center; gap: 8px; border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 8px; font: 600 13px var(--body); color: var(--ink); cursor: pointer; }
 .crm-menu button:hover, .crm-menu button:focus-visible { background: var(--bg); }
 .crm-menu .dot, .crm-drop .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sc); }
@@ -107,7 +110,14 @@
 .crm-options button.on { font-weight: 700; }
 .crm-dialog .crm-dialog-error { margin: 0; color: var(--danger); font-size: 13px; font-weight: 600; }
 .crm-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-@media (max-width: 720px) { .crm-move { opacity: 1; } }
+@media (max-width: 720px) {
+  .crm-move { opacity: 1; }
+  /* A fixed bottom sheet above the dock: the board's scroll container can never clip it. */
+  .crm-menu, .crm-menu.up { position: fixed; top: auto; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); z-index: 35;
+    min-width: 0; max-height: 60vh; overflow-y: auto; border-radius: 16px 16px 0 0;
+    padding: 8px max(8px, env(safe-area-inset-right, 0px)) 8px max(8px, env(safe-area-inset-left, 0px)); box-shadow: 0 -18px 40px -18px rgba(0,0,0,.35); }
+  .crm-menu button { padding: 12px 12px; font-size: 14px; }
+}
 
 .crm-inbox { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
 .crm-ib { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 8px; transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .35s; }

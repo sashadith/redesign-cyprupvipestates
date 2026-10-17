@@ -6,7 +6,7 @@ import "./crm.css";
 import { getCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { prisma } from "@/lib/prisma";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { inboxWhere } from "@/lib/crm/inboxWhere";
 import { Shell } from "./components/Shell";
 
 export const dynamic = "force-dynamic";
@@ -17,14 +17,22 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
   const user = await getCrmUser();
   if (!user) redirect("/admin/login?callbackUrl=/crm");
   const canAssign = canAssignLeads(user);
-  const inboxCount = canAssign
-    ? await prisma.lead.count({ where: { deletedAt: null, assignedToId: null, ...EXCLUDE_NEWSLETTER } })
-    : 0;
   return (
     <html lang="en">
       <body className="crm-app antialiased">
-        <Shell user={{ name: user.name, canAssign, inboxCount }}>{children}</Shell>
+        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0 }}>{children}</Shell>
       </body>
     </html>
   );
 }
+
+// The nav badge must never take the whole CRM down: on a failed count it shows 0.
+async function countInbox(): Promise<number> {
+  try {
+    return await prisma.lead.count({ where: inboxWhere() });
+  } catch (err) {
+    console.error("[crm inbox count]", err);
+    return 0;
+  }
+}
+

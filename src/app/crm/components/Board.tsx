@@ -16,10 +16,22 @@ type DragProps = {
   onMenu: (id: string, to: LeadStatusValue) => void; popId: string | null;
 };
 
-export function CardView({ card, drag }: { card: BoardCard; drag?: DragProps }) {
+export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: DragProps }) {
+  // Cards the user may not edit (canEditLead on the server) cannot be moved at all.
+  const drag = card.canEdit ? dragAll : undefined;
   const [menu, setMenu] = useState(false);
+  // Desktop: open upward when the card sits in the lower half of the viewport.
+  const [up, setUp] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const moveBtn = useRef<HTMLButtonElement>(null);
+
+  function toggleMenu() {
+    if (!menu) {
+      const r = moveBtn.current?.getBoundingClientRect();
+      setUp(!!r && r.top > window.innerHeight / 2);
+    }
+    setMenu((m) => !m);
+  }
 
   // Close the menu on an outside click or Escape.
   useEffect(() => {
@@ -32,7 +44,14 @@ export function CardView({ card, drag }: { card: BoardCard; drag?: DragProps }) 
   }, [menu]);
 
   return (
-    <div ref={wrap} className={`crm-cardwrap${menu ? " menu-open" : ""}`}>
+    <div
+      ref={wrap}
+      className={`crm-cardwrap${menu ? " menu-open" : ""}`}
+      // Keyboard focus leaving the card closes the menu. A null relatedTarget
+      // (a click on a non-focusable spot, or Safari's unfocused buttons) is left
+      // to the outside-pointerdown handler, so a click on an item still lands.
+      onBlur={(e) => { if (menu && e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node)) setMenu(false); }}
+    >
       <a
         className={`crm-card s-${card.status}${drag?.popId === card.id ? " pop" : ""}`}
         href={`/admin/crm/${card.id}`}
@@ -52,7 +71,9 @@ export function CardView({ card, drag }: { card: BoardCard; drag?: DragProps }) 
         <div className="c-meta">
           <span className={`src${card.isPartner ? " partner" : ""}`}>{card.sourceLabel}</span>
           <span className={`age${card.stale ? " warn" : ""}`}>{card.ageLabel}</span>
-          {card.ownerInitials && <span className="av" title={card.ownerName ?? undefined}>{card.ownerInitials}</span>}
+          {card.ownerInitials
+            ? <span className="av" title={card.ownerName ?? undefined}>{card.ownerInitials}</span>
+            : <span className="av none" title="Unassigned">—</span>}
         </div>
         {card.dealValue != null && (
           <div className="c-deal"><span>{eur(card.dealValue)}</span>{card.dealCommission != null && <span className="comm">{card.status === "CLOSED" ? "Earned" : "Exp."} {eur(card.dealCommission)}</span>}</div>
@@ -60,11 +81,11 @@ export function CardView({ card, drag }: { card: BoardCard; drag?: DragProps }) 
       </a>
       {drag && (
         <>
-          <button ref={moveBtn} type="button" className="crm-move" aria-haspopup="menu" aria-expanded={menu} aria-label={`Move ${card.name}`} onClick={() => setMenu((m) => !m)}>Move</button>
+          <button ref={moveBtn} type="button" className="crm-move" aria-expanded={menu} aria-label={`Move ${card.name}`} onClick={toggleMenu}>Move</button>
           {menu && (
-            <div className="crm-menu" role="menu" aria-label={`Move ${card.name} to`}>
+            <div className={`crm-menu${up ? " up" : ""}`} aria-label={`Move ${card.name} to`}>
               {MENU_TARGETS.filter((s) => s !== card.status).map((s, i) => (
-                <button type="button" role="menuitem" key={s} className={`s-${s}`} autoFocus={i === 0} onClick={() => { setMenu(false); drag.onMenu(card.id, s); }}>
+                <button type="button" key={s} className={`s-${s}`} autoFocus={i === 0} onClick={() => { setMenu(false); drag.onMenu(card.id, s); }}>
                   <span className="dot" />{STATUS_LABEL[s]}
                 </button>
               ))}
@@ -106,6 +127,17 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`.crm-card[data-id="${CSS.escape(id)}"]`)?.focus());
   }
 
+  // Put one card back where it was (column and position), leaving every other
+  // card as it is now: a failed move must not undo moves that succeeded meanwhile.
+  function restoreCard(card: BoardCard, index: number) {
+    setColumns((cols) => cols.map((c) => {
+      const rest = c.cards.filter((x) => x.id !== card.id);
+      if (c.status !== card.status) return rest.length === c.cards.length ? c : { ...c, cards: rest };
+      const i = Math.min(index, rest.length);
+      return { ...c, cards: [...rest.slice(0, i), card, ...rest.slice(i)] };
+    }));
+  }
+
   function moveLocal(id: string, to: LeadStatusValue) {
     setColumns((cols) => {
       const card = cols.flatMap((c) => c.cards).find((c) => c.id === id);
@@ -119,10 +151,10 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
 
   async function attempt(id: string, to: LeadStatusValue, refocus: boolean) {
     const card = find(id);
-    if (!card || pending.current.has(id)) return;
+    if (!card || !card.canEdit || pending.current.has(id)) return;
     pending.current.add(id);
     setBusy(true);
-    const before = colsRef.current;
+    const index = colsRef.current.find((c) => c.status === card.status)?.cards.findIndex((c) => c.id === id) ?? 0;
     const answer = answers.current;
     moveLocal(id, to);
     if (refocus) focusCard(id);
@@ -150,7 +182,7 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
       return;
     }
 
-    setColumns(before);
+    restoreCard(card, Math.max(0, index));
     if (res.need) {
       // Show the server's message only when it rejects an answer already given
       // for this same question (e.g. an unknown project), not on the first ask.
@@ -176,6 +208,19 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
     answers.current = {};
     setDialog(null);
     focusCard(dialog.id);
+  }
+
+  // The <dialog> was closed natively (e.g. the browser's close watcher on a
+  // repeated Escape): always forget it, even mid-request, so no `dialog` state
+  // can outlive the modal and block every further move. Ignores a close event
+  // from a dialog that has already been replaced by the next question.
+  const dialogRef = useRef(dialog);
+  dialogRef.current = dialog;
+  function dialogClosed(closed: OpenDialog) {
+    if (dialogRef.current !== closed) return;
+    answers.current = {};
+    setDialog(null);
+    focusCard(closed.id);
   }
 
   const drag: DragProps = {
@@ -226,6 +271,7 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
           state={dialog}
           busy={busy}
           onCancel={closeDialog}
+          onClosed={() => dialogClosed(dialog)}
           onSubmit={(a) => {
             answers.current = { ...answers.current, ...a };
             void attempt(dialog.id, dialog.to, dialog.refocus);

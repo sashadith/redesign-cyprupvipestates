@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireCrmUser } from "@/lib/crm/session";
-import { loadBoardLeads } from "@/lib/crm/pipelineQuery";
-import { buildBoard, isBoardFilter, type BoardFilter } from "@/lib/crm/boardModel";
+import { BOARD_CAP, loadBoardLeads } from "@/lib/crm/pipelineQuery";
+import { CLOSED_WINDOW_DAYS, buildBoard, isBoardFilter, type BoardFilter } from "@/lib/crm/boardModel";
 import { Board } from "../components/Board";
 
 export const dynamic = "force-dynamic";
@@ -14,14 +14,17 @@ export default async function PipelinePage({ searchParams }: { searchParams: { f
   const user = await requireCrmUser();
   const filter: BoardFilter = isBoardFilter(searchParams.f) ? searchParams.f : "all";
   const now = new Date();
-  const columns = buildBoard(await loadBoardLeads(user, filter, now), now);
-  const count = columns.reduce((n, c) => n + c.cards.length, 0);
+  const { leads, total } = await loadBoardLeads(user, filter, now);
+  const columns = buildBoard(leads, now);
+  // The Closed column is a recent-sales window, not active work: counted apart.
+  const sold = columns.find((c) => c.status === "CLOSED")?.cards.length ?? 0;
+  const active = columns.reduce((n, c) => n + c.cards.length, 0) - sold;
   return (
     <>
       <div className="crm-headrow">
         <div>
           <h1>Pipeline</h1>
-          <p>{count} active {count === 1 ? "lead" : "leads"}</p>
+          <p>{active} active · {sold} sold ({CLOSED_WINDOW_DAYS} days)</p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {FILTERS.map((f) => (
@@ -29,6 +32,9 @@ export default async function PipelinePage({ searchParams }: { searchParams: { f
           ))}
         </div>
       </div>
+      {total > BOARD_CAP && (
+        <p className="crm-notice" role="status">Showing the {BOARD_CAP} most recently updated of {total} leads.</p>
+      )}
       <Board columns={columns} />
     </>
   );
