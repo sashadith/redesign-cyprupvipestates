@@ -5,6 +5,8 @@ import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads, canEditLead, canViewLead, seesAllLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
+import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
+import { buildCockpitPartnerCard, type ClaimStateValue } from "@/lib/crm/partnerClaims";
 import { CockpitContact, CockpitHeader, type CockpitLead } from "../../components/CockpitHeader";
 import { CockpitStage } from "../../components/CockpitStage";
 import { CockpitDeals } from "../../components/CockpitDeals";
@@ -12,6 +14,7 @@ import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
+import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
 import { ToastProvider } from "../../components/Toast";
 import { CreatedToast } from "../../components/CreatedToast";
 import type { DealRow } from "../../components/DealsTable";
@@ -19,6 +22,7 @@ import type { DealRow } from "../../components/DealsTable";
 export const dynamic = "force-dynamic";
 
 const TIMELINE_CAP = 100;
+const PARTNER_MESSAGES_CAP = 50;
 const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 // Lead cockpit (CRM v2, 2026-10-18). A lead that does not exist and one the
@@ -34,6 +38,14 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
+      contactRepName: true, contactRepPhone: true,
+      claims: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, state: true, mode: true, contactMode: true, createdAt: true, submission: true,
+          partner: { select: { id: true, company: true, firstName: true, lastName: true, status: true, type: true } },
+        },
+      },
       deals: {
         orderBy: { createdAt: "desc" },
         select: {
@@ -58,6 +70,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     : [];
 
   const now = new Date();
+  const partnerView = await loadPartnerView(lead, canEdit, now);
   const name = `${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead";
   const attributionRows: [string, string | null][] = [
     ["Partner ref", lead.attributionRef], ["UTM source", lead.utmSource], ["UTM medium", lead.utmMedium], ["UTM campaign", lead.utmCampaign],
@@ -93,6 +106,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />
+            {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
             {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
             {seesAllLeads(user) && <Link className="crm-ck-old" href={`/admin/crm/${lead.id}`}>Presentations, matching, email →</Link>}
@@ -101,4 +115,45 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       </div>
     </ToastProvider>
   );
+}
+
+type PartnerLeadInput = {
+  id: string; status: string; contactRepName: string | null; contactRepPhone: string | null;
+  deals: { commissionStatus: string }[];
+  claims: Parameters<typeof buildCockpitPartnerCard>[0]["claims"];
+};
+
+// Partner card data (phase 3b): only for leads that carry a claim; the two extra
+// queries run only then, so leads without partners render exactly as before.
+async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, now: Date): Promise<CockpitPartnerView | null> {
+  if (!lead.claims.length) return null;
+  const [last, messages] = await Promise.all([
+    prisma.leadInteraction.findFirst({
+      where: { leadId: lead.id, type: { in: [...REAL_CONTACT_TYPES] } },
+      orderBy: { occurredAt: "desc" },
+      select: { occurredAt: true },
+    }),
+    prisma.partnerMessage.findMany({
+      where: { leadId: lead.id },
+      orderBy: { createdAt: "desc" },
+      take: PARTNER_MESSAGES_CAP,
+      select: { id: true, body: true, createdAt: true, author: { select: { name: true } } },
+    }),
+  ]);
+  const built = buildCockpitPartnerCard({
+    claims: lead.claims.map((c) => ({ ...c, state: c.state as ClaimStateValue })),
+    lead: {
+      status: lead.status, hasDeal: lead.deals.some((d) => d.commissionStatus !== "CANCELLED"),
+      lastRealContactAt: last?.occurredAt ?? null, contactRepName: lead.contactRepName, contactRepPhone: lead.contactRepPhone,
+    },
+    now,
+  });
+  if (!built) return null;
+  return {
+    leadId: lead.id,
+    card: built.card,
+    inReview: built.inReview,
+    messages: messages.map((m) => ({ id: m.id, author: m.author?.name ?? "Former team member", createdAt: m.createdAt.toISOString(), body: m.body })),
+    canMessage: canEdit && built.hasActive,
+  };
 }

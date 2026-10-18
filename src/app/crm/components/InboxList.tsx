@@ -6,7 +6,7 @@ import { assignToast, type AssignResult } from "@/lib/crm/assignMessage";
 import { useToast } from "./Toast";
 
 export type InboxItem = {
-  id: string; name: string; lang: string | null; source: string; isPartner: boolean; interest: string | null; createdAt: string;
+  id: string; name: string; lang: string | null; source: string; isPartner: boolean; partnerBadge: boolean; isFix: boolean; interest: string | null; createdAt: string;
   suggestion: { userId: string; name: string; reason: string } | null;
 };
 
@@ -54,9 +54,16 @@ export function InboxList({ items, staff }: { items: InboxItem[]; staff: { id: s
           return (
             <article key={it.id} className={`crm-ib${gone ? " leaving" : ""}`}>
               <div className="t"><a href={`/crm/leads/${it.id}`}>{it.name}</a>{it.lang && <span className="lang">{it.lang}</span>}<span className="wait">{waited(it.createdAt)}</span></div>
-              <div className="s"><span className={`src${it.isPartner ? " partner" : ""}`}>{it.source}</span>{it.interest && <> · {it.interest}</>}</div>
+              <div className="s">
+                <span className={`src${it.isPartner ? " partner" : ""}`}>{it.source}</span>
+                {it.partnerBadge && <> <span className="src partner">Partner</span></>}
+                {it.isFix && <> <span className="src partner fix">Fix</span></>}
+                {it.interest && <> · {it.interest}</>}
+              </div>
               <div className="sug">
-                {it.suggestion ? <span><b>{it.suggestion.name}</b> <span className="why">{it.suggestion.reason}</span></span> : <span className="why">Nobody is taking leads right now</span>}
+                {it.isFix
+                  ? <span className="why">Fix — assign the developer-registration owner</span>
+                  : it.suggestion ? <span><b>{it.suggestion.name}</b> <span className="why">{it.suggestion.reason}</span></span> : <span className="why">Nobody is taking leads right now</span>}
                 <label className="sr-only" htmlFor={`own-${it.id}`}>Owner</label>
                 <select id={`own-${it.id}`} value={pick} onChange={(e) => setChoice((c) => ({ ...c, [it.id]: e.target.value }))}>
                   <option value="" disabled>Choose…</option>
