@@ -61,3 +61,19 @@ Always `nginx -t` on the VPS before reloading, and `systemctl reload nginx`
   send/read timeouts (2026-09-26). The five-language Claude description (and
   other admin server actions) can run past 60 s; nginx then answered 504 and
   the admin button spun forever. The public site keeps 60 s.
+
+Both snippets blank the client's `x-middleware-subrequest` header
+(CVE-2025-29927: on Next.js < 14.2.25 that header makes the app skip its
+middleware, i.e. host routing and auth checks).
+
+## Partner portal vhost (template, not live yet)
+
+`partner.cyprusvipestates.conf` is the vhost for `partner.cyprusvipestates.com`
+(2026-10-18). Unlike `cyprusvipestates.conf` it is **not** a mirror of a live
+file: the operator applies it by hand after the DNS A record exists and the
+certificate has been issued with certbot (steps in the file header). It is an
+allowlist — portal pages plus `/_next/`, `/crm/fonts/` and the icons are
+proxied; API, admin, CRM, booking/presentation links, previews, uploads and
+SEO files answer 404. Once it is live, copy it back here like the main vhost.
+The main vhost answers 404 for `/partner-portal` so the internal segment is
+never reachable on cyprusvipestates.com.
