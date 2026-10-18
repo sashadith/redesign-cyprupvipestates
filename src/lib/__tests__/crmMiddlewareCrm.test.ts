@@ -18,6 +18,14 @@ test("/crm and its sub-pages bypass the locale middleware", () => {
   assert.equal(re.test("/crm/inbox"), false);
 });
 
+test("the CRM font files under /crm/fonts are served as static files", () => {
+  // 2026-10-18: they first lived in /crm-fonts, which the locale middleware
+  // rewrote to /en/crm-fonts → 404 (found in the first runtime preview).
+  const re = matcher();
+  assert.equal(re.test("/crm/fonts/hanken-grotesk-latin.woff2"), false);
+  assert.equal(re.test("/crm-fonts/hanken-grotesk-latin.woff2"), true);
+});
+
 test("look-alike public paths are still localised", () => {
   const re = matcher();
   assert.equal(re.test("/crmfoo"), true);

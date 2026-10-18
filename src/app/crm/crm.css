@@ -1,6 +1,6 @@
 /* CRM v2 — Limestone (2026-10-18). Scoped to .crm-app; tokens mirror the approved mockup. */
-@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 600 700; font-display: swap; src: url("/crm-fonts/bricolage-grotesque-latin.woff2") format("woff2"); }
-@font-face { font-family: "Hanken Grotesk"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/crm-fonts/hanken-grotesk-latin.woff2") format("woff2"); }
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 600 700; font-display: swap; src: url("/crm/fonts/bricolage-grotesque-latin.woff2") format("woff2"); }
+@font-face { font-family: "Hanken Grotesk"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("/crm/fonts/hanken-grotesk-latin.woff2") format("woff2"); }
 
 .crm-app {
   --bg: #eef2f1; --panel: #ffffff; --colbg: #e3e9e7; --ink: #10302b; --muted: #5f716c; --line: #d5dedb;
