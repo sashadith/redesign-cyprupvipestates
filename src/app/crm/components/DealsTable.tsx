@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { setDealStageAction } from "../commissions/actions";
 import { payoutActions, type PayoutAction } from "@/lib/crm/commissionActions";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
+import { DEALS_SHOWN, withoutRateLabel, type StatusTotal } from "@/lib/crm/commissionTotals";
 import { useToast } from "./Toast";
 
 export type DealRow = {
@@ -13,7 +14,7 @@ export type DealRow = {
   ourCommission: number | null; partnerCommission: number | null; status: CommissionStatusValue;
   expectedAt: string | null; earnedAt: string | null; developerPaidAt: string | null; paidOutAt: string | null;
 };
-export type StatusTotal = { status: CommissionStatusValue; count: number; sum: number };
+export type { StatusTotal };
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
 export const COMMISSION_LABEL: Record<CommissionStatusValue, string> = {
@@ -78,16 +79,17 @@ export function DealsTable({ deals, totals, today, truncated }: { deals: DealRow
       <div className="crm-comm-sechead">
         <div>
           <h2 id="crm-deals-h">Deals</h2>
-          <p>Open and paid deals, newest first. Cancelled deals are hidden.{truncated ? " Showing the latest 300." : ""}</p>
+          <p>Open and paid deals, newest first. Cancelled deals are hidden.{truncated ? ` Showing the latest ${DEALS_SHOWN}.` : ""}</p>
         </div>
       </div>
       <dl className="crm-comm-totals">
         {TOTAL_ORDER.map((s) => {
           const t = totalOf.get(s);
+          const missing = withoutRateLabel(t?.withoutRate ?? 0);
           return (
             <div key={s} className={`crm-panel c-${s}`}>
               <dt>{COMMISSION_LABEL[s]} <span>{t?.count ?? 0}</span></dt>
-              <dd>{eur(t?.sum ?? 0)}</dd>
+              <dd>{eur(t?.sum ?? 0)}{missing && <small className="crm-warn">{missing}</small>}</dd>
             </div>
           );
         })}

@@ -4,7 +4,8 @@ import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { RatesEditor, type RateAccount } from "../components/RatesEditor";
-import { DealsTable, type DealRow, type StatusTotal } from "../components/DealsTable";
+import { DealsTable, type DealRow } from "../components/DealsTable";
+import { DEALS_SHOWN, capDeals, statusTotalsOf } from "@/lib/crm/commissionTotals";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function CommissionsPage() {
     prisma.deal.findMany({
       where: live,
       orderBy: { createdAt: "desc" },
-      take: 300,
+      take: DEALS_SHOWN + 1,
       select: {
         id: true, leadId: true, unitLabel: true, price: true, ourRatePercent: true, rateSource: true, ourCommission: true, partnerCommission: true,
         commissionStatus: true, expectedAt: true, earnedAt: true, developerPaidAt: true, paidOutAt: true,
@@ -35,7 +36,7 @@ export default async function CommissionsPage() {
         development: { select: { publicName: true } },
       },
     }),
-    prisma.deal.groupBy({ by: ["commissionStatus"], where: live, _sum: { ourCommission: true }, _count: { _all: true } }),
+    prisma.deal.groupBy({ by: ["commissionStatus"], where: live, _sum: { ourCommission: true }, _count: { _all: true, ourCommission: true } }),
   ]);
 
   const rateAccounts: RateAccount[] = accounts.map((a) => {
@@ -57,7 +58,8 @@ export default async function CommissionsPage() {
     };
   });
 
-  const dealRows: DealRow[] = deals.map((d) => ({
+  const { shown, truncated } = capDeals(deals);
+  const dealRows: DealRow[] = shown.map((d) => ({
     id: d.id,
     leadId: d.leadId,
     leadName: `${d.lead.firstName} ${d.lead.lastName}`.trim() || "Unnamed lead",
@@ -75,11 +77,7 @@ export default async function CommissionsPage() {
     paidOutAt: day(d.paidOutAt),
   }));
 
-  const statusTotals: StatusTotal[] = totals.map((t) => ({
-    status: t.commissionStatus as CommissionStatusValue,
-    count: t._count._all,
-    sum: t._sum.ourCommission ?? 0,
-  }));
+  const statusTotals = statusTotalsOf(totals);
 
   return (
     <>
@@ -90,7 +88,7 @@ export default async function CommissionsPage() {
         </div>
       </div>
       <RatesEditor accounts={rateAccounts} />
-      <DealsTable deals={dealRows} totals={statusTotals} today={new Date().toISOString().slice(0, 10)} truncated={deals.length === 300} />
+      <DealsTable deals={dealRows} totals={statusTotals} today={new Date().toISOString().slice(0, 10)} truncated={truncated} />
     </>
   );
 }
