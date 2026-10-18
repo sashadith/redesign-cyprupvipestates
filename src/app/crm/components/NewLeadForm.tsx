@@ -6,7 +6,6 @@ import { createLeadAction, type CreateLeadResult } from "../leads/actions";
 import { FINANCINGS, NEW_LEAD_LANGUAGES, TIMELINES } from "@/lib/crm/newLeadForm";
 import { intakeToFormPatch } from "@/lib/crm/ai/intakePrefill";
 import type { IntakeFields } from "@/lib/crm/ai/intake";
-import { useToast } from "./Toast";
 import { LeadIntake } from "./LeadIntake";
 
 // New lead in the new CRM (Phase 2c). Validation lives in newLeadForm.ts and is
@@ -27,11 +26,12 @@ const budget = (v: string): number | null | "bad" => {
 
 export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: { id: string; name: string }[] }) {
   const router = useRouter();
-  const toast = useToast();
   const [f, setF] = useState({ firstName: "", lastName: "", email: "", phone: "", languagePreference: "", budgetMin: "", budgetMax: "", timeline: "", financing: "", message: "", notes: "", ownerId: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ text: string; field?: string } | null>(null);
   const [dup, setDup] = useState<Dup | null>(null);
+  // Created, but the hand-over to the chosen owner failed: stay here and say so.
+  const [created, setCreated] = useState<{ id: string; warning: string } | null>(null);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
   const err = (k: string) => (error?.field === k ? error.text : null);
 
@@ -44,7 +44,7 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    if (busy || created) return;
     setError(null); setDup(null);
     const min = budget(f.budgetMin), max = budget(f.budgetMax);
     if (min === "bad") { setError({ text: "Budget must be a whole number, 0 or more.", field: "budgetMin" }); return; }
@@ -65,8 +65,8 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
     }
     if ("duplicate" in res) { setDup(res.duplicate); return; }
     if ("error" in res) { setError({ text: res.error, field: res.field }); return; }
-    toast.show("Lead created");
-    router.push(`/crm/leads/${res.id}`);
+    if (res.assignWarning) { setCreated({ id: res.id, warning: res.assignWarning }); return; }
+    router.push(`/crm/leads/${res.id}?created=1`);
   }
 
   const field = (k: keyof typeof f, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
@@ -82,15 +82,21 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
       <LeadIntake onExtract={prefill} />
       {dup && (
         <div className="crm-nl-dup" role="alert">
-          <b>This contact already exists</b>
+          <b>This contact is already in the CRM</b>
           <p>
             {dup.id && dup.name
-              ? <>An active lead with the same {dup.matchedOn} is already in the CRM: <Link href={`/crm/leads/${dup.id}`}>{dup.name}</Link>.</>
-              : <>An active lead with the same {dup.matchedOn} already exists. Ask a manager to open it before contacting them.</>}
+              ? <>A contact with the same {dup.matchedOn} is already in the CRM: <Link href={`/crm/leads/${dup.id}`}>{dup.name}</Link>.</>
+              : <>A contact with the same {dup.matchedOn} is already in the CRM. Ask a manager to open it before contacting them.</>}
           </p>
         </div>
       )}
-      <fieldset disabled={busy} className="crm-nl-grid">
+      {created && (
+        <div className="crm-nl-dup" role="alert">
+          <b>Lead created, but the owner was not assigned</b>
+          <p>{created.warning} <Link href={`/crm/leads/${created.id}`}>Open the lead</Link> to assign it.</p>
+        </div>
+      )}
+      <fieldset disabled={busy || !!created} className="crm-nl-grid">
         {field("firstName", "First name", { maxLength: 80, autoComplete: "off", required: true })}
         {field("lastName", "Last name", { maxLength: 80, autoComplete: "off" })}
         {field("email", "Email", { type: "email", maxLength: 200, autoComplete: "off", inputMode: "email" })}
@@ -140,9 +146,8 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
       {error && !error.field && <p className="crm-ck-error" role="alert">{error.text}</p>}
       <div className="crm-nl-actions">
         <Link href="/crm/pipeline" className="crm-btn">Cancel</Link>
-        <button type="submit" className="crm-btn primary" disabled={busy}>{busy ? "Saving…" : "Create lead"}</button>
+        <button type="submit" className="crm-btn primary" disabled={busy || !!created}>{busy ? "Saving…" : "Create lead"}</button>
       </div>
-      {toast.node}
     </form>
   );
 }

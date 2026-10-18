@@ -13,6 +13,7 @@ import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
 import { ToastProvider } from "../../components/Toast";
+import { CreatedToast } from "../../components/CreatedToast";
 import type { DealRow } from "../../components/DealsTable";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 // Lead cockpit (CRM v2, 2026-10-18). A lead that does not exist and one the
 // user may not see look the same: 404.
-export default async function LeadCockpitPage({ params }: { params: { id: string } }) {
+export default async function LeadCockpitPage({ params, searchParams }: { params: { id: string }; searchParams?: { created?: string | string[] } }) {
   const user = await requireCrmUser();
   const lead = await prisma.lead.findFirst({
     where: { id: params.id, deletedAt: null },
@@ -80,6 +81,7 @@ export default async function LeadCockpitPage({ params }: { params: { id: string
 
   return (
     <ToastProvider>
+      <CreatedToast show={searchParams?.created === "1"} />
       <div className="crm-cockpit">
         <CockpitHeader lead={view} now={now} />
         <div className="crm-ck-grid">

@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads, canEditLead, canViewLead } from "@/lib/crm/access";
 import { createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
-import { validateNewLead } from "@/lib/crm/newLeadForm";
+import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
+import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
 import { makeLimiter } from "@/lib/crm/ai/rateLimit";
@@ -34,7 +35,7 @@ export async function logInteractionAction(leadId: string, raw: unknown): Promis
 }
 
 export type CreateLeadResult =
-  | { ok: true; id: string }
+  | { ok: true; id: string; assignWarning?: string }
   | { error: string; field?: string }
   | { duplicate: { id: string | null; name: string | null; matchedOn: "email" | "phone" } };
 
@@ -46,15 +47,14 @@ export async function createLeadAction(raw: unknown): Promise<CreateLeadResult> 
   if (!parsed.ok) return { error: parsed.error, ...(parsed.field ? { field: parsed.field } : {}) };
   const { ownerId, ...data } = parsed.data;
 
-  let owner: string | null = user.id;
-  if (canAssignLeads(user)) {
-    owner = null;
-    if (ownerId) {
-      const staff = await prisma.user.findFirst({ where: { id: ownerId, isActive: true }, select: { id: true } });
-      if (!staff) return { error: "That person is not an active team member.", field: "ownerId" };
-      owner = staff.id;
-    }
+  const isManager = canAssignLeads(user);
+  let requested: string | null = null;
+  if (isManager && ownerId) {
+    const staff = await prisma.user.findFirst({ where: { id: ownerId, isActive: true }, select: { id: true } });
+    if (!staff) return { error: "That person is not an active team member.", field: "ownerId" };
+    requested = staff.id;
   }
+  const { createWith, assignTo } = decideOwner({ isManager, creatorId: user.id, requestedOwnerId: requested });
 
   const dup = await findDuplicateLead(data.email, data.phone);
   if (dup) {
@@ -63,10 +63,21 @@ export async function createLeadAction(raw: unknown): Promise<CreateLeadResult> 
     return { duplicate: { id: visible ? dup.id : null, name: visible ? `${dup.firstName} ${dup.lastName}`.trim() : null, matchedOn: dup.matchedOn } };
   }
 
-  const { id } = await createLeadRecord({ userId: user.id, userName: user.name }, { ...data, assignedToId: owner });
+  const { id } = await createLeadRecord({ userId: user.id, userName: user.name }, { ...data, assignedToId: createWith });
+  // The lead exists either way: a failed hand-over is a warning, not an error.
+  let assignWarning: string | undefined;
+  if (assignTo) {
+    try {
+      const res = await assignLead(user, id, assignTo);
+      if ("error" in res) assignWarning = res.error;
+    } catch (e) {
+      console.error("[crm new lead assign]", e);
+      assignWarning = "Could not assign the owner — assign it from the lead page.";
+    }
+  }
   revalidatePath("/crm/pipeline");
   revalidatePath("/crm/inbox");
-  return { ok: true, id };
+  return { ok: true, id, ...(assignWarning ? { assignWarning } : {}) };
 }
 
 // Claude helpers (Phase 2c). Both are read-only: the summary is only shown, the
@@ -77,6 +88,7 @@ const SLOW_DOWN = "Too many Claude requests — wait a minute and try again.";
 
 export async function summariseLeadAction(leadId: string): Promise<SummaryResult> {
   const user = await requireCrmUser();
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { ok: false, error: "Lead not found." };
   const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
   if (!lead || !canViewLead(user, lead)) return { ok: false, error: "Lead not found." };
   if (!summaryLimiter(user.id)) return { ok: false, error: SLOW_DOWN };

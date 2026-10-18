@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validateNewLead } from "@/lib/crm/newLeadForm";
+import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
 
 test("a name plus email or phone is enough", () => {
   const r = validateNewLead({ firstName: "Markus", phone: "+49 171 555 1234" });
@@ -41,4 +41,20 @@ test("phone rejects illegal characters and more than 20 digits", () => {
   assert.equal(validateNewLead({ firstName: "A", phone: "+49 171 abc 1234" }).ok, false);
   assert.equal(validateNewLead({ firstName: "A", phone: "123456789012345678901" }).ok, false);
   assert.equal(validateNewLead({ firstName: "A", phone: "12345678901234567890" }).ok, true);
+});
+
+// Owner decision (final fix wave): a lead for someone else is created
+// unassigned and then handed over through assignLead, like from the inbox.
+test("decideOwner: a non-manager always owns what they create", () => {
+  assert.deepEqual(decideOwner({ isManager: false, creatorId: "u1", requestedOwnerId: "u2" }), { createWith: "u1", assignTo: null });
+  assert.deepEqual(decideOwner({ isManager: false, creatorId: "u1", requestedOwnerId: null }), { createWith: "u1", assignTo: null });
+});
+test("decideOwner: a manager without an owner sends the lead to the inbox", () => {
+  assert.deepEqual(decideOwner({ isManager: true, creatorId: "m1", requestedOwnerId: null }), { createWith: null, assignTo: null });
+});
+test("decideOwner: a manager picking themselves owns it directly", () => {
+  assert.deepEqual(decideOwner({ isManager: true, creatorId: "m1", requestedOwnerId: "m1" }), { createWith: "m1", assignTo: null });
+});
+test("decideOwner: a manager picking someone else creates unassigned, then assigns", () => {
+  assert.deepEqual(decideOwner({ isManager: true, creatorId: "m1", requestedOwnerId: "u2" }), { createWith: null, assignTo: "u2" });
 });

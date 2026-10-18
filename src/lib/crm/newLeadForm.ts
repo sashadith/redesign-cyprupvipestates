@@ -102,3 +102,15 @@ export function validateNewLead(raw: unknown): Result {
     },
   };
 }
+
+// Who owns a new lead. Non-managers always own what they create. A manager may
+// leave it unassigned (inbox), take it, or pick someone else: then the lead is
+// created unassigned and handed over with assignLead, so the "Assigned to" row
+// and the owner's notifications happen exactly as from the inbox.
+// requestedOwnerId must already be checked as an active team member.
+export function decideOwner({ isManager, creatorId, requestedOwnerId }: { isManager: boolean; creatorId: string; requestedOwnerId: string | null }): { createWith: string | null; assignTo: string | null } {
+  if (!isManager) return { createWith: creatorId, assignTo: null };
+  if (!requestedOwnerId) return { createWith: null, assignTo: null };
+  if (requestedOwnerId === creatorId) return { createWith: creatorId, assignTo: null };
+  return { createWith: null, assignTo: requestedOwnerId };
+}

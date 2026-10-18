@@ -19,7 +19,6 @@ export default async function NewLeadPage() {
           <p>{canAssign ? "Leave the owner empty to send it to the inbox." : "You will own this lead."}</p>
         </div>
       </div>
-      <div id="intake-slot" />
       <NewLeadForm canAssign={canAssign} staff={staff} />
     </>
   );
