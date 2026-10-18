@@ -1,5 +1,6 @@
 import { PartnerType } from "@prisma/client";
 import { passwordProblem } from "./password";
+import { checkPartnerVatId } from "./vat";
 
 import { PARTNER_LOCALES, type PartnerLocale } from "./i18n";
 
@@ -11,6 +12,8 @@ export interface RegistrationInput {
   lastName: string;
   company: string | null;
   country: string;
+  /** Normalised; required for a company in an EU member state (see ./vat). */
+  vatId: string | null;
   phone: string;
   email: string;
   language: PartnerLanguage;
@@ -27,10 +30,11 @@ export const REGISTRATION_ERROR_CODES = [
   "err.invalid", "err.unknownField", "err.firstName", "err.lastName", "err.company",
   "err.country", "err.phone", "err.email", "err.language", "err.type",
   "err.passwordShort", "err.passwordLong", "err.passwordDigits", "err.agreement",
+  "err.vatIdRequired", "err.vatIdFormat",
 ] as const;
 
 const ALLOWED = new Set([
-  "firstName", "lastName", "company", "country", "phone", "email", "language", "type", "password", "acceptAgreement",
+  "firstName", "lastName", "company", "country", "vatId", "phone", "email", "language", "type", "password", "acceptAgreement",
 ]);
 const EMAIL_RE = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[^\s@<>()[\],;:"]{2,}$/;
 // eslint-disable-next-line no-control-regex
@@ -62,6 +66,9 @@ export function validateRegistration(raw: unknown): RegistrationResult {
   const country = str(r.country);
   if (!/^[A-Z]{2}$/.test(country)) return fail("country", "err.country");
 
+  const vat = checkPartnerVatId({ country, company, vatId: r.vatId });
+  if (!vat.ok) return fail("vatId", vat.code);
+
   if (typeof r.phone === "string" && r.phone.length > 40) return fail("phone", "err.phone");
   const phoneRaw = str(r.phone);
   if (!/^\+?[\d\s().-]+$/.test(phoneRaw)) return fail("phone", "err.phone");
@@ -89,7 +96,7 @@ export function validateRegistration(raw: unknown): RegistrationResult {
   return {
     ok: true,
     data: {
-      firstName, lastName, company, country, phone, email,
+      firstName, lastName, company, country, vatId: vat.vatId, phone, email,
       language: language as PartnerLanguage, type: type as PartnerType, password,
     },
   };
@@ -99,15 +106,19 @@ export interface ProfileInput {
   firstName: string;
   lastName: string;
   company: string | null;
+  vatId: string | null;
   language: PartnerLanguage;
 }
 
 export type ProfileResult = { ok: true; data: ProfileInput } | { ok: false; field: string; code: string };
 
-const PROFILE_ALLOWED = new Set(["firstName", "lastName", "company", "language"]);
+const PROFILE_ALLOWED = new Set(["firstName", "lastName", "company", "vatId", "language"]);
 
-/** Profile edit: same rules as registration for the editable fields; phone, email and type are locked. */
-export function validateProfile(raw: unknown): ProfileResult {
+/**
+ * Profile edit: same rules as registration for the editable fields; phone, email, type and country are
+ * locked. `ctx.country` is the partner's stored country (drives the VAT-number rule with the new company).
+ */
+export function validateProfile(raw: unknown, ctx: { country: string }): ProfileResult {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, field: "_", code: "err.invalid" };
   const r = raw as Record<string, unknown>;
   for (const k of Object.keys(r)) if (!PROFILE_ALLOWED.has(k)) return { ok: false, field: k, code: "err.unknownField" };
@@ -121,7 +132,9 @@ export function validateProfile(raw: unknown): ProfileResult {
     if (typeof r.company !== "string" || c.length > 120 || badText(c)) return { ok: false, field: "company", code: "err.company" };
     company = c || null;
   }
+  const vat = checkPartnerVatId({ country: ctx.country, company, vatId: r.vatId });
+  if (!vat.ok) return { ok: false, field: "vatId", code: vat.code };
   const language = str(r.language);
   if (!(PARTNER_LANGUAGES as readonly string[]).includes(language)) return { ok: false, field: "language", code: "err.language" };
-  return { ok: true, data: { firstName, lastName, company, language: language as PartnerLanguage } };
+  return { ok: true, data: { firstName, lastName, company, vatId: vat.vatId, language: language as PartnerLanguage } };
 }

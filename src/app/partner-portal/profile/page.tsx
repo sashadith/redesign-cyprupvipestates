@@ -13,7 +13,7 @@ export default async function PartnerProfile() {
   const { t, locale } = await portalContext();
   const p = await prisma.partner.findUnique({
     where: { id: me.partner.id },
-    select: { firstName: true, lastName: true, company: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true },
+    select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true },
   });
   if (!p) return null;
   const P = t.profile;
@@ -31,7 +31,8 @@ export default async function PartnerProfile() {
         <h1>{P.title}</h1>
         <ProfileForm
           t={t}
-          values={{ firstName: p.firstName, lastName: p.lastName, company: p.company ?? "", language: String(p.language) }}
+          country={p.country}
+          values={{ firstName: p.firstName, lastName: p.lastName, company: p.company ?? "", vatId: p.vatId ?? "", language: String(p.language) }}
         />
       </section>
       <section className="pp-panel">

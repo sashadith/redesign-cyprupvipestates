@@ -5,7 +5,7 @@ import { validateRegistration, REGISTRATION_ERROR_CODES } from "@/lib/partner/re
 import { PARTNER_LOCALES, lookup } from "@/lib/partner/i18n";
 
 const good = {
-  firstName: " Anna ", lastName: "Meier", company: "Meier GmbH", country: "DE",
+  firstName: " Anna ", lastName: "Meier", company: "Meier GmbH", country: "DE", vatId: "de 123.456-789",
   phone: "+49 170 1234567", email: " Anna@Example.COM ", language: "de",
   type: "REAL_ESTATE", password: "a-long-password", acceptAgreement: true,
 };
@@ -20,6 +20,7 @@ test("registration: happy path normalises", () => {
     assert.equal(r.data.firstName, "Anna");
     assert.equal(r.data.phone, "+491701234567");
     assert.equal(r.data.type, "REAL_ESTATE");
+    assert.equal(r.data.vatId, "DE123456789");
   }
   assert.ok(validateRegistration({ ...good, company: undefined }).ok);
   const r2 = validateRegistration({ ...good, company: "" });
@@ -58,6 +59,7 @@ test("registration: every returnable code resolves in every locale", () => {
     { ...good, country: "x" }, { ...good, phone: "1" }, { ...good, email: "x" }, { ...good, language: "he" },
     { ...good, type: "x" }, { ...good, password: "x" }, { ...good, password: "x".repeat(73) },
     { ...good, password: "1234567890" }, { ...good, acceptAgreement: false },
+    { ...good, vatId: "" }, { ...good, vatId: "FR12345678901" },
   ];
   const seen = new Set<string>();
   for (const s of samples) { const r = validateRegistration(s); assert.ok(!r.ok); if (!r.ok) seen.add(r.code); }

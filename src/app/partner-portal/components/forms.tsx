@@ -11,6 +11,7 @@ import {
 import { saveBankDetailsAction } from "../bankActions";
 import { savePartnerSettingsAction } from "../settingsActions";
 import { isErr, isOk, type FormState, type SettingsState, type SubmitState } from "../formState";
+import { vatIdRequired } from "@/lib/partner/vat";
 
 const LANG_NAMES = new Map<string, string>([
   ["en", "English"],
@@ -69,10 +70,37 @@ export function Field({ t, state, name, label, hint, children }: FieldProps) {
   );
 }
 
+/**
+ * VAT number. Always rendered; marked required (client hint only — the server decides) when the
+ * country is an EU member state and a company is filled in.
+ */
+function VatIdField({ t, state, country, company, defaultValue }: {
+  t: PartnerDict; state: FormState; country: string; company: string; defaultValue?: string;
+}) {
+  const required = vatIdRequired({ country, company });
+  return (
+    <Field t={t} state={state} name="vatId" label={t.register.vatId} hint={t.register.vatIdHelp}>
+      {(a) => (
+        <>
+          <input
+            {...a}
+            aria-describedby={[a["aria-describedby"], required ? "f-vatId-req" : ""].filter(Boolean).join(" ") || undefined}
+            name="vatId" autoComplete="off" spellCheck={false} maxLength={40} defaultValue={defaultValue}
+            required={required} aria-required={required || undefined}
+          />
+          {required && <small id="f-vatId-req" className="pp-hint"><strong>{t.register.vatIdRequiredNow}</strong></small>}
+        </>
+      )}
+    </Field>
+  );
+}
+
 // ─── Register ────────────────────────────────────────────────────────────────
 
 export function RegisterForm({ t, locale, countries }: { t: PartnerDict; locale: PartnerLocale; countries: { code: string; name: string }[] }) {
   const [state, action] = useFormState(registerAction, null);
+  const [country, setCountry] = useState("");
+  const [company, setCompany] = useState("");
   if (isOk(state)) {
     return (
       <div className="pp-done" role="status">
@@ -81,7 +109,7 @@ export function RegisterForm({ t, locale, countries }: { t: PartnerDict; locale:
       </div>
     );
   }
-  const shown = ["firstName", "lastName", "company", "country", "phone", "email", "language", "type", "password", "acceptAgreement"];
+  const shown = ["firstName", "lastName", "company", "country", "vatId", "phone", "email", "language", "type", "password", "acceptAgreement"];
   return (
     <form action={action} className="pp-form" noValidate>
       <FormError t={t} state={state} fields={shown} />
@@ -94,12 +122,12 @@ export function RegisterForm({ t, locale, countries }: { t: PartnerDict; locale:
         </Field>
       </div>
       <Field t={t} state={state} name="company" label={t.register.company}>
-        {(a) => <input {...a} name="company" autoComplete="organization" maxLength={120} />}
+        {(a) => <input {...a} name="company" autoComplete="organization" maxLength={120} onChange={(e) => setCompany(e.target.value)} />}
       </Field>
       <div className="pp-row">
         <Field t={t} state={state} name="country" label={t.register.country}>
           {(a) => (
-            <select {...a} name="country" defaultValue="" required>
+            <select {...a} name="country" defaultValue="" required onChange={(e) => setCountry(e.target.value)}>
               <option value="" disabled>—</option>
               {countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
             </select>
@@ -109,6 +137,7 @@ export function RegisterForm({ t, locale, countries }: { t: PartnerDict; locale:
           {(a) => <input {...a} name="phone" type="tel" autoComplete="tel" inputMode="tel" maxLength={40} required />}
         </Field>
       </div>
+      <VatIdField t={t} state={state} country={country} company={company} />
       <Field t={t} state={state} name="email" label={t.register.email}>
         {(a) => <input {...a} name="email" type="email" autoComplete="email" maxLength={254} required />}
       </Field>
@@ -263,13 +292,15 @@ export function ResetForm({ t, token }: { t: PartnerDict; token: string }) {
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
-type ProfileValues = { firstName: string; lastName: string; company: string; language: string };
+type ProfileValues = { firstName: string; lastName: string; company: string; vatId: string; language: string };
 
-export function ProfileForm({ t, values }: { t: PartnerDict; values: ProfileValues }) {
+/** `country` is the stored (locked) country; it only drives the VAT-number hint. */
+export function ProfileForm({ t, values, country }: { t: PartnerDict; values: ProfileValues; country: string }) {
   const [state, action] = useFormState(updateProfileAction, null);
+  const [company, setCompany] = useState(values.company);
   return (
     <form action={action} className="pp-form">
-      <FormError t={t} state={state} fields={["firstName", "lastName", "company", "language"]} />
+      <FormError t={t} state={state} fields={["firstName", "lastName", "company", "vatId", "language"]} />
       <div className="pp-row">
         <Field t={t} state={state} name="firstName" label={t.register.firstName}>
           {(a) => <input {...a} name="firstName" autoComplete="given-name" maxLength={80} defaultValue={values.firstName} required />}
@@ -279,8 +310,9 @@ export function ProfileForm({ t, values }: { t: PartnerDict; values: ProfileValu
         </Field>
       </div>
       <Field t={t} state={state} name="company" label={t.register.company}>
-        {(a) => <input {...a} name="company" autoComplete="organization" maxLength={120} defaultValue={values.company} />}
+        {(a) => <input {...a} name="company" autoComplete="organization" maxLength={120} defaultValue={values.company} onChange={(e) => setCompany(e.target.value)} />}
       </Field>
+      <VatIdField t={t} state={state} country={country} company={company} defaultValue={values.vatId} />
       <Field t={t} state={state} name="language" label={t.profile.language}>
         {(a) => (
           <select {...a} name="language" defaultValue={values.language}>

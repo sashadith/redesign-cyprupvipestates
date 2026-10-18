@@ -2085,6 +2085,10 @@ model Partner {
   bankDetailsUpdatedAt DateTime?
   ibanChangedAt        DateTime?
   vatMode              PartnerVatMode @default(NONE)
+  // Phase 3d (Decision 10): VAT number (public business data, normalised). vatMode is derived from
+  // country + vatId (src/lib/partner/vat.ts) unless an operator picked a mode in /crm/partners (vatModeManual).
+  vatId                String?
+  vatModeManual        Boolean        @default(false)
   creditNotes          CreditNote[]
   // Phase 3d preferences: stage/message emails on/off (claim outcomes and payouts always send), weekly digest.
   emailNotifications   Boolean        @default(true)

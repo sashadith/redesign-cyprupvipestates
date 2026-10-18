@@ -15,6 +15,7 @@ import { decryptBankDetails } from "@/lib/partner/bankCrypto";
 import { effectiveStateOf } from "@/lib/partner/claimFacts";
 import { activeSince } from "@/lib/partner/claimState";
 import { submissionView } from "@/lib/partner/clientDto";
+import { creditNoteRecipientVatId } from "@/lib/partner/vat";
 import { clientInitials, creditNoteModel, creditNoteNumber, vatFor, type VatMode } from "@/lib/partner/creditNote";
 import { renderCreditNotePdf } from "@/lib/partner/creditNotePdf";
 
@@ -94,7 +95,7 @@ export async function markPaidOut(
       await tx.$queryRaw`SELECT id FROM partners WHERE id = ${partnerId} FOR SHARE`;
       const partner = await tx.partner.findUniqueOrThrow({
         where: { id: partnerId },
-        select: { bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true },
+        select: { bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true, vatId: true },
       });
       let bank: BankDetails | null = null;
       if (partner.bankDetailsEnc) {
@@ -130,7 +131,8 @@ export async function markPaidOut(
       const sub = submissionView(claim.submission);
       const model = creditNoteModel({
         issuer: issuer.issuer,
-        partner: { billingName: bank.billingName, billingAddress: bank.billingAddress, vatId: bank.vatId },
+        // Decision 10: Partner.vatId (from registration/profile/CRM) wins; the bank-details VAT ID is the fallback.
+        partner: { billingName: bank.billingName, billingAddress: bank.billingAddress, vatId: creditNoteRecipientVatId(partner.vatId, bank.vatId) },
         number,
         issuedAt: now,
         deal: {

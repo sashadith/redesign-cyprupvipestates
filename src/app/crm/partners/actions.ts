@@ -11,6 +11,7 @@ import { newRefCode, randomSuffix } from "@/lib/partner/refCode";
 import { parseTerms } from "@/lib/partner/terms";
 import { sendEmail } from "@/lib/sendEmail";
 import { isVatMode } from "@/lib/crm/payoutRules";
+import { checkPartnerVatId, deriveVatMode, vatModeAfterChange, type DerivedVatMode } from "@/lib/partner/vat";
 import { decryptBankDetails } from "@/lib/partner/bankCrypto";
 import type { BankDetails } from "@/lib/partner/bank";
 
@@ -146,25 +147,69 @@ export async function updatePartnerTermsAction(id: string, raw: unknown): Promis
   return { ok: true, notice: "Saved" };
 }
 
-/** VAT treatment on the partner's credit notes — set by the office, never by the partner. Audited (vatMode only). */
+type VatRow = { country: string; company: string | null; vatId: string | null; vatMode: DerivedVatMode; vatModeManual: boolean };
+const lockVatRow = async (tx: Prisma.TransactionClient, id: string) =>
+  (await tx.$queryRaw<VatRow[]>`
+    SELECT country, company, "vatId", "vatMode"::text AS "vatMode", "vatModeManual" FROM partners WHERE id = ${id} FOR UPDATE`)[0];
+
+/**
+ * VAT treatment on the partner's credit notes — set by the office, never by the partner. "AUTO" hands it back
+ * to the automatic rule (country + VAT number, Decision 10); a concrete mode pins it (vatModeManual). Audited.
+ */
 export async function updatePartnerVatModeAction(id: string, mode: unknown): Promise<Result> {
   const actor = await guard();
   if (!actor) return { error: DENIED };
   if (typeof id !== "string" || !id || id.length > 64) return { error: "Partner not found." };
-  if (!isVatMode(mode)) return { error: "Unknown VAT mode." };
+  if (mode !== "AUTO" && !isVatMode(mode)) return { error: "Unknown VAT mode." };
   const outcome = await prisma.$transaction(async (tx): Promise<"missing" | "unchanged" | "saved"> => {
-    const rows = await tx.$queryRaw<{ vatMode: string }[]>`SELECT "vatMode"::text AS "vatMode" FROM partners WHERE id = ${id} FOR UPDATE`;
-    if (rows.length === 0) return "missing";
-    const before = rows[0].vatMode;
-    if (before === mode) return "unchanged";
-    await tx.partner.update({ where: { id }, data: { vatMode: mode } });
-    await writeAudit(actor, "partner_vat_mode_update", "partner", id, { before: { vatMode: before }, after: { vatMode: mode } }, tx);
+    const row = await lockVatRow(tx, id);
+    if (!row) return "missing";
+    const after = mode === "AUTO"
+      ? { vatMode: deriveVatMode({ country: row.country, vatId: row.vatId }), vatModeManual: false }
+      : { vatMode: mode, vatModeManual: true };
+    if (after.vatMode === row.vatMode && after.vatModeManual === row.vatModeManual) return "unchanged";
+    await tx.partner.update({ where: { id }, data: after });
+    await writeAudit(actor, "partner_vat_mode_update", "partner", id, {
+      before: { vatMode: row.vatMode, vatModeManual: row.vatModeManual }, after,
+    }, tx);
     return "saved";
   });
   if (outcome === "missing") return { error: "Partner not found." };
   if (outcome === "unchanged") return { ok: true, notice: "No changes" };
   revalidatePath("/crm/partners");
   return { ok: true, notice: "VAT mode saved" };
+}
+
+const VAT_ID_ERRORS = {
+  "err.vatIdRequired": "A VAT number is required for a company in an EU country.",
+  "err.vatIdFormat": "VAT number format is invalid (EU: country prefix, Greece EL, then 2–13 letters/digits; elsewhere 4–20 letters/digits).",
+} as const;
+
+/** VAT number (public business data). Same rules as the portal; the partner's stored country applies. Audited. */
+export async function updatePartnerVatIdAction(id: string, vatId: unknown): Promise<Result> {
+  const actor = await guard();
+  if (!actor) return { error: DENIED };
+  if (typeof id !== "string" || !id || id.length > 64) return { error: "Partner not found." };
+  const outcome = await prisma.$transaction(async (tx): Promise<"missing" | "unchanged" | "saved" | { error: string }> => {
+    const row = await lockVatRow(tx, id);
+    if (!row) return "missing";
+    const v = checkPartnerVatId({ country: row.country, company: row.company, vatId });
+    if (!v.ok) return { error: VAT_ID_ERRORS[v.code] };
+    if (v.vatId === row.vatId) return "unchanged";
+    const vatMode = vatModeAfterChange(row, { country: row.country, vatId: v.vatId });
+    await tx.partner.update({ where: { id }, data: { vatId: v.vatId, vatMode } });
+    await writeAudit(actor, "partner_vat_id_update", "partner", id, {
+      before: { vatId: row.vatId, vatMode: row.vatMode },
+      after: { vatId: v.vatId, vatMode },
+      vatModeChanged: vatMode !== row.vatMode,
+    }, tx);
+    return "saved";
+  });
+  if (outcome === "missing") return { error: "Partner not found." };
+  if (typeof outcome === "object") return outcome;
+  if (outcome === "unchanged") return { ok: true, notice: "No changes" };
+  revalidatePath("/crm/partners");
+  return { ok: true, notice: "VAT number saved" };
 }
 
 /**

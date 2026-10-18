@@ -19,6 +19,8 @@ import { PARTNER_LANG_COOKIE } from "@/lib/partner/i18n";
 import { ipKey, partnerLimits as L } from "@/lib/partner/limits";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/partner/password";
 import { validateProfile, validateRegistration } from "@/lib/partner/registration";
+import { writePartnerAudit } from "@/lib/partner/audit";
+import { deriveVatMode, vatModeAfterChange, type DerivedVatMode } from "@/lib/partner/vat";
 import { createPartnerSession, getPartner, revokeAllSessionsForPartner, revokeCurrentSession } from "@/lib/partner/session";
 import type { FormState } from "./formState";
 
@@ -42,7 +44,7 @@ const pwCode = (p: NonNullable<ReturnType<typeof passwordProblem>>) =>
 export async function registerAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const ip = requestIp();
   const raw: Record<string, unknown> = {};
-  for (const k of ["firstName", "lastName", "company", "country", "phone", "email", "language", "type", "password"]) raw[k] = field(fd, k);
+  for (const k of ["firstName", "lastName", "company", "country", "vatId", "phone", "email", "language", "type", "password"]) raw[k] = field(fd, k);
   raw.acceptAgreement = fd.get("acceptAgreement") === "on";
   const v = validateRegistration(raw);
   if (!v.ok) return { error: v.code, field: v.field };
@@ -74,6 +76,8 @@ export async function registerAction(_prev: FormState, fd: FormData): Promise<Fo
         data: {
           status: "PENDING", type: d.type, firstName: d.firstName, lastName: d.lastName, company: d.company,
           country: d.country, phone: d.phone, language: d.language,
+          // Decision 10: VAT number (normalised) and the VAT treatment it implies; never manual at sign-up.
+          vatId: d.vatId, vatMode: deriveVatMode({ country: d.country, vatId: d.vatId }), vatModeManual: false,
         },
         select: { id: true },
       });
@@ -219,16 +223,39 @@ export async function updateProfileAction(_prev: FormState, fd: FormData): Promi
   if (!me) redirect("/login");
   if (!L.profile.hit(me.partner.id)) return { error: "err.rateLimited" };
 
-  const v = validateProfile({
+  const raw = {
     firstName: field(fd, "firstName"),
     lastName: field(fd, "lastName"),
     company: field(fd, "company"),
+    vatId: field(fd, "vatId"),
     language: field(fd, "language"),
+  };
+  // Row-locked: the VAT rule needs the stored country, and the automatic VAT mode must not race a CRM change.
+  const outcome = await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ country: string; vatId: string | null; vatMode: DerivedVatMode; vatModeManual: boolean }[]>`
+      SELECT country, "vatId", "vatMode"::text AS "vatMode", "vatModeManual" FROM partners WHERE id = ${me.partner.id} FOR UPDATE`;
+    const current = rows[0];
+    if (!current) return { missing: true as const };
+    // Country is not editable by the partner: the VAT-number rule uses the stored one.
+    const v = validateProfile(raw, { country: current.country });
+    if (!v.ok) return { v };
+    const vatIdChanged = (current.vatId ?? null) !== v.data.vatId;
+    const vatMode = vatIdChanged ? vatModeAfterChange(current, { country: current.country, vatId: v.data.vatId }) : current.vatMode;
+    // Scoped to the session's partner — never an id from the form.
+    await tx.partner.update({ where: { id: me.partner.id }, data: { ...v.data, vatMode } });
+    if (vatIdChanged) {
+      await writePartnerAudit(me.partner, me.user, "partner.vat_id_changed", {
+        before: current.vatId ?? null,
+        after: v.data.vatId,
+        vatModeChanged: vatMode !== current.vatMode,
+        ...(vatMode !== current.vatMode ? { vatModeBefore: current.vatMode, vatModeAfter: vatMode } : {}),
+      }, tx);
+    }
+    return { v };
   });
+  if ("missing" in outcome) redirect("/login");
+  const v = outcome.v;
   if (!v.ok) return { error: v.code, field: v.field };
-
-  // Scoped to the session's partner — never an id from the form.
-  await prisma.partner.update({ where: { id: me.partner.id }, data: v.data });
   cookies().set(PARTNER_LANG_COOKIE, v.data.language, {
     maxAge: 60 * 60 * 24 * 365, sameSite: "lax", path: "/", httpOnly: false, secure: process.env.NODE_ENV === "production",
   });

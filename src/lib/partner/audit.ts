@@ -8,8 +8,9 @@ export async function writePartnerAudit(
   user: { email: string },
   action: string,
   detail?: Record<string, unknown>,
+  db: Prisma.TransactionClient = prisma,
 ): Promise<void> {
-  await prisma.adminAuditLog.create({
+  await db.adminAuditLog.create({
     data: {
       actorId: null,
       actorName: `Partner: ${partnerDisplayName(partner)}`,

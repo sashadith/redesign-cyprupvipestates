@@ -33,7 +33,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         manager: { select: { name: true } },
         users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true, emailVerifiedAt: true } },
         acceptances: { orderBy: { acceptedAt: "desc" }, take: 1, select: { version: true } },
-        bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true,
+        bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true, vatModeManual: true, vatId: true,
       },
     }),
     prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -57,7 +57,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
     agreement: p.acceptances[0]?.version ?? null,
     handoverShare: String(Number(p.handoverShare)), fixShare: String(Number(p.fixShare)), trustMode: p.trustMode,
     refCode: p.refCode, managerUserId: p.managerUserId, managerName: p.manager?.name ?? null,
-    vatMode: p.vatMode, bank: bankOf(p),
+    vatMode: p.vatMode, vatModeManual: p.vatModeManual, vatId: p.vatId, bank: bankOf(p),
   }));
   // Pending: verified first, then unverified; each oldest first (query is already oldest first, sort is stable).
   if (tab.key === "pending") rows.sort((a, b) => Number(b.verified) - Number(a.verified));

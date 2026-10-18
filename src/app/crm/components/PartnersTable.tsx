@@ -2,20 +2,24 @@
 import { useState, useTransition } from "react";
 import type { PartnerType } from "@prisma/client";
 import {
-  approvePartnerAction, reactivatePartnerAction, revealBankDetailsAction, suspendPartnerAction, updatePartnerTermsAction, updatePartnerVatModeAction,
+  approvePartnerAction, reactivatePartnerAction, revealBankDetailsAction, suspendPartnerAction, updatePartnerTermsAction, updatePartnerVatIdAction, updatePartnerVatModeAction,
 } from "../partners/actions";
 import { VAT_MODES, type PartnerBankView, type VatModeValue } from "@/lib/crm/payoutRules";
 import type { BankDetails } from "@/lib/partner/bank";
+import { deriveVatMode } from "@/lib/partner/vat";
 import { useToast } from "./Toast";
 
 export type PartnerRow = {
   id: string; status: "PENDING" | "ACTIVE" | "SUSPENDED"; type: PartnerType; name: string; company: string | null; country: string; language: string;
   email: string; verified: boolean; registered: string; agreement: string | null;
   handoverShare: string; fixShare: string; trustMode: boolean; refCode: string | null; managerUserId: string | null; managerName: string | null;
-  vatMode: VatModeValue; bank: PartnerBankView;
+  vatMode: VatModeValue; vatModeManual: boolean; vatId: string | null; bank: PartnerBankView;
 };
 
 const VAT_LABEL: Record<VatModeValue, string> = { NONE: "No VAT", CY_VAT: "CY VAT 19%", REVERSE_CHARGE: "Reverse charge" };
+const vatModeText = (r: Pick<PartnerRow, "vatMode" | "vatModeManual">) =>
+  `${VAT_LABEL[r.vatMode]} (${r.vatModeManual ? "set manually" : "automatic"})`;
+type VatChoice = VatModeValue | "AUTO";
 
 // Record<PartnerType, …>: a new enum value fails the type check until it gets a label.
 const TYPE_LABEL: Record<PartnerType, string> = {
@@ -62,12 +66,20 @@ function BankBadges({ bank }: { bank: PartnerBankView }) {
 function BankPanel({ row, canReveal }: { row: PartnerRow; canReveal: boolean }) {
   const toast = useToast();
   const [pending, start] = useTransition();
-  const [vat, setVat] = useState<VatModeValue>(row.vatMode);
+  const initialVat: VatChoice = row.vatModeManual ? row.vatMode : "AUTO";
+  const [vat, setVat] = useState<VatChoice>(initialVat);
+  const [vatId, setVatId] = useState(row.vatId ?? "");
+  // What "Automatic" resolves to now; lets the office re-apply it when the stored mode is stale.
+  const autoMode = deriveVatMode({ country: row.country, vatId: row.vatId });
   // Full details live only in this component's state while shown; "Hide" drops them.
   const [revealed, setRevealed] = useState<BankDetails | null>(null);
   const b = row.bank;
   const saveVat = () => start(async () => {
     const r = await updatePartnerVatModeAction(row.id, vat);
+    if ("error" in r) toast.show(r.error, "error"); else toast.show(r.notice ?? "Saved");
+  });
+  const saveVatId = () => start(async () => {
+    const r = await updatePartnerVatIdAction(row.id, vatId);
     if ("error" in r) toast.show(r.error, "error"); else toast.show(r.notice ?? "Saved");
   });
   const reveal = () => start(async () => {
@@ -94,12 +106,19 @@ function BankPanel({ row, canReveal }: { row: PartnerRow; canReveal: boolean }) 
       )}
       <div className="crm-pt-bankactions">
         <fieldset disabled={pending} className="crm-pt-terms crm-pt-vat">
-          <label><span>VAT on credit notes</span>
-            <select value={vat} onChange={(e) => setVat(e.target.value as VatModeValue)}>
-              {VAT_MODES.map((m) => <option key={m} value={m}>{VAT_LABEL[m]}</option>)}
+          <label><span>VAT number</span>
+            <input value={vatId} onChange={(e) => setVatId(e.target.value)} maxLength={40} spellCheck={false} autoComplete="off" placeholder={`e.g. ${row.country === "GR" ? "EL" : row.country}123456789`} />
+          </label>
+          <button type="button" className="crm-btn" onClick={saveVatId} disabled={vatId.trim() === (row.vatId ?? "")}>Save VAT number</button>
+        </fieldset>
+        <fieldset disabled={pending} className="crm-pt-terms crm-pt-vat">
+          <label><span>VAT on credit notes · now {vatModeText(row)}</span>
+            <select value={vat} onChange={(e) => setVat(e.target.value as VatChoice)}>
+              <option value="AUTO">Automatic: {VAT_LABEL[autoMode]} (from country and VAT number)</option>
+              {VAT_MODES.map((m) => <option key={m} value={m}>{VAT_LABEL[m]} (set manually)</option>)}
             </select>
           </label>
-          <button type="button" className="crm-btn" onClick={saveVat} disabled={vat === row.vatMode}>Save VAT mode</button>
+          <button type="button" className="crm-btn" onClick={saveVat} disabled={vat === initialVat && !(vat === "AUTO" && autoMode !== row.vatMode)}>Save VAT mode</button>
         </fieldset>
         {canReveal && b.state === "ok" && (
           revealed
@@ -129,6 +148,7 @@ function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: st
           <b>{row.name}</b>
           {row.company && <span>{row.company}</span>}
           <span>{TYPE_LABEL[row.type]} · {row.country} · {row.language.toUpperCase()}</span>
+          <span>VAT no. {row.vatId ?? "none"}</span>
         </div>
         <div className="crm-pt-mail">
           <span>{row.email}</span>
@@ -142,7 +162,7 @@ function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: st
           <div className="crm-pt-meta">
             <span>Handover {row.handoverShare}% · Fix {row.fixShare}%</span>
             <span>Trust: {row.trustMode ? "on" : "off"} · Manager: {row.managerName ?? "none"}</span>
-            <span>Ref: {row.refCode ?? "none"} · VAT: {VAT_LABEL[row.vatMode]}</span>
+            <span>Ref: {row.refCode ?? "none"} · VAT: {vatModeText(row)}</span>
             <span className="crm-pt-badges"><BankBadges bank={row.bank} /></span>
           </div>
         )}

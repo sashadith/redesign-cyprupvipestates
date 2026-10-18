@@ -128,14 +128,15 @@ test("agreement: version and a text for every locale, no Hebrew", () => {
 
 test("validateProfile: same rules as registration, locked fields refused", () => {
   const good = { firstName: " Anna ", lastName: "Meier", company: "", language: "de" };
-  const r = validateProfile(good);
+  const ctx = { country: "DE" };
+  const r = validateProfile(good, ctx);
   assert.ok(r.ok && r.data.firstName === "Anna" && r.data.company === null && r.data.language === "de");
   const code = (x: ReturnType<typeof validateProfile>) => (x.ok ? "ok" : `${x.field}:${x.code}`);
-  assert.equal(code(validateProfile({ ...good, firstName: "" })), "firstName:err.firstName");
-  assert.equal(code(validateProfile({ ...good, lastName: "x".repeat(81) })), "lastName:err.lastName");
-  assert.equal(code(validateProfile({ ...good, company: "x".repeat(121) })), "company:err.company");
-  assert.equal(code(validateProfile({ ...good, language: "he" })), "language:err.language");
-  assert.equal(code(validateProfile({ ...good, phone: "+1 555 0100" })), "phone:err.unknownField");
-  assert.equal(code(validateProfile({ ...good, partnerId: "x" })), "partnerId:err.unknownField");
-  assert.equal(code(validateProfile(null)), "_:err.invalid");
+  assert.equal(code(validateProfile({ ...good, firstName: "" }, ctx)), "firstName:err.firstName");
+  assert.equal(code(validateProfile({ ...good, lastName: "x".repeat(81) }, ctx)), "lastName:err.lastName");
+  assert.equal(code(validateProfile({ ...good, company: "x".repeat(121) }, ctx)), "company:err.company");
+  assert.equal(code(validateProfile({ ...good, language: "he" }, ctx)), "language:err.language");
+  assert.equal(code(validateProfile({ ...good, phone: "+1 555 0100" }, ctx)), "phone:err.unknownField");
+  assert.equal(code(validateProfile({ ...good, partnerId: "x" }, ctx)), "partnerId:err.unknownField");
+  assert.equal(code(validateProfile(null, ctx)), "_:err.invalid");
 });
