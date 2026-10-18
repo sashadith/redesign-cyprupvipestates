@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { partnerRewritePath } from "@/lib/partner/host";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
@@ -396,6 +397,15 @@ export function nestedCanonicalFor(pathname: string): string | null {
 }
 
 export default async function middleware(request: NextRequest) {
+  // Partner portal host: rewrite into the internal /partner-portal segment and skip all
+  // locale logic. The main host must never reach that segment.
+  const partnerTarget = partnerRewritePath(request.headers.get("host"), request.nextUrl.pathname, process.env);
+  if (partnerTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = partnerTarget === "block" ? "/_gated-locale-404" : partnerTarget;
+    return NextResponse.rewrite(url);
+  }
+
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
   // launch): answer 404 instead of letting next-intl treat "he" as a plain
   // path segment and the singlepage catch-all serve English content at a
