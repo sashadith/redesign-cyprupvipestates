@@ -8,6 +8,9 @@ import { visibleName } from "./clientDto";
 import { creditNoteWhere } from "./commissions";
 import { pickPartnerLocale } from "./i18n";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
+import { buildTelegramNotification, routeNotification, type TelegramNotificationInput } from "./telegram";
+import { sendPartnerTelegram } from "./telegramApi";
+import { PARTIAL_PREFIX, blockedFallbackToEmail, deliveryOutcome, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
   INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildPayoutEmail, buildStageEmail, clientLink,
   commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate,
@@ -19,6 +22,8 @@ export { notifyStartFromEnv };
 const LOOKBACK_MS = 7 * 86_400_000;
 const INTERACTION_CAP = 1000;
 const CLAIM_SCAN_CAP = 5000;
+/** Skip-counter key for rows closed because the partner's chat blocked the bot and no e-mail was allowed. */
+const TELEGRAM_BLOCKED = "telegram blocked";
 
 export type CollectResult = { scanned: number; pending: number; collapsed: number; settlingLeads: number; inserted: number };
 
@@ -72,7 +77,15 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
 
 export type SendResult = { sent: number; skipped: Record<string, number>; failed: number; dead: number; errors: string[]; stoppedEarly?: string };
 
-type Outcome = { skip: string } | { mail: BuiltEmail; to: string };
+/** What to deliver for one row: e-mail and/or Telegram (routeNotification), plus an e-mail fallback for a blocked chat. */
+type Delivery = {
+  partnerId: string;
+  email: { to: string; mail: BuiltEmail } | null;
+  telegram: { chatId: string; html: string } | null;
+  /** E-mail allowed for this row but not routed (the partner chose Telegram only): used when the chat turns out blocked. */
+  fallbackEmail: { to: string; mail: BuiltEmail } | null;
+};
+type Outcome = { skip: string } | Delivery;
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
@@ -81,25 +94,32 @@ type OutboxRow = {
   payload: unknown; createdAt: Date;
 };
 
-/** Decides what to do with one outbox row: a reason to drop it, or the mail to send. */
+/** Decides what to do with one outbox row: a reason to drop it, or what to send on which channel(s). */
 async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Promise<Outcome> {
   if (beforeStart(row, start)) return { skip: "before start" };
   if (NOT_IMPLEMENTED_KINDS.includes(row.kind)) return { skip: NOT_IMPLEMENTED_ERROR }; // before any gate: no claim/partner lookups
   const partner = await prisma.partner.findUnique({
     where: { id: row.partnerId },
     select: {
-      status: true, firstName: true, language: true, emailNotifications: true,
+      status: true, firstName: true, language: true, emailNotifications: true, notifyChannel: true, telegramChatId: true,
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
     },
   });
   if (!partner) return { skip: "partner missing" };
   if (partner.status === "SUSPENDED") return { skip: "suspended" };
   if (partner.status !== "ACTIVE") return { skip: "pending" };
-  const to = partner.users[0]?.email?.trim();
-  if (!to) return { skip: "no recipient" };
-  // Switched off in the profile: the row is closed as sent with error "opted out" (never mailed later).
-  const optedOut = optOutGate(row.kind, partner.emailNotifications);
-  if (optedOut) return { skip: optedOut };
+  const to = partner.users[0]?.email?.trim() || null;
+  const chatId = partner.telegramChatId?.trim() || null;
+  // Channel(s) per Decision 2. The profile switch (3d) suppresses STAGE/MESSAGE e-mail only, never Telegram.
+  const route = routeNotification({ kind: row.kind, notifyChannel: partner.notifyChannel, chatLinked: !!chatId, emailNotifications: partner.emailNotifications });
+  const emailAllowed = !!to && !optOutGate(row.kind, partner.emailNotifications);
+  const sendEmailToo = route.email && !!to;
+  const sendTelegram = route.telegram && !!chatId;
+  if (!sendEmailToo && !sendTelegram) {
+    // Switched off in the profile: the row is closed as sent with error "opted out" (never mailed later).
+    const optedOut = optOutGate(row.kind, partner.emailNotifications);
+    return { skip: optedOut ?? "no recipient" };
+  }
 
   const claim = row.claimId
     ? await prisma.partnerClaim.findUnique({
@@ -121,6 +141,13 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
 
   const locale = pickPartnerLocale({ partnerLanguage: partner.language });
   const common = { partnerFirstName: partner.firstName, clientName: visibleName(claim), link: clientLink(base, claim.id) };
+  const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
+  const deliver = (mail: BuiltEmail, tg: TelegramNotificationInput): Delivery => ({
+    partnerId: row.partnerId,
+    email: sendEmailToo && to ? { to, mail } : null,
+    telegram: sendTelegram && chatId ? { chatId, html: buildTelegramNotification(locale, tg) } : null,
+    fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
+  });
 
   // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
   switch (row.kind) {
@@ -129,12 +156,15 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       const stageKey = stageKeyFor(toStatus);
       if (!stageKey) return { skip: "invalid status" };
       const lastMailed = await prisma.partnerNotification.findFirst({
-        where: { claimId: claim.id, kind: "STAGE", sentAt: { not: null }, error: null, id: { not: row.id } },
+        where: {
+          claimId: claim.id, kind: "STAGE", sentAt: { not: null }, id: { not: row.id },
+          OR: [{ error: null }, { error: { startsWith: PARTIAL_PREFIX } }],
+        },
         orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
         select: { payload: true },
       });
       if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
-      return { to, mail: buildStageEmail(locale, { ...common, stageKey }) };
+      return deliver(buildStageEmail(locale, { ...common, stageKey }), { ...tgCommon, kind: "STAGE", stageKey });
     }
     case "MESSAGE": {
       const messageId = messageIdFromRefKey(row.refKey);
@@ -145,10 +175,13 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
           })
         : null;
       if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== claim.leadId) return { skip: "message missing" };
-      return { to, mail: buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }) };
+      return deliver(
+        buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }),
+        { ...tgCommon, kind: "MESSAGE", messageBody: msg.body },
+      );
     }
     case "CLAIM_OUTCOME":
-      return { to, mail: buildClaimOutcomeEmail(locale, { ...common, accepted }) };
+      return deliver(buildClaimOutcomeEmail(locale, { ...common, accepted }), { ...tgCommon, kind: "CLAIM_OUTCOME", accepted });
     case "PAYOUT": {
       const creditNoteId = obj(row.payload).creditNoteId;
       const note = typeof creditNoteId === "string" && creditNoteId
@@ -162,24 +195,57 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         : null;
       if (!note || note.deal.leadId !== claim.leadId || payoutDealIdFromRefKey(row.refKey) !== note.dealId) return { skip: "credit note missing" };
       const dev = note.deal.development;
-      return {
-        to,
-        mail: buildPayoutEmail(locale, {
+      const amount = formatPayoutAmount(locale, note.totalAmount);
+      return deliver(
+        buildPayoutEmail(locale, {
           ...common,
           link: commissionsLink(base),
           project: dev ? dev.override?.alias?.trim() || dev.publicName : null,
           unit: note.deal.unitLabel,
-          amount: formatPayoutAmount(locale, note.totalAmount),
+          amount,
           creditNoteNumber: note.number,
         }),
-      };
+        { ...tgCommon, kind: "PAYOUT", url: commissionsLink(base), amount, creditNoteNumber: note.number },
+      );
     }
     case "MATCH":
     case "PRESENTATION_OPENED":
-      return { skip: NOT_IMPLEMENTED_ERROR }; // Tasks 3-5 implement these; never fall through to another kind's builder
+      return { skip: NOT_IMPLEMENTED_ERROR }; // Tasks 4-5 implement these; never fall through to another kind's builder
     default:
       return unhandledKind(row.kind);
   }
+}
+
+/**
+ * Sends one prepared row on its channel(s). A blocked chat (the partner blocked the bot) is unlinked —
+ * only if it is still the partner's chat — and the row is e-mailed instead when allowed.
+ */
+async function deliverRow(d: Delivery, refKey: string, errors: string[]): Promise<DeliveryOutcome> {
+  const results: { email?: ChannelResult; telegram?: ChannelResult } = {};
+  if (d.telegram) {
+    const r = await sendPartnerTelegram(d.telegram.chatId, d.telegram.html);
+    results.telegram = r.ok ? { ok: true } : { ok: false, error: truncateError(`${r.status} ${r.description}`), blocked: r.blocked };
+    if (!r.ok && r.blocked) {
+      await prisma.partner
+        .updateMany({
+          where: { id: d.partnerId, telegramChatId: d.telegram.chatId },
+          data: { telegramChatId: null, telegramLinkedAt: null, notifyChannel: "EMAIL" },
+        })
+        .catch((e) => errors.push(`${refKey}: could not unlink blocked chat: ${truncateError(e)}`));
+    }
+  }
+  const tg = results.telegram;
+  const telegramBlocked = !!tg && !tg.ok && tg.blocked === true;
+  const email = d.email ?? (blockedFallbackToEmail({ telegramBlocked, emailAttempted: false, emailAllowed: !!d.fallbackEmail }) ? d.fallbackEmail : null);
+  if (email) {
+    try {
+      await sendEmail({ to: email.to, subject: email.mail.subject, text: email.mail.text, html: email.mail.html });
+      results.email = { ok: true };
+    } catch (e) {
+      results.email = { ok: false, error: truncateError(e) };
+    }
+  }
+  return deliveryOutcome(results);
 }
 
 /** Advisory-lock key of the partner-notify run ("PNOT"). */
@@ -209,7 +275,9 @@ export async function withNotifyLock<T>(fn: () => Promise<T>): Promise<T | null>
  * Each row is claimed with a guarded update (sentAt: null → now, error "sending") before anything is
  * mailed, so two runs can never mail the same row. A failed send releases the row (sentAt null,
  * failedAt, error) and charges an attempt; due again after the backoff (retryAt), up to MAX_ATTEMPTS.
- * Three consecutive transport errors stop the batch without charging those rows. Rows left at "sending"
+ * Delivery goes to the partner's channel(s) (deliverRow): sent when at least one channel succeeded; a row
+ * whose only channel was a chat that blocked the bot is closed. When no channel got through, the row is
+ * released as above. Three consecutive transport errors stop the batch without charging those rows. Rows left at "sending"
  * for over an hour (a run died mid-send) are first released as a failed attempt.
  */
 export async function sendPendingNotifications(now: Date, start: Date, limit = 50): Promise<SendResult> {
@@ -271,22 +339,30 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
       result.skipped[o.skip] = (result.skipped[o.skip] ?? 0) + 1;
       continue;
     }
-    try {
-      await sendEmail({ to: o.to, subject: o.mail.subject, text: o.mail.text, html: o.mail.html });
-    } catch (e) {
-      await release(row, truncateError(e), false);
+    const out = await deliverRow(o, row.refKey, result.errors);
+    if (out.state === "closed") {
+      // Nothing went out and nothing can (the only channel was a chat that blocked the bot): done, with the reason.
+      await prisma.partnerNotification
+        .update({ where: { id: row.id }, data: { sentAt: new Date(), error: truncateError(out.error) } })
+        .catch((e) => result.errors.push(`${row.refKey}: could not record outcome: ${truncateError(e)}`));
+      result.skipped[TELEGRAM_BLOCKED] = (result.skipped[TELEGRAM_BLOCKED] ?? 0) + 1;
+      continue;
+    }
+    if (out.state === "failed") {
+      await release(row, truncateError(out.error), false);
       if (streak.fail(row.id)) {
         tripped = true;
-        result.stoppedEarly = "mail transport failing";
+        result.stoppedEarly = "delivery transport failing";
         break;
       }
       continue;
     }
     result.sent++;
+    if (out.error) result.errors.push(`${row.refKey}: ${out.error}`);
     await charge(streak.succeed());
-    // The mail went out: a failure to clear the marker must not turn into a resend.
+    // It went out on at least one channel: a failure to clear the marker must not turn into a resend.
     try {
-      await prisma.partnerNotification.update({ where: { id: row.id }, data: { sentAt: new Date(), error: null } });
+      await prisma.partnerNotification.update({ where: { id: row.id }, data: { sentAt: new Date(), error: out.error ? truncateError(out.error) : null } });
     } catch (e) {
       console.error("[partner-notify] sent but could not mark", row.refKey, truncateError(e));
     }

@@ -22,6 +22,8 @@ export const partnerLimits = {
   submitIp: makeThrottle(60, HOUR),
   /** Bank-detail saves (phase 3c): every attempt counts, wrong passwords included. */
   bankPartner: makeThrottle(5, HOUR),
+  /** Telegram link codes (phase 3e): per partner. */
+  telegramCode: makeThrottle(5, HOUR),
 };
 
 /** Throttle key for a request without a usable client IP (all such requests share one bucket). */

@@ -10,7 +10,8 @@ import {
 } from "../actions";
 import { saveBankDetailsAction } from "../bankActions";
 import { savePartnerSettingsAction } from "../settingsActions";
-import { isErr, isOk, type FormState, type SettingsState, type SubmitState } from "../formState";
+import { createTelegramCodeAction, disconnectTelegramAction } from "../telegramActions";
+import { isErr, isOk, type FormState, type NotifyChannelValue, type SettingsState, type SubmitState, type TelegramCodeState } from "../formState";
 import { vatIdRequired, vatIdSoftExempt } from "@/lib/partner/vat";
 
 const LANG_NAMES = new Map<string, string>([
@@ -356,15 +357,23 @@ export function PasswordForm({ t }: { t: PartnerDict }) {
 // ─── Email settings (phase 3d) ───────────────────────────────────────────────
 
 type SettingsValues = { emailNotifications: boolean; digestOptIn: boolean };
+/** Present only while the partner bot is configured; Telegram/Both are selectable only with a linked chat. */
+type ChannelValues = { channel: NotifyChannelValue; linked: boolean };
+const CHANNELS: NotifyChannelValue[] = ["EMAIL", "TELEGRAM", "BOTH"];
 
-export function SettingsForm({ t, values }: { t: PartnerDict; values: SettingsValues }) {
+export function SettingsForm({ t, values, telegram }: { t: PartnerDict; values: SettingsValues; telegram?: ChannelValues }) {
   const S = t.profileSettings;
+  const C = t.telegram;
   const [state, action] = useFormState<SettingsState, FormData>(savePartnerSettingsAction, null);
-  // After a save the stored values win (the key remounts the checkboxes with them).
-  const shown = state && "ok" in state ? { emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn } : values;
+  // After a save the stored values win (the key remounts the inputs with them).
+  const shown = state && "ok" in state
+    ? { emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn, channel: state.notifyChannel }
+    : { ...values, channel: telegram?.channel ?? "EMAIL" };
+  // An unlinked chat cannot be a channel: show Email (the sender falls back to it anyway).
+  const channel = telegram && !telegram.linked ? "EMAIL" : shown.channel;
   const err = state && "error" in state ? state : null;
   return (
-    <form action={action} className="pp-form" key={`${shown.emailNotifications}-${shown.digestOptIn}`}>
+    <form action={action} className="pp-form" key={`${shown.emailNotifications}-${shown.digestOptIn}-${channel}`}>
       {err && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, err.error), err.vars ?? {})}</p>}
       <label className="pp-check">
         <input type="checkbox" name="emailNotifications" defaultChecked={shown.emailNotifications} aria-describedby="set-notif-hint" />
@@ -376,11 +385,66 @@ export function SettingsForm({ t, values }: { t: PartnerDict; values: SettingsVa
         <span>{S.digestOptIn}</span>
         <small id="set-digest-hint" className="pp-hint pp-check-hint">{S.digestOptInHint}</small>
       </label>
+      {telegram && (
+        <fieldset className="pp-fieldset" aria-describedby={telegram.linked ? undefined : "set-channel-hint"}>
+          <legend>{C.card.channelTitle}</legend>
+          <div className="pp-radios pp-radios-3">
+            {CHANNELS.map((c) => (
+              <label key={c} className="pp-radio">
+                <input type="radio" name="notifyChannel" value={c} defaultChecked={c === channel} disabled={c !== "EMAIL" && !telegram.linked} />
+                <span>{C.channel[c]}</span>
+              </label>
+            ))}
+          </div>
+          {!telegram.linked && <small id="set-channel-hint" className="pp-hint">{C.card.channelHint}</small>}
+        </fieldset>
+      )}
       <div className="pp-actions">
         <Submit wide={false}>{t.profile.save}</Submit>
         {state && "ok" in state && <span className="pp-saved" role="status">{S.saved}</span>}
       </div>
     </form>
+  );
+}
+
+// ─── Telegram connection (phase 3e) ──────────────────────────────────────────
+
+/**
+ * Connect / disconnect. The code and deep link come back from the action once and live only in this
+ * component's state: a reload never shows them again. The chat id never reaches the client.
+ */
+export function TelegramCard({ t, available, linkedAt }: { t: PartnerDict; available: boolean; linkedAt: string | null }) {
+  const C = t.telegram.card;
+  const [state, action] = useFormState<TelegramCodeState, FormData>(createTelegramCodeAction, null);
+  if (!available && !linkedAt) return <p className="pp-alert pp-alert-neutral" role="status">{C.notAvailable}</p>;
+  if (linkedAt) {
+    return (
+      <div className="pp-tg">
+        <p className="pp-tg-linked"><span className="pp-tg-dot" aria-hidden="true" />{fill(C.linked, { date: linkedAt })}</p>
+        <form action={disconnectTelegramAction}>
+          <Submit wide={false}>{C.disconnect}</Submit>
+        </form>
+      </div>
+    );
+  }
+  const code = state && "ok" in state ? state : null;
+  return (
+    <div className="pp-tg">
+      {isErr(state) && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, state.error), state.vars ?? {})}</p>}
+      {code ? (
+        <div className="pp-tg-code" role="status">
+          <p>{C.linkIntro}</p>
+          <p><a className="pp-btn" href={code.link} target="_blank" rel="noopener noreferrer">{C.connect}</a></p>
+          <p>{C.codeIntro}</p>
+          <p><code className="pp-tg-start">/start {code.code}</code></p>
+          <p className="pp-small pp-muted">{C.validity}</p>
+        </div>
+      ) : (
+        <form action={action}>
+          <Submit wide={false}>{C.connect}</Submit>
+        </form>
+      )}
+    </div>
   );
 }
 

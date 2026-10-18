@@ -8,6 +8,8 @@ import { decryptBankDetails } from "@/lib/partner/bankCrypto";
 import type { BankDetails } from "@/lib/partner/bank";
 import { PartnersTable, type PartnerRow } from "../components/PartnersTable";
 import { ToastProvider } from "../components/Toast";
+import { PartnerTelegramPanel } from "../components/PartnerTelegramPanel";
+import { partnerBotConfigured } from "@/lib/partner/telegramApi";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +24,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
   if (!canAssignLeads(user)) redirect("/crm/today");
 
   const tab = TABS.find((t) => t.key === searchParams?.tab) ?? TABS[0];
-  const [counts, partners, managers] = await Promise.all([
+  const [counts, partners, managers, telegramLinked] = await Promise.all([
     prisma.partner.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.partner.findMany({
       where: { status: tab.status },
@@ -34,9 +36,11 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true, emailVerifiedAt: true } },
         acceptances: { orderBy: { acceptedAt: "desc" }, take: 1, select: { version: true } },
         bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true, vatModeManual: true, vatId: true,
+        telegramChatId: true, // mapped to a boolean below; the chat id never reaches the client
       },
     }),
     prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    user.isOwner ? prisma.partner.count({ where: { telegramChatId: { not: null } } }) : Promise.resolve(0),
   ]);
   const countOf = (s: string) => counts.find((c) => c.status === s)?._count._all ?? 0;
 
@@ -58,6 +62,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
     handoverShare: String(Number(p.handoverShare)), fixShare: String(Number(p.fixShare)), trustMode: p.trustMode,
     refCode: p.refCode, managerUserId: p.managerUserId, managerName: p.manager?.name ?? null,
     vatMode: p.vatMode, vatModeManual: p.vatModeManual, vatId: p.vatId, bank: bankOf(p),
+    telegramLinked: !!p.telegramChatId,
   }));
   // Pending: verified first, then unverified; each oldest first (query is already oldest first, sort is stable).
   if (tab.key === "pending") rows.sort((a, b) => Number(b.verified) - Number(a.verified));
@@ -77,6 +82,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
           </Link>
         ))}
       </nav>
+      {user.isOwner && <PartnerTelegramPanel configured={partnerBotConfigured()} linkedCount={telegramLinked} />}
       <ToastProvider>
         <PartnersTable rows={rows} managers={managers} canReveal={user.isOwner} />
       </ToastProvider>

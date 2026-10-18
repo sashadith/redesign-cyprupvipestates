@@ -499,6 +499,15 @@
 .crm-pt-bankdl dt { font-size: 12px; color: var(--muted); }
 .crm-pt-bankdl dd { margin: 2px 0 0; font-size: 13px; white-space: pre-line; overflow-wrap: anywhere; }
 .crm-pt-bankactions { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; }
+/* Partner Telegram bot panel (owner only, phase 3e) */
+.crm-pt-bot { margin: 0 0 16px; display: grid; gap: 12px; }
+.crm-pt-bot-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.crm-pt-bot-head h2 { margin: 0; font-size: 15px; }
+.crm-pt-bot-count { color: var(--muted); font-size: 12.5px; }
+.crm-pt-bot p { margin: 0; color: var(--muted); font-size: 13px; }
+.crm-pt-bot-status { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 18px; }
+.crm-pt-bot-status dt { font-size: 12px; color: var(--muted); }
+.crm-pt-bot-status dd { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .crm-pt-vat { border-top: 0; margin: 0; padding: 0; }
 .crm-pay-anyway { font-weight: 600; color: var(--warn); }
 .crm-pay-anyway input { accent-color: var(--accent); }

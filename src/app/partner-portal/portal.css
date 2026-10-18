@@ -456,3 +456,15 @@
 .pp-faq-item summary { font-weight: 600; }
 .pp-faq-item p { margin: 0; max-width: 72ch; color: var(--text-soft); }
 .pp-response { margin: -16px 0 28px; font: 400 1.0625rem / 1.4 var(--pp-display); color: var(--pp-bronze-ink); }
+
+/* Telegram connection (phase 3e) */
+.pp-tg { display: flex; flex-direction: column; gap: 12px; }
+.pp-tg-linked { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 600; color: var(--text); }
+.pp-tg-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pp-good); flex: none; }
+.pp-tg-code { padding: 16px 18px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--pp-card); }
+.pp-tg-code p { margin: 0 0 10px; }
+.pp-tg-code p:last-child { margin-bottom: 0; }
+.pp-tg-start { display: inline-block; padding: 6px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--text);
+  font: 600 1rem / 1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; user-select: all; word-break: break-all; }
+.pp-radios-3 { grid-template-columns: repeat(3, auto); justify-content: start; }
+@media (max-width: 640px) { .pp-radios-3 { grid-template-columns: 1fr; } }

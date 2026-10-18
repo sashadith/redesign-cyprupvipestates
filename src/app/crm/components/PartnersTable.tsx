@@ -14,6 +14,8 @@ export type PartnerRow = {
   email: string; verified: boolean; registered: string; agreement: string | null;
   handoverShare: string; fixShare: string; trustMode: boolean; refCode: string | null; managerUserId: string | null; managerName: string | null;
   vatMode: VatModeValue; vatModeManual: boolean; vatId: string | null; bank: PartnerBankView;
+  /** A Telegram chat is linked (never the chat id). */
+  telegramLinked: boolean;
 };
 
 const VAT_LABEL: Record<VatModeValue, string> = { NONE: "No VAT", CY_VAT: "CY VAT 19%", REVERSE_CHARGE: "Reverse charge" };
@@ -153,6 +155,7 @@ function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: st
         <div className="crm-pt-mail">
           <span>{row.email}</span>
           <span className={`crm-pill${row.verified ? " crm-pt-ok" : ""}`}>{row.verified ? "Verified" : "Not verified"}</span>
+          {row.telegramLinked && <span className="crm-pill crm-pt-ok" title="Telegram linked">Telegram</span>}
         </div>
         <div className="crm-pt-meta">
           <span>Registered {row.registered}</span>

@@ -5,7 +5,8 @@ import { ibanLast4 } from "@/lib/partner/bankFlow";
 import { loadBankDetails } from "@/lib/partner/bankStore";
 import { requirePartner } from "@/lib/partner/session";
 import { vatIdMissing } from "@/lib/partner/vat";
-import { BankForm, PasswordForm, ProfileForm, SettingsForm } from "../components/forms";
+import { partnerBotConfigured } from "@/lib/partner/telegramApi";
+import { BankForm, PasswordForm, ProfileForm, SettingsForm, TelegramCard } from "../components/forms";
 import { dateFmt } from "../components/portalBits";
 import { portalContext } from "../portalContext";
 
@@ -14,7 +15,8 @@ export default async function PartnerProfile() {
   const { t, locale } = await portalContext();
   const p = await prisma.partner.findUnique({
     where: { id: me.partner.id },
-    select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true },
+    select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true,
+      notifyChannel: true, telegramChatId: true, telegramLinkedAt: true },
   });
   if (!p) return null;
   const P = t.profile;
@@ -26,6 +28,10 @@ export default async function PartnerProfile() {
   const last4 = bank?.state === "ok" ? bank.ibanLast4 ?? ibanLast4(bank.details.iban) : null;
   const blockedUntil = bank?.state === "ok" && isPayoutBlocked(bank.blockedUntil, new Date()) ? bank.blockedUntil : null;
   const dates = dateFmt(locale);
+  // The chat id itself never leaves the server: the page only needs "linked since".
+  const botAvailable = partnerBotConfigured();
+  const linked = !!p.telegramChatId;
+  const linkedAt = linked ? dates.format(p.telegramLinkedAt ?? new Date()) : null;
   return (
     <div className="pp-stack">
       <section className="pp-card pp-card-wide">
@@ -80,9 +86,20 @@ export default async function PartnerProfile() {
         )}
       </section>
       {active && (
+        <section className="pp-panel pp-anchor" id="telegram" aria-labelledby="telegram-title">
+          <h2 className="pp-h3" id="telegram-title">{t.telegram.card.title}</h2>
+          <p className="pp-muted">{t.telegram.card.intro}</p>
+          <TelegramCard t={t} available={botAvailable} linkedAt={linkedAt} />
+        </section>
+      )}
+      {active && (
         <section className="pp-panel pp-anchor" id="settings" aria-labelledby="settings-title">
           <h2 className="pp-h3" id="settings-title">{t.profileSettings.title}</h2>
-          <SettingsForm t={t} values={{ emailNotifications: p.emailNotifications, digestOptIn: p.digestOptIn }} />
+          <SettingsForm
+            t={t}
+            values={{ emailNotifications: p.emailNotifications, digestOptIn: p.digestOptIn }}
+            telegram={botAvailable || linked ? { channel: p.notifyChannel, linked } : undefined}
+          />
         </section>
       )}
       <section className="pp-panel">

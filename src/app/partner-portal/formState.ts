@@ -12,5 +12,11 @@ export type SubmitOk = { ok: true; name: string; alreadyYours?: boolean };
 export type SubmitState = SubmitOk | FormErr | null;
 
 /** Profile email settings: the saved values come back so the form shows what is stored. */
-export type SettingsOk = { ok: true; emailNotifications: boolean; digestOptIn: boolean };
+export type SettingsOk = { ok: true; emailNotifications: boolean; digestOptIn: boolean; notifyChannel: NotifyChannelValue };
 export type SettingsState = SettingsOk | FormErr | null;
+
+export type NotifyChannelValue = "EMAIL" | "TELEGRAM" | "BOTH";
+
+/** Telegram link code: shown once (never stored in clear text, never re-displayed after a reload). */
+export type TelegramCodeOk = { ok: true; code: string; link: string };
+export type TelegramCodeState = TelegramCodeOk | FormErr | null;

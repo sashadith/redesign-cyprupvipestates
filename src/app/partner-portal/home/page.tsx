@@ -8,6 +8,7 @@ import { loadBankDetails } from "@/lib/partner/bankStore";
 import { ONBOARDING_DISMISS_COOKIE, onboardingFactsFrom, onboardingHref, onboardingSteps, onboardingVisible } from "@/lib/partner/onboarding";
 import { vatIdRequired } from "@/lib/partner/vat";
 import { myOverview } from "@/lib/partner/scope";
+import { partnerBotConfigured } from "@/lib/partner/telegramApi";
 import { requirePartner } from "@/lib/partner/session";
 import { CopyLink } from "../components/forms";
 import { CommissionFigures, ContactCard, dateFmt, tr, type Contact } from "../components/portalBits";
@@ -30,11 +31,12 @@ async function onboardingFor(partnerId: string, status: string) {
     prisma.partnerAgreementAcceptance.findFirst({ where: { partnerId }, select: { id: true } }),
     prisma.partnerClaim.findFirst({ where: { partnerId }, select: { id: true } }),
     loadBankDetails(partnerId),
-    prisma.partner.findUnique({ where: { id: partnerId }, select: { country: true, company: true, vatId: true } }),
+    prisma.partner.findUnique({ where: { id: partnerId }, select: { country: true, company: true, vatId: true, telegramChatId: true } }),
   ]);
   const bankComplete = bank.state === "ok" && bankDetailsComplete(bank.details) && !!bank.ibanLast4;
   const vatFacts = vat ? { required: vatIdRequired(vat), set: !!vat.vatId?.trim() } : undefined;
-  const o = onboardingSteps(onboardingFactsFrom({ status, hasAcceptance: !!acceptance, bankComplete, hasClaim: !!claim, vat: vatFacts }));
+  const telegram = { available: partnerBotConfigured(), linked: !!vat?.telegramChatId };
+  const o = onboardingSteps(onboardingFactsFrom({ status, hasAcceptance: !!acceptance, bankComplete, hasClaim: !!claim, vat: vatFacts, telegram }));
   return onboardingVisible(o, dismissed) ? o : null;
 }
 
