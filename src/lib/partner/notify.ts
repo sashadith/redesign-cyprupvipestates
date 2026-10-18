@@ -180,7 +180,7 @@ export function isUnchangedStage(toStatus: unknown, lastMailedToStatus: unknown)
  * acceptance, a stage change and a message only while the claim is effectively ACTIVE.
  */
 export function notificationGate(input: {
-  kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME";
+  kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME" | "PAYOUT";
   accepted: boolean;
   claim: { ownedByPartner: boolean; effective: EffectiveClaimState } | null;
 }): string | null {

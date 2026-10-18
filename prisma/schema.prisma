@@ -728,6 +728,7 @@ model User {
   dealsCreated Deal[] @relation("DealsCreated")
   managedPartners Partner[] @relation("PartnerManager")
   partnerMessagesAuthored PartnerMessage[] @relation("PartnerMessagesAuthored")
+  creditNotesIssued CreditNote[] @relation("CreditNotesIssued")
   id                     String               @id @default(uuid())
   email                  String               @unique
   password               String
@@ -2024,6 +2025,7 @@ model Deal {
   createdBy              User?            @relation("DealsCreated", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
+  creditNote             CreditNote?
 
   @@index([leadId])
   @@index([commissionStatus])
@@ -2078,6 +2080,12 @@ model Partner {
   claims         PartnerClaim[]
   messages       PartnerMessage[]
   notifications  PartnerNotification[]
+  bankDetailsEnc       String?
+  ibanLast4            String?
+  bankDetailsUpdatedAt DateTime?
+  ibanChangedAt        DateTime?
+  vatMode              PartnerVatMode @default(NONE)
+  creditNotes          CreditNote[]
   @@index([status])
   @@map("partners")
 }
@@ -2159,6 +2167,45 @@ enum PartnerNotificationKind {
   STAGE
   MESSAGE
   CLAIM_OUTCOME
+  PAYOUT
+}
+
+enum PartnerVatMode {
+  NONE
+  CY_VAT
+  REVERSE_CHARGE
+}
+
+model CreditNote {
+  id          String         @id @default(uuid())
+  number      String         @unique
+  year        Int
+  seq         Int
+  partnerId   String
+  partner     Partner        @relation(fields: [partnerId], references: [id], onDelete: Restrict)
+  dealId      String         @unique
+  deal        Deal           @relation(fields: [dealId], references: [id], onDelete: Restrict)
+  netAmount   Int
+  vatMode     PartnerVatMode
+  vatRate     Decimal?       @db.Decimal(5, 2)
+  vatAmount   Int
+  totalAmount Int
+  issuedAt    DateTime       @default(now())
+  issuedById  String?
+  issuedBy    User?          @relation("CreditNotesIssued", fields: [issuedById], references: [id], onDelete: SetNull)
+  pdf         Bytes
+  pdfSha256   String
+
+  @@unique([year, seq])
+  @@index([partnerId])
+  @@map("credit_notes")
+}
+
+model CreditNoteCounter {
+  year    Int @id
+  lastSeq Int @default(0)
+
+  @@map("credit_note_counters")
 }
 
 model PartnerMessage {

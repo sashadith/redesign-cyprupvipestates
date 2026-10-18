@@ -76,7 +76,7 @@ type Outcome = { skip: string } | { mail: BuiltEmail; to: string };
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
 type OutboxRow = {
-  id: string; kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME"; refKey: string; partnerId: string; claimId: string | null; leadId: string | null;
+  id: string; kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME" | "PAYOUT"; refKey: string; partnerId: string; claimId: string | null; leadId: string | null;
   payload: unknown; createdAt: Date;
 };
 
