@@ -78,3 +78,13 @@ test("buildBankChangedNotice: escaped, last 4 only, block date only on change", 
   assert.ok(n2.includes("25 Oct 2026"));
   assert.ok(!n2.includes(IBAN_B));
 });
+
+test("saveBankDetailsAction builds the partner mail inside the background job (a throwing base URL never fails a save)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const src = readFileSync(join(process.cwd(), "src/app/partner-portal/bankActions.ts"), "utf8");
+  const bg = src.indexOf('"bank changed mail"');
+  const build = src.indexOf("buildBankChangedEmail(asLocale");
+  assert.ok(bg > 0 && build > bg, "the mail is built after (inside) the inBackground call");
+  assert.ok(src.slice(bg, build).includes("(async () => {"), "inside an async job");
+});

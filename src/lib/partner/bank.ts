@@ -79,8 +79,9 @@ export function validateBankDetails(raw: unknown): BankDetailsResult {
   const iban = normaliseIban(r.iban);
 
   let bic: string | null = null;
-  if (r.bic !== undefined && r.bic !== null && str(r.bic) !== "") {
-    if (typeof r.bic !== "string" || !bicValid(r.bic)) return fail("bic", "err.bic");
+  if (r.bic !== undefined && r.bic !== null && typeof r.bic !== "string") return fail("bic", "err.bic");
+  if (typeof r.bic === "string" && r.bic.trim() !== "") {
+    if (!bicValid(r.bic)) return fail("bic", "err.bic");
     bic = r.bic.replace(/\s+/g, "").toUpperCase();
   }
 
@@ -91,8 +92,9 @@ export function validateBankDetails(raw: unknown): BankDetailsResult {
   if (!addr || addr.length > 300 || badLine(addr.replace(/\n/g, " "))) return fail("billingAddress", "err.billingAddress");
 
   let vatId: string | null = null;
-  if (r.vatId !== undefined && r.vatId !== null && str(r.vatId) !== "") {
-    if (typeof r.vatId !== "string" || !vatIdValid(r.vatId)) return fail("vatId", "err.vatId");
+  if (r.vatId !== undefined && r.vatId !== null && typeof r.vatId !== "string") return fail("vatId", "err.vatId");
+  if (typeof r.vatId === "string" && r.vatId.trim() !== "") {
+    if (!vatIdValid(r.vatId)) return fail("vatId", "err.vatId");
     vatId = r.vatId.replace(/[\s.-]+/g, "").toUpperCase();
   }
 

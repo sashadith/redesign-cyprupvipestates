@@ -55,8 +55,14 @@ export async function saveBankDetailsAction(_prev: FormState, fd: FormData): Pro
   await saveBankDetails(me.partner.id, next, changed, now);
 
   const last4 = ibanLast4(next.iban);
-  const mail = buildBankChangedEmail(asLocale(me.partner.language), { name: me.partner.firstName, ibanLast4: last4, changedAt: now });
-  inBackground("bank changed mail", sendEmail({ to: me.user.email, subject: mail.subject, text: mail.text, html: mail.html }));
+  // Built inside the background job: partnerBaseUrl() may throw on a misconfigured host, and the save already happened.
+  inBackground(
+    "bank changed mail",
+    (async () => {
+      const mail = buildBankChangedEmail(asLocale(me.partner.language), { name: me.partner.firstName, ibanLast4: last4, changedAt: now });
+      await sendEmail({ to: me.user.email, subject: mail.subject, text: mail.text, html: mail.html });
+    })(),
+  );
   inBackground(
     "bank changed notice",
     sendTelegramMessage(

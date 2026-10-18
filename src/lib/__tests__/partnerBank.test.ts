@@ -64,6 +64,13 @@ test("validateBankDetails: errors per field", () => {
   assert.equal(code({ billingAddress: "x".repeat(301) }), "billingAddress:err.billingAddress");
   assert.equal(code({ billingAddress: "a\u0007b" }), "billingAddress:err.billingAddress");
   assert.equal(code({ vatId: "123" }), "vatId:err.vatId");
+  // A non-string bic / vatId is an error, not silently dropped; null / undefined / blank stay "none".
+  assert.equal(code({ bic: 123 }), "bic:err.bic");
+  assert.equal(code({ bic: ["COBADEFF"] }), "bic:err.bic");
+  assert.equal(code({ vatId: 42 }), "vatId:err.vatId");
+  assert.equal(code({ vatId: { v: "CY12345678X" } }), "vatId:err.vatId");
+  assert.equal(code({ bic: null, vatId: undefined }), "ok");
+  assert.equal(code({ bic: "  ", vatId: " " }), "ok");
   assert.equal(code({ extra: 1 }), "extra:err.unknownField");
   assert.equal(validateBankDetails(null).ok, false);
 });
