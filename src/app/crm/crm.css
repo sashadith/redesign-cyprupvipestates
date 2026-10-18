@@ -138,3 +138,26 @@
 .crm-ib .sug select { margin-left: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: 500 12.5px var(--body); background: var(--panel); color: var(--ink); }
 .crm-empty { text-align: center; color: var(--muted); padding: 32px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Team screen */
+.crm-team { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.crm-team-row { display: grid; grid-template-columns: minmax(180px, 1.1fr) 1.4fr auto 1.3fr; gap: 14px 18px; align-items: start; }
+.crm-team-who { display: grid; gap: 2px; min-width: 0; }
+.crm-team-who span { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.crm-team-load { font-variant-numeric: tabular-nums; }
+.crm-team-rights { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.crm-team-langs { display: flex; gap: 6px; }
+.crm-team-spec { display: grid; gap: 6px; }
+.crm-team-spec label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.crm-team-spec input { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: 500 13px var(--body); background: var(--panel); color: var(--ink); }
+.crm-team-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.crm-pill { display: inline-block; border: 1px solid var(--line); background: var(--bg); color: var(--muted); border-radius: 99px; padding: 3px 10px; font: 600 12px var(--body); }
+.crm-switch { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 4px 0; font: 600 13px var(--body); color: var(--ink); cursor: pointer; }
+.crm-switch-track { width: 34px; height: 20px; border-radius: 99px; background: var(--line); position: relative; flex: none; transition: background .15s; }
+.crm-switch-track i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel); transition: transform .15s; }
+.crm-switch.on .crm-switch-track { background: var(--accent); }
+.crm-switch.on .crm-switch-track i { transform: translateX(14px); }
+.crm-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.crm-team-spec input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (max-width: 900px) { .crm-team-row { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .crm-switch-track, .crm-switch-track i { transition: none; } }

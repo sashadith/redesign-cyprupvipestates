@@ -19,6 +19,7 @@ export function Shell({ user, children }: Props) {
               Inbox {user.inboxCount > 0 && <span className="n">{user.inboxCount}</span>}
             </Link>
           )}
+          {user.canAssign && <Link href="/crm/team" className={on("/crm/team")}>Team</Link>}
           <Link href="/admin/crm">Old CRM</Link>
         </nav>
         <div className="crm-me"><span>{user.name}</span><b aria-hidden="true">{initials}</b></div>
@@ -28,6 +29,7 @@ export function Shell({ user, children }: Props) {
         <Link href="/admin/crm/new" className="plus">＋ New lead</Link>
         <Link href="/crm/pipeline">Pipeline</Link>
         {user.canAssign && <Link href="/crm/inbox">Inbox</Link>}
+        {user.canAssign && <Link href="/crm/team">Team</Link>}
       </nav>
     </>
   );
