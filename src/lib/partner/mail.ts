@@ -1,4 +1,4 @@
-/** Partner portal e-mails — pure builders (no I/O). Plain text + minimal HTML, no tracking. */
+/** Partner portal e-mails — pure builders (no I/O). Plain text + minimal HTML (CI-styled, logo only), no tracking. */
 import { dict, fmt, type PartnerLocale } from "./i18n";
 
 export type BuiltEmail = { subject: string; text: string; html: string };
@@ -39,17 +39,23 @@ function render(p: Parts): BuiltEmail {
   const text = [p.greeting, p.intro, `${p.button}: ${p.link}`, ...p.notes, p.signature]
     .filter((x): x is string => !!x)
     .join("\n\n");
+  // CI (light): paper #F5F1E8 page, #FBF9F3 card, ink #221C15 text, bronze #8E6B3D button (white label 4.9:1),
+  // champagne #C29A5E only as a decorative rule. Inline styles + a solid rule: mail clients drop gradients and <style>.
   const para = (s: string) => `<p style="margin:0 0 16px">${escapeHtml(s).replace(/\n/g, "<br>")}</p>`;
+  const logo = `${partnerBaseUrl()}/crm/brand/logo-full.png`;
   const html =
-    `<!doctype html><html><body style="margin:0;padding:24px;background:#eef2f1;font-family:Arial,Helvetica,sans-serif;color:#10302b;font-size:15px;line-height:1.5">` +
-    `<div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #d5dedb;border-radius:14px;padding:24px">` +
+    `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F5F1E8;font-family:Arial,Helvetica,sans-serif;color:#221C15;font-size:15px;line-height:1.6">` +
+    `<div style="max-width:520px;margin:0 auto">` +
+    `<div style="text-align:center;padding:0 0 24px"><img src="${escapeHtml(logo)}" width="250" height="35" alt="Cyprus VIP Estates" style="display:inline-block;border:0;width:250px;height:35px"></div>` +
+    `<div style="background:#FBF9F3;border:1px solid #E4DCCB;border-radius:16px;padding:32px 28px">` +
     (p.greeting ? para(p.greeting) : "") +
     para(p.intro) +
-    `<p style="margin:0 0 16px"><a href="${escapeHtml(p.link)}" style="display:inline-block;background:#1b4b43;color:#f2f7f5;text-decoration:none;font-weight:bold;padding:10px 16px;border-radius:10px">${escapeHtml(p.button)}</a></p>` +
-    `<p style="margin:0 0 16px;font-size:13px;color:#5f716c;word-break:break-all">${escapeHtml(p.link)}</p>` +
+    `<p style="margin:24px 0 16px"><a href="${escapeHtml(p.link)}" style="display:inline-block;background:#8E6B3D;color:#ffffff;text-decoration:none;font-weight:bold;letter-spacing:0.03em;padding:13px 24px;border-radius:16px">${escapeHtml(p.button)}</a></p>` +
+    `<p style="margin:0 0 20px;font-size:13px;color:#6B5E4E;word-break:break-all">${escapeHtml(p.link)}</p>` +
+    `<div style="height:1px;line-height:1px;font-size:0;background:#C29A5E;margin:0 0 20px">&nbsp;</div>` +
     p.notes.map(para).join("") +
     para(p.signature) +
-    `</div></body></html>`;
+    `</div></div></body></html>`;
   return { subject: p.subject, text, html };
 }
 

@@ -35,7 +35,23 @@ test("mail: link present in text and html, no password content", () => {
       assert.ok(m.html.includes(`href="${LINK}"`), `${kind} ${l} html`);
       // No password or password-like value is ever put into a mail.
       assert.doesNotMatch(m.text + m.html, /a-long-password|passwordHash|\$2[aby]\$/);
-      assert.doesNotMatch(m.html, /<img|<script/i);
+      assert.doesNotMatch(m.html, /<script/i);
+    }
+  }
+});
+
+test("mail: CI logo at the top of every html mail (absolute URL, sized, alt), text part has no image", () => {
+  const logo = `${partnerBaseUrl()}/crm/brand/logo-full.png`;
+  for (const [kind, build] of Object.entries(builders)) {
+    for (const l of PARTNER_LOCALES) {
+      const m = build(l, "Anna");
+      const imgs = m.html.match(/<img\b[^>]*>/gi) ?? [];
+      assert.equal(imgs.length, 1, `${kind} ${l}: exactly one image`);
+      assert.ok(imgs[0].includes(`src="${logo}"`), `${kind} ${l}: logo src`);
+      assert.match(imgs[0], /^<img src="https?:\/\//, `${kind} ${l}: absolute URL`);
+      assert.match(imgs[0], /width="250" height="35" alt="Cyprus VIP Estates"/, `${kind} ${l}: size + alt`);
+      assert.ok(m.html.indexOf("<img") < m.html.indexOf(`href="${LINK}"`), `${kind} ${l}: logo above the button`);
+      assert.doesNotMatch(m.text, /logo-full|<img/i, `${kind} ${l}: text unchanged`);
     }
   }
 });
