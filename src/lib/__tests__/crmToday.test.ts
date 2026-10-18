@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildToday, todayGreeting, type TodayLead } from "../crm/today";
+import { buildToday, isAssignmentTo, todayGreeting, type TodayLead } from "../crm/today";
 
 // Cyprus is UTC+3 until 25 Oct 2026 and UTC+2 after it; the code derives that via Intl.
 const NOW = new Date("2026-10-18T09:00:00Z"); // 12:00 in Cyprus, Sunday 18 Oct
@@ -90,4 +90,13 @@ test("greeting follows the Cyprus hour and uses the first word of the name", () 
   assert.equal(todayGreeting(new Date("2026-10-18T15:00:00Z"), "Anna"), "Good evening, Anna"); // 18:00
   assert.equal(todayGreeting(new Date("2026-11-02T09:59:00Z"), "Anna"), "Good morning, Anna"); // 11:59 at UTC+2
   assert.equal(todayGreeting(new Date("2026-11-02T10:00:00Z"), "  "), "Good afternoon"); // 12:00 at UTC+2
+});
+
+test("isAssignmentTo accepts crm-v2 metadata and legacy name-only rows, rejects others", () => {
+  const user = { id: "u1", name: "Anna Kyriakou" };
+  assert.equal(isAssignmentTo({ body: "Assigned to Anna Kyriakou", metadata: { assignedToId: "u1", via: "crm-v2" } }, user), true);
+  assert.equal(isAssignmentTo({ body: "Assigned to Anna Kyriakou", metadata: null }, user), true); // old admin CRM
+  assert.equal(isAssignmentTo({ body: "Assigned to Anna Kyriakou", metadata: {} }, user), true);
+  assert.equal(isAssignmentTo({ body: "Assigned to Anna Kyriakou", metadata: { assignedToId: "u2" } }, user), false);
+  assert.equal(isAssignmentTo({ body: "Assigned to Bob", metadata: null }, user), false);
 });

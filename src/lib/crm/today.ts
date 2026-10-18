@@ -76,3 +76,11 @@ export function todayGreeting(now: Date, fullName: string, tz = CRM_TZ): string 
   const first = fullName.trim().split(/\s+/)[0];
   return first ? `Good ${part}, ${first}` : `Good ${part}`;
 }
+
+// Did this SYSTEM "Assigned to ..." row assign the lead to `user`? crm-v2 rows carry
+// metadata.assignedToId; rows written by the old admin CRM have no metadata, only the name in the body.
+export function isAssignmentTo(row: { body: string | null; metadata: unknown }, user: { id: string; name: string }): boolean {
+  const meta = row.metadata && typeof row.metadata === "object" ? (row.metadata as { assignedToId?: unknown }) : null;
+  if (meta && meta.assignedToId !== undefined && meta.assignedToId !== null) return meta.assignedToId === user.id;
+  return row.body === `Assigned to ${user.name}`;
+}

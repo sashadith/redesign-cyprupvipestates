@@ -4,7 +4,7 @@ import { requireCrmUser } from "@/lib/crm/session";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ACTIVE_LEAD_STATUSES, STATUS_LABEL, isLeadStatus } from "@/lib/crm/leadStatus";
-import { CRM_TZ, buildToday, todayGreeting, type TodayLead } from "@/lib/crm/today";
+import { CRM_TZ, buildToday, isAssignmentTo, todayGreeting, type TodayLead } from "@/lib/crm/today";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export default async function TodayPage() {
         { OR: [{ status: { in: [...ACTIVE_LEAD_STATUSES] } }, { viewingScheduledAt: { gte: new Date(now.getTime() - 86_400_000) } }] },
       ],
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ nextFollowUpAt: { sort: "asc", nulls: "last" } }, { updatedAt: "desc" }],
     take: LEAD_CAP,
     select: {
       id: true, firstName: true, lastName: true, status: true, createdAt: true, nextFollowUpAt: true, viewingScheduledAt: true,
@@ -40,14 +40,13 @@ export default async function TodayPage() {
 
   // The latest "Assigned to <name>" row aimed at this user: when the lead landed with them.
   const assignRows = rows.length === 0 ? [] : await prisma.leadInteraction.findMany({
-    where: { leadId: { in: rows.map((r) => r.id) }, type: "SYSTEM", body: { startsWith: "Assigned to" } },
+    where: { leadId: { in: rows.map((r) => r.id) }, type: "SYSTEM", body: { startsWith: "Assigned to" }, occurredAt: { gte: new Date(now.getTime() - 48 * 3_600_000) } },
     orderBy: { occurredAt: "desc" },
-    select: { leadId: true, occurredAt: true, metadata: true },
+    select: { leadId: true, occurredAt: true, body: true, metadata: true },
   });
   const assignedAt = new Map<string, Date>();
   for (const a of assignRows) {
-    const meta = a.metadata as { assignedToId?: string } | null;
-    if (meta?.assignedToId === user.id && !assignedAt.has(a.leadId)) assignedAt.set(a.leadId, a.occurredAt);
+    if (!assignedAt.has(a.leadId) && isAssignmentTo(a, user)) assignedAt.set(a.leadId, a.occurredAt);
   }
 
   const leads: TodayLead[] = rows.map((r) => ({
@@ -78,7 +77,7 @@ export default async function TodayPage() {
           <p>{total === 0 && t.stale.length === 0 ? "Nothing needs you right now." : summary}</p>
         </div>
       </div>
-      {leads.length >= LEAD_CAP && <p className="crm-notice" role="status">Showing your {LEAD_CAP} most recently updated leads.</p>}
+      {leads.length >= LEAD_CAP && <p className="crm-notice" role="status">This list may be incomplete — showing {LEAD_CAP} leads.</p>}
       <div className="crm-today">
         {sections.map((s) => (
           <section key={s.key} className="crm-panel crm-today-sec" aria-labelledby={`today-${s.key}`}>
