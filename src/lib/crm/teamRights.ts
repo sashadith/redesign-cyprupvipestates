@@ -48,3 +48,20 @@ export function validateTeamPatch(raw: unknown): { ok: true; patch: TeamPatch } 
   }
   return { ok: true, patch };
 }
+
+/** Admins and the owner always see everything; their see/edit rights are not configurable. */
+export function isRightsImmune(target: { isOwner: boolean; role: string }): boolean {
+  return target.isOwner || target.role === "ADMIN";
+}
+
+/** Case-insensitive dedupe + trim + cap, shared by the client input and the validator's rules. */
+export function cleanSpecialties(list: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const s of list.map((x) => x.trim()).filter(Boolean)) {
+    if (seen.has(s.toLowerCase())) continue;
+    seen.add(s.toLowerCase());
+    out.push(s);
+  }
+  return out.slice(0, 10);
+}

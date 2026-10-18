@@ -161,3 +161,4 @@
 .crm-team-spec input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 900px) { .crm-team-row { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .crm-switch-track, .crm-switch-track i { transition: none; } }
+.crm-team-fs { display: contents; border: 0; padding: 0; margin: 0; min-width: 0; }

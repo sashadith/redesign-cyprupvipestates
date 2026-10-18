@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
-import { updateTeamMemberAction } from "../team/actions";
-import { normalizeRights, TEAM_LANGUAGES, type TeamPatch } from "@/lib/crm/teamRights";
+import { updateTeamMemberAction, type TeamStored } from "../team/actions";
+import { cleanSpecialties, normalizeRights, TEAM_LANGUAGES, type TeamPatch } from "@/lib/crm/teamRights";
 import { useToast } from "./Toast";
 
 export type TeamRow = {
@@ -19,31 +19,33 @@ function Switch({ on, label, onChange, disabled }: { on: boolean; label: string;
   );
 }
 
-function Row({ initial, save }: { initial: TeamRow; save: (id: string, patch: TeamPatch) => Promise<boolean> }) {
+function Row({ initial, save }: { initial: TeamRow; save: (id: string, patch: TeamPatch) => Promise<TeamStored | null> }) {
   const [row, setRow] = useState(initial);
   const [draft, setDraft] = useState(initial.specialties.join(", "));
   const [pending, start] = useTransition();
 
-  // Optimistic: apply, call the server, roll back to the previous row on failure.
+  // Optimistic (functional updates); the server's stored values win, failure rolls back.
   const apply = (patch: TeamPatch) => {
+    if (pending) return;
     const prev = row;
-    const rights = normalizeRights(row, patch);
     const touchesRights = patch.canSeeColleagues !== undefined || patch.canEditColleagues !== undefined;
-    setRow({ ...row, ...patch, ...(touchesRights ? rights : {}) });
+    setRow((r) => ({ ...r, ...patch, ...(touchesRights ? normalizeRights(r, patch) : {}) }));
     start(async () => {
-      const ok = await save(row.id, patch);
-      if (!ok) { setRow(prev); setDraft(prev.specialties.join(", ")); }
+      const stored = await save(row.id, patch);
+      if (stored) { setRow((r) => ({ ...r, ...stored })); setDraft(stored.specialties.join(", ")); }
+      else { setRow(prev); setDraft(prev.specialties.join(", ")); }
     });
   };
 
   const commitSpecialties = () => {
-    const list = draft.split(",").map((s) => s.trim()).filter(Boolean);
+    const list = cleanSpecialties(draft.split(","));
     if (list.join("\n").toLowerCase() === row.specialties.join("\n").toLowerCase()) { setDraft(row.specialties.join(", ")); return; }
     apply({ specialties: list });
   };
 
   return (
     <li className="crm-panel crm-team-row" aria-busy={pending}>
+      <fieldset disabled={pending} className="crm-team-fs">
       <div className="crm-team-who">
         <b>{row.name}</b>
         <span>{row.email}</span>
@@ -81,6 +83,7 @@ function Row({ initial, save }: { initial: TeamRow; save: (id: string, patch: Te
           <div className="crm-team-chips">{row.specialties.map((s) => <span key={s} className="crm-pill">{s}</span>)}</div>
         )}
       </div>
+      </fieldset>
     </li>
   );
 }
@@ -89,9 +92,9 @@ export function TeamTable({ rows }: { rows: TeamRow[] }) {
   const toast = useToast();
   const save = async (id: string, patch: TeamPatch) => {
     const r = await updateTeamMemberAction(id, patch);
-    if ("error" in r) { toast.show(r.error, "error"); return false; }
+    if ("error" in r) { toast.show(r.error, "error"); return null; }
     toast.show("Saved");
-    return true;
+    return r.stored;
   };
   return (
     <>

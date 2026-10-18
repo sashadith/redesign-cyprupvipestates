@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeRights, validateTeamPatch } from "@/lib/crm/teamRights";
+import { cleanSpecialties, isRightsImmune, normalizeRights, validateTeamPatch } from "@/lib/crm/teamRights";
 
 const off = { canSeeColleagues: false, canEditColleagues: false };
 
@@ -35,4 +35,15 @@ test("booleans must be booleans and unknown keys are rejected", () => {
   assert.equal(validateTeamPatch({ role: "ADMIN" }).ok, false);
   assert.equal(validateTeamPatch(null).ok, false);
   assert.deepEqual(validateTeamPatch({ acceptsLeads: false }), { ok: true, patch: { acceptsLeads: false } });
+});
+
+test("admins and the owner are immune to rights changes, editors are not", () => {
+  assert.equal(isRightsImmune({ isOwner: true, role: "EDITOR" }), true);
+  assert.equal(isRightsImmune({ isOwner: false, role: "ADMIN" }), true);
+  assert.equal(isRightsImmune({ isOwner: false, role: "EDITOR" }), false);
+});
+
+test("cleanSpecialties dedupes case-insensitively and caps at 10", () => {
+  assert.deepEqual(cleanSpecialties([" A ", "a", "", "B"]), ["A", "B"]);
+  assert.equal(cleanSpecialties(Array.from({ length: 14 }, (_, i) => `t${i}`)).length, 10);
 });
