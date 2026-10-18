@@ -1,2 +1,2 @@
 import { redirect } from "next/navigation";
-export default function CrmIndex() { redirect("/crm/pipeline"); }
+export default function CrmIndex() { redirect("/crm/today"); }

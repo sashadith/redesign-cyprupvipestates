@@ -13,8 +13,9 @@ export function Shell({ user, children }: Props) {
   return (
     <>
       <header className="crm-top">
-        <Link href="/crm/pipeline" className="crm-logo"><i>CV</i>CVE Office</Link>
+        <Link href="/crm/today" className="crm-logo"><i>CV</i>CVE Office</Link>
         <nav className="crm-nav" aria-label="CRM">
+          <Link href="/crm/today" className={on("/crm/today")}>Today</Link>
           <Link href="/crm/pipeline" className={on("/crm/pipeline")}>Pipeline</Link>
           {user.canAssign && (
             <Link href="/crm/inbox" className={on("/crm/inbox")}>
@@ -30,6 +31,7 @@ export function Shell({ user, children }: Props) {
       <main className="crm-main">{children}</main>
       <nav className="crm-dock" aria-label="Quick actions">
         <Link href="/crm/leads/new" className="plus">＋ New lead</Link>
+        <Link href="/crm/today">Today</Link>
         <Link href="/crm/pipeline">Pipeline</Link>
         {user.canAssign && <Link href="/crm/inbox">Inbox</Link>}
         {user.canAssign && <Link href="/crm/team">Team</Link>}
