@@ -1,6 +1,6 @@
 import { PartnerType } from "@prisma/client";
 import { passwordProblem } from "./password";
-import { checkPartnerVatId } from "./vat";
+import { checkPartnerVatId, vatIdSoftExempt } from "./vat";
 
 import { PARTNER_LOCALES, type PartnerLocale } from "./i18n";
 
@@ -116,9 +116,13 @@ const PROFILE_ALLOWED = new Set(["firstName", "lastName", "company", "vatId", "l
 
 /**
  * Profile edit: same rules as registration for the editable fields; phone, email, type and country are
- * locked. `ctx.country` is the partner's stored country (drives the VAT-number rule with the new company).
+ * locked. `ctx.country` is the partner's stored country (drives the VAT-number rule with the new company);
+ * `ctx.stored` (stored VAT number and company) enables the soft path of vatIdSoftExempt.
  */
-export function validateProfile(raw: unknown, ctx: { country: string }): ProfileResult {
+export function validateProfile(
+  raw: unknown,
+  ctx: { country: string; stored?: { vatId: string | null; company: string | null } },
+): ProfileResult {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, field: "_", code: "err.invalid" };
   const r = raw as Record<string, unknown>;
   for (const k of Object.keys(r)) if (!PROFILE_ALLOWED.has(k)) return { ok: false, field: k, code: "err.unknownField" };
@@ -132,7 +136,8 @@ export function validateProfile(raw: unknown, ctx: { country: string }): Profile
     if (typeof r.company !== "string" || c.length > 120 || badText(c)) return { ok: false, field: "company", code: "err.company" };
     company = c || null;
   }
-  const vat = checkPartnerVatId({ country: ctx.country, company, vatId: r.vatId });
+  const allowMissing = !!ctx.stored && vatIdSoftExempt(ctx.stored, company);
+  const vat = checkPartnerVatId({ country: ctx.country, company, vatId: r.vatId, allowMissing });
   if (!vat.ok) return { ok: false, field: "vatId", code: vat.code };
   const language = str(r.language);
   if (!(PARTNER_LANGUAGES as readonly string[]).includes(language)) return { ok: false, field: "language", code: "err.language" };

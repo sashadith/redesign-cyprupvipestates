@@ -174,7 +174,8 @@ function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: st
         </div>
       </div>
       {open && <TermsEditor row={row} managers={managers} />}
-      {open && <BankPanel row={row} canReveal={canReveal} />}
+      {/* Keyed on the stored VAT state: after a save (revalidated row) the inputs start from the new values. */}
+      {open && <BankPanel key={`${row.vatId ?? ""}|${row.vatMode}|${row.vatModeManual}`} row={row} canReveal={canReveal} />}
     </li>
   );
 }

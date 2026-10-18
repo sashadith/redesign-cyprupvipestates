@@ -2,8 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   EU_COUNTRIES, checkPartnerVatId, creditNoteRecipientVatId, deriveVatMode, euVatIdValid, normaliseVatId,
-  vatIdRequired, vatModeAfterChange, vatPrefixFor,
+  vatIdMissing, vatIdRequired, vatIdSoftExempt, vatModeAfterChange, vatPrefixFor,
 } from "@/lib/partner/vat";
+import { buildVatModeChangedNotice } from "@/lib/partner/vatNotice";
 import { validateProfile, validateRegistration } from "@/lib/partner/registration";
 
 test("vat: EU-27 list", () => {
@@ -106,4 +107,47 @@ test("profile: VAT number rule uses the stored country", () => {
   assert.equal(code(validateProfile({ ...p, vatId: "DE123456789" }, { country: "AT" })), "vatId:err.vatIdFormat");
   const ok = validateProfile({ ...p, vatId: "atu 1234 5678" }, { country: "AT" });
   assert.ok(ok.ok && ok.data.vatId === "ATU12345678");
+});
+
+test("vat: soft path for existing partners — no stored number and the company unchanged", () => {
+  assert.equal(vatIdSoftExempt({ vatId: null, company: "Muster GmbH" }, " Muster GmbH "), true);
+  assert.equal(vatIdSoftExempt({ vatId: "", company: null }, ""), true);
+  assert.equal(vatIdSoftExempt({ vatId: null, company: "Muster GmbH" }, "Muster AG"), false); // company changed → hard rule
+  assert.equal(vatIdSoftExempt({ vatId: "DE123456789", company: "Muster GmbH" }, "Muster GmbH"), false); // stored number cannot be cleared
+  assert.deepEqual(checkPartnerVatId({ country: "DE", company: "Muster GmbH", vatId: "", allowMissing: true }), { ok: true, vatId: null });
+  assert.deepEqual(checkPartnerVatId({ country: "DE", company: "Muster GmbH", vatId: "" }), { ok: false, code: "err.vatIdRequired" });
+  // allowMissing never relaxes the format of a number that is typed in
+  assert.deepEqual(checkPartnerVatId({ country: "DE", company: "Muster GmbH", vatId: "FR123", allowMissing: true }), { ok: false, code: "err.vatIdFormat" });
+});
+
+test("profile: soft path accepts a save without a VAT number; company change or registration stays hard", () => {
+  const raw = { firstName: "Anna", lastName: "Muster", company: "Muster GmbH", vatId: "", language: "de" };
+  const code = (x: ReturnType<typeof validateProfile>) => (x.ok ? "ok" : `${x.field}:${x.code}`);
+  const legacy = { vatId: null, company: "Muster GmbH" };
+  assert.equal(code(validateProfile(raw, { country: "DE", stored: legacy })), "ok");
+  assert.equal(code(validateProfile({ ...raw, firstName: "Anne" }, { country: "DE", stored: legacy })), "ok");
+  assert.equal(code(validateProfile({ ...raw, company: "Muster AG" }, { country: "DE", stored: legacy })), "vatId:err.vatIdRequired");
+  assert.equal(code(validateProfile(raw, { country: "DE", stored: { vatId: "DE123456789", company: "Muster GmbH" } })), "vatId:err.vatIdRequired");
+  assert.equal(code(validateProfile(raw, { country: "DE" })), "vatId:err.vatIdRequired");
+  const reg = validateRegistration({
+    firstName: "Anna", lastName: "Muster", company: "Muster GmbH", country: "DE", vatId: "", phone: "+49 30 1234567",
+    email: "anna@example.com", language: "de", type: "REAL_ESTATE", password: "correct-horse-battery", acceptAgreement: true,
+  });
+  assert.equal(reg.ok ? "ok" : reg.code, "err.vatIdRequired");
+});
+
+test("vat: vatIdMissing drives the profile prompt and the onboarding item", () => {
+  assert.equal(vatIdMissing({ country: "DE", company: "Muster GmbH", vatId: null }), true);
+  assert.equal(vatIdMissing({ country: "DE", company: "Muster GmbH", vatId: "DE123456789" }), false);
+  assert.equal(vatIdMissing({ country: "DE", company: null, vatId: null }), false);
+  assert.equal(vatIdMissing({ country: "GB", company: "Ltd", vatId: null }), false);
+});
+
+test("vat: office notice when the partner's own edit changes the VAT treatment (English, escaped)", () => {
+  assert.equal(
+    buildVatModeChangedNotice({ name: "Muster <GmbH> & Co", vatId: "DE123456789", before: "NONE", after: "REVERSE_CHARGE" }),
+    "Partner Muster &lt;GmbH&gt; &amp; Co set VAT number DE123456789 — VAT treatment No VAT → Reverse charge. Check before the next payout.",
+  );
+  assert.match(buildVatModeChangedNotice({ name: "A", vatId: "CY12345678X", before: "NONE", after: "CY_VAT" }), /No VAT → CY VAT 19%/);
+  assert.match(buildVatModeChangedNotice({ name: "A", vatId: null, before: "REVERSE_CHARGE", after: "NONE" }), /removed the VAT number — VAT treatment Reverse charge → No VAT/);
 });

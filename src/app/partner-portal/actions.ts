@@ -21,6 +21,9 @@ import { hashPassword, passwordProblem, verifyPassword } from "@/lib/partner/pas
 import { validateProfile, validateRegistration } from "@/lib/partner/registration";
 import { writePartnerAudit } from "@/lib/partner/audit";
 import { deriveVatMode, vatModeAfterChange, type DerivedVatMode } from "@/lib/partner/vat";
+import { buildVatModeChangedNotice } from "@/lib/partner/vatNotice";
+import { partnerDisplayName } from "@/lib/partner/bankFlow";
+import { sendTelegramMessage } from "@/lib/telegram";
 import { createPartnerSession, getPartner, revokeAllSessionsForPartner, revokeCurrentSession } from "@/lib/partner/session";
 import type { FormState } from "./formState";
 
@@ -232,12 +235,13 @@ export async function updateProfileAction(_prev: FormState, fd: FormData): Promi
   };
   // Row-locked: the VAT rule needs the stored country, and the automatic VAT mode must not race a CRM change.
   const outcome = await prisma.$transaction(async (tx) => {
-    const rows = await tx.$queryRaw<{ country: string; vatId: string | null; vatMode: DerivedVatMode; vatModeManual: boolean }[]>`
-      SELECT country, "vatId", "vatMode"::text AS "vatMode", "vatModeManual" FROM partners WHERE id = ${me.partner.id} FOR UPDATE`;
+    const rows = await tx.$queryRaw<{ country: string; company: string | null; vatId: string | null; vatMode: DerivedVatMode; vatModeManual: boolean }[]>`
+      SELECT country, company, "vatId", "vatMode"::text AS "vatMode", "vatModeManual" FROM partners WHERE id = ${me.partner.id} FOR UPDATE`;
     const current = rows[0];
     if (!current) return { missing: true as const };
-    // Country is not editable by the partner: the VAT-number rule uses the stored one.
-    const v = validateProfile(raw, { country: current.country });
+    // Country is not editable by the partner: the VAT-number rule uses the stored one. Stored VAT number and
+    // company enable the soft path (no VAT number yet, company unchanged → save accepted, prompt stays).
+    const v = validateProfile(raw, { country: current.country, stored: { vatId: current.vatId, company: current.company } });
     if (!v.ok) return { v };
     const vatIdChanged = (current.vatId ?? null) !== v.data.vatId;
     const vatMode = vatIdChanged ? vatModeAfterChange(current, { country: current.country, vatId: v.data.vatId }) : current.vatMode;
@@ -251,11 +255,18 @@ export async function updateProfileAction(_prev: FormState, fd: FormData): Promi
         ...(vatMode !== current.vatMode ? { vatModeBefore: current.vatMode, vatModeAfter: vatMode } : {}),
       }, tx);
     }
-    return { v };
+    const modeChange = vatMode !== current.vatMode ? { before: current.vatMode, after: vatMode } : null;
+    return { v, modeChange };
   });
   if ("missing" in outcome) redirect("/login");
   const v = outcome.v;
   if (!v.ok) return { error: v.code, field: v.field };
+  if ("modeChange" in outcome && outcome.modeChange) {
+    // The automatic VAT treatment changed through the partner's own edit: the office checks it before the next payout.
+    inBackground("vat mode notice", sendTelegramMessage(buildVatModeChangedNotice({
+      name: partnerDisplayName(v.data), vatId: v.data.vatId, ...outcome.modeChange,
+    })));
+  }
   cookies().set(PARTNER_LANG_COOKIE, v.data.language, {
     maxAge: 60 * 60 * 24 * 365, sameSite: "lax", path: "/", httpOnly: false, secure: process.env.NODE_ENV === "production",
   });

@@ -11,7 +11,7 @@ import { newRefCode, randomSuffix } from "@/lib/partner/refCode";
 import { parseTerms } from "@/lib/partner/terms";
 import { sendEmail } from "@/lib/sendEmail";
 import { isVatMode } from "@/lib/crm/payoutRules";
-import { checkPartnerVatId, deriveVatMode, vatModeAfterChange, type DerivedVatMode } from "@/lib/partner/vat";
+import { checkPartnerVatId, deriveVatMode, vatIdSoftExempt, vatModeAfterChange, type DerivedVatMode } from "@/lib/partner/vat";
 import { decryptBankDetails } from "@/lib/partner/bankCrypto";
 import type { BankDetails } from "@/lib/partner/bank";
 
@@ -185,7 +185,11 @@ const VAT_ID_ERRORS = {
   "err.vatIdFormat": "VAT number format is invalid (EU: country prefix, Greece EL, then 2–13 letters/digits; elsewhere 4–20 letters/digits).",
 } as const;
 
-/** VAT number (public business data). Same rules as the portal; the partner's stored country applies. Audited. */
+/**
+ * VAT number (public business data). Same rules as the portal; the partner's stored country applies. Audited.
+ * Same soft path as the portal: the company is not edited here, so a partner without a stored VAT number may
+ * stay without one (an empty save is "No changes"); an existing number of an EU company cannot be cleared.
+ */
 export async function updatePartnerVatIdAction(id: string, vatId: unknown): Promise<Result> {
   const actor = await guard();
   if (!actor) return { error: DENIED };
@@ -193,7 +197,7 @@ export async function updatePartnerVatIdAction(id: string, vatId: unknown): Prom
   const outcome = await prisma.$transaction(async (tx): Promise<"missing" | "unchanged" | "saved" | { error: string }> => {
     const row = await lockVatRow(tx, id);
     if (!row) return "missing";
-    const v = checkPartnerVatId({ country: row.country, company: row.company, vatId });
+    const v = checkPartnerVatId({ country: row.country, company: row.company, vatId, allowMissing: vatIdSoftExempt(row, row.company) });
     if (!v.ok) return { error: VAT_ID_ERRORS[v.code] };
     if (v.vatId === row.vatId) return "unchanged";
     const vatMode = vatModeAfterChange(row, { country: row.country, vatId: v.vatId });
