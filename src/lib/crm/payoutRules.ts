@@ -1,4 +1,5 @@
 import { canAssignLeads, canViewLead, type CrmUser } from "./access";
+import { cyprusDateParts } from "@/lib/partner/creditNote";
 import { ibanValid, isPayoutBlocked, normaliseIban, payoutBlockedUntil, type BankDetails } from "@/lib/partner/bank";
 
 // Pure rules for "Paid out" on a partner deal (partner portal phase 3c). No DB,
@@ -42,9 +43,37 @@ export function payoutDecision(i: PayoutDecisionInput): PayoutDecision {
   return { ok: true, creditNote: true, overridden: blocked };
 }
 
-/** A deal earns a credit note only with a positive partner commission and an effectively ACTIVE claim. */
-export function isPartnerDeal(i: { partnerCommission: number | null; claimEffectivelyActive: boolean }): boolean {
-  return (i.partnerCommission ?? 0) > 0 && i.claimEffectivelyActive;
+export const CLAIM_NOT_ACTIVE_ERROR =
+  "This deal carries a partner commission, but the partner's claim is no longer active for it — check the partner claim before paying out.";
+export const PAYOUT_BUSY_ERROR = "Busy issuing another credit note — please try again.";
+
+export type PayoutKind = { kind: "plain" } | { kind: "partner" } | { kind: "blocked"; error: string };
+
+/**
+ * Which payout this is. A deal is a partner deal when it carries a positive partner commission.
+ * A partner deal pays out (with a credit note) only while the claim of lead.partnerId is effectively
+ * ACTIVE and the deal was created at/after the claim's activeSince — otherwise it is blocked, never
+ * silently turned into a plain payout. No/zero partner commission: the plain stage change.
+ */
+export function payoutKind(i: {
+  partnerCommission: number | null;
+  partnerId: string | null;
+  claimEffectivelyActive: boolean;
+  claimActiveSince: Date | null;
+  dealCreatedAt: Date;
+}): PayoutKind {
+  if (!((i.partnerCommission ?? 0) > 0)) return { kind: "plain" };
+  if (!i.partnerId || !i.claimEffectivelyActive || !i.claimActiveSince || i.dealCreatedAt.getTime() < i.claimActiveSince.getTime()) {
+    return { kind: "blocked", error: CLAIM_NOT_ACTIVE_ERROR };
+  }
+  return { kind: "partner" };
+}
+
+/** Prisma P2028 / "Transaction already closed": the counter lock was held too long by another payout. */
+export function isTransactionBusyError(e: unknown): boolean {
+  if (!e || typeof e !== "object") return false;
+  const o = e as { code?: unknown; message?: unknown };
+  return o.code === "P2028" || (typeof o.message === "string" && o.message.includes("Transaction already closed"));
 }
 
 /** Everything a credit note needs from the partner's bank details. */
@@ -90,9 +119,9 @@ export function nextCreditNoteSeq(lastSeq: number): number {
   return lastSeq + 1;
 }
 
-/** The credit-note year is the document date's (UTC) year. */
+/** The credit-note year is the document date's year in Cyprus time (Asia/Nicosia). */
 export function creditNoteYear(issuedAt: Date): number {
-  return issuedAt.getUTCFullYear();
+  return cyprusDateParts(issuedAt).year;
 }
 
 /** Staff download: managers, or anyone who may see the deal's lead. */

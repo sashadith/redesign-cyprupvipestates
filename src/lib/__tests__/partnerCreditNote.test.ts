@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { clientInitials, creditNoteModel, creditNoteNumber, CY_VAT_RATE, formatEuro, vatFor } from "@/lib/partner/creditNote";
+import { clientInitials, creditNoteModel, cyprusDateParts, creditNoteNumber, CY_VAT_RATE, formatEuro, vatFor } from "@/lib/partner/creditNote";
 
 test("number: padding and year", () => {
   assert.equal(creditNoteNumber(2026, 1), "CVE-GS-2026-0001");
@@ -24,6 +24,12 @@ test("initials", () => {
   assert.equal(clientInitials("Иван", "Петров"), "И. П.");
   assert.equal(clientInitials("  Łukasz", "O'Neil"), "Ł. O.");
   assert.equal(clientInitials("Anna", ""), "A.");
+  // One code point per initial: ß upper-cases to "SS" but stays one letter.
+  assert.equal(clientInitials("ßarah", "ßmith"), "S. S.");
+  assert.equal(clientInitials("ärger", "öz"), "Ä. Ö.");
+  // No letters at all: the helper itself returns the dash.
+  assert.equal(clientInitials("", ""), "—");
+  assert.equal(clientInitials(" - ", "12"), "—");
 });
 
 test("formatEuro", () => {
@@ -61,4 +67,14 @@ test("model: reverse charge, no vat, recipient vat id optional", () => {
   const none = creditNoteModel({ ...base, vatMode: "NONE", partner: { ...base.partner, vatId: null } });
   assert.match(none.vatNote!, /No VAT charged/);
   assert.ok(!none.recipientLines.some((l) => l.includes("USt-IdNr")));
+});
+
+test("document date is the Cyprus calendar day (Asia/Nicosia), not UTC", () => {
+  // 31 Dec 22:30 UTC is already 1 Jan 00:30 in Cyprus (UTC+2 in winter).
+  const nye = new Date("2026-12-31T22:30:00Z");
+  assert.deepEqual(cyprusDateParts(nye), { year: 2027, month: 1, day: 1 });
+  assert.equal(creditNoteModel({ ...base, issuedAt: nye }).date, "01/01/2027");
+  assert.equal(creditNoteModel({ ...base, issuedAt: new Date("2026-12-31T21:30:00Z") }).date, "31/12/2026");
+  // Summer time (UTC+3): 21:30 UTC on 30 June is 1 July in Cyprus.
+  assert.equal(creditNoteModel({ ...base, issuedAt: new Date("2026-06-30T21:30:00Z") }).date, "01/07/2026");
 });

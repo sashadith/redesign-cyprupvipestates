@@ -7,12 +7,13 @@ import { parseStageDate, payoutActions, stageOrderError } from "./commissionActi
 import type { CommissionStatusValue } from "./commission";
 import type { SessionCrmUser } from "./session";
 import {
-  bankDetailsComplete, creditNoteFinal, creditNoteYear, isPartnerDeal, issuerFromEnv, nextCreditNoteSeq, payoutDecision,
-  PAYOUT_PAUSED_CODE,
+  bankDetailsComplete, creditNoteFinal, creditNoteYear, isTransactionBusyError, issuerFromEnv, nextCreditNoteSeq, payoutDecision, payoutKind,
+  PAYOUT_BUSY_ERROR, PAYOUT_PAUSED_CODE,
 } from "./payoutRules";
 import { payoutBlockedUntil, type BankDetails } from "@/lib/partner/bank";
 import { decryptBankDetails } from "@/lib/partner/bankCrypto";
 import { effectiveStateOf } from "@/lib/partner/claimFacts";
+import { activeSince } from "@/lib/partner/claimState";
 import { submissionView } from "@/lib/partner/clientDto";
 import { clientInitials, creditNoteModel, creditNoteNumber, vatFor, type VatMode } from "@/lib/partner/creditNote";
 import { renderCreditNotePdf } from "@/lib/partner/creditNotePdf";
@@ -21,6 +22,14 @@ import { renderCreditNotePdf } from "@/lib/partner/creditNotePdf";
 // transaction: the deal row lock, the gap-free counter, the PDF render, the
 // immutable CreditNote row, the stage change, audit and the PAYOUT outbox row
 // all commit together — or nothing does (a failed render consumes no number).
+//
+// A deal with a positive partnerCommission is a partner deal: it needs the
+// effectively ACTIVE claim of lead.partnerId and a deal created at/after the
+// claim's activeSince, or the payout is blocked (payoutKind). The credit note's
+// issuer block comes from env: CVE_LEGAL_NAME, CVE_LEGAL_ADDRESS (literal "\n"
+// allowed), CVE_LEGAL_VAT_ID and CVE_LEGAL_REG_NO (CVE_VAT_ID / CVE_REG_NO are
+// accepted as fallbacks); CREDIT_NOTE_FINAL=1 drops the draft footer. Year and
+// document date are Cyprus time (Asia/Nicosia).
 
 export type PayoutResult =
   | { ok: true; leadId: string; creditNote: { id: string; number: string } | null }
@@ -47,8 +56,8 @@ export async function markPaidOut(
       const deal = await tx.deal.findUniqueOrThrow({
         where: { id: dealId },
         select: {
-          leadId: true, commissionStatus: true, earnedAt: true, developerPaidAt: true, partnerCommission: true, unitLabel: true,
-          development: { select: { publicName: true } },
+          leadId: true, createdAt: true, commissionStatus: true, earnedAt: true, developerPaidAt: true, partnerCommission: true, unitLabel: true,
+          development: { select: { publicName: true, override: { select: { alias: true } } } },
           lead: { select: { partnerId: true } },
         },
       });
@@ -66,9 +75,16 @@ export async function markPaidOut(
           })
         : null;
       const claimEffectivelyActive = !!claim && (await effectiveStateOf(tx, claim, now)) === "ACTIVE";
-
-      if (!partnerId || !claim || !isPartnerDeal({ partnerCommission: deal.partnerCommission, claimEffectivelyActive })) {
-        // No partner share at payout time: the plain stage change, no credit note.
+      const kind = payoutKind({
+        partnerCommission: deal.partnerCommission,
+        partnerId,
+        claimEffectivelyActive,
+        claimActiveSince: claim ? activeSince(claim) : null,
+        dealCreatedAt: deal.createdAt,
+      });
+      if (kind.kind === "blocked") throw new Abort(kind.error);
+      if (kind.kind === "plain" || !partnerId || !claim) {
+        // No partner commission on the deal: the plain stage change, no credit note.
         await tx.deal.update({ where: { id: dealId }, data: { commissionStatus: "PAID_OUT", paidOutAt: date.value } });
         await writeAudit(actor, "crm_deal_stage", "Deal", dealId, { leadId: deal.leadId, from, to: "PAID_OUT", date: opts.onDate }, tx);
         return { ok: true, leadId: deal.leadId, creditNote: null };
@@ -117,8 +133,12 @@ export async function markPaidOut(
         partner: { billingName: bank.billingName, billingAddress: bank.billingAddress, vatId: bank.vatId },
         number,
         issuedAt: now,
-        deal: { projectName: deal.development?.publicName ?? "Property", unitLabel: deal.unitLabel ?? "" },
-        clientInitials: clientInitials(sub.firstName, sub.lastName ?? "") || "—",
+        deal: {
+          // Same project name as the portal, the CSV and the PAYOUT mail: override alias, else the public name.
+          projectName: (deal.development ? deal.development.override?.alias?.trim() || deal.development.publicName : null) ?? "Property",
+          unitLabel: deal.unitLabel ?? "",
+        },
+        clientInitials: clientInitials(sub.firstName, sub.lastName ?? ""),
         net,
         vatMode,
         ibanLast4: partner.ibanLast4 as string,
@@ -160,6 +180,7 @@ export async function markPaidOut(
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return { error: "A credit note for this deal was just issued by someone else — reload." };
     }
+    if (isTransactionBusyError(e)) return { error: PAYOUT_BUSY_ERROR };
     throw e;
   }
 }

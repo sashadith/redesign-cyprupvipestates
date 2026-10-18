@@ -21,14 +21,19 @@ export function vatFor(mode: VatMode, net: number): { rate: number | null; vat: 
   return { rate: null, vat: 0, total: net };
 }
 
+// One code point only: "ß".toUpperCase() is "SS", which would read as two letters.
 const firstLetter = (s: string): string => {
-  for (const ch of Array.from(s.trim())) if (!/[\s\-'’.,()\d]/.test(ch)) return ch.toUpperCase();
+  for (const ch of Array.from(String(s ?? "").trim())) {
+    if (/[\s\-'’.,()\d]/.test(ch)) continue;
+    return Array.from(ch.toLocaleUpperCase())[0] ?? "";
+  }
   return "";
 };
 
-/** "Nina", "Bauer" -> "N. B." (GDPR: only initials appear on the document). */
+/** "Nina", "Bauer" -> "N. B." (GDPR: only initials appear on the document); no letters at all -> "—". */
 export function clientInitials(first: string, last: string): string {
-  return [firstLetter(first), firstLetter(last)].filter(Boolean).map((c) => `${c}.`).join(" ");
+  const out = [firstLetter(first), firstLetter(last)].filter(Boolean).map((c) => `${c}.`).join(" ");
+  return out || "—";
 }
 
 /** One euro formatter: "€ 12,345" (en-GB grouping, whole euros). */
@@ -38,8 +43,18 @@ export function formatEuro(n: number): string {
   return `${sign}€ ${digits}`;
 }
 
-const formatDate = (d: Date) =>
-  `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()}`;
+const CY_PARTS = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Nicosia", year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** Calendar date of an instant in Cyprus time (Asia/Nicosia) — the credit note's document date and year. */
+export function cyprusDateParts(d: Date): { year: number; month: number; day: number } {
+  const p = Object.fromEntries(CY_PARTS.formatToParts(d).map((x) => [x.type, x.value]));
+  return { year: Number(p.year), month: Number(p.month), day: Number(p.day) };
+}
+
+const formatDate = (d: Date) => {
+  const p = cyprusDateParts(d);
+  return `${String(p.day).padStart(2, "0")}/${String(p.month).padStart(2, "0")}/${p.year}`;
+};
 
 export interface CreditNoteInput {
   issuer: { legalName: string; address: string; vatId: string; regNo: string };

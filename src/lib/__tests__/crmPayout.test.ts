@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   BANK_MISSING_ERROR, ISSUER_MISSING_ERROR, PAYOUT_PAUSED_CODE, bankDetailsComplete, canDownloadCreditNote, creditNoteFilename, creditNoteFinal,
-  creditNoteYear, isPartnerDeal, isVatMode, issuerFromEnv, nextCreditNoteSeq, partnerBankView, payoutDecision, type PayoutDecisionInput,
+  CLAIM_NOT_ACTIVE_ERROR, PAYOUT_BUSY_ERROR, creditNoteYear, isTransactionBusyError, isVatMode, issuerFromEnv, nextCreditNoteSeq, partnerBankView,
+  payoutDecision, payoutKind, type PayoutDecisionInput,
 } from "@/lib/crm/payoutRules";
 import { creditNoteModel, creditNoteNumber } from "@/lib/partner/creditNote";
 import { isCreditNoteModel, isPdfBytes, renderCreditNotePdf } from "@/lib/partner/creditNotePdf";
@@ -46,11 +47,40 @@ test("payoutDecision: pause matrix", () => {
   assert.deepEqual(payoutDecision({ ...base, blockedUntil: until, override: true, bankComplete: false }), { ok: false, error: BANK_MISSING_ERROR });
 });
 
-test("isPartnerDeal: positive share and effectively active claim", () => {
-  assert.equal(isPartnerDeal({ partnerCommission: 5000, claimEffectivelyActive: true }), true);
-  assert.equal(isPartnerDeal({ partnerCommission: 0, claimEffectivelyActive: true }), false);
-  assert.equal(isPartnerDeal({ partnerCommission: null, claimEffectivelyActive: true }), false);
-  assert.equal(isPartnerDeal({ partnerCommission: 5000, claimEffectivelyActive: false }), false);
+test("payoutKind: a positive partner commission needs an active claim covering the deal, else BLOCK", () => {
+  const since = new Date("2026-03-01T00:00:00Z");
+  const k = (o: Partial<Parameters<typeof payoutKind>[0]> = {}) => payoutKind({
+    partnerCommission: 5000, partnerId: "p1", claimEffectivelyActive: true, claimActiveSince: since, dealCreatedAt: new Date("2026-04-01T00:00:00Z"), ...o,
+  });
+  assert.deepEqual(k(), { kind: "partner" });
+  // Deal created exactly at activeSince is covered.
+  assert.deepEqual(k({ dealCreatedAt: since }), { kind: "partner" });
+  // No / zero partner commission: plain payout, whatever the claim says.
+  assert.deepEqual(k({ partnerCommission: 0, claimEffectivelyActive: false }), { kind: "plain" });
+  assert.deepEqual(k({ partnerCommission: null, partnerId: null, claimActiveSince: null }), { kind: "plain" });
+  assert.deepEqual(k({ partnerCommission: -10 }), { kind: "plain" });
+  // Partner commission, but the claim is not (or no longer) active for this deal: blocked, never silently plain.
+  const blocked = { kind: "blocked", error: CLAIM_NOT_ACTIVE_ERROR };
+  assert.deepEqual(k({ claimEffectivelyActive: false }), blocked);
+  assert.deepEqual(k({ claimActiveSince: null, claimEffectivelyActive: false }), blocked);
+  assert.deepEqual(k({ partnerId: null }), blocked);
+  assert.deepEqual(k({ dealCreatedAt: new Date("2026-02-28T23:59:59Z") }), blocked, "deal before activeSince");
+  assert.equal(CLAIM_NOT_ACTIVE_ERROR,
+    "This deal carries a partner commission, but the partner's claim is no longer active for it — check the partner claim before paying out.");
+});
+
+test("isTransactionBusyError: P2028 and a closed transaction map to the retry message", () => {
+  assert.equal(isTransactionBusyError({ code: "P2028", message: "Transaction API error" }), true);
+  assert.equal(isTransactionBusyError(new Error("Transaction already closed: A query cannot be executed on an expired transaction.")), true);
+  assert.equal(isTransactionBusyError({ code: "P2002" }), false);
+  assert.equal(isTransactionBusyError(new Error("boom")), false);
+  assert.equal(isTransactionBusyError(null), false);
+  assert.equal(PAYOUT_BUSY_ERROR, "Busy issuing another credit note — please try again.");
+  const src = readFileSync(join(process.cwd(), "src/lib/crm/payout.ts"), "utf8");
+  assert.ok(src.includes("if (isTransactionBusyError(e)) return { error: PAYOUT_BUSY_ERROR };"), "markPaidOut maps it");
+  assert.ok(src.includes("if (kind.kind === \"blocked\") throw new Abort(kind.error);"), "markPaidOut blocks instead of a plain payout");
+  assert.ok(src.includes("development.override?.alias?.trim() || deal.development.publicName"), "PDF project name = portal/CSV/mail expression");
+  for (const k of ["CVE_LEGAL_NAME", "CVE_LEGAL_ADDRESS", "CVE_LEGAL_VAT_ID", "CVE_LEGAL_REG_NO"]) assert.ok(src.includes(k), `payout.ts documents ${k}`);
 });
 
 const BANK = { holder: "Nina Bauer", iban: "DE89370400440532013000", bic: null, billingName: "Nina Bauer", billingAddress: "Str. 1\n10115 Berlin", vatId: null };
@@ -76,13 +106,15 @@ test("issuerFromEnv: all four required, fallbacks and literal \\n", () => {
   assert.equal(creditNoteFinal({}), false);
 });
 
-test("counter: next sequence, corrupt rows refused, UTC year", () => {
+test("counter: next sequence, corrupt rows refused, Cyprus-time year", () => {
   assert.equal(nextCreditNoteSeq(0), 1);
   assert.equal(nextCreditNoteSeq(41), 42);
   assert.throws(() => nextCreditNoteSeq(-1));
   assert.throws(() => nextCreditNoteSeq(1.5));
   assert.throws(() => nextCreditNoteSeq(Number.NaN));
-  assert.equal(creditNoteYear(new Date("2026-12-31T23:59:59Z")), 2026);
+  // Cyprus is UTC+2 on 31 Dec: 21:59 UTC is still 2026, 22:30 UTC is already 1 Jan 2027.
+  assert.equal(creditNoteYear(new Date("2026-12-31T21:59:59Z")), 2026);
+  assert.equal(creditNoteYear(new Date("2026-12-31T22:30:00Z")), 2027);
   assert.equal(creditNoteYear(new Date("2027-01-01T00:00:00Z")), 2027);
   assert.equal(creditNoteNumber(2026, nextCreditNoteSeq(0)), "CVE-GS-2026-0001");
 });

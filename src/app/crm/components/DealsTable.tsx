@@ -49,7 +49,7 @@ export function useStageSetter(toast: ReturnType<typeof useToast>): StageSetter 
 
 export function CreditNoteLink({ deal }: { deal: DealRow }) {
   if (!deal.creditNote) return null;
-  return <a className="crm-credit-note" href={`/crm/credit-notes/${deal.creditNote.id}`} download>Credit note {deal.creditNote.number}</a>;
+  return <a className="crm-credit-note" href={`/crm/credit-notes/${deal.creditNote.id}`}>Credit note {deal.creditNote.number}</a>;
 }
 
 export function StageButtons({ deal, today, onSet }: { deal: DealRow; today: string; onSet: StageSetter }) {
@@ -82,7 +82,7 @@ export function StageButtons({ deal, today, onSet }: { deal: DealRow; today: str
       }}>
       <label>
         <span>{ACTION_QUESTION[picking]}</span>
-        <input type="date" value={date} max={today} required onChange={(e) => setDate(e.target.value)} disabled={pending} />
+        <input type="date" value={date} max={today} required onChange={(e) => { setDate(e.target.value); setOverride(false); }} disabled={pending} />
       </label>
       {picking === "PAID_OUT" && paused && (
         <label className="crm-pay-anyway">
