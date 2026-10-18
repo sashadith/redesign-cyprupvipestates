@@ -343,3 +343,17 @@
 .crm-today-sec .when { grid-column: 1 / -1; font-family: var(--mono); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .crm-today-sec .st { align-self: start; }
 .crm-today-empty { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* Claude summary (cockpit) and intake (new lead), Phase 2c */
+.crm-ck-summary h2 { margin: 0; }
+.crm-ck-sumlist { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.crm-ck-next { margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.crm-ck-sumnote { margin: 8px 0 0; font-size: 12px; }
+.crm-ck-summary .crm-ck-error { margin-top: 10px; }
+.crm-nl-intake { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); }
+.crm-nl-intake summary { cursor: pointer; font-weight: 700; font-size: 13.5px; color: var(--ink); }
+.crm-nl-intake summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.crm-nl-intakebody { display: grid; gap: 8px; margin-top: 10px; }
+.crm-nl-intakerow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; }
+.crm-nl-intakebody p { margin: 0; font-size: 13px; }
+.crm-nl-intakebody p:empty { display: none; }

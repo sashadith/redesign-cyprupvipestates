@@ -26,7 +26,12 @@ export type NewLeadInput = {
 type Result = { ok: true; data: NewLeadInput } | { ok: false; error: string; field?: string };
 
 const KEYS = ["firstName", "lastName", "email", "phone", "languagePreference", "budgetMin", "budgetMax", "timeline", "financing", "message", "notes", "ownerId"];
-const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+export const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+// 6 to 20 digits, only the usual separators. Shared with the Claude intake parser.
+export const isValidPhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, "").length;
+  return digits >= 6 && digits <= 20 && /^[+\d\s().\-/]+$/.test(phone);
+};
 const fail = (error: string, field?: string): Result => ({ ok: false, error, field });
 
 export function validateNewLead(raw: unknown): Result {
@@ -57,10 +62,7 @@ export function validateNewLead(raw: unknown): Result {
   if (email && (email.length > 200 || !EMAIL_RE.test(email))) return bad("email", "Enter a valid email address.");
   const phone = text("phone");
   if (phone === undefined) return bad("phone", "Enter a valid phone number.");
-  if (phone) {
-    const digits = phone.replace(/\D/g, "").length;
-    if (digits < 6 || digits > 20 || !/^[+\d\s().\-/]+$/.test(phone)) return bad("phone", "Phone needs 6 to 20 digits.");
-  }
+  if (phone && !isValidPhone(phone)) return bad("phone", "Phone needs 6 to 20 digits.");
   if (!email && !phone) return bad("email", "Add an email or a phone number");
 
   const lang = text("languagePreference");

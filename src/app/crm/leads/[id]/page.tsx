@@ -11,6 +11,7 @@ import { CockpitDeals } from "../../components/CockpitDeals";
 import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
+import { CockpitSummary } from "../../components/CockpitSummary";
 import { ToastProvider } from "../../components/Toast";
 import type { DealRow } from "../../components/DealsTable";
 
@@ -84,6 +85,7 @@ export default async function LeadCockpitPage({ params }: { params: { id: string
         <div className="crm-ck-grid">
           <div className="crm-ck-main">
             <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
+            <CockpitSummary leadId={lead.id} />
             <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
             <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP} />
           </div>

@@ -7,6 +7,9 @@ import { createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { validateNewLead } from "@/lib/crm/newLeadForm";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
+import { makeLimiter } from "@/lib/crm/ai/rateLimit";
+import { summariseLead, type SummaryResult } from "@/lib/crm/ai/summary";
+import { INTAKE_MAX, INTAKE_MIN, intakeFromText, type IntakeResult } from "@/lib/crm/ai/intake";
 
 // Lead cockpit writes (CRM v2, 2026-10-18). Same validation as the MCP tool
 // crm_log_interaction; the lead id comes from the page, never from the form.
@@ -64,4 +67,28 @@ export async function createLeadAction(raw: unknown): Promise<CreateLeadResult> 
   revalidatePath("/crm/pipeline");
   revalidatePath("/crm/inbox");
   return { ok: true, id };
+}
+
+// Claude helpers (Phase 2c). Both are read-only: the summary is only shown, the
+// intake only prefills the form. 10 calls a minute per user, per feature.
+const summaryLimiter = makeLimiter(10, 60_000);
+const intakeLimiter = makeLimiter(10, 60_000);
+const SLOW_DOWN = "Too many Claude requests — wait a minute and try again.";
+
+export async function summariseLeadAction(leadId: string): Promise<SummaryResult> {
+  const user = await requireCrmUser();
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
+  if (!lead || !canViewLead(user, lead)) return { ok: false, error: "Lead not found." };
+  if (!summaryLimiter(user.id)) return { ok: false, error: SLOW_DOWN };
+  return summariseLead(leadId);
+}
+
+export async function intakeFromTextAction(text: string): Promise<IntakeResult> {
+  const user = await requireCrmUser();
+  if (typeof text !== "string") return { ok: false, error: "Paste the text first." };
+  // Length errors come from intakeFromText without spending a slot.
+  const len = text.trim().length;
+  if (len < INTAKE_MIN || len > INTAKE_MAX) return intakeFromText(text);
+  if (!intakeLimiter(user.id)) return { ok: false, error: SLOW_DOWN };
+  return intakeFromText(text);
 }

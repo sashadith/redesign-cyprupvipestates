@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createLeadAction, type CreateLeadResult } from "../leads/actions";
 import { FINANCINGS, NEW_LEAD_LANGUAGES, TIMELINES } from "@/lib/crm/newLeadForm";
+import { intakeToFormPatch } from "@/lib/crm/ai/intakePrefill";
+import type { IntakeFields } from "@/lib/crm/ai/intake";
 import { useToast } from "./Toast";
+import { LeadIntake } from "./LeadIntake";
 
 // New lead in the new CRM (Phase 2c). Validation lives in newLeadForm.ts and is
 // re-run by the server action; this form only shows what comes back.
@@ -31,6 +34,13 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
   const [dup, setDup] = useState<Dup | null>(null);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
   const err = (k: string) => (error?.field === k ? error.text : null);
+
+  // Claude intake: fill only what is still empty, report what was filled.
+  const prefill = (fields: IntakeFields) => {
+    const { patch, filled } = intakeToFormPatch(f, fields);
+    if (filled.length) setF((p) => ({ ...p, ...patch }));
+    return filled;
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +79,7 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
 
   return (
     <form className="crm-panel crm-nl" onSubmit={submit} noValidate>
+      <LeadIntake onExtract={prefill} />
       {dup && (
         <div className="crm-nl-dup" role="alert">
           <b>This contact already exists</b>
