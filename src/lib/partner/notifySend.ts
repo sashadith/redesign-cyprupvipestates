@@ -217,7 +217,7 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
 
   let tripped = false;
   for (const row of rows) {
-    const claimed = await prisma.partnerNotification.updateMany({ where: { id: row.id, sentAt: null }, data: { sentAt: now, error: SENDING_MARK } });
+    const claimed = await prisma.partnerNotification.updateMany({ where: { id: row.id, sentAt: null }, data: { sentAt: new Date(), error: SENDING_MARK } /* claim time, not run start: stuck-row recovery measures from here */ });
     if (claimed.count !== 1) continue; // another run took it
 
     let o: Outcome;
