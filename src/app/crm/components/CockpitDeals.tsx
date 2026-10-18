@@ -1,8 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { setDealStageAction } from "../commissions/actions";
-import type { PayoutAction } from "@/lib/crm/commissionActions";
-import { COMMISSION_LABEL, DealDates, RATE_SOURCE_LABEL, StageButtons, type DealRow } from "./DealsTable";
+import { COMMISSION_LABEL, CreditNoteLink, DealDates, RATE_SOURCE_LABEL, StageButtons, useStageSetter, type DealRow } from "./DealsTable";
 import { useToast } from "./Toast";
 
 // Deals of one lead on the cockpit (CRM v2, 2026-10-18). Numbers are the ones
@@ -13,14 +10,7 @@ const eur = (n: number) => "€" + n.toLocaleString("en-US");
 
 export function CockpitDeals({ deals, canPayout, today }: { deals: DealRow[]; canPayout: boolean; today: string }) {
   const toast = useToast();
-  const router = useRouter();
-  const onSet = async (dealId: string, to: PayoutAction, date: string) => {
-    const r = await setDealStageAction(dealId, to, date);
-    if ("error" in r) { toast.show(r.error, "error"); return false; }
-    toast.show(to === "CANCELLED" ? "Deal cancelled" : "Stage saved");
-    router.refresh();
-    return true;
-  };
+  const onSet = useStageSetter(toast);
   return (
     <section className="crm-panel crm-ck-deals" aria-labelledby="crm-ck-deals-h">
       <h2 id="crm-ck-deals-h">Deals</h2>
@@ -43,7 +33,9 @@ export function CockpitDeals({ deals, canPayout, today }: { deals: DealRow[]; ca
                 <div><dt>Partner</dt><dd>{d.partnerCommission != null ? eur(d.partnerCommission) : <span className="crm-muted">—</span>}</dd></div>
               </dl>
               <DealDates d={d} />
-              {canPayout && <div className="crm-ck-payout"><StageButtons deal={d} today={today} onSet={onSet} /></div>}
+              {canPayout
+                ? <div className="crm-ck-payout"><StageButtons deal={d} today={today} onSet={onSet} /></div>
+                : d.creditNote && <div className="crm-ck-payout"><CreditNoteLink deal={d} /></div>}
             </li>
           ))}
         </ul>

@@ -35,6 +35,7 @@ export default async function CommissionsPage() {
         commissionStatus: true, expectedAt: true, earnedAt: true, developerPaidAt: true, paidOutAt: true,
         lead: { select: { firstName: true, lastName: true } },
         development: { select: { publicName: true } },
+        creditNote: { select: { id: true, number: true } },
       },
     }),
     prisma.deal.groupBy({ by: ["commissionStatus"], where: live, _sum: { ourCommission: true }, _count: { _all: true, ourCommission: true } }),
@@ -76,6 +77,7 @@ export default async function CommissionsPage() {
     earnedAt: day(d.earnedAt),
     developerPaidAt: day(d.developerPaidAt),
     paidOutAt: day(d.paidOutAt),
+    creditNote: d.creditNote,
   }));
 
   const statusTotals = statusTotalsOf(totals);

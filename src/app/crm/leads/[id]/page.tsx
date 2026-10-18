@@ -52,6 +52,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           id: true, unitLabel: true, price: true, ourRatePercent: true, rateSource: true, ourCommission: true, partnerCommission: true,
           commissionStatus: true, expectedAt: true, earnedAt: true, developerPaidAt: true, paidOutAt: true,
           development: { select: { publicName: true } },
+          creditNote: { select: { id: true, number: true } },
         },
       },
       interactions: {
@@ -89,6 +90,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     ourRatePercent: d.ourRatePercent?.toNumber() ?? null, rateSource: d.rateSource, ourCommission: d.ourCommission, partnerCommission: d.partnerCommission,
     status: d.commissionStatus as CommissionStatusValue,
     expectedAt: day(d.expectedAt), earnedAt: day(d.earnedAt), developerPaidAt: day(d.developerPaidAt), paidOutAt: day(d.paidOutAt),
+    creditNote: d.creditNote,
   }));
   const timeline = toTimeline(lead.interactions.slice(0, TIMELINE_CAP));
 

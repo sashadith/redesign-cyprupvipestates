@@ -13,6 +13,8 @@ export type DealRow = {
   price: number; ourRatePercent: number | null; rateSource: "PROJECT" | "DEVELOPER" | "MANUAL" | "MISSING";
   ourCommission: number | null; partnerCommission: number | null; status: CommissionStatusValue;
   expectedAt: string | null; earnedAt: string | null; developerPaidAt: string | null; paidOutAt: string | null;
+  /** Set once a partner payout issued a credit note. */
+  creditNote?: { id: string; number: string } | null;
 };
 export type { StatusTotal };
 
@@ -29,30 +31,67 @@ const ACTION_QUESTION: Record<PayoutAction, string> = {
 export const RATE_SOURCE_LABEL: Record<DealRow["rateSource"], string> = { PROJECT: "project", DEVELOPER: "developer", MANUAL: "manual", MISSING: "rate missing" };
 const TOTAL_ORDER: CommissionStatusValue[] = ["EXPECTED", "EARNED", "DEVELOPER_PAID", "PAID_OUT"];
 
-export function StageButtons({ deal, today, onSet }: { deal: DealRow; today: string; onSet: (dealId: string, to: PayoutAction, date: string) => Promise<boolean> }) {
+/** "ok" = saved; "paused" = the partner's payouts are paused and the server wants an explicit override. */
+export type StageOutcome = "ok" | "paused" | "error";
+export type StageSetter = (dealId: string, to: PayoutAction, date: string, override: boolean) => Promise<StageOutcome>;
+
+/** The one save path for payout buttons (Commissions screen and lead cockpit). */
+export function useStageSetter(toast: ReturnType<typeof useToast>): StageSetter {
+  const router = useRouter();
+  return async (dealId, to, date, override) => {
+    const r = await setDealStageAction(dealId, to, date, override);
+    if ("error" in r) { toast.show(r.error, "error"); return r.code === "PAYOUT_PAUSED" ? "paused" : "error"; }
+    toast.show(to === "CANCELLED" ? "Deal cancelled" : r.creditNoteNumber ? `Paid out — credit note ${r.creditNoteNumber}` : "Stage saved");
+    router.refresh();
+    return "ok";
+  };
+}
+
+export function CreditNoteLink({ deal }: { deal: DealRow }) {
+  if (!deal.creditNote) return null;
+  return <a className="crm-credit-note" href={`/crm/credit-notes/${deal.creditNote.id}`} download>Credit note {deal.creditNote.number}</a>;
+}
+
+export function StageButtons({ deal, today, onSet }: { deal: DealRow; today: string; onSet: StageSetter }) {
   const actions = payoutActions(deal.status);
   const [picking, setPicking] = useState<PayoutAction | null>(null);
   const [date, setDate] = useState(today);
+  const [paused, setPaused] = useState(false);
+  const [override, setOverride] = useState(false);
   const [pending, start] = useTransition();
-  if (actions.length === 0) return <span className="crm-muted">—</span>;
+  if (actions.length === 0) return deal.creditNote ? <CreditNoteLink deal={deal} /> : <span className="crm-muted">—</span>;
+  const pick = (a: PayoutAction | null) => { setDate(today); setPaused(false); setOverride(false); setPicking(a); };
   if (!picking) {
     return (
       <span className="crm-deal-actions">
         {actions.map((a) => (
-          <button key={a} type="button" className={`crm-btn${a === "CANCELLED" ? " quiet" : ""}`} onClick={() => { setDate(today); setPicking(a); }}>{ACTION_LABEL[a]}</button>
+          <button key={a} type="button" className={`crm-btn${a === "CANCELLED" ? " quiet" : ""}`} onClick={() => pick(a)}>{ACTION_LABEL[a]}</button>
         ))}
       </span>
     );
   }
   return (
     <form className="crm-confirm" aria-label={`${ACTION_LABEL[picking]} for ${deal.leadName}`}
-      onSubmit={(e) => { e.preventDefault(); start(async () => { if (await onSet(deal.id, picking, date)) setPicking(null); }); }}>
+      onSubmit={(e) => {
+        e.preventDefault();
+        start(async () => {
+          const r = await onSet(deal.id, picking, date, picking === "PAID_OUT" && paused && override);
+          if (r === "ok") pick(null);
+          else if (r === "paused") setPaused(true);
+        });
+      }}>
       <label>
         <span>{ACTION_QUESTION[picking]}</span>
         <input type="date" value={date} max={today} required onChange={(e) => setDate(e.target.value)} disabled={pending} />
       </label>
-      <button type="submit" className={`crm-btn ${picking === "CANCELLED" ? "danger" : "primary"}`} disabled={pending || !date}>Confirm</button>
-      <button type="button" className="crm-btn" disabled={pending} onClick={() => setPicking(null)}>Back</button>
+      {picking === "PAID_OUT" && paused && (
+        <label className="crm-pay-anyway">
+          <input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} disabled={pending} />
+          <span>Pay anyway</span>
+        </label>
+      )}
+      <button type="submit" className={`crm-btn ${picking === "CANCELLED" ? "danger" : "primary"}`} disabled={pending || !date || (paused && !override)}>Confirm</button>
+      <button type="button" className="crm-btn" disabled={pending} onClick={() => pick(null)}>Back</button>
     </form>
   );
 }
@@ -65,14 +104,7 @@ export function DealDates({ d }: { d: DealRow }) {
 
 export function DealsTable({ deals, totals, today, truncated }: { deals: DealRow[]; totals: StatusTotal[]; today: string; truncated: boolean }) {
   const toast = useToast();
-  const router = useRouter();
-  const onSet = async (dealId: string, to: PayoutAction, date: string) => {
-    const r = await setDealStageAction(dealId, to, date);
-    if ("error" in r) { toast.show(r.error, "error"); return false; }
-    toast.show(to === "CANCELLED" ? "Deal cancelled" : "Stage saved");
-    router.refresh();
-    return true;
-  };
+  const onSet = useStageSetter(toast);
   const totalOf = new Map(totals.map((t) => [t.status, t]));
   return (
     <section className="crm-comm-section" aria-labelledby="crm-deals-h">

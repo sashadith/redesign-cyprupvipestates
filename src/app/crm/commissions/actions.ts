@@ -8,6 +8,8 @@ import { writeAudit } from "@/lib/crm/audit";
 import { parseRate } from "@/lib/crm/rateForm";
 import { isIdArg, isPayoutAction, parseStageDate, payoutActions, stageOrderError, type PayoutAction } from "@/lib/crm/commissionActions";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
+import { markPaidOut } from "@/lib/crm/payout";
+import type { PAYOUT_PAUSED_CODE } from "@/lib/crm/payoutRules";
 
 // Commissions screen writes (CRM v2, 2026-10-18). Money records: every write and
 // its audit row commit in one transaction. Changing a rate never touches
@@ -90,19 +92,38 @@ export async function deleteRateAction(rateId: string): Promise<Result> {
   return { ok: true };
 }
 
+// PAID_OUT goes through markPaidOut (credit notes); this map covers the other steps.
 const STAGE_FIELD: Record<PayoutAction, "developerPaidAt" | "paidOutAt" | "cancelledAt"> = {
   DEVELOPER_PAID: "developerPaidAt",
   PAID_OUT: "paidOutAt",
   CANCELLED: "cancelledAt",
 };
 
-export async function setDealStageAction(dealId: string, to: PayoutAction, onDate: string): Promise<Result> {
+export type StageResult = { ok: true; creditNoteNumber?: string } | { error: string; code?: typeof PAYOUT_PAUSED_CODE };
+
+const revalidateDeal = (leadId?: string) => {
+  revalidatePath("/crm/commissions");
+  revalidatePath("/crm/pipeline");
+  if (leadId) revalidatePath(`/crm/leads/${leadId}`);
+};
+
+// `override` (Pay anyway) only matters for PAID_OUT on a partner whose payouts are
+// paused after a bank-details change; the manager() guard already limits this
+// action to canAssignLeads users, and markPaidOut checks it again.
+export async function setDealStageAction(dealId: string, to: PayoutAction, onDate: string, override?: boolean): Promise<StageResult> {
   const actor = await manager();
   if (!actor) return DENIED;
   if (!isIdArg(dealId)) return { error: "Deal not recognised — reload." };
   if (!isPayoutAction(to)) return { error: "Unknown payout step." };
   const date = parseStageDate(String(onDate ?? ""));
   if (!date.ok) return { error: date.error };
+
+  if (to === "PAID_OUT") {
+    const r = await markPaidOut(actor, dealId, { onDate, override: override === true });
+    if ("error" in r) return r;
+    revalidateDeal(r.leadId);
+    return r.creditNote ? { ok: true, creditNoteNumber: r.creditNote.number } : { ok: true };
+  }
 
   const result = await prisma.$transaction(async (tx): Promise<Result & { leadId?: string }> => {
     // Lock the row so two clicks (or two people) cannot both move the same deal.
@@ -121,8 +142,6 @@ export async function setDealStageAction(dealId: string, to: PayoutAction, onDat
     return { ok: true, leadId: deal.leadId };
   });
   if ("error" in result) return { error: result.error };
-  revalidatePath("/crm/commissions");
-  revalidatePath("/crm/pipeline");
-  if (result.leadId) revalidatePath(`/crm/leads/${result.leadId}`);
+  revalidateDeal(result.leadId);
   return { ok: true };
 }
