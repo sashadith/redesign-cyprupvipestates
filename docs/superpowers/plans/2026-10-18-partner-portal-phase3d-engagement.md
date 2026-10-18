@@ -66,6 +66,19 @@
    - Pure `averageResponse(samples)` with tests. The server query is bounded (500 claims) and cached via `unstable_cache` with a 1 h revalidate (tag `partner-response-avg`).
 9. **Nav:** "Calculator" and "Materials" are added for ACTIVE partners. If the header gets crowded on phones, keep them in the scrollable nav like the CRM does.
 
+10. **EU VAT number at registration (operator, 2026-10-18):**
+    - A partner registering a company in an EU member state must enter its VAT number.
+    - `Partner.vatId String?` (plain; a VAT number is public business data) and `Partner.vatModeManual Boolean @default(false)`. These are added to the 3d migration file, which is not deployed yet.
+    - Registration validation: when `company` is filled and `country` ∈ EU-27, a VAT number is required. Format: a 2-letter prefix matching the country (Greece uses `EL`), then 2–13 alphanumerics. Outside the EU it is optional.
+    - The profile shows the VAT number. The partner can correct it (same validation); the operator can always edit it in /crm/partners.
+    - `vatMode` is derived automatically unless `vatModeManual`:
+      - a vatId and an EU country other than CY → REVERSE_CHARGE;
+      - CY with a vatId → CY_VAT;
+      - otherwise NONE.
+      It is recomputed on registration and on every vatId/country change. When the operator picks a mode in /crm/partners, `vatModeManual` is set to true; the operator can choose "Automatic" to go back.
+    - The credit note's recipient VAT line uses `Partner.vatId` (falling back to the bank-details vatId if that is the only one set).
+    - Pure `deriveVatMode({ country, vatId })` + `euVatIdValid(country, vatId)` with tests.
+
 ## Tasks
 
 ### Task 1: Migration
@@ -90,6 +103,12 @@
 - [ ] `src/lib/partner/digestSend.ts` + `src/app/api/cron/partner-digest/route.ts` per Decision 6.
 - [ ] Header comment with the crontab line `0 5 * * 1 curl -s "http://127.0.0.1:3000/api/cron/partner-digest?key=$CRON_SECRET" >/dev/null` (05:00 UTC ≈ 07:00/08:00 Cyprus).
 - [ ] Tests for the pure planning parts: recipient filter, week key, log idempotency decisions.
+
+### Task 4b: EU VAT number + automatic VAT mode (Decision 10)
+- [ ] Schema columns (append to `20261019130000_partner_engagement`; the controller re-runs the PGlite check).
+- [ ] Pure helpers + tests; registration form field (shown/required for EU countries with a company), validation, dictionary in 4 locales.
+- [ ] Profile edit; CRM partners: VAT number editable, vatMode select with "Automatic".
+- [ ] markPaidOut/creditNoteModel recipient VAT from Partner.vatId.
 
 ### Task 5: Wrap-up
 - [ ] Full checks, PGlite migration check, demo smoke (calculator, materials, onboarding, toggles).
