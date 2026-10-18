@@ -244,7 +244,7 @@ test("ACTIVE claim with expired protection is shown like EXPIRED: submission onl
   const c = { ...ctx(), activity: new Map([["lead-1", {
     events: [{ type: "STATUS_CHANGE", occurredAt: t("2025-01-05T00:00:00Z"), metadata: { toStatus: "OFFER" } }] as never[],
     firstRealContactAt: t("2025-01-02T00:00:00Z"), lastRealContactAt: t("2025-02-01T00:00:00Z"), firstOutboundAt: t("2025-01-02T00:00:00Z"),
-  }]]), deals: [deal({ createdAt: t("2025-01-10T00:00:00Z") })], messages: [{ leadId: "lead-1", partnerId: P, createdAt: t("2025-01-06T00:00:00Z"), body: "Viewing went well" }] };
+  }]]), deals: [deal({ createdAt: t("2025-01-10T00:00:00Z"), commissionStatus: "CANCELLED", cancelledAt: t("2025-01-20T00:00:00Z") })], messages: [{ leadId: "lead-1", partnerId: P, createdAt: t("2025-01-06T00:00:00Z"), body: "Viewing went well" }] };
   const d = toClientDetail(old, c);
   assert.equal(d.kind, "submission");
   assert.equal(d.state, "EXPIRED");
@@ -261,6 +261,37 @@ test("ACTIVE claim with expired protection is shown like EXPIRED: submission onl
   // a recent real contact keeps it protected
   c.activity.get("lead-1")!.lastRealContactAt = t("2026-03-01T00:00:00Z");
   assert.equal(toClientDetail(old, c).kind, "active");
+});
+test("committed claims (lead RESERVED/CLOSED or a non-CANCELLED deal) never read as expired", () => {
+  const act = () => new Map<string, Activity>([["lead-1", {
+    events: [], firstRealContactAt: t("2025-01-02T00:00:00Z"), lastRealContactAt: t("2025-02-01T00:00:00Z"), firstOutboundAt: t("2025-01-02T00:00:00Z"),
+  }]]);
+  const old = (status: string) => activeClaim({ createdAt: t("2025-01-01T00:00:00Z"), lead: { ...leadWithSecrets, status } as never });
+  const base = { ...ctx(), activity: act(), messages: [] };
+  for (const status of ["RESERVED", "CLOSED"]) {
+    const d = toClientDetail(old(status), { ...base, deals: [] });
+    assert.equal(d.kind, "active", status);
+    assert.equal(toListItem(old(status), { ...base, deals: [] }).state, "ACTIVE");
+  }
+  // a deal (even one from before the claim) that is not cancelled keeps the claim visible with its commission
+  const earned = deal({ createdAt: t("2025-03-01T00:00:00Z"), commissionStatus: "EARNED" });
+  const d = toClientDetail(old("OFFER"), { ...base, deals: [earned] });
+  assert.equal(d.kind, "active");
+  assert.equal(d.kind === "active" && d.deals[0].commission, 4500);
+  const item = toListItem(old("OFFER"), { ...base, deals: [earned] });
+  assert.equal(item.category, "active");
+  assert.deepEqual(item.commission, { EXPECTED: 0, EARNED: 4500, DEVELOPER_PAID: 0, PAID_OUT: 0 });
+  assert.equal(latestMilestones([old("OFFER")], { ...base, deals: [earned] }).length > 0, true);
+  // only cancelled deals → expired again; a deal of another lead does not count
+  const cancelled = deal({ createdAt: t("2025-03-01T00:00:00Z"), commissionStatus: "CANCELLED" });
+  assert.equal(toClientDetail(old("OFFER"), { ...base, deals: [cancelled, deal({ leadId: "lead-9" })] }).state, "EXPIRED");
+  // the where-clauses use the same rule
+  const live = JSON.stringify(clientsWhere(P, "active", now));
+  assert.ok(live.includes('"status":{"in":["RESERVED","CLOSED"]}') && live.includes('"deals":{"some":{"commissionStatus":{"not":"CANCELLED"}}}'));
+  const lost = JSON.stringify(clientsWhere(P, "lost", now));
+  assert.ok(lost.includes('"status":{"notIn":["RESERVED","CLOSED"]}') && lost.includes('"deals":{"none":{"commissionStatus":{"not":"CANCELLED"}}}'));
+  for (const w of [overviewCountWheres(P, now).active, overviewCountWheres(P, now).closed, clientsWhere(P, "closed", now)])
+    assert.ok(JSON.stringify(w).includes('"deals":{"some":{"commissionStatus":{"not":"CANCELLED"}}}'));
 });
 test("soft-deleted lead behind an ACTIVE claim reads as neutral 'Not proceeding' with no details", () => {
   const trashed = activeClaim({ lead: { ...leadWithSecrets, deletedAt: t("2026-05-10T00:00:00Z") } as never });

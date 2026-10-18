@@ -205,18 +205,18 @@ export async function listMyClients(
       skip: (page - 1) * CLIENTS_PAGE_SIZE, take: CLIENTS_PAGE_SIZE,
     })) as RawClaim[];
   }
-  // Activity decides the display state (protection); deals/messages only for claims still ACTIVE.
+  // Activity + deals decide the display state (protection, committed); messages only for claims still ACTIVE.
   const active = rows.filter((r) => r.state === "ACTIVE" && r.lead && !r.lead.deletedAt);
-  const activity = await loadActivity(active);
-  const live = active.filter((r) => displayStateOf(r, { activity, now }) === "ACTIVE").map((r) => r.leadId);
-  const [deals, messages] = await Promise.all([loadDeals(live), loadMessages(partnerId, live, false)]);
+  const [activity, deals] = await Promise.all([loadActivity(active), loadDeals(active.map((r) => r.leadId))]);
+  const live = active.filter((r) => displayStateOf(r, { activity, now, deals }) === "ACTIVE").map((r) => r.leadId);
+  const messages = await loadMessages(partnerId, live, false);
   const ctx = { partnerId, now, activity, deals, messages };
   return { items: rows.map((r) => toListItem(r, ctx)), total, page, pages: Math.max(1, Math.ceil(total / CLIENTS_PAGE_SIZE)) };
 }
 
 /**
  * One claim of this partner, or null (→ notFound()). Non-ACTIVE claims load no CRM data at all;
- * ACTIVE claims on a trashed lead or with expired protection load no deals or messages.
+ * ACTIVE claims on a trashed lead or with expired protection (and nothing committed) show no deals or messages.
  */
 export async function getMyClient(partnerId: string, claimId: string): Promise<ClientDetail | null> {
   if (typeof claimId !== "string" || claimId.length > 64) return null;
@@ -230,18 +230,19 @@ export async function getMyClient(partnerId: string, claimId: string): Promise<C
   if (claim.state !== "ACTIVE") {
     return toClientDetail({ ...claim, lead: null }, { partnerId, now, deals: [], messages: [], office });
   }
-  const [lead, activity] = await Promise.all([
+  const [lead, activity, deals] = await Promise.all([
     prisma.lead.findUnique({
       where: { id: claim.leadId },
       select: { status: true, lostReason: true, deletedAt: true, assignedTo: { select: { name: true, email: true, phone: true, isActive: true } } },
     }),
     loadActivity([claim]),
+    loadDeals([claim.leadId]),
   ]);
   const row: RawClaim = { ...claim, lead };
-  if (displayStateOf(row, { activity, now }) !== "ACTIVE") {
+  if (displayStateOf(row, { activity, now, deals }) !== "ACTIVE") {
     return toClientDetail(row, { partnerId, now, activity, deals: [], messages: [], office });
   }
-  const [deals, messages] = await Promise.all([loadDeals([claim.leadId]), loadMessages(partnerId, [claim.leadId], true)]);
+  const messages = await loadMessages(partnerId, [claim.leadId], true);
   return toClientDetail(row, { partnerId, now, activity, deals, messages, office });
 }
 
@@ -255,8 +256,8 @@ const OVERVIEW_CLAIM_SCAN = 2000;
 const OVERVIEW_MILESTONE_CLAIMS = 20;
 
 /**
- * KPIs, commission totals per stage and the 5 latest milestones. Claims with expired protection or on
- * a trashed lead are left out. Milestones scan the 20 live claims whose lead changed most recently.
+ * KPIs, commission totals per stage and the 5 latest milestones. Claims on a trashed lead, and claims
+ * with expired protection and nothing committed (no RESERVED/CLOSED status, no non-CANCELLED deal), are left out. Milestones scan the 20 live claims whose lead changed most recently.
  */
 export async function myOverview(partnerId: string): Promise<MyOverview> {
   const now = new Date();
@@ -276,7 +277,7 @@ export async function myOverview(partnerId: string): Promise<MyOverview> {
   ]);
   const recentLeadIds = recent.map((c) => c.leadId);
   const [deals, activity, messages] = await Promise.all([
-    loadDeals(claims.map((c) => c.leadId)),
+    loadDeals(Array.from(new Set([...claims.map((c) => c.leadId), ...recentLeadIds]))),
     loadActivity(recent),
     loadMessages(partnerId, recentLeadIds, false),
   ]);
@@ -284,6 +285,7 @@ export async function myOverview(partnerId: string): Promise<MyOverview> {
   return {
     counts: { active, inReview, viewings, closed },
     commission: commissionTotals(mine),
-    latest: latestMilestones(recent, { partnerId, now, activity, deals: mine, messages }, 5),
+    // All deals of the leads: the committed check looks at any deal; milestones still only use deals after the claim.
+    latest: latestMilestones(recent, { partnerId, now, activity, deals, messages }, 5),
   };
 }

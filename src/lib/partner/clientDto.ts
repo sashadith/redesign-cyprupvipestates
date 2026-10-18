@@ -35,17 +35,24 @@ export function classifyClaim(state: DisplayState, leadStatus: string | null | u
   return "active";
 }
 
+/** Lead statuses that commit the claim: never shown as expired (the partner must always see their commission). */
+export const COMMITTED_STATUSES = ["RESERVED", "CLOSED"] as const;
+
 /**
  * Display state of a claim. ACTIVE claims on a soft-deleted lead → NOT_PROCEEDING; ACTIVE claims whose
- * computed protection (claimProtection, full real-contact definition) has run out → EXPIRED.
+ * computed protection (claimProtection, full real-contact definition) has run out → EXPIRED — unless
+ * the claim is committed (lead RESERVED/CLOSED or at least one non-CANCELLED deal on the lead).
  */
 export function displayState(
-  row: { state: ClaimState; createdAt: Date; lead: { deletedAt?: Date | null } | null },
+  row: { state: ClaimState; createdAt: Date; lead: { deletedAt?: Date | null; status?: string } | null },
   lastRealContactAt: Date | null,
   now: Date,
+  hasLiveDeal = false,
 ): DisplayState {
   if (row.state !== "ACTIVE") return row.state;
   if (!row.lead || row.lead.deletedAt) return "NOT_PROCEEDING";
+  const committed = hasLiveDeal || (COMMITTED_STATUSES as readonly string[]).includes(row.lead.status ?? "");
+  if (committed) return "ACTIVE";
   return claimProtection({ claimCreatedAt: row.createdAt, lastRealContactAt, now }).expired ? "EXPIRED" : "ACTIVE";
 }
 
@@ -64,18 +71,30 @@ const REAL_TYPES = [...REAL_CONTACT_TYPES];
 export function protectionCutoff(now: Date): Date {
   return addMonthsUtc(now, -6);
 }
+const LIVE_DEAL = { commissionStatus: { not: "CANCELLED" } } as const;
+/** Live = protected, or committed (lead RESERVED/CLOSED or a non-CANCELLED deal) — same rule as displayState. */
 function liveActive(cutoff: Date, status?: Prisma.EnumLeadStatusFilter | "CLOSED" | "LOST" | "VIEWING_SCHEDULED"): Prisma.PartnerClaimWhereInput {
   return {
     state: "ACTIVE",
     lead: { deletedAt: null, ...(status ? { status } : {}) },
-    OR: [{ createdAt: { gte: cutoff } }, { lead: { interactions: { some: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } } } }],
+    OR: [
+      { createdAt: { gte: cutoff } },
+      { lead: { interactions: { some: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } } } },
+      { lead: { status: { in: [...COMMITTED_STATUSES] } } },
+      { lead: { deals: { some: LIVE_DEAL } } },
+    ],
   };
 }
 function expiredActive(cutoff: Date): Prisma.PartnerClaimWhereInput {
   return {
     state: "ACTIVE",
     createdAt: { lt: cutoff },
-    lead: { deletedAt: null, interactions: { none: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } } },
+    lead: {
+      deletedAt: null,
+      status: { notIn: [...COMMITTED_STATUSES] },
+      deals: { none: LIVE_DEAL },
+      interactions: { none: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } },
+    },
   };
 }
 const trashedActive: Prisma.PartnerClaimWhereInput = { state: "ACTIVE", lead: { deletedAt: { not: null } } };
@@ -356,8 +375,10 @@ function lastRealContact(row: RawClaim, ctx: Pick<MapContext, "activity">): Date
   return last && last >= row.createdAt ? last : null;
 }
 
-export function displayStateOf(row: RawClaim, ctx: Pick<MapContext, "activity" | "now">): DisplayState {
-  return displayState(row, lastRealContact(row, ctx), ctx.now);
+/** ctx.deals must hold all deals of the claim's lead (any date) for the committed check. */
+export function displayStateOf(row: RawClaim, ctx: Pick<MapContext, "activity" | "now" | "deals">): DisplayState {
+  const hasLiveDeal = ctx.deals.some((d) => d.leadId === row.leadId && d.commissionStatus !== "CANCELLED");
+  return displayState(row, lastRealContact(row, ctx), ctx.now, hasLiveDeal);
 }
 
 function ownClaim(row: RawClaim, partnerId: string): void {
