@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteRateAction, saveRateAction } from "../commissions/actions";
-import { parseRate } from "@/lib/crm/rateForm";
+import { filterRateAccounts, parseRate } from "@/lib/crm/rateForm";
 import { useToast } from "./Toast";
 
 export type RateAccount = {
@@ -134,8 +134,7 @@ export function RatesEditor({ accounts }: { accounts: RateAccount[] }) {
     router.refresh();
     return true;
   };
-  const q = query.trim().toLowerCase();
-  const shown = q ? accounts.filter((a) => a.name.toLowerCase().includes(q) || a.overrides.some((o) => o.projectName.toLowerCase().includes(q))) : accounts;
+  const shown = filterRateAccounts(accounts, query);
   return (
     <section className="crm-comm-section" aria-labelledby="crm-rates-h">
       <div className="crm-comm-sechead">
