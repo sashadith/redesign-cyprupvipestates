@@ -8,12 +8,13 @@ export type BankFormInput = {
   bic: string;
   billingName: string;
   billingAddress: string;
-  vatId: string;
 };
 
 /**
  * The raw object handed to validateBankDetails. An empty IBAN keeps the stored one (the form never
- * pre-fills it); without a stored IBAN it stays empty and validation rejects it.
+ * pre-fills it); without a stored IBAN it stays empty and validation rejects it. The form has no VAT
+ * field any more (the VAT number lives in the company details): a legacy stored bank VAT ID is carried
+ * over unchanged, so payout can keep using it as the fallback.
  */
 export function mergeBankInput(prev: BankDetails | null, input: BankFormInput): Record<string, string> {
   const typed = input.iban.trim();
@@ -23,7 +24,7 @@ export function mergeBankInput(prev: BankDetails | null, input: BankFormInput): 
     bic: input.bic,
     billingName: input.billingName,
     billingAddress: input.billingAddress,
-    vatId: input.vatId,
+    vatId: prev?.vatId ?? "",
   };
 }
 

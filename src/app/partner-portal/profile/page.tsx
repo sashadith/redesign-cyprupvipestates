@@ -4,6 +4,7 @@ import { isPayoutBlocked } from "@/lib/partner/bank";
 import { ibanLast4 } from "@/lib/partner/bankFlow";
 import { loadBankDetails } from "@/lib/partner/bankStore";
 import { requirePartner } from "@/lib/partner/session";
+import { vatIdMissing } from "@/lib/partner/vat";
 import { BankForm, PasswordForm, ProfileForm, SettingsForm } from "../components/forms";
 import { dateFmt } from "../components/portalBits";
 import { portalContext } from "../portalContext";
@@ -29,6 +30,7 @@ export default async function PartnerProfile() {
     <div className="pp-stack">
       <section className="pp-card pp-card-wide">
         <h1>{P.title}</h1>
+        {vatIdMissing(p) && <p className="pp-alert pp-alert-info" role="status">{P.vatMissing}</p>}
         <ProfileForm
           t={t}
           country={p.country}
@@ -60,7 +62,6 @@ export default async function PartnerProfile() {
                 <div><dt>{B.bic}</dt><dd>{d.bic ?? "—"}</dd></div>
                 <div><dt>{B.billingName}</dt><dd>{d.billingName}</dd></div>
                 <div><dt>{B.billingAddress}</dt><dd className="pp-pre">{d.billingAddress}</dd></div>
-                <div><dt>{B.vatId}</dt><dd>{d.vatId ?? "—"}</dd></div>
                 {bank.updatedAt && <div><dt>{B.lastChanged}</dt><dd>{dates.format(bank.updatedAt)}</dd></div>}
               </dl>
             ) : (
@@ -71,7 +72,7 @@ export default async function PartnerProfile() {
               ibanLast4={last4}
               prefill={
                 d
-                  ? { holder: d.holder, bic: d.bic ?? "", billingName: d.billingName, billingAddress: d.billingAddress, vatId: d.vatId ?? "" }
+                  ? { holder: d.holder, bic: d.bic ?? "", billingName: d.billingName, billingAddress: d.billingAddress }
                   : null
               }
             />

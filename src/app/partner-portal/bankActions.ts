@@ -44,7 +44,6 @@ export async function saveBankDetailsAction(_prev: FormState, fd: FormData): Pro
       bic: field(fd, "bic"),
       billingName: field(fd, "billingName"),
       billingAddress: field(fd, "billingAddress"),
-      vatId: field(fd, "vatId"),
     }),
   );
   if (!v.ok) return { error: v.code, field: v.field };

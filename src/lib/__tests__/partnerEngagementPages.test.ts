@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { NOTIFICATION_KINDS, OPTED_OUT_ERROR, optOutGate } from "@/lib/partner/notify";
-import { BROCHURE_CAP, brochureLinks, brochurePdfLang, brochureRows } from "@/lib/partner/materials";
-import { onboardingFactsFrom, onboardingHref, onboardingSteps } from "@/lib/partner/onboarding";
+import { BROCHURE_CAP, brochureLang, brochureLinks, brochureRows } from "@/lib/partner/materials";
+import { PARTNER_LOCALES, dict } from "@/lib/partner/i18n";
+import { onboardingFactsFrom, onboardingHref, onboardingSteps, onboardingVisible } from "@/lib/partner/onboarding";
 import { averageResponse, responseMinutesFrom } from "@/lib/partner/responseAverage";
 
 test("optOutGate: STAGE and MESSAGE are dropped when notifications are off", () => {
@@ -20,24 +21,26 @@ test("optOutGate: claim decisions and payouts always go out", () => {
   assert.deepEqual([...NOTIFICATION_KINDS].sort(), ["CLAIM_OUTCOME", "MESSAGE", "PAYOUT", "STAGE"]);
 });
 
-test("brochure links: main-site URLs, en without prefix, slug encoded", () => {
-  assert.deepEqual(brochureLinks("en", "sea-view"), {
-    page: "https://cyprusvipestates.com/projects/sea-view",
-    pdf: "https://cyprusvipestates.com/api/projects/en/sea-view/pdf",
-  });
-  assert.deepEqual(brochureLinks("de", "a b"), {
-    page: "https://cyprusvipestates.com/de/projects/a%20b",
-    pdf: "https://cyprusvipestates.com/api/projects/de/a%20b/pdf",
-  });
-  assert.equal(brochureLinks("pl", "x")!.pdf, "https://cyprusvipestates.com/api/projects/pl/x/pdf");
+test("brochure links: main-site project pages only, en without prefix, slug encoded", () => {
+  assert.deepEqual(brochureLinks("en", "sea-view"), { page: "https://cyprusvipestates.com/projects/sea-view" });
+  assert.deepEqual(brochureLinks("de", "a b"), { page: "https://cyprusvipestates.com/de/projects/a%20b" });
+  assert.equal(brochureLinks("pl", "x")!.page, "https://cyprusvipestates.com/pl/projects/x");
   assert.equal(brochureLinks("ru", "x")!.page, "https://cyprusvipestates.com/ru/projects/x");
   assert.equal(brochureLinks("en", null), null);
   assert.equal(brochureLinks("en", "  "), null);
 });
-test("brochure PDF language falls back to en", () => {
-  assert.equal(brochurePdfLang("he"), "en");
-  assert.equal(brochurePdfLang("fr"), "en");
-  assert.equal(brochurePdfLang("ru"), "ru");
+test("brochure language falls back to en", () => {
+  assert.equal(brochureLang("he"), "en");
+  assert.equal(brochureLang("fr"), "en");
+  assert.equal(brochureLang("ru"), "ru");
+});
+test("materials: no PDF link or PDF wording left in any locale", () => {
+  for (const l of PARTNER_LOCALES) {
+    const m = dict(l).materials as Record<string, unknown>;
+    assert.ok(!("pdf" in m), l);
+    assert.doesNotMatch(dict(l).materials.brochuresIntro, /PDF/i, l);
+  }
+  assert.ok(!("pdf" in brochureRows("en", [{ id: "a", name: "A", town: null, slug: "a" }])[0]));
 });
 test("brochureRows skips slugless projects, keeps order, caps", () => {
   const ps = Array.from({ length: 320 }, (_, i) => ({ id: `p${i}`, name: `P${i}`, town: null, slug: i === 1 ? null : `s${i}` }));
@@ -79,4 +82,26 @@ test("responseMinutesFrom: minutes per claim with a later first outbound contact
   const m5 = new Map(five.map((c, i) => [c.leadId, new Date(t0.getTime() + (i + 1) * 60_000 * 10)]));
   assert.equal(averageResponse(responseMinutesFrom(five, m5)), 30);
   assert.equal(averageResponse(responseMinutesFrom(five.slice(0, 4), m5)), null);
+});
+
+test("onboarding: VAT-number item only for EU companies, stays visible despite Hide until set", () => {
+  const base = { status: "ACTIVE", hasAcceptance: true, bankComplete: true, hasClaim: true };
+  const none = onboardingSteps(onboardingFactsFrom({ ...base, vat: { required: false, set: false } }));
+  assert.equal(none.total, 4);
+  assert.equal(none.complete, true);
+  const missing = onboardingSteps(onboardingFactsFrom({ ...base, vat: { required: true, set: false } }));
+  assert.deepEqual([missing.total, missing.done, missing.complete], [5, 4, false]);
+  assert.equal(onboardingHref("vatId"), "/profile");
+  assert.equal(onboardingVisible(missing, true), true); // Hide does not hide a missing VAT number
+  assert.equal(onboardingVisible(missing, false), true);
+  const set = onboardingSteps(onboardingFactsFrom({ ...base, vat: { required: true, set: true } }));
+  assert.equal(set.complete, true);
+  assert.equal(onboardingVisible(set, false), false);
+  const open = onboardingSteps(onboardingFactsFrom({ ...base, hasClaim: false }));
+  assert.equal(onboardingVisible(open, true), false);
+  assert.equal(onboardingVisible(open, false), true);
+  for (const l of PARTNER_LOCALES) {
+    assert.ok(dict(l).onboarding.steps.vatId.trim(), l);
+    assert.ok(dict(l).profile.vatMissing.trim(), l);
+  }
 });

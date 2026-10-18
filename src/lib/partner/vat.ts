@@ -52,18 +52,35 @@ export function deriveVatMode(i: { country: string; vatId: string | null | undef
   return "NONE";
 }
 
+/** An EU company without a stored VAT number: shown as a prompt on /profile and an onboarding item on /home. */
+export function vatIdMissing(p: { country: string; company: string | null | undefined; vatId: string | null | undefined }): boolean {
+  return vatIdRequired(p) && !(p.vatId ?? "").trim();
+}
+
+/**
+ * Soft path for existing partners (registered before the rule): while no VAT number is stored and the company
+ * name stays the same, a save without one is accepted. A new registration or a changed company name gets the
+ * hard rule.
+ */
+export function vatIdSoftExempt(
+  stored: { vatId: string | null | undefined; company: string | null | undefined },
+  nextCompany: string | null | undefined,
+): boolean {
+  return !(stored.vatId ?? "").trim() && (stored.company ?? "").trim() === (nextCompany ?? "").trim();
+}
+
 export type VatIdCheck = { ok: true; vatId: string | null } | { ok: false; code: "err.vatIdRequired" | "err.vatIdFormat" };
 
 /**
- * One rule for every entry point: empty → null unless required; EU country → EU format;
- * elsewhere → generic format. Returns the normalised value to store.
+ * One rule for every entry point: empty → null unless required (and not `allowMissing`, the soft path);
+ * EU country → EU format; elsewhere → generic format. Returns the normalised value to store.
  */
-export function checkPartnerVatId(i: { country: string; company: string | null | undefined; vatId: unknown }): VatIdCheck {
+export function checkPartnerVatId(i: { country: string; company: string | null | undefined; vatId: unknown; allowMissing?: boolean }): VatIdCheck {
   if (i.vatId !== undefined && i.vatId !== null && typeof i.vatId !== "string") return { ok: false, code: "err.vatIdFormat" };
   const raw = typeof i.vatId === "string" ? i.vatId : "";
   if (raw.length > 40) return { ok: false, code: "err.vatIdFormat" };
   const v = normaliseVatId(raw);
-  if (!v) return vatIdRequired(i) ? { ok: false, code: "err.vatIdRequired" } : { ok: true, vatId: null };
+  if (!v) return vatIdRequired(i) && !i.allowMissing ? { ok: false, code: "err.vatIdRequired" } : { ok: true, vatId: null };
   const valid = isEuCountry(i.country) ? euVatIdValid(i.country, v) : genericVatIdValid(v);
   return valid ? { ok: true, vatId: v } : { ok: false, code: "err.vatIdFormat" };
 }

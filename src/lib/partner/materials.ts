@@ -1,25 +1,22 @@
-// Materials page (partner portal phase 3d). Pure: brochure links on the main site.
-// Absolute main-site URLs — /api is not served on the partner host.
+// Materials page (partner portal phase 3d). Pure: project-page links on the main site.
+// Absolute main-site URLs — the partner host serves only the portal.
 import { isLocale } from "@/lib/locale";
 import { publicProjectUrl } from "./clientDto";
 
 export const BROCHURE_CAP = 300;
-const MAIN_SITE = "https://cyprusvipestates.com";
-// The PDF route (src/app/api/projects/[lang]/[slug]/pdf) renders every site locale except he; anything else → en.
-export function brochurePdfLang(locale: string): string {
+// Main-site project pages exist in every site locale; the partner portal never links to he, anything else → en.
+export function brochureLang(locale: string): string {
   return isLocale(locale) && locale !== "he" ? locale : "en";
 }
 
-export type BrochureLinks = { page: string; pdf: string };
+export type BrochureLinks = { page: string };
 
-/** Project page (en without prefix) and PDF brochure for a slug; null without a slug. */
+/** Main-site project page (en without prefix) for a slug; null without a slug. */
 export function brochureLinks(locale: string, slug: string | null | undefined): BrochureLinks | null {
   const s = slug?.trim();
   if (!s) return null;
-  const lang = brochurePdfLang(locale);
-  const page = publicProjectUrl(lang, s);
-  if (!page) return null;
-  return { page, pdf: `${MAIN_SITE}/api/projects/${lang}/${encodeURIComponent(s)}/pdf` };
+  const page = publicProjectUrl(brochureLang(locale), s);
+  return page ? { page } : null;
 }
 
 export type BrochureRow = { id: string; name: string; town: string | null } & BrochureLinks;

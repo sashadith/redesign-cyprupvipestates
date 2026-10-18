@@ -21,17 +21,23 @@ export function isoWeekKey(date: Date): string {
 
 export type DigestUpdate = { clientName: string; key: string; vars?: Record<string, string>; at: Date };
 export type DigestTotals = { expected: number; earned: number; developerPaid: number; paidOut: number };
-export type DigestProject = { name: string; town: string | null; handoverRate: number | null; url: string };
+/** `publishedAt` orders the list (newest first); it is not shown. */
+export type DigestProject = { name: string; town: string | null; handoverRate: number | null; url: string; publishedAt: Date };
 export type DigestContent = { updates: DigestUpdate[]; totals: DigestTotals; newProjects: DigestProject[] };
 
-/** null when there is nothing to report (no updates, all totals 0, no projects). Caps 10 updates / 5 projects. */
+/**
+ * null when there is no news: no client updates and no new projects. Totals alone are not news (they are
+ * still shown inside a mail that goes out). New projects newest first; caps 10 updates / 5 projects.
+ */
 export function digestContent(input: { updates: DigestUpdate[]; totals: DigestTotals; newProjects: DigestProject[] }): DigestContent | null {
-  const totalsSum = input.totals.expected + input.totals.earned + input.totals.developerPaid + input.totals.paidOut;
-  if (!input.updates.length && totalsSum === 0 && !input.newProjects.length) return null;
+  if (!input.updates.length && !input.newProjects.length) return null;
+  const newProjects = [...input.newProjects].sort(
+    (a, b) => b.publishedAt.getTime() - a.publishedAt.getTime() || a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+  );
   return {
     updates: input.updates.slice(0, DIGEST_MAX_UPDATES),
     totals: input.totals,
-    newProjects: input.newProjects.slice(0, DIGEST_MAX_PROJECTS),
+    newProjects: newProjects.slice(0, DIGEST_MAX_PROJECTS),
   };
 }
 
@@ -41,6 +47,9 @@ export function buildDigestEmail(
 ): BuiltEmail {
   const d = dict(locale);
   const t = d.digest;
+  // Stage names are the commissions page's terms (one vocabulary for the partner).
+  const stage = d.commission;
+  const pct = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n);
   const euro = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
   const date = (at: Date) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Asia/Nicosia" }).format(at);
   const { updates, totals, newProjects } = p.content;
@@ -60,10 +69,10 @@ export function buildDigestEmail(
     sections.push(
       [
         t.totalsTitle,
-        `• ${t.expected}: ${euro(totals.expected)}`,
-        `• ${t.earned}: ${euro(totals.earned)}`,
-        `• ${t.developerPaid}: ${euro(totals.developerPaid)}`,
-        `• ${t.paidOut}: ${euro(totals.paidOut)}`,
+        `• ${stage.EXPECTED}: ${euro(totals.expected)}`,
+        `• ${stage.EARNED}: ${euro(totals.earned)}`,
+        `• ${stage.DEVELOPER_PAID}: ${euro(totals.developerPaid)}`,
+        `• ${stage.PAID_OUT}: ${euro(totals.paidOut)}`,
       ].join("\n"),
     );
   }
@@ -72,7 +81,7 @@ export function buildDigestEmail(
       [
         t.projectsTitle,
         ...newProjects.map((pr) => {
-          const rate = pr.handoverRate == null ? t.onRequest : fmt(t.rate, { rate: pr.handoverRate });
+          const rate = pr.handoverRate == null ? t.onRequest : fmt(t.rate, { rate: pct(pr.handoverRate) });
           return `• ${[pr.name, pr.town].filter(Boolean).join(", ")} — ${rate}\n  ${pr.url}`;
         }),
       ].join("\n"),

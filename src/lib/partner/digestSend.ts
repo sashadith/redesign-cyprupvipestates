@@ -60,7 +60,7 @@ type Candidate = {
  * Sends this ISO week's digest to up to `limit` partners (call inside withDigestLock). Nothing happens
  * before `start` (PARTNER_DIGEST_START). Per partner: the week's log row is claimed first — a unique
  * insert (P2002 = another run has it) or, after an earlier failure, a guarded update — then the
- * content is built from the last 7 days; empty → "nothing new", no verified user → "no recipient"
+ * content is built from the last 7 days; no updates and no new projects → "nothing new", no verified user → "no recipient"
  * (both terminal for the week); a send sets sentAt; a failure stores the error (retried next run).
  * Three consecutive transport errors stop the batch.
  */
@@ -162,11 +162,13 @@ export async function sendWeeklyDigests(now: Date, start: Date, limit = 200): Pr
         myCommissions(p.id, { from: null, to: null }),
       ]);
       const shares = { handoverShare: Number(p.handoverShare), fixShare: Number(p.fixShare), trustMode: false };
+      const publishedAt = new Map(published.rows.map((r) => [r.id, r.publishedAt]));
       const content = digestContent({
         updates: milestones.map((m) => ({ clientName: m.name, key: m.key, at: m.at })),
         totals: digestTotals(commissions.totals),
         newProjects: projectRates(published.rows, published.rates, shares).map((pr) => ({
           name: pr.name, town: pr.town, handoverRate: pr.handoverRate, url: newProjectUrl(locale, pr.slug!),
+          publishedAt: publishedAt.get(pr.id) ?? now,
         })),
       });
       if (!content) {

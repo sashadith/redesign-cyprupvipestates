@@ -79,23 +79,38 @@ test("isoWeekKey uses Cyprus time: Sunday night UTC is already Monday in Cyprus"
 
 const totals0 = { expected: 0, earned: 0, developerPaid: 0, paidOut: 0 };
 const upd = (i: number, name = "Client " + i) => ({ clientName: name, key: "milestones.firstContact", at: new Date(Date.UTC(2026, 9, 15, 10, i)) });
-test("digestContent is null when empty and caps the lists", () => {
+const pub = (day: number) => new Date(Date.UTC(2026, 9, day, 9));
+test("digestContent is null without news (totals alone are not news) and caps the lists", () => {
   assert.equal(digestContent({ updates: [], totals: totals0, newProjects: [] }), null);
-  assert.notEqual(digestContent({ updates: [], totals: { ...totals0, expected: 1 }, newProjects: [] }), null);
+  assert.equal(digestContent({ updates: [], totals: { ...totals0, expected: 1, paidOut: 500 }, newProjects: [] }), null);
+  const withTotals = digestContent({ updates: [upd(1)], totals: { ...totals0, earned: 7 }, newProjects: [] })!;
+  assert.equal(withTotals.totals.earned, 7); // still carried inside a mail that goes out
   const c = digestContent({
     updates: Array.from({ length: 14 }, (_, i) => upd(i)),
     totals: totals0,
-    newProjects: Array.from({ length: 8 }, (_, i) => ({ name: `P${i}`, town: null, handoverRate: null, url: `https://x/${i}` })),
+    newProjects: Array.from({ length: 8 }, (_, i) => ({ name: `P${i}`, town: null, handoverRate: null, url: `https://x/${i}`, publishedAt: pub(10 + i) })),
   })!;
   assert.equal(c.updates.length, 10);
   assert.equal(c.newProjects.length, 5);
+});
+test("digestContent: new projects newest first, not by name", () => {
+  const c = digestContent({
+    updates: [],
+    totals: totals0,
+    newProjects: [
+      { name: "Alpha", town: null, handoverRate: null, url: "https://x/a", publishedAt: pub(12) },
+      { name: "Zeta", town: null, handoverRate: null, url: "https://x/z", publishedAt: pub(16) },
+      { name: "Mid", town: null, handoverRate: null, url: "https://x/m", publishedAt: pub(14) },
+    ],
+  })!;
+  assert.deepEqual(c.newProjects.map((p) => p.name), ["Zeta", "Mid", "Alpha"]);
 });
 
 test("buildDigestEmail: escapes, opt-out link, no internal fields, 4 locales", () => {
   const content = digestContent({
     updates: [upd(1, "<script>alert(1)</script>"), { ...upd(2), key: "milestones.dealEarned" }],
     totals: { expected: 12000, earned: 3000, developerPaid: 0, paidOut: 500 },
-    newProjects: [{ name: "Sea <b>View</b>", town: "Limassol", handoverRate: 1.2, url: "https://cyprusvipestates.com/en/projects/sea" }],
+    newProjects: [{ name: "Sea <b>View</b>", town: "Limassol", handoverRate: 1.5, url: "https://cyprusvipestates.com/en/projects/sea", publishedAt: pub(15) }],
   })!;
   for (const l of PARTNER_LOCALES) {
     const m = buildDigestEmail(l, { partnerFirstName: "Anna", content, portalUrl: "https://partner.example/home", profileUrl: "https://partner.example/profile" });
@@ -109,8 +124,16 @@ test("buildDigestEmail: escapes, opt-out link, no internal fields, 4 locales", (
   }
   const de = buildDigestEmail("de", { partnerFirstName: "Anna", content, portalUrl: "https://p/home", profileUrl: "https://p/profile" });
   assert.match(de.text, /Guten Tag Anna/);
-  assert.match(de.text, /1\.200|12\.000/);
-  const nothingRate = digestContent({ updates: [], totals: totals0, newProjects: [{ name: "X", town: null, handoverRate: null, url: "https://u" }] })!;
+  assert.match(de.text, /12\.000/);
+  assert.match(de.text, /Ihr Satz: 1,5 %/); // rate in the partner's number format
+  assert.match(buildDigestEmail("en", { partnerFirstName: "Anna", content, portalUrl: "https://p/home", profileUrl: "https://p/profile" }).text, /Your rate: 1\.5%/);
+  // Stage names come from the commissions dictionary in every locale.
+  for (const l of PARTNER_LOCALES) {
+    const m = buildDigestEmail(l, { partnerFirstName: "Anna", content, portalUrl: "https://p/home", profileUrl: "https://p/profile" });
+    const c = dict(l).commission;
+    for (const s of [c.EXPECTED, c.EARNED, c.DEVELOPER_PAID, c.PAID_OUT]) assert.ok(m.text.includes(`• ${s}: `), `${l} ${s}`);
+  }
+  const nothingRate = digestContent({ updates: [], totals: totals0, newProjects: [{ name: "X", town: null, handoverRate: null, url: "https://u", publishedAt: pub(15) }] })!;
   assert.match(buildDigestEmail("en", { partnerFirstName: "", content: nothingRate, portalUrl: "https://p", profileUrl: "https://p/profile" }).text, /on request/);
 });
 
@@ -118,6 +141,12 @@ test("new dictionary sections carry the programme facts in every locale", () => 
   for (const l of PARTNER_LOCALES) {
     const d = dict(l);
     assert.equal(Object.keys(d.materials.faq).length, 10);
+    // FAQ q3 names the stages exactly as the commissions page does.
+    for (const s of [d.commission.EXPECTED, d.commission.EARNED, d.commission.DEVELOPER_PAID, d.commission.PAID_OUT]) {
+      assert.ok(d.materials.faq.q3.a.includes(s), `${l} q3 ${s}`);
+    }
+    // q2 must not reveal our rate through a formula.
+    assert.doesNotMatch(d.materials.faq.q2.a, /our commission rate|unserem Provisionssatz|naszą stawkę|нашу ставку/i, l);
     assert.ok(d.landing.responseAvg.includes("{time}"));
   }
 });

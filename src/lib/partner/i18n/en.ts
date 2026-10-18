@@ -27,7 +27,7 @@ export const en = {
     company: "Company (optional)",
     country: "Country",
     vatId: "VAT number",
-    vatIdHelp: "Required for companies registered in the EU — shown on your credit notes (reverse charge).",
+    vatIdHelp: "Required for companies registered in the EU. It appears on your credit notes and sets the VAT treatment (reverse charge in other EU countries, 19% VAT in Cyprus).",
     vatIdRequiredNow: "Required: your company is registered in an EU country.",
     phone: "Phone number",
     email: "Email address",
@@ -124,6 +124,7 @@ export const en = {
     email: "Email address",
     type: "Type of business",
     lockedNote: "Please contact us to change your phone number, email address or type of business.",
+    vatMissing: "Please add your company's VAT number. It is required for companies registered in the EU and appears on your credit notes.",
   },
   mail: {
     signature: "Kind regards,\nCyprus VIP Estates",
@@ -197,8 +198,6 @@ export const en = {
     billingName: "Name on the credit note",
     billingAddress: "Billing address",
     billingAddressHelp: "One address line per row, 300 characters at most.",
-    vatId: "VAT ID (optional)",
-    vatIdHelp: "If you are VAT-registered, for example CY12345678X.",
     password: "Current password",
     passwordHelp: "Please enter your password to confirm the change.",
     edit: "Edit bank details",
@@ -491,6 +490,7 @@ export const en = {
       agreementAccepted: "Accept the partner agreement",
       bankComplete: "Add your bank details",
       hasClient: "Submit your first client",
+      vatId: "Add your VAT number — required for EU companies",
     },
   },
   materials: {
@@ -503,10 +503,9 @@ export const en = {
     guidelinesTitle: "Advertising guidelines",
     faqTitle: "How it works",
     brochuresTitle: "Project brochures",
-    brochuresIntro: "Links to the project page and the PDF brochure on our main website.",
+    brochuresIntro: "Links to the project pages on our main website.",
     search: "Search by name or town",
     page: "Project page",
-    pdf: "PDF brochure",
     none: "No project matches your search.",
     shown: "Shown: {count}",
     guidelines: {
@@ -524,7 +523,7 @@ export const en = {
       },
       q2: {
         q: "How is my commission calculated?",
-        a: "Your payout is the purchase price multiplied by your effective rate for the project, which is our commission rate for that project multiplied by your share. The calculator shows it for any price.",
+        a: "Your payout is the purchase price multiplied by your rate for the project (shown on the Projects page). The calculator shows it for any price.",
       },
       q3: {
         q: "When do I receive my commission?",
@@ -536,7 +535,7 @@ export const en = {
       },
       q5: {
         q: "What happens if I change my bank details?",
-        a: "For your security, payouts are paused for 7 days after any change to your bank details. You will receive an email confirming the change.",
+        a: "For your security, payouts are paused for 7 days after a change of your bank account (IBAN). You will receive an email confirming the change.",
       },
       q6: {
         q: "How long is my client protected?",
@@ -556,7 +555,7 @@ export const en = {
       },
       q10: {
         q: "How do I reach my contact person?",
-        a: "Your contact person is shown on your home page. You can also write to us through the message function of any client.",
+        a: "Your contact person is shown on your home page with email and phone.",
       },
     },
   },
@@ -566,10 +565,6 @@ export const en = {
     intro: "Here is what happened with your clients and your commission over the past week.",
     updatesTitle: "Client updates",
     totalsTitle: "Your commission",
-    expected: "Expected",
-    earned: "Earned",
-    developerPaid: "Received from the developer",
-    paidOut: "Paid out to you",
     projectsTitle: "New projects",
     rate: "Your rate: {rate}%",
     onRequest: "rate on request",

@@ -5,7 +5,8 @@ import { bankDetailsComplete } from "@/lib/crm/payoutRules";
 import { officeContact } from "@/lib/partner/accounts";
 import { fmt } from "@/lib/partner/i18n";
 import { loadBankDetails } from "@/lib/partner/bankStore";
-import { ONBOARDING_DISMISS_COOKIE, onboardingFactsFrom, onboardingHref, onboardingSteps } from "@/lib/partner/onboarding";
+import { ONBOARDING_DISMISS_COOKIE, onboardingFactsFrom, onboardingHref, onboardingSteps, onboardingVisible } from "@/lib/partner/onboarding";
+import { vatIdRequired } from "@/lib/partner/vat";
 import { myOverview } from "@/lib/partner/scope";
 import { requirePartner } from "@/lib/partner/session";
 import { CopyLink } from "../components/forms";
@@ -19,17 +20,22 @@ async function managerContact(managerUserId: string | null): Promise<Contact | n
   return u && u.isActive ? { name: u.name, email: u.email, phone: u.phone?.trim() || null } : null;
 }
 
-/** Onboarding checklist for an ACTIVE partner; null once complete or hidden (cookie). All reads are the partner's own. */
+/**
+ * Onboarding checklist for an ACTIVE partner; null once complete or hidden (cookie — except while an EU
+ * company's VAT number is missing). All reads are the partner's own.
+ */
 async function onboardingFor(partnerId: string, status: string) {
-  if (cookies().get(ONBOARDING_DISMISS_COOKIE)?.value === "1") return null;
-  const [acceptance, claim, bank] = await Promise.all([
+  const dismissed = cookies().get(ONBOARDING_DISMISS_COOKIE)?.value === "1";
+  const [acceptance, claim, bank, vat] = await Promise.all([
     prisma.partnerAgreementAcceptance.findFirst({ where: { partnerId }, select: { id: true } }),
     prisma.partnerClaim.findFirst({ where: { partnerId }, select: { id: true } }),
     loadBankDetails(partnerId),
+    prisma.partner.findUnique({ where: { id: partnerId }, select: { country: true, company: true, vatId: true } }),
   ]);
   const bankComplete = bank.state === "ok" && bankDetailsComplete(bank.details) && !!bank.ibanLast4;
-  const o = onboardingSteps(onboardingFactsFrom({ status, hasAcceptance: !!acceptance, bankComplete, hasClaim: !!claim }));
-  return o.complete ? null : o;
+  const vatFacts = vat ? { required: vatIdRequired(vat), set: !!vat.vatId?.trim() } : undefined;
+  const o = onboardingSteps(onboardingFactsFrom({ status, hasAcceptance: !!acceptance, bankComplete, hasClaim: !!claim, vat: vatFacts }));
+  return onboardingVisible(o, dismissed) ? o : null;
 }
 
 export default async function PartnerHome() {

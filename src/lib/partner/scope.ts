@@ -333,7 +333,7 @@ export async function myRecentMilestones(partnerId: string, now: Date, since: Da
 }
 
 /** A published development with the rows projectRates needs (shared by all partners of one digest run). */
-export type PublishedProjects = { rows: ProjectRow[]; rates: RateRow[] };
+export type PublishedProjects = { rows: (ProjectRow & { publishedAt: Date })[]; rates: RateRow[] };
 
 /**
  * Developments published in [since, now] with a slug, newest first (at most `limit`), plus their
@@ -344,7 +344,10 @@ export type PublishedProjects = { rows: ProjectRow[]; rates: RateRow[] };
 export async function recentlyPublishedProjects(now: Date, since: Date, limit = 5): Promise<PublishedProjects> {
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published", slug: { not: null }, publishedAt: { gte: since, lte: now } },
-    select: { id: true, publicName: true, town: true, slug: true, developerAccountId: true, override: { select: { alias: true, town: true } } },
+    select: {
+      id: true, publicName: true, town: true, slug: true, developerAccountId: true, publishedAt: true,
+      override: { select: { alias: true, town: true } },
+    },
     orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
     take: limit,
   });
@@ -360,6 +363,7 @@ export async function recentlyPublishedProjects(now: Date, since: Date, limit = 
       town: d.override?.town?.trim() || d.town || null,
       slug: d.slug,
       developerAccountId: d.developerAccountId,
+      publishedAt: d.publishedAt ?? now, // never null here: the filter requires publishedAt in [since, now]
     })),
     rates: rateRows.map((r) => ({ developerAccountId: r.developerAccountId, developmentId: r.developmentId, ratePercent: Number(r.ratePercent) })),
   };

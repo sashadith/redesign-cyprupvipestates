@@ -1,5 +1,5 @@
 "use client";
-/** Materials page: client-side search over the brochure links (main-site project page + PDF). */
+/** Materials page: client-side search over the main-site project-page links. */
 import { useMemo, useState } from "react";
 import type { PartnerDict } from "@/lib/partner/i18n";
 import type { BrochureRow } from "@/lib/partner/materials";
@@ -38,7 +38,6 @@ export function BrochureList({ t, rows }: { t: PartnerDict; rows: BrochureRow[] 
               </div>
               <div className="pp-projlist-rates">
                 <a href={r.page} target="_blank" rel="noopener">{M.page}</a>
-                <a href={r.pdf} target="_blank" rel="noopener">{M.pdf}</a>
               </div>
             </li>
           ))}

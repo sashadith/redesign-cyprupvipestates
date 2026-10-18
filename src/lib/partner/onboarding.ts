@@ -1,8 +1,12 @@
 // Onboarding checklist (partner portal phase 3d). Pure: the page computes the booleans server-side.
 // Step keys are dictionary keys under onboarding.steps.
-export type OnboardingFacts = { agreementAccepted: boolean; bankComplete: boolean; hasClient: boolean; emailVerified: boolean };
+export type OnboardingFacts = {
+  agreementAccepted: boolean; bankComplete: boolean; hasClient: boolean; emailVerified: boolean;
+  /** Present only for an EU company (VAT number required); `done` once it is stored. */
+  vatId?: { done: boolean };
+};
 
-export type OnboardingKey = "emailVerified" | "agreementAccepted" | "bankComplete" | "hasClient";
+export type OnboardingKey = "emailVerified" | "agreementAccepted" | "bankComplete" | "hasClient" | "vatId";
 
 export function onboardingSteps(f: OnboardingFacts): {
   steps: { key: OnboardingKey; done: boolean }[];
@@ -16,6 +20,7 @@ export function onboardingSteps(f: OnboardingFacts): {
     { key: "bankComplete", done: f.bankComplete },
     { key: "hasClient", done: f.hasClient },
   ];
+  if (f.vatId) steps.push({ key: "vatId", done: f.vatId.done });
   const done = steps.filter((s) => s.done).length;
   return { steps, done, total: steps.length, complete: done === steps.length };
 }
@@ -33,6 +38,8 @@ export function onboardingHref(key: OnboardingKey): string | null {
       return "/profile#bank";
     case "hasClient":
       return "/submit";
+    case "vatId":
+      return "/profile";
     default:
       return null;
   }
@@ -47,6 +54,8 @@ export function onboardingFactsFrom(input: {
   hasAcceptance: boolean;
   bankComplete: boolean;
   hasClaim: boolean;
+  /** Stored country/company/VAT number; adds the VAT step for an EU company (see vatIdRequired). */
+  vat?: { required: boolean; set: boolean };
 }): OnboardingFacts {
   return {
     // Only verified accounts can log in, and ACTIVE requires approval after verification.
@@ -54,5 +63,12 @@ export function onboardingFactsFrom(input: {
     agreementAccepted: input.hasAcceptance,
     bankComplete: input.bankComplete,
     hasClient: input.hasClaim,
+    ...(input.vat?.required ? { vatId: { done: input.vat.set } } : {}),
   };
+}
+
+/** The "Hide" cookie hides the card, except while the VAT number is missing (that item stays until it is set). */
+export function onboardingVisible(o: { complete: boolean; steps: { key: OnboardingKey; done: boolean }[] }, dismissed: boolean): boolean {
+  if (o.complete) return false;
+  return !dismissed || o.steps.some((s) => s.key === "vatId" && !s.done);
 }

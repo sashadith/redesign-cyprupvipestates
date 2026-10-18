@@ -10,7 +10,7 @@ const IBAN_B = "CY17002001280000001200527600";
 const prev: BankDetails = {
   holder: "Anna Muster", iban: IBAN_A, bic: "COBADEFF", billingName: "Muster GmbH", billingAddress: "Hauptstr. 1\n10115 Berlin", vatId: null,
 };
-const input = (iban: string) => ({ holder: "Anna Muster", iban, bic: "", billingName: "Muster GmbH", billingAddress: "Hauptstr. 1", vatId: "" });
+const input = (iban: string) => ({ holder: "Anna Muster", iban, bic: "", billingName: "Muster GmbH", billingAddress: "Hauptstr. 1" });
 
 test("mergeBankInput: empty IBAN keeps the stored one", () => {
   const m = mergeBankInput(prev, input("   "));
@@ -31,6 +31,15 @@ test("mergeBankInput: a typed IBAN replaces the stored one; only allowed keys", 
   assert.equal(m.iban, "cy17 0020 0128 0000 0012 0052 7600");
   assert.deepEqual(Object.keys(m).sort(), ["bic", "billingAddress", "billingName", "holder", "iban", "vatId"]);
   assert.equal(validateBankDetails(m).ok, true);
+});
+
+test("mergeBankInput: the form has no VAT field; a stored legacy bank VAT ID is carried over unchanged", () => {
+  assert.equal(mergeBankInput(prev, input("")).vatId, "");
+  assert.equal(mergeBankInput(null, input(IBAN_A)).vatId, "");
+  const legacy = mergeBankInput({ ...prev, vatId: "DE123456789" }, input(""));
+  assert.equal(legacy.vatId, "DE123456789");
+  const v = validateBankDetails(legacy);
+  assert.ok(v.ok && v.data.vatId === "DE123456789");
 });
 
 test("ibanChanged: first entry is not a change; same IBAN in other spacing is not a change", () => {

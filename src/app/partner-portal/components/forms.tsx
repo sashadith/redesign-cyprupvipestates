@@ -11,7 +11,7 @@ import {
 import { saveBankDetailsAction } from "../bankActions";
 import { savePartnerSettingsAction } from "../settingsActions";
 import { isErr, isOk, type FormState, type SettingsState, type SubmitState } from "../formState";
-import { vatIdRequired } from "@/lib/partner/vat";
+import { vatIdRequired, vatIdSoftExempt } from "@/lib/partner/vat";
 
 const LANG_NAMES = new Map<string, string>([
   ["en", "English"],
@@ -72,12 +72,14 @@ export function Field({ t, state, name, label, hint, children }: FieldProps) {
 
 /**
  * VAT number. Always rendered; marked required (client hint only — the server decides) when the
- * country is an EU member state and a company is filled in.
+ * country is an EU member state and a company is filled in — except on the profile's soft path
+ * (`stored`: no VAT number stored yet and the company name unchanged), where the save goes through.
  */
-function VatIdField({ t, state, country, company, defaultValue }: {
+function VatIdField({ t, state, country, company, defaultValue, stored }: {
   t: PartnerDict; state: FormState; country: string; company: string; defaultValue?: string;
+  stored?: { vatId: string; company: string };
 }) {
-  const required = vatIdRequired({ country, company });
+  const required = vatIdRequired({ country, company }) && !(stored && vatIdSoftExempt(stored, company));
   return (
     <Field t={t} state={state} name="vatId" label={t.register.vatId} hint={t.register.vatIdHelp}>
       {(a) => (
@@ -312,7 +314,7 @@ export function ProfileForm({ t, values, country }: { t: PartnerDict; values: Pr
       <Field t={t} state={state} name="company" label={t.register.company}>
         {(a) => <input {...a} name="company" autoComplete="organization" maxLength={120} defaultValue={values.company} onChange={(e) => setCompany(e.target.value)} />}
       </Field>
-      <VatIdField t={t} state={state} country={country} company={company} defaultValue={values.vatId} />
+      <VatIdField t={t} state={state} country={country} company={company} defaultValue={values.vatId} stored={{ vatId: values.vatId, company: values.company }} />
       <Field t={t} state={state} name="language" label={t.profile.language}>
         {(a) => (
           <select {...a} name="language" defaultValue={values.language}>
@@ -385,7 +387,7 @@ export function SettingsForm({ t, values }: { t: PartnerDict; values: SettingsVa
 // ─── Bank & billing details ──────────────────────────────────────────────────
 
 /** The partner's own stored values, minus the IBAN (which is never sent to the client). */
-export type BankPrefill = { holder: string; bic: string; billingName: string; billingAddress: string; vatId: string };
+export type BankPrefill = { holder: string; bic: string; billingName: string; billingAddress: string };
 
 export function BankForm({ t, prefill, ibanLast4 }: { t: PartnerDict; prefill: BankPrefill | null; ibanLast4: string | null }) {
   const B = t.bank;
@@ -409,7 +411,8 @@ export function BankForm({ t, prefill, ibanLast4 }: { t: PartnerDict; prefill: B
       </div>
     );
   }
-  const shown = ["holder", "iban", "bic", "billingName", "billingAddress", "vatId", "currentPassword"];
+  // No VAT field: an error on a carried-over legacy bank VAT ID shows as a form-level message.
+  const shown = ["holder", "iban", "bic", "billingName", "billingAddress", "currentPassword"];
   return (
     <form action={action} className="pp-form" noValidate>
       <FormError t={t} state={state} fields={shown} />
@@ -441,9 +444,6 @@ export function BankForm({ t, prefill, ibanLast4 }: { t: PartnerDict; prefill: B
       </Field>
       <Field t={t} state={state} name="billingAddress" label={B.billingAddress} hint={B.billingAddressHelp}>
         {(a) => <textarea {...a} name="billingAddress" rows={3} maxLength={300} defaultValue={prefill?.billingAddress ?? ""} required />}
-      </Field>
-      <Field t={t} state={state} name="vatId" label={B.vatId} hint={B.vatIdHelp}>
-        {(a) => <input {...a} name="vatId" autoComplete="off" spellCheck={false} maxLength={24} defaultValue={prefill?.vatId ?? ""} />}
       </Field>
       <Field t={t} state={state} name="currentPassword" label={B.password} hint={B.passwordHelp}>
         {(a) => <input {...a} ref={pwRef} name="currentPassword" type="password" autoComplete="current-password" required />}
