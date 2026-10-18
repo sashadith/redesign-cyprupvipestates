@@ -11,6 +11,7 @@ import { CockpitDeals } from "../../components/CockpitDeals";
 import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
+import { ToastProvider } from "../../components/Toast";
 import type { DealRow } from "../../components/DealsTable";
 
 export const dynamic = "force-dynamic";
@@ -77,21 +78,23 @@ export default async function LeadCockpitPage({ params }: { params: { id: string
   const timeline = toTimeline(lead.interactions.slice(0, TIMELINE_CAP));
 
   return (
-    <div className="crm-cockpit">
-      <CockpitHeader lead={view} now={now} />
-      <div className="crm-ck-grid">
-        <div className="crm-ck-main">
-          <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
-          <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
-          <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP} />
+    <ToastProvider>
+      <div className="crm-cockpit">
+        <CockpitHeader lead={view} now={now} />
+        <div className="crm-ck-grid">
+          <div className="crm-ck-main">
+            <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
+            <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
+            <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP} />
+          </div>
+          <aside className="crm-ck-aside">
+            <CockpitContact lead={view} />
+            <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
+            {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
+            {seesAllLeads(user) && <Link className="crm-ck-old" href={`/admin/crm/${lead.id}`}>Presentations, matching, email →</Link>}
+          </aside>
         </div>
-        <aside className="crm-ck-aside">
-          <CockpitContact lead={view} />
-          <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
-          {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
-          {seesAllLeads(user) && <Link className="crm-ck-old" href={`/admin/crm/${lead.id}`}>Presentations, matching, email →</Link>}
-        </aside>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

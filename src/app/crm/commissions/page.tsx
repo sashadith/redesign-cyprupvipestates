@@ -5,6 +5,7 @@ import { canAssignLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { RatesEditor, type RateAccount } from "../components/RatesEditor";
 import { DealsTable, type DealRow } from "../components/DealsTable";
+import { ToastProvider } from "../components/Toast";
 import { DEALS_SHOWN, capDeals, statusTotalsOf } from "@/lib/crm/commissionTotals";
 
 export const dynamic = "force-dynamic";
@@ -80,7 +81,7 @@ export default async function CommissionsPage() {
   const statusTotals = statusTotalsOf(totals);
 
   return (
-    <>
+    <ToastProvider>
       <div className="crm-headrow">
         <div>
           <h1>Commissions</h1>
@@ -89,6 +90,6 @@ export default async function CommissionsPage() {
       </div>
       <RatesEditor accounts={rateAccounts} />
       <DealsTable deals={dealRows} totals={statusTotals} today={new Date().toISOString().slice(0, 10)} truncated={truncated} />
-    </>
+    </ToastProvider>
   );
 }
