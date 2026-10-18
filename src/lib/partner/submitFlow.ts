@@ -1,6 +1,7 @@
 // Pure helpers for the partner client submission (partner portal phase 3b). No DB access:
 // the server service (submitClient.ts) and the form action use these, the tests cover them.
 import type { Prisma } from "@prisma/client";
+import { emailKey, phonesMatch } from "@/lib/crm/leadIdentity";
 import { escapeHtml } from "./mail";
 import { parseBudgetField } from "./budgetField";
 import type { SubmissionInput, SubmissionMode } from "./submission";
@@ -109,6 +110,22 @@ export function claimSubmissionJson(input: SubmissionInput, projects: { id: stri
     repPhone: input.repPhone,
     comment: input.comment,
   };
+}
+
+/**
+ * "This client is already in your list" may only be said when EVERY identifier the partner typed
+ * belongs to the matched lead. Otherwise a partner could pair an unknown email with their own
+ * client's phone and learn from the different answer whether that email is known to us
+ * (enumeration oracle). A partial match gets the ordinary neutral "received" answer.
+ */
+export function alreadyYoursAnswer(
+  typed: { email: string | null; phone: string | null },
+  lead: { email: string | null; phone: string | null },
+): "ALREADY_YOURS" | "RECEIVED" {
+  if (!typed.email && !typed.phone) return "RECEIVED";
+  if (typed.email && emailKey(typed.email) !== emailKey(lead.email)) return "RECEIVED";
+  if (typed.phone && !phonesMatch(lead.phone, typed.phone)) return "RECEIVED";
+  return "ALREADY_YOURS";
 }
 
 /** Office Telegram notice (HTML parse mode → every value escaped). The lead link only for a new lead. */

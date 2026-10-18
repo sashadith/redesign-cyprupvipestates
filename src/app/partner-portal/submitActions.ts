@@ -25,7 +25,7 @@ export async function submitClientAction(_prev: SubmitState, fd: FormData): Prom
 
   try {
     const out = await submitClient(me, v.data);
-    if (out.kind === "INVALID_PROJECTS") return { error: "err.projects", field: "projectIds" };
+    if (out.kind === "PROJECT_UNAVAILABLE") return { error: "err.projectUnavailable", field: "projectIds" };
     if (out.kind === "ALREADY_YOURS") return { ok: true, name, alreadyYours: true };
     return { ok: true, name };
   } catch (e) {

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildPartnerClientNotice, claimSubmissionJson, leadDataFromSubmission, leadMessage, parseBudgetField,
+  alreadyYoursAnswer, buildPartnerClientNotice, claimSubmissionJson, leadDataFromSubmission, leadMessage, parseBudgetField,
   partnerDisplayName, partnerSubmissionNote, rawFromForm,
 } from "@/lib/partner/submitFlow";
 import { validateSubmission, type SubmissionInput } from "@/lib/partner/submission";
@@ -166,4 +166,25 @@ test("projectRates resolves project over developer rate, hides our rate without 
   assert.deepEqual(out.map((p) => [p.handoverRate, p.fixRate, p.ourRate]), [[1.5, 2.5, null], [1.8, 3, null], [null, null, null]]);
   const trusted = projectRates(devs, rates, { handoverShare: 30, fixShare: 50, trustMode: true });
   assert.deepEqual(trusted.map((p) => p.ourRate), [5, 6, null]);
+});
+
+// ─── ALREADY_YOURS must not be an enumeration oracle ─────────────────────────
+
+test("alreadyYoursAnswer: only a full identifier match says ALREADY_YOURS", () => {
+  const lead = { email: "anna.meyer@gmail.com", phone: "+49 170 1234567" };
+  assert.equal(alreadyYoursAnswer({ email: "Anna.Meyer@gmail.com", phone: null }, lead), "ALREADY_YOURS");
+  assert.equal(alreadyYoursAnswer({ email: null, phone: "+491701234567" }, lead), "ALREADY_YOURS");
+  assert.equal(alreadyYoursAnswer({ email: "annameyer@googlemail.com", phone: "0049 170 1234567" }, lead), "ALREADY_YOURS");
+});
+test("alreadyYoursAnswer: email probe (unknown email + own client's phone) stays neutral", () => {
+  const lead = { email: "anna@example.com", phone: "+491701234567" };
+  assert.equal(alreadyYoursAnswer({ email: "probe@other.com", phone: "+491701234567" }, lead), "RECEIVED");
+  // Lead without email: any typed email is a mismatch.
+  assert.equal(alreadyYoursAnswer({ email: "probe@other.com", phone: "+491701234567" }, { email: null, phone: "+491701234567" }), "RECEIVED");
+});
+test("alreadyYoursAnswer: phone probe (own client's email + unknown phone) stays neutral", () => {
+  const lead = { email: "anna@example.com", phone: "+491701234567" };
+  assert.equal(alreadyYoursAnswer({ email: "anna@example.com", phone: "+357 99 000000" }, lead), "RECEIVED");
+  assert.equal(alreadyYoursAnswer({ email: "anna@example.com", phone: "+357 99 000000" }, { email: "anna@example.com", phone: null }), "RECEIVED");
+  assert.equal(alreadyYoursAnswer({ email: null, phone: null }, lead), "RECEIVED");
 });

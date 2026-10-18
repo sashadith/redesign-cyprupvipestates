@@ -173,6 +173,7 @@ export const pl: PartnerDict = {
     budget: "Prosimy podać prawidłowy budżet w pełnych euro, przy czym minimum nie może przekraczać maksimum.",
     mode: "Prosimy wybrać, jak mamy postąpić.",
     projects: "Prosimy wybrać maksymalnie 10 różnych projektów.",
+    projectUnavailable: "Ten projekt nie jest już dostępny — prosimy wybrać inny.",
     fixOneProject: "Tryb Fix wymaga dokładnie jednego projektu.",
     projectsText: "Tekst o projektach jest zbyt długi (maksymalnie 300 znaków).",
     contactMode: "Prosimy wybrać, z kim mamy się kontaktować.",

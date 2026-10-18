@@ -13,11 +13,11 @@ import { decideSubmission } from "./claims";
 import type { PartnerSessionInfo } from "./session";
 import type { SubmissionInput } from "./submission";
 import {
-  buildPartnerClientNotice, claimSubmissionJson, clientDisplayName, leadDataFromSubmission, partnerDisplayName,
+  alreadyYoursAnswer, buildPartnerClientNotice, claimSubmissionJson, clientDisplayName, leadDataFromSubmission, partnerDisplayName,
   partnerSubmissionNote, type PartnerClientNotice,
 } from "./submitFlow";
 
-export type SubmitOutcome = { kind: "RECEIVED" } | { kind: "ALREADY_YOURS" } | { kind: "INVALID_PROJECTS" };
+export type SubmitOutcome = { kind: "RECEIVED" } | { kind: "ALREADY_YOURS" } | { kind: "PROJECT_UNAVAILABLE" };
 
 type Partner = PartnerSessionInfo["partner"];
 
@@ -91,7 +91,7 @@ export async function submitClient(me: PartnerSessionInfo, input: SubmissionInpu
   const partner = me.partner;
   if (partner.status !== "ACTIVE") throw new Error("submitClient: partner not active");
   const projects = await loadProjects(input.projectIds);
-  if (!projects) return { kind: "INVALID_PROJECTS" };
+  if (!projects) return { kind: "PROJECT_UNAVAILABLE" };
 
   const review = async (leadId: string): Promise<SubmitOutcome> => {
     if (await reviewClaim(partner, leadId, input, projects)) notifyOffice(partner, input, { outcome: "REVIEW" });
@@ -103,7 +103,12 @@ export async function submitClient(me: PartnerSessionInfo, input: SubmissionInpu
     ? await prisma.partnerClaim.findMany({ where: { partnerId: partner.id, leadId: dup.id, state: "ACTIVE" }, select: { leadId: true } })
     : [];
   const decision = decideSubmission({ duplicate: dup ? { leadId: dup.id } : null, myActiveClaimLeadIds: mine.map((c) => c.leadId) });
-  if (decision.kind === "ALREADY_YOURS") return { kind: "ALREADY_YOURS" };
+  if (decision.kind === "ALREADY_YOURS") {
+    // Only a full identifier match may say so; a partial match writes nothing and answers neutrally.
+    return dup && alreadyYoursAnswer(input, dup) === "ALREADY_YOURS" ? { kind: "ALREADY_YOURS" } : { kind: "RECEIVED" };
+  }
+  // CREATE (transaction + more writes) and REVIEW (one claim row) take slightly different time;
+  // that small timing difference is accepted — the answer itself is identical.
   if (decision.kind === "REVIEW") return review(decision.leadId);
 
   let leadId: string;
