@@ -489,6 +489,21 @@
 .crm-pt-terms input[type="checkbox"] { accent-color: var(--accent); }
 .crm-pt-check { display: flex !important; align-items: center; gap: 6px; }
 @media (max-width: 900px) { .crm-pt-main { grid-template-columns: 1fr; } }
+/* Partner bank & billing (phase 3c): masked view, VAT mode, owner-only reveal. */
+.crm-pt-warn { color: var(--warn); border-color: currentColor; }
+.crm-pt-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.crm-pt-badges:empty { display: none; }
+.crm-pt-bank { border-top: 1px solid var(--line); margin: 12px 0 0; padding: 12px 0 0; display: grid; gap: 10px; }
+.crm-pt-bankhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.crm-pt-bankdl { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 18px; }
+.crm-pt-bankdl dt { font-size: 12px; color: var(--muted); }
+.crm-pt-bankdl dd { margin: 2px 0 0; font-size: 13px; white-space: pre-line; overflow-wrap: anywhere; }
+.crm-pt-bankactions { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; }
+.crm-pt-vat { border-top: 0; margin: 0; padding: 0; }
+.crm-pay-anyway { font-weight: 600; color: var(--warn); }
+.crm-pay-anyway input { accent-color: var(--accent); }
+.crm-credit-note { font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.crm-credit-note:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* ── Partner claims: inbox review + cockpit partner card (phase 3b) ────── */
 .crm-cr-list { margin: 18px 0 22px; display: grid; gap: 12px; }

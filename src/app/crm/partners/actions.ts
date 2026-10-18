@@ -10,6 +10,9 @@ import { asLocale } from "@/lib/partner/accounts";
 import { newRefCode, randomSuffix } from "@/lib/partner/refCode";
 import { parseTerms } from "@/lib/partner/terms";
 import { sendEmail } from "@/lib/sendEmail";
+import { isVatMode } from "@/lib/crm/payoutRules";
+import { decryptBankDetails } from "@/lib/partner/bankCrypto";
+import type { BankDetails } from "@/lib/partner/bank";
 
 type Result = { ok: true; notice?: string } | { error: string };
 const DENIED = "Only managers can manage partners";
@@ -141,4 +144,46 @@ export async function updatePartnerTermsAction(id: string, raw: unknown): Promis
   if (outcome === "unchanged") return { ok: true, notice: "No changes" };
   revalidatePath("/crm/partners");
   return { ok: true, notice: "Saved" };
+}
+
+/** VAT treatment on the partner's credit notes — set by the office, never by the partner. Audited (vatMode only). */
+export async function updatePartnerVatModeAction(id: string, mode: unknown): Promise<Result> {
+  const actor = await guard();
+  if (!actor) return { error: DENIED };
+  if (typeof id !== "string" || !id || id.length > 64) return { error: "Partner not found." };
+  if (!isVatMode(mode)) return { error: "Unknown VAT mode." };
+  const outcome = await prisma.$transaction(async (tx): Promise<"missing" | "unchanged" | "saved"> => {
+    const rows = await tx.$queryRaw<{ vatMode: string }[]>`SELECT "vatMode"::text AS "vatMode" FROM partners WHERE id = ${id} FOR UPDATE`;
+    if (rows.length === 0) return "missing";
+    const before = rows[0].vatMode;
+    if (before === mode) return "unchanged";
+    await tx.partner.update({ where: { id }, data: { vatMode: mode } });
+    await writeAudit(actor, "partner_vat_mode_update", "partner", id, { before: { vatMode: before }, after: { vatMode: mode } }, tx);
+    return "saved";
+  });
+  if (outcome === "missing") return { error: "Partner not found." };
+  if (outcome === "unchanged") return { ok: true, notice: "No changes" };
+  revalidatePath("/crm/partners");
+  return { ok: true, notice: "VAT mode saved" };
+}
+
+/**
+ * Full bank details for the owner only, once per click (nothing cached client-side).
+ * The owner right is read from the DB (requireCrmUser). Audit without any values.
+ */
+export async function revealBankDetailsAction(partnerId: string): Promise<{ ok: true; details: BankDetails } | { error: string }> {
+  const actor = await requireCrmUser();
+  if (!actor.isActive || !actor.isOwner) return { error: "Only the owner can view full bank details." };
+  if (typeof partnerId !== "string" || !partnerId || partnerId.length > 64) return { error: "Partner not found." };
+  const p = await prisma.partner.findUnique({ where: { id: partnerId }, select: { bankDetailsEnc: true } });
+  if (!p) return { error: "Partner not found." };
+  if (!p.bankDetailsEnc) return { error: "This partner has not entered bank details yet." };
+  let details: BankDetails;
+  try {
+    details = decryptBankDetails(p.bankDetailsEnc);
+  } catch {
+    return { error: "Bank details could not be decrypted — check the encryption key configuration." };
+  }
+  await writeAudit(actor, "partner.bank_viewed", "partner", partnerId, {});
+  return { ok: true, details };
 }

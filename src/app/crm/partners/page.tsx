@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
+import { partnerBankView } from "@/lib/crm/payoutRules";
+import { decryptBankDetails } from "@/lib/partner/bankCrypto";
+import type { BankDetails } from "@/lib/partner/bank";
 import { PartnersTable, type PartnerRow } from "../components/PartnersTable";
 import { ToastProvider } from "../components/Toast";
 
@@ -30,11 +33,23 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         manager: { select: { name: true } },
         users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true, emailVerifiedAt: true } },
         acceptances: { orderBy: { acceptedAt: "desc" }, take: 1, select: { version: true } },
+        bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true,
       },
     }),
     prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   const countOf = (s: string) => counts.find((c) => c.status === s)?._count._all ?? 0;
+
+  // Decrypted here, on the server; only the masked view (no full IBAN) reaches the client.
+  const now = new Date();
+  const bankOf = (p: { bankDetailsEnc: string | null; ibanLast4: string | null; ibanChangedAt: Date | null }) => {
+    let details: BankDetails | null = null;
+    let unreadable = false;
+    if (p.bankDetailsEnc) {
+      try { details = decryptBankDetails(p.bankDetailsEnc); } catch { unreadable = true; }
+    }
+    return partnerBankView({ details, unreadable, ibanLast4: p.ibanLast4, ibanChangedAt: p.ibanChangedAt }, now);
+  };
 
   const rows: PartnerRow[] = partners.map((p) => ({
     id: p.id, status: p.status, type: p.type, name: `${p.firstName} ${p.lastName}`, company: p.company, country: p.country, language: p.language,
@@ -42,6 +57,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
     agreement: p.acceptances[0]?.version ?? null,
     handoverShare: String(Number(p.handoverShare)), fixShare: String(Number(p.fixShare)), trustMode: p.trustMode,
     refCode: p.refCode, managerUserId: p.managerUserId, managerName: p.manager?.name ?? null,
+    vatMode: p.vatMode, bank: bankOf(p),
   }));
   // Pending: verified first, then unverified; each oldest first (query is already oldest first, sort is stable).
   if (tab.key === "pending") rows.sort((a, b) => Number(b.verified) - Number(a.verified));
@@ -62,7 +78,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         ))}
       </nav>
       <ToastProvider>
-        <PartnersTable rows={rows} managers={managers} />
+        <PartnersTable rows={rows} managers={managers} canReveal={user.isOwner} />
       </ToastProvider>
     </>
   );

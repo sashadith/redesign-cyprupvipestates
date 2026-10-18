@@ -1,14 +1,21 @@
 "use client";
 import { useState, useTransition } from "react";
 import type { PartnerType } from "@prisma/client";
-import { approvePartnerAction, reactivatePartnerAction, suspendPartnerAction, updatePartnerTermsAction } from "../partners/actions";
+import {
+  approvePartnerAction, reactivatePartnerAction, revealBankDetailsAction, suspendPartnerAction, updatePartnerTermsAction, updatePartnerVatModeAction,
+} from "../partners/actions";
+import { VAT_MODES, type PartnerBankView, type VatModeValue } from "@/lib/crm/payoutRules";
+import type { BankDetails } from "@/lib/partner/bank";
 import { useToast } from "./Toast";
 
 export type PartnerRow = {
   id: string; status: "PENDING" | "ACTIVE" | "SUSPENDED"; type: PartnerType; name: string; company: string | null; country: string; language: string;
   email: string; verified: boolean; registered: string; agreement: string | null;
   handoverShare: string; fixShare: string; trustMode: boolean; refCode: string | null; managerUserId: string | null; managerName: string | null;
+  vatMode: VatModeValue; bank: PartnerBankView;
 };
+
+const VAT_LABEL: Record<VatModeValue, string> = { NONE: "No VAT", CY_VAT: "CY VAT 19%", REVERSE_CHARGE: "Reverse charge" };
 
 // Record<PartnerType, …>: a new enum value fails the type check until it gets a label.
 const TYPE_LABEL: Record<PartnerType, string> = {
@@ -43,7 +50,68 @@ function TermsEditor({ row, managers }: { row: PartnerRow; managers: { id: strin
   );
 }
 
-function Row({ row, managers }: { row: PartnerRow; managers: { id: string; name: string }[] }) {
+function BankBadges({ bank }: { bank: PartnerBankView }) {
+  return (
+    <>
+      {!bank.complete && <span className="crm-pill crm-pt-warn">{bank.state === "unreadable" ? "Bank details unreadable" : "Bank details incomplete"}</span>}
+      {bank.pausedUntil && <span className="crm-pill crm-pt-warn">Payouts paused until {bank.pausedUntil}</span>}
+    </>
+  );
+}
+
+function BankPanel({ row, canReveal }: { row: PartnerRow; canReveal: boolean }) {
+  const toast = useToast();
+  const [pending, start] = useTransition();
+  const [vat, setVat] = useState<VatModeValue>(row.vatMode);
+  // Full details live only in this component's state while shown; "Hide" drops them.
+  const [revealed, setRevealed] = useState<BankDetails | null>(null);
+  const b = row.bank;
+  const saveVat = () => start(async () => {
+    const r = await updatePartnerVatModeAction(row.id, vat);
+    if ("error" in r) toast.show(r.error, "error"); else toast.show(r.notice ?? "Saved");
+  });
+  const reveal = () => start(async () => {
+    const r = await revealBankDetailsAction(row.id);
+    if ("error" in r) toast.show(r.error, "error"); else setRevealed(r.details);
+  });
+  const fields: [string, string | null][] = revealed
+    ? [["Account holder", revealed.holder], ["IBAN", revealed.iban], ["BIC", revealed.bic], ["Billing name", revealed.billingName], ["Billing address", revealed.billingAddress], ["VAT ID", revealed.vatId]]
+    : [["Account holder", b.holder], ["IBAN", b.ibanMasked], ["BIC", b.bic], ["Billing name", b.billingName], ["Billing address", b.billingAddress], ["VAT ID", b.vatId]];
+  return (
+    <section className="crm-pt-bank" aria-label={`Bank and billing details of ${row.name}`}>
+      <div className="crm-pt-bankhead">
+        <b>Bank &amp; billing</b>
+        <BankBadges bank={b} />
+      </div>
+      {b.state === "none" ? (
+        <p className="crm-muted">The partner has not entered bank details yet.</p>
+      ) : b.state === "unreadable" ? (
+        <p className="crm-warn">Stored bank details could not be decrypted.</p>
+      ) : (
+        <dl className="crm-pt-bankdl">
+          {fields.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v ?? <span className="crm-muted">—</span>}</dd></div>)}
+        </dl>
+      )}
+      <div className="crm-pt-bankactions">
+        <fieldset disabled={pending} className="crm-pt-terms crm-pt-vat">
+          <label><span>VAT on credit notes</span>
+            <select value={vat} onChange={(e) => setVat(e.target.value as VatModeValue)}>
+              {VAT_MODES.map((m) => <option key={m} value={m}>{VAT_LABEL[m]}</option>)}
+            </select>
+          </label>
+          <button type="button" className="crm-btn" onClick={saveVat} disabled={vat === row.vatMode}>Save VAT mode</button>
+        </fieldset>
+        {canReveal && b.state === "ok" && (
+          revealed
+            ? <button type="button" className="crm-btn" onClick={() => setRevealed(null)}>Hide</button>
+            : <button type="button" className="crm-btn quiet" disabled={pending} onClick={reveal} title="Shows the full IBAN once; the view is logged">Reveal</button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: string; name: string }[]; canReveal: boolean }) {
   const toast = useToast();
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -74,27 +142,29 @@ function Row({ row, managers }: { row: PartnerRow; managers: { id: string; name:
           <div className="crm-pt-meta">
             <span>Handover {row.handoverShare}% · Fix {row.fixShare}%</span>
             <span>Trust: {row.trustMode ? "on" : "off"} · Manager: {row.managerName ?? "none"}</span>
-            <span>Ref: {row.refCode ?? "none"}</span>
+            <span>Ref: {row.refCode ?? "none"} · VAT: {VAT_LABEL[row.vatMode]}</span>
+            <span className="crm-pt-badges"><BankBadges bank={row.bank} /></span>
           </div>
         )}
         <div className="crm-pt-actions">
           {row.status === "PENDING" && <button type="button" className="crm-btn primary" disabled={pending || !row.verified} title={row.verified ? undefined : "Email not verified yet"} onClick={() => run(approvePartnerAction)}>Approve</button>}
           {row.status === "ACTIVE" && <button type="button" className="crm-btn danger" disabled={pending} onClick={() => run(suspendPartnerAction)}>Suspend</button>}
           {row.status === "SUSPENDED" && <button type="button" className="crm-btn primary" disabled={pending} onClick={() => run(reactivatePartnerAction)}>Reactivate</button>}
-          <button type="button" className="crm-btn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? "Hide terms" : "Terms"}</button>
+          <button type="button" className="crm-btn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? "Hide details" : "Terms & bank"}</button>
         </div>
       </div>
       {open && <TermsEditor row={row} managers={managers} />}
+      {open && <BankPanel row={row} canReveal={canReveal} />}
     </li>
   );
 }
 
-export function PartnersTable({ rows, managers }: { rows: PartnerRow[]; managers: { id: string; name: string }[] }) {
+export function PartnersTable({ rows, managers, canReveal }: { rows: PartnerRow[]; managers: { id: string; name: string }[]; canReveal: boolean }) {
   const toast = useToast();
   if (rows.length === 0) return <p className="crm-pt-empty">No partners here.</p>;
   return (
     <>
-      <ul className="crm-pt">{rows.map((r) => <Row key={r.id} row={r} managers={managers} />)}</ul>
+      <ul className="crm-pt">{rows.map((r) => <Row key={r.id} row={r} managers={managers} canReveal={canReveal} />)}</ul>
       {toast.node}
     </>
   );
