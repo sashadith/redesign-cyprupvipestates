@@ -85,7 +85,8 @@ D.showModal = function () { this.setAttribute("open", ""); };
 D.close = function () {
   if (!this.hasAttribute("open")) return;
   this.removeAttribute("open");
-  this.dispatchEvent(new win.Event("close"));
+  // Queued, as in browsers: the event arrives after the current task.
+  setTimeout(() => this.dispatchEvent(new win.Event("close")), 0);
 };
 for (const k of ["window", "document", "HTMLElement", "Node", "Event", "KeyboardEvent", "getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame"]) {
   Object.defineProperty(globalThis, k, { value: k === "window" ? win : win[k], configurable: true, writable: true });
@@ -125,11 +126,11 @@ const click = (el) => act(async () => { el.dispatchEvent(new win.MouseEvent("cli
 const dialog = () => doc.querySelector("dialog.crm-dialog");
 const columnOf = (id) => doc.querySelector(`.crm-card[data-id="${id}"]`)?.closest("section")?.getAttribute("aria-label") ?? null;
 
-async function mount(cards) {
+async function mount(cards, strict = false) {
   calls.length = 0; replies.length = 0;
   doc.body.innerHTML = "<div id='root'></div>";
   const root = createRoot(doc.getElementById("root"));
-  await act(async () => { root.render(React.createElement(Board, { columns: columns(cards) })); });
+  await act(async () => { const el = React.createElement(Board, { columns: columns(cards) }); root.render(strict ? React.createElement(React.StrictMode, null, el) : el); });
   return root;
 }
 async function menuMove(id, label) {
@@ -185,7 +186,7 @@ test("a natively closed dialog never leaves dialog state behind", async () => {
   const root = await mount([card("a", "RESERVED")]);
   replies.push({ error: "Choose why the lead was lost.", need: "lostReason" });
   await menuMove("a", "Lost");
-  await act(async () => { dialog().close(); });
+  await act(async () => { dialog().close(); await new Promise((r) => setTimeout(r, 5)); });
   assert.equal(dialog(), null);
   replies.push({ ok: true });
   await menuMove("a", "Offer");
@@ -273,5 +274,25 @@ test("the deal dialog keeps showing the chosen project", async () => {
   });
   const save = [...dialog().querySelectorAll("button")].find((b) => b.textContent === "Save deal and move");
   assert.equal(save.disabled, false);
+  await act(async () => root.unmount());
+});
+
+test("under StrictMode the dialog stays open, and Escape / native close still clear it", async () => {
+  const root = await mount([card("a", "RESERVED")], true);
+  replies.push({ error: "Choose why the lead was lost.", need: "lostReason" });
+  await menuMove("a", "Lost");
+  await flush();
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  assert.ok(dialog()?.hasAttribute("open"), "dialog survives the simulated unmount");
+  await act(async () => { dialog().dispatchEvent(new win.Event("cancel", { cancelable: true })); });
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  assert.equal(dialog(), null, "Escape clears it");
+  replies.push({ error: "Choose why the lead was lost.", need: "lostReason" });
+  await menuMove("a", "Lost");
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  assert.ok(dialog()?.hasAttribute("open"));
+  await act(async () => { dialog().close(); });
+  await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+  assert.equal(dialog(), null, "native close clears it");
   await act(async () => root.unmount());
 });

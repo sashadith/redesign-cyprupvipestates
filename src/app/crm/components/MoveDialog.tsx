@@ -23,11 +23,14 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
   const [price, setPrice] = useState("");
   const [reason, setReason] = useState<string>(LOST_REASONS[0]);
 
+  const chosen = devId !== "" && q === devLabel;
+
   useEffect(() => {
-    const d = ref.current;
     // StrictMode (next dev) runs mount, cleanup, mount: re-arm on every mount.
+    // The cleanup must not call close(): its close event is queued and would
+    // arrive after the re-run has reopened the dialog. Unmounting the element is enough.
     unmounting.current = false;
-    return () => { unmounting.current = true; if (d?.open) d.close(); };
+    return () => { unmounting.current = true; };
   }, []);
 
   // Open on mount and after every render in which it is not open, so a retry
@@ -40,13 +43,13 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
   useEffect(() => {
     if (state.need !== "deal") return;
     // The input text equals the chosen label: searching for it would empty the list.
-    if (devId !== "" && q === devLabel) return;
+    if (chosen) return;
     let live = true;
     const t = setTimeout(() => {
       searchDevelopmentsAction(q).then((r) => { if (live) setOptions(r); }).catch(() => { if (live) setOptions([]); });
     }, 250);
     return () => { live = false; clearTimeout(t); };
-  }, [q, state.need, devId, devLabel]);
+  }, [q, state.need, chosen]);
 
   const priceNum = parseEuroPrice(price);
   const dealReady = devId !== "" && priceNum != null;
@@ -54,7 +57,7 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
 
   return (
     <dialog ref={ref} className="crm-dialog" onCancel={(e) => { e.preventDefault(); onCancel(); }}
-      onClose={() => { if (!unmounting.current) onClosed(); }} aria-labelledby="crm-dialog-title">
+      onClose={() => { if (unmounting.current || ref.current?.open) return; onClosed(); }} aria-labelledby="crm-dialog-title">
       <form method="dialog" onSubmit={(e) => {
         e.preventDefault();
         if (busy) return;
@@ -70,7 +73,7 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
             <label htmlFor="crm-dev-q">Project</label>
             <input id="crm-dev-q" value={q} onChange={(e) => { setQ(e.target.value); setDevId(""); setDevLabel(""); }} placeholder="Search published projects" autoComplete="off" autoFocus />
             <div className="crm-options" role="listbox" aria-label="Projects">
-              {devId !== "" && q === devLabel
+              {chosen
                 ? <button type="button" role="option" aria-selected="true" className="on">✓ {devLabel}</button>
                 : options.slice(0, 20).map((o) => (
                   <button type="button" key={o.id} role="option" aria-selected={devId === o.id} className={devId === o.id ? "on" : undefined}
