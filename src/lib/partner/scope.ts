@@ -6,8 +6,8 @@ import { resolveRate, type RateRow } from "@/lib/crm/commission";
 import { officeContact } from "./accounts";
 import { REAL_CONTACT_TYPES } from "./claims";
 import {
-  CLIENT_SEARCH_SCAN, CLIENTS_PAGE_SIZE, activeClaimsWhere, claimWhere, clientsWhere, commissionTotals, dealsForClaims,
-  latestMilestones, matchesQuery, messagesWhere, overviewCountWheres, toClientDetail, toListItem, visibleName,
+  CLIENT_SEARCH_SCAN, CLIENTS_PAGE_SIZE, OUTBOUND_CONTACT_TYPES, activeClaimsWhere, claimWhere, clientsWhere, commissionTotals,
+  dealsForClaims, displayStateOf, latestMilestones, matchesQuery, messagesWhere, overviewCountWheres, toClientDetail, toListItem, visibleName,
   type Activity, type ClientDetail, type ClientFilter, type ClientListItem, type CommissionStage, type OverviewMilestone,
   type RawClaim, type RawDeal, type RawMessage,
 } from "./clientDto";
@@ -87,8 +87,8 @@ export async function myProjects(partnerId: string): Promise<MyProjects> {
 
 // ── My clients ──────────────────────────────────────────────────────────────
 
-// Lead fields a claim row may load. Never email/phone/notes/message of the lead; the mappers
-// additionally show lead names only for ACTIVE claims.
+// Lead fields a claim row may load: never email/phone/notes/message, not even the lead's name
+// (the partner always sees the name they submitted).
 const CLAIM_SELECT = {
   id: true,
   partnerId: true,
@@ -96,21 +96,21 @@ const CLAIM_SELECT = {
   state: true,
   createdAt: true,
   submission: true,
-  lead: { select: { status: true, firstName: true, lastName: true, assignedTo: { select: { name: true } } } },
+  lead: { select: { status: true, deletedAt: true, assignedTo: { select: { name: true } } } },
 } as const;
 
 type ClaimLite = { leadId: string; createdAt: Date };
 
 /**
- * Stage/booking events and first/last real contact per lead, each restricted to occurredAt >= that
- * lead's claim date. Two queries for any number of claims; bodies are never selected.
- * Callers pass ACTIVE claims only (at most one per lead, enforced by a partial unique index).
+ * Stage/booking events, first/last real contact and first outbound contact per lead, each restricted
+ * to occurredAt >= that lead's claim date. Two queries for any number of claims; bodies are never
+ * selected. Callers pass ACTIVE claims only (at most one per lead, enforced by a partial unique index).
  */
 async function loadActivity(claims: ClaimLite[]): Promise<Map<string, Activity>> {
   const map = new Map<string, Activity>();
   if (!claims.length) return map;
   const or = claims.map((c) => ({ leadId: c.leadId, occurredAt: { gte: c.createdAt } }));
-  const [events, real] = await Promise.all([
+  const [events, contacts] = await Promise.all([
     prisma.leadInteraction.findMany({
       where: { OR: or, type: { in: ["STATUS_CHANGE", "BOOKING_EVENT"] } },
       select: { leadId: true, type: true, occurredAt: true, metadata: true },
@@ -118,7 +118,7 @@ async function loadActivity(claims: ClaimLite[]): Promise<Map<string, Activity>>
       take: 5000,
     }),
     prisma.leadInteraction.groupBy({
-      by: ["leadId"],
+      by: ["leadId", "type"],
       where: { OR: or, type: { in: [...REAL_CONTACT_TYPES] } },
       _min: { occurredAt: true },
       _max: { occurredAt: true },
@@ -126,19 +126,27 @@ async function loadActivity(claims: ClaimLite[]): Promise<Map<string, Activity>>
   ]);
   const get = (leadId: string) => {
     let a = map.get(leadId);
-    if (!a) map.set(leadId, (a = { events: [], firstRealContactAt: null, lastRealContactAt: null }));
+    if (!a) map.set(leadId, (a = { events: [], firstRealContactAt: null, lastRealContactAt: null, firstOutboundAt: null }));
     return a;
   };
+  const earlier = (x: Date | null | undefined, y: Date | null | undefined) => (!x ? y ?? null : !y ? x : x < y ? x : y);
+  const later = (x: Date | null | undefined, y: Date | null | undefined) => (!x ? y ?? null : !y ? x : x > y ? x : y);
   for (const e of events) get(e.leadId).events.push({ type: e.type, occurredAt: e.occurredAt, metadata: e.metadata });
-  for (const r of real) {
+  for (const r of contacts) {
     const a = get(r.leadId);
-    a.firstRealContactAt = r._min.occurredAt ?? null;
-    a.lastRealContactAt = r._max.occurredAt ?? null;
+    a.firstRealContactAt = earlier(a.firstRealContactAt, r._min.occurredAt);
+    a.lastRealContactAt = later(a.lastRealContactAt, r._max.occurredAt);
+    if ((OUTBOUND_CONTACT_TYPES as readonly string[]).includes(r.type)) a.firstOutboundAt = earlier(a.firstOutboundAt, r._min.occurredAt);
   }
   return map;
 }
 
-/** Deals on these leads — partner-facing columns only (never ourCommission / ourRatePercent). */
+/**
+ * Deals on these leads — partner-facing columns only (never ourCommission / ourRatePercent).
+ * Capped at the 2000 newest deals as a safety bound: callers pass at most one page of claims or the
+ * overview's (capped) active claims, and a lead rarely has more than a few deals, so the cap is
+ * not reached in practice; beyond it the oldest deals would be missing from the totals.
+ */
 async function loadDeals(leadIds: string[]): Promise<RawDeal[]> {
   if (!leadIds.length) return [];
   const rows = await prisma.deal.findMany({
@@ -169,18 +177,19 @@ async function loadMessages(partnerId: string, leadIds: string[], withBody: bool
 
 export type MyClients = { items: ClientListItem[]; total: number; page: number; pages: number };
 
-/** Claims of this partner (all states), newest first, 50 per page; search on the partner-visible name. */
+/** Claims of this partner (all states), newest first, 50 per page; search on the submitted name. */
 export async function listMyClients(
   partnerId: string,
   opts: { filter: ClientFilter; q?: string; page?: number },
 ): Promise<MyClients> {
-  const where = clientsWhere(partnerId, opts.filter);
+  const now = new Date();
+  const where = clientsWhere(partnerId, opts.filter, now);
   const q = opts.q?.trim() ?? "";
   let page = Math.max(1, Math.floor(opts.page ?? 1));
   let rows: RawClaim[];
   let total: number;
   if (q) {
-    // Names live partly in JSON (submission), so the match runs in memory over a bounded scan.
+    // Names live in JSON (submission), so the match runs in memory over a bounded scan.
     const all = (await prisma.partnerClaim.findMany({
       where, select: CLAIM_SELECT, orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: CLIENT_SEARCH_SCAN,
     })) as RawClaim[];
@@ -196,16 +205,19 @@ export async function listMyClients(
       skip: (page - 1) * CLIENTS_PAGE_SIZE, take: CLIENTS_PAGE_SIZE,
     })) as RawClaim[];
   }
-  const active = rows.filter((r) => r.state === "ACTIVE");
-  const leadIds = active.map((r) => r.leadId);
-  const [activity, deals, messages] = await Promise.all([
-    loadActivity(active), loadDeals(leadIds), loadMessages(partnerId, leadIds, false),
-  ]);
-  const ctx = { partnerId, activity, deals, messages };
+  // Activity decides the display state (protection); deals/messages only for claims still ACTIVE.
+  const active = rows.filter((r) => r.state === "ACTIVE" && r.lead && !r.lead.deletedAt);
+  const activity = await loadActivity(active);
+  const live = active.filter((r) => displayStateOf(r, { activity, now }) === "ACTIVE").map((r) => r.leadId);
+  const [deals, messages] = await Promise.all([loadDeals(live), loadMessages(partnerId, live, false)]);
+  const ctx = { partnerId, now, activity, deals, messages };
   return { items: rows.map((r) => toListItem(r, ctx)), total, page, pages: Math.max(1, Math.ceil(total / CLIENTS_PAGE_SIZE)) };
 }
 
-/** One claim of this partner, or null (→ notFound()). Non-ACTIVE claims load no CRM data at all. */
+/**
+ * One claim of this partner, or null (→ notFound()). Non-ACTIVE claims load no CRM data at all;
+ * ACTIVE claims on a trashed lead or with expired protection load no deals or messages.
+ */
 export async function getMyClient(partnerId: string, claimId: string): Promise<ClientDetail | null> {
   if (typeof claimId !== "string" || claimId.length > 64) return null;
   const claim = await prisma.partnerClaim.findFirst({
@@ -214,22 +226,23 @@ export async function getMyClient(partnerId: string, claimId: string): Promise<C
   });
   if (!claim) return null;
   const office = officeContact();
+  const now = new Date();
   if (claim.state !== "ACTIVE") {
-    return toClientDetail({ ...claim, lead: null }, { partnerId, deals: [], messages: [], office, now: new Date() });
+    return toClientDetail({ ...claim, lead: null }, { partnerId, now, deals: [], messages: [], office });
   }
-  const [lead, activity, deals, messages] = await Promise.all([
+  const [lead, activity] = await Promise.all([
     prisma.lead.findUnique({
       where: { id: claim.leadId },
-      select: {
-        status: true, lostReason: true, firstName: true, lastName: true,
-        assignedTo: { select: { name: true, email: true, phone: true, isActive: true } },
-      },
+      select: { status: true, lostReason: true, deletedAt: true, assignedTo: { select: { name: true, email: true, phone: true, isActive: true } } },
     }),
     loadActivity([claim]),
-    loadDeals([claim.leadId]),
-    loadMessages(partnerId, [claim.leadId], true),
   ]);
-  return toClientDetail({ ...claim, lead }, { partnerId, activity, deals, messages, office, now: new Date() });
+  const row: RawClaim = { ...claim, lead };
+  if (displayStateOf(row, { activity, now }) !== "ACTIVE") {
+    return toClientDetail(row, { partnerId, now, activity, deals: [], messages: [], office });
+  }
+  const [deals, messages] = await Promise.all([loadDeals([claim.leadId]), loadMessages(partnerId, [claim.leadId], true)]);
+  return toClientDetail(row, { partnerId, now, activity, deals, messages, office });
 }
 
 export type MyOverview = {
@@ -241,19 +254,26 @@ export type MyOverview = {
 const OVERVIEW_CLAIM_SCAN = 2000;
 const OVERVIEW_MILESTONE_CLAIMS = 20;
 
-/** KPIs, commission totals per stage and the 5 latest milestones (scan capped at the last 20 active claims). */
+/**
+ * KPIs, commission totals per stage and the 5 latest milestones. Claims with expired protection or on
+ * a trashed lead are left out. Milestones scan the 20 live claims whose lead changed most recently.
+ */
 export async function myOverview(partnerId: string): Promise<MyOverview> {
-  const w = overviewCountWheres(partnerId);
-  const [active, inReview, viewings, closed, claims] = await Promise.all([
+  const now = new Date();
+  const w = overviewCountWheres(partnerId, now);
+  const live = activeClaimsWhere(partnerId, now);
+  const [active, inReview, viewings, closed, claims, recent] = await Promise.all([
     prisma.partnerClaim.count({ where: w.active }),
     prisma.partnerClaim.count({ where: w.inReview }),
     prisma.partnerClaim.count({ where: w.viewings }),
     prisma.partnerClaim.count({ where: w.closed }),
     prisma.partnerClaim.findMany({
-      where: activeClaimsWhere(partnerId), select: CLAIM_SELECT, orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: OVERVIEW_CLAIM_SCAN,
+      where: live, select: { leadId: true, createdAt: true }, orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: OVERVIEW_CLAIM_SCAN,
+    }),
+    prisma.partnerClaim.findMany({
+      where: live, select: CLAIM_SELECT, orderBy: [{ lead: { updatedAt: "desc" } }, { id: "asc" }], take: OVERVIEW_MILESTONE_CLAIMS,
     }) as Promise<RawClaim[]>,
   ]);
-  const recent = claims.slice(0, OVERVIEW_MILESTONE_CLAIMS);
   const recentLeadIds = recent.map((c) => c.leadId);
   const [deals, activity, messages] = await Promise.all([
     loadDeals(claims.map((c) => c.leadId)),
@@ -264,6 +284,6 @@ export async function myOverview(partnerId: string): Promise<MyOverview> {
   return {
     counts: { active, inReview, viewings, closed },
     commission: commissionTotals(mine),
-    latest: latestMilestones(recent, { partnerId, activity, deals: mine, messages }, 5),
+    latest: latestMilestones(recent, { partnerId, now, activity, deals: mine, messages }, 5),
   };
 }

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   CLIENT_FILTERS, activeClaimsWhere, claimWhere, classifyClaim, clientsWhere, commissionTotals, dealView, formatResponse,
   latestMilestones, matchesQuery, messagesWhere, overviewCountWheres, parseClientFilter, publicProjectUrl, submissionView,
-  toClientDetail, toListItem, visibleName, type RawClaim, type RawDeal, type RawMessage,
+  toClientDetail, toListItem, visibleName, type Activity, type RawClaim, type RawDeal, type RawMessage,
 } from "@/lib/partner/clientDto";
 import { PARTNER_LOCALES, lookup } from "@/lib/partner/i18n";
 
@@ -32,13 +32,16 @@ test("where-builders refuse an empty partnerId", () => {
 const SECRETS = [
   "lead-secret@example.com", "+35799000111", "internal note text", "call body secret", "whatsapp body secret",
   "ourCommission", "ourRatePercent", "99999", "other partner message", "outcome note secret", "lostNote secret",
+  "Leadname", "Crmstored",
 ];
 
 const leadWithSecrets = {
   status: "VIEWING_SCHEDULED",
   lostReason: null,
-  firstName: "Anna",
-  lastName: "Schmidt",
+  // The CRM lead's stored name differs from what the partner typed (accepted duplicate): never shown.
+  firstName: "Leadname",
+  lastName: "Crmstored",
+  deletedAt: null,
   email: "lead-secret@example.com",
   phone: "+35799000111",
   notes: "internal note text",
@@ -82,10 +85,11 @@ const messages: RawMessage[] = [
 
 const ctx = () => ({
   partnerId: P,
-  activity: new Map([["lead-1", {
+  activity: new Map<string, Activity>([["lead-1", {
     events: interactionsWithBodies.filter((i) => i.type === "STATUS_CHANGE") as never[],
     firstRealContactAt: t("2026-05-01T10:42:00Z"),
     lastRealContactAt: t("2026-05-02T00:00:00Z"),
+    firstOutboundAt: t("2026-05-01T10:42:00Z"),
   }]]),
   deals: [deal(), deal({ id: "deal-2", leadId: "lead-9" })],
   messages,
@@ -133,6 +137,7 @@ test("events before the claim are ignored; inactive owner falls back to the offi
   const c = ctx();
   c.activity.get("lead-1")!.events = [{ type: "STATUS_CHANGE", occurredAt: t("2026-04-01T00:00:00Z"), metadata: { toStatus: "OFFER" } }] as never[];
   c.activity.get("lead-1")!.firstRealContactAt = t("2026-04-01T00:00:00Z");
+  c.activity.get("lead-1")!.firstOutboundAt = t("2026-04-01T00:00:00Z");
   const lead = { ...leadWithSecrets, assignedTo: { ...leadWithSecrets.assignedTo, isActive: false } };
   const d = toClientDetail(activeClaim({ lead: lead as never }), { ...c, deals: [], messages: [] });
   assert.equal(d.kind, "active");
@@ -214,18 +219,85 @@ test("classifyClaim splits active / closed / lost", () => {
   assert.equal(classifyClaim("EXPIRED", "CLOSED"), "lost");
 });
 test("filter where-clauses match the classification", () => {
-  assert.deepEqual(clientsWhere(P, "closed"), { partnerId: P, state: "ACTIVE", lead: { status: "CLOSED" } });
-  assert.deepEqual(clientsWhere(P, "all"), { partnerId: P });
-  assert.deepEqual(clientsWhere(P, "lost").OR, [{ state: { in: ["REJECTED", "EXPIRED"] } }, { state: "ACTIVE", lead: { status: "LOST" } }]);
-  assert.deepEqual(clientsWhere(P, "active").OR, [{ state: "IN_REVIEW" }, { state: "ACTIVE", lead: { status: { notIn: ["CLOSED", "LOST"] } } }]);
+  const json = (f: (typeof CLIENT_FILTERS)[number]) => JSON.stringify(clientsWhere(P, f, now));
+  assert.deepEqual(clientsWhere(P, "all", now), { partnerId: P });
+  // live ACTIVE claims: lead not trashed, protection cutoff 6 months before now
+  for (const f of ["active", "closed"] as const) {
+    assert.ok(json(f).includes('"deletedAt":null'), f);
+    assert.ok(json(f).includes('"gte":"2025-12-01T00:00:00.000Z"'), f);
+  }
+  assert.ok(json("active").includes('"IN_REVIEW"'));
+  assert.ok(json("closed").includes('"status":"CLOSED"'));
+  const lost = clientsWhere(P, "lost", now).OR as object[];
+  assert.deepEqual(lost[0], { state: { in: ["REJECTED", "EXPIRED"] } });
+  assert.ok(JSON.stringify(lost).includes('"status":"LOST"'));
+  assert.ok(JSON.stringify(lost).includes('"none"'), "expired-protection ACTIVE claims are lost");
+  assert.ok(JSON.stringify(lost).includes('"deletedAt":{"not":null}'), "trashed leads are lost");
+  for (const w of Object.values(overviewCountWheres(P, now)).filter((x) => !("state" in x)))
+    assert.ok(JSON.stringify(w).includes('"deletedAt":null'), "KPIs exclude trashed leads");
   assert.equal(parseClientFilter("lost"), "lost");
   assert.equal(parseClientFilter("LOST"), null);
   assert.equal(parseClientFilter(undefined), null);
 });
+test("ACTIVE claim with expired protection is shown like EXPIRED: submission only, no stage/deals/messages", () => {
+  const old = activeClaim({ createdAt: t("2025-01-01T00:00:00Z") });
+  const c = { ...ctx(), activity: new Map([["lead-1", {
+    events: [{ type: "STATUS_CHANGE", occurredAt: t("2025-01-05T00:00:00Z"), metadata: { toStatus: "OFFER" } }] as never[],
+    firstRealContactAt: t("2025-01-02T00:00:00Z"), lastRealContactAt: t("2025-02-01T00:00:00Z"), firstOutboundAt: t("2025-01-02T00:00:00Z"),
+  }]]), deals: [deal({ createdAt: t("2025-01-10T00:00:00Z") })], messages: [{ leadId: "lead-1", partnerId: P, createdAt: t("2025-01-06T00:00:00Z"), body: "Viewing went well" }] };
+  const d = toClientDetail(old, c);
+  assert.equal(d.kind, "submission");
+  assert.equal(d.state, "EXPIRED");
+  assert.equal(d.chipKey, "clients.chipExpired");
+  assert.equal(d.kind === "submission" && d.stateKey, "clients.stateExpired");
+  noSecrets(d);
+  assert.ok(!JSON.stringify(d).includes("Viewing went well") && !JSON.stringify(d).includes("Maria Advisor"));
+  const item = toListItem(old, c);
+  assert.equal(item.state, "EXPIRED");
+  assert.equal(item.category, "lost");
+  assert.equal(item.commission, null);
+  assert.equal(item.contactName, null);
+  assert.deepEqual(latestMilestones([old], c), []);
+  // a recent real contact keeps it protected
+  c.activity.get("lead-1")!.lastRealContactAt = t("2026-03-01T00:00:00Z");
+  assert.equal(toClientDetail(old, c).kind, "active");
+});
+test("soft-deleted lead behind an ACTIVE claim reads as neutral 'Not proceeding' with no details", () => {
+  const trashed = activeClaim({ lead: { ...leadWithSecrets, deletedAt: t("2026-05-10T00:00:00Z") } as never });
+  const d = toClientDetail(trashed, ctx());
+  assert.equal(d.kind, "submission");
+  assert.equal(d.state, "NOT_PROCEEDING");
+  assert.equal(d.chipKey, "clients.chipNotProceeding");
+  assert.equal(d.kind === "submission" && d.stateKey, "clients.stateNotProceeding");
+  noSecrets(d);
+  assert.ok(!JSON.stringify(d).includes("Maria Advisor"));
+  const item = toListItem(trashed, ctx());
+  assert.equal(item.category, "lost");
+  assert.equal(item.chipKey, "clients.chipNotProceeding");
+  assert.deepEqual(latestMilestones([trashed], ctx()), []);
+  assert.equal(classifyClaim("NOT_PROCEEDING", "OFFER"), "lost");
+});
+test("response time counts only outbound first contact; protection keeps inbound contacts", () => {
+  const c = ctx();
+  const a = c.activity.get("lead-1")!;
+  a.firstRealContactAt = t("2026-05-01T10:05:00Z"); // client wrote first (WHATSAPP_IN)
+  a.firstOutboundAt = t("2026-05-01T11:55:00Z"); // our call
+  a.lastRealContactAt = t("2026-05-20T00:00:00Z"); // inbound email
+  const d = toClientDetail(activeClaim(), c);
+  assert.equal(d.kind, "active");
+  if (d.kind !== "active") return;
+  assert.deepEqual(d.response, { unit: "h", n: 2 });
+  assert.equal(d.protection.until.toISOString(), "2026-11-20T00:00:00.000Z");
+  assert.ok(d.milestones.some((m) => m.key === "milestones.firstContact" && m.at.toISOString() === "2026-05-01T10:05:00.000Z"));
+  a.firstOutboundAt = null;
+  const d2 = toClientDetail(activeClaim(), c);
+  assert.equal(d2.kind === "active" && d2.response, null, "no outbound contact yet → no response time");
+});
 test("search uses the partner-visible name, case- and accent-insensitive", () => {
   const active = activeClaim({ submission: { firstName: "Typed" } });
-  assert.equal(visibleName(active), "Anna Schmidt");
-  assert.equal(visibleName({ ...active, state: "IN_REVIEW" }), "Typed");
+  assert.equal(visibleName(active), "Typed", "ACTIVE claims also show the submitted name, not the CRM lead's");
+  assert.equal(visibleName({ ...active, state: "IN_REVIEW" } as RawClaim), "Typed");
+  assert.equal(toListItem(active, ctx()).name, "Typed");
   assert.ok(matchesQuery("Zoë Müller", "zoe mul"));
   assert.ok(matchesQuery("Anna Schmidt", "  SCHMIDT "));
   assert.ok(!matchesQuery("Anna Schmidt", "anna x"));

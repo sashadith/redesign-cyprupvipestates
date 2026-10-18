@@ -4,7 +4,7 @@
 // DTOs never carry lead email/phone/notes, interaction bodies, our commission or other partners' data.
 import type { Prisma } from "@prisma/client";
 import { isLeadStatus, type LeadStatusValue, type LostReasonValue } from "@/lib/crm/leadStatus";
-import { claimProtection } from "./claims";
+import { addMonthsUtc, claimProtection, REAL_CONTACT_TYPES } from "./claims";
 import { lostCategory, milestonesFor, partnerStage, type Milestone } from "./milestones";
 
 // ── Filters ─────────────────────────────────────────────────────────────────
@@ -23,14 +23,30 @@ export function parseClientFilter(v: unknown): ClientFilter | null {
 }
 
 export type ClaimState = "ACTIVE" | "IN_REVIEW" | "REJECTED" | "EXPIRED";
+/** What the partner sees: an ACTIVE claim with expired protection reads as EXPIRED, one on a trashed lead as NOT_PROCEEDING. */
+export type DisplayState = ClaimState | "NOT_PROCEEDING";
 export type ClientCategory = Exclude<ClientFilter, "all">;
 
-/** closed = lead CLOSED; lost = lead LOST or the claim REJECTED/EXPIRED; everything else ACTIVE/IN_REVIEW is active. */
-export function classifyClaim(state: ClaimState, leadStatus: string | null | undefined): ClientCategory {
-  if (state === "REJECTED" || state === "EXPIRED") return "lost";
+/** closed = lead CLOSED; lost = lead LOST or the claim (effectively) REJECTED/EXPIRED/NOT_PROCEEDING; everything else ACTIVE/IN_REVIEW is active. */
+export function classifyClaim(state: DisplayState, leadStatus: string | null | undefined): ClientCategory {
+  if (state === "REJECTED" || state === "EXPIRED" || state === "NOT_PROCEEDING") return "lost";
   if (state === "ACTIVE" && leadStatus === "CLOSED") return "closed";
   if (state === "ACTIVE" && leadStatus === "LOST") return "lost";
   return "active";
+}
+
+/**
+ * Display state of a claim. ACTIVE claims on a soft-deleted lead → NOT_PROCEEDING; ACTIVE claims whose
+ * computed protection (claimProtection, full real-contact definition) has run out → EXPIRED.
+ */
+export function displayState(
+  row: { state: ClaimState; createdAt: Date; lead: { deletedAt?: Date | null } | null },
+  lastRealContactAt: Date | null,
+  now: Date,
+): DisplayState {
+  if (row.state !== "ACTIVE") return row.state;
+  if (!row.lead || row.lead.deletedAt) return "NOT_PROCEEDING";
+  return claimProtection({ claimCreatedAt: row.createdAt, lastRealContactAt, now }).expired ? "EXPIRED" : "ACTIVE";
 }
 
 function needPartner(partnerId: string): string {
@@ -38,16 +54,46 @@ function needPartner(partnerId: string): string {
   return partnerId;
 }
 
-/** Claims of this partner in the given filter (same split as classifyClaim). */
-export function clientsWhere(partnerId: string, filter: ClientFilter): Prisma.PartnerClaimWhereInput {
+const REAL_TYPES = [...REAL_CONTACT_TYPES];
+
+/**
+ * Database approximation of "protection not expired": claim or a real contact after the cutoff
+ * (now − 6 months). The mappers re-check with claimProtection; the two can disagree only around
+ * month-end clamping (a day or two), which only affects which filter tab a claim appears under.
+ */
+export function protectionCutoff(now: Date): Date {
+  return addMonthsUtc(now, -6);
+}
+function liveActive(cutoff: Date, status?: Prisma.EnumLeadStatusFilter | "CLOSED" | "LOST" | "VIEWING_SCHEDULED"): Prisma.PartnerClaimWhereInput {
+  return {
+    state: "ACTIVE",
+    lead: { deletedAt: null, ...(status ? { status } : {}) },
+    OR: [{ createdAt: { gte: cutoff } }, { lead: { interactions: { some: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } } } }],
+  };
+}
+function expiredActive(cutoff: Date): Prisma.PartnerClaimWhereInput {
+  return {
+    state: "ACTIVE",
+    createdAt: { lt: cutoff },
+    lead: { deletedAt: null, interactions: { none: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } } },
+  };
+}
+const trashedActive: Prisma.PartnerClaimWhereInput = { state: "ACTIVE", lead: { deletedAt: { not: null } } };
+
+/** Claims of this partner in the given filter (same split as classifyClaim on the display state). */
+export function clientsWhere(partnerId: string, filter: ClientFilter, now: Date = new Date()): Prisma.PartnerClaimWhereInput {
   const p = needPartner(partnerId);
+  const cutoff = protectionCutoff(now);
   switch (filter) {
     case "active":
-      return { partnerId: p, OR: [{ state: "IN_REVIEW" }, { state: "ACTIVE", lead: { status: { notIn: ["CLOSED", "LOST"] } } }] };
+      return { partnerId: p, OR: [{ state: "IN_REVIEW" }, liveActive(cutoff, { notIn: ["CLOSED", "LOST"] })] };
     case "closed":
-      return { partnerId: p, state: "ACTIVE", lead: { status: "CLOSED" } };
+      return { partnerId: p, AND: [liveActive(cutoff, "CLOSED")] };
     case "lost":
-      return { partnerId: p, OR: [{ state: { in: ["REJECTED", "EXPIRED"] } }, { state: "ACTIVE", lead: { status: "LOST" } }] };
+      return {
+        partnerId: p,
+        OR: [{ state: { in: ["REJECTED", "EXPIRED"] } }, liveActive(cutoff, "LOST"), expiredActive(cutoff), trashedActive],
+      };
     default:
       return { partnerId: p };
   }
@@ -63,19 +109,24 @@ export function messagesWhere(partnerId: string, leadIds: string[]): Prisma.Part
   return { partnerId: needPartner(partnerId), leadId: { in: leadIds } };
 }
 
-/** Overview KPI counts. */
-export function overviewCountWheres(partnerId: string): Record<"active" | "inReview" | "viewings" | "closed", Prisma.PartnerClaimWhereInput> {
+/** Overview KPI counts — expired-protection and trashed-lead claims are left out. */
+export function overviewCountWheres(
+  partnerId: string,
+  now: Date = new Date(),
+): Record<"active" | "inReview" | "viewings" | "closed", Prisma.PartnerClaimWhereInput> {
   const p = needPartner(partnerId);
+  const cutoff = protectionCutoff(now);
   return {
-    active: { partnerId: p, state: "ACTIVE", lead: { status: { notIn: ["CLOSED", "LOST"] } } },
+    active: { partnerId: p, AND: [liveActive(cutoff, { notIn: ["CLOSED", "LOST"] })] },
     inReview: { partnerId: p, state: "IN_REVIEW" },
-    viewings: { partnerId: p, state: "ACTIVE", lead: { status: "VIEWING_SCHEDULED" } },
-    closed: { partnerId: p, state: "ACTIVE", lead: { status: "CLOSED" } },
+    viewings: { partnerId: p, AND: [liveActive(cutoff, "VIEWING_SCHEDULED")] },
+    closed: { partnerId: p, AND: [liveActive(cutoff, "CLOSED")] },
   };
 }
 
-export function activeClaimsWhere(partnerId: string): Prisma.PartnerClaimWhereInput {
-  return { partnerId: needPartner(partnerId), state: "ACTIVE" };
+/** ACTIVE claims with live protection on a not-trashed lead (overview commission and updates). */
+export function activeClaimsWhere(partnerId: string, now: Date = new Date()): Prisma.PartnerClaimWhereInput {
+  return { partnerId: needPartner(partnerId), AND: [liveActive(protectionCutoff(now))] };
 }
 
 // ── Raw row shapes (what scope.ts loads) ────────────────────────────────────
@@ -83,8 +134,7 @@ export function activeClaimsWhere(partnerId: string): Prisma.PartnerClaimWhereIn
 export type RawLead = {
   status: string;
   lostReason?: string | null;
-  firstName: string;
-  lastName: string;
+  deletedAt?: Date | null;
   assignedTo?: { name: string | null; email?: string | null; phone?: string | null; isActive?: boolean } | null;
 };
 
@@ -100,8 +150,19 @@ export type RawClaim = {
 
 export type RawInteraction = { type: string; occurredAt: Date; metadata: unknown };
 
-/** Per lead: stage/booking events after the claim, plus first and last real contact after it. */
-export type Activity = { events: RawInteraction[]; firstRealContactAt: Date | null; lastRealContactAt: Date | null };
+/**
+ * Per lead: stage/booking events after the claim, first and last real contact after it (protection,
+ * "first contact" milestone) and the first OUTBOUND contact after it (response time).
+ */
+export type Activity = {
+  events: RawInteraction[];
+  firstRealContactAt: Date | null;
+  lastRealContactAt: Date | null;
+  firstOutboundAt?: Date | null;
+};
+
+/** Contacts we initiated — only these count for the response time. */
+export const OUTBOUND_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "WHATSAPP_OUT"] as const;
 
 export type RawDeal = {
   id: string;
@@ -124,6 +185,7 @@ export type RawMessage = { leadId: string; partnerId: string; createdAt: Date; b
 
 export type MapContext = {
   partnerId: string;
+  now: Date;
   activity?: Map<string, Activity>;
   deals: RawDeal[];
   messages: RawMessage[];
@@ -179,9 +241,11 @@ export function submissionView(json: unknown): SubmissionView {
 
 const joinName = (first: string | null | undefined, last: string | null | undefined) => `${first ?? ""} ${last ?? ""}`.trim();
 
-/** Partner-visible name: the lead's for ACTIVE claims (the partner submitted that person), else the submission's. */
-export function visibleName(row: Pick<RawClaim, "state" | "submission" | "lead">): string {
-  if (row.state === "ACTIVE" && row.lead) return joinName(row.lead.firstName, row.lead.lastName);
+/**
+ * Partner-visible name: always what the partner typed (submission), never the CRM lead's stored name —
+ * an accepted duplicate can be a lead with a different name.
+ */
+export function visibleName(row: Pick<RawClaim, "submission">): string {
   const sub = submissionView(row.submission);
   return joinName(sub.firstName, sub.lastName);
 }
@@ -272,16 +336,29 @@ export const RESPONSE_KEYS: Record<ResponseTime["unit"], string> = {
 
 // ── Mappers ─────────────────────────────────────────────────────────────────
 
-const STATE_CHIP: Record<Exclude<ClaimState, "ACTIVE">, string> = {
+type ClosedState = Exclude<DisplayState, "ACTIVE">;
+const STATE_CHIP: Record<ClosedState, string> = {
   IN_REVIEW: "clients.chipReview",
   REJECTED: "clients.chipRejected",
   EXPIRED: "clients.chipExpired",
+  NOT_PROCEEDING: "clients.chipNotProceeding",
 };
-const STATE_MESSAGE: Record<Exclude<ClaimState, "ACTIVE">, string> = {
+const STATE_MESSAGE: Record<ClosedState, string> = {
   IN_REVIEW: "clients.stateReview",
   REJECTED: "clients.stateRejected",
   EXPIRED: "clients.stateExpired",
+  NOT_PROCEEDING: "clients.stateNotProceeding",
 };
+
+/** Last real contact at/after the claim (protection anchor), from the loaded activity. */
+function lastRealContact(row: RawClaim, ctx: Pick<MapContext, "activity">): Date | null {
+  const last = ctx.activity?.get(row.leadId)?.lastRealContactAt ?? null;
+  return last && last >= row.createdAt ? last : null;
+}
+
+export function displayStateOf(row: RawClaim, ctx: Pick<MapContext, "activity" | "now">): DisplayState {
+  return displayState(row, lastRealContact(row, ctx), ctx.now);
+}
 
 function ownClaim(row: RawClaim, partnerId: string): void {
   if (row.partnerId !== partnerId) throw new Error("partner scope: claim of another partner");
@@ -299,7 +376,8 @@ function scoped(row: RawClaim, ctx: MapContext) {
   // milestonesFor only needs the first real contact; one synthetic row stands for it.
   if (first) interactions.push({ type: "CALL", occurredAt: first, metadata: null });
   const last = act.lastRealContactAt && act.lastRealContactAt >= row.createdAt ? act.lastRealContactAt : null;
-  return { deals, messages, interactions, first, last };
+  const firstOut = act.firstOutboundAt && act.firstOutboundAt >= row.createdAt ? act.firstOutboundAt : null;
+  return { deals, messages, interactions, first, last, firstOut };
 }
 
 function claimMilestones(row: RawClaim, sc: ReturnType<typeof scoped>): Milestone[] {
@@ -314,7 +392,7 @@ function claimMilestones(row: RawClaim, sc: ReturnType<typeof scoped>): Mileston
 export type ClientListItem = {
   id: string;
   name: string;
-  state: ClaimState;
+  state: DisplayState;
   category: ClientCategory;
   /** Dictionary key of the chip (lead stage for ACTIVE, claim state otherwise). */
   chipKey: string;
@@ -326,10 +404,11 @@ export type ClientListItem = {
 
 export function toListItem(row: RawClaim, ctx: MapContext): ClientListItem {
   ownClaim(row, ctx.partnerId);
-  const base = { id: row.id, name: visibleName(row), state: row.state, submittedAt: row.createdAt };
-  if (row.state !== "ACTIVE" || !row.lead) {
-    const st = row.state === "ACTIVE" ? "IN_REVIEW" : row.state;
-    return { ...base, category: classifyClaim(row.state, null), chipKey: STATE_CHIP[st], contactName: null, lastUpdateAt: null, commission: null };
+  const st = displayStateOf(row, ctx);
+  const base = { id: row.id, name: visibleName(row), state: st, submittedAt: row.createdAt };
+  if (st !== "ACTIVE" || !row.lead) {
+    const closed = st === "ACTIVE" ? "NOT_PROCEEDING" : st;
+    return { ...base, category: classifyClaim(closed, null), chipKey: STATE_CHIP[closed], contactName: null, lastUpdateAt: null, commission: null };
   }
   const sc = scoped(row, ctx);
   const ms = claimMilestones(row, sc);
@@ -337,7 +416,7 @@ export function toListItem(row: RawClaim, ctx: MapContext): ClientListItem {
   const sums = commissionTotals(sc.deals);
   return {
     ...base,
-    category: classifyClaim(row.state, status),
+    category: classifyClaim("ACTIVE", status),
     chipKey: partnerStage(status).key,
     contactName: row.lead.assignedTo?.name?.trim() || null,
     lastUpdateAt: ms[0]?.at ?? null,
@@ -354,7 +433,7 @@ export type ClientDetail =
   | {
       kind: "submission";
       id: string;
-      state: Exclude<ClaimState, "ACTIVE">;
+      state: ClosedState;
       name: string;
       chipKey: string;
       stateKey: string;
@@ -380,19 +459,20 @@ export type ClientDetail =
 
 export function toClientDetail(
   row: RawClaim,
-  ctx: MapContext & { office: { email: string | null; phone: string | null } | null; now: Date },
+  ctx: MapContext & { office: { email: string | null; phone: string | null } | null },
 ): ClientDetail {
   ownClaim(row, ctx.partnerId);
   const submission = submissionView(row.submission);
-  if (row.state !== "ACTIVE" || !row.lead) {
-    const st = row.state === "ACTIVE" ? "IN_REVIEW" : row.state;
+  const st = displayStateOf(row, ctx);
+  if (st !== "ACTIVE" || !row.lead) {
+    const closed = st === "ACTIVE" ? "NOT_PROCEEDING" : st;
     return {
       kind: "submission",
       id: row.id,
-      state: st,
+      state: closed,
       name: joinName(submission.firstName, submission.lastName),
-      chipKey: STATE_CHIP[st],
-      stateKey: STATE_MESSAGE[st],
+      chipKey: STATE_CHIP[closed],
+      stateKey: STATE_MESSAGE[closed],
       submittedAt: row.createdAt,
       submission,
     };
@@ -407,7 +487,7 @@ export function toClientDetail(
       : ctx.office && (ctx.office.email || ctx.office.phone)
         ? { kind: "office", email: ctx.office.email, phone: ctx.office.phone }
         : { kind: "pending" };
-  const minutes = sc.first ? Math.round((sc.first.getTime() - row.createdAt.getTime()) / 60000) : null;
+  const minutes = sc.firstOut ? Math.round((sc.firstOut.getTime() - row.createdAt.getTime()) / 60000) : null;
   const prot = claimProtection({ claimCreatedAt: row.createdAt, lastRealContactAt: sc.last, now: ctx.now });
   return {
     kind: "active",
@@ -429,12 +509,12 @@ export function toClientDetail(
 
 export type OverviewMilestone = { claimId: string; name: string; at: Date; key: string };
 
-/** Latest milestones across the given ACTIVE claims (message bodies are not carried into the overview). */
+/** Latest milestones across the given claims that are effectively ACTIVE (message bodies are not carried into the overview). */
 export function latestMilestones(rows: RawClaim[], ctx: MapContext, limit = 5): OverviewMilestone[] {
   const out: OverviewMilestone[] = [];
   for (const row of rows) {
     ownClaim(row, ctx.partnerId);
-    if (row.state !== "ACTIVE" || !row.lead) continue;
+    if (displayStateOf(row, ctx) !== "ACTIVE" || !row.lead) continue;
     const name = visibleName(row);
     for (const m of claimMilestones(row, scoped(row, ctx))) out.push({ claimId: row.id, name, at: m.at, key: m.key });
   }

@@ -34,7 +34,7 @@ export function Chip({ label, tone = "stage" }: { label: string; tone?: "stage" 
 
 export function chipTone(chipKey: string): "stage" | "review" | "closed" | "lost" | "sold" {
   if (chipKey === "clients.chipReview") return "review";
-  if (chipKey === "clients.chipRejected" || chipKey === "clients.chipExpired" || chipKey === "stages.lost") return "lost";
+  if (chipKey === "clients.chipRejected" || chipKey === "clients.chipExpired" || chipKey === "clients.chipNotProceeding" || chipKey === "stages.lost") return "lost";
   if (chipKey === "stages.sold") return "sold";
   if (chipKey === "stages.onHold") return "closed";
   return "stage";
