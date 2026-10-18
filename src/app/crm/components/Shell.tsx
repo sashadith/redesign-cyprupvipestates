@@ -25,6 +25,7 @@ export function Shell({ user, children }: Props) {
               Inbox {user.inboxCount > 0 && <span className="n">{user.inboxCount}</span>}
             </Link>
           )}
+          {user.canAssign && <Link href="/crm/partners" className={on("/crm/partners")}>Partners</Link>}
           {user.canAssign && <Link href="/crm/team" className={on("/crm/team")}>Team</Link>}
           {user.canAssign && <Link href="/crm/commissions" className={on("/crm/commissions")}>Commissions</Link>}
           {user.oldCrm && <Link href="/admin/crm">Old CRM</Link>}

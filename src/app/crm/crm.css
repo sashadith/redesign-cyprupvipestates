@@ -387,3 +387,19 @@
   .crm-search-btn { margin-left: 0; padding: 6px 9px; flex: none; }
   .crm-me { flex: none; }
 }
+
+/* Partners screen (2026-10-18) */
+.crm-pt-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.crm-pt { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.crm-pt-empty { margin: 16px 0 0; color: var(--muted); }
+.crm-pt-main { display: grid; grid-template-columns: minmax(170px, 1.1fr) 1.2fr 1fr 1.2fr auto; gap: 10px 18px; align-items: start; }
+.crm-pt-who, .crm-pt-mail, .crm-pt-meta { display: grid; gap: 3px; min-width: 0; }
+.crm-pt-who span, .crm-pt-mail span:first-child, .crm-pt-meta span { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.crm-pt-mail .crm-pill { justify-self: start; }
+.crm-pt-ok { color: var(--good); border-color: currentColor; }
+.crm-pt-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.crm-pt-terms { border: 0; border-top: 1px solid var(--line); margin: 12px 0 0; padding: 12px 0 0; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; }
+.crm-pt-terms label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.crm-pt-terms input:not([type="checkbox"]), .crm-pt-terms select { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: 500 13px var(--body); background: var(--panel); color: var(--ink); min-width: 120px; }
+.crm-pt-check { display: flex !important; align-items: center; gap: 6px; }
+@media (max-width: 900px) { .crm-pt-main { grid-template-columns: 1fr; } }
