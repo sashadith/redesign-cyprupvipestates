@@ -13,7 +13,9 @@ import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
 import { SITE_URL, ogLocale } from "@/lib/seo";
 import { hePlaceOrIsolated } from "@/lib/hePlaces";
-import { presentationBranding } from "@/lib/partner/presentationBranding";
+import {
+  PARTNER_SHARE_IMAGE, isPreviewRequest, partnerPresentationAvailable, partnerShareTitle, presentationBranding, tracksClientViews,
+} from "@/lib/partner/presentationBranding";
 import { asPLocale, COPY, PARTNER_COPY, timeOfDayGreeting } from "./copy";
 import { budgetChip } from "./budgetChip";
 import HeroGreeting from "./HeroGreeting";
@@ -40,11 +42,30 @@ const PRESENTATION_OG_IMAGE = `${SITE_URL}/og/presentation-1000x1000.jpg`;
 export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
   const row = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
-    select: { locale: true, partnerId: true },
+    select: {
+      locale: true, partnerId: true,
+      partner: { select: { status: true, brandName: true, company: true, firstName: true, lastName: true } },
+    },
   });
   const locale = asPLocale(row?.locale);
-  // Partner-branded presentations (phase 3e) carry no Cyprus VIP Estates name in the tab title.
-  const title = row?.partnerId ? PARTNER_COPY[locale].metaTitle : COPY[locale].metaTitle;
+  if (row?.partnerId) {
+    // Partner-branded presentations (phase 3e): no Cyprus VIP Estates name or share image. Title is the
+    // localized title plus the partner's brand (ACTIVE partner only); the image a plain district photo.
+    const partnerTitle = partnerShareTitle(PARTNER_COPY[locale].metaTitle, row.partner);
+    const partnerDescription = COPY[locale].metaDescription;
+    return {
+      title: partnerTitle,
+      description: partnerDescription,
+      robots: { index: false, follow: false },
+      openGraph: {
+        title: partnerTitle,
+        description: partnerDescription,
+        locale: ogLocale(locale),
+        images: [{ url: `${SITE_URL}${PARTNER_SHARE_IMAGE.path}`, width: PARTNER_SHARE_IMAGE.width, height: PARTNER_SHARE_IMAGE.height }],
+      },
+    };
+  }
+  const title = COPY[locale].metaTitle;
   const description = COPY[locale].metaDescription;
   return {
     title,
@@ -100,7 +121,12 @@ function PartnerNotAvailable({ locale }: { locale: ReturnType<typeof asPLocale> 
   );
 }
 
-export default async function ClientPresentationPage({ params }: { params: { token: string } }) {
+export default async function ClientPresentationPage({
+  params, searchParams,
+}: {
+  params: { token: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const presentation = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
     // Least-data principle: no Lead PII (name/email/phone) — greetingName and
@@ -140,11 +166,18 @@ export default async function ClientPresentationPage({ params }: { params: { tok
     ? await prisma.partner.findUnique({
         where: { id: presentation.partnerId },
         select: {
-          brandName: true, company: true, firstName: true, lastName: true, brandPhone: true, brandEmail: true, brandWebsite: true,
+          status: true, brandName: true, company: true, firstName: true, lastName: true, brandPhone: true, brandEmail: true, brandWebsite: true,
           brandLogoType: true, brandLogoUpdatedAt: true,
         },
       })
     : null;
+  // A suspended / inactive / missing partner's presentations are not shown (M1); staff presentations never get here.
+  if (presentation.partnerId && !partnerPresentationAvailable(partnerRow)) {
+    return <PartnerNotAvailable locale={locale} />;
+  }
+  // The portal's "Open" link adds ?preview=1 (soft marker, see presentationBranding): the partner's own look
+  // is not recorded as the client's view. Always true for a staff presentation.
+  const trackViews = tracksClientViews({ partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) });
   const branding = presentationBranding({
     token: params.token,
     partnerId: presentation.partnerId,
@@ -287,7 +320,7 @@ export default async function ClientPresentationPage({ params }: { params: { tok
 
   return (
     <>
-      <ViewTracker token={params.token} />
+      {trackViews && <ViewTracker token={params.token} />}
       <main className="cp-page" data-theme="dark">
         <HeroGreeting
           eyebrowTag={c.eyebrowTag}
@@ -302,7 +335,12 @@ export default async function ClientPresentationPage({ params }: { params: { tok
           locale={locale}
           brand={branding.mode === "partner" ? { name: branding.name, logoUrl: branding.logoUrl } : undefined}
         />
-        <PresentationBody token={params.token} items={items} locale={locale} />
+        <PresentationBody
+          token={params.token}
+          items={items}
+          locale={locale}
+          {...(branding.mode === "partner" ? { partnerMode: true, trackViews } : {})}
+        />
         {branding.mode === "partner" ? (
           <PartnerClosing brand={branding} locale={locale} />
         ) : (

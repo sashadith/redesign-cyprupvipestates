@@ -13,7 +13,9 @@ import {
   mergePresentationStats, presentationStatusOf, presentationUrl, type PresentationClaimRow,
 } from "@/lib/partner/partnerPresentations";
 import {
-  LOGO_HEADERS, brandDisplayName, logoDecision, officeAlertPrefix, presentationBranding, presentationOpenedRow, whatsappDigits,
+  LOGO_HEADERS, PARTNER_SHARE_IMAGE, PREVIEW_PARAM, brandDisplayName, isPreviewRequest, logoDecision, officeAlertPrefix,
+  partnerPresentationAvailable, partnerShareTitle, presentationBranding, presentationOpenedRow, presentationPreviewUrl, tracksClientViews,
+  whatsappDigits,
 } from "@/lib/partner/presentationBranding";
 import { validatePresentationDraft } from "@/lib/partner/presentationDraft";
 
@@ -126,6 +128,82 @@ test("page wiring: the CVE path is untouched and partner fields load only for pa
   assert.ok(!partnerGone.includes("cyprusvipestates") && !partnerGone.includes("<img"));
 });
 
+test("suspended partner: presentations not available (partner dead end), staff presentations unaffected", () => {
+  assert.equal(partnerPresentationAvailable({ status: "ACTIVE" }), true);
+  for (const st of ["SUSPENDED", "PENDING", "REJECTED", ""]) assert.equal(partnerPresentationAvailable({ status: st }), false, st);
+  assert.equal(partnerPresentationAvailable(null), false, "missing partner row");
+  const page = src("app/c/[token]/page.tsx");
+  assert.ok(page.includes("if (presentation.partnerId && !partnerPresentationAvailable(partnerRow)) {\n    return <PartnerNotAvailable locale={locale} />;"));
+  assert.ok(page.includes("status: true, brandName: true, company: true,"));
+});
+
+test("partner preview: ?preview=1 skips view tracking for partner presentations only; the copied link stays clean", () => {
+  assert.equal(PREVIEW_PARAM, "preview");
+  assert.equal(presentationPreviewUrl("https://cyprusvipestates.com/c/tok"), "https://cyprusvipestates.com/c/tok?preview=1");
+  assert.equal(presentationPreviewUrl("https://x.test/c/tok?a=1"), "https://x.test/c/tok?a=1&preview=1");
+  assert.equal(isPreviewRequest({ preview: "1" }), true);
+  assert.equal(isPreviewRequest({ preview: ["1", "0"] }), true);
+  for (const sp of [{}, { preview: "0" }, { preview: "true" }, { preview: "" }, { preview: ["0", "1"] }, undefined, null]) {
+    assert.equal(isPreviewRequest(sp as Record<string, string | string[] | undefined> | undefined), false, JSON.stringify(sp));
+  }
+  assert.equal(tracksClientViews({ partnerId: "p1", preview: true }), false);
+  assert.equal(tracksClientViews({ partnerId: "p1", preview: false }), true);
+  assert.equal(tracksClientViews({ partnerId: null, preview: true }), true, "staff presentation: always tracked, as before");
+  assert.equal(tracksClientViews({ partnerId: null, preview: false }), true);
+  const page = src("app/c/[token]/page.tsx");
+  assert.ok(page.includes("const trackViews = tracksClientViews({ partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) });"));
+  assert.ok(page.includes("{trackViews && <ViewTracker token={params.token} />}"));
+  const body = src("app/c/[token]/PresentationBody.tsx");
+  const open = body.slice(body.indexOf("const openDetails"), body.indexOf("}, [token, trackViews]);"));
+  assert.ok(open.indexOf("if (!trackViews) return;") < open.indexOf("fetch(`/api/c/${token}/view`"), "overlay view POST skipped in preview");
+  // Portal: "Open" carries the marker, "Copy link" (sent to the client) never does.
+  const bits = src("app/partner-portal/components/presentationBits.tsx");
+  assert.ok(bits.includes("href={presentationPreviewUrl(p.url)}"));
+  assert.ok(bits.includes("<CopyLink value={p.url}"));
+  const forms = src("app/partner-portal/components/presentationForms.tsx");
+  assert.ok(forms.includes("href={presentationPreviewUrl(state.url)}"));
+  assert.ok(forms.includes("<CopyLink value={state.url}"));
+});
+
+test("partner mode: overlay hides 'View on site'; share title/image carry no CVE branding", () => {
+  const overlay = src("app/c/[token]/PropertyOverlay.tsx");
+  assert.ok(overlay.includes('{!partnerMode && publishStatus === "published" && slug && ('));
+  assert.ok(overlay.includes("partnerMode = false,"), "defaults off: staff presentations keep the link");
+  const body = src("app/c/[token]/PresentationBody.tsx");
+  assert.ok(body.includes("partnerMode = false, trackViews = true,"));
+  assert.ok(body.includes("partnerMode={partnerMode}"));
+  // Share title: localized title + brand for an ACTIVE partner, never the client; generic otherwise.
+  const p = { brandName: "Sun Homes", company: null, firstName: "Anna", lastName: "Berg", status: "ACTIVE" };
+  assert.equal(partnerShareTitle(PARTNER_COPY.de.metaTitle, p), "Ihre Immobilienauswahl — Sun Homes");
+  assert.equal(partnerShareTitle("T", { ...p, brandName: null }), "T — Anna Berg");
+  assert.equal(partnerShareTitle("T", { ...p, brandName: " ", firstName: "", lastName: "" }), "T");
+  assert.equal(partnerShareTitle("T", { ...p, status: "SUSPENDED" }), "T");
+  assert.equal(partnerShareTitle("T", null), "T");
+  assert.ok(!PARTNER_SHARE_IMAGE.path.includes("og/presentation"), "not the CVE share image");
+  const page = src("app/c/[token]/page.tsx");
+  const meta = page.slice(page.indexOf("export async function generateMetadata"), page.indexOf("const DISTRICT_HERO_IMAGES"));
+  const partnerMeta = meta.slice(meta.indexOf("if (row?.partnerId) {"), meta.indexOf("const title = COPY[locale].metaTitle;"));
+  assert.ok(partnerMeta.includes("partnerShareTitle(PARTNER_COPY[locale].metaTitle, row.partner)"));
+  assert.ok(partnerMeta.includes("PARTNER_SHARE_IMAGE.path"));
+  assert.ok(!partnerMeta.includes("PRESENTATION_OG_IMAGE") && !/(?<!PARTNER_)COPY\[locale\]\.metaTitle/.test(partnerMeta));
+  assert.ok(!/greetingName/.test(meta), "no per-client content in metadata");
+});
+
+test("staff (cve) presentation path is unchanged: metadata, tracker, body props", () => {
+  const page = src("app/c/[token]/page.tsx");
+  const meta = page.slice(page.indexOf("export async function generateMetadata"), page.indexOf("const DISTRICT_HERO_IMAGES"));
+  // The cve return is exactly the pre-3e object: CVE title, CVE share image.
+  const cve = meta.slice(meta.indexOf("const title = COPY[locale].metaTitle;"));
+  assert.ok(cve.includes("const description = COPY[locale].metaDescription;"));
+  assert.ok(cve.includes("images: [{ url: PRESENTATION_OG_IMAGE, width: 1000, height: 1000 }],"));
+  assert.ok(cve.includes("robots: { index: false, follow: false },"));
+  // Body gets the partner-only props by spread, so a staff presentation's client props are the same as before.
+  assert.ok(page.includes('{...(branding.mode === "partner" ? { partnerMode: true, trackViews } : {})}'));
+  // Partner-only gates key off partnerId (null for staff presentations).
+  assert.ok(page.includes("if (presentation.partnerId && !partnerPresentationAvailable(partnerRow))"));
+  assert.equal(tracksClientViews({ partnerId: null, preview: true }), true);
+});
+
 test("partner presentation copy: en/de/pl/ru written, he reuses English, no CVE name", () => {
   for (const l of P_LOCALES) {
     const c = PARTNER_COPY[l];
@@ -144,7 +222,7 @@ test("partner presentation copy: en/de/pl/ru written, he reuses English, no CVE 
 test("logo route: only an active, unexpired partner presentation with a stored logo of an allowed type", () => {
   const now = new Date("2026-10-18T12:00:00Z");
   const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
-  const ok = { status: "active", expiresAt: new Date("2026-11-01"), partnerId: "p1", partner: { brandLogo: png, brandLogoType: "image/png" } };
+  const ok = { status: "active", expiresAt: new Date("2026-11-01"), partnerId: "p1", partner: { status: "ACTIVE", brandLogo: png, brandLogoType: "image/png" } };
   assert.deepEqual(logoDecision(ok, now), { ok: true, bytes: png, type: "image/png" });
   assert.deepEqual(logoDecision(null, now), { ok: false });
   assert.deepEqual(logoDecision({ ...ok, status: "revoked" }, now), { ok: false });
@@ -152,13 +230,17 @@ test("logo route: only an active, unexpired partner presentation with a stored l
   assert.deepEqual(logoDecision({ ...ok, expiresAt: new Date("2026-10-18T11:59:59Z") }, now), { ok: false });
   assert.deepEqual(logoDecision({ ...ok, partnerId: null }, now), { ok: false });
   assert.deepEqual(logoDecision({ ...ok, partner: null }, now), { ok: false });
-  assert.deepEqual(logoDecision({ ...ok, partner: { brandLogo: null, brandLogoType: "image/png" } }, now), { ok: false });
-  assert.deepEqual(logoDecision({ ...ok, partner: { brandLogo: new Uint8Array(), brandLogoType: "image/png" } }, now), { ok: false });
-  assert.deepEqual(logoDecision({ ...ok, partner: { brandLogo: png, brandLogoType: "image/svg+xml" } }, now), { ok: false });
-  assert.deepEqual(LOGO_HEADERS, { "Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff" });
+  assert.deepEqual(logoDecision({ ...ok, partner: { status: "ACTIVE", brandLogo: null, brandLogoType: "image/png" } }, now), { ok: false });
+  assert.deepEqual(logoDecision({ ...ok, partner: { status: "ACTIVE", brandLogo: new Uint8Array(), brandLogoType: "image/png" } }, now), { ok: false });
+  assert.deepEqual(logoDecision({ ...ok, partner: { status: "ACTIVE", brandLogo: png, brandLogoType: "image/svg+xml" } }, now), { ok: false });
+  // Suspended (or any non-ACTIVE) partner: 404.
+  for (const st of ["SUSPENDED", "PENDING", "REJECTED"]) {
+    assert.deepEqual(logoDecision({ ...ok, partner: { ...ok.partner, status: st } }, now), { ok: false }, st);
+  }
+  assert.deepEqual(LOGO_HEADERS, { "Cache-Control": "private, max-age=300", "X-Content-Type-Options": "nosniff" });
   const route = src("app/c/[token]/logo/route.ts");
   assert.ok(route.includes('headers: { "Content-Type": d.type, ...LOGO_HEADERS }'));
-  assert.ok(route.includes("partner: { select: { brandLogo: true, brandLogoType: true } }"));
+  assert.ok(route.includes("partner: { select: { status: true, brandLogo: true, brandLogoType: true } }"));
 });
 
 test("logo upload check: magic bytes decide, size capped, the claimed MIME type is never used", () => {
@@ -299,13 +381,19 @@ test("scope: presentations are this partner's only; client activity only while t
 
 // ── Onboarding ──────────────────────────────────────────────────────────────
 
-test("onboarding: 'First presentation sent' step counts once given, links to /presentations", () => {
+test("onboarding: 'First presentation sent' is optional (like Telegram), counts once given, links to /presentations", () => {
   const base = { status: "ACTIVE", hasAcceptance: true, bankComplete: true, hasClaim: true };
   assert.equal(onboardingSteps(onboardingFactsFrom(base)).steps.some((s) => s.key === "presentation"), false);
   const open = onboardingSteps(onboardingFactsFrom({ ...base, hasPresentation: false }));
-  assert.equal(open.total, 5);
+  assert.equal(open.steps.find((s) => s.key === "presentation")?.optional, true, "listed, but optional");
+  assert.equal(open.total, 4, "an open optional step does not grow the total");
   assert.equal(open.done, 4);
-  assert.equal(open.complete, false);
-  assert.equal(onboardingSteps(onboardingFactsFrom({ ...base, hasPresentation: true })).complete, true);
+  assert.equal(open.complete, true, "never blocks completion");
+  const given = onboardingSteps(onboardingFactsFrom({ ...base, hasPresentation: true }));
+  assert.equal(given.total, 5);
+  assert.equal(given.done, 5);
+  assert.equal(given.complete, true);
+  // Required steps still block: with an open bank step the card stays incomplete regardless of the presentation.
+  assert.equal(onboardingSteps(onboardingFactsFrom({ ...base, bankComplete: false, hasPresentation: true })).complete, false);
   assert.equal(onboardingHref("presentation"), "/presentations");
 });

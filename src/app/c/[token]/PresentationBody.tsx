@@ -22,11 +22,15 @@ export type PresentationDevelopmentVM = PresentationItemVM & {
 };
 
 export default function PresentationBody({
-  token, items, locale,
+  token, items, locale, partnerMode = false, trackViews = true,
 }: {
   token: string;
   items: PresentationDevelopmentVM[];
   locale: PLocale;
+  /** Partner-branded presentation (phase 3e): no links to the Cyprus VIP Estates site. Omitted for staff presentations. */
+  partnerMode?: boolean;
+  /** false = partner preview (?preview=1): opening a property is not recorded as a client view. */
+  trackViews?: boolean;
 }) {
   const c = COPY[locale];
   const [openId, setOpenId] = useState<string | null>(null);
@@ -70,8 +74,9 @@ export default function PresentationBody({
 
   const openDetails = useCallback((developmentId: string) => {
     setOpenId(developmentId);
+    if (!trackViews) return;
     fetch(`/api/c/${token}/view`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ developmentId }) }).catch(() => {});
-  }, [token]);
+  }, [token, trackViews]);
 
   // Cards reveal in batches as they scroll into view (ScrollTrigger.batch groups
   // elements that enter around the same time — naturally one grid row at a
@@ -151,6 +156,7 @@ export default function PresentationBody({
         favoriteBusy={open ? !!favoriteBusy[open.developmentId] : false}
         onToggleFavorite={() => open && toggleFavorite(open.developmentId)}
         locale={locale}
+        partnerMode={partnerMode}
       />
     </>
   );

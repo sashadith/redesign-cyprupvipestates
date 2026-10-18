@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useFormState } from "react-dom";
 import type { PartnerDict, PartnerLocale } from "@/lib/partner/i18n";
+import { presentationPreviewUrl } from "@/lib/partner/presentationBranding";
 import { removeBrandLogoAction, saveBrandAction, uploadBrandLogoAction } from "../brandActions";
 import { createPresentationAction, revokePresentationAction } from "../presentationActions";
 import { isErr, type BrandState, type LogoState, type PresentationState } from "../formState";
@@ -121,7 +122,7 @@ function PresentationFormInner({ t, clients, projects, defaultLocale, onAgain }:
         <h2>{P.created}</h2>
         <CopyLink value={state.url} copyLabel={P.copyLink} copiedLabel={P.copied} />
         <div className="pp-cta">
-          <a className="pp-btn pp-btn-ghost" href={state.url} target="_blank" rel="noopener noreferrer">{P.open}</a>
+          <a className="pp-btn pp-btn-ghost" href={presentationPreviewUrl(state.url)} target="_blank" rel="noopener noreferrer">{P.open}</a>
           <button type="button" className="pp-btn pp-btn-ghost" onClick={onAgain}>{P.newTitle}</button>
         </div>
       </div>

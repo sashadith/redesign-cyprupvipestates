@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { fmt, type PartnerDict, type PartnerLocale } from "@/lib/partner/i18n";
+import { presentationPreviewUrl } from "@/lib/partner/presentationBranding";
 import type { MyPresentation } from "@/lib/partner/scope";
 import { CopyLink } from "./forms";
 import { Chip, dateFmt } from "./portalBits";
@@ -41,7 +42,7 @@ export function PresentationTable({ t, locale, items, showClient = true }: {
               <Chip label={status[p.status]} tone={tone[p.status]} />
               {p.status === "active" && (
                 <span className="pp-pres-actions">
-                  <a href={p.url} target="_blank" rel="noopener noreferrer" className="pp-linkbtn">{P.open}</a>
+                  <a href={presentationPreviewUrl(p.url)} target="_blank" rel="noopener noreferrer" className="pp-linkbtn">{P.open}</a>
                   <RevokeButton id={p.id} label={P.revoke} confirmText={P.revokeConfirm} />
                 </span>
               )}

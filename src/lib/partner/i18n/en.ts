@@ -513,7 +513,7 @@ export const en = {
       hasClient: "Submit your first client",
       vatId: "Add your VAT number — required for EU companies",
       telegram: "Connect Telegram (optional)",
-      presentation: "Send your first presentation",
+      presentation: "Send your first presentation (optional)",
     },
   },
   materials: {

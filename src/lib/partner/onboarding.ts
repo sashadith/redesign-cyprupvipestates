@@ -6,7 +6,7 @@ export type OnboardingFacts = {
   vatId?: { done: boolean };
   /** Present only while the partner bot is configured (phase 3e); optional — `done` once a chat is linked. */
   telegram?: { done: boolean };
-  /** "First presentation sent" (phase 3e): present for ACTIVE partners; `done` once they created one. */
+  /** "First presentation sent" (phase 3e): present for ACTIVE partners; optional (like Telegram) — `done` once they created one. */
   presentation?: { done: boolean };
 };
 
@@ -14,7 +14,7 @@ export type OnboardingKey = "emailVerified" | "agreementAccepted" | "bankComplet
 export type OnboardingStep = { key: OnboardingKey; done: boolean; optional?: true };
 
 /**
- * Optional steps (Telegram) are listed but never block completion: they count toward done/total only once
+ * Optional steps (first presentation, Telegram) are listed but never block completion: they count toward done/total only once
  * done, so "3 of 4" never turns into "3 of 5" because of an optional item, and linking adds one to both.
  */
 export function onboardingSteps(f: OnboardingFacts): {
@@ -30,7 +30,7 @@ export function onboardingSteps(f: OnboardingFacts): {
     { key: "hasClient", done: f.hasClient },
   ];
   if (f.vatId) steps.push({ key: "vatId", done: f.vatId.done });
-  if (f.presentation) steps.push({ key: "presentation", done: f.presentation.done });
+  if (f.presentation) steps.push({ key: "presentation", done: f.presentation.done, optional: true });
   if (f.telegram) steps.push({ key: "telegram", done: f.telegram.done, optional: true });
   const counted = steps.filter((s) => !s.optional || s.done);
   const done = counted.filter((s) => s.done).length;

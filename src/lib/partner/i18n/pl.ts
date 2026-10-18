@@ -515,7 +515,7 @@ export const pl: PartnerDict = {
       hasClient: "Zgłosić pierwszego klienta",
       vatId: "Dodać numer VAT – wymagany dla firm z UE",
       telegram: "Połącz Telegram (opcjonalnie)",
-      presentation: "Wyślij pierwszą prezentację",
+      presentation: "Wyślij pierwszą prezentację (opcjonalnie)",
     },
   },
   materials: {

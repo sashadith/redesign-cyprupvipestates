@@ -515,7 +515,7 @@ export const de: PartnerDict = {
       hasClient: "Ersten Kunden einreichen",
       vatId: "USt-IdNr. ergänzen – Pflicht für Unternehmen in der EU",
       telegram: "Telegram verbinden (optional)",
-      presentation: "Erste Präsentation versenden",
+      presentation: "Erste Präsentation versenden (optional)",
     },
   },
   materials: {
