@@ -16,6 +16,7 @@ export const CommandPalette = forwardRef<PaletteHandle, { canAssign: boolean; ol
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<LeadHit[]>([]);
   const [active, setActive] = useState(0);
+  const [pending, setPending] = useState(false);
 
   const open = useCallback(() => {
     const d = dlg.current;
@@ -44,9 +45,11 @@ export const CommandPalette = forwardRef<PaletteHandle, { canAssign: boolean; ol
   useEffect(() => {
     const term = q.trim();
     const mine = ++seq.current;
-    if (term.length < 2) { setHits([]); return; }
+    if (term.length < 2) { setHits([]); setPending(false); return; }
+    setPending(true);
+    const done = () => { if (mine === seq.current) setPending(false); };
     const t = setTimeout(() => {
-      searchLeadsAction(term).then((r) => { if (mine === seq.current) setHits(r); }, () => { if (mine === seq.current) setHits([]); });
+      searchLeadsAction(term).then((r) => { if (mine === seq.current) setHits(r); }, () => { if (mine === seq.current) setHits([]); }).then(done);
     }, 200);
     return () => clearTimeout(t);
   }, [q]);
@@ -71,7 +74,12 @@ export const CommandPalette = forwardRef<PaletteHandle, { canAssign: boolean; ol
   const onInputKey = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") { e.preventDefault(); setActive(items.length ? (cur + 1) % items.length : 0); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive(items.length ? (cur - 1 + items.length) % items.length : 0); }
-    else if (e.key === "Enter") { e.preventDefault(); go(items[cur]); }
+    else if (e.key === "Enter") {
+      e.preventDefault();
+      // Not while an IME composes, and not while the lead search for this query is still running.
+      if (e.nativeEvent.isComposing || pending) return;
+      go(items[cur]);
+    }
   };
 
   const row = (it: Item, i: number) => (

@@ -66,7 +66,7 @@ export async function searchLeadsAction(q: string): Promise<LeadHit[]> {
   if (!parts) return [];
   let ids: string[] = [];
   if (parts.digits) {
-    const rows = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM leads WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${parts.digits}%`} LIMIT 200`;
+    const rows = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM leads WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${parts.digits}%`}`;
     ids = rows.map((r) => r.id);
   }
   const rows = await prisma.lead.findMany({
