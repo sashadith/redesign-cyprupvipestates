@@ -75,7 +75,7 @@ export function NewLeadForm({ canAssign, staff }: { canAssign: boolean; staff: {
           <p>
             {dup.id && dup.name
               ? <>An active lead with the same {dup.matchedOn} is already in the CRM: <Link href={`/crm/leads/${dup.id}`}>{dup.name}</Link>.</>
-              : <>An active lead with the same {dup.matchedOn} belongs to a colleague. Ask a manager before contacting them.</>}
+              : <>An active lead with the same {dup.matchedOn} already exists. Ask a manager to open it before contacting them.</>}
           </p>
         </div>
       )}

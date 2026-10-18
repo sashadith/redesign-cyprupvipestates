@@ -34,6 +34,11 @@ test("timeline, financing and owner follow the allowed values", () => {
   assert.equal(validateNewLead({ firstName: "A", email: "a@b.cy", timeline: "SOON" }).ok, false);
   assert.equal(validateNewLead({ firstName: "A", email: "a@b.cy", financing: "LOAN" }).ok, false);
   assert.equal(validateNewLead({ firstName: "A", email: "a@b.cy", budgetMin: 1.5 }).ok, false);
-  assert.equal(validateNewLead({ firstName: "A", email: "a@b.cy", timeline: "" }).ok && true, true);
+  assert.equal(validateNewLead({ firstName: "A", email: "a@b.cy", timeline: "" }).ok, true);
   assert.equal(validateNewLead(null).ok, false);
+});
+test("phone rejects illegal characters and more than 20 digits", () => {
+  assert.equal(validateNewLead({ firstName: "A", phone: "+49 171 abc 1234" }).ok, false);
+  assert.equal(validateNewLead({ firstName: "A", phone: "123456789012345678901" }).ok, false);
+  assert.equal(validateNewLead({ firstName: "A", phone: "12345678901234567890" }).ok, true);
 });
