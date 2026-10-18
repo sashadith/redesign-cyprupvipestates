@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LOGGABLE_TYPES, bodyRequirement, type LoggableInteractionType } from "@/lib/crm/logRule";
 import { logInteractionAction } from "../leads/actions";
 import { useToast } from "./Toast";
@@ -25,9 +25,17 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
   const [replied, setReplied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The latest allowed time, in the browser's zone. Set only after mount: a
+  // value from the server render would be in the server's zone (UTC) and block
+  // the last hours for anyone east of it. Refreshed when the field is focused.
+  const [maxWhen, setMaxWhen] = useState<string | undefined>(undefined);
+  const refreshMax = () => setMaxWhen(localInputValue(new Date()));
+  useEffect(refreshMax, []);
 
   const isEmail = type === "EMAIL_OUT" || type === "EMAIL_IN";
   const inbound = type === "WHATSAPP_IN" || type === "EMAIL_IN";
+  // The checkbox is hidden for notes, so a tick never carries over into one.
+  const showReplied = type !== "NOTE";
   const ready = bodyRequirement(type, body, isEmail ? subject : null).ok;
 
   async function submit(e: React.FormEvent) {
@@ -48,7 +56,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
         body: body.trim() || undefined,
         subject: isEmail ? subject.trim() || undefined : undefined,
         occurredAt,
-        leadReacted: inbound || replied || undefined,
+        leadReacted: inbound || (showReplied && replied) || undefined,
       });
     } catch {
       res = { error: "Could not save — check your connection and try again." };
@@ -70,7 +78,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
           <div className="crm-ck-types" role="radiogroup" aria-label="What happened">
             {LOGGABLE_TYPES.map((t) => (
               <label key={t} className={`crm-chip${type === t ? " on" : ""}`}>
-                <input type="radio" name="crm-log-type" value={t} checked={type === t} onChange={() => setType(t)} className="sr-only" />
+                <input type="radio" name="crm-log-type" value={t} checked={type === t} onChange={() => { setType(t); setReplied(false); }} className="sr-only" />
                 {TYPE_LABEL[t]}
               </label>
             ))}
@@ -88,9 +96,9 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
           <div className="crm-ck-logrow">
             <label className="crm-ck-field">
               <span>When (empty = now)</span>
-              <input type="datetime-local" value={when} max={localInputValue(new Date())} onChange={(e) => setWhen(e.target.value)} />
+              <input type="datetime-local" value={when} max={maxWhen} onFocus={refreshMax} onChange={(e) => setWhen(e.target.value)} />
             </label>
-            {type !== "NOTE" && (
+            {showReplied && (
               <label className="crm-ck-check">
                 <input type="checkbox" checked={inbound || replied} disabled={inbound} onChange={(e) => setReplied(e.target.checked)} />
                 <span>The lead replied</span>

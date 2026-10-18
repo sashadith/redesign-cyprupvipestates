@@ -30,7 +30,7 @@ export async function moveLeadAction(
   }
   const lostReason = input.lostReason && (LOST_REASONS as readonly string[]).includes(input.lostReason) ? (input.lostReason as LostReasonValue) : undefined;
   const res = await moveLead(user, leadId, to, { deal, lostReason, confirmCancel: input.confirmCancel === true });
-  if ("ok" in res) revalidatePath("/crm/pipeline");
+  if ("ok" in res) { revalidatePath("/crm/pipeline"); revalidatePath(`/crm/leads/${leadId}`); }
   return res;
 }
 
@@ -49,6 +49,6 @@ export async function searchDevelopmentsAction(q: string): Promise<{ id: string;
 export async function assignLeadAction(leadId: string, userId: string): Promise<AssignResult> {
   const user = await requireCrmUser();
   const res = await assignLead(user, leadId, userId);
-  if ("ok" in res) { revalidatePath("/crm/inbox"); revalidatePath("/crm/pipeline"); }
+  if ("ok" in res) { revalidatePath("/crm/inbox"); revalidatePath("/crm/pipeline"); revalidatePath(`/crm/leads/${leadId}`); }
   return res;
 }

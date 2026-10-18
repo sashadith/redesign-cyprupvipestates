@@ -3,6 +3,7 @@ import { STATUS_LABEL, LOST_REASON_LABEL, isLeadStatus, type LostReasonValue } f
 import { SOURCE_LABEL } from "@/lib/crm/boardModel";
 import { ago } from "@/lib/crm/timeline";
 import { adminDateTime } from "@/lib/adminTime";
+import { safeMailto, waDigits } from "@/lib/crm/contactLinks";
 
 // Lead cockpit header and contact panel (CRM v2, 2026-10-18). Server-rendered.
 // Everything the lead typed (name, message, contact details) is rendered as
@@ -51,7 +52,8 @@ export function CockpitHeader({ lead, now }: { lead: CockpitLead; now: Date }) {
 }
 
 export function CockpitContact({ lead }: { lead: CockpitLead }) {
-  const wa = lead.phone ? lead.phone.replace(/\D/g, "") : "";
+  const wa = waDigits(lead.phone);
+  const mailto = safeMailto(lead.email);
   const tel = lead.phone ? lead.phone.replace(/[^\d+]/g, "") : "";
   const facts: [string, string | null][] = [
     ["Interested in", lead.project],
@@ -84,7 +86,7 @@ export function CockpitContact({ lead }: { lead: CockpitLead }) {
             <dt>Email</dt>
             <dd>
               <span className="crm-ck-copy">{lead.email}</span>
-              <span className="crm-ck-links"><a href={`mailto:${lead.email}`}>Write</a></span>
+              {mailto && <span className="crm-ck-links"><a href={mailto}>Write</a></span>}
             </dd>
           </div>
         )}
