@@ -7,9 +7,14 @@ test("password policy edges", () => {
   assert.equal(passwordProblem("a".repeat(10)), null);
   assert.equal(passwordProblem("1234567890"), "digits_only");
   assert.equal(passwordProblem("123456789a"), null);
-  assert.equal(passwordProblem("a".repeat(200)), null);
-  assert.equal(passwordProblem("a".repeat(201)), "too_long");
-  assert.equal(passwordProblem("1".repeat(201)), "too_long");
+  assert.equal(passwordProblem("a".repeat(72)), null);
+  assert.equal(passwordProblem("a".repeat(73)), "too_long");
+  assert.equal(passwordProblem("1".repeat(73)), "too_long");
+  // bytes, not characters: 37 two-byte chars = 74 bytes
+  assert.equal(passwordProblem("é".repeat(37)), "too_long");
+  assert.equal(passwordProblem("é".repeat(36)), null);
+  assert.equal(passwordProblem(" ".repeat(12)), "too_short");
+  assert.equal(passwordProblem("   abc      "), "too_short");
 });
 test("hash verifies own password and rejects another", async () => {
   const h = await hashPassword("correct horse battery");

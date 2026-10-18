@@ -41,8 +41,9 @@ test("registration: each failure code", () => {
   assert.equal(code(bad({ language: "fr" })), "language:err.language");
   assert.equal(code(bad({ type: "WIZARD" })), "type:err.type");
   assert.equal(code(bad({ password: "short" })), "password:err.passwordShort");
-  assert.equal(code(bad({ password: "a".repeat(201) })), "password:err.passwordLong");
+  assert.equal(code(bad({ password: "a".repeat(73) })), "password:err.passwordLong");
   assert.equal(code(bad({ password: "1234567890" })), "password:err.passwordDigits");
+  assert.equal(code(bad({ phone: "1 ".repeat(21) })), "phone:err.phone");
   assert.equal(code(bad({ acceptAgreement: false })), "acceptAgreement:err.agreement");
   assert.equal(code(bad({ acceptAgreement: "true" })), "acceptAgreement:err.agreement");
 });
@@ -55,7 +56,7 @@ test("registration: every returnable code resolves in every locale", () => {
   const samples = [
     null, { ...good, role: 1 }, { ...good, firstName: "" }, { ...good, lastName: "" }, { ...good, company: "x".repeat(200) },
     { ...good, country: "x" }, { ...good, phone: "1" }, { ...good, email: "x" }, { ...good, language: "he" },
-    { ...good, type: "x" }, { ...good, password: "x" }, { ...good, password: "x".repeat(201) },
+    { ...good, type: "x" }, { ...good, password: "x" }, { ...good, password: "x".repeat(73) },
     { ...good, password: "1234567890" }, { ...good, acceptAgreement: false },
   ];
   const seen = new Set<string>();

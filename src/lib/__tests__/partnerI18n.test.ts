@@ -25,7 +25,7 @@ test("dictionaries have no Hebrew and keep the same placeholders", () => {
     for (const k of shape(en)) {
       assert.doesNotMatch(lookup(l, k)!, /[\u0590-\u05ff]/);
       // PL greetings are deliberately name-less ("Szanowni Państwo,")
-      if (!k.endsWith(".greeting")) assert.equal(ph(lookup(l, k)!), ph(lookup("en", k)!), `${l} ${k}`);
+      if (!(l === "pl" && k.endsWith(".greeting"))) assert.equal(ph(lookup(l, k)!), ph(lookup("en", k)!), `${l} ${k}`);
     }
   }
 });

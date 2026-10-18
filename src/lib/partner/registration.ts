@@ -62,6 +62,7 @@ export function validateRegistration(raw: unknown): RegistrationResult {
   const country = str(r.country);
   if (!/^[A-Z]{2}$/.test(country)) return fail("country", "err.country");
 
+  if (typeof r.phone === "string" && r.phone.length > 40) return fail("phone", "err.phone");
   const phoneRaw = str(r.phone);
   if (!/^\+?[\d\s().-]+$/.test(phoneRaw)) return fail("phone", "err.phone");
   const digits = phoneRaw.replace(/\D/g, "");

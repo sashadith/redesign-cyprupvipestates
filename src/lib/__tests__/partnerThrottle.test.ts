@@ -22,3 +22,14 @@ test("throttle: reset clears a key", () => {
   t.reset("a");
   assert.equal(t.hit("a", 2), true);
 });
+test("throttle: expired buckets are swept and the hard cap holds", () => {
+  const t = makeThrottle(1, 1000);
+  for (let i = 0; i < 5001; i++) t.hit("k" + i, 0);
+  assert.equal(t.size(), 5001);
+  t.hit("fresh", 5000); // sweep: everything older than the window goes
+  assert.equal(t.size(), 1);
+  const u = makeThrottle(1, 1_000_000);
+  for (let i = 0; i < 25000; i++) u.hit("k" + i, i);
+  assert.ok(u.size() <= 20000);
+  assert.equal(u.hit("k24999", 25000), false); // newest survived
+});

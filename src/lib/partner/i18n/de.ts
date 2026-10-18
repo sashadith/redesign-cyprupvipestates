@@ -6,7 +6,7 @@ export const de: PartnerDict = {
   footer: { brand: "Cyprus VIP Estates", rights: "Alle Rechte vorbehalten.", agreement: "Partnervereinbarung", contact: "Kontakt" },
   landing: {
     title: "Partnerprogramm",
-    headline: "Empfehlen Sie Ihre Kunden für Immobilien auf Zypern. Den Rest übernehmen wir.",
+    headline: "Vermitteln Sie uns Ihre Kunden für Immobilien auf Zypern. Den Rest übernehmen wir.",
     lead: "Cyprus VIP Estates arbeitet weltweit mit ausgewählten Partnern zusammen. Empfehlen Sie Kunden, die eine Immobilie auf Zypern suchen, und erhalten Sie für jeden abgeschlossenen Verkauf eine Provision.",
     stepsTitle: "So funktioniert es",
     step1Title: "Registrieren",
@@ -20,7 +20,7 @@ export const de: PartnerDict = {
   },
   register: {
     title: "Partner-Registrierung",
-    intro: "Bitte erzählen Sie uns kurz etwas über sich. Wir prüfen jede Registrierung persönlich.",
+    intro: "Bitte machen Sie uns einige Angaben zu Ihrer Person und Tätigkeit. Jede Registrierung wird von uns persönlich geprüft.",
     firstName: "Vorname",
     lastName: "Nachname",
     company: "Unternehmen (optional)",
@@ -28,10 +28,10 @@ export const de: PartnerDict = {
     phone: "Telefonnummer",
     email: "E-Mail-Adresse",
     language: "Bevorzugte Sprache",
-    type: "Art des Unternehmens",
+    type: "Art Ihrer Tätigkeit",
     password: "Passwort",
     passwordHint: "Mindestens 10 Zeichen, nicht nur Ziffern.",
-    agreementPrefix: "Ich habe die",
+    agreementPrefix: "Ich akzeptiere die",
     agreementLink: "Partnervereinbarung",
     submit: "Registrieren",
     successTitle: "Bitte prüfen Sie Ihr Postfach",
@@ -156,6 +156,7 @@ export const de: PartnerDict = {
     passwordDigits: "Das Passwort darf nicht nur aus Ziffern bestehen.",
     agreement: "Bitte akzeptieren Sie die Partnervereinbarung, um fortzufahren.",
     rateLimited: "Zu viele Versuche, bitte versuchen Sie es später erneut.",
+    currentPassword: "Das aktuelle Passwort ist nicht korrekt.",
     generic: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
   },
 };

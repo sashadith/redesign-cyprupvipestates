@@ -154,6 +154,7 @@ export const en = {
     passwordDigits: "The password must not consist of digits only.",
     agreement: "Please accept the partner agreement to continue.",
     rateLimited: "Too many attempts, please try again later.",
+    currentPassword: "The current password is incorrect.",
     generic: "Something went wrong. Please try again.",
   },
 };

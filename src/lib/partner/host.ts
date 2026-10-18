@@ -4,9 +4,10 @@ export function isPartnerHost(
   env: { PARTNER_HOST?: string; NODE_ENV?: string },
 ): boolean {
   if (!host) return false;
-  const h = host.trim().toLowerCase().replace(/:\d+$/, "");
+  const norm = (x: string) => x.trim().toLowerCase().replace(/:\d+$/, "").replace(/\.$/, "");
+  const h = norm(host);
   if (!h) return false;
-  const configured = (env.PARTNER_HOST ?? "").trim().toLowerCase().replace(/:\d+$/, "");
+  const configured = norm(env.PARTNER_HOST ?? "");
   if (configured && h === configured) return true;
   return env.NODE_ENV !== "production" && h === "partner.localhost";
 }
