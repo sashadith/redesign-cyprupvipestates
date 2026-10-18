@@ -1,6 +1,6 @@
 /** Partner portal dictionary — English. Placeholders use {name}; escape HTML at the call site. */
 export const en = {
-  nav: { home: "Home", profile: "Profile", logout: "Log out", language: "Language", login: "Log in", register: "Become a partner", overview: "Overview", submit: "Submit client", clients: "My clients", projects: "Projects" },
+  nav: { home: "Home", profile: "Profile", logout: "Log out", language: "Language", login: "Log in", register: "Become a partner", overview: "Overview", submit: "Submit client", clients: "My clients", projects: "Projects", commissions: "Commissions" },
   footer: { brand: "Cyprus VIP Estates", rights: "All rights reserved.", agreement: "Partner agreement", contact: "Contact us" },
   landing: {
     title: "Partner programme",
@@ -235,6 +235,17 @@ export const en = {
     printHint: "Use your browser's print function to save this report as a PDF.",
     total: "Total",
     notIssued: "Not issued",
+    presetThisYear: "This year",
+    presetLastYear: "Last year",
+    presetAll: "All time",
+    colDate: "Date",
+    periodAll: "All time",
+    periodRange: "{from} – {to}",
+    reportTitle: "Commission report",
+    partnerLabel: "Partner",
+    cancelledNote: "Cancelled deals are listed but not counted in the totals.",
+    back: "Back to commissions",
+    truncated: "Only the 2,000 most recent deals are shown. Please choose a shorter period.",
   },
   notFound: {
     title: "Page not found",

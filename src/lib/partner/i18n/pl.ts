@@ -2,7 +2,7 @@ import type { PartnerDict } from "./en";
 
 /** Portal partnerski — polski (formalnie, forma „Państwo“). */
 export const pl: PartnerDict = {
-  nav: { home: "Strona główna", profile: "Profil", logout: "Wyloguj", language: "Język", login: "Zaloguj się", register: "Zostań partnerem", overview: "Przegląd", submit: "Zgłoś klienta", clients: "Moi klienci", projects: "Projekty" },
+  nav: { home: "Strona główna", profile: "Profil", logout: "Wyloguj", language: "Język", login: "Zaloguj się", register: "Zostań partnerem", overview: "Przegląd", submit: "Zgłoś klienta", clients: "Moi klienci", projects: "Projekty", commissions: "Prowizje" },
   footer: { brand: "Cyprus VIP Estates", rights: "Wszelkie prawa zastrzeżone.", agreement: "Umowa partnerska", contact: "Kontakt" },
   landing: {
     title: "Program partnerski",
@@ -237,6 +237,17 @@ export const pl: PartnerDict = {
     printHint: "Aby zapisać raport jako PDF, proszę użyć funkcji drukowania w przeglądarce.",
     total: "Razem",
     notIssued: "Nie wystawiono",
+    presetThisYear: "Bieżący rok",
+    presetLastYear: "Poprzedni rok",
+    presetAll: "Cały okres",
+    colDate: "Data",
+    periodAll: "Cały okres",
+    periodRange: "{from} – {to}",
+    reportTitle: "Raport prowizji",
+    partnerLabel: "Partner",
+    cancelledNote: "Anulowane transakcje są wymienione, ale nie są wliczane do podsumowania.",
+    back: "Powrót do prowizji",
+    truncated: "Wyświetlamy tylko 2000 najnowszych transakcji. Prosimy wybrać krótszy okres.",
   },
   notFound: {
     title: "Nie znaleziono strony",

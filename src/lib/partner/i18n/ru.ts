@@ -2,7 +2,7 @@ import type { PartnerDict } from "./en";
 
 /** Партнёрский портал — русский (вежливое «Вы»). */
 export const ru: PartnerDict = {
-  nav: { home: "Главная", profile: "Профиль", logout: "Выйти", language: "Язык", login: "Войти", register: "Стать партнёром", overview: "Обзор", submit: "Передать клиента", clients: "Мои клиенты", projects: "Проекты" },
+  nav: { home: "Главная", profile: "Профиль", logout: "Выйти", language: "Язык", login: "Войти", register: "Стать партнёром", overview: "Обзор", submit: "Передать клиента", clients: "Мои клиенты", projects: "Проекты", commissions: "Комиссии" },
   footer: { brand: "Cyprus VIP Estates", rights: "Все права защищены.", agreement: "Партнёрское соглашение", contact: "Связаться с нами" },
   landing: {
     title: "Партнёрская программа",
@@ -237,6 +237,17 @@ export const ru: PartnerDict = {
     printHint: "Используйте функцию печати в браузере, чтобы сохранить отчёт в PDF.",
     total: "Итого",
     notIssued: "Не выдана",
+    presetThisYear: "Этот год",
+    presetLastYear: "Прошлый год",
+    presetAll: "За всё время",
+    colDate: "Дата",
+    periodAll: "За всё время",
+    periodRange: "{from} – {to}",
+    reportTitle: "Отчёт по комиссиям",
+    partnerLabel: "Партнёр",
+    cancelledNote: "Отменённые сделки показаны, но не учитываются в итогах.",
+    back: "Назад к комиссиям",
+    truncated: "Показаны только 2000 последних сделок. Пожалуйста, выберите более короткий период.",
   },
   notFound: {
     title: "Страница не найдена",

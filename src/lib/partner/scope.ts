@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { resolveRate, type RateRow } from "@/lib/crm/commission";
 import { officeContact } from "./accounts";
 import { REAL_CONTACT_TYPES } from "./claims";
-import { activeSince } from "./claimState";
+import { COMMITTED_LEAD_STATUSES, activeSince } from "./claimState";
+import {
+  COMMISSIONS_CAP, commissionClaimsWhere, commissionRowTotals, commissionRows, creditNotesWhere,
+  type CommissionRow, type Period,
+} from "./commissions";
 import {
   CLIENT_SEARCH_SCAN, CLIENTS_PAGE_SIZE, OUTBOUND_CONTACT_TYPES, activeClaimsWhere, claimWhere, clientsWhere, commissionTotals,
   dealsForClaims, displayStateOf, latestMilestones, matchesQuery, messagesWhere, overviewCountWheres, toClientDetail, toListItem, visibleName,
@@ -304,4 +308,57 @@ export async function myOverview(partnerId: string): Promise<MyOverview> {
     // All deals of the leads: the committed check looks at any deal; milestones still only use deals after the claim.
     latest: latestMilestones(recent, { partnerId, now, activity, deals, messages }, 5),
   };
+}
+
+// ── Commissions ─────────────────────────────────────────────────────────────
+
+export type MyCommissions = {
+  rows: CommissionRow[];
+  totals: Record<CommissionStage, number>;
+  /** The claim or deal scan hit COMMISSIONS_CAP: older deals may be missing. */
+  truncated: boolean;
+};
+
+/**
+ * Deals of this partner's effectively-active claims (the client-detail rule, see commissionRows), with
+ * the partner's credit notes, inside the period (inclusive Cyprus days on the current stage date) and
+ * totals per stage (CANCELLED listed, not counted). Bounded: at most COMMISSIONS_CAP claims and deals
+ * (newest first); `truncated` tells the page. Four queries at most; no lead contact data, no bodies.
+ */
+export async function myCommissions(partnerId: string, period: Pick<Period, "from" | "to">): Promise<MyCommissions> {
+  const now = new Date();
+  const claims = (await prisma.partnerClaim.findMany({
+    where: commissionClaimsWhere(partnerId),
+    select: {
+      id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, submission: true,
+      lead: { select: { status: true, deletedAt: true } },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: COMMISSIONS_CAP,
+  })) as RawClaim[];
+  if (!claims.length) return { rows: [], totals: commissionRowTotals([]), truncated: false };
+  const deals = await loadDeals(claims.map((c) => c.leadId));
+  // Protection only matters for claims that are not committed (no live deal, lead not RESERVED/CLOSED):
+  // for those, the last real contact since activeSince decides; nothing else of the activity is needed.
+  const live = new Set(deals.filter((d) => d.commissionStatus !== "CANCELLED").map((d) => d.leadId));
+  const uncommitted = claims.filter(
+    (c) => !live.has(c.leadId) && !(COMMITTED_LEAD_STATUSES as readonly string[]).includes(c.lead?.status ?? ""),
+  );
+  const [contacts, creditNotes] = await Promise.all([
+    uncommitted.length
+      ? prisma.leadInteraction.groupBy({
+          by: ["leadId"],
+          where: { OR: uncommitted.map((c) => ({ leadId: c.leadId, occurredAt: { gte: activeSince(c) } })), type: { in: [...REAL_CONTACT_TYPES] } },
+          _max: { occurredAt: true },
+        })
+      : Promise.resolve([]),
+    deals.length
+      ? prisma.creditNote.findMany({ where: creditNotesWhere(partnerId, deals.map((d) => d.id)), select: { id: true, number: true, dealId: true } })
+      : Promise.resolve([]),
+  ]);
+  const activity = new Map<string, Activity>(
+    contacts.map((r) => [r.leadId, { events: [], firstRealContactAt: null, lastRealContactAt: r._max.occurredAt ?? null }]),
+  );
+  const rows = commissionRows(claims, { partnerId, now, activity, deals, creditNotes }, period);
+  return { rows, totals: commissionRowTotals(rows), truncated: claims.length >= COMMISSIONS_CAP || deals.length >= COMMISSIONS_CAP };
 }

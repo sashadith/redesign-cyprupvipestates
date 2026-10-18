@@ -65,6 +65,46 @@ export function buildClaimOutcomeEmail(locale: PartnerLocale, p: Common & { acce
   });
 }
 
+/** Portal commissions page (credit notes are downloaded there; the mail never attaches the PDF). */
+export function commissionsLink(base: string): string {
+  return `${base}/commissions`;
+}
+
+/**
+ * "Your commission has been paid": the submitted client name, project/unit, the amount transferred
+ * (already formatted) and the credit-note number. Nothing else — no bank data, no our-commission figures.
+ */
+export function buildPayoutEmail(
+  locale: PartnerLocale,
+  p: Common & { project?: string | null; unit?: string | null; amount: string; creditNoteNumber: string },
+): BuiltEmail {
+  const t = dict(locale).mail.payout;
+  const dash = (v: string | null | undefined) => (v ?? "").trim() || "—";
+  const vars = { client: client(p.clientName), project: dash(p.project), unit: dash(p.unit), amount: p.amount };
+  return renderPartnerEmail({
+    subject: t.subject,
+    greeting: greet(t.greeting, p.partnerFirstName),
+    intro: fmt(t.intro, vars),
+    button: t.button,
+    link: p.link,
+    notes: [fmt(t.creditNoteLine, { number: p.creditNoteNumber })],
+    signature: dict(locale).mail.signature,
+  });
+}
+
+/** Amount for the payout mail: whole euros in the partner's locale. */
+export function formatPayoutAmount(locale: PartnerLocale, euros: number): string {
+  return new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(euros);
+}
+
+export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT"] as const;
+export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+
+/** Compile-time exhaustiveness: a new kind that is not handled fails the build instead of falling through. */
+export function unhandledKind(kind: never): never {
+  throw new Error(`partner notify: unhandled notification kind ${String(kind)}`);
+}
+
 /** Partner-dictionary stage key for a lead status from STATUS_CHANGE metadata; null when not a lead status. */
 export function stageKeyFor(toStatus: unknown): string | null {
   return isLeadStatus(toStatus) ? partnerStage(toStatus).key : null;
@@ -83,6 +123,11 @@ export const stageRefKey = (interactionId: string) => `stage:${interactionId}`;
 /** PartnerMessage id from a `msg:<id>` refKey. */
 export function messageIdFromRefKey(refKey: string): string | null {
   return refKey.startsWith("msg:") && refKey.length > 4 ? refKey.slice(4) : null;
+}
+
+/** Deal id from a `paid:<dealId>` refKey (written by markPaidOut). */
+export function payoutDealIdFromRefKey(refKey: string): string | null {
+  return refKey.startsWith("paid:") && refKey.length > 5 ? refKey.slice(5) : null;
 }
 
 /** PARTNER_NOTIFY_START (ISO) — nothing older is ever mailed; unset → the job does nothing. */
@@ -176,15 +221,17 @@ export function isUnchangedStage(toStatus: unknown, lastMailedToStatus: unknown)
 
 /**
  * Whether a row may be mailed, given its claim and the claim's effective state (effectiveClaimState);
- * returns the skip reason or null. A rejection is told regardless of the lead (even trashed); an
- * acceptance, a stage change and a message only while the claim is effectively ACTIVE.
+ * returns the skip reason or null. A rejection and a payout are told regardless of the lead (even
+ * trashed); an acceptance, a stage change and a message only while the claim is effectively ACTIVE.
  */
 export function notificationGate(input: {
-  kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME" | "PAYOUT";
+  kind: NotificationKind;
   accepted: boolean;
   claim: { ownedByPartner: boolean; effective: EffectiveClaimState } | null;
 }): string | null {
   const { kind, claim } = input;
+  // The money was paid: always told, whatever the claim's state now — but only about the partner's own claim.
+  if (kind === "PAYOUT") return claim?.ownedByPartner ? null : "claim missing";
   if (!claim || !claim.ownedByPartner) return kind === "CLAIM_OUTCOME" ? "claim missing" : "claim inactive";
   if (kind === "CLAIM_OUTCOME" && !input.accepted) return null;
   if (claim.effective === "NOT_PROCEEDING") return "lead trashed";

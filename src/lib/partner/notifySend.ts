@@ -5,12 +5,13 @@ import { sendEmail } from "@/lib/sendEmail";
 import { effectiveStateOf } from "./claimFacts";
 import { activeSince } from "./claimState";
 import { visibleName } from "./clientDto";
+import { creditNoteWhere } from "./commissions";
 import { pickPartnerLocale } from "./i18n";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import {
-  INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail, clientLink, deadWhere, dueWhere,
-  firstNameOf, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, planStageNotifications, stageKeyFor, stageRefKey,
-  truncateError, type StageRow,
+  INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildPayoutEmail, buildStageEmail, clientLink,
+  commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate,
+  notifyStartFromEnv, payoutDealIdFromRefKey, planStageNotifications, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
 
 export { notifyStartFromEnv };
@@ -76,7 +77,7 @@ type Outcome = { skip: string } | { mail: BuiltEmail; to: string };
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
 type OutboxRow = {
-  id: string; kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME" | "PAYOUT"; refKey: string; partnerId: string; claimId: string | null; leadId: string | null;
+  id: string; kind: NotificationKind; refKey: string; partnerId: string; claimId: string | null; leadId: string | null;
   payload: unknown; createdAt: Date;
 };
 
@@ -103,8 +104,8 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       })
     : null;
   const accepted = obj(row.payload).accepted === true;
-  // A rejection never needs the lead; everything else is gated on the claim's effective state.
-  const needsState = !!claim && !(row.kind === "CLAIM_OUTCOME" && !accepted);
+  // A rejection and a payout never need the lead; everything else is gated on the claim's effective state.
+  const needsState = !!claim && row.kind !== "PAYOUT" && !(row.kind === "CLAIM_OUTCOME" && !accepted);
   const skip = notificationGate({
     kind: row.kind,
     accepted,
@@ -117,32 +118,61 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
   const locale = pickPartnerLocale({ partnerLanguage: partner.language });
   const common = { partnerFirstName: partner.firstName, clientName: visibleName(claim), link: clientLink(base, claim.id) };
 
-  if (row.kind === "STAGE") {
-    const toStatus = obj(row.payload).toStatus;
-    const stageKey = stageKeyFor(toStatus);
-    if (!stageKey) return { skip: "invalid status" };
-    const lastMailed = await prisma.partnerNotification.findFirst({
-      where: { claimId: claim.id, kind: "STAGE", sentAt: { not: null }, error: null, id: { not: row.id } },
-      orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
-      select: { payload: true },
-    });
-    if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
-    return { to, mail: buildStageEmail(locale, { ...common, stageKey }) };
+  // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
+  switch (row.kind) {
+    case "STAGE": {
+      const toStatus = obj(row.payload).toStatus;
+      const stageKey = stageKeyFor(toStatus);
+      if (!stageKey) return { skip: "invalid status" };
+      const lastMailed = await prisma.partnerNotification.findFirst({
+        where: { claimId: claim.id, kind: "STAGE", sentAt: { not: null }, error: null, id: { not: row.id } },
+        orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
+        select: { payload: true },
+      });
+      if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
+      return { to, mail: buildStageEmail(locale, { ...common, stageKey }) };
+    }
+    case "MESSAGE": {
+      const messageId = messageIdFromRefKey(row.refKey);
+      const msg = messageId
+        ? await prisma.partnerMessage.findUnique({
+            where: { id: messageId },
+            select: { partnerId: true, leadId: true, body: true, author: { select: { name: true } } },
+          })
+        : null;
+      if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== claim.leadId) return { skip: "message missing" };
+      return { to, mail: buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }) };
+    }
+    case "CLAIM_OUTCOME":
+      return { to, mail: buildClaimOutcomeEmail(locale, { ...common, accepted }) };
+    case "PAYOUT": {
+      const creditNoteId = obj(row.payload).creditNoteId;
+      const note = typeof creditNoteId === "string" && creditNoteId
+        ? await prisma.creditNote.findFirst({
+            where: creditNoteWhere(row.partnerId, creditNoteId),
+            select: {
+              number: true, totalAmount: true, dealId: true,
+              deal: { select: { leadId: true, unitLabel: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
+            },
+          })
+        : null;
+      if (!note || note.deal.leadId !== claim.leadId || payoutDealIdFromRefKey(row.refKey) !== note.dealId) return { skip: "credit note missing" };
+      const dev = note.deal.development;
+      return {
+        to,
+        mail: buildPayoutEmail(locale, {
+          ...common,
+          link: commissionsLink(base),
+          project: dev ? dev.override?.alias?.trim() || dev.publicName : null,
+          unit: note.deal.unitLabel,
+          amount: formatPayoutAmount(locale, note.totalAmount),
+          creditNoteNumber: note.number,
+        }),
+      };
+    }
+    default:
+      return unhandledKind(row.kind);
   }
-
-  if (row.kind === "MESSAGE") {
-    const messageId = messageIdFromRefKey(row.refKey);
-    const msg = messageId
-      ? await prisma.partnerMessage.findUnique({
-          where: { id: messageId },
-          select: { partnerId: true, leadId: true, body: true, author: { select: { name: true } } },
-        })
-      : null;
-    if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== claim.leadId) return { skip: "message missing" };
-    return { to, mail: buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }) };
-  }
-
-  return { to, mail: buildClaimOutcomeEmail(locale, { ...common, accepted }) };
 }
 
 /** Advisory-lock key of the partner-notify run ("PNOT"). */

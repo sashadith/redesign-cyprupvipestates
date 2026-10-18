@@ -22,7 +22,9 @@ export function csvCell(v: string | number | null): string {
   return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+// Cyprus calendar day, like the commissions page's period filter.
+const DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Nicosia", year: "numeric", month: "2-digit", day: "2-digit" });
+const day = (d: Date | null) => (d ? DAY.format(d) : null);
 
 export function commissionsCsv(rows: CommissionCsvRow[], locale: PartnerLocale): string {
   const d = dict(locale);
