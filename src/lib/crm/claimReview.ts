@@ -4,11 +4,12 @@
 // (PartnerNotification, sent later by the partner-notify cron — nothing is mailed here).
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { REAL_CONTACT_TYPES, claimProtection } from "@/lib/partner/claims";
+import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
+import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
 import { canEditLead } from "./access";
 import { writeAudit } from "./audit";
 import {
-  PROTECTION_ACTIVE_ERROR, REVIEW_CAP, acceptDecision, buildReviewCard, claimOutcomeRefKey, messageRefKey, normaliseOutcomeNote,
+  MESSAGE_NO_ACTIVE_ERROR, PROTECTION_ACTIVE_ERROR, REVIEW_CAP, acceptDecision, buildReviewCard, claimOutcomeRefKey, messageRefKey, normaliseOutcomeNote,
   partnerName, readSubmission, validatePartnerMessage, type ClaimStateValue, type ReviewCard,
 } from "./partnerClaims";
 import type { SessionCrmUser } from "./session";
@@ -48,7 +49,7 @@ export async function listClaimsForReview(now = new Date()): Promise<{ cards: Re
             id: true, firstName: true, lastName: true, email: true, phone: true, status: true, source: true, createdAt: true, deletedAt: true,
             assignedTo: { select: { name: true } },
             deals: { where: { commissionStatus: { not: "CANCELLED" } }, select: { id: true }, take: 1 },
-            claims: { orderBy: { createdAt: "asc" }, select: { id: true, state: true, mode: true, createdAt: true, partner: { select: PARTNER_SELECT } } },
+            claims: { orderBy: { createdAt: "asc" }, select: { id: true, state: true, mode: true, createdAt: true, reviewedAt: true, partner: { select: PARTNER_SELECT } } },
           },
         },
       },
@@ -89,19 +90,26 @@ export async function acceptClaim(actor: SessionCrmUser, claimId: string): Promi
       const now = new Date();
       const other = await tx.partnerClaim.findFirst({
         where: { leadId: lead.id, state: "ACTIVE", id: { not: claim.id } },
-        select: { id: true, partnerId: true, createdAt: true },
+        select: { id: true, partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true },
       });
-      if (other && other.partnerId === claim.partnerId) throw new Abort("This partner already holds this client — reject the duplicate claim.");
-      const protection = other
-        ? claimProtection({ claimCreatedAt: other.createdAt, lastRealContactAt: (await lastRealContacts(tx, [lead.id])).get(lead.id) ?? null, now })
-        : null;
-      const decision = acceptDecision({ otherActive: !!other, protection, hasDeal: lead.deals.length > 0, status: lead.status });
+      // Evaluated under the lead lock: a same-partner claim that lapsed is replaced like any other.
+      const decision = acceptDecision({
+        other: other
+          ? {
+            samePartner: other.partnerId === claim.partnerId,
+            effective: await effectiveStateOf(tx, other, now, {
+              leadDeleted: false, leadStatus: lead.status, hasLiveDeal: lead.deals.length > 0, lastRealContactAt: await lastRealContactAt(tx, lead.id),
+            }),
+          }
+          : null,
+      });
       if (decision.kind === "BLOCKED") throw new Abort(decision.error);
       if (decision.kind === "EXPIRE_OTHER_THEN_ACCEPT" && other) {
         const ex = await tx.partnerClaim.updateMany({ where: { id: other.id, state: "ACTIVE" }, data: { state: "EXPIRED" } });
         if (ex.count !== 1) throw new Abort(HANDLED);
         await writeAudit(actor, "partner_claim_expire", "partner_claim", other.id, {
           before: { state: "ACTIVE" }, after: { state: "EXPIRED" }, reason: "protection expired; replaced by accepted claim", replacedBy: claim.id, leadId: lead.id,
+        samePartner: other.partnerId === claim.partnerId,
         }, tx);
       }
 
@@ -172,7 +180,7 @@ export async function rejectClaim(actor: SessionCrmUser, claimId: string, rawNot
   }
 }
 
-/** Staff → partner message on a lead with an ACTIVE claim; the partner reads it in the portal and by email. */
+/** Staff → partner message on a lead with an EFFECTIVELY active claim; the partner reads it in the portal and by email. */
 export async function sendPartnerMessage(actor: SessionCrmUser, leadId: string, rawBody: unknown): Promise<ReviewResult> {
   const v = validatePartnerMessage(rawBody);
   if (!v.ok) return { error: v.error };
@@ -180,8 +188,12 @@ export async function sendPartnerMessage(actor: SessionCrmUser, leadId: string, 
     await prisma.$transaction(async (tx) => {
       const lead = await tx.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true } });
       if (!lead || !canEditLead(actor, lead)) throw new Abort("Lead not found.");
-      const claim = await tx.partnerClaim.findFirst({ where: { leadId: lead.id, state: "ACTIVE" }, select: { id: true, partnerId: true } });
-      if (!claim) throw new Abort("No partner holds this client right now.");
+      const claim = await tx.partnerClaim.findFirst({
+        where: { leadId: lead.id, state: "ACTIVE" },
+        select: { id: true, partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true },
+      });
+      // A claim whose protection ran out is no longer the partner's client: no messages to it.
+      if (!claim || (await effectiveStateOf(tx, claim, new Date())) !== "ACTIVE") throw new Abort(MESSAGE_NO_ACTIVE_ERROR);
       const msg = await tx.partnerMessage.create({
         data: { leadId: lead.id, partnerId: claim.partnerId, authorUserId: actor.id, body: v.body },
         select: { id: true },

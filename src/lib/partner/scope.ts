@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveRate, type RateRow } from "@/lib/crm/commission";
 import { officeContact } from "./accounts";
 import { REAL_CONTACT_TYPES } from "./claims";
+import { activeSince } from "./claimState";
 import {
   CLIENT_SEARCH_SCAN, CLIENTS_PAGE_SIZE, OUTBOUND_CONTACT_TYPES, activeClaimsWhere, claimWhere, clientsWhere, commissionTotals,
   dealsForClaims, displayStateOf, latestMilestones, matchesQuery, messagesWhere, overviewCountWheres, toClientDetail, toListItem, visibleName,
@@ -95,22 +96,27 @@ const CLAIM_SELECT = {
   leadId: true,
   state: true,
   createdAt: true,
+  reviewedAt: true,
   submission: true,
   lead: { select: { status: true, deletedAt: true, assignedTo: { select: { name: true } } } },
 } as const;
 
-type ClaimLite = { leadId: string; createdAt: Date };
+type ClaimLite = { leadId: string; createdAt: Date; reviewedAt?: Date | null };
 
 /**
- * Stage/booking events, first/last real contact and first outbound contact per lead, each restricted
- * to occurredAt >= that lead's claim date. Two queries for any number of claims; bodies are never
- * selected. Callers pass ACTIVE claims only (at most one per lead, enforced by a partial unique index).
+ * Stage/booking events and first/last real contact per lead, restricted to occurredAt >= the claim's
+ * activeSince (an accepted known contact's history before the review is not the partner's), plus the
+ * first outbound contact since submission (createdAt — the response-time metric). Two queries, a third
+ * only when some claim was accepted after review; bodies are never selected. Callers pass ACTIVE claims
+ * only (at most one per lead, enforced by a partial unique index).
  */
 async function loadActivity(claims: ClaimLite[]): Promise<Map<string, Activity>> {
   const map = new Map<string, Activity>();
   if (!claims.length) return map;
-  const or = claims.map((c) => ({ leadId: c.leadId, occurredAt: { gte: c.createdAt } }));
-  const [events, contacts] = await Promise.all([
+  const or = claims.map((c) => ({ leadId: c.leadId, occurredAt: { gte: activeSince(c) } }));
+  const reviewed = claims.filter((c) => activeSince(c).getTime() !== c.createdAt.getTime());
+  const reviewedLeads = new Set(reviewed.map((c) => c.leadId));
+  const [events, contacts, outbound] = await Promise.all([
     prisma.leadInteraction.findMany({
       where: { OR: or, type: { in: ["STATUS_CHANGE", "BOOKING_EVENT"] } },
       select: { leadId: true, type: true, occurredAt: true, metadata: true },
@@ -123,6 +129,13 @@ async function loadActivity(claims: ClaimLite[]): Promise<Map<string, Activity>>
       _min: { occurredAt: true },
       _max: { occurredAt: true },
     }),
+    reviewed.length
+      ? prisma.leadInteraction.groupBy({
+          by: ["leadId"],
+          where: { OR: reviewed.map((c) => ({ leadId: c.leadId, occurredAt: { gte: c.createdAt } })), type: { in: [...OUTBOUND_CONTACT_TYPES] } },
+          _min: { occurredAt: true },
+        })
+      : Promise.resolve([]),
   ]);
   const get = (leadId: string) => {
     let a = map.get(leadId);
@@ -136,8 +149,11 @@ async function loadActivity(claims: ClaimLite[]): Promise<Map<string, Activity>>
     const a = get(r.leadId);
     a.firstRealContactAt = earlier(a.firstRealContactAt, r._min.occurredAt);
     a.lastRealContactAt = later(a.lastRealContactAt, r._max.occurredAt);
-    if ((OUTBOUND_CONTACT_TYPES as readonly string[]).includes(r.type)) a.firstOutboundAt = earlier(a.firstOutboundAt, r._min.occurredAt);
+    if (!reviewedLeads.has(r.leadId) && (OUTBOUND_CONTACT_TYPES as readonly string[]).includes(r.type)) {
+      a.firstOutboundAt = earlier(a.firstOutboundAt, r._min.occurredAt);
+    }
   }
+  for (const r of outbound) get(r.leadId).firstOutboundAt = r._min.occurredAt ?? null;
   return map;
 }
 
@@ -222,7 +238,7 @@ export async function getMyClient(partnerId: string, claimId: string): Promise<C
   if (typeof claimId !== "string" || claimId.length > 64) return null;
   const claim = await prisma.partnerClaim.findFirst({
     where: claimWhere(partnerId, claimId),
-    select: { id: true, partnerId: true, leadId: true, state: true, createdAt: true, submission: true },
+    select: { id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, submission: true },
   });
   if (!claim) return null;
   const office = officeContact();
@@ -269,7 +285,7 @@ export async function myOverview(partnerId: string): Promise<MyOverview> {
     prisma.partnerClaim.count({ where: w.viewings }),
     prisma.partnerClaim.count({ where: w.closed }),
     prisma.partnerClaim.findMany({
-      where: live, select: { leadId: true, createdAt: true }, orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: OVERVIEW_CLAIM_SCAN,
+      where: live, select: { leadId: true, createdAt: true, reviewedAt: true }, orderBy: [{ createdAt: "desc" }, { id: "asc" }], take: OVERVIEW_CLAIM_SCAN,
     }),
     prisma.partnerClaim.findMany({
       where: live, select: CLAIM_SELECT, orderBy: [{ lead: { updatedAt: "desc" } }, { id: "asc" }], take: OVERVIEW_MILESTONE_CLAIMS,

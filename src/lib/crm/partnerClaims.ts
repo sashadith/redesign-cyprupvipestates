@@ -4,19 +4,20 @@
 // the tests and the client components can import it without Prisma.
 import { adminDate } from "@/lib/adminTime";
 import { claimProtection } from "@/lib/partner/claims";
+import { COMMITTED_LEAD_STATUSES, activeSince, effectiveClaimState, isCommitted, type ClaimStateValue, type EffectiveClaimState } from "@/lib/partner/claimState";
 import { partnerShareFor } from "@/lib/partner/share";
 import { SOURCE_LABEL } from "./boardModel";
 import { STATUS_LABEL, isLeadStatus } from "./leadStatus";
 
-/** Lead statuses that commit a claim: protection never runs out (same rule as the portal). */
-export const COMMITTED_LEAD_STATUSES = ["RESERVED", "CLOSED"] as const;
+export { COMMITTED_LEAD_STATUSES, type ClaimStateValue, type EffectiveClaimState };
 
 export const PROTECTION_ACTIVE_ERROR = "Another partner's client protection is still active.";
+export const SAME_PARTNER_ACTIVE_ERROR = "This partner already holds this client — reject the duplicate claim.";
+export const MESSAGE_NO_ACTIVE_ERROR = "No partner holds this client right now.";
 export const PARTNER_MESSAGE_MAX = 2000;
 export const OUTCOME_NOTE_MAX = 1000;
 export const REVIEW_CAP = 50;
 
-export type ClaimStateValue = "ACTIVE" | "IN_REVIEW" | "REJECTED" | "EXPIRED";
 export type PartnerModeValue = "HANDOVER" | "FIX";
 
 // ── Outbox ref keys (decision 10) ─────────────────────────────────────────
@@ -45,6 +46,10 @@ export function partnerName(p: { company: string | null; firstName: string; last
   return company ? `${company} (${person})` : person;
 }
 
+/** Short partner label on a cockpit message: the company, else the person's name. */
+export function messagePartnerLabel(p: { company: string | null; firstName: string; lastName: string }): string {
+  return p.company?.trim() || `${p.firstName} ${p.lastName}`.trim() || "Partner";
+}
 
 // ── Protection status of an ACTIVE claim ─────────────────────────────────
 export type ProtectionStatus =
@@ -52,12 +57,16 @@ export type ProtectionStatus =
   | { kind: "protected"; until: Date }
   | { kind: "expired"; until: Date };
 
-/** Committed (RESERVED/CLOSED or a non-cancelled deal) beats the computed expiry, as in the portal. */
+/**
+ * Label data for an ACTIVE claim on a live lead — the same rule as effectiveClaimState (committed beats
+ * the computed expiry; protection runs from activeSince). `kind` is "expired" exactly when
+ * effectiveClaimState would say EXPIRED.
+ */
 export function protectionStatus(input: {
-  claimCreatedAt: Date; lastRealContactAt: Date | null; now: Date; hasDeal: boolean; leadStatus: string;
+  activeSince: Date; lastRealContactAt: Date | null; now: Date; hasDeal: boolean; leadStatus: string;
 }): ProtectionStatus {
-  if (input.hasDeal || (COMMITTED_LEAD_STATUSES as readonly string[]).includes(input.leadStatus)) return { kind: "committed" };
-  const p = claimProtection({ claimCreatedAt: input.claimCreatedAt, lastRealContactAt: input.lastRealContactAt, now: input.now });
+  if (isCommitted({ leadStatus: input.leadStatus, hasLiveDeal: input.hasDeal })) return { kind: "committed" };
+  const p = claimProtection({ claimCreatedAt: input.activeSince, lastRealContactAt: input.lastRealContactAt, now: input.now });
   return p.expired ? { kind: "expired", until: p.protectedUntil } : { kind: "protected", until: p.protectedUntil };
 }
 
@@ -70,35 +79,35 @@ export function protectionLabel(s: ProtectionStatus): string {
 export type AcceptDecision = { kind: "ACCEPT" } | { kind: "EXPIRE_OTHER_THEN_ACCEPT" } | { kind: "BLOCKED"; error: string };
 
 /**
- * May an IN_REVIEW claim be accepted? Only one ACTIVE claim per lead: another ACTIVE claim blocks
- * unless its protection has run out AND it is not committed (no non-cancelled deal, lead not
- * RESERVED/CLOSED) — then Accept marks it EXPIRED in the same transaction.
+ * May an IN_REVIEW claim be accepted? Only one ACTIVE claim per lead. `other` is the lead's other
+ * ACTIVE claim with its effective state (effectiveClaimState). Effectively EXPIRED → Accept marks it
+ * EXPIRED in the same transaction, whichever partner held it (also the same partner's own lapsed claim).
+ * Anything else (still protected, or committed) blocks — with a distinct message for the same partner.
  */
 export function acceptDecision(input: {
-  otherActive: boolean;
-  protection: { expired: boolean } | null;
-  hasDeal: boolean;
-  status: string;
+  other: { samePartner: boolean; effective: EffectiveClaimState } | null;
 }): AcceptDecision {
-  if (!input.otherActive) return { kind: "ACCEPT" };
-  const committed = input.hasDeal || (COMMITTED_LEAD_STATUSES as readonly string[]).includes(input.status);
-  if (committed || !input.protection?.expired) return { kind: "BLOCKED", error: PROTECTION_ACTIVE_ERROR };
-  return { kind: "EXPIRE_OTHER_THEN_ACCEPT" };
+  const o = input.other;
+  if (!o) return { kind: "ACCEPT" };
+  if (o.effective === "EXPIRED") return { kind: "EXPIRE_OTHER_THEN_ACCEPT" };
+  return { kind: "BLOCKED", error: o.samePartner ? SAME_PARTNER_ACTIVE_ERROR : PROTECTION_ACTIVE_ERROR };
 }
 
 // ── Partner share on a new deal (decision 9) ─────────────────────────────
 /**
  * Percent of our commission the partner earns on a deal, or null when no partner holds the client.
- * Only an ACTIVE claim of the lead's partner counts. A suspended partner still gets the share —
- * the commission is owed for the client they brought. A lead without a mode is a handover.
+ * Only a claim of the lead's partner that is EFFECTIVELY active (effectiveClaimState, evaluated on the
+ * lead as it was before this move) counts. A suspended partner still gets the share — the commission
+ * is owed for the client they brought. A lead without a mode is a handover.
  */
 export function dealPartnerShare(input: {
   partnerId: string | null;
   partnerMode: PartnerModeValue | null;
-  activeClaimPartnerId: string | null;
+  activeClaim: { partnerId: string; effective: EffectiveClaimState } | null;
   partner: { handoverShare: number; fixShare: number; status?: string } | null;
 }): number | null {
-  if (!input.partnerId || !input.partner || input.activeClaimPartnerId !== input.partnerId) return null;
+  const c = input.activeClaim;
+  if (!input.partnerId || !input.partner || !c || c.partnerId !== input.partnerId || c.effective !== "ACTIVE") return null;
   return partnerShareFor({ mode: input.partnerMode ?? "HANDOVER", handoverShare: input.partner.handoverShare, fixShare: input.partner.fixShare });
 }
 
@@ -128,7 +137,7 @@ export type RawReviewClaim = {
   lead: {
     id: string; firstName: string; lastName: string; email: string | null; phone: string | null; status: string; source: string;
     createdAt: Date; deletedAt: Date | null; ownerName: string | null; hasDeal: boolean; lastRealContactAt: Date | null;
-    claims: { id: string; state: ClaimStateValue; mode: PartnerModeValue; createdAt: Date; partner: PartnerLite }[];
+    claims: { id: string; state: ClaimStateValue; mode: PartnerModeValue; createdAt: Date; reviewedAt?: Date | null; partner: PartnerLite }[];
   };
 };
 
@@ -173,19 +182,23 @@ export function buildReviewCard(c: RawReviewClaim, now: Date): ReviewCard {
   const s = readSubmission(c.submission);
   const rep = [s.repName, s.repPhone].filter(Boolean).join(" · ") || null;
   const others = c.lead.claims.filter((o) => o.id !== c.id);
-  const statusOf = (o: { state: ClaimStateValue; createdAt: Date }) =>
+  const statusOf = (o: { state: ClaimStateValue; createdAt: Date; reviewedAt?: Date | null }) =>
     o.state === "ACTIVE"
-      ? protectionStatus({ claimCreatedAt: o.createdAt, lastRealContactAt: c.lead.lastRealContactAt, now, hasDeal: c.lead.hasDeal, leadStatus: c.lead.status })
+      ? protectionStatus({ activeSince: activeSince(o), lastRealContactAt: c.lead.lastRealContactAt, now, hasDeal: c.lead.hasDeal, leadStatus: c.lead.status })
       : null;
   const otherActive = others.find((o) => o.state === "ACTIVE") ?? null;
-  const otherStatus = otherActive ? statusOf(otherActive) : null;
   const decision = c.lead.deletedAt
     ? { kind: "BLOCKED" as const, error: "The lead is in the trash." }
     : acceptDecision({
-      otherActive: !!otherActive,
-      protection: otherStatus ? { expired: otherStatus.kind === "expired" } : null,
-      hasDeal: c.lead.hasDeal,
-      status: c.lead.status,
+      other: otherActive
+        ? {
+          samePartner: otherActive.partner.id === c.partner.id,
+          effective: effectiveClaimState({
+            state: otherActive.state, activeSince: activeSince(otherActive), lastRealContactAt: c.lead.lastRealContactAt, now,
+            leadDeleted: false, leadStatus: c.lead.status, hasLiveDeal: c.lead.hasDeal,
+          }),
+        }
+        : null,
     });
   return {
     id: c.id,
@@ -220,7 +233,7 @@ export function buildReviewCard(c: RawReviewClaim, now: Date): ReviewCard {
     accept: decision.kind === "BLOCKED"
       ? { blocked: true, note: decision.error }
       : decision.kind === "EXPIRE_OTHER_THEN_ACCEPT"
-        ? { blocked: false, note: "Accepting marks the other partner's expired claim as expired." }
+        ? { blocked: false, note: "Accepting marks the earlier claim, whose protection has run out, as expired." }
         : { blocked: false, note: null },
   };
 }
@@ -235,7 +248,7 @@ export function pickCardClaim<T extends { state: ClaimStateValue; createdAt: Dat
 }
 
 export type RawCockpitClaim = {
-  id: string; state: ClaimStateValue; mode: PartnerModeValue; contactMode: string; createdAt: Date; submission: unknown;
+  id: string; state: ClaimStateValue; mode: PartnerModeValue; contactMode: string; createdAt: Date; reviewedAt?: Date | null; submission: unknown;
   partner: PartnerLite & { type: string };
 };
 
@@ -259,7 +272,7 @@ export function buildCockpitPartnerCard(input: {
     const repPhone = isActive ? input.lead.contactRepPhone : sub.repPhone;
     const protection = isActive
       ? protectionLabel(protectionStatus({
-        claimCreatedAt: c.createdAt, lastRealContactAt: input.lead.lastRealContactAt, now: input.now, hasDeal: input.lead.hasDeal, leadStatus: input.lead.status,
+        activeSince: activeSince(c), lastRealContactAt: input.lead.lastRealContactAt, now: input.now, hasDeal: input.lead.hasDeal, leadStatus: input.lead.status,
       }))
       : null;
     card = {
@@ -274,5 +287,10 @@ export function buildCockpitPartnerCard(input: {
       protection,
     };
   }
-  return { card, inReview, hasActive: c?.state === "ACTIVE" };
+  // The composer (and sendPartnerMessage) need an EFFECTIVELY active claim — not one whose protection ran out.
+  const effectivelyActive = !!c && c.state === "ACTIVE" && effectiveClaimState({
+    state: c.state, activeSince: activeSince(c), lastRealContactAt: input.lead.lastRealContactAt, now: input.now,
+    leadDeleted: false, leadStatus: input.lead.status, hasLiveDeal: input.lead.hasDeal,
+  }) === "ACTIVE";
+  return { card, inReview, hasActive: effectivelyActive };
 }

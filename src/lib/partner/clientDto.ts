@@ -5,6 +5,7 @@
 import type { Prisma } from "@prisma/client";
 import { isLeadStatus, type LeadStatusValue, type LostReasonValue } from "@/lib/crm/leadStatus";
 import { addMonthsUtc, claimProtection, REAL_CONTACT_TYPES } from "./claims";
+import { COMMITTED_LEAD_STATUSES, activeSince, effectiveClaimState, type ClaimStateValue, type EffectiveClaimState } from "./claimState";
 import { lostCategory, milestonesFor, partnerStage, type Milestone } from "./milestones";
 
 // ── Filters ─────────────────────────────────────────────────────────────────
@@ -22,9 +23,9 @@ export function parseClientFilter(v: unknown): ClientFilter | null {
   return typeof v === "string" && (CLIENT_FILTERS as readonly string[]).includes(v) ? (v as ClientFilter) : null;
 }
 
-export type ClaimState = "ACTIVE" | "IN_REVIEW" | "REJECTED" | "EXPIRED";
-/** What the partner sees: an ACTIVE claim with expired protection reads as EXPIRED, one on a trashed lead as NOT_PROCEEDING. */
-export type DisplayState = ClaimState | "NOT_PROCEEDING";
+export type ClaimState = ClaimStateValue;
+/** What the partner sees: the effective claim state (claimState.ts). */
+export type DisplayState = EffectiveClaimState;
 export type ClientCategory = Exclude<ClientFilter, "all">;
 
 /** closed = lead CLOSED; lost = lead LOST or the claim (effectively) REJECTED/EXPIRED/NOT_PROCEEDING; everything else ACTIVE/IN_REVIEW is active. */
@@ -35,25 +36,25 @@ export function classifyClaim(state: DisplayState, leadStatus: string | null | u
   return "active";
 }
 
-/** Lead statuses that commit the claim: never shown as expired (the partner must always see their commission). */
-export const COMMITTED_STATUSES = ["RESERVED", "CLOSED"] as const;
+/** Lead statuses that commit the claim (alias of claimState's list, kept for the where-builders). */
+export const COMMITTED_STATUSES = COMMITTED_LEAD_STATUSES;
 
-/**
- * Display state of a claim. ACTIVE claims on a soft-deleted lead → NOT_PROCEEDING; ACTIVE claims whose
- * computed protection (claimProtection, full real-contact definition) has run out → EXPIRED — unless
- * the claim is committed (lead RESERVED/CLOSED or at least one non-CANCELLED deal on the lead).
- */
+/** Display state of a claim row — effectiveClaimState (claimState.ts) on the row's lead. */
 export function displayState(
-  row: { state: ClaimState; createdAt: Date; lead: { deletedAt?: Date | null; status?: string } | null },
+  row: { state: ClaimState; createdAt: Date; reviewedAt?: Date | null; lead: { deletedAt?: Date | null; status?: string } | null },
   lastRealContactAt: Date | null,
   now: Date,
   hasLiveDeal = false,
 ): DisplayState {
-  if (row.state !== "ACTIVE") return row.state;
-  if (!row.lead || row.lead.deletedAt) return "NOT_PROCEEDING";
-  const committed = hasLiveDeal || (COMMITTED_STATUSES as readonly string[]).includes(row.lead.status ?? "");
-  if (committed) return "ACTIVE";
-  return claimProtection({ claimCreatedAt: row.createdAt, lastRealContactAt, now }).expired ? "EXPIRED" : "ACTIVE";
+  return effectiveClaimState({
+    state: row.state,
+    activeSince: activeSince(row),
+    lastRealContactAt,
+    now,
+    leadDeleted: !row.lead || !!row.lead.deletedAt,
+    leadStatus: row.lead?.status,
+    hasLiveDeal,
+  });
 }
 
 function needPartner(partnerId: string): string {
@@ -64,7 +65,7 @@ function needPartner(partnerId: string): string {
 const REAL_TYPES = [...REAL_CONTACT_TYPES];
 
 /**
- * Database approximation of "protection not expired": claim or a real contact after the cutoff
+ * Database approximation of "protection not expired": claim activation (reviewedAt, else createdAt) or a real contact after the cutoff
  * (now − 6 months). The mappers re-check with claimProtection; the two can disagree only around
  * month-end clamping (a day or two), which only affects which filter tab a claim appears under.
  */
@@ -78,7 +79,8 @@ function liveActive(cutoff: Date, status?: Prisma.EnumLeadStatusFilter | "CLOSED
     state: "ACTIVE",
     lead: { deletedAt: null, ...(status ? { status } : {}) },
     OR: [
-      { createdAt: { gte: cutoff } },
+      { reviewedAt: null, createdAt: { gte: cutoff } },
+      { reviewedAt: { gte: cutoff } },
       { lead: { interactions: { some: { type: { in: REAL_TYPES }, occurredAt: { gte: cutoff } } } } },
       { lead: { status: { in: [...COMMITTED_STATUSES] } } },
       { lead: { deals: { some: LIVE_DEAL } } },
@@ -88,7 +90,7 @@ function liveActive(cutoff: Date, status?: Prisma.EnumLeadStatusFilter | "CLOSED
 function expiredActive(cutoff: Date): Prisma.PartnerClaimWhereInput {
   return {
     state: "ACTIVE",
-    createdAt: { lt: cutoff },
+    OR: [{ reviewedAt: null, createdAt: { lt: cutoff } }, { reviewedAt: { lt: cutoff } }],
     lead: {
       deletedAt: null,
       status: { notIn: [...COMMITTED_STATUSES] },
@@ -163,6 +165,8 @@ export type RawClaim = {
   leadId: string;
   state: ClaimState;
   createdAt: Date;
+  /** Set when staff accepted a known contact; activeSince() = reviewedAt ?? createdAt. */
+  reviewedAt?: Date | null;
   submission: unknown;
   lead: RawLead | null;
 };
@@ -170,8 +174,8 @@ export type RawClaim = {
 export type RawInteraction = { type: string; occurredAt: Date; metadata: unknown };
 
 /**
- * Per lead: stage/booking events after the claim, first and last real contact after it (protection,
- * "first contact" milestone) and the first OUTBOUND contact after it (response time).
+ * Per lead: stage/booking events since the claim became active, first and last real contact since then
+ * (protection, "first contact" milestone) and the first OUTBOUND contact since submission (response time).
  */
 export type Activity = {
   events: RawInteraction[];
@@ -369,10 +373,10 @@ const STATE_MESSAGE: Record<ClosedState, string> = {
   NOT_PROCEEDING: "clients.stateNotProceeding",
 };
 
-/** Last real contact at/after the claim (protection anchor), from the loaded activity. */
+/** Last real contact since the claim became active (protection anchor), from the loaded activity. */
 function lastRealContact(row: RawClaim, ctx: Pick<MapContext, "activity">): Date | null {
   const last = ctx.activity?.get(row.leadId)?.lastRealContactAt ?? null;
-  return last && last >= row.createdAt ? last : null;
+  return last && last >= activeSince(row) ? last : null;
 }
 
 /** ctx.deals must hold all deals of the claim's lead (any date) for the committed check. */
@@ -385,25 +389,29 @@ function ownClaim(row: RawClaim, partnerId: string): void {
   if (row.partnerId !== partnerId) throw new Error("partner scope: claim of another partner");
 }
 
-/** Deals and messages that belong to this claim: same lead, created after the claim, messages of this partner only. */
+/**
+ * Deals, messages and activity that belong to this claim: same lead, at/after the claim became active
+ * (activeSince), messages of this partner only. The first outbound contact counts from submission (response time).
+ */
 function scoped(row: RawClaim, ctx: MapContext) {
-  const deals = ctx.deals.filter((d) => d.leadId === row.leadId && d.createdAt >= row.createdAt);
-  const messages = ctx.messages.filter((m) => m.partnerId === ctx.partnerId && m.leadId === row.leadId && m.createdAt >= row.createdAt);
+  const since = activeSince(row);
+  const deals = ctx.deals.filter((d) => d.leadId === row.leadId && d.createdAt >= since);
+  const messages = ctx.messages.filter((m) => m.partnerId === ctx.partnerId && m.leadId === row.leadId && m.createdAt >= since);
   const act = ctx.activity?.get(row.leadId) ?? { events: [], firstRealContactAt: null, lastRealContactAt: null };
   const interactions: RawInteraction[] = act.events
-    .filter((e) => e.occurredAt >= row.createdAt)
+    .filter((e) => e.occurredAt >= since)
     .map((e) => ({ type: e.type, occurredAt: e.occurredAt, metadata: e.metadata }));
-  const first = act.firstRealContactAt && act.firstRealContactAt >= row.createdAt ? act.firstRealContactAt : null;
+  const first = act.firstRealContactAt && act.firstRealContactAt >= since ? act.firstRealContactAt : null;
   // milestonesFor only needs the first real contact; one synthetic row stands for it.
   if (first) interactions.push({ type: "CALL", occurredAt: first, metadata: null });
-  const last = act.lastRealContactAt && act.lastRealContactAt >= row.createdAt ? act.lastRealContactAt : null;
+  const last = act.lastRealContactAt && act.lastRealContactAt >= since ? act.lastRealContactAt : null;
   const firstOut = act.firstOutboundAt && act.firstOutboundAt >= row.createdAt ? act.firstOutboundAt : null;
-  return { deals, messages, interactions, first, last, firstOut };
+  return { since, deals, messages, interactions, first, last, firstOut };
 }
 
 function claimMilestones(row: RawClaim, sc: ReturnType<typeof scoped>): Milestone[] {
   return milestonesFor({
-    claimCreatedAt: row.createdAt,
+    claimCreatedAt: sc.since,
     interactions: sc.interactions,
     deals: sc.deals.map((d) => ({ createdAt: d.createdAt, earnedAt: d.earnedAt, cancelledAt: d.cancelledAt, commissionStatus: d.commissionStatus })),
     messages: sc.messages.map((m) => ({ createdAt: m.createdAt, body: m.body ?? "" })),
@@ -509,7 +517,7 @@ export function toClientDetail(
         ? { kind: "office", email: ctx.office.email, phone: ctx.office.phone }
         : { kind: "pending" };
   const minutes = sc.firstOut ? Math.round((sc.firstOut.getTime() - row.createdAt.getTime()) / 60000) : null;
-  const prot = claimProtection({ claimCreatedAt: row.createdAt, lastRealContactAt: sc.last, now: ctx.now });
+  const prot = claimProtection({ claimCreatedAt: sc.since, lastRealContactAt: sc.last, now: ctx.now });
   return {
     kind: "active",
     id: row.id,
@@ -542,9 +550,9 @@ export function latestMilestones(rows: RawClaim[], ctx: MapContext, limit = 5): 
   return out.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit);
 }
 
-/** Deals that count for these claims: same lead and created at/after the claim. */
-export function dealsForClaims(claims: Pick<RawClaim, "leadId" | "createdAt">[], deals: RawDeal[]): RawDeal[] {
-  const since = new Map(claims.map((c) => [c.leadId, c.createdAt]));
+/** Deals that count for these claims: same lead and created at/after the claim became active. */
+export function dealsForClaims(claims: Pick<RawClaim, "leadId" | "createdAt" | "reviewedAt">[], deals: RawDeal[]): RawDeal[] {
+  const since = new Map(claims.map((c) => [c.leadId, activeSince(c)]));
   return deals.filter((d) => {
     const at = since.get(d.leadId);
     return !!at && d.createdAt >= at;

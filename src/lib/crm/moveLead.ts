@@ -4,6 +4,7 @@ import { canEditLead } from "./access";
 import { planMove, type DealLite } from "./movePlan";
 import { resolveRate, computeDealAmounts, type RateRow } from "./commission";
 import { dealPartnerShare } from "./partnerClaims";
+import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
 import type { LeadStatusValue, LostReasonValue } from "./leadStatus";
 import type { SessionCrmUser } from "./session";
 
@@ -51,17 +52,29 @@ export async function moveLead(
         const rows = await tx.commissionRate.findMany({ where: { developerAccountId: dev.developerAccountId } });
         const rateRows: RateRow[] = rows.map((r) => ({ developerAccountId: r.developerAccountId, developmentId: r.developmentId, ratePercent: r.ratePercent.toNumber() }));
         const rate = resolveRate(rateRows, dev.developerAccountId, dev.id);
-        // Partner share (phase 3b, decision 9): only while the lead's partner holds an ACTIVE claim.
+        // Partner share (phase 3b, decision 9): only while the lead's partner holds an EFFECTIVELY active
+        // claim, judged on the lead as it is before this move (status and deals not yet changed), under the row lock.
         const claim = lead.partnerId
           ? await tx.partnerClaim.findFirst({
             where: { leadId, partnerId: lead.partnerId, state: "ACTIVE" },
-            select: { partnerId: true, partner: { select: { handoverShare: true, fixShare: true, status: true } } },
+            select: {
+              partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true,
+              partner: { select: { handoverShare: true, fixShare: true, status: true } },
+            },
+          })
+          : null;
+        const effective = claim
+          ? await effectiveStateOf(tx, claim, now, {
+            leadDeleted: false,
+            leadStatus: lead.status,
+            hasLiveDeal: lead.deals.some((x) => x.commissionStatus !== "CANCELLED"),
+            lastRealContactAt: await lastRealContactAt(tx, leadId),
           })
           : null;
         const partnerSharePercent = dealPartnerShare({
           partnerId: lead.partnerId,
           partnerMode: lead.partnerMode,
-          activeClaimPartnerId: claim?.partnerId ?? null,
+          activeClaim: claim && effective ? { partnerId: claim.partnerId, effective } : null,
           partner: claim ? { handoverShare: claim.partner.handoverShare.toNumber(), fixShare: claim.partner.fixShare.toNumber(), status: claim.partner.status } : null,
         });
         const amounts = computeDealAmounts({ price: d.price, ourRatePercent: rate.ratePercent, partnerSharePercent });

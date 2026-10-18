@@ -10,6 +10,7 @@ import { findDuplicateLead } from "@/lib/crm/createLead";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { inBackground } from "./accounts";
 import { decideSubmission } from "./claims";
+import { effectiveStateOf } from "./claimFacts";
 import type { PartnerSessionInfo } from "./session";
 import type { SubmissionInput } from "./submission";
 import {
@@ -35,13 +36,28 @@ async function loadProjects(ids: string[]): Promise<{ id: string; name: string }
 
 const isUniqueViolation = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
 
-/** Claim IN_REVIEW on a known lead — unless this partner already has one there (then nothing new). */
+/**
+ * Lead ids (0 or 1) on which this partner holds an EFFECTIVELY active claim. Their own ACTIVE claim whose
+ * protection ran out does not count: the partner may submit the client again and it goes to review.
+ */
+async function myLiveClaimLeadIds(partnerId: string, leadId: string): Promise<string[]> {
+  const rows = await prisma.partnerClaim.findMany({
+    where: { partnerId, leadId, state: "ACTIVE" },
+    select: { leadId: true, state: true, createdAt: true, reviewedAt: true },
+  });
+  const now = new Date();
+  const out: string[] = [];
+  for (const r of rows) if ((await effectiveStateOf(prisma, r, now)) === "ACTIVE") out.push(r.leadId);
+  return out;
+}
+
+/** Claim IN_REVIEW on a known lead — unless this partner already has one in review or a live one there (then nothing new). */
 async function reviewClaim(partner: Partner, leadId: string, input: SubmissionInput, projects: { id: string; name: string }[]): Promise<boolean> {
-  const existing = await prisma.partnerClaim.findFirst({
-    where: { partnerId: partner.id, leadId, state: { in: ["IN_REVIEW", "ACTIVE"] } },
+  const inReview = await prisma.partnerClaim.findFirst({
+    where: { partnerId: partner.id, leadId, state: "IN_REVIEW" },
     select: { id: true },
   });
-  if (existing) return false;
+  if (inReview || (await myLiveClaimLeadIds(partner.id, leadId)).length) return false;
   await prisma.partnerClaim.create({
     data: {
       leadId, partnerId: partner.id, state: "IN_REVIEW", mode: input.mode, contactMode: input.contactMode,
@@ -99,10 +115,8 @@ export async function submitClient(me: PartnerSessionInfo, input: SubmissionInpu
   };
 
   const dup = await findDuplicateLead(input.email, input.phone);
-  const mine = dup
-    ? await prisma.partnerClaim.findMany({ where: { partnerId: partner.id, leadId: dup.id, state: "ACTIVE" }, select: { leadId: true } })
-    : [];
-  const decision = decideSubmission({ duplicate: dup ? { leadId: dup.id } : null, myActiveClaimLeadIds: mine.map((c) => c.leadId) });
+  const mine = dup ? await myLiveClaimLeadIds(partner.id, dup.id) : [];
+  const decision = decideSubmission({ duplicate: dup ? { leadId: dup.id } : null, myActiveClaimLeadIds: mine });
   if (decision.kind === "ALREADY_YOURS") {
     // Only a full identifier match may say so; a partial match writes nothing and answers neutrally.
     return dup && alreadyYoursAnswer(input, dup) === "ALREADY_YOURS" ? { kind: "ALREADY_YOURS" } : { kind: "RECEIVED" };

@@ -6,7 +6,7 @@ import { canAssignLeads, canEditLead, canViewLead, seesAllLeads } from "@/lib/cr
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
-import { buildCockpitPartnerCard, type ClaimStateValue } from "@/lib/crm/partnerClaims";
+import { buildCockpitPartnerCard, messagePartnerLabel, type ClaimStateValue } from "@/lib/crm/partnerClaims";
 import { CockpitContact, CockpitHeader, type CockpitLead } from "../../components/CockpitHeader";
 import { CockpitStage } from "../../components/CockpitStage";
 import { CockpitDeals } from "../../components/CockpitDeals";
@@ -42,7 +42,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       claims: {
         orderBy: { createdAt: "desc" },
         select: {
-          id: true, state: true, mode: true, contactMode: true, createdAt: true, submission: true,
+          id: true, state: true, mode: true, contactMode: true, createdAt: true, reviewedAt: true, submission: true,
           partner: { select: { id: true, company: true, firstName: true, lastName: true, status: true, type: true } },
         },
       },
@@ -70,7 +70,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     : [];
 
   const now = new Date();
-  const partnerView = await loadPartnerView(lead, canEdit, now);
+  const partnerView = await loadPartnerView(lead, canEdit, canAssign, now);
   const name = `${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead";
   const attributionRows: [string, string | null][] = [
     ["Partner ref", lead.attributionRef], ["UTM source", lead.utmSource], ["UTM medium", lead.utmMedium], ["UTM campaign", lead.utmCampaign],
@@ -125,7 +125,7 @@ type PartnerLeadInput = {
 
 // Partner card data (phase 3b): only for leads that carry a claim; the two extra
 // queries run only then, so leads without partners render exactly as before.
-async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, now: Date): Promise<CockpitPartnerView | null> {
+async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canReview: boolean, now: Date): Promise<CockpitPartnerView | null> {
   if (!lead.claims.length) return null;
   const [last, messages] = await Promise.all([
     prisma.leadInteraction.findFirst({
@@ -137,7 +137,10 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, now: Da
       where: { leadId: lead.id },
       orderBy: { createdAt: "desc" },
       take: PARTNER_MESSAGES_CAP,
-      select: { id: true, body: true, createdAt: true, author: { select: { name: true } } },
+      select: {
+        id: true, body: true, createdAt: true, author: { select: { name: true } },
+        partner: { select: { company: true, firstName: true, lastName: true } },
+      },
     }),
   ]);
   const built = buildCockpitPartnerCard({
@@ -153,7 +156,11 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, now: Da
     leadId: lead.id,
     card: built.card,
     inReview: built.inReview,
-    messages: messages.map((m) => ({ id: m.id, author: m.author?.name ?? "Former team member", createdAt: m.createdAt.toISOString(), body: m.body })),
+    messages: messages.map((m) => ({
+      id: m.id, author: m.author?.name ?? "Former team member", partner: messagePartnerLabel(m.partner),
+      createdAt: m.createdAt.toISOString(), body: m.body,
+    })),
     canMessage: canEdit && built.hasActive,
+    canReview,
   };
 }

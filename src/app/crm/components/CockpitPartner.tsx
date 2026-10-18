@@ -16,8 +16,10 @@ export type CockpitPartnerView = {
     state: string; isActive: boolean; protection: string | null;
   } | null;
   inReview: { id: string; partner: string; submittedAt: string }[];
-  messages: { id: string; author: string; createdAt: string; body: string }[];
+  messages: { id: string; author: string; partner: string; createdAt: string; body: string }[];
   canMessage: boolean;
+  /** Managers only (canAssignLeads): the inbox review is theirs. */
+  canReview: boolean;
 };
 
 
@@ -88,7 +90,10 @@ export function CockpitPartner({ view }: { view: CockpitPartnerView }) {
           <h3>Claims in review</h3>
           <ul>
             {view.inReview.map((r) => (
-              <li key={r.id}><b>{r.partner}</b> <span className="crm-muted">{date(r.submittedAt)}</span> <a href={`/crm/inbox#claim-${r.id}`}>Review in inbox →</a></li>
+              <li key={r.id}>
+                <b>{r.partner}</b> <span className="crm-muted">{date(r.submittedAt)}</span>
+                {view.canReview && <> <a href={`/crm/inbox#claim-${r.id}`}>Review in inbox →</a></>}
+              </li>
             ))}
           </ul>
         </div>
@@ -100,7 +105,7 @@ export function CockpitPartner({ view }: { view: CockpitPartnerView }) {
           <ol>
             {view.messages.map((m) => (
               <li key={m.id}>
-                <div className="crm-ck-itemhead"><b>{m.author}</b><span className="crm-muted">{when(m.createdAt)}</span></div>
+                <div className="crm-ck-itemhead"><span><b>{m.author}</b> to <b>{m.partner}</b></span><span className="crm-muted">{when(m.createdAt)}</span></div>
                 <p className="crm-ck-text">{m.body}</p>
               </li>
             ))}

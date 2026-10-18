@@ -1,10 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  PARTNER_MESSAGE_MAX, PROTECTION_ACTIVE_ERROR, acceptDecision, buildCockpitPartnerCard, buildReviewCard, claimOutcomeRefKey, dealPartnerShare,
+  PARTNER_MESSAGE_MAX, PROTECTION_ACTIVE_ERROR, SAME_PARTNER_ACTIVE_ERROR, acceptDecision, buildCockpitPartnerCard, buildReviewCard, claimOutcomeRefKey, dealPartnerShare, messagePartnerLabel,
   messageRefKey, normaliseOutcomeNote, pickCardClaim, protectionStatus, readSubmission, validatePartnerMessage, type RawReviewClaim,
 } from "@/lib/crm/partnerClaims";
 import { computeDealAmounts } from "@/lib/crm/commission";
+import { activeSince, effectiveClaimState } from "@/lib/partner/claimState";
 
 const t = (iso: string) => new Date(iso);
 const now = t("2026-10-18T12:00:00Z");
@@ -18,51 +19,80 @@ test("outbox ref keys follow decision 10", () => {
 
 // ── accept precondition ────────────────────────────────────────────────────
 test("acceptDecision: no other ACTIVE claim → accept", () => {
-  assert.deepEqual(acceptDecision({ otherActive: false, protection: null, hasDeal: false, status: "NEW" }), { kind: "ACCEPT" });
-  // a deal or a committed status only matters when someone else holds the client
-  assert.deepEqual(acceptDecision({ otherActive: false, protection: null, hasDeal: true, status: "CLOSED" }), { kind: "ACCEPT" });
+  assert.deepEqual(acceptDecision({ other: null }), { kind: "ACCEPT" });
 });
 
-test("acceptDecision: other claim still protected → blocked with the fixed message", () => {
-  assert.deepEqual(acceptDecision({ otherActive: true, protection: { expired: false }, hasDeal: false, status: "CONTACTED" }), { kind: "BLOCKED", error: PROTECTION_ACTIVE_ERROR });
-  assert.equal(acceptDecision({ otherActive: true, protection: null, hasDeal: false, status: "NEW" }).kind, "BLOCKED");
+test("acceptDecision: other claim effectively active (protected or committed) → blocked", () => {
+  assert.deepEqual(acceptDecision({ other: { samePartner: false, effective: "ACTIVE" } }), { kind: "BLOCKED", error: PROTECTION_ACTIVE_ERROR });
+  // the same partner's live claim: a distinct message, never a second claim
+  assert.deepEqual(acceptDecision({ other: { samePartner: true, effective: "ACTIVE" } }), { kind: "BLOCKED", error: SAME_PARTNER_ACTIVE_ERROR });
+  assert.equal(acceptDecision({ other: { samePartner: false, effective: "NOT_PROCEEDING" } }).kind, "BLOCKED");
 });
 
-test("acceptDecision: other claim expired → expire it, then accept — unless committed", () => {
-  assert.deepEqual(acceptDecision({ otherActive: true, protection: { expired: true }, hasDeal: false, status: "OFFER" }), { kind: "EXPIRE_OTHER_THEN_ACCEPT" });
-  assert.equal(acceptDecision({ otherActive: true, protection: { expired: true }, hasDeal: true, status: "OFFER" }).kind, "BLOCKED");
-  for (const status of ["RESERVED", "CLOSED"]) {
-    assert.equal(acceptDecision({ otherActive: true, protection: { expired: true }, hasDeal: false, status }).kind, "BLOCKED", status);
+test("acceptDecision: other claim effectively expired → expire it, then accept — also the same partner's own lapsed claim", () => {
+  assert.deepEqual(acceptDecision({ other: { samePartner: false, effective: "EXPIRED" } }), { kind: "EXPIRE_OTHER_THEN_ACCEPT" });
+  assert.deepEqual(acceptDecision({ other: { samePartner: true, effective: "EXPIRED" } }), { kind: "EXPIRE_OTHER_THEN_ACCEPT" });
+});
+
+test("acceptDecision fed by effectiveClaimState: committed never expires; accepted known contact counts from review", () => {
+  const eff = (o: Partial<Parameters<typeof effectiveClaimState>[0]>) => effectiveClaimState({
+    state: "ACTIVE", activeSince: t("2026-01-10T00:00:00Z"), lastRealContactAt: null, now, leadDeleted: false, leadStatus: "OFFER", hasLiveDeal: false, ...o,
+  });
+  assert.equal(acceptDecision({ other: { samePartner: false, effective: eff({}) } }).kind, "EXPIRE_OTHER_THEN_ACCEPT");
+  assert.equal(acceptDecision({ other: { samePartner: false, effective: eff({ hasLiveDeal: true }) } }).kind, "BLOCKED");
+  for (const leadStatus of ["RESERVED", "CLOSED"]) {
+    assert.equal(acceptDecision({ other: { samePartner: false, effective: eff({ leadStatus }) } }).kind, "BLOCKED", leadStatus);
   }
+  // submitted a year ago, accepted last month → activeSince is the review date → still protected
+  const since = activeSince({ createdAt: t("2025-10-01T00:00:00Z"), reviewedAt: t("2026-09-20T00:00:00Z") });
+  assert.equal(acceptDecision({ other: { samePartner: false, effective: eff({ activeSince: since }) } }).kind, "BLOCKED");
 });
 
-test("protectionStatus: committed beats expiry; otherwise six months from the latest real contact", () => {
-  const created = t("2026-01-10T00:00:00Z");
-  assert.deepEqual(protectionStatus({ claimCreatedAt: created, lastRealContactAt: null, now, hasDeal: false, leadStatus: "OFFER" }), { kind: "expired", until: t("2026-07-10T00:00:00Z") });
-  assert.deepEqual(protectionStatus({ claimCreatedAt: created, lastRealContactAt: t("2026-06-01T00:00:00Z"), now, hasDeal: false, leadStatus: "OFFER" }), { kind: "protected", until: t("2026-12-01T00:00:00Z") });
-  assert.equal(protectionStatus({ claimCreatedAt: created, lastRealContactAt: null, now, hasDeal: true, leadStatus: "OFFER" }).kind, "committed");
-  assert.equal(protectionStatus({ claimCreatedAt: created, lastRealContactAt: null, now, hasDeal: false, leadStatus: "RESERVED" }).kind, "committed");
+test("protectionStatus: committed beats expiry; otherwise six months from max(activeSince, latest real contact)", () => {
+  const since = t("2026-01-10T00:00:00Z");
+  assert.deepEqual(protectionStatus({ activeSince: since, lastRealContactAt: null, now, hasDeal: false, leadStatus: "OFFER" }), { kind: "expired", until: t("2026-07-10T00:00:00Z") });
+  assert.deepEqual(protectionStatus({ activeSince: since, lastRealContactAt: t("2026-06-01T00:00:00Z"), now, hasDeal: false, leadStatus: "OFFER" }), { kind: "protected", until: t("2026-12-01T00:00:00Z") });
+  assert.equal(protectionStatus({ activeSince: since, lastRealContactAt: null, now, hasDeal: true, leadStatus: "OFFER" }).kind, "committed");
+  assert.equal(protectionStatus({ activeSince: since, lastRealContactAt: null, now, hasDeal: false, leadStatus: "RESERVED" }).kind, "committed");
 });
 
 // ── partner share on deals ─────────────────────────────────────────────────
 const shares = { handoverShare: 30, fixShare: 50 };
+const live = (partnerId: string) => ({ partnerId, effective: "ACTIVE" as const });
 
-test("dealPartnerShare: no partner or no ACTIVE claim of that partner → null", () => {
-  assert.equal(dealPartnerShare({ partnerId: null, partnerMode: null, activeClaimPartnerId: null, partner: null }), null);
-  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaimPartnerId: null, partner: shares }), null);
+test("dealPartnerShare: no partner or no effectively active claim of that partner → null", () => {
+  assert.equal(dealPartnerShare({ partnerId: null, partnerMode: null, activeClaim: null, partner: null }), null);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: null, partner: shares }), null);
   // an ACTIVE claim of a different partner never pays the lead's (stale) partner
-  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaimPartnerId: "p2", partner: shares }), null);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: live("p2"), partner: shares }), null);
+  // the partner's own claim whose protection ran out (or trashed) earns nothing on a new deal
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: { partnerId: "p1", effective: "EXPIRED" }, partner: shares }), null);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: { partnerId: "p1", effective: "NOT_PROCEEDING" }, partner: shares }), null);
+});
+
+test("dealPartnerShare: the move's own deal does not rescue a lapsed claim (state judged before the move)", () => {
+  // before the move: no deal, lead in OFFER, protection run out → EXPIRED (the deal created by this move is not counted)
+  const before = effectiveClaimState({
+    state: "ACTIVE", activeSince: t("2026-01-10T00:00:00Z"), lastRealContactAt: null, now, leadDeleted: false, leadStatus: "OFFER", hasLiveDeal: false,
+  });
+  assert.equal(before, "EXPIRED");
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: { partnerId: "p1", effective: before }, partner: shares }), null);
+  // an existing live deal before the move commits the claim → share
+  const committed = effectiveClaimState({
+    state: "ACTIVE", activeSince: t("2026-01-10T00:00:00Z"), lastRealContactAt: null, now, leadDeleted: false, leadStatus: "OFFER", hasLiveDeal: true,
+  });
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: { partnerId: "p1", effective: committed }, partner: shares }), 30);
 });
 
 test("dealPartnerShare: mode picks the share; missing mode is a handover; suspended partners keep their share", () => {
-  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "FIX", activeClaimPartnerId: "p1", partner: shares }), 50);
-  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaimPartnerId: "p1", partner: shares }), 30);
-  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: null, activeClaimPartnerId: "p1", partner: shares }), 30);
-  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "FIX", activeClaimPartnerId: "p1", partner: { ...shares, status: "SUSPENDED" } }), 50);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "FIX", activeClaim: live("p1"), partner: shares }), 50);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: live("p1"), partner: shares }), 30);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: null, activeClaim: live("p1"), partner: shares }), 30);
+  assert.equal(dealPartnerShare({ partnerId: "p1", partnerMode: "FIX", activeClaim: live("p1"), partner: { ...shares, status: "SUSPENDED" } }), 50);
 });
 
 test("deal amounts with the partner share; a missing rate leaves the partner commission open", () => {
-  const share = dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaimPartnerId: "p1", partner: shares });
+  const share = dealPartnerShare({ partnerId: "p1", partnerMode: "HANDOVER", activeClaim: live("p1"), partner: shares });
   assert.deepEqual(computeDealAmounts({ price: 300_000, ourRatePercent: 5, partnerSharePercent: share }), { ourCommission: 15_000, partnerCommission: 4_500 });
   assert.deepEqual(computeDealAmounts({ price: 300_000, ourRatePercent: null, partnerSharePercent: share }), { ourCommission: null, partnerCommission: null });
 });
@@ -157,6 +187,30 @@ test("buildReviewCard: non-ACTIVE other claims carry no protection line", () => 
   assert.equal(c.accept.blocked, false);
 });
 
+test("buildReviewCard: the same partner's own claim — live blocks with its own message, lapsed is replaced", () => {
+  const own = (lastRealContactAt: Date | null) => raw({
+    lastRealContactAt,
+    claims: [{ id: "c-own", state: "ACTIVE", mode: "HANDOVER", createdAt: t("2026-02-01T00:00:00Z"), partner: partner("p1", "Acme Realty") }],
+  });
+  assert.deepEqual(buildReviewCard(own(t("2026-09-01T00:00:00Z")), now).accept, { blocked: true, note: SAME_PARTNER_ACTIVE_ERROR });
+  assert.equal(buildReviewCard(own(null), now).accept.blocked, false);
+});
+
+test("buildReviewCard: an accepted known contact's protection runs from the review, not the submission", () => {
+  const c = buildReviewCard(raw({
+    lastRealContactAt: null,
+    claims: [{ id: "c-old", state: "ACTIVE", mode: "HANDOVER", createdAt: t("2025-09-01T00:00:00Z"), reviewedAt: t("2026-09-01T00:00:00Z"), partner: partner("p2") }],
+  }), now);
+  assert.match(c.others[0].protection ?? "", /^Protected until /);
+  assert.equal(c.accept.blocked, true);
+});
+
+test("messagePartnerLabel: company, else the person", () => {
+  assert.equal(messagePartnerLabel({ company: " Acme ", firstName: "Max", lastName: "Muster" }), "Acme");
+  assert.equal(messagePartnerLabel({ company: null, firstName: "Max", lastName: "Muster" }), "Max Muster");
+  assert.equal(messagePartnerLabel({ company: "", firstName: "", lastName: "" }), "Partner");
+});
+
 // ── cockpit partner card ───────────────────────────────────────────────────
 const ck = (id: string, state: "ACTIVE" | "IN_REVIEW" | "REJECTED" | "EXPIRED", createdAt: string) => ({
   id, state, mode: "HANDOVER" as const, contactMode: "DIRECT", createdAt: t(createdAt), submission: { repName: "Sub Rep" },
@@ -188,4 +242,14 @@ test("buildCockpitPartnerCard: null without claims; ACTIVE card uses the lead's 
   assert.equal(rejected.card?.rep, "Sub Rep");
   assert.equal(rejected.card?.protection, null);
   assert.equal(rejected.hasActive, false);
+});
+
+test("buildCockpitPartnerCard: an ACTIVE claim whose protection ran out cannot be messaged; committed or recently reviewed can", () => {
+  const old = ck("act", "ACTIVE", "2025-09-01T00:00:00Z");
+  const lapsed = buildCockpitPartnerCard({ claims: [old], lead: leadCtx, now })!;
+  assert.equal(lapsed.card?.state, "Active");
+  assert.match(lapsed.card?.protection ?? "", /^Protection expired /);
+  assert.equal(lapsed.hasActive, false);
+  assert.equal(buildCockpitPartnerCard({ claims: [old], lead: { ...leadCtx, hasDeal: true }, now })!.hasActive, true);
+  assert.equal(buildCockpitPartnerCard({ claims: [{ ...old, reviewedAt: t("2026-09-01T00:00:00Z") }], lead: leadCtx, now })!.hasActive, true);
 });

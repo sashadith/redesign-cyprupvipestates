@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  CLIENT_FILTERS, activeClaimsWhere, claimWhere, classifyClaim, clientsWhere, commissionTotals, dealView, formatResponse,
+  CLIENT_FILTERS, activeClaimsWhere, claimWhere, classifyClaim, clientsWhere, commissionTotals, dealView, dealsForClaims, formatResponse,
   latestMilestones, matchesQuery, messagesWhere, overviewCountWheres, parseClientFilter, publicProjectUrl, submissionView,
   toClientDetail, toListItem, visibleName, type Activity, type RawClaim, type RawDeal, type RawMessage,
 } from "@/lib/partner/clientDto";
@@ -323,6 +323,31 @@ test("response time counts only outbound first contact; protection keeps inbound
   a.firstOutboundAt = null;
   const d2 = toClientDetail(activeClaim(), c);
   assert.equal(d2.kind === "active" && d2.response, null, "no outbound contact yet → no response time");
+});
+test("accepted known contact: everything partner-visible starts at the review (activeSince); response time still from submission", () => {
+  // submitted 2025-01-01, accepted 2026-05-01 10:00 — the earlier history is not the partner's
+  const reviewed = activeClaim({ createdAt: t("2025-01-01T00:00:00Z"), reviewedAt: claimAt });
+  const c = ctx();
+  c.activity.get("lead-1")!.events.push({ type: "STATUS_CHANGE", occurredAt: t("2025-06-01T00:00:00Z"), metadata: { toStatus: "OFFER" } } as never);
+  c.deals = [deal(), deal({ id: "deal-old", createdAt: t("2025-06-01T00:00:00Z"), commissionStatus: "CANCELLED" })];
+  c.messages = [...messages, { leadId: "lead-1", partnerId: P, createdAt: t("2025-06-02T00:00:00Z"), body: "before review" }];
+  const d = toClientDetail(reviewed, c);
+  assert.equal(d.kind, "active", "a year-old submission accepted last month is protected from the review date");
+  if (d.kind !== "active") return;
+  assert.deepEqual(d.deals.map((x) => x.id), ["deal-1"], "deals before the review are not the partner's");
+  assert.ok(!JSON.stringify(d).includes("before review"));
+  assert.ok(d.milestones.every((m) => m.at >= claimAt), "no milestone before the review");
+  assert.equal(d.protection.until.toISOString(), "2026-11-02T00:00:00.000Z");
+  // response time measures submission → first outbound contact
+  assert.equal(d.response?.unit, "d");
+  assert.equal(d.submittedAt.toISOString(), "2025-01-01T00:00:00.000Z");
+  // the same claim without the review date would have lapsed long ago
+  assert.equal(toClientDetail({ ...reviewed, reviewedAt: null }, { ...c, activity: new Map(), deals: [] }).kind, "submission");
+  // commission totals and the DB filters use the same anchor
+  assert.deepEqual(dealsForClaims([reviewed], c.deals).map((x) => x.id), ["deal-1"]);
+  const live = JSON.stringify(clientsWhere(P, "active", now));
+  assert.ok(live.includes('"reviewedAt":{"gte":"2025-12-01T00:00:00.000Z"}'), live);
+  assert.ok(JSON.stringify(clientsWhere(P, "lost", now)).includes('"reviewedAt":{"lt":"2025-12-01T00:00:00.000Z"}'));
 });
 test("search uses the partner-visible name, case- and accent-insensitive", () => {
   const active = activeClaim({ submission: { firstName: "Typed" } });

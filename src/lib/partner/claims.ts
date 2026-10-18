@@ -8,6 +8,7 @@ export type SubmissionDecision =
   | { kind: "REVIEW"; leadId: string }
   | { kind: "ALREADY_YOURS"; leadId: string };
 
+/** myActiveClaimLeadIds: leads where this partner's claim is EFFECTIVELY active (effectiveClaimState); a lapsed own claim → REVIEW. */
 export function decideSubmission(input: {
   duplicate: { leadId: string } | null;
   myActiveClaimLeadIds: string[];
@@ -29,7 +30,10 @@ export function addMonthsUtc(d: Date, months: number): Date {
   ));
 }
 
-/** Protected until max(claimCreatedAt, lastRealContactAt) + 6 calendar months. */
+/**
+ * Protected until max(claimCreatedAt, lastRealContactAt) + 6 calendar months. Callers pass the claim's
+ * activeSince (claimState.ts) as claimCreatedAt; decisions go through effectiveClaimState, not this directly.
+ */
 export function claimProtection(input: {
   claimCreatedAt: Date;
   lastRealContactAt: Date | null;
