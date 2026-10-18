@@ -40,17 +40,18 @@ const EMAIL_RE = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[^\s@<>()[\],;:"]{2,}$
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // eslint-disable-next-line no-control-regex
 const CONTROL_RE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
-const HEBREW_RE = /[֐-׿]/;
 const MAX_BUDGET = 100_000_000;
 
 const fail = (field: string, code: string): SubmissionResult => ({ ok: false, field, code });
 const absent = (v: unknown) => v === undefined || v === null || v === "";
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-const badText = (s: string) => CONTROL_RE.test(s) || HEBREW_RE.test(s);
+const badText = (s: string) => CONTROL_RE.test(s);
+/** Single-line fields additionally reject line breaks. */
+const badLine = (s: string) => badText(s) || /[\r\n]/.test(s);
 
 /** Returns normalised phone (+digits) or undefined when invalid. */
 function normPhone(v: unknown): string | undefined {
-  if (typeof v !== "string" || v.length > 40) return undefined;
+  if (typeof v !== "string" || v.length > 40 || /[\r\n]/.test(v)) return undefined;
   const raw = v.trim();
   if (!/^\+?[\d\s().-]+$/.test(raw)) return undefined;
   const digits = raw.replace(/\D/g, "");
@@ -64,11 +65,11 @@ export function validateSubmission(raw: unknown): SubmissionResult {
   for (const k of Object.keys(r)) if (!ALLOWED.has(k)) return fail(k, "err.unknownField");
 
   const firstName = str(r.firstName);
-  if (!firstName || firstName.length > 80 || badText(firstName)) return fail("firstName", "err.firstName");
+  if (!firstName || firstName.length > 80 || badLine(firstName)) return fail("firstName", "err.firstName");
   let lastName: string | null = null;
   if (!absent(r.lastName)) {
     const l = str(r.lastName);
-    if (typeof r.lastName !== "string" || !l || l.length > 80 || badText(l)) return fail("lastName", "err.lastName");
+    if (typeof r.lastName !== "string" || !l || l.length > 80 || badLine(l)) return fail("lastName", "err.lastName");
     lastName = l;
   }
 
@@ -119,7 +120,7 @@ export function validateSubmission(raw: unknown): SubmissionResult {
   let projectsText: string | null = null;
   if (!absent(r.projectsText)) {
     const t = str(r.projectsText);
-    if (typeof r.projectsText !== "string" || t.length > 300 || badText(t)) return fail("projectsText", "err.projectsText");
+    if (typeof r.projectsText !== "string" || t.length > 300 || badLine(t)) return fail("projectsText", "err.projectsText");
     projectsText = t || null;
   }
 
@@ -129,7 +130,7 @@ export function validateSubmission(raw: unknown): SubmissionResult {
   let repPhone: string | null = null;
   if (contactMode === "VIA_PARTNER_REP" || contactMode === "VIA_CLIENT_REP") {
     const n = str(r.repName);
-    if (!n || n.length > 80 || badText(n)) return fail("repName", "err.rep");
+    if (!n || n.length > 80 || badLine(n)) return fail("repName", "err.rep");
     const p = normPhone(r.repPhone);
     if (!p) return fail("repPhone", "err.rep");
     repName = n;

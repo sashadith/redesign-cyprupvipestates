@@ -226,7 +226,7 @@ export const ru: PartnerDict = {
     budgetMin: "Бюджет от (EUR)",
     budgetMax: "Бюджет до (EUR)",
     modeTitle: "Как нам действовать?",
-    modeHandover: "Вы берёте клиента на себя",
+    modeHandover: "Мы берём клиента на себя",
     modeFix: "Я остаюсь контактным лицом (Fix)",
     projects: "Интересующие проекты",
     projectsText: "Другие проекты или пожелания",

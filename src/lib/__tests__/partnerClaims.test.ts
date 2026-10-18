@@ -42,6 +42,9 @@ test("partnerStage covers every status", () => {
     for (const l of PARTNER_LOCALES) assert.ok(lookup(l, key), `${l} ${key}`);
   }
 });
+test("partnerStage falls back for an unknown status", () => {
+  assert.deepEqual(partnerStage("BOGUS" as never), { step: null, key: "stages.onHold" });
+});
 test("lostCategory exhaustive", () => {
   const cats = new Set(["budget", "timing", "other_choice", "unreachable", "other"]);
   for (const r of LOST_REASONS) {

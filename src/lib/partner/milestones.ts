@@ -13,7 +13,8 @@ const STEP_BY_STATUS: Partial<Record<LeadStatusValue, number>> = {
 export function partnerStage(status: LeadStatusValue): { step: 1 | 2 | 3 | 4 | 5 | 6 | 7 | null; key: string } {
   if (status === "KEEP_CONTACT") return { step: null, key: "stages.onHold" };
   if (status === "LOST") return { step: null, key: "stages.lost" };
-  const step = STEP_BY_STATUS[status] as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  const step = (STEP_BY_STATUS[status] ?? null) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
+  if (step === null) return { step: null, key: "stages.onHold" };
   return { step, key: PARTNER_STEPS[step - 1] };
 }
 
@@ -95,7 +96,15 @@ export function milestonesFor(input: {
   }
   for (const m of messages) push({ at: m.createdAt, key: "milestones.message", body: m.body });
 
-  return out.sort((a, b) => b.at.getTime() - a.at.getTime());
+  // Same key within the same minute (e.g. duplicated STATUS_CHANGE rows) is one milestone.
+  const seen = new Set<string>();
+  const unique = out.filter((m) => {
+    const id = `${m.key}|${Math.floor(m.at.getTime() / 60000)}|${m.body ?? ""}`;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  return unique.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
 
 /** Minutes from claim creation to the first real contact after it; null if none yet. */

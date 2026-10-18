@@ -31,7 +31,13 @@ test("non-objects and unknown keys", () => {
 test("names", () => {
   bad({ firstName: "" }, "firstName");
   bad({ firstName: "x".repeat(81) }, "firstName");
-  bad({ lastName: "שלום" }, "lastName");
+  assert.ok(validateSubmission({ ...ok(), lastName: "שלום" }).ok);
+  bad({ firstName: "A\nB" }, "firstName");
+  bad({ lastName: "A\rB" }, "lastName");
+  bad({ projectsText: "a\nb" }, "projectsText");
+  bad({ phone: "123\n4567" }, "phone");
+  bad({ contactMode: "VIA_PARTNER_REP", repName: "A\nB", repPhone: "+357 99 123456" }, "repName");
+  assert.ok(validateSubmission({ ...ok(), comment: "a\nb" }).ok);
 });
 test("email or phone required", () => {
   bad({ email: undefined }, "email", "err.contactRequired");

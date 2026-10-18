@@ -49,6 +49,14 @@ test("booking confirmed, deals, unknown status ignored", () => {
   });
   assert.deepEqual(m.map((x) => x.key), ["milestones.dealCancelled", "milestones.dealEarned", "milestones.dealCreated", "milestones.viewingConfirmed"]);
 });
+test("identical key within the same minute is deduped", () => {
+  const m = milestonesFor({ ...base, deals: [], messages: [], interactions: [
+    { type: "STATUS_CHANGE", occurredAt: t("2026-03-05T00:00:05Z"), metadata: { toStatus: "OFFER" } },
+    { type: "STATUS_CHANGE", occurredAt: t("2026-03-05T00:00:40Z"), metadata: { toStatus: "OFFER" } },
+    { type: "STATUS_CHANGE", occurredAt: t("2026-03-05T00:02:00Z"), metadata: { toStatus: "OFFER" } },
+  ] });
+  assert.equal(m.length, 2);
+});
 test("milestone keys exist in every locale", () => {
   const all = ["Viewing", "Offer", "Reserved", "Closed", "OnHold", "Lost", "Contacted", "Communicating"].map((s) => `milestones.status${s}`)
     .concat(["firstContact", "viewingConfirmed", "dealCreated", "dealEarned", "dealCancelled", "message"].map((k) => `milestones.${k}`));
