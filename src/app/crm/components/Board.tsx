@@ -54,7 +54,7 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
     >
       <a
         className={`crm-card s-${card.status}${drag?.popId === card.id ? " pop" : ""}`}
-        href={`/admin/crm/${card.id}`}
+        href={`/crm/leads/${card.id}`}
         data-id={card.id}
         draggable={!!drag}
         aria-keyshortcuts={drag ? "ArrowLeft ArrowRight" : undefined}
@@ -84,6 +84,7 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
           <button ref={moveBtn} type="button" className="crm-move" aria-expanded={menu} aria-label={`Move ${card.name}`} onClick={toggleMenu}>Move</button>
           {menu && (
             <div className={`crm-menu${up ? " up" : ""}`} aria-label={`Move ${card.name} to`}>
+              <div className="sheet-title">Move {card.name} to…</div>
               {MENU_TARGETS.filter((s) => s !== card.status).map((s, i) => (
                 <button type="button" key={s} className={`s-${s}`} autoFocus={i === 0} onClick={() => { setMenu(false); drag.onMenu(card.id, s); }}>
                   <span className="dot" />{STATUS_LABEL[s]}

@@ -37,7 +37,11 @@ export async function moveLeadAction(id, to, input) {
   if (!r) throw new Error("no reply queued");
   return r;
 }
-export async function searchDevelopmentsAction() { return []; }
+export const searches = [];
+export async function searchDevelopmentsAction(q) {
+  searches.push(q);
+  return q === "" ? [{ id: "d1", label: "Eden Coast · Paphos" }] : [];
+}
 export async function assignLeadAction() { return { error: "not used" }; }
 `);
 
@@ -52,8 +56,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { Board } from ${JSON.stringify(join(ROOT, "src/app/crm/components/Board.tsx"))};
-import { calls, replies } from ${JSON.stringify(actionsStub)};
-export { React, createRoot, act, Board, calls, replies };
+import { calls, replies, searches } from ${JSON.stringify(actionsStub)};
+export { React, createRoot, act, Board, calls, replies, searches };
 `);
 try {
   const out = await build({
@@ -101,7 +105,7 @@ globalThis.MessageChannel = class {
 
 let mod;
 try { mod = await import(bundlePath); } finally { cleanup(); }
-const { React, createRoot, act, Board, calls, replies } = mod;
+const { React, createRoot, act, Board, calls, replies, searches } = mod;
 // pretendToBeVisual keeps a frame timer running; close the window or node never exits.
 after(() => win.close());
 
@@ -234,5 +238,40 @@ test("the move menu carries no ARIA menu roles", async () => {
   await click(btn);
   assert.equal(btn.getAttribute("aria-expanded"), "true");
   assert.equal(wrap.querySelector('[role="menu"], [role="menuitem"]'), null);
+  await act(async () => root.unmount());
+});
+
+test("the card links to the new cockpit", async () => {
+  const root = await mount([card("a", "NEW")]);
+  assert.match(doc.querySelector('.crm-card[data-id="a"]').getAttribute("href"), /^\/crm\/leads\/a$/);
+  await act(async () => root.unmount());
+});
+
+test("the deal dialog keeps showing the chosen project", async () => {
+  const root = await mount([card("a", "OFFER")]);
+  replies.push({ error: "Add the deal.", need: "deal" });
+  await menuMove("a", "Reserved");
+  assert.ok(dialog()?.hasAttribute("open"));
+  const wait = () => act(async () => { await new Promise((r) => setTimeout(r, 300)); });
+  await wait();
+  const opt = [...dialog().querySelectorAll('[role="option"]')].find((b) => b.textContent === "Eden Coast · Paphos");
+  assert.ok(opt, "option listed");
+  await click(opt);
+  searches.length = 0;
+  await wait();
+  const rows = [...dialog().querySelectorAll('[role="option"]')];
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].className, "on");
+  assert.match(rows[0].textContent, /Eden Coast · Paphos/);
+  assert.deepEqual(searches, [], "no search for the chosen label");
+  // Price makes the form submittable: the selection survived.
+  const price = dialog().querySelector("#crm-price");
+  await act(async () => {
+    const set = Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "value").set;
+    set.call(price, "412000");
+    price.dispatchEvent(new win.Event("input", { bubbles: true }));
+  });
+  const save = [...dialog().querySelectorAll("button")].find((b) => b.textContent === "Save deal and move");
+  assert.equal(save.disabled, false);
   await act(async () => root.unmount());
 });

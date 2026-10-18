@@ -18,12 +18,15 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
   const [q, setQ] = useState("");
   const [options, setOptions] = useState<{ id: string; label: string }[]>([]);
   const [devId, setDevId] = useState("");
+  const [devLabel, setDevLabel] = useState("");
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState("");
   const [reason, setReason] = useState<string>(LOST_REASONS[0]);
 
   useEffect(() => {
     const d = ref.current;
+    // StrictMode (next dev) runs mount, cleanup, mount: re-arm on every mount.
+    unmounting.current = false;
     return () => { unmounting.current = true; if (d?.open) d.close(); };
   }, []);
 
@@ -36,12 +39,14 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
 
   useEffect(() => {
     if (state.need !== "deal") return;
+    // The input text equals the chosen label: searching for it would empty the list.
+    if (devId !== "" && q === devLabel) return;
     let live = true;
     const t = setTimeout(() => {
       searchDevelopmentsAction(q).then((r) => { if (live) setOptions(r); }).catch(() => { if (live) setOptions([]); });
     }, 250);
     return () => { live = false; clearTimeout(t); };
-  }, [q, state.need]);
+  }, [q, state.need, devId, devLabel]);
 
   const priceNum = parseEuroPrice(price);
   const dealReady = devId !== "" && priceNum != null;
@@ -63,12 +68,14 @@ export function MoveDialog({ state, busy, onSubmit, onCancel, onClosed }: {
         {state.need === "deal" && (
           <>
             <label htmlFor="crm-dev-q">Project</label>
-            <input id="crm-dev-q" value={q} onChange={(e) => { setQ(e.target.value); setDevId(""); }} placeholder="Search published projects" autoComplete="off" autoFocus />
+            <input id="crm-dev-q" value={q} onChange={(e) => { setQ(e.target.value); setDevId(""); setDevLabel(""); }} placeholder="Search published projects" autoComplete="off" autoFocus />
             <div className="crm-options" role="listbox" aria-label="Projects">
-              {options.slice(0, 20).map((o) => (
-                <button type="button" key={o.id} role="option" aria-selected={devId === o.id} className={devId === o.id ? "on" : undefined}
-                  onClick={() => { setDevId(o.id); setQ(o.label); }}>{o.label}</button>
-              ))}
+              {devId !== "" && q === devLabel
+                ? <button type="button" role="option" aria-selected="true" className="on">✓ {devLabel}</button>
+                : options.slice(0, 20).map((o) => (
+                  <button type="button" key={o.id} role="option" aria-selected={devId === o.id} className={devId === o.id ? "on" : undefined}
+                    onClick={() => { setDevId(o.id); setDevLabel(o.label); setQ(o.label); }}>{o.label}</button>
+                ))}
             </div>
             <label htmlFor="crm-unit">Unit (optional)</label>
             <input id="crm-unit" value={unit} maxLength={40} onChange={(e) => setUnit(e.target.value)} placeholder="e.g. A203" autoComplete="off" />

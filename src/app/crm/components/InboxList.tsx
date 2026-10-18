@@ -53,7 +53,7 @@ export function InboxList({ items, staff }: { items: InboxItem[]; staff: { id: s
           const gone = leaving === it.id || assigned.has(it.id);
           return (
             <article key={it.id} className={`crm-ib${gone ? " leaving" : ""}`}>
-              <div className="t"><a href={`/admin/crm/${it.id}`}>{it.name}</a>{it.lang && <span className="lang">{it.lang}</span>}<span className="wait">{waited(it.createdAt)}</span></div>
+              <div className="t"><a href={`/crm/leads/${it.id}`}>{it.name}</a>{it.lang && <span className="lang">{it.lang}</span>}<span className="wait">{waited(it.createdAt)}</span></div>
               <div className="s"><span className={`src${it.isPartner ? " partner" : ""}`}>{it.source}</span>{it.interest && <> · {it.interest}</>}</div>
               <div className="sug">
                 {it.suggestion ? <span><b>{it.suggestion.name}</b> <span className="why">{it.suggestion.reason}</span></span> : <span className="why">Nobody is taking leads right now</span>}
