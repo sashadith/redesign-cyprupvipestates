@@ -27,6 +27,49 @@ enum Locale {
   he
 }
 
+// Partner portal (2026-10-19)
+enum PartnerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum PartnerType {
+  REAL_ESTATE
+  PRIVATE_BROKER
+  BANK
+  INVESTMENT
+  FAMILY_OFFICE
+  TOURISM
+  DESIGN
+  LEGAL
+  OTHER
+}
+
+enum PartnerTokenKind {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum PartnerMode {
+  HANDOVER
+  FIX
+}
+
+enum ContactMode {
+  DIRECT
+  VIA_PARTNER
+  VIA_PARTNER_REP
+  VIA_CLIENT_REP
+}
+
+enum PartnerClaimState {
+  ACTIVE
+  IN_REVIEW
+  REJECTED
+  EXPIRED
+}
+
 enum ContentStatus {
   DRAFT
   PUBLISHED
@@ -683,6 +726,7 @@ model MediaFolder {
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
   dealsCreated Deal[] @relation("DealsCreated")
+  managedPartners Partner[] @relation("PartnerManager")
   id                     String               @id @default(uuid())
   email                  String               @unique
   password               String
@@ -789,6 +833,14 @@ model Session {
 // ─── CRM / LEADS ─────────────────────────────────────────────────────────────
 model Lead {
   deals Deal[]
+  partnerId        String?
+  partner          Partner?       @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  partnerMode      PartnerMode?
+  contactMode      ContactMode?
+  contactRepName   String?
+  contactRepPhone  String?
+  claims           PartnerClaim[]
+  @@index([partnerId])
   id                   String                @id @default(uuid())
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -1995,4 +2047,100 @@ model CommissionRate {
 
   @@index([developerAccountId])
   @@map("commission_rates")
+}
+
+model Partner {
+  id             String        @id @default(uuid())
+  status         PartnerStatus @default(PENDING)
+  type           PartnerType
+  firstName      String
+  lastName       String
+  company        String?
+  country        String        // ISO 3166-1 alpha-2
+  phone          String
+  language       Locale        @default(en)
+  handoverShare  Decimal       @default(30) @db.Decimal(5, 2)
+  fixShare       Decimal       @default(50) @db.Decimal(5, 2)
+  trustMode      Boolean       @default(false)
+  refCode        String?       @unique
+  managerUserId  String?
+  manager        User?         @relation("PartnerManager", fields: [managerUserId], references: [id], onDelete: SetNull)
+  approvedAt     DateTime?
+  approvedById   String?
+  suspendedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  users          PartnerUser[]
+  acceptances    PartnerAgreementAcceptance[]
+  leads          Lead[]
+  claims         PartnerClaim[]
+  @@index([status])
+  @@map("partners")
+}
+
+model PartnerUser {
+  id              String         @id @default(uuid())
+  partnerId       String
+  partner         Partner        @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  email           String         @unique   // stored lower-cased
+  passwordHash    String
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  sessions        PartnerSession[]
+  tokens          PartnerToken[]
+  @@map("partner_users")
+}
+
+model PartnerSession {
+  id            String      @id @default(uuid())
+  partnerUserId String
+  partnerUser   PartnerUser @relation(fields: [partnerUserId], references: [id], onDelete: Cascade)
+  tokenHash     String      @unique
+  createdAt     DateTime    @default(now())
+  expiresAt     DateTime
+  lastSeenAt    DateTime    @default(now())
+  revokedAt     DateTime?
+  @@index([partnerUserId])
+  @@map("partner_sessions")
+}
+
+model PartnerToken {
+  id            String           @id @default(uuid())
+  partnerUserId String
+  partnerUser   PartnerUser      @relation(fields: [partnerUserId], references: [id], onDelete: Cascade)
+  kind          PartnerTokenKind
+  tokenHash     String           @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime         @default(now())
+  @@index([partnerUserId, kind])
+  @@map("partner_tokens")
+}
+
+model PartnerAgreementAcceptance {
+  id         String   @id @default(uuid())
+  partnerId  String
+  partner    Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  version    String
+  acceptedAt DateTime @default(now())
+  ip         String?
+  @@index([partnerId])
+  @@map("partner_agreement_acceptances")
+}
+
+model PartnerClaim {
+  id           String            @id @default(uuid())
+  leadId       String
+  lead         Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  partnerId    String
+  partner      Partner           @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  state        PartnerClaimState
+  createdAt    DateTime          @default(now())
+  reviewedAt   DateTime?
+  reviewedById String?
+  @@index([leadId])
+  @@index([partnerId, state])
+  @@map("partner_claims")
 }
