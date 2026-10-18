@@ -18,10 +18,26 @@ test("parseSummary rejects more than 5 bullets, non-strings and empty", () => {
   assert.equal(parseSummary({ bullets: ["  "], nextStep: "x" }), null);
   assert.equal(parseSummary({ bullets: ["a"], nextStep: "" }), null);
   assert.equal(parseSummary({ bullets: ["a"] }), null);
-  assert.equal(parseSummary({ bullets: ["a".repeat(201)], nextStep: "x" }), null);
-  assert.equal(parseSummary({ bullets: ["a"], nextStep: "x".repeat(201) }), null);
+  assert.equal(parseSummary({ bullets: ["a".repeat(401)], nextStep: "x" }), null);
+  assert.equal(parseSummary({ bullets: ["a"], nextStep: "x".repeat(401) }), null);
   assert.equal(parseSummary(null), null);
   assert.equal(parseSummary("bullets"), null);
+});
+test("parseSummary truncates lines of 201-400 characters at a word boundary", () => {
+  const long = "Wants a three bedroom villa near the sea ".repeat(8).trim(); // 327 chars
+  const r = parseSummary({ bullets: [long, "b".repeat(200)], nextStep: long });
+  assert.ok(r);
+  const [first, second] = r!.bullets;
+  assert.ok(first.length <= 200, `got ${first.length}`);
+  assert.ok(first.endsWith("…"));
+  assert.ok(long.startsWith(first.slice(0, -1)), "a prefix of the original");
+  assert.ok(!/\s…$/.test(first) && long[first.length - 1] === " ", "cut at a space, no trailing blank");
+  assert.equal(second, "b".repeat(200), "200 characters stay untouched");
+  assert.equal(r!.nextStep, first);
+  // One 300-character word: no boundary, hard cut.
+  const word = parseSummary({ bullets: ["w".repeat(300)], nextStep: "x" })!.bullets[0];
+  assert.equal(word, "w".repeat(199) + "…");
+  assert.ok(parseSummary({ bullets: ["a".repeat(400)], nextStep: "x" }));
 });
 
 test("parseIntake keeps numeric budgets and drops string ones", () => {
@@ -109,6 +125,11 @@ test("intakeToFormPatch fills only empty fields and names what it filled", () =>
   const { patch, filled } = intakeToFormPatch(form, {
     firstName: "Anna", email: "other@x.de", budgetMax: 450000, languagePreference: "de", interestText: "Sea view", propertyTypes: ["villa"],
   });
-  assert.deepEqual(patch, { firstName: "Anna", budgetMax: "450000", languagePreference: "de", message: "Sea view\nProperty types: villa" });
+  assert.deepEqual(patch, { firstName: "Anna", budgetMax: "450000", languagePreference: "de", message: "(from pasted text) Sea view\nProperty types: villa" });
   assert.deepEqual(filled, ["First name", "Language", "Budget to (EUR)", "What the lead asked for"]);
+});
+test("intakeToFormPatch marks property types alone as pasted text too", () => {
+  const form = { firstName: "", message: "" };
+  assert.deepEqual(intakeToFormPatch(form, { propertyTypes: ["villa", "apartment"] }).patch, { message: "(from pasted text) Property types: villa, apartment" });
+  assert.deepEqual(intakeToFormPatch(form, { firstName: "Anna" }).patch, { firstName: "Anna" });
 });

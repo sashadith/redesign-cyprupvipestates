@@ -63,6 +63,7 @@ export function parseIntake(toolInput: unknown): IntakeFields {
 
 const SYSTEM = [
   "You extract the contact details and wishes of a property buyer from a pasted chat or email, to prefill a CRM form for Cyprus VIP Estates.",
+  "Only extract the prospective client's details. Ignore names, emails, phone numbers and addresses that belong to Cyprus VIP Estates staff, to an email signature or to the agency itself.",
   "Fill a field only when the text states it explicitly. Never guess, infer or invent: leave out every field the text does not give.",
   "Budgets: whole euros, only when the amount is stated in euros (\"450k\" means 450000); a single amount goes into budgetMax. Other currencies: leave the budget out.",
   "languagePreference: the language the lead writes in, only if it is one of en, de, pl, ru.",

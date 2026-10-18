@@ -12,6 +12,8 @@ export type SummaryResult = { ok: true; bullets: string[]; nextStep: string } | 
 const TEXT_CAP = 1500;
 const TIMELINE_CAP = 30;
 const LINE_CAP = 200;
+// Lines up to this long are shortened to LINE_CAP; longer ones are malformed.
+const LINE_HARD_CAP = 400;
 // Bodies written by us; every other type (EMAIL_IN, WHATSAPP_IN, SYSTEM rows
 // that may echo a form message, ...) is treated as written by the lead.
 const STAFF_TYPES = new Set(["NOTE", "CALL", "EMAIL_OUT", "WHATSAPP_OUT", "STATUS_CHANGE"]);
@@ -60,10 +62,17 @@ export function buildSummaryPayload(lead: SummaryLead, interactions: SummaryInte
   };
 }
 
+// A slightly long line is cut at the last space that fits (hard cut when the
+// only space is too early) and ends in "…", LINE_CAP characters at most.
 const cleanLine = (v: unknown): string | null => {
   if (typeof v !== "string") return null;
   const t = v.trim();
-  return t && t.length <= LINE_CAP ? t : null;
+  if (!t || t.length > LINE_HARD_CAP) return null;
+  if (t.length <= LINE_CAP) return t;
+  const head = t.slice(0, LINE_CAP);
+  const space = Math.max(head.lastIndexOf(" "), head.lastIndexOf("\n"));
+  const cut = space >= LINE_CAP / 2 ? head.slice(0, space).trimEnd() : head.slice(0, LINE_CAP - 1);
+  return `${cut}…`;
 };
 
 export function parseSummary(toolInput: unknown): { bullets: string[]; nextStep: string } | null {

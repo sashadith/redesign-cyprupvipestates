@@ -18,7 +18,8 @@ export function intakeToFormPatch(form: FormState, fields: IntakeFields): { patc
   const values: FormState = {};
   for (const [k, v] of Object.entries(rest)) if (v !== undefined && v !== null) values[k] = String(v);
   const message = [interestText, propertyTypes?.length ? `Property types: ${propertyTypes.join(", ")}` : null].filter(Boolean).join("\n");
-  if (message) values.message = message;
+  // Marked so nobody mistakes Claude's wording for the lead's own words.
+  if (message) values.message = `(from pasted text) ${message}`;
 
   const patch: FormState = {};
   const filled: string[] = [];
