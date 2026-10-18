@@ -245,9 +245,9 @@
 .crm-ck-sechead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .crm-ck-sechead span { font-size: 12.5px; }
 
-.crm-ck-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
-.crm-ck-steps button { width: 100%; height: 100%; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted);
-  border-radius: 10px; padding: 8px; font: 600 12px var(--body); text-align: left; cursor: pointer; transition: background .15s, border-color .15s; }
+.crm-ck-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.crm-ck-steps button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted);
+  border-radius: 10px; padding: 8px 12px; font: 600 12px var(--body); text-align: left; cursor: pointer; transition: background .15s, border-color .15s; }
 .crm-ck-steps li.done button { background: var(--panel); color: var(--ink); }
 .crm-ck-steps button[aria-current="step"] { border-color: var(--sc); box-shadow: inset 0 0 0 1px var(--sc); color: var(--ink); background: var(--panel); opacity: 1; cursor: default; }
 .crm-ck-steps button:not(:disabled):hover { border-color: var(--sc); }
@@ -257,7 +257,6 @@
 .crm-ck-side .crm-btn { display: inline-flex; align-items: center; gap: 7px; }
 .crm-ck-side .crm-btn.on { border-color: var(--sc); box-shadow: inset 0 0 0 1px var(--sc); opacity: 1; }
 @media (max-width: 720px) {
-  .crm-ck-steps { grid-template-columns: 1fr 1fr; }
   .crm-ck-title h1 { font-size: 24px; }
 }
 
