@@ -94,3 +94,34 @@ export function validateRegistration(raw: unknown): RegistrationResult {
     },
   };
 }
+
+export interface ProfileInput {
+  firstName: string;
+  lastName: string;
+  company: string | null;
+  language: PartnerLanguage;
+}
+
+export type ProfileResult = { ok: true; data: ProfileInput } | { ok: false; field: string; code: string };
+
+const PROFILE_ALLOWED = new Set(["firstName", "lastName", "company", "language"]);
+
+/** Profile edit: same rules as registration for the editable fields; phone, email and type are locked. */
+export function validateProfile(raw: unknown): ProfileResult {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, field: "_", code: "err.invalid" };
+  const r = raw as Record<string, unknown>;
+  for (const k of Object.keys(r)) if (!PROFILE_ALLOWED.has(k)) return { ok: false, field: k, code: "err.unknownField" };
+  const firstName = str(r.firstName);
+  if (!firstName || firstName.length > 80 || badText(firstName)) return { ok: false, field: "firstName", code: "err.firstName" };
+  const lastName = str(r.lastName);
+  if (!lastName || lastName.length > 80 || badText(lastName)) return { ok: false, field: "lastName", code: "err.lastName" };
+  let company: string | null = null;
+  if (r.company !== undefined && r.company !== null && r.company !== "") {
+    const c = str(r.company);
+    if (typeof r.company !== "string" || c.length > 120 || badText(c)) return { ok: false, field: "company", code: "err.company" };
+    company = c || null;
+  }
+  const language = str(r.language);
+  if (!(PARTNER_LANGUAGES as readonly string[]).includes(language)) return { ok: false, field: "language", code: "err.language" };
+  return { ok: true, data: { firstName, lastName, company, language: language as PartnerLanguage } };
+}

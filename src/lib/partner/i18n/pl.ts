@@ -57,6 +57,8 @@ export const pl: PartnerDict = {
     resend: "Wyślij nowy link",
     resent: "Jeśli ten adres e-mail jest zarejestrowany, wysłaliśmy nowy link.",
     goLogin: "Przejdź do logowania",
+    confirmIntro: "Prosimy o potwierdzenie adresu e-mail, aby dokończyć rejestrację.",
+    confirm: "Potwierdzam adres e-mail",
   },
   login: {
     title: "Logowanie partnera",
@@ -82,6 +84,7 @@ export const pl: PartnerDict = {
     submit: "Zapisz hasło",
     success: "Hasło zostało zmienione. Mogą Państwo się teraz zalogować.",
     invalid: "Ten link jest nieprawidłowy lub wygasł. Prosimy o wygenerowanie nowego.",
+    requestNew: "Poproś o nowy link",
   },
   agreement: {
     title: "Umowa partnerska",
@@ -114,6 +117,9 @@ export const pl: PartnerDict = {
     currentPassword: "Obecne hasło",
     newPassword: "Nowe hasło",
     passwordSaved: "Hasło zostało zmienione.",
+    email: "Adres e-mail",
+    type: "Rodzaj działalności",
+    lockedNote: "W celu zmiany numeru telefonu, adresu e-mail lub rodzaju działalności prosimy o kontakt.",
   },
   mail: {
     signature: "Z poważaniem\nCyprus VIP Estates",
@@ -139,6 +145,11 @@ export const pl: PartnerDict = {
       intro: "mamy dobrą wiadomość: Państwa konto partnera zostało zatwierdzone. Mogą Państwo się teraz zalogować i znaleźć swój osobisty link polecający.",
       button: "Zaloguj się",
     },
+  },
+  notFound: {
+    title: "Nie znaleziono strony",
+    text: "Szukana strona nie istnieje lub została przeniesiona.",
+    back: "Powrót do strony głównej",
   },
   err: {
     invalid: "Przesłane dane są nieprawidłowe.",

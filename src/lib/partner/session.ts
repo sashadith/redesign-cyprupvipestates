@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -35,8 +36,11 @@ export async function createPartnerSession(partnerUserId: string): Promise<void>
   });
 }
 
-/** Valid (unrevoked, unexpired) session of an existing user, else null. Status is returned as-is. */
-export async function getPartner(): Promise<PartnerSessionInfo | null> {
+/**
+ * Valid (unrevoked, unexpired) session of an existing user, else null. Status is returned as-is.
+ * Memoised per request with React cache() (layout + page share one lookup).
+ */
+export const getPartner = cache(async function getPartner(): Promise<PartnerSessionInfo | null> {
   const token = cookies().get(PARTNER_COOKIE)?.value;
   if (!token) return null;
   const session = await prisma.partnerSession.findUnique({
@@ -68,7 +72,7 @@ export async function getPartner(): Promise<PartnerSessionInfo | null> {
     user: { id: partnerUser.id, email: partnerUser.email },
     partner: { ...partnerUser.partner, language: String(partnerUser.partner.language) },
   };
-}
+});
 
 /** Redirect paths are partner-host paths; the middleware adds the /partner-portal prefix. */
 export async function requirePartner(opts: { active?: boolean } = {}): Promise<PartnerSessionInfo> {

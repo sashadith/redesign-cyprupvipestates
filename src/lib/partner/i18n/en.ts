@@ -55,6 +55,8 @@ export const en = {
     resend: "Send a new link",
     resent: "If this email is registered, we have sent a new link.",
     goLogin: "Go to log in",
+    confirmIntro: "Please confirm your email address to complete your registration.",
+    confirm: "Confirm my email",
   },
   login: {
     title: "Partner log in",
@@ -80,6 +82,7 @@ export const en = {
     submit: "Save password",
     success: "Your password has been changed. You can now log in.",
     invalid: "This link is invalid or has expired. Please request a new one.",
+    requestNew: "Request a new link",
   },
   agreement: {
     title: "Partner agreement",
@@ -112,6 +115,9 @@ export const en = {
     currentPassword: "Current password",
     newPassword: "New password",
     passwordSaved: "Your password has been changed.",
+    email: "Email address",
+    type: "Type of business",
+    lockedNote: "Please contact us to change your phone number, email address or type of business.",
   },
   mail: {
     signature: "Kind regards,\nCyprus VIP Estates",
@@ -137,6 +143,11 @@ export const en = {
       intro: "Good news: your partner account is approved. You can now log in and find your personal referral link.",
       button: "Log in",
     },
+  },
+  notFound: {
+    title: "Page not found",
+    text: "The page you are looking for does not exist or has moved.",
+    back: "Back to the start page",
   },
   err: {
     invalid: "The submitted data is not valid.",
