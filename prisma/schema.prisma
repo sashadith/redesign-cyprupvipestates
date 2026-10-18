@@ -1104,6 +1104,47 @@ model DevelopmentSnapshot {
 }
 
 // ─── ANALYTICS (self-hosted) ─────────────────────────────────────────────────
+// What a visitor DID on a page, as opposed to PageView's "was here".
+//
+// Built 2026-10-17 to answer a question the data could not: 4,085 real visitors
+// reached project pages over 90 days and 12 enquired (0.29%). The only contact
+// form on a project page sits at line 448 of 484 — after the gallery, facts,
+// description, unit table, plans and map. Whether the other 4,073 saw it and
+// declined, or never scrolled that far, was unknowable, and without that the
+// obvious fix ("move the form up") is a guess that would have been impossible
+// to evaluate afterwards.
+//
+// Same contract as PageView, deliberately: cookieless, no PII, no IP, the same
+// daily-rotating visitorHash, bot/prefetch/test rows RECORDED and flagged
+// rather than dropped so exclusions stay visible. One row per (view, type):
+// the client fires each type at most once per page view, so `scroll_90` means
+// "this visitor reached 90% once", never "scrolled up and down six times".
+model PageEvent {
+  id          Int      @id @default(autoincrement())
+  path        String
+  locale      String?
+  // "scroll_50" | "scroll_90" | "form_view" | "cta_click" | "wa_click".
+  // A string, not an enum: adding a measurement should not need a migration,
+  // and a type nobody queries is harmless noise rather than a schema change.
+  type        String
+  // The Development UUID when the page is a project page — the same key the
+  // Meta pixel and the Xellex bridge use, so engagement can be joined to a
+  // specific property instead of a path that changes when a project is renamed.
+  contentId   String?
+  visitorHash String?
+  deviceType  String?
+  country     String?
+  isBot       Boolean  @default(false)
+  isPrefetch  Boolean  @default(false)
+  isTest      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([path])
+  @@index([contentId])
+  @@map("page_events")
+}
+
 model PageView {
   id          Int      @id @default(autoincrement())
   path        String
