@@ -6,7 +6,7 @@ import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { writeAudit } from "@/lib/crm/audit";
 import { parseRate } from "@/lib/crm/rateForm";
-import { isPayoutAction, parseStageDate, payoutActions, stageOrderError, type PayoutAction } from "@/lib/crm/commissionActions";
+import { isIdArg, isPayoutAction, parseStageDate, payoutActions, stageOrderError, type PayoutAction } from "@/lib/crm/commissionActions";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 
 // Commissions screen writes (CRM v2, 2026-10-18). Money records: every write and
@@ -24,10 +24,12 @@ async function manager() {
 export async function saveRateAction(input: { developerAccountId: string; developmentId: string | null; rate: string }): Promise<Result> {
   const actor = await manager();
   if (!actor) return DENIED;
-  const parsed = parseRate(String(input.rate ?? ""));
+  const developerAccountId: unknown = input?.developerAccountId;
+  const developmentId: unknown = input?.developmentId === "" ? null : input?.developmentId ?? null;
+  if (!isIdArg(developerAccountId)) return { error: "Developer account missing — reload." };
+  if (developmentId !== null && !isIdArg(developmentId)) return { error: "Project not recognised — reload." };
+  const parsed = parseRate(String(input?.rate ?? ""));
   if (!parsed.ok) return { error: parsed.error };
-  const { developerAccountId } = input;
-  const developmentId = input.developmentId || null;
 
   const account = await prisma.developerAccount.findUnique({ where: { id: developerAccountId }, select: { id: true } });
   if (!account) return { error: "Developer account not found — reload." };
@@ -54,6 +56,8 @@ export async function saveRateAction(input: { developerAccountId: string; develo
     });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return { error: "Someone else just saved this rate — reload." };
+    // The row was deleted between our read and the update.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return { error: "This rate no longer exists — reload." };
     throw e;
   }
   revalidatePath("/crm/commissions");
@@ -63,15 +67,24 @@ export async function saveRateAction(input: { developerAccountId: string; develo
 export async function deleteRateAction(rateId: string): Promise<Result> {
   const actor = await manager();
   if (!actor) return DENIED;
-  const deleted = await prisma.$transaction(async (tx) => {
-    const row = await tx.commissionRate.findUnique({ where: { id: rateId } });
-    if (!row) return false;
-    await tx.commissionRate.delete({ where: { id: rateId } });
-    await writeAudit(actor, "crm_rate_delete", "CommissionRate", rateId, {
-      developerAccountId: row.developerAccountId, developmentId: row.developmentId, ratePercent: row.ratePercent.toFixed(2), note: row.note,
-    }, tx);
-    return true;
-  });
+  if (!isIdArg(rateId)) return { error: "Rate not recognised — reload." };
+  let deleted: boolean;
+  try {
+    deleted = await prisma.$transaction(async (tx) => {
+      const row = await tx.commissionRate.findUnique({ where: { id: rateId } });
+      if (!row) return false;
+      await tx.commissionRate.delete({ where: { id: rateId } });
+      await writeAudit(actor, "crm_rate_delete", "CommissionRate", rateId, {
+        developerAccountId: row.developerAccountId, developmentId: row.developmentId, ratePercent: row.ratePercent.toFixed(2), note: row.note,
+      }, tx);
+      return true;
+    });
+  } catch (e) {
+    // A parallel delete won between our read and our delete. (A delete cannot
+    // hit a unique index, so P2002 needs no mapping here.)
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") deleted = false;
+    else throw e;
+  }
   if (!deleted) return { error: "This rate no longer exists — reload." };
   revalidatePath("/crm/commissions");
   return { ok: true };
@@ -86,6 +99,7 @@ const STAGE_FIELD: Record<PayoutAction, "developerPaidAt" | "paidOutAt" | "cance
 export async function setDealStageAction(dealId: string, to: PayoutAction, onDate: string): Promise<Result> {
   const actor = await manager();
   if (!actor) return DENIED;
+  if (!isIdArg(dealId)) return { error: "Deal not recognised — reload." };
   if (!isPayoutAction(to)) return { error: "Unknown payout step." };
   const date = parseStageDate(String(onDate ?? ""));
   if (!date.ok) return { error: date.error };

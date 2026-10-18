@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isPayoutAction, parseStageDate, payoutActions, stageOrderError } from "@/lib/crm/commissionActions";
+import { isIdArg, isPayoutAction, parseStageDate, payoutActions, stageOrderError } from "@/lib/crm/commissionActions";
 import { canTransitionCommission, COMMISSION_STATUSES } from "@/lib/crm/commission";
 test("payout buttons per stage", () => {
   assert.deepEqual(payoutActions("EXPECTED"), ["CANCELLED"]);
@@ -31,4 +31,19 @@ test("a payout stage cannot predate the stage before it", () => {
   assert.equal(stageOrderError("PAID_OUT", "2026-10-01", deal), null);
   assert.equal(stageOrderError("CANCELLED", "2000-01-01", deal), null);
   assert.equal(stageOrderError("DEVELOPER_PAID", "2000-01-01", { earnedAt: null, developerPaidAt: null }), null);
+});
+
+test("id arguments from the client: non-empty strings of at most 64 characters", () => {
+  for (const ok of ["c", "cmabc123", "x".repeat(64)]) assert.ok(isIdArg(ok), ok);
+  for (const bad of ["", "x".repeat(65), null, undefined, 3, {}, ["a"]]) assert.equal(isIdArg(bad), false, JSON.stringify(bad));
+});
+
+test("the commission actions guard their id arguments and map vanished rows (P2025)", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync("src/app/crm/commissions/actions.ts", "utf8");
+  assert.match(src, /!isIdArg\(developerAccountId\)/);
+  assert.match(src, /developmentId !== null && !isIdArg\(developmentId\)/);
+  assert.match(src, /!isIdArg\(rateId\)/);
+  assert.match(src, /!isIdArg\(dealId\)/);
+  assert.equal(src.match(/e\.code === "P2025"/g)?.length, 2, "save and delete both map P2025");
 });

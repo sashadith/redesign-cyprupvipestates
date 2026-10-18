@@ -10,6 +10,12 @@ export function payoutActions(status: CommissionStatusValue): PayoutAction[] {
   return PAYOUT_ACTIONS.filter((a) => canTransitionCommission(status, a) && !(status === "EXPECTED" && a !== "CANCELLED"));
 }
 
+// Server-action arguments arrive from the client as-is: an id must be a
+// non-empty string of at most 64 characters (cuid ids are ~25).
+export function isIdArg(v: unknown): v is string {
+  return typeof v === "string" && v.length > 0 && v.length <= 64;
+}
+
 export function isPayoutAction(v: unknown): v is PayoutAction {
   return typeof v === "string" && (PAYOUT_ACTIONS as readonly string[]).includes(v);
 }
