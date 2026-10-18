@@ -36,11 +36,21 @@ export const REGISTRATION_ERROR_CODES = [
 const ALLOWED = new Set([
   "firstName", "lastName", "company", "country", "vatId", "phone", "email", "language", "type", "password", "acceptAgreement",
 ]);
-const EMAIL_RE = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[^\s@<>()[\],;:"]{2,}$/;
+export const PARTNER_EMAIL_RE = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[^\s@<>()[\],;:"]{2,}$/;
 // eslint-disable-next-line no-control-regex
 const CONTROL_RE = /[\u0000-\u001f\u007f]/;
 const HEBREW_RE = /[֐-׿]/;
 const TYPES = Object.values(PartnerType) as string[];
+
+/** Phone as typed (≤ 40 chars, digits/space/().-, optional leading +) → "+digits" (6–20 digits); null when invalid. */
+export function normalizePartnerPhone(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.length > 40) return null;
+  const phoneRaw = raw.trim();
+  if (!/^\+?[\d\s().-]+$/.test(phoneRaw)) return null;
+  const digits = phoneRaw.replace(/\D/g, "");
+  if (digits.length < 6 || digits.length > 20) return null;
+  return (phoneRaw.startsWith("+") ? "+" : "") + digits;
+}
 
 const fail = (field: string, code: string): RegistrationResult => ({ ok: false, field, code });
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
@@ -69,15 +79,11 @@ export function validateRegistration(raw: unknown): RegistrationResult {
   const vat = checkPartnerVatId({ country, company, vatId: r.vatId });
   if (!vat.ok) return fail("vatId", vat.code);
 
-  if (typeof r.phone === "string" && r.phone.length > 40) return fail("phone", "err.phone");
-  const phoneRaw = str(r.phone);
-  if (!/^\+?[\d\s().-]+$/.test(phoneRaw)) return fail("phone", "err.phone");
-  const digits = phoneRaw.replace(/\D/g, "");
-  if (digits.length < 6 || digits.length > 20) return fail("phone", "err.phone");
-  const phone = (phoneRaw.startsWith("+") ? "+" : "") + digits;
+  const phone = normalizePartnerPhone(r.phone);
+  if (!phone) return fail("phone", "err.phone");
 
   const email = str(r.email).toLowerCase();
-  if (email.length > 254 || !EMAIL_RE.test(email)) return fail("email", "err.email");
+  if (email.length > 254 || !PARTNER_EMAIL_RE.test(email)) return fail("email", "err.email");
 
   const language = str(r.language);
   if (!(PARTNER_LANGUAGES as readonly string[]).includes(language)) return fail("language", "err.language");
