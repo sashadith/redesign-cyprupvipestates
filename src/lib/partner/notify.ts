@@ -124,6 +124,15 @@ export function dueWhere(now: Date): Prisma.PartnerNotificationWhereInput {
   return { sentAt: null, OR };
 }
 
+/** A row still marked "sending" this long after it was claimed belongs to a run that died mid-send. */
+export const STUCK_SENDING_MS = 60 * 60_000;
+export const INTERRUPTED_ERROR = "interrupted while sending";
+
+/** Rows claimed (sentAt set, error "sending") more than STUCK_SENDING_MS ago: recovered as a failed attempt. */
+export function stuckSendingWhere(now: Date): Prisma.PartnerNotificationWhereInput {
+  return { error: SENDING_MARK, sentAt: { lt: new Date(now.getTime() - STUCK_SENDING_MS) } };
+}
+
 /** Rows that gave up: unsent after MAX_ATTEMPTS failures. */
 export function deadWhere(): Prisma.PartnerNotificationWhereInput {
   return { sentAt: null, attempts: { gte: MAX_ATTEMPTS } };

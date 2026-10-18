@@ -8,8 +8,8 @@ import { visibleName } from "./clientDto";
 import { pickPartnerLocale } from "./i18n";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import {
-  SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail, clientLink, deadWhere, dueWhere,
-  firstNameOf, isUnchangedStage, messageIdFromRefKey, notificationGate, notifyStartFromEnv, planStageNotifications, stageKeyFor, stageRefKey,
+  INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail, clientLink, deadWhere, dueWhere,
+  firstNameOf, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, planStageNotifications, stageKeyFor, stageRefKey,
   truncateError, type StageRow,
 } from "./notify";
 
@@ -172,10 +172,18 @@ export async function withNotifyLock<T>(fn: () => Promise<T>): Promise<T | null>
  * Each row is claimed with a guarded update (sentAt: null → now, error "sending") before anything is
  * mailed, so two runs can never mail the same row. A failed send releases the row (sentAt null,
  * failedAt, error) and charges an attempt; due again after the backoff (retryAt), up to MAX_ATTEMPTS.
- * Three consecutive transport errors stop the batch without charging those rows.
+ * Three consecutive transport errors stop the batch without charging those rows. Rows left at "sending"
+ * for over an hour (a run died mid-send) are first released as a failed attempt.
  */
 export async function sendPendingNotifications(now: Date, start: Date, limit = 50): Promise<SendResult> {
   const result: SendResult = { sent: 0, skipped: {}, failed: 0, dead: 0, errors: [] };
+  // A run that died after claiming a row left it at "sending": release it as a failed attempt (it may or
+  // may not have been mailed — at most one duplicate, against a lost mail), then backoff/dead apply as usual.
+  const recovered = await prisma.partnerNotification.updateMany({
+    where: stuckSendingWhere(now),
+    data: { sentAt: null, attempts: { increment: 1 }, failedAt: now, error: INTERRUPTED_ERROR },
+  });
+  if (recovered.count) result.errors.push(`recovered ${recovered.count} row(s) interrupted while sending`);
   const [rows, dead] = await Promise.all([
     prisma.partnerNotification.findMany({
       where: dueWhere(now),

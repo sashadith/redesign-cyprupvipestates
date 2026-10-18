@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PARTNER_LOCALES, dict, type PartnerLocale } from "@/lib/partner/i18n";
 import {
-  BACKOFF_BASE_MS, MAX_ATTEMPTS, TRANSPORT_BREAKER, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail,
+  BACKOFF_BASE_MS, MAX_ATTEMPTS, SENDING_MARK, STUCK_SENDING_MS, stuckSendingWhere, TRANSPORT_BREAKER, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail,
   clientLink, deadWhere, dueWhere, firstNameOf, isDue, isUnchangedStage, messageIdFromRefKey, notificationGate, notifyStartFromEnv,
   planStageNotifications, retryAt, stageKeyFor, stageRefKey, truncateError, type StageRow,
 } from "@/lib/partner/notify";
@@ -331,4 +331,11 @@ test("notification gate: rejection is told regardless of the lead; everything el
   }
   assert.equal(g("CLAIM_OUTCOME", false, null), "claim missing");
   assert.equal(g("CLAIM_OUTCOME", false, { ownedByPartner: false, effective: "REJECTED" }), "claim missing");
+});
+
+test("stuck rows: only rows still at 'sending' and claimed over an hour ago are recovered", () => {
+  const now = new Date("2026-10-20T12:00:00Z");
+  assert.equal(STUCK_SENDING_MS, 60 * 60_000);
+  assert.deepEqual(stuckSendingWhere(now), { error: SENDING_MARK, sentAt: { lt: new Date("2026-10-20T11:00:00Z") } });
+  assert.equal(SENDING_MARK, "sending");
 });

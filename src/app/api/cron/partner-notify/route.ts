@@ -1,7 +1,7 @@
 // Partner notification outbox (partner portal phase 3b). ENGLISH (internal).
 // 1. collect: STATUS_CHANGE rows on leads with an ACTIVE claim become STAGE outbox rows
 //    (debounced 10 min, several changes of one lead collapse into one mail with the latest stage).
-// 2. send: up to 50 due rows (STAGE / MESSAGE / CLAIM_OUTCOME), oldest first, as localized e-mails
+// 2. send (rows stuck at "sending" > 60 min are first released as a failed attempt): up to 50 due rows (STAGE / MESSAGE / CLAIM_OUTCOME), oldest first, as localized e-mails
 //    to the partner's first user. Each row is claimed (sentAt set, error "sending") before mailing, so
 //    two runs never mail the same row; a failed send releases it for a retry after a backoff
 //    (10 min · 2^(attempts−1)), up to 6 attempts — the summary reports the given-up ("dead") count.
