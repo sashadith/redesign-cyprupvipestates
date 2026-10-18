@@ -162,3 +162,64 @@
 @media (max-width: 900px) { .crm-team-row { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .crm-switch-track, .crm-switch-track i { transition: none; } }
 .crm-team-fs { display: contents; border: 0; padding: 0; margin: 0; min-width: 0; }
+/* Commissions (2026-10-18) */
+.crm-comm-section { display: grid; gap: 12px; }
+.crm-comm-sechead { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+.crm-comm-sechead h2 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -.02em; }
+.crm-comm-sechead p { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 70ch; }
+.crm-comm-search, .crm-rate-input input, .crm-rate-add select, .crm-confirm input[type="date"] { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: 500 13px var(--body); background: var(--panel); color: var(--ink); }
+.crm-comm-search { min-width: 220px; }
+.crm-comm-search:focus-visible, .crm-rate-input input:focus-visible, .crm-rate-add select:focus-visible, .crm-confirm input:focus-visible, .crm-linkbtn:focus-visible, .crm-deals a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-rates { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.crm-rate-acc { display: grid; gap: 10px; }
+.crm-rate-head { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
+.crm-rate-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.crm-rate-what { color: var(--muted); font-size: 12.5px; min-width: 60px; }
+.crm-rate-overrides { list-style: none; margin: 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 6px; }
+.crm-rate-overrides .crm-rate-what { color: var(--ink); font-size: 13px; min-width: 180px; }
+.crm-rate-input { display: inline-flex; align-items: center; gap: 4px; position: relative; flex-wrap: wrap; }
+.crm-rate-input input { width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+.crm-rate-input input[aria-invalid="true"] { border-color: var(--danger); }
+.crm-rate-err { flex-basis: 100%; color: var(--danger); font-size: 12px; font-style: normal; }
+.crm-rate-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.crm-rate-add-label { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.crm-rate-add select { max-width: 100%; min-width: 0; }
+.crm-linkbtn { border: 0; background: none; padding: 4px 2px; color: var(--muted); font: 600 12.5px var(--body); text-decoration: underline; cursor: pointer; }
+.crm-confirm { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; }
+.crm-confirm label { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.crm-btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.crm-btn.quiet { color: var(--muted); }
+.crm-muted { color: var(--muted); }
+.crm-warn { color: var(--warn); font-weight: 700; }
+.crm-comm-totals { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.crm-comm-totals dt { color: var(--muted); font-size: 12.5px; font-weight: 600; display: flex; justify-content: space-between; gap: 6px; }
+.crm-comm-totals dt span, .crm-comm-totals dd { font-variant-numeric: tabular-nums; }
+.crm-comm-totals dd { margin: 4px 0 0; font-family: var(--display); font-weight: 700; font-size: 20px; }
+.crm-deals-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
+.crm-deals { width: 100%; border-collapse: collapse; font-size: 13px; }
+.crm-deals th { text-align: left; color: var(--muted); font-size: 12px; font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.crm-deals td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.crm-deals tr:last-child td { border-bottom: 0; }
+.crm-deals .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.crm-deals a { color: var(--ink); font-weight: 700; }
+.crm-deal-dates { display: grid; gap: 1px; margin-top: 4px; color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.crm-deal-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.crm-pill.c-EARNED { color: var(--good); border-color: currentColor; }
+.crm-pill.c-DEVELOPER_PAID { color: var(--accent); border-color: currentColor; }
+.crm-pill.c-PAID_OUT { background: var(--accent); color: var(--onaccent); border-color: var(--accent); }
+@media (max-width: 900px) {
+  .crm-comm-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crm-deals-wrap { background: none; border: 0; overflow: visible; }
+  .crm-deals, .crm-deals tbody, .crm-deals tr, .crm-deals td { display: block; width: 100%; }
+  .crm-deals thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .crm-deals tr { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 12px; margin-bottom: 10px; }
+  .crm-deals td { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line); text-align: right; }
+  .crm-deals td::before { content: attr(data-label); color: var(--muted); font-size: 12px; font-weight: 600; text-align: left; flex-shrink: 0; }
+  .crm-deals tr td:last-child { border-bottom: 0; }
+  .crm-deal-actions, .crm-confirm { justify-content: flex-end; }
+  .crm-rate-overrides .crm-rate-what { min-width: 0; flex-basis: 100%; }
+  .crm-comm-search { min-width: 0; width: 100%; }
+}
+.crm-deal-stage { display: inline-grid; justify-items: start; }
+@media (max-width: 900px) { .crm-deal-stage { justify-items: end; } }
+@media (max-width: 420px) { .crm-dock a { padding: 9px 7px; font-size: 12px; } }
