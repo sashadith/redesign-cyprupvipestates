@@ -50,7 +50,7 @@ export default async function PartnerCommissions({ searchParams }: { searchParam
         </div>
         <p className="pp-small pp-muted">{C.period}: {periodLabel(t, locale, period)}</p>
         <div className="pp-cta pp-comm-actions">
-          <a href={`/commissions/export.csv${q}`} className="pp-btn pp-btn-ghost" download>{C.exportCsv}</a>
+          <a href={`/commissions/export.csv${q}`} className="pp-btn pp-btn-ghost">{C.exportCsv}</a>
           <Link href={`/commissions/report${q}`} className="pp-btn pp-btn-ghost">{C.report}</Link>
         </div>
       </section>

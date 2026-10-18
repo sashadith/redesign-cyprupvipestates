@@ -39,6 +39,12 @@ export function CommissionsTable({ t, locale, rows, links }: { t: PartnerDict; l
             <td data-label={C.colPrice}>{eur.format(r.price)}</td>
             <td data-label={C.colCommission}>
               {r.commission == null ? <span className="pp-muted">{C.calculating}</span> : <span className="pp-figure-sm">{eur.format(r.commission)}</span>}
+              {r.stage === "PAID_OUT" && r.creditNote && (
+                <>
+                  <span className="pp-cell-sub">{C.colVat}: {eur.format(r.creditNote.vat)}</span>
+                  <span className="pp-cell-sub">{C.colTotalPaid}: {eur.format(r.creditNote.total)}</span>
+                </>
+              )}
             </td>
             <td data-label={C.colStage}>
               {t.commission[r.stage]}
@@ -47,7 +53,7 @@ export function CommissionsTable({ t, locale, rows, links }: { t: PartnerDict; l
             <td data-label={C.colCreditNote}>
               {r.creditNote ? (
                 links ? (
-                  <a href={`/commissions/credit-note/${encodeURIComponent(r.creditNote.id)}`} download>
+                  <a href={`/commissions/credit-note/${encodeURIComponent(r.creditNote.id)}`}>
                     {r.creditNote.number}
                     <span className="pp-sr"> — {C.downloadCreditNote}</span>
                   </a>

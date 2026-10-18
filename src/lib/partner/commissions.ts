@@ -30,9 +30,17 @@ export function commissionClaimsWhere(partnerId: string): Prisma.PartnerClaimWhe
   return { partnerId: needPartner(partnerId), state: "ACTIVE", lead: { deletedAt: null, deals: { some: {} } } };
 }
 
-/** Credit notes of this partner for the given deals. */
-export function creditNotesWhere(partnerId: string, dealIds: string[]): Prisma.CreditNoteWhereInput {
-  return { partnerId: needPartner(partnerId), dealId: { in: dealIds } };
+/**
+ * Every credit note of this partner — paid money never disappears from the partner's view, whatever
+ * happened to the claim or the lead afterwards (myCommissions merges these deals into the rows).
+ */
+export function partnerCreditNotesWhere(partnerId: string): Prisma.CreditNoteWhereInput {
+  return { partnerId: needPartner(partnerId) };
+}
+
+/** This partner's claims (any state) on the given leads — only for the client name of a paid deal. */
+export function paidClaimsWhere(partnerId: string, leadIds: string[]): Prisma.PartnerClaimWhereInput {
+  return { partnerId: needPartner(partnerId), leadId: { in: leadIds } };
 }
 
 /** One credit note — only the owning partner's (anything else is a 404). */
@@ -115,53 +123,76 @@ export type CommissionRow = {
   earnedAt: Date | null;
   developerPaidAt: Date | null;
   paidOutAt: Date | null;
-  creditNote: { id: string; number: string } | null;
+  /** The issued credit note: VAT and total paid come from the document, never recomputed. */
+  creditNote: { id: string; number: string; vat: number; total: number } | null;
 };
 
-export type CreditNoteRef = { id: string; number: string; dealId: string };
+export type CreditNoteRef = { id: string; number: string; dealId: string; partnerId: string; vatAmount: number; totalAmount: number };
 
 /**
  * Deals of the partner's effectively-active claims (same rule as the client detail page: claim
  * ACTIVE, lead not trashed, protection running or committed; deals created at/after activeSince),
  * inside the period (current stage date, inclusive Cyprus days), newest stage first.
- * ctx.deals must hold all deals of the claims' leads (committed check); credit notes are matched by
- * deal id and must already be this partner's (creditNotesWhere).
+ * Plus every deal this partner holds a credit note for — regardless of claim state, trash or activeSince:
+ * paid money never disappears. Its client is the name submitted on this partner's claim on that lead
+ * (any state; "—" without one).
+ * ctx.deals must hold all deals of the claims' leads (committed check) and the credit-noted deals;
+ * credit notes and paidClaims must be this partner's (partnerCreditNotesWhere / paidClaimsWhere).
  */
 export function commissionRows(
   claims: RawClaim[],
-  ctx: { partnerId: string; now: Date; activity: Map<string, Activity>; deals: RawDeal[]; creditNotes: CreditNoteRef[] },
+  ctx: {
+    partnerId: string; now: Date; activity: Map<string, Activity>; deals: RawDeal[]; creditNotes: CreditNoteRef[];
+    /** This partner's claims (any state) on the credit-noted deals' leads — client names only. */
+    paidClaims?: Pick<RawClaim, "partnerId" | "leadId" | "createdAt" | "submission">[];
+  },
   period: Pick<Period, "from" | "to">,
 ): CommissionRow[] {
-  const notes = new Map(ctx.creditNotes.map((n) => [n.dealId, { id: n.id, number: n.number }]));
+  const notes = new Map<string, NonNullable<CommissionRow["creditNote"]>>();
+  for (const n of ctx.creditNotes) {
+    if (n.partnerId !== ctx.partnerId) throw new Error("partner scope: credit note of another partner");
+    notes.set(n.dealId, { id: n.id, number: n.number, vat: n.vatAmount, total: n.totalAmount });
+  }
   const out: CommissionRow[] = [];
   const seen = new Set<string>();
+  const push = (d: RawDeal, client: string) => {
+    if (seen.has(d.id)) return;
+    const v = dealView(d);
+    const stageAt = v.statusAt ?? d.expectedAt;
+    if (!inPeriod(cyprusDay(stageAt), period)) return;
+    seen.add(d.id);
+    out.push({
+      dealId: d.id,
+      client,
+      project: v.project,
+      unit: v.unit,
+      price: v.price,
+      commission: v.commission,
+      stage: v.status,
+      stageAt,
+      expectedAt: d.expectedAt,
+      earnedAt: d.earnedAt,
+      developerPaidAt: d.developerPaidAt,
+      paidOutAt: d.paidOutAt,
+      creditNote: notes.get(d.id) ?? null,
+    });
+  };
   for (const claim of claims) {
     if (claim.partnerId !== ctx.partnerId) throw new Error("partner scope: claim of another partner");
     if (!claim.lead || claim.lead.deletedAt) continue;
     if (displayStateOf(claim, { activity: ctx.activity, now: ctx.now, deals: ctx.deals }) !== "ACTIVE") continue;
     const client = visibleName(claim);
-    for (const d of dealsForClaims([claim], ctx.deals)) {
-      if (seen.has(d.id)) continue;
-      const v = dealView(d);
-      const stageAt = v.statusAt ?? d.expectedAt;
-      if (!inPeriod(cyprusDay(stageAt), period)) continue;
-      seen.add(d.id);
-      out.push({
-        dealId: d.id,
-        client,
-        project: v.project,
-        unit: v.unit,
-        price: v.price,
-        commission: v.commission,
-        stage: v.status,
-        stageAt,
-        expectedAt: d.expectedAt,
-        earnedAt: d.earnedAt,
-        developerPaidAt: d.developerPaidAt,
-        paidOutAt: d.paidOutAt,
-        creditNote: notes.get(d.id) ?? null,
-      });
-    }
+    for (const d of dealsForClaims([claim], ctx.deals)) push(d, client);
+  }
+  // Paid deals outside the effective rule (claim ended, lead trashed, deal before activeSince).
+  const paidClaims = [...(ctx.paidClaims ?? [])].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  for (const c of paidClaims) if (c.partnerId !== ctx.partnerId) throw new Error("partner scope: claim of another partner");
+  const dealById = new Map(ctx.deals.map((d) => [d.id, d]));
+  for (const n of ctx.creditNotes) {
+    const d = dealById.get(n.dealId);
+    if (!d || seen.has(d.id)) continue;
+    const c = paidClaims.find((x) => x.leadId === d.leadId);
+    push(d, (c && visibleName(c)) || "—");
   }
   return out.sort((a, b) => b.stageAt.getTime() - a.stageAt.getTime() || (a.dealId < b.dealId ? -1 : 1));
 }
@@ -190,5 +221,7 @@ export function toCsvRows(rows: CommissionRow[]): CommissionCsvRow[] {
     developerPaidAt: r.developerPaidAt,
     paidOutAt: r.paidOutAt,
     creditNoteNumber: r.creditNote?.number ?? null,
+    vat: r.creditNote?.vat ?? null,
+    totalPaid: r.creditNote?.total ?? null,
   }));
 }

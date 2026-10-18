@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { PartnerNotificationKind } from "@prisma/client";
 import type { Activity, RawClaim, RawDeal } from "@/lib/partner/clientDto";
 import {
-  COMMISSIONS_CAP, commissionClaimsWhere, commissionRowTotals, commissionRows, creditNoteWhere, creditNotesWhere, csvFilename, cyprusDay,
-  parsePeriod, periodQuery, toCsvRows, type CreditNoteRef,
+  COMMISSIONS_CAP, commissionClaimsWhere, commissionRowTotals, commissionRows, creditNoteWhere, csvFilename, cyprusDay,
+  paidClaimsWhere, parsePeriod, partnerCreditNotesWhere, periodQuery, toCsvRows, type CreditNoteRef,
 } from "@/lib/partner/commissions";
 import { commissionsCsv } from "@/lib/partner/commissionsCsv";
 import { PARTNER_LOCALES, dict } from "@/lib/partner/i18n";
@@ -22,10 +22,12 @@ const now = t("2027-01-10T00:00:00Z");
 // ── where-builders ──────────────────────────────────────────────────────────
 test("commission where-builders carry the partnerId and refuse an empty one", () => {
   assert.deepEqual(commissionClaimsWhere(P), { partnerId: P, state: "ACTIVE", lead: { deletedAt: null, deals: { some: {} } } });
-  assert.deepEqual(creditNotesWhere(P, ["d1"]), { partnerId: P, dealId: { in: ["d1"] } });
+  assert.deepEqual(partnerCreditNotesWhere(P), { partnerId: P });
+  assert.deepEqual(paidClaimsWhere(P, ["lead-1"]), { partnerId: P, leadId: { in: ["lead-1"] } });
   assert.deepEqual(creditNoteWhere(P, "cn1"), { id: "cn1", partnerId: P });
   assert.throws(() => commissionClaimsWhere(""));
-  assert.throws(() => creditNotesWhere(" ", []));
+  assert.throws(() => partnerCreditNotesWhere(" "));
+  assert.throws(() => paidClaimsWhere("", ["lead-1"]));
   assert.throws(() => creditNoteWhere("", "cn1"));
   assert.equal(COMMISSIONS_CAP, 2000);
 });
@@ -52,8 +54,10 @@ const deal = (over: Partial<RawDeal> & Record<string, unknown> = {}): RawDeal =>
     ourCommission: 99999, ourRatePercent: 5, iban: "CY17002001280000001200527600", ...over,
   }) as RawDeal;
 
-const notes: CreditNoteRef[] = [{ id: "cn-1", number: "CVE-GS-2026-0001", dealId: "deal-1" }];
-const ctx = (deals: RawDeal[], activity = new Map<string, Activity>(), creditNotes = notes) => ({ partnerId: P, now, activity, deals, creditNotes });
+const notes: CreditNoteRef[] = [{ id: "cn-1", number: "CVE-GS-2026-0001", dealId: "deal-1", partnerId: P, vatAmount: 855, totalAmount: 5355 }];
+const ctxBase = (deals: RawDeal[], activity = new Map<string, Activity>(), creditNotes = notes, paidClaims: RawClaim[] = []) =>
+  ({ partnerId: P, now, activity, deals, creditNotes, paidClaims });
+const ctx = ctxBase;
 const all = { from: null, to: null };
 
 test("commission rows: only partner-facing columns, the submitted name, the credit note, no secrets", () => {
@@ -64,17 +68,48 @@ test("commission rows: only partner-facing columns, the submitted name, the cred
     "client", "commission", "creditNote", "dealId", "developerPaidAt", "earnedAt", "expectedAt", "paidOutAt", "price", "project", "stage", "stageAt", "unit",
   ]);
   assert.equal(r.client, "Anna Schmidt");
-  assert.deepEqual(r.creditNote, { id: "cn-1", number: "CVE-GS-2026-0001" });
+  assert.deepEqual(r.creditNote, { id: "cn-1", number: "CVE-GS-2026-0001", vat: 855, total: 5355 });
   assert.equal(r.stageAt.toISOString(), "2026-08-01T12:00:00.000Z");
   const json = JSON.stringify(rows);
   for (const s of SECRETS) assert.ok(!json.includes(s), `row leaks "${s}"`);
 });
 
-test("commission rows refuse another partner's claim", () => {
+test("commission rows refuse another partner's claim or credit note", () => {
   assert.throws(() => commissionRows([claim({ partnerId: OTHER })], ctx([deal()]), all));
+  assert.throws(() => commissionRows([], ctx([deal()], undefined, [{ ...notes[0], partnerId: OTHER }]), all));
+  assert.throws(() => commissionRows([], ctx([deal()], undefined, notes, [claim({ partnerId: OTHER })]), all));
+});
+
+test("paid money never disappears: credit-noted deals stay listed whatever happened to the claim or lead", () => {
+  const ended = claim({ state: "EXPIRED" as RawClaim["state"], lead: { status: "OFFER", deletedAt: t("2026-09-01T00:00:00Z") } as unknown as RawClaim["lead"] });
+  // Trashed lead, ended claim: not a candidate claim at all — the credit note alone brings the deal back.
+  let rows = commissionRows([], ctx([deal()], undefined, notes, [ended]), all);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].dealId, "deal-1");
+  assert.equal(rows[0].client, "Anna Schmidt", "name submitted on the partner's own claim");
+  assert.deepEqual(rows[0].creditNote, { id: "cn-1", number: "CVE-GS-2026-0001", vat: 855, total: 5355 });
+  // The same with the (trashed-lead) claim passed as a regular candidate: still exactly one row.
+  rows = commissionRows([ended], ctx([deal()], undefined, notes, [ended]), all);
+  assert.equal(rows.length, 1);
+  // Deal created before activeSince (accepted known contact) but paid to this partner: listed.
+  const late = claim({ reviewedAt: t("2026-04-02T00:00:00Z") });
+  rows = commissionRows([late], ctx([deal()], undefined, notes, [late]), all);
+  assert.equal(rows.length, 1);
+  // No claim of this partner on that lead any more: a dash, never someone else's name.
+  rows = commissionRows([], ctx([deal()], undefined, notes, []), all);
+  assert.equal(rows[0].client, "—");
+  // Without a credit note the trashed / ended case stays hidden.
+  assert.equal(commissionRows([ended], ctx([deal()], undefined, [], [ended]), all).length, 0);
+  // The period still applies to paid rows; totals count them.
+  assert.equal(commissionRows([], ctx([deal()], undefined, notes, [ended]), { from: "2026-09-01", to: null }).length, 0);
+  assert.deepEqual(commissionRowTotals(commissionRows([], ctx([deal()], undefined, notes, [ended]), all)).PAID_OUT, 4500);
+  // A credit note for a deal that is not in ctx.deals produces nothing (never another partner's deal).
+  assert.equal(commissionRows([], ctx([deal({ id: "deal-x" })], undefined, notes, [ended]), all).length, 0);
 });
 
 test("effective rule: deals before activeSince, trashed leads and expired uncommitted claims are left out; committed claims stay", () => {
+  // Without a credit note: the effective rule alone decides (paid deals are covered by their own test).
+  const ctx = (deals: RawDeal[], activity = new Map<string, Activity>()) => ctxBase(deals, activity, []);
   // Accepted known contact: reviewedAt is activeSince — the deal created before it is not the partner's.
   assert.equal(commissionRows([claim({ reviewedAt: t("2026-04-02T00:00:00Z") })], ctx([deal()]), all).length, 0);
   assert.equal(commissionRows([claim({ lead: { status: "OFFER", deletedAt: t("2026-09-01T00:00:00Z") } })], ctx([deal()]), all).length, 0);
@@ -139,9 +174,12 @@ test("CSV rows are built from the DTO only", () => {
   const csvRows = toCsvRows(rows);
   for (const r of csvRows) {
     assert.deepEqual(Object.keys(r).sort(), [
-      "client", "commission", "creditNoteNumber", "developerPaidAt", "earnedAt", "expectedAt", "paidOutAt", "price", "project", "stage", "unit",
+      "client", "commission", "creditNoteNumber", "developerPaidAt", "earnedAt", "expectedAt", "paidOutAt", "price", "project", "stage", "totalPaid", "unit", "vat",
     ]);
   }
+  assert.deepEqual([csvRows[0].vat, csvRows[0].totalPaid], [855, 5355], "VAT and total paid from the credit note");
+  const noNote = csvRows.find((r) => r.creditNoteNumber == null)!;
+  assert.deepEqual([noNote.vat, noNote.totalPaid], [null, null], "empty without a credit note");
   const csv = commissionsCsv(csvRows, "en");
   for (const s of SECRETS) assert.ok(!csv.includes(s), `CSV leaks "${s}"`);
   assert.ok(csv.includes("CVE-GS-2026-0001"));
@@ -169,6 +207,12 @@ test("payout e-mail in every locale: amount, credit-note number, commissions lin
     assert.ok(!m.html.includes("<b>Anna</b>"), l);
     assert.ok(!/\{\w+\}/.test(m.text), `${l}: no unfilled placeholder`);
     for (const s of ["IBAN", "ourCommission", "99999"]) assert.ok(!m.text.includes(s) && !m.html.includes(s), `${l} leaks ${s}`);
+  }
+  for (const l of ["en", "ru"] as const) {
+    for (const intro of [dict(l).mail.payout.intro, dict(l).mail.bankChanged.intro]) {
+      const first = intro.charAt(0);
+      assert.ok(first === first.toLocaleUpperCase() && first !== first.toLocaleLowerCase(), `${l}: mail intro starts with a capital letter`);
+    }
   }
   const noUnit = buildPayoutEmail("en", { partnerFirstName: "", clientName: "", project: null, unit: null, amount: "€1", creditNoteNumber: "N", link });
   assert.ok(noUnit.text.includes("— (—, —)"), "missing values become a dash");
@@ -208,4 +252,21 @@ test("commissions paths reach the portal: middleware matcher includes them and t
     assert.equal(partnerRewritePath("partner.cyprusvipestates.com", p, env), `/partner-portal${p}`);
   }
   assert.ok(!re.test("/api/x"), "sanity: excluded prefixes stay excluded");
+});
+
+test("download links carry no download attribute (the route's Content-Disposition names the file)", () => {
+  for (const f of ["src/app/crm/components/DealsTable.tsx", "src/app/partner-portal/commissions/page.tsx", "src/app/partner-portal/components/commissionsBits.tsx"]) {
+    const src = readFileSync(join(process.cwd(), f), "utf8");
+    assert.ok(!/\sdownload[\s>]/.test(src), `${f} has no download attribute`);
+  }
+  const deals = readFileSync(join(process.cwd(), "src/app/crm/components/DealsTable.tsx"), "utf8");
+  assert.ok(deals.includes("setDate(e.target.value); setOverride(false);"), "changing the date resets Pay anyway");
+});
+
+test("commissions column says net; VAT and total paid labels exist in every locale", () => {
+  for (const l of PARTNER_LOCALES) {
+    const c = dict(l).commissions;
+    assert.ok(c.colCommission && c.colVat && c.colTotalPaid, l);
+  }
+  assert.equal(dict("en").commissions.colCommission, "Commission (net)");
 });

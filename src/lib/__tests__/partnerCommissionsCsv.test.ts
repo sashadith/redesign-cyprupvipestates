@@ -6,19 +6,20 @@ import { dict } from "@/lib/partner/i18n";
 const row: CommissionCsvRow = {
   client: "=HYPERLINK(\"x\")", project: "Sea; Breeze", unit: "A\"1", price: 300000, commission: 4500, stage: "PAID_OUT",
   expectedAt: new Date("2026-09-01T00:00:00Z"), earnedAt: null, developerPaidAt: null, paidOutAt: new Date("2026-10-18T09:00:00Z"),
-  creditNoteNumber: "CVE-GS-2026-0001",
+  creditNoteNumber: "CVE-GS-2026-0001", vat: 855, totalPaid: 5355,
 };
 
 test("csv: BOM, CRLF, semicolons, quoting, formula guard", () => {
-  const out = commissionsCsv([row, { ...row, client: "+1", commission: null, stage: "EXPECTED", creditNoteNumber: null }], "en");
+  const out = commissionsCsv([row, { ...row, client: "+1", commission: null, stage: "EXPECTED", creditNoteNumber: null, vat: 1, totalPaid: 2 }], "en");
   assert.equal(out.charCodeAt(0), 0xfeff);
   const lines = out.slice(1).split("\r\n");
   assert.equal(lines.length, 4);
   assert.equal(lines[3], "");
-  assert.equal(lines[0], "Client;Project;Unit;Price;Your commission;Status;Expected;Earned;Received from developer;Paid out;Credit note");
-  assert.equal(lines[1], `"'=HYPERLINK(""x"")";"Sea; Breeze";"A""1";300000;4500;Paid out to you;2026-09-01;;;2026-10-18;CVE-GS-2026-0001`);
+  assert.equal(lines[0], "Client;Project;Unit;Price;Commission (net);Status;Expected;Earned;Received from developer;Paid out;Credit note;VAT;Total paid");
+  assert.equal(lines[1], `"'=HYPERLINK(""x"")";"Sea; Breeze";"A""1";300000;4500;Paid out to you;2026-09-01;;;2026-10-18;CVE-GS-2026-0001;855;5355`);
   assert.ok(lines[2].startsWith("'+1;"));
   assert.ok(lines[2].includes("being calculated"));
+  assert.ok(lines[2].endsWith(";;;"), "VAT and total paid stay empty without a credit note");
 });
 
 test("csvCell: guards", () => {
