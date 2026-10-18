@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { CommandPalette, type PaletteHandle } from "./CommandPalette";
+import { LogoFull, LogoMark } from "@/app/partner-portal/components/Brand";
 
 // oldCrm: the person may use /admin/crm (src/lib/crm/oldCrmGate.ts). Without it the
 // link into the old CRM ("Old CRM") would only bounce back here.
@@ -16,7 +17,12 @@ export function Shell({ user, children }: Props) {
   return (
     <>
       <header className="crm-top">
-        <Link href="/crm/today" className="crm-logo" aria-label="CVE Office"><i>CV</i><span>CVE Office</span></Link>
+        {/* Gold mark on phones, full wordmark from 721px, "Office" tag from 1101px (crm.css). */}
+        <Link href="/crm/today" className="crm-logo" aria-label="CVE Office">
+          <LogoMark className="crm-logo-mark" />
+          <LogoFull className="crm-logo-full" />
+          <span aria-hidden="true">Office</span>
+        </Link>
         <nav className="crm-nav" aria-label="CRM">
           <Link href="/crm/today" className={on("/crm/today")}>Today</Link>
           <Link href="/crm/pipeline" className={on("/crm/pipeline")}>Pipeline</Link>
