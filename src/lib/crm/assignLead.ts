@@ -8,9 +8,10 @@ import type { AssignResult } from "./assignMessage";
 
 const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!);
 
-// Same absolute admin link as src/lib/leadNotify.ts and metaLeadgen/notify.ts
-// (not imported: notify.ts pulls the WhatsApp stack).
-const leadUrl = (leadId: string) => `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${leadId}`;
+// Same base URL as src/lib/leadNotify.ts and metaLeadgen/notify.ts (not
+// imported: notify.ts pulls the WhatsApp stack), but the link opens the lead in
+// the new CRM cockpit: restricted employees are kept out of the old CRM.
+const leadUrl = (leadId: string) => `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/crm/leads/${leadId}`;
 
 export async function assignLead(actor: SessionCrmUser, leadId: string, userId: string): Promise<AssignResult> {
   if (!canAssignLeads(actor)) return { error: "Only admins can assign leads." };

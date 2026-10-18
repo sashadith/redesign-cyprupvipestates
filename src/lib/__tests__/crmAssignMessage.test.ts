@@ -14,3 +14,10 @@ test("the toast says exactly which notifications went out", () => {
 test("re-assigning to the current owner says so instead of claiming a notice", () => {
   assert.equal(assignToast("Sophie", ok(false, false, false)), "Already assigned to Sophie.");
 });
+
+test("the owner notification links to the new CRM cockpit, not the old CRM", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync("src/lib/crm/assignLead.ts", "utf8");
+  assert.match(src, /process\.env\.NEXT_PUBLIC_SITE_URL \|\| "http:\/\/72\.60\.89\.239"\}\/crm\/leads\/\$\{leadId\}`/);
+  assert.doesNotMatch(src, /\/admin\/crm\//);
+});
