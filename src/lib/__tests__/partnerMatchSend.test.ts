@@ -183,6 +183,8 @@ test("owner e-mail: English, lead link to /crm/leads/<id>, values escaped", () =
   );
   assert.ok(mail.subject.startsWith("Partner match alerts on your leads (1)"));
   assert.ok(mail.text.includes("Hi Maria,"));
+  assert.ok(mail.text.includes("Match alerts queued for the partners of these clients today."));
+  assert.ok(!/were told/.test(mail.text), "queued, not claimed as delivered");
   assert.ok(mail.text.includes("https://cyprusvipestates.com/crm/leads/l1"));
   assert.ok(mail.text.includes("price reduced, from €290,000"));
   assert.ok(mail.html.includes("&lt;b&gt;Bob&lt;/b&gt;") && !mail.html.includes("<b>Bob</b>"));

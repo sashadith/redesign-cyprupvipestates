@@ -67,7 +67,46 @@ export function isBlockedTelegramError(status: number, _description?: string): b
   return status === 403;
 }
 
-export type ChannelResult = { ok: true } | { ok: false; error: string; blocked?: boolean };
+/** Description the API client returns (status 0) when the PARTNER_TELEGRAM_* env is incomplete. */
+export const PARTNER_BOT_NOT_CONFIGURED = "partner bot not configured";
+
+/**
+ * What a failed sendMessage means for the outbox row:
+ *  - "blocked": 403 — the partner blocked the bot; permanent, and the chat link is cleared;
+ *  - "permanent": any other 4xx except 429 (chat not found, bad request…) or the bot not configured —
+ *    retrying the same row cannot help: fall back to e-mail when allowed, otherwise close the row;
+ *  - "transport": 5xx, 429, network error, timeout — Telegram itself is unavailable; retried and counted
+ *    by the transport breaker;
+ *  - "other": anything unclassified — retried with the normal backoff, never trips the breaker.
+ */
+export type TelegramFailureClass = "blocked" | "permanent" | "transport" | "other";
+
+export function classifyTelegramFailure(status: number, description?: string): TelegramFailureClass {
+  if (isBlockedTelegramError(status, description)) return "blocked";
+  if (status === 429) return "transport";
+  if (status >= 400 && status < 500) return "permanent";
+  if (status >= 500 && status < 600) return "transport";
+  if (status === 0) return description === PARTNER_BOT_NOT_CONFIGURED ? "permanent" : "transport";
+  return "other";
+}
+
+/**
+ * A channel attempt. On failure: `permanent` = this row can never go out on this channel (a blocked chat
+ * sets `blocked` too); `transport` = a shared outage (counts toward the breaker). An e-mail failure is
+ * always a transport failure (sendEmail only throws when the mail server rejects or is unreachable).
+ */
+export type ChannelResult = { ok: true } | { ok: false; error: string; blocked?: boolean; permanent?: boolean; transport?: boolean };
+
+/** ChannelResult for a failed Telegram send, from its classification. */
+export function telegramFailureResult(error: string, cls: TelegramFailureClass): ChannelResult {
+  return {
+    ok: false,
+    error,
+    ...(cls === "blocked" ? { blocked: true } : {}),
+    ...(cls === "blocked" || cls === "permanent" ? { permanent: true } : {}),
+    ...(cls === "transport" ? { transport: true } : {}),
+  };
+}
 
 /** Prefix of `error` on a row that went out on one channel while another failed (still counts as mailed). */
 export const PARTIAL_PREFIX = "partial: ";
@@ -75,30 +114,38 @@ export const PARTIAL_PREFIX = "partial: ";
 export type DeliveryOutcome =
   /** At least one channel succeeded; `error` lists the failed channel(s) (prefixed "partial: ") or is null. */
   | { state: "sent"; error: string | null }
-  /** Nothing went out and nothing can on retry (the only channel tried was a blocked chat): close the row. */
-  | { state: "closed"; error: string }
-  /** Nothing went out: release the row for a retry (counts toward the transport breaker). */
-  | { state: "failed"; error: string };
+  /** Nothing went out and nothing can on retry (every channel tried failed permanently): close the row. `blocked` = a blocked chat among them. */
+  | { state: "closed"; error: string; blocked: boolean }
+  /** Nothing went out: release the row for a retry. `transport` = a shared outage, counted by the transport breaker. */
+  | { state: "failed"; error: string; transport: boolean };
+
+const isPermanent = (r: ChannelResult) => !r.ok && (r.permanent === true || r.blocked === true);
 
 /**
- * Per-row result over the channels that were attempted. Sent when ≥ 1 succeeded. A blocked Telegram chat
- * is permanent (the chat link is cleared), so a row whose every attempt was a blocked chat is closed
- * rather than retried; any other failure (mail transport, Telegram 5xx/429/network) is retried.
+ * Per-row result over the channels that were attempted. Sent when ≥ 1 succeeded. A row whose every attempt
+ * failed permanently (blocked chat, Telegram 4xx other than 429, bot not configured) is closed rather than
+ * retried. Any other failure is retried; it counts toward the transport breaker only when a channel failed
+ * on a shared transport (mail transport, Telegram 5xx/429/network/timeout) — a Telegram failure that is
+ * neither permanent nor transport is charged an attempt but never stops the batch.
  */
 export function deliveryOutcome(results: { email?: ChannelResult; telegram?: ChannelResult }): DeliveryOutcome {
   const tried = (["email", "telegram"] as const).filter((k) => results[k]);
-  if (!tried.length) return { state: "failed", error: "no channel" };
+  if (!tried.length) return { state: "failed", error: "no channel", transport: false };
   const failed = tried.filter((k) => !results[k]!.ok);
   const errorText = failed.map((k) => `${k}: ${(results[k] as { error: string }).error}`).join("; ");
   if (failed.length < tried.length) return { state: "sent", error: failed.length ? PARTIAL_PREFIX + errorText : null };
-  const allBlocked = failed.every((k) => (results[k] as { blocked?: boolean }).blocked === true);
-  return allBlocked ? { state: "closed", error: errorText } : { state: "failed", error: errorText };
+  if (failed.every((k) => isPermanent(results[k]!))) {
+    return { state: "closed", error: errorText, blocked: failed.some((k) => (results[k] as { blocked?: boolean }).blocked === true) };
+  }
+  const transport = failed.some((k) => k === "email" || (results[k] as { transport?: boolean }).transport === true);
+  return { state: "failed", error: errorText, transport };
 }
 
 /**
- * After a blocked Telegram send: e-mail this row instead, when it was not e-mailed already and an e-mail
- * is allowed for it (a recipient exists and the profile switch does not suppress this kind).
+ * After a permanent Telegram failure (blocked chat, 4xx, bot not configured): e-mail this row instead, when
+ * it was not e-mailed already and an e-mail is allowed for it (a recipient exists and the profile switch
+ * does not suppress this kind).
  */
-export function blockedFallbackToEmail(input: { telegramBlocked: boolean; emailAttempted: boolean; emailAllowed: boolean }): boolean {
-  return input.telegramBlocked && !input.emailAttempted && input.emailAllowed;
+export function permanentFallbackToEmail(input: { telegramPermanent: boolean; emailAttempted: boolean; emailAllowed: boolean }): boolean {
+  return input.telegramPermanent && !input.emailAttempted && input.emailAllowed;
 }

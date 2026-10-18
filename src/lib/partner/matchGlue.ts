@@ -238,7 +238,8 @@ export function buildOwnerMatchEmail(d: { ownerName: string; items: OwnerDigestI
   const first = d.ownerName.trim().split(/\s+/)[0] || "there";
   const n = d.items.length;
   const subject = `Partner match alerts on your leads (${n}) — ${today}`;
-  const intro = `Partners were told today that ${n === 1 ? "a project fits one of their clients" : "projects fit some of their clients"} on leads you own:`;
+  // "Queued", not "told": the outbox delivers them later and may still skip a row (gate, opt-out, failure).
+  const intro = "Match alerts queued for the partners of these clients today.";
   const line = (i: OwnerDigestItem) =>
     `${i.leadName} (partner: ${i.partner}) — ${i.project}, ${CHANGE_LABEL_EN[i.changeType] ?? i.changeType}, from ${euro(i.priceFrom)}`;
   const text = [`Hi ${first},`, intro, ...d.items.map((i) => `- ${line(i)}\n  ${leadUrl(i.leadId)}`), "This is an automatic notice from the partner portal."].join("\n\n");

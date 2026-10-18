@@ -87,6 +87,15 @@ test("routeNotification matrix", () => {
     assert.deepEqual(r(k, "EMAIL", false, false), { email: true, telegram: false }, k);
     assert.deepEqual(r(k, "TELEGRAM", true, false), { email: false, telegram: true }, k);
   }
+  // Bot not configured: no Telegram send is attempted; a linked chat routes like no chat (e-mail fallback).
+  const nb = (notifyChannel: "EMAIL" | "TELEGRAM" | "BOTH", emailNotifications = true, kind: (typeof NOTIFICATION_KINDS)[number] = "STAGE") =>
+    routeNotification({ kind, notifyChannel, chatLinked: true, botConfigured: false, emailNotifications });
+  assert.deepEqual(nb("TELEGRAM"), { email: true, telegram: false });
+  assert.deepEqual(nb("BOTH"), { email: true, telegram: false });
+  assert.deepEqual(nb("EMAIL"), { email: true, telegram: false });
+  assert.deepEqual(nb("TELEGRAM", false), { email: false, telegram: false }, "STAGE opted out: nothing");
+  assert.deepEqual(nb("TELEGRAM", false, "MATCH"), { email: true, telegram: false });
+  assert.deepEqual(routeNotification({ kind: "STAGE", notifyChannel: "TELEGRAM", chatLinked: true, botConfigured: true, emailNotifications: true }), { email: false, telegram: true });
 });
 
 // ── bot replies ─────────────────────────────────────────────────────────────

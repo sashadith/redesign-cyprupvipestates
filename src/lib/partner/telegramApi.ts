@@ -2,7 +2,7 @@
 // This is the PARTNER bot (env PARTNER_TELEGRAM_*), never the office bot in src/lib/telegram.ts.
 // The token is part of the request URL: neither the token nor the URL is ever logged or returned.
 import "server-only";
-import { isBlockedTelegramError, partnerBotConfigFrom, type PartnerBotConfig } from "./telegramBot";
+import { PARTNER_BOT_NOT_CONFIGURED, classifyTelegramFailure, partnerBotConfigFrom, type PartnerBotConfig, type TelegramFailureClass } from "./telegramBot";
 
 export const PARTNER_WEBHOOK_URL = "https://cyprusvipestates.com/api/webhooks/partner-telegram";
 const TIMEOUT_MS = 10_000;
@@ -24,7 +24,7 @@ const clip = (s: string) => (s.length > DESCRIPTION_MAX ? s.slice(0, DESCRIPTION
 /** One Bot API call (POST JSON, 10 s timeout). Errors come back as values; nothing here throws or logs the URL. */
 async function call(method: string, body: Record<string, unknown>): Promise<ApiResult> {
   const cfg = partnerBotConfig();
-  if (!cfg) return { ok: false, status: 0, description: "partner bot not configured" };
+  if (!cfg) return { ok: false, status: 0, description: PARTNER_BOT_NOT_CONFIGURED };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -48,9 +48,9 @@ async function call(method: string, body: Record<string, unknown>): Promise<ApiR
   }
 }
 
-export type PartnerSendResult = { ok: true } | { ok: false; status: number; description: string; blocked: boolean };
+export type PartnerSendResult = { ok: true } | { ok: false; status: number; description: string; failure: TelegramFailureClass };
 
-/** sendMessage with parse_mode HTML and no link previews. `blocked` = the partner blocked the bot (403). */
+/** sendMessage with parse_mode HTML and no link previews. `failure` classifies an error (classifyTelegramFailure). */
 export async function sendPartnerTelegram(chatId: string, html: string): Promise<PartnerSendResult> {
   const r = await call("sendMessage", {
     chat_id: chatId,
@@ -60,13 +60,13 @@ export async function sendPartnerTelegram(chatId: string, html: string): Promise
     link_preview_options: { is_disabled: true },
   });
   if (r.ok) return { ok: true };
-  return { ok: false, status: r.status, description: r.description, blocked: isBlockedTelegramError(r.status, r.description) };
+  return { ok: false, status: r.status, description: r.description, failure: classifyTelegramFailure(r.status, r.description) };
 }
 
 /** Registers the webhook on the main host with the secret header; only `message` updates; drops the backlog. */
 export async function setPartnerWebhook(): Promise<{ ok: true } | { ok: false; description: string }> {
   const cfg = partnerBotConfig();
-  if (!cfg) return { ok: false, description: "partner bot not configured" };
+  if (!cfg) return { ok: false, description: PARTNER_BOT_NOT_CONFIGURED };
   const r = await call("setWebhook", {
     url: PARTNER_WEBHOOK_URL,
     secret_token: cfg.secret,

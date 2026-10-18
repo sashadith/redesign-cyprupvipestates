@@ -152,7 +152,6 @@ export function formatPayoutAmount(locale: PartnerLocale, euros: number): string
 export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
-
 /** Compile-time exhaustiveness: a new kind that is not handled fails the build instead of falling through. */
 export function unhandledKind(kind: never): never {
   throw new Error(`partner notify: unhandled notification kind ${String(kind)}`);
@@ -194,7 +193,7 @@ export function notifyStartFromEnv(env: Record<string, string | undefined>): Dat
 export const MAX_ATTEMPTS = 6;
 /** Retry backoff: attempt n+1 is due 10 min · 2^(n−1) after the n-th failure (10, 20, 40, 80, 160 min). */
 export const BACKOFF_BASE_MS = 10 * 60_000;
-/** Consecutive transport (send) errors that stop a batch — the mail server is down, not the rows. */
+/** Consecutive shared-transport errors (mail transport, Telegram 5xx/429/network/timeout) that stop a batch — the transport is down, not the rows. */
 export const TRANSPORT_BREAKER = 3;
 /** Marker in `error` while a row is claimed by a running send (sentAt set, outcome not recorded yet). */
 export const SENDING_MARK = "sending";
@@ -281,12 +280,6 @@ export function optOutGate(kind: NotificationKind, emailNotifications: boolean):
   return !emailNotifications && OPTIONAL_KINDS.includes(kind) ? OPTED_OUT_ERROR : null;
 }
 
-/**
- * Whether a row may be mailed, given its claim and the claim's effective state (effectiveClaimState);
- * returns the skip reason or null. A rejection and a payout are told regardless of the lead (even
- * trashed); an acceptance, a stage change, a message and a match alert only while the claim is
- * effectively ACTIVE; a presentation-opened row needs no claim at all.
- */
 /** Only an ACTIVE partner is told anything; the skip reason otherwise. */
 export function partnerStatusGate(status: string | null | undefined): string | null {
   if (!status) return "partner missing";
@@ -295,6 +288,12 @@ export function partnerStatusGate(status: string | null | undefined): string | n
   return null;
 }
 
+/**
+ * Whether a row may be mailed, given its claim and the claim's effective state (effectiveClaimState);
+ * returns the skip reason or null. A rejection and a payout are told regardless of the lead (even
+ * trashed); an acceptance, a stage change, a message and a match alert only while the claim is
+ * effectively ACTIVE; a presentation-opened row needs no claim at all.
+ */
 export function notificationGate(input: {
   kind: NotificationKind;
   accepted: boolean;
@@ -313,6 +312,7 @@ export function notificationGate(input: {
   if (claim.effective !== "ACTIVE") return "claim inactive";
   return null;
 }
+
 export function truncateError(e: unknown): string {
   const s = e instanceof Error ? e.message : String(e);
   return s.length > ERROR_MAX ? s.slice(0, ERROR_MAX) : s;

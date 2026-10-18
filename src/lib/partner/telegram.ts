@@ -57,18 +57,22 @@ export function normalizeLinkCode(raw: unknown): string | null {
 export type NotifyChannel = "EMAIL" | "TELEGRAM" | "BOTH";
 
 /**
- * Channels for one outbox row. TELEGRAM/BOTH need a linked chat, otherwise the row falls back to email.
+ * Channels for one outbox row. TELEGRAM/BOTH need a linked chat and a configured bot (botConfigured,
+ * default true), otherwise the row falls back to email.
  * emailNotifications=false suppresses STAGE/MESSAGE email only (3d rule), never Telegram.
  */
 export function routeNotification(input: {
   kind: NotificationKind;
   notifyChannel: NotifyChannel;
   chatLinked: boolean;
+  /** partnerBotConfigured(): without the bot env no Telegram send is attempted. */
+  botConfigured?: boolean;
   emailNotifications: boolean;
 }): { email: boolean; telegram: boolean } {
-  const { kind, notifyChannel, chatLinked, emailNotifications } = input;
-  const telegram = notifyChannel !== "EMAIL" && chatLinked;
-  let email = notifyChannel !== "TELEGRAM" || !chatLinked;
+  const { kind, notifyChannel, emailNotifications } = input;
+  const reachable = input.chatLinked && input.botConfigured !== false;
+  const telegram = notifyChannel !== "EMAIL" && reachable;
+  let email = notifyChannel !== "TELEGRAM" || !reachable;
   if (!emailNotifications && (kind === "STAGE" || kind === "MESSAGE")) email = false;
   return { email, telegram };
 }

@@ -9,8 +9,8 @@ import { creditNoteWhere } from "./commissions";
 import { pickPartnerLocale } from "./i18n";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import { buildTelegramNotification, routeNotification, type TelegramNotificationInput } from "./telegram";
-import { sendPartnerTelegram } from "./telegramApi";
-import { PARTIAL_PREFIX, blockedFallbackToEmail, deliveryOutcome, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
+import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
+import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
   INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMatchEmail, buildMessageEmail, buildPayoutEmail,
   buildPresentationOpenedEmail, buildStageEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage,
@@ -25,8 +25,9 @@ export { notifyStartFromEnv };
 const LOOKBACK_MS = 7 * 86_400_000;
 const INTERACTION_CAP = 1000;
 const CLAIM_SCAN_CAP = 5000;
-/** Skip-counter key for rows closed because the partner's chat blocked the bot and no e-mail was allowed. */
+/** Skip-counter keys for rows closed because Telegram failed permanently and no e-mail was allowed. */
 const TELEGRAM_BLOCKED = "telegram blocked";
+const TELEGRAM_REJECTED = "telegram rejected";
 
 export type CollectResult = { scanned: number; pending: number; collapsed: number; settlingLeads: number; inserted: number };
 
@@ -80,12 +81,12 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
 
 export type SendResult = { sent: number; skipped: Record<string, number>; failed: number; dead: number; errors: string[]; stoppedEarly?: string };
 
-/** What to deliver for one row: e-mail and/or Telegram (routeNotification), plus an e-mail fallback for a blocked chat. */
+/** What to deliver for one row: e-mail and/or Telegram (routeNotification), plus an e-mail fallback for a permanent Telegram failure. */
 type Delivery = {
   partnerId: string;
   email: { to: string; mail: BuiltEmail } | null;
   telegram: { chatId: string; html: string } | null;
-  /** E-mail allowed for this row but not routed (the partner chose Telegram only): used when the chat turns out blocked. */
+  /** E-mail allowed for this row but not routed (the partner chose Telegram only): used when Telegram fails permanently (blocked, 4xx, not configured). */
   fallbackEmail: { to: string; mail: BuiltEmail } | null;
 };
 type Outcome = { skip: string } | Delivery;
@@ -112,7 +113,11 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
   const to = partner.users[0]?.email?.trim() || null;
   const chatId = partner.telegramChatId?.trim() || null;
   // Channel(s) per Decision 2. The profile switch (3d) suppresses STAGE/MESSAGE e-mail only, never Telegram.
-  const route = routeNotification({ kind: row.kind, notifyChannel: partner.notifyChannel, chatLinked: !!chatId, emailNotifications: partner.emailNotifications });
+  // Without the bot env no Telegram send is attempted: the row routes as if no chat were linked.
+  const route = routeNotification({
+    kind: row.kind, notifyChannel: partner.notifyChannel, chatLinked: !!chatId, botConfigured: partnerBotConfigured(),
+    emailNotifications: partner.emailNotifications,
+  });
   const emailAllowed = !!to && !optOutGate(row.kind, partner.emailNotifications);
   const sendEmailToo = route.email && !!to;
   const sendTelegram = route.telegram && !!chatId;
@@ -246,15 +251,16 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
 }
 
 /**
- * Sends one prepared row on its channel(s). A blocked chat (the partner blocked the bot) is unlinked —
- * only if it is still the partner's chat — and the row is e-mailed instead when allowed.
+ * Sends one prepared row on its channel(s). A permanent Telegram failure (classifyTelegramFailure: blocked
+ * chat, other 4xx except 429, bot not configured) e-mails the row instead when allowed; a blocked chat is
+ * also unlinked — only if it is still the partner's chat.
  */
 async function deliverRow(d: Delivery, refKey: string, errors: string[]): Promise<DeliveryOutcome> {
   const results: { email?: ChannelResult; telegram?: ChannelResult } = {};
   if (d.telegram) {
     const r = await sendPartnerTelegram(d.telegram.chatId, d.telegram.html);
-    results.telegram = r.ok ? { ok: true } : { ok: false, error: truncateError(`${r.status} ${r.description}`), blocked: r.blocked };
-    if (!r.ok && r.blocked) {
+    results.telegram = r.ok ? { ok: true } : telegramFailureResult(truncateError(`${r.status} ${r.description}`), r.failure);
+    if (!r.ok && r.failure === "blocked") {
       await prisma.partner
         .updateMany({
           where: { id: d.partnerId, telegramChatId: d.telegram.chatId },
@@ -264,14 +270,14 @@ async function deliverRow(d: Delivery, refKey: string, errors: string[]): Promis
     }
   }
   const tg = results.telegram;
-  const telegramBlocked = !!tg && !tg.ok && tg.blocked === true;
-  const email = d.email ?? (blockedFallbackToEmail({ telegramBlocked, emailAttempted: false, emailAllowed: !!d.fallbackEmail }) ? d.fallbackEmail : null);
+  const telegramPermanent = !!tg && !tg.ok && tg.permanent === true;
+  const email = d.email ?? (permanentFallbackToEmail({ telegramPermanent, emailAttempted: false, emailAllowed: !!d.fallbackEmail }) ? d.fallbackEmail : null);
   if (email) {
     try {
       await sendEmail({ to: email.to, subject: email.mail.subject, text: email.mail.text, html: email.mail.html });
       results.email = { ok: true };
     } catch (e) {
-      results.email = { ok: false, error: truncateError(e) };
+      results.email = { ok: false, error: truncateError(e), transport: true };
     }
   }
   return deliveryOutcome(results);
@@ -305,9 +311,11 @@ export async function withNotifyLock<T>(fn: () => Promise<T>): Promise<T | null>
  * mailed, so two runs can never mail the same row. A failed send releases the row (sentAt null,
  * failedAt, error) and charges an attempt; due again after the backoff (retryAt), up to MAX_ATTEMPTS.
  * Delivery goes to the partner's channel(s) (deliverRow): sent when at least one channel succeeded; a row
- * whose only channel was a chat that blocked the bot is closed. When no channel got through, the row is
- * released as above. Three consecutive transport errors stop the batch without charging those rows. Rows left at "sending"
- * for over an hour (a run died mid-send) are first released as a failed attempt.
+ * whose every channel failed permanently (blocked chat, Telegram 4xx, bot not configured, no e-mail allowed)
+ * is closed. When no channel got through, the row is released as above. Only shared transport failures
+ * (mail transport, Telegram 5xx/429/network/timeout) feed the breaker: three in a row stop the batch
+ * without charging those rows; any other failure is charged an attempt at once and never stops the batch.
+ * Rows left at "sending" for over an hour (a run died mid-send) are first released as a failed attempt.
  */
 export async function sendPendingNotifications(now: Date, start: Date, limit = 50): Promise<SendResult> {
   const result: SendResult = { sent: 0, skipped: {}, failed: 0, dead: 0, errors: [] };
@@ -370,14 +378,20 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
     }
     const out = await deliverRow(o, row.refKey, result.errors);
     if (out.state === "closed") {
-      // Nothing went out and nothing can (the only channel was a chat that blocked the bot): done, with the reason.
+      // Nothing went out and nothing can (Telegram failed permanently, no e-mail allowed): done, with the reason.
       await prisma.partnerNotification
         .update({ where: { id: row.id }, data: { sentAt: new Date(), error: truncateError(out.error) } })
         .catch((e) => result.errors.push(`${row.refKey}: could not record outcome: ${truncateError(e)}`));
-      result.skipped[TELEGRAM_BLOCKED] = (result.skipped[TELEGRAM_BLOCKED] ?? 0) + 1;
+      const key = out.blocked ? TELEGRAM_BLOCKED : TELEGRAM_REJECTED;
+      result.skipped[key] = (result.skipped[key] ?? 0) + 1;
       continue;
     }
     if (out.state === "failed") {
+      if (!out.transport) {
+        // Not a shared outage: charge the attempt now (normal backoff); the breaker is not involved.
+        await release(row, truncateError(out.error), true);
+        continue;
+      }
       await release(row, truncateError(out.error), false);
       if (streak.fail(row.id)) {
         tripped = true;

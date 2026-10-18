@@ -3,8 +3,9 @@ import { join } from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  MAX_UPDATE_BYTES, PARTIAL_PREFIX, blockedFallbackToEmail, deliveryOutcome, extractPrivateText, isBlockedTelegramError,
-  parseNotifyChannel, partnerBotConfigFrom, secretMatches, telegramDeepLink,
+  MAX_UPDATE_BYTES, PARTIAL_PREFIX, PARTNER_BOT_NOT_CONFIGURED, classifyTelegramFailure, deliveryOutcome, extractPrivateText,
+  isBlockedTelegramError, parseNotifyChannel, partnerBotConfigFrom, permanentFallbackToEmail, secretMatches, telegramDeepLink,
+  telegramFailureResult,
 } from "@/lib/partner/telegramBot";
 import { onboardingFactsFrom, onboardingHref, onboardingSteps, onboardingVisible } from "@/lib/partner/onboarding";
 import { PARTNER_LOCALES, dict } from "@/lib/partner/i18n";
@@ -96,33 +97,86 @@ test("deliveryOutcome: sent when at least one chosen channel succeeded; per-chan
   assert.deepEqual(partial2, { state: "sent", error: `${PARTIAL_PREFIX}email: smtp down` });
 });
 
-test("deliveryOutcome: nothing went out → failed (retry), unless the only failure was a blocked chat → closed", () => {
-  assert.deepEqual(deliveryOutcome({ email: { ok: false, error: "smtp down" } }), { state: "failed", error: "email: smtp down" });
-  assert.deepEqual(deliveryOutcome({ telegram: { ok: false, error: "0 timeout" } }), { state: "failed", error: "telegram: 0 timeout" });
+test("deliveryOutcome: nothing went out → failed (retry), unless every failure was permanent → closed", () => {
+  assert.deepEqual(deliveryOutcome({ email: { ok: false, error: "smtp down", transport: true } }), { state: "failed", error: "email: smtp down", transport: true });
   assert.deepEqual(
-    deliveryOutcome({ telegram: { ok: false, error: "403 Forbidden: bot was blocked by the user", blocked: true } }),
-    { state: "closed", error: "telegram: 403 Forbidden: bot was blocked by the user" },
+    deliveryOutcome({ telegram: telegramFailureResult("0 timeout", "transport") }),
+    { state: "failed", error: "telegram: 0 timeout", transport: true },
   );
-  // Blocked chat + failed fallback e-mail: the e-mail is retried.
-  const both = deliveryOutcome({ email: { ok: false, error: "smtp down" }, telegram: { ok: false, error: "403 blocked", blocked: true } });
+  assert.deepEqual(
+    deliveryOutcome({ telegram: telegramFailureResult("403 Forbidden: bot was blocked by the user", "blocked") }),
+    { state: "closed", error: "telegram: 403 Forbidden: bot was blocked by the user", blocked: true },
+  );
+  assert.deepEqual(
+    deliveryOutcome({ telegram: telegramFailureResult("400 Bad Request: chat not found", "permanent") }),
+    { state: "closed", error: "telegram: 400 Bad Request: chat not found", blocked: false },
+  );
+  // Blocked chat + failed fallback e-mail: the e-mail is retried (and counts as transport).
+  const both = deliveryOutcome({ email: { ok: false, error: "smtp down" }, telegram: telegramFailureResult("403 blocked", "blocked") });
   assert.equal(both.state, "failed");
   assert.equal(both.error, "email: smtp down; telegram: 403 blocked");
-  assert.deepEqual(deliveryOutcome({}), { state: "failed", error: "no channel" });
+  assert.equal(both.state === "failed" && both.transport, true);
+  assert.deepEqual(deliveryOutcome({}), { state: "failed", error: "no channel", transport: false });
 });
 
-test("blocked bot: 403 is permanent; fall back to e-mail only when not mailed already and allowed", () => {
+test("breaker counting: only shared transport failures count; other Telegram-only failures are charged but never trip", () => {
+  const counts = (o: ReturnType<typeof deliveryOutcome>) => o.state === "failed" && o.transport;
+  // Mail transport error (an e-mail failure is always transport, flagged or not).
+  assert.equal(counts(deliveryOutcome({ email: { ok: false, error: "ECONNREFUSED" } })), true);
+  // Telegram 5xx / 429 / network / timeout.
+  for (const [status, d] of [[500, "x"], [502, "x"], [429, "Too Many Requests"], [0, "network error"], [0, "timeout"]] as const) {
+    assert.equal(counts(deliveryOutcome({ telegram: telegramFailureResult(`${status} ${d}`, classifyTelegramFailure(status, d)) })), true, `${status} ${d}`);
+  }
+  // Unclassified Telegram failure: failed (charged, backoff), not counted.
+  const other = deliveryOutcome({ telegram: telegramFailureResult("302 moved", classifyTelegramFailure(302, "moved")) });
+  assert.equal(other.state, "failed");
+  assert.equal(counts(other), false);
+  // Permanent ones never reach the breaker: closed.
+  for (const [status, d] of [[400, "Bad Request"], [404, "Not Found"], [403, "Forbidden"], [0, PARTNER_BOT_NOT_CONFIGURED]] as const) {
+    assert.equal(deliveryOutcome({ telegram: telegramFailureResult(`${status} ${d}`, classifyTelegramFailure(status, d)) }).state, "closed", `${status}`);
+  }
+  // Sender: charges non-transport failures at once, feeds only transport failures to the streak.
+  const s = src("src/lib/partner/notifySend.ts");
+  const i = s.indexOf('if (out.state === "failed") {');
+  const block = s.slice(i, s.indexOf("result.sent++;", i));
+  assert.ok(block.indexOf("if (!out.transport) {") < block.indexOf("streak.fail(row.id)"));
+  assert.ok(block.includes("await release(row, truncateError(out.error), true);\n        continue;"));
+});
+
+test("classifyTelegramFailure: 403 blocked; other 4xx and not-configured permanent; 5xx/429/network transport", () => {
+  assert.equal(classifyTelegramFailure(403, "Forbidden: bot was blocked by the user"), "blocked");
+  for (const st of [400, 401, 404, 409, 413]) assert.equal(classifyTelegramFailure(st, "x"), "permanent", String(st));
+  assert.equal(classifyTelegramFailure(0, PARTNER_BOT_NOT_CONFIGURED), "permanent");
+  for (const st of [429, 500, 502, 503, 504]) assert.equal(classifyTelegramFailure(st, "x"), "transport", String(st));
+  assert.equal(classifyTelegramFailure(0, "timeout"), "transport");
+  assert.equal(classifyTelegramFailure(0, "network error"), "transport");
+  assert.equal(classifyTelegramFailure(200, "ok false"), "other");
+  assert.deepEqual(telegramFailureResult("e", "blocked"), { ok: false, error: "e", blocked: true, permanent: true });
+  assert.deepEqual(telegramFailureResult("e", "permanent"), { ok: false, error: "e", permanent: true });
+  assert.deepEqual(telegramFailureResult("e", "transport"), { ok: false, error: "e", transport: true });
+  assert.deepEqual(telegramFailureResult("e", "other"), { ok: false, error: "e" });
+  // The API client reports a missing env with exactly this description, and classifies every failure.
+  const a = src("src/lib/partner/telegramApi.ts");
+  assert.ok(a.includes("description: PARTNER_BOT_NOT_CONFIGURED"));
+  assert.ok(a.includes("failure: classifyTelegramFailure(r.status, r.description)"));
+});
+
+test("permanent Telegram failure: fall back to e-mail only when not mailed already and allowed; 403 stays 'blocked'", () => {
   assert.equal(isBlockedTelegramError(403, "Forbidden: bot was blocked by the user"), true);
   assert.equal(isBlockedTelegramError(403, "Forbidden: user is deactivated"), true);
   for (const s of [0, 400, 429, 500, 502]) assert.equal(isBlockedTelegramError(s, "x"), false, String(s));
-  assert.equal(blockedFallbackToEmail({ telegramBlocked: true, emailAttempted: false, emailAllowed: true }), true);
-  assert.equal(blockedFallbackToEmail({ telegramBlocked: true, emailAttempted: true, emailAllowed: true }), false); // BOTH: mailed already
-  assert.equal(blockedFallbackToEmail({ telegramBlocked: true, emailAttempted: false, emailAllowed: false }), false); // opted out / no address
-  assert.equal(blockedFallbackToEmail({ telegramBlocked: false, emailAttempted: false, emailAllowed: true }), false); // transient failure: retry instead
+  assert.equal(permanentFallbackToEmail({ telegramPermanent: true, emailAttempted: false, emailAllowed: true }), true);
+  assert.equal(permanentFallbackToEmail({ telegramPermanent: true, emailAttempted: true, emailAllowed: true }), false); // BOTH: mailed already
+  assert.equal(permanentFallbackToEmail({ telegramPermanent: true, emailAttempted: false, emailAllowed: false }), false); // opted out / no address
+  assert.equal(permanentFallbackToEmail({ telegramPermanent: false, emailAttempted: false, emailAllowed: true }), false); // transient failure: retry instead
+  const s = src("src/lib/partner/notifySend.ts");
+  assert.ok(s.includes("const telegramPermanent = !!tg && !tg.ok && tg.permanent === true;"));
+  assert.ok(s.includes('if (!r.ok && r.failure === "blocked") {'), "only a 403 unlinks the chat");
 });
 
 test("sender wiring: routeNotification decides channels, blocked chat unlinked only if unchanged, MATCH/PRESENTATION_OPENED delivered", () => {
   const s = src("src/lib/partner/notifySend.ts");
-  assert.ok(s.includes("routeNotification({ kind: row.kind, notifyChannel: partner.notifyChannel"));
+  assert.ok(s.includes("kind: row.kind, notifyChannel: partner.notifyChannel, chatLinked: !!chatId, botConfigured: partnerBotConfigured(),"));
   assert.ok(s.includes("where: { id: d.partnerId, telegramChatId: d.telegram.chatId }"), "only the chat that blocked is cleared");
   assert.ok(s.includes("return deliveryOutcome(results);"));
   assert.ok(s.includes('kind: "MATCH", projectName, changeType, url, portalUrl: common.link'));
