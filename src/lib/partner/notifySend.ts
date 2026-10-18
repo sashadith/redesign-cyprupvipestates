@@ -2,13 +2,15 @@
 // Pure builders and the planner: notify.ts. Cron entry: src/app/api/cron/partner-notify/route.ts.
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/sendEmail";
-import { REAL_CONTACT_TYPES } from "./claims";
-import { displayState, visibleName } from "./clientDto";
+import { effectiveStateOf } from "./claimFacts";
+import { activeSince } from "./claimState";
+import { visibleName } from "./clientDto";
 import { pickPartnerLocale } from "./i18n";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import {
-  MAX_ATTEMPTS, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail, clientLink, firstNameOf,
-  messageIdFromRefKey, notifyStartFromEnv, planStageNotifications, stageKeyFor, stageRefKey, truncateError, type StageRow,
+  SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail, clientLink, deadWhere, dueWhere,
+  firstNameOf, isUnchangedStage, messageIdFromRefKey, notificationGate, notifyStartFromEnv, planStageNotifications, stageKeyFor, stageRefKey,
+  truncateError, type StageRow,
 } from "./notify";
 
 export { notifyStartFromEnv };
@@ -26,7 +28,7 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
     where: { state: "ACTIVE" },
     orderBy: { createdAt: "desc" },
     take: CLAIM_SCAN_CAP,
-    select: { id: true, leadId: true, partnerId: true, createdAt: true },
+    select: { id: true, leadId: true, partnerId: true, createdAt: true, reviewedAt: true },
   });
   if (claims.length === 0) return { scanned: 0, pending: 0, collapsed: 0, settlingLeads: 0, inserted: 0 };
   const claimByLead = new Map(claims.map((c) => [c.leadId, c]));
@@ -45,7 +47,7 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
     const meta = i.metadata && typeof i.metadata === "object" && !Array.isArray(i.metadata) ? (i.metadata as Record<string, unknown>) : {};
     return [{
       interactionId: i.id, leadId: i.leadId, occurredAt: i.occurredAt, toStatus: meta.toStatus,
-      claimId: c.id, partnerId: c.partnerId, claimCreatedAt: c.createdAt,
+      claimId: c.id, partnerId: c.partnerId, claimActiveSince: activeSince(c),
     }];
   });
   const existing = await prisma.partnerNotification.findMany({
@@ -67,18 +69,20 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
   return { scanned: rows.length, pending: plan.pending, collapsed: plan.collapsed, settlingLeads: plan.settlingLeads, inserted };
 }
 
-export type SendResult = { sent: number; skipped: Record<string, number>; failed: number; errors: string[] };
+export type SendResult = { sent: number; skipped: Record<string, number>; failed: number; dead: number; errors: string[]; stoppedEarly?: string };
 
 type Outcome = { skip: string } | { mail: BuiltEmail; to: string };
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
+type OutboxRow = {
+  id: string; kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME"; refKey: string; partnerId: string; claimId: string | null; leadId: string | null;
+  payload: unknown; createdAt: Date;
+};
+
 /** Decides what to do with one outbox row: a reason to drop it, or the mail to send. */
-async function prepare(
-  row: { id: string; kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME"; refKey: string; partnerId: string; claimId: string | null; leadId: string | null; payload: unknown },
-  now: Date,
-  base: string,
-): Promise<Outcome> {
+async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Promise<Outcome> {
+  if (beforeStart(row, start)) return { skip: "before start" };
   const partner = await prisma.partner.findUnique({
     where: { id: row.partnerId },
     select: {
@@ -95,35 +99,34 @@ async function prepare(
   const claim = row.claimId
     ? await prisma.partnerClaim.findUnique({
         where: { id: row.claimId },
-        select: {
-          id: true, state: true, createdAt: true, submission: true, partnerId: true, leadId: true,
-          lead: { select: { id: true, status: true, deletedAt: true } },
-        },
+        select: { id: true, state: true, createdAt: true, reviewedAt: true, submission: true, partnerId: true, leadId: true },
       })
     : null;
-  if (!claim || claim.partnerId !== row.partnerId) return { skip: row.kind === "CLAIM_OUTCOME" ? "claim missing" : "claim inactive" };
-  if (row.kind !== "CLAIM_OUTCOME" && claim.state !== "ACTIVE") return { skip: "claim inactive" };
-  if (!claim.lead || claim.lead.deletedAt) return { skip: "lead trashed" };
+  const accepted = obj(row.payload).accepted === true;
+  // A rejection never needs the lead; everything else is gated on the claim's effective state.
+  const needsState = !!claim && !(row.kind === "CLAIM_OUTCOME" && !accepted);
+  const skip = notificationGate({
+    kind: row.kind,
+    accepted,
+    claim: claim
+      ? { ownedByPartner: claim.partnerId === row.partnerId, effective: needsState ? await effectiveStateOf(prisma, claim, now) : claim.state }
+      : null,
+  });
+  if (skip || !claim) return { skip: skip ?? "claim missing" };
 
   const locale = pickPartnerLocale({ partnerLanguage: partner.language });
   const common = { partnerFirstName: partner.firstName, clientName: visibleName(claim), link: clientLink(base, claim.id) };
 
   if (row.kind === "STAGE") {
-    const stageKey = stageKeyFor(obj(row.payload).toStatus);
+    const toStatus = obj(row.payload).toStatus;
+    const stageKey = stageKeyFor(toStatus);
     if (!stageKey) return { skip: "invalid status" };
-    const [last, liveDeals] = await Promise.all([
-      prisma.leadInteraction.aggregate({
-        where: { leadId: claim.leadId, type: { in: [...REAL_CONTACT_TYPES] } },
-        _max: { occurredAt: true },
-      }),
-      prisma.deal.count({ where: { leadId: claim.leadId, commissionStatus: { not: "CANCELLED" } } }),
-    ]);
-    const state = displayState(
-      { state: claim.state, createdAt: claim.createdAt, lead: claim.lead },
-      last._max.occurredAt ?? null, now, liveDeals > 0,
-    );
-    if (state === "EXPIRED") return { skip: "protection ended" };
-    if (state !== "ACTIVE") return { skip: "claim inactive" };
+    const lastMailed = await prisma.partnerNotification.findFirst({
+      where: { claimId: claim.id, kind: "STAGE", sentAt: { not: null }, error: null, id: { not: row.id } },
+      orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
+      select: { payload: true },
+    });
+    if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
     return { to, mail: buildStageEmail(locale, { ...common, stageKey }) };
   }
 
@@ -139,40 +142,110 @@ async function prepare(
     return { to, mail: buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }) };
   }
 
-  return { to, mail: buildClaimOutcomeEmail(locale, { ...common, accepted: obj(row.payload).accepted === true }) };
+  return { to, mail: buildClaimOutcomeEmail(locale, { ...common, accepted }) };
 }
 
-/** Sends up to `limit` pending outbox rows, oldest first. sentAt is set only after a successful send. */
-export async function sendPendingNotifications(now: Date, limit = 50): Promise<SendResult> {
-  const result: SendResult = { sent: 0, skipped: {}, failed: 0, errors: [] };
-  const rows = await prisma.partnerNotification.findMany({
-    where: { sentAt: null, attempts: { lt: MAX_ATTEMPTS } },
-    orderBy: { createdAt: "asc" },
-    take: limit,
-    select: { id: true, kind: true, refKey: true, partnerId: true, claimId: true, leadId: true, payload: true, attempts: true },
-  });
+/** Advisory-lock key of the partner-notify run ("PNOT"). */
+const NOTIFY_LOCK_KEY = 0x504e4f54;
+const LOCK_HOLD_MS = 15 * 60_000;
+
+/**
+ * Runs fn while holding the partner-notify advisory lock; null when another run holds it.
+ * The lock is transaction-scoped (pg_try_advisory_xact_lock) on a connection pinned by an otherwise idle
+ * interactive transaction: a session lock taken through Prisma's pool could be released on a different
+ * connection and stay held forever. Commit/rollback (also a crash) releases it. fn itself uses the
+ * normal client; per-row claiming (sendPendingNotifications) stays correct even without the lock.
+ */
+export async function withNotifyLock<T>(fn: () => Promise<T>): Promise<T | null> {
+  return prisma.$transaction(
+    async (tx) => {
+      const rows = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(${NOTIFY_LOCK_KEY}::bigint) AS locked`;
+      if (!rows[0]?.locked) return null;
+      return fn();
+    },
+    { maxWait: 10_000, timeout: LOCK_HOLD_MS },
+  );
+}
+
+/**
+ * Sends up to `limit` due outbox rows, oldest first (call inside withNotifyLock).
+ * Each row is claimed with a guarded update (sentAt: null → now, error "sending") before anything is
+ * mailed, so two runs can never mail the same row. A failed send releases the row (sentAt null,
+ * failedAt, error) and charges an attempt; due again after the backoff (retryAt), up to MAX_ATTEMPTS.
+ * Three consecutive transport errors stop the batch without charging those rows.
+ */
+export async function sendPendingNotifications(now: Date, start: Date, limit = 50): Promise<SendResult> {
+  const result: SendResult = { sent: 0, skipped: {}, failed: 0, dead: 0, errors: [] };
+  const [rows, dead] = await Promise.all([
+    prisma.partnerNotification.findMany({
+      where: dueWhere(now),
+      orderBy: { createdAt: "asc" },
+      take: limit,
+      select: { id: true, kind: true, refKey: true, partnerId: true, claimId: true, leadId: true, payload: true, createdAt: true },
+    }),
+    prisma.partnerNotification.count({ where: deadWhere() }),
+  ]);
+  result.dead = dead;
   if (rows.length === 0) return result;
   const base = partnerBaseUrl(); // throws in production without PARTNER_HOST — never mail a localhost link
 
+  const streak = new TransportStreak();
+  const charge = async (ids: string[]) => {
+    if (!ids.length) return;
+    await prisma.partnerNotification
+      .updateMany({ where: { id: { in: ids }, sentAt: null }, data: { attempts: { increment: 1 } } })
+      .catch((e) => result.errors.push(`could not count attempts: ${truncateError(e)}`));
+  };
+  const release = async (row: OutboxRow, error: string, countAttempt: boolean) => {
+    result.failed++;
+    result.errors.push(`${row.refKey}: ${error}`);
+    await prisma.partnerNotification
+      .update({
+        where: { id: row.id },
+        data: { sentAt: null, failedAt: new Date(), error, ...(countAttempt ? { attempts: { increment: 1 } } : {}) },
+      })
+      .catch((e2) => result.errors.push(`${row.refKey}: could not record failure: ${truncateError(e2)}`));
+  };
+
+  let tripped = false;
   for (const row of rows) {
+    const claimed = await prisma.partnerNotification.updateMany({ where: { id: row.id, sentAt: null }, data: { sentAt: now, error: SENDING_MARK } });
+    if (claimed.count !== 1) continue; // another run took it
+
+    let o: Outcome;
     try {
-      const o = await prepare(row, now, base);
-      if ("skip" in o) {
-        await prisma.partnerNotification.update({ where: { id: row.id }, data: { sentAt: now, error: o.skip } });
-        result.skipped[o.skip] = (result.skipped[o.skip] ?? 0) + 1;
-        continue;
-      }
-      await sendEmail({ to: o.to, subject: o.mail.subject, text: o.mail.text, html: o.mail.html });
-      await prisma.partnerNotification.update({ where: { id: row.id }, data: { sentAt: new Date(), error: null } });
-      result.sent++;
+      o = await prepare(row, now, start, base);
     } catch (e) {
-      const error = truncateError(e);
-      result.failed++;
-      result.errors.push(`${row.refKey}: ${error}`);
+      await release(row, truncateError(e), true);
+      continue;
+    }
+    if ("skip" in o) {
       await prisma.partnerNotification
-        .update({ where: { id: row.id }, data: { attempts: { increment: 1 }, failedAt: new Date(), error } })
-        .catch((e2) => result.errors.push(`${row.refKey}: could not record failure: ${truncateError(e2)}`));
+        .update({ where: { id: row.id }, data: { error: o.skip } })
+        .catch((e) => result.errors.push(`${row.refKey}: could not record skip: ${truncateError(e)}`));
+      result.skipped[o.skip] = (result.skipped[o.skip] ?? 0) + 1;
+      continue;
+    }
+    try {
+      await sendEmail({ to: o.to, subject: o.mail.subject, text: o.mail.text, html: o.mail.html });
+    } catch (e) {
+      await release(row, truncateError(e), false);
+      if (streak.fail(row.id)) {
+        tripped = true;
+        result.stoppedEarly = "mail transport failing";
+        break;
+      }
+      continue;
+    }
+    result.sent++;
+    await charge(streak.succeed());
+    // The mail went out: a failure to clear the marker must not turn into a resend.
+    try {
+      await prisma.partnerNotification.update({ where: { id: row.id }, data: { sentAt: new Date(), error: null } });
+    } catch (e) {
+      console.error("[partner-notify] sent but could not mark", row.refKey, truncateError(e));
     }
   }
+  await charge(streak.finish(tripped));
   return result;
 }

@@ -2,8 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PARTNER_LOCALES, dict, type PartnerLocale } from "@/lib/partner/i18n";
 import {
-  buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail, clientLink, firstNameOf, messageIdFromRefKey,
-  notifyStartFromEnv, planStageNotifications, stageKeyFor, stageRefKey, truncateError, type StageRow,
+  BACKOFF_BASE_MS, MAX_ATTEMPTS, TRANSPORT_BREAKER, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildStageEmail,
+  clientLink, deadWhere, dueWhere, firstNameOf, isDue, isUnchangedStage, messageIdFromRefKey, notificationGate, notifyStartFromEnv,
+  planStageNotifications, retryAt, stageKeyFor, stageRefKey, truncateError, type StageRow,
 } from "@/lib/partner/notify";
 
 const LINK = clientLink("https://partner.example.com", "claim-123");
@@ -137,7 +138,7 @@ const START = new Date("2026-10-19T00:00:00Z");
 const ago = (min: number) => new Date(NOW.getTime() - min * 60_000);
 const CLAIM_AT = new Date("2026-10-19T06:00:00Z");
 const row = (id: string, minAgo: number, toStatus: unknown = "CONTACTED", over: Partial<StageRow> = {}): StageRow => ({
-  interactionId: id, leadId: "L1", occurredAt: ago(minAgo), toStatus, claimId: "C1", partnerId: "P1", claimCreatedAt: CLAIM_AT, ...over,
+  interactionId: id, leadId: "L1", occurredAt: ago(minAgo), toStatus, claimId: "C1", partnerId: "P1", claimActiveSince: CLAIM_AT, ...over,
 });
 const plan = (rows: StageRow[], existing: string[] = []) =>
   planStageNotifications({ rows, existingRefKeys: existing, now: NOW, start: START });
@@ -174,14 +175,14 @@ test("planner: several changes of one lead collapse into the newest", () => {
 });
 
 test("planner: changes before PARTNER_NOTIFY_START or before the claim are ignored", () => {
-  const beforeStart = row("i1", 0, "OFFER", { occurredAt: new Date("2026-10-18T23:00:00Z"), claimCreatedAt: new Date("2026-10-01T00:00:00Z") });
+  const beforeStart = row("i1", 0, "OFFER", { occurredAt: new Date("2026-10-18T23:00:00Z"), claimActiveSince: new Date("2026-10-01T00:00:00Z") });
   const beforeClaim = row("i2", 0, "OFFER", { occurredAt: new Date("2026-10-19T05:00:00Z") });
   assert.deepEqual(plan([beforeStart, beforeClaim]).rows, []);
   // a pre-claim change never makes a lead "settling" nor collapses into the claim's own changes
   const p = plan([row("i3", 30, "RESERVED"), beforeClaim]);
   assert.deepEqual(p.rows.map((r) => r.refKey), ["stage:i3"]);
   // a change at exactly the claim time counts
-  assert.equal(plan([row("i4", 0, "OFFER", { occurredAt: CLAIM_AT, claimCreatedAt: CLAIM_AT })]).pending, 1);
+  assert.equal(plan([row("i4", 0, "OFFER", { occurredAt: CLAIM_AT, claimActiveSince: CLAIM_AT })]).pending, 1);
 });
 
 test("planner: rows already in the outbox are never planned again", () => {
@@ -237,4 +238,97 @@ test("planner: identical timestamps pick one deterministic newest", () => {
 test("planner: custom debounce", () => {
   const p = planStageNotifications({ rows: [row("i1", 3)], existingRefKeys: [], now: NOW, start: START, debounceMs: 60_000 });
   assert.equal(p.pending, 1);
+});
+
+test("planner: stage changes between submission and review of an accepted known contact are not the partner's", () => {
+  // claimActiveSince = reviewedAt; a change after submission but before the review is ignored
+  const reviewedAt = ago(60);
+  const p = plan([row("i1", 120, "OFFER", { claimActiveSince: reviewedAt }), row("i2", 30, "RESERVED", { claimActiveSince: reviewedAt })]);
+  assert.deepEqual(p.rows.map((r) => r.refKey), ["stage:i2"]);
+});
+
+// ── Outbox robustness ───────────────────────────────────────────────────────
+
+test("backoff: 10 min · 2^(attempts−1), at most 6 attempts", () => {
+  assert.equal(MAX_ATTEMPTS, 6);
+  const failedAt = new Date("2026-10-20T12:00:00Z");
+  assert.equal(retryAt({ attempts: 0, failedAt: null }), null);
+  assert.equal(retryAt({ attempts: 0, failedAt }), null);
+  assert.deepEqual([1, 2, 3, 4, 5].map((attempts) => (retryAt({ attempts, failedAt })!.getTime() - failedAt.getTime()) / 60_000), [10, 20, 40, 80, 160]);
+  const at = (min: number) => new Date(failedAt.getTime() + min * 60_000);
+  assert.equal(isDue({ sentAt: null, attempts: 0, failedAt: null }, failedAt), true);
+  assert.equal(isDue({ sentAt: null, attempts: 1, failedAt }, at(9)), false);
+  assert.equal(isDue({ sentAt: null, attempts: 1, failedAt }, at(10)), true);
+  assert.equal(isDue({ sentAt: null, attempts: 3, failedAt }, at(39)), false);
+  assert.equal(isDue({ sentAt: null, attempts: 3, failedAt }, at(40)), true);
+  assert.equal(isDue({ sentAt: null, attempts: 6, failedAt }, at(100_000)), false, "dead rows are never due");
+  assert.equal(isDue({ sentAt: failedAt, attempts: 0, failedAt: null }, at(1)), false, "sent / claimed rows are never due");
+});
+
+test("dueWhere mirrors isDue: one branch per attempt count with its own backoff cutoff", () => {
+  const now = new Date("2026-10-20T12:00:00Z");
+  const w = dueWhere(now);
+  assert.equal(w.sentAt, null);
+  const or = w.OR as { attempts: unknown; failedAt?: { lte: Date } | null }[];
+  assert.deepEqual(or[0], { attempts: 0 });
+  assert.deepEqual(or[1], { attempts: { gt: 0, lt: MAX_ATTEMPTS }, failedAt: null });
+  const branches = or.slice(2);
+  assert.deepEqual(branches.map((b) => b.attempts), [1, 2, 3, 4, 5]);
+  assert.deepEqual(branches.map((b) => (now.getTime() - b.failedAt!.lte.getTime()) / BACKOFF_BASE_MS), [1, 2, 4, 8, 16]);
+  assert.deepEqual(deadWhere(), { sentAt: null, attempts: { gte: MAX_ATTEMPTS } });
+});
+
+test("transport streak: three consecutive send errors stop the batch uncharged; a success charges the held rows", () => {
+  assert.equal(TRANSPORT_BREAKER, 3);
+  const a = new TransportStreak();
+  assert.equal(a.fail("r1"), false);
+  assert.deepEqual(a.succeed(), ["r1"], "the mail server works — r1 itself failed and is charged");
+  assert.deepEqual(a.succeed(), []);
+  assert.equal(a.fail("r2"), false);
+  assert.equal(a.fail("r3"), false);
+  assert.equal(a.fail("r4"), true, "third in a row trips");
+  assert.deepEqual(a.finish(true), [], "tripped: transport failure, no attempt counted");
+  const b = new TransportStreak();
+  b.fail("r5");
+  assert.deepEqual(b.finish(false), ["r5"], "batch ended without tripping: charged");
+});
+
+test("before start: MESSAGE / CLAIM_OUTCOME rows written before PARTNER_NOTIFY_START are not mailed; STAGE is filtered at collect", () => {
+  const start = new Date("2026-10-19T00:00:00Z");
+  const before = new Date("2026-10-18T23:59:59Z");
+  assert.equal(beforeStart({ kind: "MESSAGE", createdAt: before }, start), true);
+  assert.equal(beforeStart({ kind: "CLAIM_OUTCOME", createdAt: before }, start), true);
+  assert.equal(beforeStart({ kind: "STAGE", createdAt: before }, start), false);
+  assert.equal(beforeStart({ kind: "MESSAGE", createdAt: start }, start), false);
+});
+
+test("unchanged stage: a row repeating the last mailed stage is skipped", () => {
+  assert.equal(isUnchangedStage("OFFER", "OFFER"), true);
+  assert.equal(isUnchangedStage("OFFER", "VIEWING_SCHEDULED"), false);
+  assert.equal(isUnchangedStage("OFFER", undefined), false, "nothing mailed yet");
+  assert.equal(isUnchangedStage("NOPE", "NOPE"), false);
+});
+
+test("notification gate: rejection is told regardless of the lead; everything else needs an effectively ACTIVE claim", () => {
+  const g = (kind: "STAGE" | "MESSAGE" | "CLAIM_OUTCOME", accepted: boolean, claim: Parameters<typeof notificationGate>[0]["claim"]) =>
+    notificationGate({ kind, accepted, claim });
+  const mine = (effective: "ACTIVE" | "EXPIRED" | "NOT_PROCEEDING" | "REJECTED" | "IN_REVIEW") => ({ ownedByPartner: true, effective });
+  // rejection: sent even on a trashed lead
+  assert.equal(g("CLAIM_OUTCOME", false, mine("REJECTED")), null);
+  assert.equal(g("CLAIM_OUTCOME", false, mine("NOT_PROCEEDING")), null);
+  // acceptance: only while still effectively active
+  assert.equal(g("CLAIM_OUTCOME", true, mine("ACTIVE")), null);
+  assert.equal(g("CLAIM_OUTCOME", true, mine("NOT_PROCEEDING")), "lead trashed");
+  assert.equal(g("CLAIM_OUTCOME", true, mine("EXPIRED")), "protection ended");
+  assert.equal(g("CLAIM_OUTCOME", true, mine("REJECTED")), "claim inactive");
+  for (const kind of ["STAGE", "MESSAGE"] as const) {
+    assert.equal(g(kind, false, mine("ACTIVE")), null, kind);
+    assert.equal(g(kind, false, mine("EXPIRED")), "protection ended", kind);
+    assert.equal(g(kind, false, mine("NOT_PROCEEDING")), "lead trashed", kind);
+    assert.equal(g(kind, false, mine("IN_REVIEW")), "claim inactive", kind);
+    assert.equal(g(kind, false, null), "claim inactive", kind);
+    assert.equal(g(kind, false, { ownedByPartner: false, effective: "ACTIVE" }), "claim inactive", kind);
+  }
+  assert.equal(g("CLAIM_OUTCOME", false, null), "claim missing");
+  assert.equal(g("CLAIM_OUTCOME", false, { ownedByPartner: false, effective: "REJECTED" }), "claim missing");
 });

@@ -1,10 +1,14 @@
 // Partner notification outbox (partner portal phase 3b). ENGLISH (internal).
 // 1. collect: STATUS_CHANGE rows on leads with an ACTIVE claim become STAGE outbox rows
 //    (debounced 10 min, several changes of one lead collapse into one mail with the latest stage).
-// 2. send: up to 50 unsent rows (STAGE / MESSAGE / CLAIM_OUTCOME), oldest first, as localized e-mails
-//    to the partner's first user. sentAt is set only after a successful send; a failed send is retried
-//    on the next run, up to 3 attempts. Rows that must not be mailed (partner suspended/pending, claim
-//    no longer active, lead trashed, protection ended) are marked sent with the reason in `error`.
+// 2. send: up to 50 due rows (STAGE / MESSAGE / CLAIM_OUTCOME), oldest first, as localized e-mails
+//    to the partner's first user. Each row is claimed (sentAt set, error "sending") before mailing, so
+//    two runs never mail the same row; a failed send releases it for a retry after a backoff
+//    (10 min · 2^(attempts−1)), up to 6 attempts — the summary reports the given-up ("dead") count.
+//    Three consecutive transport errors stop the batch. Rows that must not be mailed (partner
+//    suspended/pending, claim not effectively active, lead trashed, protection ended, stage unchanged,
+//    message/outcome written before PARTNER_NOTIFY_START) are marked sent with the reason in `error`.
+//    Only one run at a time (advisory lock); an overlapping call returns skipped.
 // Builders/planner: src/lib/partner/notify.ts; DB side: src/lib/partner/notifySend.ts.
 //
 // Set PARTNER_NOTIFY_START to the deploy time first (ISO, e.g. 2026-10-19T12:00:00Z): no stage change
@@ -13,7 +17,9 @@
 //   */10 * * * * curl -s "http://127.0.0.1:3000/api/cron/partner-notify?key=$CRON_SECRET" >/dev/null
 import { NextRequest, NextResponse } from "next/server";
 import { withCronLog } from "@/lib/cronLog";
-import { collectStageEvents, notifyStartFromEnv, sendPendingNotifications, type CollectResult, type SendResult } from "@/lib/partner/notifySend";
+import {
+  collectStageEvents, notifyStartFromEnv, sendPendingNotifications, withNotifyLock, type CollectResult, type SendResult,
+} from "@/lib/partner/notifySend";
 
 export const dynamic = "force-dynamic";
 
@@ -25,17 +31,22 @@ async function runNotify(): Promise<NotifyResult> {
   const start = notifyStartFromEnv(process.env);
   if (!start) return { skipped: "PARTNER_NOTIFY_START not set" };
   const now = new Date();
-  const collected = await collectStageEvents(now, start);
-  const send = await sendPendingNotifications(now);
-  if (send.errors.length) console.error("[partner-notify]", send.errors);
-  return { ok: true, collected, send };
+  const run = await withNotifyLock(async () => {
+    const collected = await collectStageEvents(now, start);
+    const send = await sendPendingNotifications(now, start);
+    return { collected, send };
+  });
+  if (!run) return { skipped: "another run active" };
+  if (run.send.errors.length) console.error("[partner-notify]", run.send.errors);
+  return { ok: true, ...run };
 }
 
 const summarize = (r: NotifyResult) => {
   if (!("ok" in r)) return `skipped: ${r.skipped}`;
   const skipped = Object.values(r.send.skipped).reduce((a, b) => a + b, 0);
   return `collected ${r.collected.inserted} (${r.collected.pending} pending, ${r.collected.collapsed} collapsed, ${r.collected.settlingLeads} settling), ` +
-    `sent ${r.send.sent}${skipped ? `, ${skipped} skipped` : ""}${r.send.failed ? `, ${r.send.failed} failed` : ""}`;
+    `sent ${r.send.sent}${skipped ? `, ${skipped} skipped` : ""}${r.send.failed ? `, ${r.send.failed} failed` : ""}` +
+    `${r.send.dead ? `, ${r.send.dead} dead` : ""}${r.send.stoppedEarly ? ` (stopped: ${r.send.stoppedEarly})` : ""}`;
 };
 
 export async function GET(req: NextRequest) {
