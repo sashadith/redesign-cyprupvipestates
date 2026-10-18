@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
 import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
-import { findDuplicateLead } from "@/lib/crm/createLead";
+import { toMsisdn } from "./phoneMatch";
 import { resolveProjectInterest } from "@/lib/leads/projectInterest";
 import type { SiteButtonMessage } from "./siteButtonMessage";
 
@@ -37,10 +37,12 @@ export type ButtonLeadResult =
   | { status: "attached"; leadId: string }
   | { status: "duplicate" };
 
-/** WhatsApp display names are free text; keep a sane first name or fall back. */
+/** WhatsApp display names are free text. No name stays empty rather than a
+ *  placeholder: client-facing drafts greet by firstName, and an empty one gives
+ *  the neutral greeting (compose/greeting.ts) instead of "Dear WhatsApp lead". */
 export function leadNameFrom(pushName: string | null): { firstName: string; lastName: string } {
   const name = (pushName ?? "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
-  if (!name) return { firstName: "WhatsApp lead", lastName: "" };
+  if (!name) return { firstName: "", lastName: "" };
   const i = name.indexOf(" ");
   return i === -1 ? { firstName: name, lastName: "" } : { firstName: name.slice(0, i), lastName: name.slice(i + 1) };
 }
@@ -75,15 +77,22 @@ export async function createLeadFromButtonMessage(input: ButtonLeadInput): Promi
     }
   }
 
-  const whatsappIn = (leadId: string) => ({
+  // The enquiry itself is a SYSTEM row, not WHATSAPP_IN: the Action Center
+  // counts WHATSAPP_IN as "real contact" whatever its direction (crm.ts
+  // REAL_CONTACT_TYPES), so a fresh lead logged that way would skip the URGENT
+  // "never contacted" tier and surface only after a week. Same choice as every
+  // other intake path (leadNotify.ts). Later replies are WHATSAPP_IN as usual.
+  const intakeRow = (leadId: string) => ({
     leadId,
-    type: "WHATSAPP_IN" as const,
+    type: "SYSTEM" as const,
     direction: "INBOUND" as const,
     channel: "WHATSAPP" as const,
+    subject: "WhatsApp button enquiry",
     body: input.body.slice(0, 8000),
     occurredAt: input.occurredAt,
     messageId: input.messageId,
-    metadata: { via: "openwa-webhook", from: input.from, sitePage: input.site.pageUrl },
+    createdByName: ACTOR,
+    metadata: { via: "openwa-webhook", source: "whatsapp_button", from: input.from, sitePage: input.site.pageUrl },
   });
 
   const result = await prisma.$transaction(async (tx) => {
@@ -93,12 +102,17 @@ export async function createLeadFromButtonMessage(input: ButtonLeadInput): Promi
       const seen = await tx.leadInteraction.findFirst({ where: { messageId: input.messageId }, select: { id: true } });
       if (seen) return { status: "duplicate" as const };
     }
-    // Looser than the webhook's exact matcher on purpose: a lead whose stored
-    // number differs only in formatting must get the message, not a twin.
-    const dup = await findDuplicateLead(null, phone);
-    if (dup) {
-      await tx.leadInteraction.create({ data: whatsappIn(dup.id) });
-      return { status: "attached" as const, leadId: dup.id };
+    // Re-check under the lock — a concurrent message from the same number may
+    // have created the lead a moment ago. EXACT full-number match, same rule as
+    // matchLead.ts: the CRM's duplicate check (findDuplicateLead) compares the
+    // last 8 digits, which would put a stranger on +44 7999 278285 onto the
+    // timeline of +357 99 278285 and lose their enquiry without a notification.
+    const suffix = input.msisdn.slice(-6);
+    const candidates = await tx.$queryRaw<{ id: string; phone: string }[]>`SELECT id, phone FROM leads WHERE phone IS NOT NULL AND "deletedAt" IS NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${suffix}`}`;
+    const existing = candidates.find((c) => toMsisdn(c.phone) === input.msisdn);
+    if (existing) {
+      await tx.leadInteraction.create({ data: { ...intakeRow(existing.id), type: "WHATSAPP_IN" as const, subject: null, createdByName: null } });
+      return { status: "attached" as const, leadId: existing.id };
     }
     const lead = await tx.lead.create({
       data: {
@@ -119,7 +133,7 @@ export async function createLeadFromButtonMessage(input: ButtonLeadInput): Promi
       select: { id: true },
     });
     await tx.leadActivity.create({ data: { leadId: lead.id, type: "INBOUND", content: "Lead received via the WhatsApp button on the website", createdBy: ACTOR } });
-    await tx.leadInteraction.create({ data: whatsappIn(lead.id) });
+    await tx.leadInteraction.create({ data: intakeRow(lead.id) });
     return { status: "created" as const, leadId: lead.id };
   });
 
@@ -129,7 +143,7 @@ export async function createLeadFromButtonMessage(input: ButtonLeadInput): Promi
   // turn the webhook answer into a 500 (the gateway would retry → duplicate skip,
   // so no harm, but no reason to provoke it either).
   const crmLink = `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${result.leadId}`;
-  const name = `${firstName} ${lastName}`.trim();
+  const name = `${firstName} ${lastName}`.trim() || "(no WhatsApp name)";
   const tg = buttonLeadTelegram({ name, phone, site: input.site, projectTitle, body: input.body, crmLink });
   try {
     if (await sendTelegramMessage(tg)) await prisma.lead.update({ where: { id: result.leadId }, data: { telegramNotified: true } }).catch(() => {});

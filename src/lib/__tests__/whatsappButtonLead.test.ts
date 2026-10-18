@@ -69,11 +69,11 @@ test("parse: a hostile slug is dropped, the enquiry is kept", () => {
   assert.equal(p.projectSlug, null);
 });
 
-test("leadNameFrom: display name split, fallback when empty", () => {
+test("leadNameFrom: display name split; no name stays empty (neutral greeting, not 'Dear WhatsApp lead')", () => {
   assert.deepEqual(leadNameFrom("Viktor Hansen"), { firstName: "Viktor", lastName: "Hansen" });
   assert.deepEqual(leadNameFrom("V"), { firstName: "V", lastName: "" });
-  assert.deepEqual(leadNameFrom("  "), { firstName: "WhatsApp lead", lastName: "" });
-  assert.deepEqual(leadNameFrom(null), { firstName: "WhatsApp lead", lastName: "" });
+  assert.deepEqual(leadNameFrom("  "), { firstName: "", lastName: "" });
+  assert.deepEqual(leadNameFrom(null), { firstName: "", lastName: "" });
 });
 
 test("telegram text: escapes the visitor's text, links the CRM", () => {

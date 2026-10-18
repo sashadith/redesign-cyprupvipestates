@@ -65,7 +65,7 @@ export function decideHealthAction(obs: Observation, h: HealthHistory): HealthDe
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Telegram HTML, English (admin-facing). WhatsApp itself is the broken channel, so Telegram only. */
-export function healthAlertText(kind: "down" | "pairing" | "recovered", obs: Observation, restarted: boolean): string {
+export function healthAlertText(kind: "down" | "pairing" | "recovered", obs: Observation, restarted: boolean, restartError: string | null = null): string {
   if (kind === "recovered") {
     return "✅ <b>WhatsApp gateway is back</b>\nSession is ready again. CRM threads, sends and inbound messages work.";
   }
@@ -81,7 +81,13 @@ export function healthAlertText(kind: "down" | "pairing" | "recovered", obs: Obs
   return [
     "⚠️ <b>WhatsApp gateway is down</b>",
     state,
-    restarted ? "An automatic restart was just attempted; the next check runs in 5 minutes." : "Automatic restart already tried in the last 15 minutes without success.",
+    restarted
+      ? "An automatic restart was just attempted; the next check runs in 5 minutes."
+      : restartError
+        ? `The automatic restart failed: ${esc(restartError.slice(0, 200))}`
+        : obs
+          ? "Automatic restart already tried in the last 15 minutes without success."
+          : "Nothing to restart from here — check the openwa-api container on the VPS.",
     "Until fixed: no CRM WhatsApp threads, no sends, no team-group lead alerts, inbound messages are not recorded.",
   ].join("\n");
 }

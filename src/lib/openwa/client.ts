@@ -22,10 +22,13 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
   const headers = { "X-API-Key": cfg.apiKey, "Content-Type": "application/json" };
 
   // The response body can echo request data; only the status is surfaced.
-  async function call(url: string, init?: RequestInit): Promise<unknown> {
+  // A gateway that accepts the connection and then hangs (the "bridge never
+  // attached" state can look like that) must not hang the webhook or the
+  // health cron with it.
+  async function call(url: string, init?: RequestInit, timeoutMs = 15_000): Promise<unknown> {
     let res: Response;
     try {
-      res = await doFetch(url, { ...init, headers });
+      res = await doFetch(url, { ...init, headers, signal: AbortSignal.timeout(timeoutMs) });
     } catch {
       throw new ToolError("internal", "WhatsApp gateway unreachable.");
     }
@@ -35,7 +38,8 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
 
   return {
     async fetchThread(chatId, limit) {
-      const body = await call(`${base}/messages/${chatId}/history?limit=${limit}&deep=true`);
+      // deep=true reaches into WhatsApp's own history and can take a while.
+      const body = await call(`${base}/messages/${chatId}/history?limit=${limit}&deep=true`, undefined, 30_000);
       return Array.isArray(body) ? (body as RawMessage[]) : [];
     },
     async sendText(chatId, text) {
@@ -53,7 +57,8 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
       };
     },
     async startSession() {
-      await call(`${base}/start`, { method: "POST" });
+      // Start waits for the browser to come up; the readiness deadline is ~90 s.
+      await call(`${base}/start`, { method: "POST" }, 45_000);
     },
   };
 }

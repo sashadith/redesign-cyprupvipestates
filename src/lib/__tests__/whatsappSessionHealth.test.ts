@@ -48,4 +48,5 @@ test("alert texts: pairing explains what to do, down escapes the gateway error",
   assert.match(down, /&lt;x&gt;/);
   assert.match(down, /automatic restart was just attempted/);
   assert.match(healthAlertText("recovered", null, false), /back/);
+  assert.match(healthAlertText("down", { status: "failed", lastError: null }, false, "WhatsApp gateway returned HTTP 400."), /restart failed: WhatsApp gateway returned HTTP 400/);
 });
