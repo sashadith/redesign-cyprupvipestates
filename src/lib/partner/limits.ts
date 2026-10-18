@@ -17,6 +17,9 @@ export const partnerLimits = {
   tokenIp: makeThrottle(30, MIN15),
   changePassword: makeThrottle(5, MIN15),
   profile: makeThrottle(30, MIN15),
+  /** Client submissions (phase 3b, decision 11): per partner and per IP. */
+  submitPartner: makeThrottle(20, HOUR),
+  submitIp: makeThrottle(60, HOUR),
 };
 
 /** Throttle key for a request without a usable client IP (all such requests share one bucket). */

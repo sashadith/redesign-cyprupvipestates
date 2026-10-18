@@ -8,7 +8,7 @@ import {
   changePasswordAction, forgotAction, loginAction, registerAction, resendVerifyAction, resetAction,
   updateProfileAction, verifyAction,
 } from "../actions";
-import { isErr, isOk, type FormState } from "../formState";
+import { isErr, isOk, type FormState, type SubmitState } from "../formState";
 
 const LANG_NAMES = new Map<string, string>([
   ["en", "English"],
@@ -17,10 +17,10 @@ const LANG_NAMES = new Map<string, string>([
   ["ru", "Русский"],
 ]);
 // Type-only i18n import above keeps the four dictionaries out of the client bundle.
-const LANG_OPTIONS = Array.from(LANG_NAMES);
+export const LANG_OPTIONS = Array.from(LANG_NAMES);
 
 /** Resolve a dotted dictionary key against the dictionary passed from the server. */
-function say(t: PartnerDict, key: string): string {
+export function say(t: PartnerDict, key: string): string {
   let cur: unknown = t;
   for (const part of key.split(".")) {
     if (cur && typeof cur === "object" && part in (cur as object)) cur = (cur as Record<string, unknown>)[part];
@@ -28,9 +28,9 @@ function say(t: PartnerDict, key: string): string {
   }
   return typeof cur === "string" ? cur : t.err.generic;
 }
-const fill = (s: string, vars: Record<string, string>) => s.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
+export const fill = (s: string, vars: Record<string, string>) => s.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m);
 
-function Submit({ children, wide = true }: { children: React.ReactNode; wide?: boolean }) {
+export function Submit({ children, wide = true }: { children: React.ReactNode; wide?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className={wide ? "pp-btn pp-btn-wide" : "pp-btn"} disabled={pending} aria-busy={pending}>
@@ -40,20 +40,20 @@ function Submit({ children, wide = true }: { children: React.ReactNode; wide?: b
 }
 
 /** Form-level error (errors without a field, or for a field not shown in this form). */
-function FormError({ t, state, fields }: { t: PartnerDict; state: FormState; fields: string[] }) {
+export function FormError({ t, state, fields }: { t: PartnerDict; state: FormState | SubmitState; fields: string[] }) {
   if (!isErr(state) || (state.field && fields.includes(state.field))) return null;
   return <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, state.error), state.vars ?? {})}</p>;
 }
 
 type FieldProps = {
   t: PartnerDict;
-  state: FormState;
+  state: FormState | SubmitState;
   name: string;
   label: string;
   hint?: string;
   children: (a11y: { id: string; "aria-invalid"?: true; "aria-describedby"?: string }) => React.ReactNode;
 };
-function Field({ t, state, name, label, hint, children }: FieldProps) {
+export function Field({ t, state, name, label, hint, children }: FieldProps) {
   const id = `f-${name}`;
   const err = isErr(state) && state.field === name ? say(t, state.error) : null;
   const describedBy = [hint ? `${id}-hint` : "", err ? `${id}-err` : ""].filter(Boolean).join(" ") || undefined;

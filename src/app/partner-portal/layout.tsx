@@ -21,7 +21,7 @@ export default async function PartnerPortalLayout({ children }: { children: Reac
   return (
     <html lang={locale} data-theme="light" className="pp-html">
       <body className={`pp-app antialiased ${fontVars}`}>
-        <PortalShell locale={locale} t={t} loggedIn={!!me}>{children}</PortalShell>
+        <PortalShell locale={locale} t={t} loggedIn={!!me} active={me?.partner.status === "ACTIVE"}>{children}</PortalShell>
       </body>
     </html>
   );

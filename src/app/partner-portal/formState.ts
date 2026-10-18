@@ -6,3 +6,7 @@ export type FormState = FormOk | FormErr | null;
 
 export const isErr = (s: FormState): s is FormErr => !!s && "error" in s;
 export const isOk = (s: FormState): s is FormOk => !!s && "ok" in s;
+
+/** Submit-client form: the partner's own typed name comes back for the thank-you panel. */
+export type SubmitOk = { ok: true; name: string; alreadyYours?: boolean };
+export type SubmitState = SubmitOk | FormErr | null;

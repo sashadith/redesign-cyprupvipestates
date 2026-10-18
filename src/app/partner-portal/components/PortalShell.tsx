@@ -4,9 +4,10 @@ import { logoutAction } from "../sessionActions";
 import { LogoFull, LogoMark } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
-type Props = { locale: PartnerLocale; t: PartnerDict; loggedIn: boolean; children: React.ReactNode };
+/** `active`: the partner is approved (ACTIVE) — pending partners keep the 3a home/profile navigation. */
+type Props = { locale: PartnerLocale; t: PartnerDict; loggedIn: boolean; active?: boolean; children: React.ReactNode };
 
-export function PortalShell({ locale, t, loggedIn, children }: Props) {
+export function PortalShell({ locale, t, loggedIn, active = false, children }: Props) {
   return (
     <>
       <header className="pp-top">
@@ -18,7 +19,16 @@ export function PortalShell({ locale, t, loggedIn, children }: Props) {
           </Link>
           {loggedIn && (
             <nav className="pp-nav" aria-label="Partner">
-              <Link href="/home">{t.nav.home}</Link>
+              {active ? (
+                <>
+                  <Link href="/home">{t.nav.overview}</Link>
+                  <Link href="/submit">{t.nav.submit}</Link>
+                  <Link href="/clients">{t.nav.clients}</Link>
+                  <Link href="/projects">{t.nav.projects}</Link>
+                </>
+              ) : (
+                <Link href="/home">{t.nav.home}</Link>
+              )}
               <Link href="/profile">{t.nav.profile}</Link>
               <form action={logoutAction}>
                 <button type="submit" className="pp-linkbtn">{t.nav.logout}</button>
