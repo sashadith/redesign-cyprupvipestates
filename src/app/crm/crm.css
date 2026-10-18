@@ -223,3 +223,91 @@
 .crm-deal-stage { display: inline-grid; justify-items: start; }
 @media (max-width: 900px) { .crm-deal-stage { justify-items: end; } }
 @media (max-width: 420px) { .crm-dock a { padding: 9px 7px; font-size: 12px; } }
+/* Lead cockpit (2026-10-18) */
+.crm-cockpit { display: grid; gap: 16px; }
+.crm-cockpit h2 { margin: 0 0 10px; font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+.crm-ck-head { display: grid; gap: 8px; }
+.crm-ck-back { color: var(--muted); font-size: 13px; font-weight: 600; text-decoration: none; justify-self: start; }
+.crm-ck-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.crm-ck-title h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -.03em; line-height: 1.05; overflow-wrap: anywhere; }
+.crm-ck-lang { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: var(--muted); }
+.crm-ck-chips { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; font-size: 13px; }
+.crm-ck-status { display: inline-flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--sc); border-radius: 99px; padding: 4px 11px; font-weight: 700; font-size: 12.5px; }
+.crm-ck-status .dot, .crm-ck-steps .dot, .crm-ck-side .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sc); flex: none; }
+.crm-ck-src { font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 3px 7px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); }
+.crm-ck-src.partner { background: var(--partnerbg); color: var(--partnerfg); border-color: var(--partnerbg); }
+.crm-ck-owner { color: var(--ink); }
+.crm-ck-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.crm-ck-main, .crm-ck-aside { display: grid; gap: 16px; min-width: 0; }
+@media (min-width: 1024px) { .crm-ck-grid { grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); } }
+.crm-ck-sechead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.crm-ck-sechead span { font-size: 12.5px; }
+
+.crm-ck-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.crm-ck-steps button { width: 100%; height: 100%; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted);
+  border-radius: 10px; padding: 8px; font: 600 12px var(--body); text-align: left; cursor: pointer; transition: background .15s, border-color .15s; }
+.crm-ck-steps li.done button { background: var(--panel); color: var(--ink); }
+.crm-ck-steps button[aria-current="step"] { border-color: var(--sc); box-shadow: inset 0 0 0 1px var(--sc); color: var(--ink); background: var(--panel); opacity: 1; cursor: default; }
+.crm-ck-steps button:not(:disabled):hover { border-color: var(--sc); }
+.crm-ck-steps button:disabled:not([aria-current]) { cursor: default; }
+.crm-ck-steps button:focus-visible, .crm-ck-side button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.crm-ck-side { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.crm-ck-side .crm-btn { display: inline-flex; align-items: center; gap: 7px; }
+.crm-ck-side .crm-btn.on { border-color: var(--sc); box-shadow: inset 0 0 0 1px var(--sc); opacity: 1; }
+@media (max-width: 720px) {
+  .crm-ck-steps { grid-template-columns: 1fr 1fr; }
+  .crm-ck-title h1 { font-size: 24px; }
+}
+
+.crm-ck-facts { margin: 0; display: grid; gap: 8px; }
+.crm-ck-facts > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; }
+.crm-ck-facts dt { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.crm-ck-facts dd { margin: 0; display: flex; gap: 4px 10px; flex-wrap: wrap; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.crm-ck-copy { user-select: all; -webkit-user-select: all; font-variant-numeric: tabular-nums; }
+.crm-ck-links { display: inline-flex; gap: 10px; }
+.crm-ck-links a, .crm-ck-old { color: var(--accent); font-weight: 700; font-size: 13px; }
+.crm-ck-links a:focus-visible, .crm-ck-old:focus-visible, .crm-ck-back:focus-visible, .crm-ck-attr summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.crm-ck-msg { margin: 12px 0 0; }
+.crm-ck-msg figcaption { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.crm-ck-msg blockquote { margin: 0; padding: 8px 12px; border-left: 3px solid var(--line); background: var(--bg); border-radius: 0 10px 10px 0; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13.5px; line-height: 1.5; }
+.crm-ck-attr { margin-top: 12px; font-size: 13px; }
+.crm-ck-attr summary { cursor: pointer; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+
+.crm-ck-log fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 10px; }
+.crm-ck-types { display: flex; flex-wrap: wrap; gap: 6px; }
+.crm-ck-types label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.crm-ck-field { display: grid; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.crm-ck-field input, .crm-ck-field textarea, .crm-ck-assignrow select { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: 500 14px var(--body); color: var(--ink); background: var(--panel); min-width: 0; }
+.crm-ck-field textarea { resize: vertical; min-height: 84px; line-height: 1.45; }
+.crm-ck-field input:focus-visible, .crm-ck-field textarea:focus-visible, .crm-ck-assignrow select:focus-visible, .crm-ck-check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-ck-logrow { display: flex; align-items: end; gap: 10px 16px; flex-wrap: wrap; }
+.crm-ck-logrow .crm-btn { margin-left: auto; }
+.crm-ck-check { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding-bottom: 9px; }
+.crm-ck-error { margin: 0; color: var(--danger); font-size: 13px; font-weight: 600; }
+
+.crm-ck-timeline ol { list-style: none; margin: 0; padding: 0; display: grid; }
+.crm-ck-timeline li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.crm-ck-timeline li:first-child { border-top: 0; padding-top: 0; }
+.crm-ck-ico { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); color: var(--muted); }
+.crm-ck-timeline li.in .crm-ck-ico { background: var(--sugbg); color: var(--accent); }
+.crm-ck-timeline li.k-status .crm-ck-ico { color: var(--accent); }
+.crm-ck-itemhead { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.crm-ck-itemhead b { overflow-wrap: anywhere; }
+.crm-ck-itemhead .crm-muted { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.crm-ck-text { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; font-size: 13.5px; }
+.crm-ck-more { margin: 10px 0 0; font-size: 12.5px; }
+
+.crm-ck-deals ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.crm-ck-deals li { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.crm-ck-deals li.cancelled { opacity: .65; }
+.crm-ck-dealhead { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.crm-ck-dealhead b { overflow-wrap: anywhere; }
+.crm-ck-dealnums { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.crm-ck-dealnums dt { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.crm-ck-dealnums dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+.crm-ck-deals .crm-deal-dates { margin-top: 0; grid-auto-flow: column; justify-content: start; gap: 12px; }
+.crm-ck-payout { border-top: 1px dashed var(--line); padding-top: 8px; }
+.crm-ck-assignrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.crm-ck-assignrow select { flex: 1; }
+.crm-ck-old { justify-self: start; padding: 4px 0; }
+@media (max-width: 420px) { .crm-ck-facts > div { grid-template-columns: 1fr; gap: 2px; } .crm-ck-deals .crm-deal-dates { grid-auto-flow: row; } }

@@ -3,9 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { BoardColumn, BoardCard } from "@/lib/crm/boardModel";
 import { FUNNEL_STATUSES, STATUS_LABEL, type LeadStatusValue } from "@/lib/crm/leadStatus";
-import type { MoveResult } from "@/lib/crm/moveLead";
-import { moveLeadAction } from "../actions";
-import { MoveDialog, type DialogNeed, type DialogAnswer } from "./MoveDialog";
+import { useMoveFlow, type MoveRequest } from "./useMoveFlow";
 import { useToast } from "./Toast";
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
@@ -98,24 +96,18 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
   );
 }
 
-type OpenDialog = DialogNeed & { id: string; refocus: boolean };
+type BoardMove = MoveRequest & { refocus: boolean };
 
 export function Board({ columns: initial }: { columns: BoardColumn[] }) {
   const router = useRouter();
   const toast = useToast();
   const [columns, setColumns] = useState(initial);
-  const [dialog, setDialog] = useState<OpenDialog | null>(null);
-  const [busy, setBusy] = useState(false);
   const [popId, setPopId] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
-  // Answers given in earlier dialog rounds of the same move (e.g. a lost reason,
-  // then a cancel confirmation): every retry re-sends all of them.
-  const answers = useRef<DialogAnswer>({});
   // Always the latest board, so a move snapshots what is on screen right now
   // rather than what an older render closed over.
   const colsRef = useRef(columns);
   colsRef.current = columns;
-  const pending = useRef(new Set<string>());
   const popTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => setColumns(initial), [initial]);
@@ -150,78 +142,37 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
     });
   }
 
-  async function attempt(id: string, to: LeadStatusValue, refocus: boolean) {
-    const card = find(id);
-    if (!card || !card.canEdit || pending.current.has(id)) return;
-    pending.current.add(id);
-    setBusy(true);
-    const index = colsRef.current.find((c) => c.status === card.status)?.cards.findIndex((c) => c.id === id) ?? 0;
-    const answer = answers.current;
-    moveLocal(id, to);
-    if (refocus) focusCard(id);
-
-    let res: MoveResult;
-    try {
-      res = await moveLeadAction(id, to, answer);
-    } catch {
-      res = { error: "The move did not go through. Check your connection and try again." };
-    } finally {
-      pending.current.delete(id);
-      setBusy(false);
-    }
-
-    if ("ok" in res) {
-      answers.current = {};
-      setDialog(null);
+  const flow = useMoveFlow<BoardMove>({
+    canMove: ({ id }) => !!find(id)?.canEdit,
+    apply: ({ id, to, refocus }) => {
+      const card = find(id);
+      if (!card) return;
+      const index = colsRef.current.find((c) => c.status === card.status)?.cards.findIndex((c) => c.id === id) ?? 0;
+      moveLocal(id, to);
+      if (refocus) focusCard(id);
+      return () => restoreCard(card, Math.max(0, index));
+    },
+    moved: ({ id, to, leadName, refocus }, afterDialog) => {
       setPopId(id);
       if (popTimer.current) clearTimeout(popTimer.current);
       popTimer.current = setTimeout(() => setPopId(null), 700);
-      toast.show(`${card.name} → ${STATUS_LABEL[to]}`);
+      toast.show(`${leadName} → ${STATUS_LABEL[to]}`);
       // After a dialog round the card was inert behind the modal; focus it now.
-      if (refocus || Object.keys(answer).length > 0) focusCard(id);
+      if (refocus || afterDialog) focusCard(id);
       router.refresh();
-      return;
-    }
-
-    restoreCard(card, Math.max(0, index));
-    if (res.need) {
-      // Show the server's message only when it rejects an answer already given
-      // for this same question (e.g. an unknown project), not on the first ask.
-      const answered = (res.need === "deal" && !!answer.deal) || (res.need === "lostReason" && !!answer.lostReason) || (res.need === "confirmCancel" && !!answer.confirmCancel);
-      setDialog({ id, refocus, need: res.need, leadName: card.name, to, cancelCount: res.cancelCount, error: answered ? res.error : undefined });
-    } else {
-      answers.current = {};
-      setDialog(null);
-      toast.show(res.error, "error");
+    },
+    failed: ({ id, refocus }, error) => {
+      toast.show(error, "error");
       if (refocus) focusCard(id);
-    }
-  }
+    },
+    dismissed: ({ id }) => focusCard(id),
+  });
 
-  // A move started from a card, menu or drop: forget answers from any earlier move.
+  // A move started from a card, menu or drop.
   function start(id: string, to: LeadStatusValue, refocus: boolean) {
-    if (dialog || pending.current.has(id)) return;
-    answers.current = {};
-    void attempt(id, to, refocus);
-  }
-
-  function closeDialog() {
-    if (!dialog || busy) return;
-    answers.current = {};
-    setDialog(null);
-    focusCard(dialog.id);
-  }
-
-  // The <dialog> was closed natively (e.g. the browser's close watcher on a
-  // repeated Escape): always forget it, even mid-request, so no `dialog` state
-  // can outlive the modal and block every further move. Ignores a close event
-  // from a dialog that has already been replaced by the next question.
-  const dialogRef = useRef(dialog);
-  dialogRef.current = dialog;
-  function dialogClosed(closed: OpenDialog) {
-    if (dialogRef.current !== closed) return;
-    answers.current = {};
-    setDialog(null);
-    focusCard(closed.id);
+    const card = find(id);
+    if (!card) return;
+    flow.start({ id, to, leadName: card.name, refocus });
   }
 
   const drag: DragProps = {
@@ -266,19 +217,7 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
         <div className="crm-drop s-KEEP_CONTACT" {...dropProps("KEEP_CONTACT")}><span className="dot" />Keep contact</div>
         <div className="crm-drop s-LOST" {...dropProps("LOST")}><span className="dot" />Lost</div>
       </div>
-      {dialog && (
-        <MoveDialog
-          key={`${dialog.id}:${dialog.need}`}
-          state={dialog}
-          busy={busy}
-          onCancel={closeDialog}
-          onClosed={() => dialogClosed(dialog)}
-          onSubmit={(a) => {
-            answers.current = { ...answers.current, ...a };
-            void attempt(dialog.id, dialog.to, dialog.refocus);
-          }}
-        />
-      )}
+      {flow.node}
       {toast.node}
     </>
   );

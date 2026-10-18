@@ -16,7 +16,7 @@ export type DealRow = {
 export type StatusTotal = { status: CommissionStatusValue; count: number; sum: number };
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
-const STATUS_LABEL: Record<CommissionStatusValue, string> = {
+export const COMMISSION_LABEL: Record<CommissionStatusValue, string> = {
   EXPECTED: "Expected", EARNED: "Earned", DEVELOPER_PAID: "Developer paid", PAID_OUT: "Paid out", CANCELLED: "Cancelled",
 };
 const ACTION_LABEL: Record<PayoutAction, string> = { DEVELOPER_PAID: "Developer paid", PAID_OUT: "Paid out", CANCELLED: "Cancel" };
@@ -25,10 +25,10 @@ const ACTION_QUESTION: Record<PayoutAction, string> = {
   PAID_OUT: "Commission paid out on",
   CANCELLED: "Cancel this deal's commission as of",
 };
-const SOURCE_LABEL: Record<DealRow["rateSource"], string> = { PROJECT: "project", DEVELOPER: "developer", MANUAL: "manual", MISSING: "rate missing" };
+export const RATE_SOURCE_LABEL: Record<DealRow["rateSource"], string> = { PROJECT: "project", DEVELOPER: "developer", MANUAL: "manual", MISSING: "rate missing" };
 const TOTAL_ORDER: CommissionStatusValue[] = ["EXPECTED", "EARNED", "DEVELOPER_PAID", "PAID_OUT"];
 
-function StageButtons({ deal, today, onSet }: { deal: DealRow; today: string; onSet: (dealId: string, to: PayoutAction, date: string) => Promise<boolean> }) {
+export function StageButtons({ deal, today, onSet }: { deal: DealRow; today: string; onSet: (dealId: string, to: PayoutAction, date: string) => Promise<boolean> }) {
   const actions = payoutActions(deal.status);
   const [picking, setPicking] = useState<PayoutAction | null>(null);
   const [date, setDate] = useState(today);
@@ -56,7 +56,7 @@ function StageButtons({ deal, today, onSet }: { deal: DealRow; today: string; on
   );
 }
 
-function Dates({ d }: { d: DealRow }) {
+export function DealDates({ d }: { d: DealRow }) {
   const steps: [string, string | null][] = [["Expected", d.expectedAt], ["Earned", d.earnedAt], ["Dev. paid", d.developerPaidAt], ["Paid out", d.paidOutAt]];
   const shown = steps.filter(([, v]) => v);
   return <span className="crm-deal-dates">{shown.map(([k, v]) => <span key={k}>{k} <time dateTime={v ?? undefined}>{v}</time></span>)}</span>;
@@ -86,7 +86,7 @@ export function DealsTable({ deals, totals, today, truncated }: { deals: DealRow
           const t = totalOf.get(s);
           return (
             <div key={s} className={`crm-panel c-${s}`}>
-              <dt>{STATUS_LABEL[s]} <span>{t?.count ?? 0}</span></dt>
+              <dt>{COMMISSION_LABEL[s]} <span>{t?.count ?? 0}</span></dt>
               <dd>{eur(t?.sum ?? 0)}</dd>
             </div>
           );
@@ -109,11 +109,11 @@ export function DealsTable({ deals, totals, today, truncated }: { deals: DealRow
                   <td data-label="Our rate" className="num"><span>
                     {d.rateSource === "MISSING"
                       ? <span className="crm-warn">rate missing</span>
-                      : <>{d.ourRatePercent != null ? `${d.ourRatePercent} % ` : ""}<span className="crm-muted">{SOURCE_LABEL[d.rateSource]}</span></>}
+                      : <>{d.ourRatePercent != null ? `${d.ourRatePercent} % ` : ""}<span className="crm-muted">{RATE_SOURCE_LABEL[d.rateSource]}</span></>}
                   </span></td>
                   <td data-label="Our commission" className="num">{d.ourCommission != null ? eur(d.ourCommission) : <span className="crm-muted">—</span>}</td>
                   <td data-label="Partner" className="num">{d.partnerCommission != null ? eur(d.partnerCommission) : <span className="crm-muted">—</span>}</td>
-                  <td data-label="Stage"><span className="crm-deal-stage"><span className={`crm-pill c-${d.status}`}>{STATUS_LABEL[d.status]}</span><Dates d={d} /></span></td>
+                  <td data-label="Stage"><span className="crm-deal-stage"><span className={`crm-pill c-${d.status}`}>{COMMISSION_LABEL[d.status]}</span><DealDates d={d} /></span></td>
                   <td data-label="Payout"><StageButtons deal={d} today={today} onSet={onSet} /></td>
                 </tr>
               ))}
