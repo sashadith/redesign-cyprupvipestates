@@ -727,6 +727,7 @@ model MediaFolder {
 model User {
   dealsCreated Deal[] @relation("DealsCreated")
   managedPartners Partner[] @relation("PartnerManager")
+  partnerMessagesAuthored PartnerMessage[] @relation("PartnerMessagesAuthored")
   id                     String               @id @default(uuid())
   email                  String               @unique
   password               String
@@ -835,6 +836,7 @@ model Lead {
   deals Deal[]
   partnerId        String?
   partner          Partner?       @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  partnerMessages  PartnerMessage[]
   partnerMode      PartnerMode?
   contactMode      ContactMode?
   contactRepName   String?
@@ -2074,6 +2076,8 @@ model Partner {
   acceptances    PartnerAgreementAcceptance[]
   leads          Lead[]
   claims         PartnerClaim[]
+  messages       PartnerMessage[]
+  notifications  PartnerNotification[]
   @@index([status])
   @@map("partners")
 }
@@ -2130,6 +2134,8 @@ model PartnerAgreementAcceptance {
   @@map("partner_agreement_acceptances")
 }
 
+// One ACTIVE claim per lead is enforced by a partial unique index that exists only in SQL
+// (migration 20261019110000, "partner_claims_one_active_per_lead") — Prisma cannot express it.
 model PartnerClaim {
   id           String            @id @default(uuid())
   leadId       String
@@ -2137,10 +2143,52 @@ model PartnerClaim {
   partnerId    String
   partner      Partner           @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   state        PartnerClaimState
+  mode         PartnerMode
+  contactMode  ContactMode
+  submission   Json
+  outcomeNote  String?
   createdAt    DateTime          @default(now())
   reviewedAt   DateTime?
   reviewedById String?
   @@index([leadId])
   @@index([partnerId, state])
   @@map("partner_claims")
+}
+
+enum PartnerNotificationKind {
+  STAGE
+  MESSAGE
+  CLAIM_OUTCOME
+}
+
+model PartnerMessage {
+  id           String   @id @default(uuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  partnerId    String
+  partner      Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  authorUserId String?
+  author       User?    @relation("PartnerMessagesAuthored", fields: [authorUserId], references: [id], onDelete: SetNull)
+  body         String
+  createdAt    DateTime @default(now())
+  @@index([leadId, createdAt])
+  @@map("partner_messages")
+}
+
+model PartnerNotification {
+  id        String                  @id @default(uuid())
+  partnerId String
+  partner   Partner                 @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  kind      PartnerNotificationKind
+  refKey    String                  @unique
+  leadId    String?
+  claimId   String?
+  payload   Json
+  attempts  Int                     @default(0)
+  createdAt DateTime                @default(now())
+  sentAt    DateTime?
+  failedAt  DateTime?
+  error     String?
+  @@index([sentAt, createdAt])
+  @@map("partner_notifications")
 }
