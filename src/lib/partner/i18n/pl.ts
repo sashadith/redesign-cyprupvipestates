@@ -178,6 +178,7 @@ export const pl: PartnerDict = {
       greeting: "Szanowni Państwo,",
       intro: "dane bankowe na Państwa koncie partnera zostały zmienione (IBAN kończy się na {last4}).",
       warning: "Jeśli to nie Państwo dokonali tej zmiany, prosimy o niezwłoczny kontakt.",
+      changedOn: "Data zmiany: {date}",
       button: "Otwórz profil",
     },
   },
@@ -202,6 +203,10 @@ export const pl: PartnerDict = {
     cancel: "Anuluj",
     blockedNote: "Ze względów bezpieczeństwa wypłaty są wstrzymane do {date} po zmianie numeru IBAN.",
     emailNote: "Poinformujemy Państwa e-mailem o każdej zmianie danych bankowych.",
+    pendingNote: "Dane bankowe i rozliczeniowe mogą Państwo dodać po zatwierdzeniu konta partnera.",
+    unavailable: "Państwa danych bankowych nie można obecnie wyświetlić. Prosimy o kontakt.",
+    lastChanged: "Ostatnia zmiana",
+    ibanKeepHelp: "Prosimy pozostawić to pole puste, aby zachować zapisany IBAN.",
   },
   commissions: {
     title: "Prowizje",

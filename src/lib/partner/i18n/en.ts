@@ -176,6 +176,7 @@ export const en = {
       greeting: "Dear {name},",
       intro: "the bank details in your partner account were changed (IBAN ending {last4}).",
       warning: "If you did not make this change, please contact us immediately.",
+      changedOn: "Date of the change: {date}",
       button: "Open profile",
     },
   },
@@ -200,6 +201,10 @@ export const en = {
     cancel: "Cancel",
     blockedNote: "For security, payouts are paused until {date} after an IBAN change.",
     emailNote: "We will email you whenever your bank details change.",
+    pendingNote: "Bank and billing details can be added once your partner account has been approved.",
+    unavailable: "Your bank details can't be shown right now. Please contact us.",
+    lastChanged: "Last changed",
+    ibanKeepHelp: "Leave this field empty to keep the saved IBAN.",
   },
   commissions: {
     title: "Commissions",

@@ -8,6 +8,7 @@ import {
   changePasswordAction, forgotAction, loginAction, registerAction, resendVerifyAction, resetAction,
   updateProfileAction, verifyAction,
 } from "../actions";
+import { saveBankDetailsAction } from "../bankActions";
 import { isErr, isOk, type FormState, type SubmitState } from "../formState";
 
 const LANG_NAMES = new Map<string, string>([
@@ -312,6 +313,83 @@ export function PasswordForm({ t }: { t: PartnerDict }) {
       <div className="pp-actions">
         <Submit wide={false}>{t.profile.changePassword}</Submit>
         {isOk(state) && <span className="pp-saved" role="status">{t.profile.passwordSaved}</span>}
+      </div>
+    </form>
+  );
+}
+
+// ─── Bank & billing details ──────────────────────────────────────────────────
+
+/** The partner's own stored values, minus the IBAN (which is never sent to the client). */
+export type BankPrefill = { holder: string; bic: string; billingName: string; billingAddress: string; vatId: string };
+
+export function BankForm({ t, prefill, ibanLast4 }: { t: PartnerDict; prefill: BankPrefill | null; ibanLast4: string | null }) {
+  const B = t.bank;
+  const [state, action] = useFormState(saveBankDetailsAction, null);
+  const [open, setOpen] = useState(!prefill);
+  const ibanRef = useRef<HTMLInputElement>(null);
+  const pwRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!state) return;
+    // After every answer the IBAN and password inputs are emptied: neither is ever kept or echoed back.
+    if (ibanRef.current) ibanRef.current.value = "";
+    if (pwRef.current) pwRef.current.value = "";
+    if (isOk(state)) setOpen(false);
+  }, [state]);
+
+  if (!open) {
+    return (
+      <div className="pp-actions">
+        <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setOpen(true)}>{B.edit}</button>
+        {isOk(state) && <span className="pp-saved" role="status">{B.saved}</span>}
+      </div>
+    );
+  }
+  const shown = ["holder", "iban", "bic", "billingName", "billingAddress", "vatId", "currentPassword"];
+  return (
+    <form action={action} className="pp-form" noValidate>
+      <FormError t={t} state={state} fields={shown} />
+      <Field t={t} state={state} name="holder" label={B.holder}>
+        {(a) => <input {...a} name="holder" autoComplete="cc-name" maxLength={80} defaultValue={prefill?.holder ?? ""} required />}
+      </Field>
+      <div className="pp-row">
+        <Field t={t} state={state} name="iban" label={B.iban} hint={ibanLast4 ? B.ibanKeepHelp : undefined}>
+          {(a) => (
+            <input
+              {...a}
+              ref={ibanRef}
+              name="iban"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={60}
+              placeholder={ibanLast4 ? `•••• ${ibanLast4}` : undefined}
+              defaultValue=""
+              required={!ibanLast4}
+            />
+          )}
+        </Field>
+        <Field t={t} state={state} name="bic" label={B.bic}>
+          {(a) => <input {...a} name="bic" autoComplete="off" spellCheck={false} maxLength={14} defaultValue={prefill?.bic ?? ""} />}
+        </Field>
+      </div>
+      <Field t={t} state={state} name="billingName" label={B.billingName}>
+        {(a) => <input {...a} name="billingName" autoComplete="organization" maxLength={120} defaultValue={prefill?.billingName ?? ""} required />}
+      </Field>
+      <Field t={t} state={state} name="billingAddress" label={B.billingAddress} hint={B.billingAddressHelp}>
+        {(a) => <textarea {...a} name="billingAddress" rows={3} maxLength={300} defaultValue={prefill?.billingAddress ?? ""} required />}
+      </Field>
+      <Field t={t} state={state} name="vatId" label={B.vatId} hint={B.vatIdHelp}>
+        {(a) => <input {...a} name="vatId" autoComplete="off" spellCheck={false} maxLength={24} defaultValue={prefill?.vatId ?? ""} />}
+      </Field>
+      <Field t={t} state={state} name="currentPassword" label={B.password} hint={B.passwordHelp}>
+        {(a) => <input {...a} ref={pwRef} name="currentPassword" type="password" autoComplete="current-password" required />}
+      </Field>
+      <p className="pp-muted pp-small">{B.emailNote}</p>
+      <div className="pp-actions">
+        <Submit wide={false}>{B.save}</Submit>
+        {prefill && (
+          <button type="button" className="pp-btn pp-btn-ghost" onClick={() => setOpen(false)}>{B.cancel}</button>
+        )}
       </div>
     </form>
   );

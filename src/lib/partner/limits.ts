@@ -20,6 +20,8 @@ export const partnerLimits = {
   /** Client submissions (phase 3b, decision 11): per partner and per IP. */
   submitPartner: makeThrottle(20, HOUR),
   submitIp: makeThrottle(60, HOUR),
+  /** Bank-detail saves (phase 3c): every attempt counts, wrong passwords included. */
+  bankPartner: makeThrottle(5, HOUR),
 };
 
 /** Throttle key for a request without a usable client IP (all such requests share one bucket). */

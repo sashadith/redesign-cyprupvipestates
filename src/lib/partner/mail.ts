@@ -116,3 +116,24 @@ export function buildRegistrationNotice(p: { company: string | null; firstName: 
   const who = p.company?.trim() || `${p.firstName} ${p.lastName}`.trim();
   return `New partner registration: ${escapeHtml(who)}, ${escapeHtml(p.country)} → /crm/partners`;
 }
+
+/**
+ * "Your bank details were changed" mail to the partner. Carries only the last 4 of the IBAN and the
+ * time of the change — never the IBAN itself or any other bank/billing value.
+ */
+export function buildBankChangedEmail(
+  locale: PartnerLocale,
+  i: { name?: string; ibanLast4: string; changedAt: Date },
+): BuiltEmail {
+  const t = dict(locale).mail;
+  const when = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Nicosia" }).format(i.changedAt);
+  return renderPartnerEmail({
+    subject: t.bankChanged.subject,
+    greeting: greet(t.bankChanged.greeting, i.name),
+    intro: fmt(t.bankChanged.intro, { last4: String(i.ibanLast4).slice(-4) }),
+    button: t.bankChanged.button,
+    link: `${partnerBaseUrl()}/profile`,
+    notes: [fmt(t.bankChanged.changedOn, { date: when }), t.bankChanged.warning],
+    signature: t.signature,
+  });
+}
