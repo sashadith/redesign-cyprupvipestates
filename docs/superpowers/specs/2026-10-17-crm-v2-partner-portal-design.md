@@ -38,7 +38,7 @@ module, not part of this scope. Hebrew is out of scope for the portal (see memor
 | Deals | **Multiple deals per lead**, each with its own commission. |
 | Architecture | Rebuild inside the existing Next.js app, same DB. Built **in parallel** to the old CRM. |
 | Addresses | Old CRM stays at `/admin/crm`; new CRM at `/crm`; portal at **`partner.cyprusvipestates.com`**. |
-| Visual direction | **Limestone** (original colours): cool light grey, brand green #1B4B43 for text/structure, per-stage colours, floating action dock. Champagne/bronze accents were tried and rejected. Mockup: https://claude.ai/artifact/FAmQpy3gu5DhicwAra8J4N |
+| Visual direction | **Company CI** (operator, 2026-10-18 — supersedes the Limestone mockup for both CRM and portal): light paper backgrounds, Fraunces headings, Mulish body, bronze buttons/figures, champagne only for gold lines, gold logo. Reference: https://cyprusvipestates.com/style. |
 | Payout | **Credit note (Gutschrift) basis**, no partner invoice. Profile stores bank details. System generates a numbered **credit-note PDF** on "Paid out". |
 | Whitewill learnings adopted | Contact mode per client, personal manager, partner type, phone/type locked, archive with reason + reopen, period filter, live report/export, materials, automatic news, rating with prizes, **Fix mode**. |
 | Fix mode | Second submission path: partner works the client personally, we only register with the developer and handle the paperwork. Own default share **50 %** (configurable, overridable per partner). |
