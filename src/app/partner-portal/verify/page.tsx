@@ -1,3 +1,4 @@
+import { tokenLooksValid } from "@/lib/partner/accounts";
 import { ResendForm, VerifyForm } from "../components/forms";
 import { portalContext } from "../portalContext";
 
@@ -5,10 +6,12 @@ import { portalContext } from "../portalContext";
 export default async function VerifyPage({ searchParams }: { searchParams: { token?: string | string[] } }) {
   const { t } = await portalContext();
   const token = typeof searchParams.token === "string" ? searchParams.token.slice(0, 200) : "";
+  // Read-only check; the token is consumed only by the button's server action.
+  const valid = token ? await tokenLooksValid(token, "VERIFY_EMAIL") : false;
   return (
     <section className="pp-card">
       <h1>{t.verify.title}</h1>
-      {token ? (
+      {valid ? (
         <VerifyForm t={t} token={token} />
       ) : (
         <>

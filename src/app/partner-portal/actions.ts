@@ -19,7 +19,7 @@ import { PARTNER_LANG_COOKIE } from "@/lib/partner/i18n";
 import { ipKey, partnerLimits as L } from "@/lib/partner/limits";
 import { hashPassword, passwordProblem, verifyPassword } from "@/lib/partner/password";
 import { validateProfile, validateRegistration } from "@/lib/partner/registration";
-import { createPartnerSession, getPartner, revokeAllSessionsForPartner } from "@/lib/partner/session";
+import { createPartnerSession, getPartner, revokeAllSessionsForPartner, revokeCurrentSession } from "@/lib/partner/session";
 import type { FormState } from "./formState";
 
 const field = (fd: FormData, k: string): string => {
@@ -29,6 +29,11 @@ const field = (fd: FormData, k: string): string => {
 const normEmail = (s: string) => s.trim().toLowerCase().slice(0, 254);
 const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const requestIp = () => partnerClientIp(headers());
+/** Log in fresh: any session behind an existing cookie is revoked first, so its token cannot stay valid. */
+async function startFreshSession(partnerUserId: string): Promise<void> {
+  await revokeCurrentSession();
+  await createPartnerSession(partnerUserId);
+}
 const pwCode = (p: NonNullable<ReturnType<typeof passwordProblem>>) =>
   p === "too_short" ? "err.passwordShort" : p === "too_long" ? "err.passwordLong" : "err.passwordDigits";
 
@@ -83,7 +88,7 @@ export async function verifyAction(_prev: FormState, fd: FormData): Promise<Form
   await markEmailVerified(userId);
   const user = await prisma.partnerUser.findUnique({ where: { id: userId }, select: { partner: { select: { status: true } } } });
   if (!user || user.partner.status === "SUSPENDED") redirect("/login");
-  await createPartnerSession(userId);
+  await startFreshSession(userId);
   redirect("/home");
 }
 
@@ -124,7 +129,7 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
 
   L.loginEmail.reset(email);
   await prisma.partnerUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await createPartnerSession(user.id);
+  await startFreshSession(user.id);
   redirect("/home");
 }
 
@@ -165,7 +170,7 @@ export async function resetAction(_prev: FormState, fd: FormData): Promise<FormS
   await markEmailVerified(userId);
   await revokeAllSessionsForPartner(user.partnerId);
   if (user.partner.status === "SUSPENDED") return { ok: true };
-  await createPartnerSession(userId);
+  await startFreshSession(userId);
   redirect("/home");
 }
 

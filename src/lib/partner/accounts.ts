@@ -56,7 +56,7 @@ export async function tokenLooksValid(token: string, kind: PartnerTokenKind): Pr
 
 /**
  * Sets emailVerifiedAt if it was still empty. On the first verification the office gets a
- * Telegram notice (best effort, never blocks the partner).
+ * Telegram notice (best effort, never blocks the partner; skipped for SUSPENDED partners).
  */
 export async function markEmailVerified(partnerUserId: string): Promise<void> {
   const res = await prisma.partnerUser.updateMany({
@@ -69,9 +69,10 @@ export async function markEmailVerified(partnerUserId: string): Promise<void> {
     (async () => {
       const user = await prisma.partnerUser.findUnique({
         where: { id: partnerUserId },
-        select: { partner: { select: { company: true, firstName: true, lastName: true, country: true } } },
+        select: { partner: { select: { company: true, firstName: true, lastName: true, country: true, status: true } } },
       });
-      if (user) await sendTelegramMessage(buildRegistrationNotice(user.partner));
+      // A suspended partner is not a new registration for the office.
+      if (user && user.partner.status !== "SUSPENDED") await sendTelegramMessage(buildRegistrationNotice(user.partner));
     })(),
   );
 }
