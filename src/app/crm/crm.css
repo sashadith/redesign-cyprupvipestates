@@ -313,3 +313,17 @@
 .crm-ck-assignrow select { flex: 1; }
 .crm-ck-old { justify-self: start; padding: 4px 0; }
 @media (max-width: 420px) { .crm-ck-facts > div { grid-template-columns: 1fr; gap: 2px; } .crm-ck-deals .crm-deal-dates { grid-auto-flow: row; } }
+
+/* New lead form (Phase 2c) */
+.crm-nl { margin-top: 14px; display: grid; gap: 14px; max-width: 760px; }
+.crm-nl fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.crm-nl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.crm-nl-wide { grid-column: 1 / -1; }
+.crm-ck-field select { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: 500 14px var(--body); color: var(--ink); background: var(--panel); min-width: 0; }
+.crm-ck-field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-ck-field em.crm-ck-error { font-style: normal; font-size: 12px; }
+.crm-nl-dup { border: 1px solid var(--danger); border-radius: 10px; padding: 10px 12px; }
+.crm-nl-dup p { margin: 4px 0 0; font-size: 13.5px; }
+.crm-nl-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.crm-nl-actions a.crm-btn { text-decoration: none; }
+@media (max-width: 560px) { .crm-nl-grid { grid-template-columns: minmax(0, 1fr); } }

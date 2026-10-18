@@ -1,6 +1,6 @@
 /* Behaviour test for the CRM v2 Phase 2b final fixes (2026-10-18):
-     - Shell hides the old-CRM links ("Old CRM", "+ New lead") for people the
-       old-CRM gate keeps out, and keeps them for everyone else;
+     - Shell hides the "Old CRM" link for people the old-CRM gate keeps out,
+       and keeps it for everyone else; "+ New lead" (/crm/leads/new) is for all;
      - panels inside one ToastProvider share a single toast (no overlap);
      - TeamTable gives focus back to the control that triggered a save;
      - CockpitStage gives focus back to the stage button after a dialog is
@@ -127,7 +127,8 @@ test("the shell hides the old-CRM links for people the gate keeps out", async ()
   const user = { name: "Sophie Keller", canAssign: false, inboxCount: 0, oldCrm: false };
   const root = await mount(h(Shell, { user }, h("p", null, "page")));
   assert.ok(!links().includes("/admin/crm"), "no Old CRM link");
-  assert.ok(!links().includes("/admin/crm/new"), "no + New lead link");
+  assert.ok(!links().includes("/admin/crm/new"), "no link into the old CRM's new-lead form");
+  assert.ok(links().includes("/crm/leads/new"), "+ New lead stays, pointing at the new CRM");
   assert.ok(links().includes("/crm/pipeline"));
   await act(async () => root.unmount());
 });
@@ -136,7 +137,8 @@ test("the shell keeps the old-CRM links for everyone else", async () => {
   const user = { name: "Sophie Keller", canAssign: true, inboxCount: 2, oldCrm: true };
   const root = await mount(h(Shell, { user }, h("p", null, "page")));
   assert.ok(links().includes("/admin/crm"), "Old CRM link");
-  assert.ok(links().includes("/admin/crm/new"), "+ New lead link");
+  assert.ok(links().includes("/crm/leads/new"), "+ New lead link (new CRM)");
+  assert.ok(!links().includes("/admin/crm/new"), "no link into the old CRM's new-lead form");
   await act(async () => root.unmount());
 });
 

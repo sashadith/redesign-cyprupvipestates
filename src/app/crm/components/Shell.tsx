@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // oldCrm: the person may use /admin/crm (src/lib/crm/oldCrmGate.ts). Without it the
-// links into the old CRM ("Old CRM", "+ New lead") would only bounce back here.
+// link into the old CRM ("Old CRM") would only bounce back here.
 type Props = { user: { name: string; canAssign: boolean; inboxCount: number; oldCrm: boolean }; children: React.ReactNode };
 
 export function Shell({ user, children }: Props) {
@@ -29,7 +29,7 @@ export function Shell({ user, children }: Props) {
       </header>
       <main className="crm-main">{children}</main>
       <nav className="crm-dock" aria-label="Quick actions">
-        {user.oldCrm && <Link href="/admin/crm/new" className="plus">＋ New lead</Link>}
+        <Link href="/crm/leads/new" className="plus">＋ New lead</Link>
         <Link href="/crm/pipeline">Pipeline</Link>
         {user.canAssign && <Link href="/crm/inbox">Inbox</Link>}
         {user.canAssign && <Link href="/crm/team">Team</Link>}
