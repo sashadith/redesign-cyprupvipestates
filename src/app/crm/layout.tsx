@@ -5,6 +5,7 @@ import "@/app/globals.css";
 import "./crm.css";
 import { getCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
+import { mayUseOldCrm } from "@/lib/crm/oldCrmGate";
 import { prisma } from "@/lib/prisma";
 import { inboxWhere } from "@/lib/crm/inboxWhere";
 import { Shell } from "./components/Shell";
@@ -20,7 +21,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
   return (
     <html lang="en">
       <body className="crm-app antialiased">
-        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0 }}>{children}</Shell>
+        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user) }}>{children}</Shell>
       </body>
     </html>
   );

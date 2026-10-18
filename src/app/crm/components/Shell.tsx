@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type Props = { user: { name: string; canAssign: boolean; inboxCount: number }; children: React.ReactNode };
+// oldCrm: the person may use /admin/crm (src/lib/crm/oldCrmGate.ts). Without it the
+// links into the old CRM ("Old CRM", "+ New lead") would only bounce back here.
+type Props = { user: { name: string; canAssign: boolean; inboxCount: number; oldCrm: boolean }; children: React.ReactNode };
 
 export function Shell({ user, children }: Props) {
   const path = usePathname();
@@ -21,13 +23,13 @@ export function Shell({ user, children }: Props) {
           )}
           {user.canAssign && <Link href="/crm/team" className={on("/crm/team")}>Team</Link>}
           {user.canAssign && <Link href="/crm/commissions" className={on("/crm/commissions")}>Commissions</Link>}
-          <Link href="/admin/crm">Old CRM</Link>
+          {user.oldCrm && <Link href="/admin/crm">Old CRM</Link>}
         </nav>
         <div className="crm-me"><span>{user.name}</span><b aria-hidden="true">{initials}</b></div>
       </header>
       <main className="crm-main">{children}</main>
       <nav className="crm-dock" aria-label="Quick actions">
-        <Link href="/admin/crm/new" className="plus">＋ New lead</Link>
+        {user.oldCrm && <Link href="/admin/crm/new" className="plus">＋ New lead</Link>}
         <Link href="/crm/pipeline">Pipeline</Link>
         {user.canAssign && <Link href="/crm/inbox">Inbox</Link>}
         {user.canAssign && <Link href="/crm/team">Team</Link>}
