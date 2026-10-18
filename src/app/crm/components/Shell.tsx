@@ -16,7 +16,7 @@ export function Shell({ user, children }: Props) {
   return (
     <>
       <header className="crm-top">
-        <Link href="/crm/today" className="crm-logo"><i>CV</i>CVE Office</Link>
+        <Link href="/crm/today" className="crm-logo" aria-label="CVE Office"><i>CV</i><span>CVE Office</span></Link>
         <nav className="crm-nav" aria-label="CRM">
           <Link href="/crm/today" className={on("/crm/today")}>Today</Link>
           <Link href="/crm/pipeline" className={on("/crm/pipeline")}>Pipeline</Link>

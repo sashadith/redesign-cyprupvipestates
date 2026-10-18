@@ -96,7 +96,7 @@ function AccountRates({ account, save, remove }: { account: RateAccount; save: S
         <span className="crm-rate-line">
           <span className="crm-rate-what">Default</span>
           <RateInput key={`d:${d?.id ?? "none"}:${d?.ratePercent ?? ""}`} current={d?.ratePercent ?? null} label={`Default rate for ${account.name}`}
-            placeholder="No default rate" onSave={(r) => save(account.id, null, r)} />
+            placeholder="none" onSave={(r) => save(account.id, null, r)} />
           {d && <RemoveButton question="Remove default rate?" label={`Remove default rate for ${account.name}`} onRemove={() => remove(d.id)} />}
         </span>
       </div>

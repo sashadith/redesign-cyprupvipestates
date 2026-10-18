@@ -370,3 +370,20 @@
 .crm-palette li[aria-selected="true"] { background: var(--bg); }
 .crm-palette .empty { padding: 12px 18px; color: var(--muted); font-size: 13px; }
 @media (max-width: 640px) { .crm-search-btn kbd { display: none; } }
+
+/* Polish (2026-10-18, operator preview): the dock is a phone-only bottom bar —
+   on wider screens the top nav and ⌘K cover it and it hid form buttons. On
+   phones the header is one row: logo mark, a swipeable nav strip, search, avatar. */
+@media (min-width: 721px) {
+  .crm-dock { display: none; }
+  .crm-main { padding-bottom: 40px; }
+}
+@media (max-width: 720px) {
+  .crm-top { flex-wrap: nowrap; gap: 10px; padding: 10px 16px; }
+  .crm-logo span { display: none; }
+  .crm-nav { flex-wrap: nowrap; overflow-x: auto; flex: 1 1 auto; min-width: 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .crm-nav::-webkit-scrollbar { display: none; }
+  .crm-nav a { padding: 7px 10px; white-space: nowrap; flex: none; }
+  .crm-search-btn { margin-left: 0; padding: 6px 9px; flex: none; }
+  .crm-me { flex: none; }
+}
