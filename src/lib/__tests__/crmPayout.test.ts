@@ -93,11 +93,15 @@ test("bankDetailsComplete", () => {
   assert.equal(bankDetailsComplete({ ...BANK, holder: "" }), false);
 });
 
-test("issuerFromEnv: all four required, fallbacks and literal \\n", () => {
+test("issuerFromEnv: built-in company data, env overrides, fallbacks and literal \\n", () => {
   const full = { CVE_LEGAL_NAME: "Example Ltd", CVE_LEGAL_ADDRESS: "1 Street\\n8000 Paphos", CVE_LEGAL_VAT_ID: "CY1", CVE_LEGAL_REG_NO: "HE1" };
   assert.deepEqual(issuerFromEnv(full), { ok: true, issuer: { legalName: "Example Ltd", address: "1 Street\n8000 Paphos", vatId: "CY1", regNo: "HE1" } });
-  assert.deepEqual(issuerFromEnv({}), { ok: false, missing: ["CVE_LEGAL_NAME", "CVE_LEGAL_ADDRESS", "CVE_LEGAL_VAT_ID", "CVE_LEGAL_REG_NO"] });
-  assert.deepEqual(issuerFromEnv({ ...full, CVE_LEGAL_NAME: "   " }), { ok: false, missing: ["CVE_LEGAL_NAME"] });
+  assert.deepEqual(issuerFromEnv({}), {
+    ok: true,
+    issuer: { legalName: "SecretBrand Solutions LTD", address: "Palaion Patron Germanou 11\n8011 Paphos\nCyprus", vatId: "CY60038766O", regNo: "HE450005" },
+  });
+  const blank = issuerFromEnv({ ...full, CVE_LEGAL_NAME: "   " });
+  assert.ok(blank.ok && blank.issuer.legalName === "SecretBrand Solutions LTD", "a blank override falls back to the built-in name");
   const short = { CVE_LEGAL_NAME: "X", CVE_LEGAL_ADDRESS: "A", CVE_VAT_ID: "CY2", CVE_REG_NO: "HE2" };
   const r = issuerFromEnv(short);
   assert.ok(r.ok && r.issuer.vatId === "CY2" && r.issuer.regNo === "HE2");

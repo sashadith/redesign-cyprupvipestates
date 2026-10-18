@@ -1,4 +1,4 @@
-// Pure credit-note (Gutschrift / self-billing) data model. Everything the PDF
+// Pure credit-note (self-billing, English only) data model. Everything the PDF
 // shows is preformatted here; the renderer only lays it out. Never holds a full IBAN.
 
 export const CY_VAT_RATE = 19;
@@ -76,6 +76,8 @@ export interface CreditNoteModel {
   dateLabel: string;
   date: string;
   issuerLabel: string;
+  /** Brand line above the legal entity ("Cyprus VIP Estates is a project of"). */
+  issuerIntro: string;
   issuerLines: string[];
   recipientLabel: string;
   recipientLines: string[];
@@ -92,44 +94,44 @@ const lines = (s: string) => s.split(/\r?\n/).map((l) => l.trim()).filter(Boolea
 
 export function creditNoteModel(i: CreditNoteInput): CreditNoteModel {
   const v = vatFor(i.vatMode, i.net);
-  const rows: CreditNoteModel["rows"] = [{ label: "Net amount / Nettobetrag", amount: formatEuro(i.net) }];
+  const rows: CreditNoteModel["rows"] = [{ label: "Net amount", amount: formatEuro(i.net) }];
   let vatNote: string | null = null;
   if (i.vatMode === "CY_VAT") {
-    rows.push({ label: `VAT ${CY_VAT_RATE}% / MwSt. ${CY_VAT_RATE} %`, amount: formatEuro(v.vat) });
+    rows.push({ label: `VAT ${CY_VAT_RATE}%`, amount: formatEuro(v.vat) });
   } else if (i.vatMode === "REVERSE_CHARGE") {
-    rows.push({ label: "VAT / MwSt.", amount: formatEuro(0) });
+    rows.push({ label: "VAT", amount: formatEuro(0) });
     vatNote =
-      "Reverse charge — VAT to be accounted for by the recipient (Art. 196 Directive 2006/112/EC) / " +
-      "Reverse Charge — Steuerschuldnerschaft des Leistungsempfängers (Art. 196 Richtlinie 2006/112/EG)";
+      "Reverse charge — VAT to be accounted for by the recipient (Art. 196 Directive 2006/112/EC)";
   } else {
-    rows.push({ label: "VAT / MwSt.", amount: formatEuro(0) });
-    vatNote = "No VAT charged / Keine Umsatzsteuer berechnet";
+    rows.push({ label: "VAT", amount: formatEuro(0) });
+    vatNote = "No VAT charged";
   }
-  rows.push({ label: "Total / Gesamtbetrag", amount: formatEuro(v.total), strong: true });
+  rows.push({ label: "Total", amount: formatEuro(v.total), strong: true });
 
-  const issuerLines = [i.issuer.legalName, ...lines(i.issuer.address), `VAT ID / USt-IdNr.: ${i.issuer.vatId}`, `Reg. no. / Handelsregister-Nr.: ${i.issuer.regNo}`];
+  const issuerLines = [i.issuer.legalName, ...lines(i.issuer.address), `VAT no.: ${i.issuer.vatId}`, `Reg. no.: ${i.issuer.regNo}`];
   const recipientLines = [i.partner.billingName, ...lines(i.partner.billingAddress)];
-  if (i.partner.vatId) recipientLines.push(`VAT ID / USt-IdNr.: ${i.partner.vatId}`);
+  if (i.partner.vatId) recipientLines.push(`VAT no.: ${i.partner.vatId}`);
 
   return {
-    title: "Credit note / Gutschrift",
-    numberLabel: "Credit note no. / Gutschrift-Nr.",
+    title: "Credit note",
+    numberLabel: "Credit note no.",
     number: i.number,
-    dateLabel: "Date / Datum",
+    dateLabel: "Date",
     date: formatDate(i.issuedAt),
-    issuerLabel: "Issued on behalf of the recipient by / Ausgestellt im Namen des Empfängers durch",
+    issuerLabel: "Issued on behalf of the recipient by",
+    issuerIntro: "Cyprus VIP Estates is a project of",
     issuerLines,
-    recipientLabel: "Recipient / Empfänger",
+    recipientLabel: "Recipient",
     recipientLines,
-    referenceLabel: "Service / Leistung",
-    reference: `Referral commission — ${i.deal.projectName} ${i.deal.unitLabel}, client ${i.clientInitials} / Vermittlungsprovision — ${i.deal.projectName} ${i.deal.unitLabel}, Kunde ${i.clientInitials}`,
+    referenceLabel: "Service",
+    reference: `Referral commission — ${i.deal.projectName} ${i.deal.unitLabel}, client ${i.clientInitials}`,
     rows,
     vatNote,
-    paymentNote: `Paid by bank transfer to IBAN •••• ${i.ibanLast4} / Zahlung per Überweisung auf IBAN •••• ${i.ibanLast4}`,
+    paymentNote: `Paid by bank transfer to IBAN •••• ${i.ibanLast4}`,
     selfBillingNote:
-      "This credit note replaces an invoice from the recipient (self-billing). / Diese Gutschrift ersetzt eine Rechnung des Empfängers (Selbstfakturierung).",
+      "This credit note replaces an invoice from the recipient (self-billing).",
     draftFooter: i.final
       ? null
-      : "Draft — content to be confirmed by our tax adviser / Entwurf — Inhalt wird von unserem Steuerberater bestätigt",
+      : "Draft — content to be confirmed by our tax adviser",
   };
 }

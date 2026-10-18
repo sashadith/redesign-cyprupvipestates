@@ -10,9 +10,11 @@
 // no full-height SVG, a static TTF font (DejaVuSans covers Latin, Polish, Cyrillic).
 import path from "node:path";
 import React from "react";
-import { Document, Font, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Font, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 
 const MAX_INPUT = 64 * 1024;
+// Fixed asset path (never from the model): the gold wordmark used across the portal and CRM.
+const LOGO = path.join(process.cwd(), "public", "crm", "brand", "logo-full.png");
 
 const STRING_FIELDS = [
   "title", "numberLabel", "number", "dateLabel", "date", "issuerLabel", "recipientLabel",
@@ -54,6 +56,8 @@ const s = StyleSheet.create({
   page: { fontFamily: "DejaVu", fontSize: 9.5, color: INK, paddingTop: 48, paddingBottom: 64, paddingHorizontal: 52, lineHeight: 1.4 },
   head: { flexDirection: "row", justifyContent: "space-between", marginBottom: 28 },
   issuer: { width: "58%" },
+  // Gold wordmark (public/crm/brand/logo-full.png, 500×70) top right.
+  logo: { width: 170, height: 23.8 },
   issuerName: { fontSize: 11, color: INK, marginBottom: 2 },
   small: { fontSize: 8, color: MUTED },
   label: { fontSize: 7.5, color: MUTED, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.6 },
@@ -84,8 +88,10 @@ function CreditNote({ m }) {
       h(View, { style: s.head },
         h(View, { style: s.issuer },
           h(Text, { style: s.label }, m.issuerLabel),
+          typeof m.issuerIntro === "string" && m.issuerIntro ? h(Text, { style: s.small }, m.issuerIntro) : null,
           ...m.issuerLines.map((l, i) => h(Text, { key: `i${i}`, style: i === 0 ? s.issuerName : s.small }, l)),
         ),
+        h(Image, { style: s.logo, src: LOGO }),
       ),
       h(Text, { style: s.title }, m.title),
       h(View, { style: s.recipient },

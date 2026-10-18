@@ -92,16 +92,25 @@ const envVal = (env: Env, ...keys: string[]) => {
   return "";
 };
 
+/** Our legal entity — Cyprus VIP Estates is a project of SecretBrand Solutions LTD (operator, 2026-10-18). */
+export const DEFAULT_ISSUER: Issuer = {
+  legalName: "SecretBrand Solutions LTD",
+  address: "Palaion Patron Germanou 11\n8011 Paphos\nCyprus",
+  vatId: "CY60038766O",
+  regNo: "HE450005",
+};
+
 /**
- * Issuer block from env: CVE_LEGAL_NAME, CVE_LEGAL_ADDRESS (newlines as real
- * line breaks or a literal "\n"), CVE_LEGAL_VAT_ID, CVE_LEGAL_REG_NO. The plan's
- * shorter CVE_VAT_ID / CVE_REG_NO are accepted as fallbacks.
+ * Issuer block for credit notes: DEFAULT_ISSUER, each field overridable from env
+ * (CVE_LEGAL_NAME, CVE_LEGAL_ADDRESS — newlines as real line breaks or a literal
+ * "\n" — CVE_LEGAL_VAT_ID, CVE_LEGAL_REG_NO; shorter CVE_VAT_ID / CVE_REG_NO accepted).
+ * `missing` stays for an override that blanks a field out entirely.
  */
 export function issuerFromEnv(env: Env): { ok: true; issuer: Issuer } | { ok: false; missing: string[] } {
-  const legalName = envVal(env, "CVE_LEGAL_NAME");
-  const address = envVal(env, "CVE_LEGAL_ADDRESS").replace(/\\n/g, "\n");
-  const vatId = envVal(env, "CVE_LEGAL_VAT_ID", "CVE_VAT_ID");
-  const regNo = envVal(env, "CVE_LEGAL_REG_NO", "CVE_REG_NO");
+  const legalName = envVal(env, "CVE_LEGAL_NAME") || DEFAULT_ISSUER.legalName;
+  const address = (envVal(env, "CVE_LEGAL_ADDRESS") || DEFAULT_ISSUER.address).replace(/\\n/g, "\n");
+  const vatId = envVal(env, "CVE_LEGAL_VAT_ID", "CVE_VAT_ID") || DEFAULT_ISSUER.vatId;
+  const regNo = envVal(env, "CVE_LEGAL_REG_NO", "CVE_REG_NO") || DEFAULT_ISSUER.regNo;
   const missing = [
     !legalName && "CVE_LEGAL_NAME", !address.trim() && "CVE_LEGAL_ADDRESS", !vatId && "CVE_LEGAL_VAT_ID", !regNo && "CVE_LEGAL_REG_NO",
   ].filter((x): x is string => !!x);

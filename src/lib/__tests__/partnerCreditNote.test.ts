@@ -48,12 +48,15 @@ const base = {
 
 test("model: draft footer unless final; no full IBAN", () => {
   const m = creditNoteModel(base);
-  assert.match(m.draftFooter!, /Draft — content to be confirmed by our tax adviser \/ Entwurf/);
+  assert.match(m.draftFooter!, /^Draft — content to be confirmed by our tax adviser$/);
   assert.equal(creditNoteModel({ ...base, final: true }).draftFooter, null);
   const json = JSON.stringify(m);
   assert.ok(json.includes("•••• 3000"));
   assert.ok(!/[A-Z]{2}\d{2}[A-Z0-9]{10,}/.test(json));
-  assert.equal(m.title, "Credit note / Gutschrift");
+  assert.equal(m.title, "Credit note");
+  assert.equal(m.issuerIntro, "Cyprus VIP Estates is a project of");
+  // English only: no German left anywhere in the document model.
+  assert.ok(!/Gutschrift|MwSt|USt-IdNr|Empfänger|Datum|Nettobetrag|Gesamtbetrag|Entwurf|Kunde|Überweisung/.test(json));
   assert.equal(m.date, "18/10/2026");
   assert.deepEqual(m.rows.map((r) => r.amount), ["€ 12,345", "€ 2,346", "€ 14,691"]);
   assert.ok(m.reference.includes("N. B."));
@@ -66,7 +69,7 @@ test("model: reverse charge, no vat, recipient vat id optional", () => {
   assert.deepEqual(rc.rows.map((r) => r.amount), ["€ 12,345", "€ 0", "€ 12,345"]);
   const none = creditNoteModel({ ...base, vatMode: "NONE", partner: { ...base.partner, vatId: null } });
   assert.match(none.vatNote!, /No VAT charged/);
-  assert.ok(!none.recipientLines.some((l) => l.includes("USt-IdNr")));
+  assert.ok(!none.recipientLines.some((l) => l.includes("VAT no.")));
 });
 
 test("document date is the Cyprus calendar day (Asia/Nicosia), not UTC", () => {
