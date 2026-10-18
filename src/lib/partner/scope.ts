@@ -310,6 +310,61 @@ export async function myOverview(partnerId: string): Promise<MyOverview> {
   };
 }
 
+const DIGEST_MILESTONE_CLAIMS = 50;
+
+/**
+ * Weekly digest: this partner's milestones in [since, now] on effectively ACTIVE claims (the overview
+ * rule, latestMilestones), newest first, at most `limit`. Scans the 50 live claims whose lead changed
+ * most recently. No message bodies, no lead contact data.
+ */
+export async function myRecentMilestones(partnerId: string, now: Date, since: Date, limit = 10): Promise<OverviewMilestone[]> {
+  const recent = (await prisma.partnerClaim.findMany({
+    where: activeClaimsWhere(partnerId, now),
+    select: CLAIM_SELECT,
+    orderBy: [{ lead: { updatedAt: "desc" } }, { id: "asc" }],
+    take: DIGEST_MILESTONE_CLAIMS,
+  })) as RawClaim[];
+  if (!recent.length) return [];
+  const leadIds = recent.map((c) => c.leadId);
+  const [deals, activity, messages] = await Promise.all([loadDeals(leadIds), loadActivity(recent), loadMessages(partnerId, leadIds, false)]);
+  return latestMilestones(recent, { partnerId, now, activity, deals, messages }, Number.MAX_SAFE_INTEGER)
+    .filter((m) => m.at.getTime() >= since.getTime() && m.at.getTime() <= now.getTime())
+    .slice(0, limit);
+}
+
+/** A published development with the rows projectRates needs (shared by all partners of one digest run). */
+export type PublishedProjects = { rows: ProjectRow[]; rates: RateRow[] };
+
+/**
+ * Developments published in [since, now] with a slug, newest first (at most `limit`), plus their
+ * developers' rate rows. `publishedAt` is stamped on every transition into "published" (admin publish
+ * action) and cleared on archive, so a re-published project counts again. Partner-neutral: the
+ * partner's rates are applied per recipient with projectRates.
+ */
+export async function recentlyPublishedProjects(now: Date, since: Date, limit = 5): Promise<PublishedProjects> {
+  const devs = await prisma.development.findMany({
+    where: { publishStatus: "published", slug: { not: null }, publishedAt: { gte: since, lte: now } },
+    select: { id: true, publicName: true, town: true, slug: true, developerAccountId: true, override: { select: { alias: true, town: true } } },
+    orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
+    take: limit,
+  });
+  if (!devs.length) return { rows: [], rates: [] };
+  const rateRows = await prisma.commissionRate.findMany({
+    where: { developerAccountId: { in: Array.from(new Set(devs.map((d) => d.developerAccountId))) } },
+    select: { developerAccountId: true, developmentId: true, ratePercent: true },
+  });
+  return {
+    rows: devs.map((d) => ({
+      id: d.id,
+      name: d.override?.alias?.trim() || d.publicName,
+      town: d.override?.town?.trim() || d.town || null,
+      slug: d.slug,
+      developerAccountId: d.developerAccountId,
+    })),
+    rates: rateRows.map((r) => ({ developerAccountId: r.developerAccountId, developmentId: r.developmentId, ratePercent: Number(r.ratePercent) })),
+  };
+}
+
 // ── Commissions ─────────────────────────────────────────────────────────────
 
 export type MyCommissions = {

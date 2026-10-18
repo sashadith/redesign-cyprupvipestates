@@ -1,7 +1,8 @@
 // Weekly partner digest (partner portal phase 3d): week key, content model, e-mail. Pure, no I/O.
 // Only the partner's own items are passed in; the mail carries no internal fields (no our-rate, no lead data).
 import { cyprusDateParts } from "./creditNote";
-import { dict, fmt, lookup, type PartnerLocale } from "./i18n";
+import { publicProjectUrl } from "./clientDto";
+import { PARTNER_LOCALES, dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { greet, partnerBaseUrl, renderPartnerEmail, type BuiltEmail } from "./mail";
 
 export const DIGEST_MAX_UPDATES = 10;
@@ -91,3 +92,69 @@ export function buildDigestEmail(
 
 /** Portal profile page (the opt-out link target). */
 export const digestProfileLink = (base: string = partnerBaseUrl()) => `${base}/profile`;
+
+// ── Send planning (pure; the DB side is digestSend.ts) ──────────────────────
+
+/** Errors that close a week's log row for good: never retried in the same week. */
+export const DIGEST_NOTHING_NEW = "nothing new";
+export const DIGEST_NO_RECIPIENT = "no recipient";
+export const DIGEST_TERMINAL_ERRORS = [DIGEST_NOTHING_NEW, DIGEST_NO_RECIPIENT] as const;
+/** Marker in `error` while a run holds the row (sentAt null). Never retried: the run may still be mailing. */
+export const DIGEST_SENDING = "sending";
+
+export function isTerminalDigestError(e: string | null | undefined): boolean {
+  return !!e && (DIGEST_TERMINAL_ERRORS as readonly string[]).includes(e);
+}
+
+export type DigestLogState = { sentAt: Date | null; error: string | null };
+
+/**
+ * What to do with a partner's log row for this week:
+ * - none → create (the unique (partnerId, weekKey) insert is the claim);
+ * - sent, terminal, or held by a run ("sending") → skip;
+ * - an earlier failure (sentAt null, other error, or none) → retry via a guarded update.
+ */
+export function digestLogAction(existing: DigestLogState | null | undefined): "create" | "retry" | "skip" {
+  if (!existing) return "create";
+  if (existing.sentAt) return "skip";
+  if (isTerminalDigestError(existing.error) || existing.error === DIGEST_SENDING) return "skip";
+  return "retry";
+}
+
+export type DigestCandidateRow = {
+  id: string;
+  status: string;
+  digestOptIn: boolean;
+  createdAt: Date;
+  digestLogs: (DigestLogState & { weekKey: string })[];
+};
+
+/** Recipients of this week's run: ACTIVE, opted in, created before `now`, and this week's row not closed. */
+export function digestCandidates<T extends DigestCandidateRow>(rows: T[], weekKey: string, now: Date): T[] {
+  return rows.filter(
+    (r) =>
+      r.status === "ACTIVE" &&
+      r.digestOptIn &&
+      r.createdAt.getTime() < now.getTime() &&
+      digestLogAction(r.digestLogs.find((l) => l.weekKey === weekKey)) !== "skip",
+  );
+}
+
+/** Main-site project page in the partner's language (en without prefix; unknown/he → en). */
+export function newProjectUrl(lang: string | null | undefined, slug: string): string {
+  const locale = (PARTNER_LOCALES as readonly string[]).includes(lang ?? "") ? (lang as string) : "en";
+  return publicProjectUrl(locale, slug)!;
+}
+
+/** PARTNER_DIGEST_START (ISO); null = unset/invalid → the job does nothing. */
+export function digestStartFromEnv(env: Record<string, string | undefined>): Date | null {
+  const s = env.PARTNER_DIGEST_START?.trim() ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+  const ms = Date.parse(s);
+  return Number.isNaN(ms) ? null : new Date(ms);
+}
+
+/** Overview commission stages → digest totals. */
+export function digestTotals(t: { EXPECTED: number; EARNED: number; DEVELOPER_PAID: number; PAID_OUT: number }): DigestTotals {
+  return { expected: t.EXPECTED, earned: t.EARNED, developerPaid: t.DEVELOPER_PAID, paidOut: t.PAID_OUT };
+}
