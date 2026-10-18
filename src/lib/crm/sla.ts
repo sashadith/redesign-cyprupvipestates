@@ -120,7 +120,7 @@ export function unassignedTelegram(leads: SlaLead[], base: string): string {
 
 // The caller passes at most SLA_TELEGRAM_LIST_MAX leads (the rest wait for the next run).
 export function escalateTelegram(leads: SlaLead[], now: Date, base: string): string {
-  const lines = [`🚨 <b>${leads.length} assigned lead${leads.length === 1 ? "" : "s"} not contacted</b>`];
+  const lines = [`🚨 <b>${leads.length} assigned lead${leads.length === 1 ? "" : "s"} not contacted</b> — reassign in the inbox or the lead page if needed`];
   for (const l of leads) {
     const owner = esc(cut(l.ownerName || "(unknown)")) + (l.ownerActive === false ? " (inactive)" : "");
     const name = esc(cut(l.name || "(no name)"));

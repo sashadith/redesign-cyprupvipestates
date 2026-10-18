@@ -35,12 +35,10 @@ export function Shell({ user, children }: Props) {
       <CommandPalette ref={palette} canAssign={user.canAssign} oldCrm={user.oldCrm} />
       <main className="crm-main">{children}</main>
       <nav className="crm-dock" aria-label="Quick actions">
+        {/* Quick actions only: Today, Team and Commissions are in the top nav and ⌘K. */}
         <Link href="/crm/leads/new" className="plus">＋ New lead</Link>
-        <Link href="/crm/today">Today</Link>
         <Link href="/crm/pipeline">Pipeline</Link>
         {user.canAssign && <Link href="/crm/inbox">Inbox</Link>}
-        {user.canAssign && <Link href="/crm/team">Team</Link>}
-        {user.canAssign && <Link href="/crm/commissions">Commissions</Link>}
       </nav>
     </>
   );

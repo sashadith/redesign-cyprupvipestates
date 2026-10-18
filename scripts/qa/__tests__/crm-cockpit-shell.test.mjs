@@ -143,6 +143,19 @@ test("the shell keeps the old-CRM links for everyone else", async () => {
   await act(async () => root.unmount());
 });
 
+// Phone dock (Phase 2c final fixes): only the quick actions; Today, Team and
+// Commissions stay in the top nav and in ⌘K.
+const dockLinks = () => [...doc.querySelectorAll(".crm-dock a")].map((a) => a.getAttribute("href"));
+test("the dock holds New lead, Pipeline and (for managers) Inbox only", async () => {
+  let root = await mount(h(Shell, { user: { name: "Sophie Keller", canAssign: true, inboxCount: 2, oldCrm: true } }, h("p", null, "page")));
+  assert.deepEqual(dockLinks(), ["/crm/leads/new", "/crm/pipeline", "/crm/inbox"]);
+  for (const href of ["/crm/today", "/crm/team", "/crm/commissions"]) assert.ok(links().includes(href), `${href} stays in the top nav`);
+  await act(async () => root.unmount());
+  root = await mount(h(Shell, { user: { name: "Sophie Keller", canAssign: false, inboxCount: 0, oldCrm: false } }, h("p", null, "page")));
+  assert.deepEqual(dockLinks(), ["/crm/leads/new", "/crm/pipeline"]);
+  await act(async () => root.unmount());
+});
+
 test("panels inside one ToastProvider share a single toast", async () => {
   const shows = [];
   const Panel = ({ name }) => { const t = useToast(); shows.push(t.show); return h("section", null, name, t.node); };

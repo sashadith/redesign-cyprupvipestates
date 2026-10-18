@@ -49,7 +49,7 @@
   .crm-main { padding: 14px 16px 104px; }
   .crm-headrow h1 { font-size: 24px; }
   .crm-me span { display: none; }
-  .crm-dock { left: 0; right: 0; bottom: 0; transform: none; border-radius: 0; justify-content: space-around; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .crm-dock { left: 0; right: 0; bottom: 0; transform: none; border-radius: 0; justify-content: space-around; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); overflow-x: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .crm-app *, .crm-app *::before, .crm-app *::after { transition: none !important; animation: none !important; } }
 .crm-boardwrap { overflow-x: auto; padding-bottom: 6px; }

@@ -13,6 +13,7 @@
 //
 // Set CRM_SLA_START to the deploy time first (ISO, e.g. 2026-10-18T12:00:00Z):
 // only leads created after it are considered, and without it the job does nothing.
+// Leads created more than 7 days ago get no SLA reminders, even if assigned later.
 // Crontab:
 //   */10 * * * * curl -s "http://127.0.0.1:3000/api/cron/crm-sla?key=$CRON_SECRET" >/dev/null
 import { NextRequest, NextResponse } from "next/server";

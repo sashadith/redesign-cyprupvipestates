@@ -123,6 +123,7 @@ test("ESCALATE Telegram names owner, lead and the lead link, escaped", () => {
   assert.match(text, /A&amp;B/);
   assert.match(text, /https:\/\/x\.test\/crm\/leads\/abc/);
   assert.match(text, /5 h/);
+  assert.match(text.split("\n")[0], /not contacted<\/b> — reassign in the inbox or the lead page if needed$/);
 });
 
 test("UNCONTACTED email subject carries the lead and the whole hours since assignment", () => {
