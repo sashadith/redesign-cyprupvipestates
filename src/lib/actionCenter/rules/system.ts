@@ -65,6 +65,9 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   { job: "indexnow-sweep", label: "indexnow-sweep", expectedMs: 24 * HOUR },
   // 2026-10-09 — social reminders (planned Typefully drafts), `3,8,…,58 * * * *`.
   { job: "social-reminders", label: "social-reminders", expectedMs: 5 * MIN },
+  // 2026-10-18 — WhatsApp gateway session watch, `*/5`. Its own ok=false row is
+  // the session being down; a missing row is the watch itself not running.
+  { job: "whatsapp-health", label: "whatsapp-health", expectedMs: 5 * MIN },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

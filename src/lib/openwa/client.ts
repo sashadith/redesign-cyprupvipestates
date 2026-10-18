@@ -5,6 +5,12 @@ import type { RawMessage } from "./shapeMessages";
 export type OpenWaClient = {
   fetchThread(chatId: string, limit: number): Promise<RawMessage[]>;
   sendText(chatId: string, text: string): Promise<void>;
+  /** Phone digits behind a privacy id (…@lid); null when WhatsApp will not say. */
+  resolvePhone(contactId: string): Promise<string | null>;
+  /** The configured session's status as the gateway reports it. */
+  getSession(): Promise<{ status: string; lastError: string | null }>;
+  /** POST /start — relaunches the browser with the saved credentials (no QR). */
+  startSession(): Promise<void>;
 };
 
 // The only module that knows the OpenWA API key. Runs against 127.0.0.1 on the
@@ -34,6 +40,20 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
     },
     async sendText(chatId, text) {
       await call(`${base}/messages/send-text`, { method: "POST", body: JSON.stringify({ chatId, text }) });
+    },
+    async resolvePhone(contactId) {
+      const body = (await call(`${base}/contacts/${encodeURIComponent(contactId)}/phone`)) as { phone?: unknown } | null;
+      return typeof body?.phone === "string" && body.phone ? body.phone : null;
+    },
+    async getSession() {
+      const body = (await call(base)) as { status?: unknown; lastError?: unknown } | null;
+      return {
+        status: typeof body?.status === "string" ? body.status : "unknown",
+        lastError: typeof body?.lastError === "string" ? body.lastError : null,
+      };
+    },
+    async startSession() {
+      await call(`${base}/start`, { method: "POST" });
     },
   };
 }

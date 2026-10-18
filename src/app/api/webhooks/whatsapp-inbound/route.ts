@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { processInboundWhatsApp, type InboundMessage } from "@/lib/openwa/inboundMessage";
+import { createOpenWaClient } from "@/lib/openwa/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -59,6 +60,8 @@ function extract(body: any): InboundMessage | null {
     body: typeof p.body === "string" ? p.body : (typeof p.text === "string" ? p.text : null),
     fromMe: p.fromMe === true,
     timestamp: typeof p.timestamp === "number" ? p.timestamp : null,
+    senderPhone: typeof p.senderPhone === "string" ? p.senderPhone : null,
+    pushName: typeof p.contact?.pushName === "string" ? p.contact.pushName : (typeof p.contact?.name === "string" ? p.contact.name : null),
   };
 }
 
@@ -71,7 +74,7 @@ export async function POST(req: NextRequest) {
   try {
     const msg = extract(await req.json().catch(() => null));
     if (!msg) return NextResponse.json({ status: "skipped", reason: "unparseable" });
-    const result = await processInboundWhatsApp(msg);
+    const result = await processInboundWhatsApp(msg, { resolvePhone: (id) => createOpenWaClient().resolvePhone(id) });
     // Always 200 on a parsed payload: a gateway that retries on non-2xx would
     // hammer this endpoint over a message we deliberately skipped (our own
     // send, a group, an unknown number).
