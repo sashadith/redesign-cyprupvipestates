@@ -143,6 +143,27 @@ export const en = {
       intro: "Good news: your partner account is approved. You can now log in and find your personal referral link.",
       button: "Log in",
     },
+    stage: {
+      subject: "Update on your client {client}",
+      greeting: "Dear {name},",
+      intro: "There is an update on your client {client}. The current status is: {stage}.",
+      button: "View client",
+    },
+    message: {
+      subject: "New message about your client {client}",
+      greeting: "Dear {name},",
+      intro: "{author} from Cyprus VIP Estates has sent you a message about your client {client}:",
+      introTeam: "The Cyprus VIP Estates team has sent you a message about your client {client}:",
+      button: "Open in the portal",
+    },
+    claimOutcome: {
+      greeting: "Dear {name},",
+      acceptedSubject: "Your client {client} has been accepted",
+      acceptedIntro: "We have reviewed your submission: {client} is now registered as your client. You can follow the progress in the partner portal.",
+      rejectedSubject: "Your submission {client} has been reviewed",
+      rejectedIntro: "We have reviewed your submission of {client}. Unfortunately, we cannot register this contact as your client.",
+      button: "View in the portal",
+    },
   },
   notFound: {
     title: "Page not found",

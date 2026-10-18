@@ -145,6 +145,27 @@ export const de: PartnerDict = {
       intro: "gute Nachrichten: Ihr Partnerkonto wurde freigeschaltet. Sie können sich jetzt anmelden und Ihren persönlichen Empfehlungslink abrufen.",
       button: "Anmelden",
     },
+    stage: {
+      subject: "Neuigkeiten zu Ihrem Kunden {client}",
+      greeting: "Guten Tag {name},",
+      intro: "es gibt Neuigkeiten zu Ihrem Kunden {client}. Der aktuelle Status lautet: {stage}.",
+      button: "Kunden ansehen",
+    },
+    message: {
+      subject: "Neue Nachricht zu Ihrem Kunden {client}",
+      greeting: "Guten Tag {name},",
+      intro: "{author} von Cyprus VIP Estates hat Ihnen eine Nachricht zu Ihrem Kunden {client} geschickt:",
+      introTeam: "das Team von Cyprus VIP Estates hat Ihnen eine Nachricht zu Ihrem Kunden {client} geschickt:",
+      button: "Im Portal öffnen",
+    },
+    claimOutcome: {
+      greeting: "Guten Tag {name},",
+      acceptedSubject: "Ihr Kunde {client} wurde angenommen",
+      acceptedIntro: "wir haben Ihre Meldung geprüft: {client} ist jetzt als Ihr Kunde registriert. Den Fortschritt können Sie im Partnerportal verfolgen.",
+      rejectedSubject: "Ihre Meldung {client} wurde geprüft",
+      rejectedIntro: "wir haben Ihre Meldung zu {client} geprüft. Leider können wir diesen Kontakt nicht als Ihren Kunden registrieren.",
+      button: "Im Portal ansehen",
+    },
   },
   notFound: {
     title: "Seite nicht gefunden",

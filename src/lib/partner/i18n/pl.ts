@@ -145,6 +145,27 @@ export const pl: PartnerDict = {
       intro: "mamy dobrą wiadomość: Państwa konto partnera zostało zatwierdzone. Mogą Państwo się teraz zalogować i znaleźć swój osobisty link polecający.",
       button: "Zaloguj się",
     },
+    stage: {
+      subject: "Nowe informacje o Państwa kliencie {client}",
+      greeting: "Szanowni Państwo,",
+      intro: "mamy nowe informacje o Państwa kliencie {client}. Aktualny status: {stage}.",
+      button: "Zobacz klienta",
+    },
+    message: {
+      subject: "Nowa wiadomość dotycząca Państwa klienta {client}",
+      greeting: "Szanowni Państwo,",
+      intro: "{author} (Cyprus VIP Estates) przesyła Państwu wiadomość dotyczącą klienta {client}:",
+      introTeam: "zespół Cyprus VIP Estates przesyła Państwu wiadomość dotyczącą klienta {client}:",
+      button: "Otwórz w portalu",
+    },
+    claimOutcome: {
+      greeting: "Szanowni Państwo,",
+      acceptedSubject: "Klient {client} został przyjęty",
+      acceptedIntro: "sprawdziliśmy Państwa zgłoszenie: {client} jest teraz zarejestrowany jako Państwa klient. Postępy mogą Państwo śledzić w portalu partnera.",
+      rejectedSubject: "Zgłoszenie {client} zostało sprawdzone",
+      rejectedIntro: "sprawdziliśmy Państwa zgłoszenie dotyczące {client}. Niestety nie możemy zarejestrować tego kontaktu jako Państwa klienta.",
+      button: "Zobacz w portalu",
+    },
   },
   notFound: {
     title: "Nie znaleziono strony",

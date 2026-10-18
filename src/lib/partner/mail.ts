@@ -25,18 +25,22 @@ export function escapeHtml(v: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
-type Parts = {
+export type EmailParts = {
   subject: string;
   greeting: string | null;
   intro: string;
+  /** Optional quoted block under the intro (e.g. a message from us): escaped, newlines kept. */
+  quote?: string | null;
   button: string;
   link: string;
   notes: string[];
   signature: string;
 };
 
-function render(p: Parts): BuiltEmail {
-  const text = [p.greeting, p.intro, `${p.button}: ${p.link}`, ...p.notes, p.signature]
+/** The CI partner mail layout (logo, paper card, bronze button). Every value is escaped here. */
+export function renderPartnerEmail(p: EmailParts): BuiltEmail {
+  const quote = p.quote ? p.quote.replace(/\r\n?/g, "\n") : null;
+  const text = [p.greeting, p.intro, quote, `${p.button}: ${p.link}`, ...p.notes, p.signature]
     .filter((x): x is string => !!x)
     .join("\n\n");
   // CI (light): paper #F5F1E8 page, #FBF9F3 card, ink #221C15 text, bronze #8E6B3D button (white label 4.9:1),
@@ -50,6 +54,9 @@ function render(p: Parts): BuiltEmail {
     `<div style="background:#FBF9F3;border:1px solid #E4DCCB;border-radius:16px;padding:32px 28px">` +
     (p.greeting ? para(p.greeting) : "") +
     para(p.intro) +
+    (quote
+      ? `<div style="margin:0 0 16px;padding:12px 16px;background:#F5F1E8;border-left:3px solid #C29A5E;border-radius:4px">${escapeHtml(quote).replace(/\n/g, "<br>")}</div>`
+      : "") +
     `<p style="margin:24px 0 16px"><a href="${escapeHtml(p.link)}" style="display:inline-block;background:#8E6B3D;color:#ffffff;text-decoration:none;font-weight:bold;letter-spacing:0.03em;padding:13px 24px;border-radius:16px">${escapeHtml(p.button)}</a></p>` +
     `<p style="margin:0 0 20px;font-size:13px;color:#6B5E4E;word-break:break-all">${escapeHtml(p.link)}</p>` +
     `<div style="height:1px;line-height:1px;font-size:0;background:#C29A5E;margin:0 0 20px">&nbsp;</div>` +
@@ -59,7 +66,7 @@ function render(p: Parts): BuiltEmail {
   return { subject: p.subject, text, html };
 }
 
-const greet = (template: string, name: string | undefined) => {
+export const greet = (template: string, name: string | undefined) => {
   const n = (name ?? "").trim();
   if (!n && template.includes("{name}")) return null;
   return fmt(template, { name: n });
@@ -67,7 +74,7 @@ const greet = (template: string, name: string | undefined) => {
 
 export function buildVerifyEmail(locale: PartnerLocale, link: string, name?: string): BuiltEmail {
   const t = dict(locale).mail;
-  return render({
+  return renderPartnerEmail({
     subject: t.verify.subject,
     greeting: greet(t.verify.greeting, name),
     intro: t.verify.intro,
@@ -80,7 +87,7 @@ export function buildVerifyEmail(locale: PartnerLocale, link: string, name?: str
 
 export function buildResetEmail(locale: PartnerLocale, link: string, name?: string): BuiltEmail {
   const t = dict(locale).mail;
-  return render({
+  return renderPartnerEmail({
     subject: t.reset.subject,
     greeting: greet(t.reset.greeting, name),
     intro: t.reset.intro,
@@ -93,7 +100,7 @@ export function buildResetEmail(locale: PartnerLocale, link: string, name?: stri
 
 export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLink: string): BuiltEmail {
   const t = dict(locale).mail;
-  return render({
+  return renderPartnerEmail({
     subject: t.approved.subject,
     greeting: greet(t.approved.greeting, name),
     intro: t.approved.intro,
