@@ -27,16 +27,17 @@ async function managerContact(managerUserId: string | null): Promise<Contact | n
  */
 async function onboardingFor(partnerId: string, status: string) {
   const dismissed = cookies().get(ONBOARDING_DISMISS_COOKIE)?.value === "1";
-  const [acceptance, claim, bank, vat] = await Promise.all([
+  const [acceptance, claim, presentation, bank, vat] = await Promise.all([
     prisma.partnerAgreementAcceptance.findFirst({ where: { partnerId }, select: { id: true } }),
     prisma.partnerClaim.findFirst({ where: { partnerId }, select: { id: true } }),
+    prisma.clientPresentation.findFirst({ where: { partnerId }, select: { id: true } }),
     loadBankDetails(partnerId),
     prisma.partner.findUnique({ where: { id: partnerId }, select: { country: true, company: true, vatId: true, telegramChatId: true } }),
   ]);
   const bankComplete = bank.state === "ok" && bankDetailsComplete(bank.details) && !!bank.ibanLast4;
   const vatFacts = vat ? { required: vatIdRequired(vat), set: !!vat.vatId?.trim() } : undefined;
   const telegram = { available: partnerBotConfigured(), linked: !!vat?.telegramChatId };
-  const o = onboardingSteps(onboardingFactsFrom({ status, hasAcceptance: !!acceptance, bankComplete, hasClaim: !!claim, vat: vatFacts, telegram }));
+  const o = onboardingSteps(onboardingFactsFrom({ status, hasAcceptance: !!acceptance, bankComplete, hasClaim: !!claim, vat: vatFacts, telegram, hasPresentation: !!presentation }));
   return onboardingVisible(o, dismissed) ? o : null;
 }
 

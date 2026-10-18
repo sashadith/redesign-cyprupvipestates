@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RESPONSE_KEYS, type SubmissionView } from "@/lib/partner/clientDto";
 import { fmt, type PartnerDict, type PartnerLocale } from "@/lib/partner/i18n";
-import { getMyClient } from "@/lib/partner/scope";
+import { getMyClient, myClientPresentations } from "@/lib/partner/scope";
 import { requirePartner } from "@/lib/partner/session";
+import { PresentationTable } from "../../components/presentationBits";
 import { Chip, ContactCard, StageBar, chipTone, dateFmt, eurFmt, tr } from "../../components/portalBits";
 import { portalContext } from "../../portalContext";
 
@@ -48,7 +49,7 @@ function SubmissionList({ t, locale, s }: { t: PartnerDict; locale: PartnerLocal
 export default async function PartnerClient({ params }: { params: { id: string } }) {
   const me = await requirePartner({ active: true });
   const { t, locale } = await portalContext();
-  const c = await getMyClient(me.partner.id, params.id);
+  const [c, presentations] = await Promise.all([getMyClient(me.partner.id, params.id), myClientPresentations(me.partner.id, params.id)]);
   if (!c) notFound();
   const C = t.clients;
   const date = dateFmt(locale);
@@ -149,6 +150,15 @@ export default async function PartnerClient({ params }: { params: { id: string }
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {presentations.length > 0 && (
+        <section className="pp-panel pp-panel-flush" aria-labelledby="client-pres-title">
+          <h2 className="pp-h3 pp-panel-pad" id="client-pres-title">
+            {t.presentations.title} <span className="pp-muted">({presentations.length})</span>
+          </h2>
+          <PresentationTable t={t} locale={locale} items={presentations} showClient={false} />
         </section>
       )}
 

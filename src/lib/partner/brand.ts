@@ -69,3 +69,14 @@ export function sniffImageType(bytes: Uint8Array): BrandLogoType | null {
   if (startsWith(bytes, [0x52, 0x49, 0x46, 0x46]) && startsWith(bytes, [0x57, 0x45, 0x42, 0x50], 8)) return "image/webp";
   return null;
 }
+
+/**
+ * Upload check for a logo file (phase 3e, Task 5): empty → err.logoType, over BRAND_LOGO_MAX_BYTES →
+ * err.logoSize, type from the magic bytes only (the browser's claimed MIME type is never used).
+ */
+export function checkBrandLogo(bytes: Uint8Array): { ok: true; type: BrandLogoType } | { ok: false; code: "err.logoType" | "err.logoSize" } {
+  if (!bytes.length) return { ok: false, code: "err.logoType" };
+  if (bytes.length > BRAND_LOGO_MAX_BYTES) return { ok: false, code: "err.logoSize" };
+  const type = sniffImageType(bytes);
+  return type ? { ok: true, type } : { ok: false, code: "err.logoType" };
+}

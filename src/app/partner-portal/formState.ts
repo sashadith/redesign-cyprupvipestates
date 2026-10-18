@@ -20,3 +20,17 @@ export type NotifyChannelValue = "EMAIL" | "TELEGRAM" | "BOTH";
 /** Telegram link code: shown once (never stored in clear text, never re-displayed after a reload). */
 export type TelegramCodeOk = { ok: true; code: string; link: string };
 export type TelegramCodeState = TelegramCodeOk | FormErr | null;
+
+/** Branding (phase 3e): the stored values come back so the form shows what is saved. */
+export type BrandOk = {
+  ok: true;
+  brandName: string | null; brandPhone: string | null; brandEmail: string | null; brandWebsite: string | null;
+};
+export type BrandState = BrandOk | FormErr | null;
+
+/** Logo upload / removal (phase 3e). */
+export type LogoState = { ok: true; removed?: boolean } | FormErr | null;
+
+/** New presentation (phase 3e): the public link comes back for the copy button. */
+export type PresentationOk = { ok: true; url: string };
+export type PresentationState = PresentationOk | FormErr | null;

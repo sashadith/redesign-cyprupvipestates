@@ -6,9 +6,11 @@ export type OnboardingFacts = {
   vatId?: { done: boolean };
   /** Present only while the partner bot is configured (phase 3e); optional — `done` once a chat is linked. */
   telegram?: { done: boolean };
+  /** "First presentation sent" (phase 3e): present for ACTIVE partners; `done` once they created one. */
+  presentation?: { done: boolean };
 };
 
-export type OnboardingKey = "emailVerified" | "agreementAccepted" | "bankComplete" | "hasClient" | "vatId" | "telegram";
+export type OnboardingKey = "emailVerified" | "agreementAccepted" | "bankComplete" | "hasClient" | "vatId" | "presentation" | "telegram";
 export type OnboardingStep = { key: OnboardingKey; done: boolean; optional?: true };
 
 /**
@@ -28,6 +30,7 @@ export function onboardingSteps(f: OnboardingFacts): {
     { key: "hasClient", done: f.hasClient },
   ];
   if (f.vatId) steps.push({ key: "vatId", done: f.vatId.done });
+  if (f.presentation) steps.push({ key: "presentation", done: f.presentation.done });
   if (f.telegram) steps.push({ key: "telegram", done: f.telegram.done, optional: true });
   const counted = steps.filter((s) => !s.optional || s.done);
   const done = counted.filter((s) => s.done).length;
@@ -51,6 +54,8 @@ export function onboardingHref(key: OnboardingKey): string | null {
       return "/profile";
     case "telegram":
       return "/profile#telegram";
+    case "presentation":
+      return "/presentations";
     default:
       return null;
   }
@@ -69,6 +74,8 @@ export function onboardingFactsFrom(input: {
   vat?: { required: boolean; set: boolean };
   /** Partner bot configured (partnerBotConfigured) and whether this partner has a linked chat. */
   telegram?: { available: boolean; linked: boolean };
+  /** Whether any presentation with partnerId = this partner exists; omitted → no presentation step. */
+  hasPresentation?: boolean;
 }): OnboardingFacts {
   return {
     // Only verified accounts can log in, and ACTIVE requires approval after verification.
@@ -77,6 +84,7 @@ export function onboardingFactsFrom(input: {
     bankComplete: input.bankComplete,
     hasClient: input.hasClaim,
     ...(input.vat?.required ? { vatId: { done: input.vat.set } } : {}),
+    ...(input.hasPresentation !== undefined ? { presentation: { done: input.hasPresentation } } : {}),
     // A linked chat counts even if the bot env was removed later; an unlinked one is offered only while available.
     ...(input.telegram && (input.telegram.available || input.telegram.linked) ? { telegram: { done: input.telegram.linked } } : {}),
   };

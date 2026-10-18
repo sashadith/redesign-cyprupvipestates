@@ -24,6 +24,10 @@ export const partnerLimits = {
   bankPartner: makeThrottle(5, HOUR),
   /** Telegram link codes (phase 3e): per partner. */
   telegramCode: makeThrottle(5, HOUR),
+  /** Branding saves and logo uploads/removals (phase 3e): per partner. */
+  brand: makeThrottle(20, HOUR),
+  /** Presentation create / revoke (phase 3e): per partner. */
+  presentation: makeThrottle(30, HOUR),
 };
 
 /** Throttle key for a request without a usable client IP (all such requests share one bucket). */

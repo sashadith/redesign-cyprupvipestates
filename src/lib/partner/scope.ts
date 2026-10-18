@@ -16,6 +16,10 @@ import {
   type Activity, type ClientDetail, type ClientFilter, type ClientListItem, type CommissionStage, type OverviewMilestone,
   type RawClaim, type RawDeal, type RawMessage,
 } from "./clientDto";
+import {
+  PRESENTATION_CLIENT_SCAN, PRESENTATION_LIST_CAP, effectiveActiveClients, mergePresentationStats, presentationStatusOf, presentationUrl,
+  type PresentationClient, type PresentationStats, type PresentationStatus,
+} from "./partnerPresentations";
 
 export type MyProject = {
   id: string;
@@ -441,3 +445,124 @@ export async function myCommissions(partnerId: string, period: Pick<Period, "fro
   };
 }
 
+
+// ── Presentations (phase 3e) ────────────────────────────────────────────────
+
+/**
+ * This partner's effectively ACTIVE claims (claimState.ts rule, evaluated in batch) as presentation
+ * clients: claim id, lead id and the submitted name only. Bounded by PRESENTATION_CLIENT_SCAN.
+ */
+export async function myPresentationClients(partnerId: string, now: Date = new Date()): Promise<PresentationClient[]> {
+  const rows = await prisma.partnerClaim.findMany({
+    where: activeClaimsWhere(partnerId, now),
+    select: { id: true, leadId: true, state: true, createdAt: true, reviewedAt: true, submission: true, lead: { select: { status: true, deletedAt: true } } },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: PRESENTATION_CLIENT_SCAN,
+  });
+  if (!rows.length) return [];
+  const leadIds = Array.from(new Set(rows.map((r) => r.leadId)));
+  const liveDeals = await prisma.deal.groupBy({
+    by: ["leadId"],
+    where: { leadId: { in: leadIds }, commissionStatus: { not: "CANCELLED" } },
+    _count: { _all: true },
+  });
+  const liveDealLeads = new Set(liveDeals.map((d) => d.leadId));
+  const uncommitted = rows.filter((r) => !liveDealLeads.has(r.leadId) && !(COMMITTED_LEAD_STATUSES as readonly string[]).includes(r.lead?.status ?? ""));
+  const contacts = uncommitted.length
+    ? await prisma.leadInteraction.groupBy({
+        by: ["leadId"],
+        where: { leadId: { in: Array.from(new Set(uncommitted.map((r) => r.leadId))) }, type: { in: [...REAL_CONTACT_TYPES] } },
+        _max: { occurredAt: true },
+      })
+    : [];
+  const lastContact = new Map(contacts.map((c) => [c.leadId, c._max.occurredAt ?? null]));
+  return effectiveActiveClients(rows, { liveDealLeads, lastContact, now }).sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+}
+
+export type MyPresentation = {
+  id: string;
+  token: string;
+  url: string;
+  leadId: string;
+  clientName: string;
+  /** The partner's claim on this lead while it is effectively ACTIVE (client detail link), else null. */
+  claimId: string | null;
+  createdAt: Date;
+  expiresAt: Date | null;
+  status: PresentationStatus;
+  /** Views / last opened / favourites — only while the claim is effectively ACTIVE (null otherwise). */
+  stats: PresentationStats | null;
+};
+
+/**
+ * Presentations this partner created (partnerId = me), newest first, optionally for one lead. Activity of
+ * the client (views, favourites) is shown only while the partner's claim on that lead is effectively ACTIVE.
+ */
+export async function myPresentations(partnerId: string, opts: { leadId?: string; clients?: PresentationClient[] } = {}): Promise<MyPresentation[]> {
+  if (typeof partnerId !== "string" || !partnerId) throw new Error("partner scope: partnerId required");
+  const now = new Date();
+  const [rows, clients] = await Promise.all([
+    prisma.clientPresentation.findMany({
+      where: { partnerId, ...(opts.leadId ? { leadId: opts.leadId } : {}) },
+      select: { id: true, token: true, leadId: true, status: true, expiresAt: true, createdAt: true, greetingName: true },
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      take: PRESENTATION_LIST_CAP,
+    }),
+    opts.clients ? Promise.resolve(opts.clients) : myPresentationClients(partnerId, now),
+  ]);
+  if (!rows.length) return [];
+  const activeByLead = new Map(clients.map((c) => [c.leadId, c]));
+  const otherLeads = Array.from(new Set(rows.map((r) => r.leadId).filter((l) => !activeByLead.has(l))));
+  const [otherClaims, viewGroups, favGroups] = await Promise.all([
+    otherLeads.length
+      ? prisma.partnerClaim.findMany({
+          where: { partnerId, leadId: { in: otherLeads } },
+          select: { leadId: true, submission: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
+    prisma.presentationView.groupBy({
+      by: ["presentationId"],
+      where: { presentationId: { in: rows.filter((r) => activeByLead.has(r.leadId)).map((r) => r.id) }, developmentId: null },
+      _count: { _all: true },
+      _max: { createdAt: true },
+    }),
+    prisma.clientPresentationItem.groupBy({
+      by: ["presentationId"],
+      where: { presentationId: { in: rows.filter((r) => activeByLead.has(r.leadId)).map((r) => r.id) }, isFavorited: true },
+      _count: { _all: true },
+    }),
+  ]);
+  const otherName = new Map<string, string>();
+  for (const c of otherClaims) if (!otherName.has(c.leadId)) otherName.set(c.leadId, visibleName(c));
+  const stats = mergePresentationStats(
+    rows.map((r) => r.id),
+    viewGroups.map((g) => ({ presentationId: g.presentationId, count: g._count._all, last: g._max.createdAt ?? null })),
+    favGroups.map((g) => ({ presentationId: g.presentationId, count: g._count._all })),
+  );
+  return rows.map((r) => {
+    const client = activeByLead.get(r.leadId);
+    return {
+      id: r.id,
+      token: r.token,
+      url: presentationUrl(r.token),
+      leadId: r.leadId,
+      clientName: client?.name || otherName.get(r.leadId) || r.greetingName,
+      claimId: client?.claimId ?? null,
+      createdAt: r.createdAt,
+      expiresAt: r.expiresAt,
+      status: presentationStatusOf(r, now),
+      stats: client ? stats.get(r.id) ?? null : null,
+    };
+  });
+}
+
+/** Presentations for one of this partner's clients (client detail); empty unless the claim is effectively ACTIVE. */
+export async function myClientPresentations(partnerId: string, claimId: string): Promise<MyPresentation[]> {
+  if (typeof claimId !== "string" || claimId.length > 64) return [];
+  const claim = await prisma.partnerClaim.findFirst({ where: claimWhere(partnerId, claimId), select: { leadId: true } });
+  if (!claim) return [];
+  const clients = await myPresentationClients(partnerId);
+  if (!clients.some((c) => c.claimId === claimId)) return [];
+  return myPresentations(partnerId, { leadId: claim.leadId, clients });
+}

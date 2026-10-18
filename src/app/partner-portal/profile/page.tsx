@@ -6,7 +6,9 @@ import { loadBankDetails } from "@/lib/partner/bankStore";
 import { requirePartner } from "@/lib/partner/session";
 import { vatIdMissing } from "@/lib/partner/vat";
 import { partnerBotConfigured } from "@/lib/partner/telegramApi";
+import { brandDisplayName } from "@/lib/partner/presentationBranding";
 import { BankForm, PasswordForm, ProfileForm, SettingsForm, TelegramCard } from "../components/forms";
+import { BrandForm, LogoForm } from "../components/presentationForms";
 import { dateFmt } from "../components/portalBits";
 import { portalContext } from "../portalContext";
 
@@ -16,7 +18,8 @@ export default async function PartnerProfile() {
   const p = await prisma.partner.findUnique({
     where: { id: me.partner.id },
     select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true,
-      notifyChannel: true, telegramChatId: true, telegramLinkedAt: true },
+      notifyChannel: true, telegramChatId: true, telegramLinkedAt: true,
+      brandName: true, brandPhone: true, brandEmail: true, brandWebsite: true, brandLogoType: true, brandLogoUpdatedAt: true },
   });
   if (!p) return null;
   const P = t.profile;
@@ -85,6 +88,18 @@ export default async function PartnerProfile() {
           </>
         )}
       </section>
+      {active && (
+        <section className="pp-panel pp-anchor" id="branding" aria-labelledby="branding-title">
+          <h2 className="pp-h3" id="branding-title">{t.branding.title}</h2>
+          <p className="pp-muted">{t.branding.intro}</p>
+          <BrandForm
+            t={t}
+            values={{ brandName: p.brandName, brandPhone: p.brandPhone, brandEmail: p.brandEmail, brandWebsite: p.brandWebsite }}
+            fallbackName={brandDisplayName({ brandName: null, company: p.company, firstName: p.firstName, lastName: p.lastName })}
+          />
+          <LogoForm t={t} logoSrc={p.brandLogoType ? `/profile/logo?v=${p.brandLogoUpdatedAt?.getTime() ?? 0}` : null} />
+        </section>
+      )}
       {active && (
         <section className="pp-panel pp-anchor" id="telegram" aria-labelledby="telegram-title">
           <h2 className="pp-h3" id="telegram-title">{t.telegram.card.title}</h2>
