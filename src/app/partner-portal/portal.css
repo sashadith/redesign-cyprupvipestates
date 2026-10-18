@@ -218,7 +218,11 @@
   color: var(--pp-warn); font-weight: 600; font-size: var(--text-sm); border: 1px dashed rgba(138, 90, 18, 0.4); }
 
 /* ── Submit client ──────────────────────────────────────────────────────── */
-.pp-nav { flex-wrap: wrap; }
+/* Nav (phase 3d: 8 entries for ACTIVE partners): one row that scrolls sideways instead of wrapping, like the CRM. */
+.pp-nav { flex-wrap: nowrap; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; white-space: nowrap; }
+.pp-nav::-webkit-scrollbar { display: none; }
+.pp-nav > * { flex: 0 0 auto; }
 .pp-card-form { max-width: 760px; }
 .pp-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .pp-fieldset > legend { padding: 0; margin: 0 0 12px; font: 400 1.125rem / 1.3 var(--pp-display); color: var(--text); }
@@ -427,3 +431,28 @@
   .pp-app *, .pp-app *::before, .pp-app *::after { transition: none !important; animation: none !important; }
   .pp-btn:active:not(:disabled) { transform: none; }
 }
+
+/* ── Phase 3d: onboarding, calculator, materials, settings, landing response line ── */
+.pp-anchor { scroll-margin-top: 24px; }
+.pp-onboarding-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pp-onboarding-head form { margin: 0; }
+.pp-progress { display: block; width: 100%; height: 6px; margin: 8px 0 14px; border: 0; border-radius: 999px; overflow: hidden;
+  appearance: none; -webkit-appearance: none; background: var(--hairline-strong); color: var(--bronze); }
+.pp-progress::-webkit-progress-bar { background: var(--hairline-strong); border-radius: 999px; }
+.pp-progress::-webkit-progress-value { background: var(--bronze); border-radius: 999px; }
+.pp-progress::-moz-progress-bar { background: var(--bronze); border-radius: 999px; }
+.pp-onboarding-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pp-onboarding-steps li { display: flex; align-items: center; gap: 12px; }
+.pp-onboarding-mark { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+  border-radius: 50%; border: 2px solid var(--hairline-strong); font-size: 0.75rem; line-height: 1; color: #fff; }
+.pp-onboarding-done .pp-onboarding-mark { background: var(--bronze); border-color: var(--bronze); }
+.pp-onboarding-done > span:not(.pp-onboarding-mark) { color: var(--text-soft); }
+.pp-calc-empty { margin: 0; padding: 18px; }
+.pp-check-hint { grid-column: 2; }
+.pp-guidelines { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.pp-faq { display: flex; flex-direction: column; }
+.pp-faq-item { padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.pp-faq-item:last-child { border-bottom: 0; }
+.pp-faq-item summary { font-weight: 600; }
+.pp-faq-item p { margin: 0; max-width: 72ch; color: var(--text-soft); }
+.pp-response { margin: -16px 0 28px; font: 400 1.0625rem / 1.4 var(--pp-display); color: var(--pp-bronze-ink); }

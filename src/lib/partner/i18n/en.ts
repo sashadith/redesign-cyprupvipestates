@@ -472,6 +472,9 @@ export const en = {
     invalid: "Please enter a whole amount in euros between 1 and 100,000,000.",
     hint: "Handover: we take over the client. Fix: you stay involved. Your rates differ per project.",
     shown: "Shown: {count}",
+    town: "Town",
+    enterPrice: "Enter a purchase price to see the payouts.",
+    disclaimer: "All figures are estimates. The final commission follows the actual deal (final price, project rate and your agreed share).",
   },
   onboarding: {
     title: "Getting started",
@@ -491,6 +494,7 @@ export const en = {
     agreementTitle: "Partner agreement",
     agreementMeta: "Version {version}, accepted on {date}",
     agreementLink: "Open the agreement",
+    agreementNone: "No acceptance on record yet.",
     guidelinesTitle: "Advertising guidelines",
     faqTitle: "How it works",
     brochuresTitle: "Project brochures",

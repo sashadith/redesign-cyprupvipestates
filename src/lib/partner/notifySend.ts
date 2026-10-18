@@ -11,7 +11,7 @@ import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import {
   INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildPayoutEmail, buildStageEmail, clientLink,
   commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate,
-  notifyStartFromEnv, payoutDealIdFromRefKey, planStageNotifications, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
+  notifyStartFromEnv, optOutGate, payoutDealIdFromRefKey, planStageNotifications, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
 
 export { notifyStartFromEnv };
@@ -87,7 +87,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
   const partner = await prisma.partner.findUnique({
     where: { id: row.partnerId },
     select: {
-      status: true, firstName: true, language: true,
+      status: true, firstName: true, language: true, emailNotifications: true,
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
     },
   });
@@ -96,6 +96,9 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
   if (partner.status !== "ACTIVE") return { skip: "pending" };
   const to = partner.users[0]?.email?.trim();
   if (!to) return { skip: "no recipient" };
+  // Switched off in the profile: the row is closed as sent with error "opted out" (never mailed later).
+  const optedOut = optOutGate(row.kind, partner.emailNotifications);
+  if (optedOut) return { skip: optedOut };
 
   const claim = row.claimId
     ? await prisma.partnerClaim.findUnique({

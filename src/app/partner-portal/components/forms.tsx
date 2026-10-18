@@ -9,7 +9,8 @@ import {
   updateProfileAction, verifyAction,
 } from "../actions";
 import { saveBankDetailsAction } from "../bankActions";
-import { isErr, isOk, type FormState, type SubmitState } from "../formState";
+import { savePartnerSettingsAction } from "../settingsActions";
+import { isErr, isOk, type FormState, type SettingsState, type SubmitState } from "../formState";
 
 const LANG_NAMES = new Map<string, string>([
   ["en", "English"],
@@ -313,6 +314,37 @@ export function PasswordForm({ t }: { t: PartnerDict }) {
       <div className="pp-actions">
         <Submit wide={false}>{t.profile.changePassword}</Submit>
         {isOk(state) && <span className="pp-saved" role="status">{t.profile.passwordSaved}</span>}
+      </div>
+    </form>
+  );
+}
+
+// ─── Email settings (phase 3d) ───────────────────────────────────────────────
+
+type SettingsValues = { emailNotifications: boolean; digestOptIn: boolean };
+
+export function SettingsForm({ t, values }: { t: PartnerDict; values: SettingsValues }) {
+  const S = t.profileSettings;
+  const [state, action] = useFormState<SettingsState, FormData>(savePartnerSettingsAction, null);
+  // After a save the stored values win (the key remounts the checkboxes with them).
+  const shown = state && "ok" in state ? { emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn } : values;
+  const err = state && "error" in state ? state : null;
+  return (
+    <form action={action} className="pp-form" key={`${shown.emailNotifications}-${shown.digestOptIn}`}>
+      {err && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, err.error), err.vars ?? {})}</p>}
+      <label className="pp-check">
+        <input type="checkbox" name="emailNotifications" defaultChecked={shown.emailNotifications} aria-describedby="set-notif-hint" />
+        <span>{S.emailNotifications}</span>
+        <small id="set-notif-hint" className="pp-hint pp-check-hint">{S.emailNotificationsHint}</small>
+      </label>
+      <label className="pp-check">
+        <input type="checkbox" name="digestOptIn" defaultChecked={shown.digestOptIn} aria-describedby="set-digest-hint" />
+        <span>{S.digestOptIn}</span>
+        <small id="set-digest-hint" className="pp-hint pp-check-hint">{S.digestOptInHint}</small>
+      </label>
+      <div className="pp-actions">
+        <Submit wide={false}>{t.profile.save}</Submit>
+        {state && "ok" in state && <span className="pp-saved" role="status">{S.saved}</span>}
       </div>
     </form>
   );

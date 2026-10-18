@@ -4,7 +4,7 @@ import { isPayoutBlocked } from "@/lib/partner/bank";
 import { ibanLast4 } from "@/lib/partner/bankFlow";
 import { loadBankDetails } from "@/lib/partner/bankStore";
 import { requirePartner } from "@/lib/partner/session";
-import { BankForm, PasswordForm, ProfileForm } from "../components/forms";
+import { BankForm, PasswordForm, ProfileForm, SettingsForm } from "../components/forms";
 import { dateFmt } from "../components/portalBits";
 import { portalContext } from "../portalContext";
 
@@ -13,7 +13,7 @@ export default async function PartnerProfile() {
   const { t, locale } = await portalContext();
   const p = await prisma.partner.findUnique({
     where: { id: me.partner.id },
-    select: { firstName: true, lastName: true, company: true, language: true, phone: true, type: true },
+    select: { firstName: true, lastName: true, company: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true },
   });
   if (!p) return null;
   const P = t.profile;
@@ -42,7 +42,7 @@ export default async function PartnerProfile() {
         </dl>
         <p className="pp-muted pp-small">{P.lockedNote}</p>
       </section>
-      <section className="pp-panel" aria-labelledby="bank-title">
+      <section className="pp-panel pp-anchor" id="bank" aria-labelledby="bank-title">
         <h2 className="pp-h3" id="bank-title">{B.title}</h2>
         <p className="pp-muted">{B.intro}</p>
         {!active ? (
@@ -77,6 +77,12 @@ export default async function PartnerProfile() {
           </>
         )}
       </section>
+      {active && (
+        <section className="pp-panel pp-anchor" id="settings" aria-labelledby="settings-title">
+          <h2 className="pp-h3" id="settings-title">{t.profileSettings.title}</h2>
+          <SettingsForm t={t} values={{ emailNotifications: p.emailNotifications, digestOptIn: p.digestOptIn }} />
+        </section>
+      )}
       <section className="pp-panel">
         <h2 className="pp-h3">{P.changePassword}</h2>
         <PasswordForm t={t} />

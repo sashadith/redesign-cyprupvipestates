@@ -1,12 +1,18 @@
 import Link from "next/link";
+import { fmt } from "@/lib/partner/i18n";
 import { redirect } from "next/navigation";
+import { formatResponse } from "@/lib/partner/responseAverage";
+import { programmeResponseAverage } from "@/lib/partner/responseStats";
 import { LogoMark } from "./components/Brand";
 import { portalContext } from "./portalContext";
 
 export default async function PartnerLanding() {
-  const { me, t } = await portalContext();
+  const { me, t, locale } = await portalContext();
   if (me) redirect("/home");
   const L = t.landing;
+  // Cached for an hour; null below 5 samples or on a DB error (the line is then simply not shown).
+  const avg = await programmeResponseAverage();
+  const responseLine = avg == null ? null : fmt(L.responseAvg, { time: formatResponse(avg, { minutes: L.responseMinutes, hours: L.responseHours }, locale) });
   const steps = [
     { title: L.step1Title, text: L.step1Text },
     { title: L.step2Title, text: L.step2Text },
@@ -19,6 +25,7 @@ export default async function PartnerLanding() {
         <p className="pp-eyebrow">{L.title}</p>
         <h1>{L.headline}</h1>
         <p className="pp-lead">{L.lead}</p>
+        {responseLine && <p className="pp-response">{responseLine}</p>}
         <div className="pp-cta">
           <Link href="/register" className="pp-btn pp-btn-lg">{L.cta}</Link>
           <Link href="/login" className="pp-btn pp-btn-ghost pp-btn-lg">{L.loginCta}</Link>

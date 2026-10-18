@@ -474,6 +474,9 @@ export const pl: PartnerDict = {
     invalid: "Proszę podać całkowitą kwotę w euro od 1 do 100 000 000.",
     hint: "Przekazanie: przejmujemy klienta. Fix: pozostają Państwo zaangażowani. Państwa stawki różnią się w zależności od projektu.",
     shown: "Wyświetlono: {count}",
+    town: "Miejscowość",
+    enterPrice: "Proszę podać cenę zakupu, aby zobaczyć wypłaty.",
+    disclaimer: "Wszystkie kwoty są szacunkowe. Ostateczna prowizja wynika z faktycznej transakcji (cena końcowa, stawka projektu i uzgodniony udział Państwa).",
   },
   onboarding: {
     title: "Pierwsze kroki",
@@ -493,6 +496,7 @@ export const pl: PartnerDict = {
     agreementTitle: "Umowa partnerska",
     agreementMeta: "Wersja {version}, zaakceptowana {date}",
     agreementLink: "Otwórz umowę",
+    agreementNone: "Brak zarejestrowanej akceptacji.",
     guidelinesTitle: "Wytyczne reklamowe",
     faqTitle: "Jak to działa",
     brochuresTitle: "Broszury projektów",

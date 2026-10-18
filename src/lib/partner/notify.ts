@@ -219,6 +219,15 @@ export function isUnchangedStage(toStatus: unknown, lastMailedToStatus: unknown)
   return isLeadStatus(toStatus) && toStatus === lastMailedToStatus;
 }
 
+export const OPTED_OUT_ERROR = "opted out";
+/** Kinds a partner can switch off in the profile; CLAIM_OUTCOME and PAYOUT concern the claim decision and money. */
+export const OPTIONAL_KINDS: readonly NotificationKind[] = ["STAGE", "MESSAGE"];
+
+/** Profile switch (phase 3d): "opted out" for STAGE/MESSAGE when email notifications are off, else null. */
+export function optOutGate(kind: NotificationKind, emailNotifications: boolean): string | null {
+  return !emailNotifications && OPTIONAL_KINDS.includes(kind) ? OPTED_OUT_ERROR : null;
+}
+
 /**
  * Whether a row may be mailed, given its claim and the claim's effective state (effectiveClaimState);
  * returns the skip reason or null. A rejection and a payout are told regardless of the lead (even

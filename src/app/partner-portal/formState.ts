@@ -10,3 +10,7 @@ export const isOk = (s: FormState): s is FormOk => !!s && "ok" in s;
 /** Submit-client form: the partner's own typed name comes back for the thank-you panel. */
 export type SubmitOk = { ok: true; name: string; alreadyYours?: boolean };
 export type SubmitState = SubmitOk | FormErr | null;
+
+/** Profile email settings: the saved values come back so the form shows what is stored. */
+export type SettingsOk = { ok: true; emailNotifications: boolean; digestOptIn: boolean };
+export type SettingsState = SettingsOk | FormErr | null;

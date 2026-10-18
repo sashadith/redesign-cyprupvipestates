@@ -474,6 +474,9 @@ export const de: PartnerDict = {
     invalid: "Bitte geben Sie einen ganzen Eurobetrag zwischen 1 und 100.000.000 ein.",
     hint: "Übergabe: Wir übernehmen den Kunden. Fix: Sie bleiben beteiligt. Ihre Sätze unterscheiden sich je Projekt.",
     shown: "Angezeigt: {count}",
+    town: "Ort",
+    enterPrice: "Geben Sie einen Kaufpreis ein, um die Auszahlungen zu sehen.",
+    disclaimer: "Alle Beträge sind Schätzungen. Die endgültige Provision richtet sich nach dem tatsächlichen Abschluss (Endpreis, Projektsatz und Ihr vereinbarter Anteil).",
   },
   onboarding: {
     title: "Erste Schritte",
@@ -493,6 +496,7 @@ export const de: PartnerDict = {
     agreementTitle: "Partnervereinbarung",
     agreementMeta: "Version {version}, akzeptiert am {date}",
     agreementLink: "Vereinbarung öffnen",
+    agreementNone: "Noch keine Zustimmung erfasst.",
     guidelinesTitle: "Werberichtlinien",
     faqTitle: "So funktioniert es",
     brochuresTitle: "Projektbroschüren",
