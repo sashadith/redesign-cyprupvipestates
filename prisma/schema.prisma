@@ -2086,6 +2086,10 @@ model Partner {
   ibanChangedAt        DateTime?
   vatMode              PartnerVatMode @default(NONE)
   creditNotes          CreditNote[]
+  // Phase 3d preferences: stage/message emails on/off (claim outcomes and payouts always send), weekly digest.
+  emailNotifications   Boolean        @default(true)
+  digestOptIn          Boolean        @default(true)
+  digestLogs           PartnerDigestLog[]
   @@index([status])
   @@map("partners")
 }
@@ -2238,4 +2242,19 @@ model PartnerNotification {
   error     String?
   @@index([sentAt, createdAt])
   @@map("partner_notifications")
+}
+
+// Weekly partner digest (phase 3d): one row per partner and ISO week (Asia/Nicosia),
+// inserted before sending so a week is never mailed twice.
+model PartnerDigestLog {
+  id        String    @id @default(uuid())
+  partnerId String
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  weekKey   String
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@unique([partnerId, weekKey])
+  @@map("partner_digest_logs")
 }
