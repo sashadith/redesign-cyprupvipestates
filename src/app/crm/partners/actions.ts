@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { writeAudit } from "@/lib/crm/audit";
-import { revokeAllSessionsForPartner } from "@/lib/partner/session";
 import { buildApprovedEmail, partnerBaseUrl } from "@/lib/partner/mail";
 import { asLocale } from "@/lib/partner/accounts";
 import { newRefCode, randomSuffix } from "@/lib/partner/refCode";
@@ -13,7 +12,7 @@ import { parseTerms } from "@/lib/partner/terms";
 import { sendEmail } from "@/lib/sendEmail";
 
 type Result = { ok: true; notice?: string } | { error: string };
-const DENIED = "Only admins can manage partners.";
+const DENIED = "Only managers can manage partners";
 
 async function guard() {
   const actor = await requireCrmUser();
@@ -78,13 +77,15 @@ export async function suspendPartnerAction(id: string): Promise<Result> {
   const actor = await guard();
   if (!actor) return { error: DENIED };
   const done = await prisma.$transaction(async (tx) => {
-    const r = await tx.partner.updateMany({ where: { id, status: "ACTIVE" }, data: { status: "SUSPENDED", suspendedAt: new Date() } });
+    const now = new Date();
+    const r = await tx.partner.updateMany({ where: { id, status: "ACTIVE" }, data: { status: "SUSPENDED", suspendedAt: now } });
     if (r.count !== 1) return false;
+    // Same transaction: the partner is never SUSPENDED while still holding a live session.
+    await tx.partnerSession.updateMany({ where: { partnerUser: { partnerId: id }, revokedAt: null }, data: { revokedAt: now } });
     await writeAudit(actor, "partner_suspend", "partner", id, { before: { status: "ACTIVE" }, after: { status: "SUSPENDED" } }, tx);
     return true;
   });
   if (!done) return { error: "Only active partners can be suspended." };
-  await revokeAllSessionsForPartner(id);
   revalidatePath("/crm/partners");
   return { ok: true, notice: "Suspended" };
 }
@@ -113,19 +114,31 @@ export async function updatePartnerTermsAction(id: string, raw: unknown): Promis
     const m = await prisma.user.findFirst({ where: { id: t.managerUserId, isActive: true }, select: { id: true } });
     if (!m) return { error: "Manager must be an active employee." };
   }
-  const cur = await prisma.partner.findUnique({ where: { id }, select: { handoverShare: true, fixShare: true, trustMode: true, managerUserId: true } });
-  if (!cur) return { error: "Partner not found." };
-  const before = { handoverShare: Number(cur.handoverShare), fixShare: Number(cur.fixShare), trustMode: cur.trustMode, managerUserId: cur.managerUserId };
-  const keys = Object.keys(t) as (keyof typeof t)[];
-  const changed = keys.filter((k) => before[k] !== t[k]);
-  if (changed.length === 0) return { ok: true, notice: "No changes" };
-  await prisma.$transaction(async (tx) => {
-    await tx.partner.update({ where: { id }, data: t });
-    await writeAudit(actor, "partner_terms_update", "partner", id, {
-      before: Object.fromEntries(changed.map((k) => [k, before[k]])),
-      after: Object.fromEntries(changed.map((k) => [k, t[k]])),
-    }, tx);
-  });
+  type Outcome = "missing" | "unchanged" | "saved";
+  let outcome: Outcome;
+  try {
+    // Read and write in one transaction, so the audit "before" is the row actually overwritten.
+    outcome = await prisma.$transaction(async (tx): Promise<Outcome> => {
+      const cur = await tx.partner.findUnique({ where: { id }, select: { handoverShare: true, fixShare: true, trustMode: true, managerUserId: true } });
+      if (!cur) return "missing";
+      const before = { handoverShare: Number(cur.handoverShare), fixShare: Number(cur.fixShare), trustMode: cur.trustMode, managerUserId: cur.managerUserId };
+      const keys = Object.keys(t) as (keyof typeof t)[];
+      const changed = keys.filter((k) => before[k] !== t[k]);
+      if (changed.length === 0) return "unchanged";
+      await tx.partner.update({ where: { id }, data: t });
+      await writeAudit(actor, "partner_terms_update", "partner", id, {
+        before: Object.fromEntries(changed.map((k) => [k, before[k]])),
+        after: Object.fromEntries(changed.map((k) => [k, t[k]])),
+      }, tx);
+      return "saved";
+    });
+  } catch (e) {
+    // Deleted between the read and the update.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return { error: "Partner not found." };
+    throw e;
+  }
+  if (outcome === "missing") return { error: "Partner not found." };
+  if (outcome === "unchanged") return { ok: true, notice: "No changes" };
   revalidatePath("/crm/partners");
   return { ok: true, notice: "Saved" };
 }

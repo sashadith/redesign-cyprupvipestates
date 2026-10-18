@@ -54,13 +54,13 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
           <p>Approve, suspend and configure partners registered on the partner portal.</p>
         </div>
       </div>
-      <div className="crm-pt-tabs" role="tablist" aria-label="Partner status">
+      <nav className="crm-pt-tabs" aria-label="Partner status">
         {TABS.map((t) => (
-          <Link key={t.key} href={`/crm/partners?tab=${t.key}`} role="tab" aria-selected={t.key === tab.key} className={`crm-chip${t.key === tab.key ? " on" : ""}`}>
+          <Link key={t.key} href={`/crm/partners?tab=${t.key}`} aria-current={t.key === tab.key ? "page" : undefined} className={`crm-chip${t.key === tab.key ? " on" : ""}`}>
             {t.label} ({countOf(t.status)})
           </Link>
         ))}
-      </div>
+      </nav>
       <ToastProvider>
         <PartnersTable rows={rows} managers={managers} />
       </ToastProvider>

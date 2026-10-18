@@ -9,6 +9,12 @@ test("slug of company + suffix", () => assert.equal(newRefCode({ company: "Alfa 
 test("falls back to last name", () => assert.equal(newRefCode({ company: null, lastName: "Smith" }, r), "smith-ab12"));
 test("umlauts and sharp s", () => assert.equal(newRefCode({ company: "Müller Bäder Straße", lastName: "x" }, r), "mueller-baeder-s-ab12"));
 test("polish diacritics", () => assert.equal(newRefCode({ company: "Łąka Śląsk", lastName: "x" }, r), "laka-slask-ab12"));
+test("other accents are stripped (NFD)", () => {
+  assert.equal(newRefCode({ company: "René Noël Immobilière", lastName: "x" }, r), "rene-noel-immobi-ab12");
+  assert.equal(newRefCode({ company: null, lastName: "Dvořák" }, r), "dvorak-ab12");
+  // decomposed input (combining diaeresis) still maps ü → ue
+  assert.equal(newRefCode({ company: "Mu\u0308ller", lastName: "x" }, r), "mueller-ab12");
+});
 test("cyrillic", () => assert.equal(newRefCode({ company: "Северный Дом", lastName: "x" }, r), "severnyy-dom-ab12"));
 test("cyrillic company falls to last name when only unknown chars", () => assert.equal(newRefCode({ company: "株式会社", lastName: "Ivanov" }, r), "ivanov-ab12"));
 test("empty everything -> partner", () => assert.equal(newRefCode({ company: "", lastName: "!!!" }, r), "partner-ab12"));

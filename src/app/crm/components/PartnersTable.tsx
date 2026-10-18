@@ -1,16 +1,19 @@
 "use client";
 import { useState, useTransition } from "react";
+import type { PartnerType } from "@prisma/client";
 import { approvePartnerAction, reactivatePartnerAction, suspendPartnerAction, updatePartnerTermsAction } from "../partners/actions";
 import { useToast } from "./Toast";
 
 export type PartnerRow = {
-  id: string; status: "PENDING" | "ACTIVE" | "SUSPENDED"; type: string; name: string; company: string | null; country: string; language: string;
+  id: string; status: "PENDING" | "ACTIVE" | "SUSPENDED"; type: PartnerType; name: string; company: string | null; country: string; language: string;
   email: string; verified: boolean; registered: string; agreement: string | null;
   handoverShare: string; fixShare: string; trustMode: boolean; refCode: string | null; managerUserId: string | null; managerName: string | null;
 };
 
-const TYPE_LABEL: Record<string, string> = {
+// Record<PartnerType, …>: a new enum value fails the type check until it gets a label.
+const TYPE_LABEL: Record<PartnerType, string> = {
   REAL_ESTATE: "Real estate", PRIVATE_BROKER: "Private broker", BANK: "Bank", INVESTMENT: "Investment", FAMILY_OFFICE: "Family office",
+  TOURISM: "Tourism", DESIGN: "Interior & design", LEGAL: "Legal", OTHER: "Other",
 };
 
 function TermsEditor({ row, managers }: { row: PartnerRow; managers: { id: string; name: string }[] }) {
@@ -57,7 +60,7 @@ function Row({ row, managers }: { row: PartnerRow; managers: { id: string; name:
         <div className="crm-pt-who">
           <b>{row.name}</b>
           {row.company && <span>{row.company}</span>}
-          <span>{TYPE_LABEL[row.type] ?? row.type} · {row.country} · {row.language.toUpperCase()}</span>
+          <span>{TYPE_LABEL[row.type]} · {row.country} · {row.language.toUpperCase()}</span>
         </div>
         <div className="crm-pt-mail">
           <span>{row.email}</span>

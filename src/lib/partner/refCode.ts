@@ -11,7 +11,9 @@ const MAP: Record<string, string> = {
 export function slugify(input: string | null | undefined, max = 16): string {
   const lower = (input ?? "").toLowerCase();
   let out = "";
-  for (const ch of lower) out += MAP[ch] ?? ch;
+  // Mapped letters first (ä→ae, й→y need their precomposed form); any other accented letter is
+  // decomposed (NFD) and its combining marks dropped, so "René" → "rene", "Noël" → "noel".
+  for (const ch of lower.normalize("NFC")) out += MAP[ch] ?? ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return out.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, max).replace(/-+$/g, "");
 }
 
