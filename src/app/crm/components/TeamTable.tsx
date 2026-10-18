@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { updateTeamMemberAction, type TeamStored } from "../team/actions";
 import { cleanSpecialties, normalizeRights, TEAM_LANGUAGES, type TeamPatch } from "@/lib/crm/teamRights";
 import { useToast } from "./Toast";
@@ -23,10 +23,22 @@ function Row({ initial, save }: { initial: TeamRow; save: (id: string, patch: Te
   const [row, setRow] = useState(initial);
   const [draft, setDraft] = useState(initial.specialties.join(", "));
   const [pending, start] = useTransition();
+  // The fieldset is disabled while saving, which drops focus to <body>. The
+  // control that triggered the save gets it back once the save is done, unless
+  // the user has already moved focus somewhere else.
+  const returnFocus = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (pending) return;
+    const el = returnFocus.current;
+    returnFocus.current = null;
+    if (el?.isConnected && (document.activeElement === null || document.activeElement === document.body)) el.focus();
+  }, [pending]);
 
   // Optimistic (functional updates); the server's stored values win, failure rolls back.
   const apply = (patch: TeamPatch) => {
     if (pending) return;
+    const active = document.activeElement;
+    returnFocus.current = active instanceof HTMLElement && active !== document.body ? active : null;
     const prev = row;
     const touchesRights = patch.canSeeColleagues !== undefined || patch.canEditColleagues !== undefined;
     setRow((r) => ({ ...r, ...patch, ...(touchesRights ? normalizeRights(r, patch) : {}) }));

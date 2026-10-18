@@ -157,6 +157,7 @@
 .crm-switch-track i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel); transition: transform .15s; }
 .crm-switch.on .crm-switch-track { background: var(--accent); }
 .crm-switch.on .crm-switch-track i { transform: translateX(14px); }
+.crm-switch:disabled { cursor: default; opacity: .6; }
 .crm-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .crm-team-spec input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 @media (max-width: 900px) { .crm-team-row { grid-template-columns: 1fr; } }

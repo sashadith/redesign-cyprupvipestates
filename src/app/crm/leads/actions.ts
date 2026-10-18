@@ -23,5 +23,7 @@ export async function logInteractionAction(leadId: string, raw: unknown): Promis
   if (when && when.getTime() > Date.now() + FUTURE_SLACK_MS) return { error: "The date cannot be in the future." };
   await logLeadInteraction({ userId: user.id, userName: user.name }, leadId, { type, body, subject, occurredAt: when, leadReacted });
   revalidatePath(`/crm/leads/${leadId}`);
+  // A logged contact changes the board card's age / stale flag.
+  revalidatePath("/crm/pipeline");
   return { ok: true };
 }

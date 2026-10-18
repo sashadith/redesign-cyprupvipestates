@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FUNNEL_STATUSES, STATUS_LABEL, isLeadStatus, type LeadStatusValue } from "@/lib/crm/leadStatus";
 import { useMoveFlow } from "./useMoveFlow";
 import { useToast } from "./Toast";
@@ -13,6 +13,9 @@ export function CockpitStage({ leadId, leadName, status: initial, canEdit }: { l
   const toast = useToast();
   const [status, setStatus] = useState(initial);
   useEffect(() => setStatus(initial), [initial]);
+  // The button that started the move. It is disabled while the dialog is open,
+  // so a cancelled/closed dialog leaves focus on <body>; put it back by hand.
+  const trigger = useRef<HTMLButtonElement | null>(null);
 
   const flow = useMoveFlow({
     canMove: () => canEdit,
@@ -26,10 +29,12 @@ export function CockpitStage({ leadId, leadName, status: initial, canEdit }: { l
       router.refresh();
     },
     failed: (_req, error) => toast.show(error, "error"),
+    dismissed: () => requestAnimationFrame(() => trigger.current?.focus()),
   });
 
-  const move = (to: LeadStatusValue) => {
+  const move = (to: LeadStatusValue, from: HTMLButtonElement) => {
     if (to === status) return;
+    trigger.current = from;
     flow.start({ id: leadId, to, leadName });
   };
   const current = isLeadStatus(status) ? status : null;
@@ -45,7 +50,7 @@ export function CockpitStage({ leadId, leadName, status: initial, canEdit }: { l
       <ol className="crm-ck-steps">
         {FUNNEL_STATUSES.map((s, i) => (
           <li key={s} className={`s-${s}${i <= reached ? " done" : ""}`}>
-            <button type="button" aria-current={s === current ? "step" : undefined} disabled={disabled || s === current} onClick={() => move(s)}>
+            <button type="button" aria-current={s === current ? "step" : undefined} disabled={disabled || s === current} onClick={(e) => move(s, e.currentTarget)}>
               <span className="dot" />{STATUS_LABEL[s]}
             </button>
           </li>
@@ -53,7 +58,7 @@ export function CockpitStage({ leadId, leadName, status: initial, canEdit }: { l
       </ol>
       <div className="crm-ck-side">
         {(["KEEP_CONTACT", "LOST"] as const).map((s) => (
-          <button key={s} type="button" className={`crm-btn s-${s}${s === current ? " on" : ""}`} aria-pressed={s === current} disabled={disabled || s === current} onClick={() => move(s)}>
+          <button key={s} type="button" className={`crm-btn s-${s}${s === current ? " on" : ""}`} aria-pressed={s === current} disabled={disabled || s === current} onClick={(e) => move(s, e.currentTarget)}>
             <span className="dot" />{STATUS_LABEL[s]}
           </button>
         ))}
