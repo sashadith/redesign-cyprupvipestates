@@ -36,6 +36,7 @@ const moveStub = w("actions.js", `
 export const replies = [];
 export async function moveLeadAction() { const r = replies.shift(); if (!r) throw new Error("no reply queued"); return r; }
 export async function searchDevelopmentsAction() { return []; }
+export async function searchLeadsAction() { return []; }
 `);
 const teamStub = w("team-actions.js", `
 export const teamReplies = [];

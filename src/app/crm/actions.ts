@@ -2,9 +2,12 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
-import { isLeadStatus, LOST_REASONS, type LostReasonValue } from "@/lib/crm/leadStatus";
+import { isLeadStatus, STATUS_LABEL, LOST_REASONS, type LostReasonValue } from "@/lib/crm/leadStatus";
 import { assignLead } from "@/lib/crm/assignLead";
 import type { AssignResult } from "@/lib/crm/assignMessage";
+import { leadAccessWhere } from "@/lib/crm/access";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { leadSearchParts } from "@/lib/crm/leadSearch";
 import { moveLead, type DealInput, type MoveResult } from "@/lib/crm/moveLead";
 
 export async function moveLeadAction(
@@ -51,4 +54,39 @@ export async function assignLeadAction(leadId: string, userId: string): Promise<
   const res = await assignLead(user, leadId, userId);
   if ("ok" in res) { revalidatePath("/crm/inbox"); revalidatePath("/crm/pipeline"); revalidatePath(`/crm/leads/${leadId}`); }
   return res;
+}
+
+export type LeadHit = { id: string; name: string; status: string; statusLabel: string; sub: string };
+
+// ⌘K search. Everything sits under one AND with the access scope, so ids found by the raw
+// digit match can never widen what the user may see.
+export async function searchLeadsAction(q: string): Promise<LeadHit[]> {
+  const user = await requireCrmUser();
+  const parts = leadSearchParts(typeof q === "string" ? q.slice(0, 100) : "");
+  if (!parts) return [];
+  let ids: string[] = [];
+  if (parts.digits) {
+    const rows = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM leads WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${parts.digits}%`} LIMIT 200`;
+    ids = rows.map((r) => r.id);
+  }
+  const rows = await prisma.lead.findMany({
+    where: {
+      AND: [
+        leadAccessWhere(user),
+        EXCLUDE_NEWSLETTER,
+        { deletedAt: null },
+        { OR: [parts.text, ...(ids.length ? [{ id: { in: ids } }] : [])] },
+      ],
+    },
+    select: { id: true, firstName: true, lastName: true, email: true, phone: true, status: true },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    name: [r.firstName, r.lastName].filter(Boolean).join(" ") || "(no name)",
+    status: r.status,
+    statusLabel: isLeadStatus(r.status) ? STATUS_LABEL[r.status] : r.status,
+    sub: r.email ?? r.phone ?? "",
+  }));
 }
