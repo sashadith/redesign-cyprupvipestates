@@ -11,7 +11,7 @@ import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import {
   INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildPayoutEmail, buildStageEmail, clientLink,
   commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate,
-  notifyStartFromEnv, optOutGate, payoutDealIdFromRefKey, planStageNotifications, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
+  NOT_IMPLEMENTED_ERROR, NOT_IMPLEMENTED_KINDS, notifyStartFromEnv, optOutGate, payoutDealIdFromRefKey, planStageNotifications, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
 
 export { notifyStartFromEnv };
@@ -84,6 +84,7 @@ type OutboxRow = {
 /** Decides what to do with one outbox row: a reason to drop it, or the mail to send. */
 async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Promise<Outcome> {
   if (beforeStart(row, start)) return { skip: "before start" };
+  if (NOT_IMPLEMENTED_KINDS.includes(row.kind)) return { skip: NOT_IMPLEMENTED_ERROR }; // before any gate: no claim/partner lookups
   const partner = await prisma.partner.findUnique({
     where: { id: row.partnerId },
     select: {
@@ -173,6 +174,9 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         }),
       };
     }
+    case "MATCH":
+    case "PRESENTATION_OPENED":
+      return { skip: NOT_IMPLEMENTED_ERROR }; // Tasks 3-5 implement these; never fall through to another kind's builder
     default:
       return unhandledKind(row.kind);
   }

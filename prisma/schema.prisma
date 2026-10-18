@@ -1838,6 +1838,8 @@ model ClientPresentation {
   criteria        Json? // { districts, areas, bedrooms, budgetMin, budgetMax, propertyTypes } — the actual matching-panel filter state at generation time (or last edit-save). The public page's "your preferences" chips render EXCLUSIVELY from this, never from Lead fields directly — a lead's own profile (budget/type) can differ from what was actually searched for this specific presentation.
   advisorId       String? // User relation — whose contact card shows in the closing section
   advisor         User?     @relation(fields: [advisorId], references: [id])
+  partnerId       String? // Phase 3e: the partner who created this presentation (null = created by staff)
+  partner         Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
   expiresAt       DateTime? // default now + 30 days, extendable from the admin
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -1847,6 +1849,7 @@ model ClientPresentation {
   views PresentationView[]
 
   @@index([leadId])
+  @@index([partnerId])
   @@map("client_presentations")
 }
 
@@ -2094,6 +2097,19 @@ model Partner {
   emailNotifications   Boolean        @default(true)
   digestOptIn          Boolean        @default(true)
   digestLogs           PartnerDigestLog[]
+  // Phase 3e: Telegram notifications + white-label branding for partner presentations.
+  notifyChannel        PartnerNotifyChannel @default(EMAIL)
+  telegramChatId       String?        @unique
+  telegramLinkedAt     DateTime?
+  brandName            String?
+  brandPhone           String?
+  brandEmail           String?
+  brandWebsite         String?
+  brandLogo            Bytes?
+  brandLogoType        String?
+  brandLogoUpdatedAt   DateTime?
+  telegramCodes        PartnerTelegramCode[]
+  presentations        ClientPresentation[]
   @@index([status])
   @@map("partners")
 }
@@ -2176,6 +2192,26 @@ enum PartnerNotificationKind {
   MESSAGE
   CLAIM_OUTCOME
   PAYOUT
+  MATCH
+  PRESENTATION_OPENED
+}
+
+enum PartnerNotifyChannel {
+  EMAIL
+  TELEGRAM
+  BOTH
+}
+
+model PartnerTelegramCode {
+  id        String    @id @default(uuid())
+  partnerId String
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  codeHash  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  @@index([partnerId])
+  @@map("partner_telegram_codes")
 }
 
 enum PartnerVatMode {

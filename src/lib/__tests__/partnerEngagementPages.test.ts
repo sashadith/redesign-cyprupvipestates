@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { NOTIFICATION_KINDS, OPTED_OUT_ERROR, optOutGate } from "@/lib/partner/notify";
+import { NOTIFICATION_KINDS, NOT_IMPLEMENTED_ERROR, NOT_IMPLEMENTED_KINDS, OPTED_OUT_ERROR, optOutGate } from "@/lib/partner/notify";
 import { BROCHURE_CAP, brochureLang, brochureLinks, brochureRows } from "@/lib/partner/materials";
 import { PARTNER_LOCALES, dict } from "@/lib/partner/i18n";
 import { onboardingFactsFrom, onboardingHref, onboardingSteps, onboardingVisible } from "@/lib/partner/onboarding";
@@ -18,7 +20,7 @@ test("optOutGate: claim decisions and payouts always go out", () => {
     assert.equal(optOutGate("PAYOUT", on), null);
   }
   // Every kind is covered by the decision above (a new kind must be classified on purpose).
-  assert.deepEqual([...NOTIFICATION_KINDS].sort(), ["CLAIM_OUTCOME", "MESSAGE", "PAYOUT", "STAGE"]);
+  assert.deepEqual([...NOTIFICATION_KINDS].sort(), ["CLAIM_OUTCOME", "MATCH", "MESSAGE", "PAYOUT", "PRESENTATION_OPENED", "STAGE"]);
 });
 
 test("brochure links: main-site project pages only, en without prefix, slug encoded", () => {
@@ -104,4 +106,11 @@ test("onboarding: VAT-number item only for EU companies, stays visible despite H
     assert.ok(dict(l).onboarding.steps.vatId.trim(), l);
     assert.ok(dict(l).profile.vatMissing.trim(), l);
   }
+});
+
+test("MATCH and PRESENTATION_OPENED rows are skipped as not implemented, never sent with another template", () => {
+  assert.deepEqual([...NOT_IMPLEMENTED_KINDS].sort(), ["MATCH", "PRESENTATION_OPENED"]);
+  assert.equal(NOT_IMPLEMENTED_ERROR, "not implemented yet");
+  const src = readFileSync(join(process.cwd(), "src/lib/partner/notifySend.ts"), "utf8");
+  assert.ok(src.includes('case "PRESENTATION_OPENED":\n      return { skip: NOT_IMPLEMENTED_ERROR }'), "explicit skip case, no fall-through");
 });

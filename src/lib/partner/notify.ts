@@ -97,8 +97,12 @@ export function formatPayoutAmount(locale: PartnerLocale, euros: number): string
   return new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(euros);
 }
 
-export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT"] as const;
+export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+
+/** Phase 3e kinds whose senders are not built yet: their rows are skipped, never mailed with another kind's template. */
+export const NOT_IMPLEMENTED_ERROR = "not implemented yet";
+export const NOT_IMPLEMENTED_KINDS: readonly NotificationKind[] = ["MATCH", "PRESENTATION_OPENED"];
 
 /** Compile-time exhaustiveness: a new kind that is not handled fails the build instead of falling through. */
 export function unhandledKind(kind: never): never {
