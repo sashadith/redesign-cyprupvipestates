@@ -118,6 +118,14 @@ export function tracksClientViews(p: { partnerId: string | null; preview: boolea
   return !p.partnerId || !p.preview;
 }
 
+/**
+ * Whether a heart click is saved (POST /api/c/[token]/favorite). Same rule as views: in a partner preview
+ * the hearts are local-only; a staff presentation always saves, as before.
+ */
+export function savesClientFavorites(p: { partnerId: string | null; preview: boolean }): boolean {
+  return tracksClientViews(p);
+}
+
 // ── Share metadata (partner mode) ───────────────────────────────────────────
 
 /**

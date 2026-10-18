@@ -29,7 +29,8 @@ export default function PresentationBody({
   locale: PLocale;
   /** Partner-branded presentation (phase 3e): no links to the Cyprus VIP Estates site. Omitted for staff presentations. */
   partnerMode?: boolean;
-  /** false = partner preview (?preview=1): opening a property is not recorded as a client view. */
+  /** false = partner preview (?preview=1): opening a property is not recorded as a client view, and hearts are
+   *  local-only (never POSTed to /favorite). Omitted (true) for staff presentations. */
   trackViews?: boolean;
 }) {
   const c = COPY[locale];
@@ -47,6 +48,11 @@ export default function PresentationBody({
   const [favoriteBusy, setFavoriteBusy] = useState<Record<string, boolean>>({});
 
   const toggleFavorite = useCallback((developmentId: string) => {
+    if (!trackViews) {
+      // Partner preview: the heart flips on screen only; nothing is saved to the client's presentation.
+      setFavorites((prev) => ({ ...prev, [developmentId]: !prev[developmentId] }));
+      return;
+    }
     setFavorites((prev) => {
       const next = !prev[developmentId];
       setFavoriteBusy((b) => ({ ...b, [developmentId]: true }));
@@ -60,7 +66,7 @@ export default function PresentationBody({
         .finally(() => setFavoriteBusy((b) => ({ ...b, [developmentId]: false })));
       return { ...prev, [developmentId]: next };
     });
-  }, [token]);
+  }, [token, trackViews]);
 
   const markers = items.filter((i): i is PresentationDevelopmentVM & { lat: number; lng: number } => i.lat != null && i.lng != null).map((i) => ({
     id: i.developmentId, lat: i.lat, lng: i.lng, name: i.publicName,

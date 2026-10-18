@@ -14,7 +14,8 @@ import {
 } from "@/lib/partner/partnerPresentations";
 import {
   LOGO_HEADERS, PARTNER_SHARE_IMAGE, PREVIEW_PARAM, brandDisplayName, isPreviewRequest, logoDecision, officeAlertPrefix,
-  partnerPresentationAvailable, partnerShareTitle, presentationBranding, presentationOpenedRow, presentationPreviewUrl, tracksClientViews,
+  partnerPresentationAvailable, partnerShareTitle, presentationBranding, presentationOpenedRow, presentationPreviewUrl, savesClientFavorites,
+  tracksClientViews,
   whatsappDigits,
 } from "@/lib/partner/presentationBranding";
 import { validatePresentationDraft } from "@/lib/partner/presentationDraft";
@@ -151,10 +152,12 @@ test("partner preview: ?preview=1 skips view tracking for partner presentations 
   assert.equal(tracksClientViews({ partnerId: null, preview: true }), true, "staff presentation: always tracked, as before");
   assert.equal(tracksClientViews({ partnerId: null, preview: false }), true);
   const page = src("app/c/[token]/page.tsx");
-  assert.ok(page.includes("const trackViews = tracksClientViews({ partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) });"));
+  assert.ok(page.includes("const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) };"));
+  assert.ok(page.includes("const trackViews = tracksClientViews(previewCtx) && savesClientFavorites(previewCtx);"));
   assert.ok(page.includes("{trackViews && <ViewTracker token={params.token} />}"));
   const body = src("app/c/[token]/PresentationBody.tsx");
-  const open = body.slice(body.indexOf("const openDetails"), body.indexOf("}, [token, trackViews]);"));
+  const openAt = body.indexOf("const openDetails");
+  const open = body.slice(openAt, body.indexOf("}, [token, trackViews]);", openAt));
   assert.ok(open.indexOf("if (!trackViews) return;") < open.indexOf("fetch(`/api/c/${token}/view`"), "overlay view POST skipped in preview");
   // Portal: "Open" carries the marker, "Copy link" (sent to the client) never does.
   const bits = src("app/partner-portal/components/presentationBits.tsx");
@@ -163,6 +166,18 @@ test("partner preview: ?preview=1 skips view tracking for partner presentations 
   const forms = src("app/partner-portal/components/presentationForms.tsx");
   assert.ok(forms.includes("href={presentationPreviewUrl(state.url)}"));
   assert.ok(forms.includes("<CopyLink value={state.url}"));
+});
+
+test("partner preview: hearts are local-only (no POST to /favorite); staff presentations always save", () => {
+  assert.equal(savesClientFavorites({ partnerId: "p1", preview: true }), false);
+  assert.equal(savesClientFavorites({ partnerId: "p1", preview: false }), true);
+  assert.equal(savesClientFavorites({ partnerId: null, preview: true }), true, "staff presentation unchanged");
+  assert.equal(savesClientFavorites({ partnerId: null, preview: false }), true);
+  const body = src("app/c/[token]/PresentationBody.tsx");
+  const toggleAt = body.indexOf("const toggleFavorite");
+  const toggle = body.slice(toggleAt, body.indexOf("}, [token, trackViews]);", toggleAt));
+  assert.ok(toggle.indexOf("if (!trackViews) {") < toggle.indexOf("fetch(`/api/c/${token}/favorite`"), "preview returns before the POST");
+  assert.ok(toggle.slice(toggle.indexOf("if (!trackViews) {"), toggle.indexOf("fetch(")).includes("return;"));
 });
 
 test("partner mode: overlay hides 'View on site'; share title/image carry no CVE branding", () => {

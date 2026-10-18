@@ -14,7 +14,8 @@ import type { MatchFilters } from "@/lib/crm/matching";
 import { SITE_URL, ogLocale } from "@/lib/seo";
 import { hePlaceOrIsolated } from "@/lib/hePlaces";
 import {
-  PARTNER_SHARE_IMAGE, isPreviewRequest, partnerPresentationAvailable, partnerShareTitle, presentationBranding, tracksClientViews,
+  PARTNER_SHARE_IMAGE, isPreviewRequest, partnerPresentationAvailable, partnerShareTitle, presentationBranding, savesClientFavorites,
+  tracksClientViews,
 } from "@/lib/partner/presentationBranding";
 import { asPLocale, COPY, PARTNER_COPY, timeOfDayGreeting } from "./copy";
 import { budgetChip } from "./budgetChip";
@@ -176,8 +177,9 @@ export default async function ClientPresentationPage({
     return <PartnerNotAvailable locale={locale} />;
   }
   // The portal's "Open" link adds ?preview=1 (soft marker, see presentationBranding): the partner's own look
-  // is not recorded as the client's view. Always true for a staff presentation.
-  const trackViews = tracksClientViews({ partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) });
+  // is not recorded as the client's view, and hearts stay local-only. Always true for a staff presentation.
+  const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) };
+  const trackViews = tracksClientViews(previewCtx) && savesClientFavorites(previewCtx);
   const branding = presentationBranding({
     token: params.token,
     partnerId: presentation.partnerId,
