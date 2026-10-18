@@ -68,6 +68,8 @@ export const en = {
     verifyFirst: "Please confirm your email address first. Check your inbox for the link.",
     resend: "Send the confirmation link again",
     noAccount: "Not a partner yet?",
+    suspended: "Your partner account is currently paused. Please contact us.",
+    suspendedContact: "Your partner account is currently paused. Please contact us: {contact}.",
   },
   forgot: {
     title: "Reset your password",
@@ -99,8 +101,6 @@ export const en = {
     copy: "Copy",
     copied: "Copied",
     contactTitle: "Your contact person",
-    suspendedTitle: "Account on hold",
-    suspendedText: "Your partner account is currently not active. Please contact our office and we will gladly help: {contact}.",
   },
   profile: {
     title: "Profile",

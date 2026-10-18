@@ -3,10 +3,17 @@ import { dict, fmt, type PartnerLocale } from "./i18n";
 
 export type BuiltEmail = { subject: string; text: string; html: string };
 
-/** Base URL for links in partner e-mails: the configured partner host, else the local dev host. */
-export function partnerBaseUrl(env: { PARTNER_HOST?: string } = process.env as { PARTNER_HOST?: string }): string {
+/**
+ * Base URL for links in partner e-mails: the configured partner host, else the local dev host.
+ * Throws in production without PARTNER_HOST — a mail must never carry a localhost link.
+ */
+export function partnerBaseUrl(
+  env: { PARTNER_HOST?: string; NODE_ENV?: string } = process.env as { PARTNER_HOST?: string; NODE_ENV?: string },
+): string {
   const host = (env.PARTNER_HOST ?? "").trim().replace(/\.$/, "").replace(/\/+$/, "");
-  return host ? `https://${host}` : "http://partner.localhost:3000";
+  if (host) return `https://${host}`;
+  if (env.NODE_ENV === "production") throw new Error("PARTNER_HOST is not set");
+  return "http://partner.localhost:3000";
 }
 
 export function escapeHtml(v: unknown): string {

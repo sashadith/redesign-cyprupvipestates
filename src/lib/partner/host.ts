@@ -1,4 +1,6 @@
 /** Partner portal host detection (pure). Prod: env PARTNER_HOST; non-production also partner.localhost. */
+const MAIN_HOSTS = new Set(["cyprusvipestates.com", "www.cyprusvipestates.com"]);
+
 export function isPartnerHost(
   host: string | null,
   env: { PARTNER_HOST?: string; NODE_ENV?: string },
@@ -8,6 +10,8 @@ export function isPartnerHost(
   const h = norm(host);
   if (!h) return false;
   const configured = norm(env.PARTNER_HOST ?? "");
+  // Misconfiguration guard: PARTNER_HOST set to the main site must never turn the public site into the portal.
+  if (MAIN_HOSTS.has(configured)) return false;
   if (configured && h === configured) return true;
   return env.NODE_ENV !== "production" && h === "partner.localhost";
 }

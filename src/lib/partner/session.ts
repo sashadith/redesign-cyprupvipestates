@@ -4,7 +4,14 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { addHours, hashToken, newToken } from "./tokens";
 
-export const PARTNER_COOKIE = "cve_partner";
+/**
+ * Session cookie name. Production (HTTPS) uses the __Host- prefix, which the browser only accepts
+ * with Secure, Path=/ and no Domain — so the cookie can never be set for or leak to a sibling host.
+ * Plain-http dev cannot use the prefix. Nothing else may hardcode this name.
+ */
+export const PARTNER_COOKIE = process.env.NODE_ENV === "production" ? "__Host-cve_partner" : "cve_partner";
+// Host-only (no Domain); Secure in production, which the __Host- prefix requires.
+const COOKIE_OPTS = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" } as const;
 const SESSION_DAYS = 30;
 const TOUCH_EVERY_MS = 5 * 60_000;
 
@@ -27,17 +34,12 @@ export async function createPartnerSession(partnerUserId: string): Promise<void>
   const { token, hash } = newToken();
   const expiresAt = addHours(new Date(), SESSION_DAYS * 24);
   await prisma.partnerSession.create({ data: { partnerUserId, tokenHash: hash, expiresAt } });
-  cookies().set(PARTNER_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: expiresAt,
-  });
+  cookies().set(PARTNER_COOKIE, token, { ...COOKIE_OPTS, expires: expiresAt });
 }
 
 /**
- * Valid (unrevoked, unexpired) session of an existing user, else null. Status is returned as-is.
+ * Valid (unrevoked, unexpired) session of an existing, not suspended partner, else null.
+ * SUSPENDED is treated as logged out (defense in depth: suspending also revokes all sessions).
  * Memoised per request with React cache() (layout + page share one lookup).
  */
 export const getPartner = cache(async function getPartner(): Promise<PartnerSessionInfo | null> {
@@ -63,6 +65,7 @@ export const getPartner = cache(async function getPartner(): Promise<PartnerSess
   });
   const now = Date.now();
   if (!session || session.revokedAt || session.expiresAt.getTime() <= now || !session.partnerUser) return null;
+  if (session.partnerUser.partner.status === "SUSPENDED") return null;
   if (now - session.lastSeenAt.getTime() > TOUCH_EVERY_MS) {
     // Best effort: a failed touch must never log the partner out.
     await prisma.partnerSession.update({ where: { id: session.id }, data: { lastSeenAt: new Date(now) } }).catch(() => undefined);
@@ -88,7 +91,8 @@ export async function revokeCurrentSession(): Promise<void> {
   if (token) {
     await prisma.partnerSession.updateMany({ where: { tokenHash: hashToken(token), revokedAt: null }, data: { revokedAt: new Date() } });
   }
-  jar.delete(PARTNER_COOKIE);
+  // Cleared with the same attributes it was set with: a __Host- cookie without Secure is rejected.
+  jar.set(PARTNER_COOKIE, "", { ...COOKIE_OPTS, maxAge: 0 });
 }
 
 export async function revokeAllSessionsForPartner(partnerId: string): Promise<void> {

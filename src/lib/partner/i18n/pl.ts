@@ -70,6 +70,8 @@ export const pl: PartnerDict = {
     verifyFirst: "Prosimy najpierw potwierdzić adres e-mail. Link znajdą Państwo w skrzynce.",
     resend: "Wyślij link potwierdzający ponownie",
     noAccount: "Nie mają Państwo jeszcze konta?",
+    suspended: "Państwa konto partnera jest obecnie wstrzymane. Prosimy o kontakt z nami.",
+    suspendedContact: "Państwa konto partnera jest obecnie wstrzymane. Prosimy o kontakt z nami: {contact}.",
   },
   forgot: {
     title: "Resetowanie hasła",
@@ -101,8 +103,6 @@ export const pl: PartnerDict = {
     copy: "Kopiuj",
     copied: "Skopiowano",
     contactTitle: "Państwa osoba kontaktowa",
-    suspendedTitle: "Konto wstrzymane",
-    suspendedText: "Państwa konto partnera jest obecnie nieaktywne. Prosimy o kontakt z naszym biurem, chętnie pomożemy: {contact}.",
   },
   profile: {
     title: "Profil",

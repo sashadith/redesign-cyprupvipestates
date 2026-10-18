@@ -42,7 +42,7 @@ function Submit({ children, wide = true }: { children: React.ReactNode; wide?: b
 /** Form-level error (errors without a field, or for a field not shown in this form). */
 function FormError({ t, state, fields }: { t: PartnerDict; state: FormState; fields: string[] }) {
   if (!isErr(state) || (state.field && fields.includes(state.field))) return null;
-  return <p className="pp-alert pp-alert-error" role="alert">{say(t, state.error)}</p>;
+  return <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, state.error), state.vars ?? {})}</p>;
 }
 
 type FieldProps = {

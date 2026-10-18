@@ -70,6 +70,11 @@ test("partnerBaseUrl", () => {
   assert.equal(partnerBaseUrl({}), "http://partner.localhost:3000");
   assert.equal(partnerBaseUrl({ PARTNER_HOST: "" }), "http://partner.localhost:3000");
 });
+test("partnerBaseUrl: production without PARTNER_HOST throws (never a localhost link in a mail)", () => {
+  assert.throws(() => partnerBaseUrl({ NODE_ENV: "production" }), /PARTNER_HOST/);
+  assert.throws(() => partnerBaseUrl({ NODE_ENV: "production", PARTNER_HOST: "  " }), /PARTNER_HOST/);
+  assert.equal(partnerBaseUrl({ NODE_ENV: "production", PARTNER_HOST: "partner.cyprusvipestates.com" }), "https://partner.cyprusvipestates.com");
+});
 
 test("registration notice: English, escaped, company first", () => {
   assert.equal(

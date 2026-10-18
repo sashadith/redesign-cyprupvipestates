@@ -1,16 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { officeContact } from "@/lib/partner/accounts";
 import { fmt } from "@/lib/partner/i18n";
 import { requirePartner } from "@/lib/partner/session";
 import { CopyLink } from "../components/forms";
 import { portalContext } from "../portalContext";
 
 type Contact = { name: string | null; email: string | null; phone: string | null };
-
-function officeContact(): Contact | null {
-  const email = process.env.PARTNER_OFFICE_EMAIL?.trim() || null;
-  const phone = process.env.PARTNER_OFFICE_PHONE?.trim() || null;
-  return email || phone ? { name: null, email, phone } : null;
-}
 
 async function managerContact(managerUserId: string | null): Promise<Contact | null> {
   if (!managerUserId) return null;
@@ -35,7 +30,7 @@ export default async function PartnerHome() {
   const me = await requirePartner();
   const { t } = await portalContext();
   const H = t.home;
-  const office = officeContact();
+  // SUSPENDED never gets here: getPartner() treats it as logged out.
 
   if (me.partner.status === "PENDING") {
     return (
@@ -47,18 +42,8 @@ export default async function PartnerHome() {
     );
   }
 
-  if (me.partner.status === "SUSPENDED") {
-    const contact = office ? [office.email, office.phone].filter(Boolean).join(" · ") : "cyprusvipestates.com";
-    return (
-      <section className="pp-card pp-card-wide">
-        <p className="pp-eyebrow">{H.title}</p>
-        <h1>{H.suspendedTitle}</h1>
-        <p>{fmt(H.suspendedText, { contact })}</p>
-      </section>
-    );
-  }
-
-  const contact = (await managerContact(me.partner.managerUserId)) ?? office;
+  const office = officeContact();
+  const contact = (await managerContact(me.partner.managerUserId)) ?? (office && { name: null, ...office });
   const refLink = me.partner.refCode ? `https://cyprusvipestates.com/?ref=${encodeURIComponent(me.partner.refCode)}` : null;
   return (
     <div className="pp-stack">

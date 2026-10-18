@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { PARTNER_AGREEMENT_VERSION } from "@/lib/partner/agreement";
 import {
-  DUMMY_PASSWORD_HASH, consumeToken, inBackground, markEmailVerified, sendResetMail, sendVerifyMail,
+  DUMMY_PASSWORD_HASH, consumeToken, inBackground, markEmailVerified, officeContact, sendResetMail, sendVerifyMail,
 } from "@/lib/partner/accounts";
 import { partnerClientIp } from "@/lib/partner/clientIp";
 import { PARTNER_LANG_COOKIE } from "@/lib/partner/i18n";
@@ -52,8 +52,20 @@ export async function registerAction(_prev: FormState, fd: FormData): Promise<Fo
 
   // Hash first, always: an existing e-mail costs the same time as a new one (no enumeration).
   const passwordHash = await hashPassword(d.password);
-  const existing = await prisma.partnerUser.findUnique({ where: { email: d.email }, select: { id: true } });
-  if (existing) return { ok: true, email: d.email };
+  const existing = await prisma.partnerUser.findUnique({
+    where: { email: d.email },
+    select: { id: true, email: true, emailVerifiedAt: true, partner: { select: { language: true, firstName: true, status: true } } },
+  });
+  if (existing) {
+    // Registering again before confirming: send a fresh link (already counted by the per-e-mail
+    // throttle above). The answer stays identical either way, so it reveals nothing.
+    if (!existing.emailVerifiedAt && existing.partner.status !== "SUSPENDED") {
+      inBackground("verify mail (re-register)", sendVerifyMail({
+        id: existing.id, email: existing.email, language: existing.partner.language, firstName: existing.partner.firstName,
+      }));
+    }
+    return { ok: true, email: d.email };
+  }
 
   let userId: string;
   try {
@@ -124,7 +136,13 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
   });
   // Unknown e-mail still pays for one bcrypt compare, so timing does not reveal accounts.
   const okPw = await verifyPassword(password.slice(0, 200), user?.passwordHash ?? DUMMY_PASSWORD_HASH);
-  if (!user || !okPw || user.partner.status === "SUSPENDED") return { error: "login.errorGeneric" };
+  if (!user || !okPw) return { error: "login.errorGeneric" };
+  // Only after the correct password: a paused partner learns why, nobody else learns the account exists.
+  if (user.partner.status === "SUSPENDED") {
+    const office = officeContact();
+    const contact = office ? [office.email, office.phone].filter(Boolean).join(" · ") : "";
+    return contact ? { error: "login.suspendedContact", vars: { contact } } : { error: "login.suspended" };
+  }
   if (!user.emailVerifiedAt) return { error: "login.verifyFirst", resend: true, email };
 
   L.loginEmail.reset(email);

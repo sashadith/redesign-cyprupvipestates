@@ -19,6 +19,12 @@ test("partner host: partner.localhost only outside production", () => {
   assert.equal(isPartnerHost("partner.localhost", { NODE_ENV: "test" }), true);
   assert.equal(isPartnerHost("partner.localhost", prod), false);
 });
+test("partner host: PARTNER_HOST misconfigured to the main site is ignored", () => {
+  for (const PARTNER_HOST of ["cyprusvipestates.com", "www.cyprusvipestates.com", "CyprusVIPEstates.com."]) {
+    assert.equal(isPartnerHost("cyprusvipestates.com", { ...prod, PARTNER_HOST }), false);
+    assert.equal(isPartnerHost("www.cyprusvipestates.com", { ...prod, PARTNER_HOST }), false);
+  }
+});
 test("partner host: main host, null, empty and unset env are false", () => {
   assert.equal(isPartnerHost("cyprusvipestates.com", prod), false);
   assert.equal(isPartnerHost(null, prod), false);

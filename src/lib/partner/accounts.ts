@@ -3,7 +3,7 @@ import type { PartnerTokenKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/sendEmail";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { PARTNER_LOCALES, type PartnerLocale } from "./i18n";
+import { pickPartnerLocale, type PartnerLocale } from "./i18n";
 import { buildRegistrationNotice, buildResetEmail, buildVerifyEmail, partnerBaseUrl } from "./mail";
 import { addHours, hashToken, newToken } from "./tokens";
 
@@ -16,8 +16,15 @@ export const RESET_HOURS = 1;
  */
 export const DUMMY_PASSWORD_HASH = "$2b$12$U8S9XEYQdhUGL6BUtGOgKeF.FqtfPNFHV6l.XKU2aHwlObTlvUwAy";
 
-export const asLocale = (v: unknown): PartnerLocale =>
-  typeof v === "string" && (PARTNER_LOCALES as readonly string[]).includes(v) ? (v as PartnerLocale) : "en";
+/** A stored language as a partner locale (reuses the i18n guard; unknown/Hebrew → en). */
+export const asLocale = (v: unknown): PartnerLocale => pickPartnerLocale({ partnerLanguage: typeof v === "string" ? v : null });
+
+/** Office contact from env (PARTNER_OFFICE_EMAIL / PARTNER_OFFICE_PHONE); null when neither is set. */
+export function officeContact(): { email: string | null; phone: string | null } | null {
+  const email = process.env.PARTNER_OFFICE_EMAIL?.trim() || null;
+  const phone = process.env.PARTNER_OFFICE_PHONE?.trim() || null;
+  return email || phone ? { email, phone } : null;
+}
 
 /** Issues a token of `kind`; older unused tokens of that kind for the user are invalidated first. */
 export async function issueToken(partnerUserId: string, kind: PartnerTokenKind, hours: number): Promise<string> {
