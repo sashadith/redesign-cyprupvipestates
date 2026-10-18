@@ -120,12 +120,13 @@ test("blocked bot: 403 is permanent; fall back to e-mail only when not mailed al
   assert.equal(blockedFallbackToEmail({ telegramBlocked: false, emailAttempted: false, emailAllowed: true }), false); // transient failure: retry instead
 });
 
-test("sender wiring: routeNotification decides channels, blocked chat unlinked only if unchanged, MATCH/PRESENTATION_OPENED still skipped", () => {
+test("sender wiring: routeNotification decides channels, blocked chat unlinked only if unchanged, MATCH/PRESENTATION_OPENED delivered", () => {
   const s = src("src/lib/partner/notifySend.ts");
   assert.ok(s.includes("routeNotification({ kind: row.kind, notifyChannel: partner.notifyChannel"));
   assert.ok(s.includes("where: { id: d.partnerId, telegramChatId: d.telegram.chatId }"), "only the chat that blocked is cleared");
   assert.ok(s.includes("return deliveryOutcome(results);"));
-  assert.ok(s.includes('case "PRESENTATION_OPENED":\n      return { skip: NOT_IMPLEMENTED_ERROR }'));
+  assert.ok(s.includes('kind: "MATCH", projectName, changeType, url, portalUrl: common.link'));
+  assert.ok(s.includes('{ kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base }'));
   // A partially delivered STAGE row still counts as "last mailed" for the unchanged-stage check.
   assert.ok(s.includes("{ error: { startsWith: PARTIAL_PREFIX } }"));
   assert.ok(!s.includes('from "@/lib/telegram"'), "never the office bot");

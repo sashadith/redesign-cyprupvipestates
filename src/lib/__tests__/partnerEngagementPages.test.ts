@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { NOTIFICATION_KINDS, NOT_IMPLEMENTED_ERROR, NOT_IMPLEMENTED_KINDS, OPTED_OUT_ERROR, optOutGate } from "@/lib/partner/notify";
+import { NOTIFICATION_KINDS, OPTED_OUT_ERROR, optOutGate } from "@/lib/partner/notify";
 import { BROCHURE_CAP, brochureLang, brochureLinks, brochureRows } from "@/lib/partner/materials";
 import { PARTNER_LOCALES, dict } from "@/lib/partner/i18n";
 import { onboardingFactsFrom, onboardingHref, onboardingSteps, onboardingVisible } from "@/lib/partner/onboarding";
@@ -108,9 +108,9 @@ test("onboarding: VAT-number item only for EU companies, stays visible despite H
   }
 });
 
-test("MATCH and PRESENTATION_OPENED rows are skipped as not implemented, never sent with another template", () => {
-  assert.deepEqual([...NOT_IMPLEMENTED_KINDS].sort(), ["MATCH", "PRESENTATION_OPENED"]);
-  assert.equal(NOT_IMPLEMENTED_ERROR, "not implemented yet");
+test("MATCH and PRESENTATION_OPENED rows have their own builders, never another kind's template", () => {
   const src = readFileSync(join(process.cwd(), "src/lib/partner/notifySend.ts"), "utf8");
-  assert.ok(src.includes('case "PRESENTATION_OPENED":\n      return { skip: NOT_IMPLEMENTED_ERROR }'), "explicit skip case, no fall-through");
+  assert.ok(!src.includes("not implemented yet"), "no kind is skipped as not implemented any more");
+  assert.ok(src.includes("buildMatchEmail(locale, {"), "MATCH uses the match builder");
+  assert.ok(src.includes("buildPresentationOpenedEmail(locale, {"), "PRESENTATION_OPENED uses its own builder");
 });

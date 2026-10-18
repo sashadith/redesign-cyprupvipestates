@@ -12,10 +12,13 @@ import { buildTelegramNotification, routeNotification, type TelegramNotification
 import { sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, blockedFallbackToEmail, deliveryOutcome, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
-  INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMessageEmail, buildPayoutEmail, buildStageEmail, clientLink,
-  commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage, stuckSendingWhere, messageIdFromRefKey, notificationGate,
-  NOT_IMPLEMENTED_ERROR, NOT_IMPLEMENTED_KINDS, notifyStartFromEnv, optOutGate, payoutDealIdFromRefKey, planStageNotifications, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
+  INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMatchEmail, buildMessageEmail, buildPayoutEmail,
+  buildPresentationOpenedEmail, buildStageEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage,
+  stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
+  planStageNotifications, presentationsLink, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
+import { MATCH_CHANGE_TYPES } from "./matchAlerts";
+import { isOwnProjectUrl, localizedProjectUrl } from "./matchGlue";
 
 export { notifyStartFromEnv };
 
@@ -97,7 +100,6 @@ type OutboxRow = {
 /** Decides what to do with one outbox row: a reason to drop it, or what to send on which channel(s). */
 async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Promise<Outcome> {
   if (beforeStart(row, start)) return { skip: "before start" };
-  if (NOT_IMPLEMENTED_KINDS.includes(row.kind)) return { skip: NOT_IMPLEMENTED_ERROR }; // before any gate: no claim/partner lookups
   const partner = await prisma.partner.findUnique({
     where: { id: row.partnerId },
     select: {
@@ -105,9 +107,8 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
     },
   });
-  if (!partner) return { skip: "partner missing" };
-  if (partner.status === "SUSPENDED") return { skip: "suspended" };
-  if (partner.status !== "ACTIVE") return { skip: "pending" };
+  const partnerSkip = partnerStatusGate(partner?.status);
+  if (partnerSkip || !partner) return { skip: partnerSkip ?? "partner missing" };
   const to = partner.users[0]?.email?.trim() || null;
   const chatId = partner.telegramChatId?.trim() || null;
   // Channel(s) per Decision 2. The profile switch (3d) suppresses STAGE/MESSAGE e-mail only, never Telegram.
@@ -128,8 +129,8 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       })
     : null;
   const accepted = obj(row.payload).accepted === true;
-  // A rejection and a payout never need the lead; everything else is gated on the claim's effective state.
-  const needsState = !!claim && row.kind !== "PAYOUT" && !(row.kind === "CLAIM_OUTCOME" && !accepted);
+  // A rejection, a payout and a presentation-opened row never need the lead; everything else is gated on the claim's effective state.
+  const needsState = !!claim && row.kind !== "PAYOUT" && row.kind !== "PRESENTATION_OPENED" && !(row.kind === "CLAIM_OUTCOME" && !accepted);
   const skip = notificationGate({
     kind: row.kind,
     accepted,
@@ -137,17 +138,20 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       ? { ownedByPartner: claim.partnerId === row.partnerId, effective: needsState ? await effectiveStateOf(prisma, claim, now) : claim.state }
       : null,
   });
-  if (skip || !claim) return { skip: skip ?? "claim missing" };
+  if (skip) return { skip };
 
   const locale = pickPartnerLocale({ partnerLanguage: partner.language });
-  const common = { partnerFirstName: partner.firstName, clientName: visibleName(claim), link: clientLink(base, claim.id) };
-  const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
   const deliver = (mail: BuiltEmail, tg: TelegramNotificationInput): Delivery => ({
     partnerId: row.partnerId,
     email: sendEmailToo && to ? { to, mail } : null,
     telegram: sendTelegram && chatId ? { chatId, html: buildTelegramNotification(locale, tg) } : null,
     fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
   });
+  if (!claim && row.kind !== "PRESENTATION_OPENED") return { skip: "claim missing" };
+  // Every kind but PRESENTATION_OPENED has a claim from here on (checked just above); that case never reads it.
+  const own = claim as NonNullable<typeof claim>;
+  const common = { partnerFirstName: partner.firstName, clientName: claim ? visibleName(claim) : "", link: claim ? clientLink(base, claim.id) : base };
+  const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
 
   // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
   switch (row.kind) {
@@ -157,7 +161,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       if (!stageKey) return { skip: "invalid status" };
       const lastMailed = await prisma.partnerNotification.findFirst({
         where: {
-          claimId: claim.id, kind: "STAGE", sentAt: { not: null }, id: { not: row.id },
+          claimId: own.id, kind: "STAGE", sentAt: { not: null }, id: { not: row.id },
           OR: [{ error: null }, { error: { startsWith: PARTIAL_PREFIX } }],
         },
         orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
@@ -174,7 +178,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
             select: { partnerId: true, leadId: true, body: true, author: { select: { name: true } } },
           })
         : null;
-      if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== claim.leadId) return { skip: "message missing" };
+      if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== own.leadId) return { skip: "message missing" };
       return deliver(
         buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }),
         { ...tgCommon, kind: "MESSAGE", messageBody: msg.body },
@@ -193,7 +197,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
             },
           })
         : null;
-      if (!note || note.deal.leadId !== claim.leadId || payoutDealIdFromRefKey(row.refKey) !== note.dealId) return { skip: "credit note missing" };
+      if (!note || note.deal.leadId !== own.leadId || payoutDealIdFromRefKey(row.refKey) !== note.dealId) return { skip: "credit note missing" };
       const dev = note.deal.development;
       const amount = formatPayoutAmount(locale, note.totalAmount);
       return deliver(
@@ -208,9 +212,34 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         { ...tgCommon, kind: "PAYOUT", url: commissionsLink(base), amount, creditNoteNumber: note.number },
       );
     }
-    case "MATCH":
-    case "PRESENTATION_OPENED":
-      return { skip: NOT_IMPLEMENTED_ERROR }; // Tasks 4-5 implement these; never fall through to another kind's builder
+    case "MATCH": {
+      // Gated above: partner ACTIVE and the claim still effectively ACTIVE (notificationGate).
+      const p = obj(row.payload);
+      const projectName = typeof p.projectName === "string" ? p.projectName.trim() : "";
+      const changeType = typeof p.changeType === "string" && (MATCH_CHANGE_TYPES as readonly string[]).includes(p.changeType) ? p.changeType : null;
+      const price = typeof p.priceFrom === "number" && Number.isFinite(p.priceFrom) && p.priceFrom > 0 ? p.priceFrom : null;
+      if (!projectName || !changeType || !isOwnProjectUrl(p.url)) return { skip: "invalid payload" };
+      const url = localizedProjectUrl(p.url, locale);
+      return deliver(
+        buildMatchEmail(locale, {
+          partnerFirstName: partner.firstName, clientName: common.clientName, projectName, changeType, priceFrom: price, url, portalUrl: common.link,
+        }),
+        {
+          ...tgCommon, kind: "MATCH", projectName, changeType, url, portalUrl: common.link,
+          priceFrom: price != null ? formatPayoutAmount(locale, price) : null,
+        },
+      );
+    }
+    case "PRESENTATION_OPENED": {
+      // Gated on the partner only. The client name the presentation was made for comes from the producer's payload.
+      const raw = obj(row.payload).clientName;
+      const clientName = typeof raw === "string" ? raw.trim().slice(0, 120) : "";
+      const link = presentationsLink(base);
+      return deliver(
+        buildPresentationOpenedEmail(locale, { partnerFirstName: partner.firstName, clientName, link }),
+        { kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base },
+      );
+    }
     default:
       return unhandledKind(row.kind);
   }

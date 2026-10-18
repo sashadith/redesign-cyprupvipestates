@@ -92,6 +92,58 @@ export function buildPayoutEmail(
   });
 }
 
+/**
+ * Match alert (phase 3e, Decision 6): a project/unit change that fits the client's budget. Carries the
+ * submitted client name, the public project name, the change, the new price from and the public project
+ * link — nothing about the lead, our commission or other partners.
+ */
+export function buildMatchEmail(
+  locale: PartnerLocale,
+  p: {
+    partnerFirstName: string; clientName: string; projectName: string; changeType: string;
+    priceFrom: number | null; url: string; portalUrl: string;
+  },
+): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.match;
+  const change = (d.telegram.changeTypes as Record<string, string>)[p.changeType] ?? "—";
+  const vars = { client: client(p.clientName), project: p.projectName.trim() || "—", change };
+  const notes: string[] = [];
+  if (p.priceFrom != null && Number.isFinite(p.priceFrom) && p.priceFrom > 0) {
+    notes.push(fmt(t.price, { price: formatPayoutAmount(locale, p.priceFrom) }));
+  }
+  notes.push(`${d.telegram.notify.open}: ${p.portalUrl}`);
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars),
+    greeting: greet(t.greeting, p.partnerFirstName),
+    intro: fmt(t.intro, vars),
+    button: t.button,
+    link: p.url,
+    notes,
+    signature: d.mail.signature,
+  });
+}
+
+/** "Your presentation for {client} has been opened" (phase 3e, Decision 7); link = the portal's presentations page. */
+export function buildPresentationOpenedEmail(locale: PartnerLocale, p: Common): BuiltEmail {
+  const t = dict(locale).mail.presentationOpened;
+  const vars = { client: client(p.clientName) };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars),
+    greeting: greet(t.greeting, p.partnerFirstName),
+    intro: fmt(t.intro, vars),
+    button: t.button,
+    link: p.link,
+    notes: [],
+    signature: dict(locale).mail.signature,
+  });
+}
+
+/** Portal presentations page. */
+export function presentationsLink(base: string): string {
+  return `${base}/presentations`;
+}
+
 /** Amount for the payout mail: whole euros in the partner's locale. */
 export function formatPayoutAmount(locale: PartnerLocale, euros: number): string {
   return new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(euros);
@@ -100,9 +152,6 @@ export function formatPayoutAmount(locale: PartnerLocale, euros: number): string
 export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
-/** Phase 3e kinds whose senders are not built yet: their rows are skipped, never mailed with another kind's template. */
-export const NOT_IMPLEMENTED_ERROR = "not implemented yet";
-export const NOT_IMPLEMENTED_KINDS: readonly NotificationKind[] = ["MATCH", "PRESENTATION_OPENED"];
 
 /** Compile-time exhaustiveness: a new kind that is not handled fails the build instead of falling through. */
 export function unhandledKind(kind: never): never {
@@ -235,14 +284,26 @@ export function optOutGate(kind: NotificationKind, emailNotifications: boolean):
 /**
  * Whether a row may be mailed, given its claim and the claim's effective state (effectiveClaimState);
  * returns the skip reason or null. A rejection and a payout are told regardless of the lead (even
- * trashed); an acceptance, a stage change and a message only while the claim is effectively ACTIVE.
+ * trashed); an acceptance, a stage change, a message and a match alert only while the claim is
+ * effectively ACTIVE; a presentation-opened row needs no claim at all.
  */
+/** Only an ACTIVE partner is told anything; the skip reason otherwise. */
+export function partnerStatusGate(status: string | null | undefined): string | null {
+  if (!status) return "partner missing";
+  if (status === "SUSPENDED") return "suspended";
+  if (status !== "ACTIVE") return "pending";
+  return null;
+}
+
 export function notificationGate(input: {
   kind: NotificationKind;
   accepted: boolean;
   claim: { ownedByPartner: boolean; effective: EffectiveClaimState } | null;
 }): string | null {
   const { kind, claim } = input;
+  // The partner's own presentation was opened (the row is written for presentation.partnerId): only the
+  // partner gate applies, the claim's state is irrelevant to a page the client already holds.
+  if (kind === "PRESENTATION_OPENED") return null;
   // The money was paid: always told, whatever the claim's state now — but only about the partner's own claim.
   if (kind === "PAYOUT") return claim?.ownedByPartner ? null : "claim missing";
   if (!claim || !claim.ownedByPartner) return kind === "CLAIM_OUTCOME" ? "claim missing" : "claim inactive";
