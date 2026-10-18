@@ -30,7 +30,7 @@
   - Bot replies never include other partners' data, ourCommission or ourRate (unless trust mode, and even then commissions only).
 - Telegram security:
   - The webhook requires header `X-Telegram-Bot-Api-Secret-Token` to equal env `PARTNER_TELEGRAM_WEBHOOK_SECRET` (constant-time compare). Anything else returns 401.
-  - Link codes are random (≥ 128 bit), stored hashed, single-use, valid 30 min.
+  - Link codes: 10 characters from an unambiguous alphabet (~50 bit), stored hashed, single-use, valid 30 min, chat rate-limited — impractical to guess.
   - One chat per partner; `/stop` unlinks.
   - All outgoing texts are HTML-escaped (parse_mode HTML).
 - Tests `npm test`; `npx tsc --noEmit` 0; `npm run lint` 0. Explicit-path commits, never `git add -A`, don't push, don't deploy.
