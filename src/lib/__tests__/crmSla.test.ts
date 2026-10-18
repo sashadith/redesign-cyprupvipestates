@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_SLA, dueSlaNotices, slaStartFromEnv, slaThresholdsFromEnv, slaNoticesFromRows,
-  unassignedTelegram, escalateTelegram, uncontactedEmail, latestAssignedAt, type SlaLead,
+  unassignedTelegram, escalateTelegram, uncontactedEmail, latestAssignedAt, sendSlaNotices, type SlaLead, type SlaRule,
 } from "../crm/sla";
 
 const START = new Date("2026-10-18T06:00:00Z");
@@ -129,4 +129,60 @@ test("UNCONTACTED email subject carries the lead and the whole hours since assig
   const mail = uncontactedEmail(owned("abc", 150, { name: "Maria K" }), NOW, "https://x.test");
   assert.equal(mail.subject, "Please contact Maria K — assigned 2 h ago");
   assert.match(mail.text, /https:\/\/x\.test\/crm\/leads\/abc/);
+});
+
+test("an owner id pointing at no user counts as unassigned", () => {
+  assert.deepEqual(due([lead("ghost", { assignedToId: "deleted-user", ownerName: null, createdAt: min(60) })]), ["UNASSIGNED:ghost"]);
+});
+
+test("ESCALATE line marks a deactivated owner", () => {
+  assert.match(escalateTelegram([owned("a", 300, { ownerActive: false })], NOW, "https://x.test"), /<b>Anna \(inactive\)<\/b>/);
+  assert.doesNotMatch(escalateTelegram([owned("a", 300)], NOW, "https://x.test"), /inactive/);
+});
+
+function fakeDeps(telegramResult: unknown) {
+  const calls = { telegram: [] as string[], email: [] as string[], marked: [] as string[] };
+  return {
+    calls,
+    deps: {
+      sendTelegram: async (text: string) => { calls.telegram.push(text); return telegramResult; },
+      sendEmail: async (m: { to: string }) => { calls.email.push(m.to); },
+      markSent: async (leads: SlaLead[], rule: SlaRule) => { for (const l of leads) calls.marked.push(`${rule}:${l.id}`); },
+    },
+  };
+}
+
+test("send: Telegram not configured marks nothing and is a skip, not an error", async () => {
+  const { calls, deps } = fakeDeps(null);
+  const r = await sendSlaNotices([{ rule: "UNASSIGNED", lead: lead("a") }, { rule: "ESCALATE", lead: owned("b", 300) }], NOW, "https://x.test", deps);
+  assert.equal(calls.telegram.length, 2);
+  assert.deepEqual(calls.marked, []);
+  assert.deepEqual(r.sent, { UNASSIGNED: 0, UNCONTACTED: 0, ESCALATE: 0 });
+  assert.equal(r.errors.length, 0);
+  assert.equal(r.skipped.length, 2);
+});
+
+test("send: inactive or email-less owners get no email; others are emailed and marked; ESCALATE still fires", async () => {
+  const { calls, deps } = fakeDeps({ ok: true });
+  const r = await sendSlaNotices([
+    { rule: "UNCONTACTED", lead: owned("gone", 300, { ownerActive: false }) },
+    { rule: "UNCONTACTED", lead: owned("noemail", 300, { ownerEmail: null }) },
+    { rule: "UNCONTACTED", lead: owned("ok", 300) },
+    { rule: "ESCALATE", lead: owned("gone", 300, { ownerActive: false }) },
+  ], NOW, "https://x.test", deps);
+  assert.deepEqual(calls.email, ["anna@example.com"]);
+  assert.deepEqual(calls.marked, ["UNCONTACTED:ok", "ESCALATE:gone"]);
+  assert.match(calls.telegram[0], /\(inactive\)/);
+  assert.deepEqual(r.sent, { UNASSIGNED: 0, UNCONTACTED: 1, ESCALATE: 1 });
+  assert.equal(r.errors.length, 0);
+  assert.equal(r.skipped.length, 2);
+});
+
+test("send: a failing email is an error and does not block the rest", async () => {
+  const { calls, deps } = fakeDeps({ ok: true });
+  let n = 0;
+  deps.sendEmail = async (m: { to: string }) => { if (n++ === 0) throw new Error("smtp down"); calls.email.push(m.to); };
+  const r = await sendSlaNotices([{ rule: "UNCONTACTED", lead: owned("x", 300) }, { rule: "UNCONTACTED", lead: owned("y", 300) }], NOW, "https://x.test", deps);
+  assert.deepEqual(calls.marked, ["UNCONTACTED:y"]);
+  assert.deepEqual(r.errors, ["UNCONTACTED x: smtp down"]);
 });

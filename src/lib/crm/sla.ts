@@ -12,6 +12,8 @@ export const SLA_RULES: readonly SlaRule[] = ["UNASSIGNED", "UNCONTACTED", "ESCA
 export type SlaLead = {
   id: string; name: string; status: string; createdAt: Date;
   assignedToId: string | null; ownerName: string | null; ownerEmail: string | null;
+  // false for a deactivated owner: no email goes to former staff. Missing = active.
+  ownerActive?: boolean;
   assignedAt: Date | null; lastOutboundContactAt: Date | null;
   notified: { rule: SlaRule; at: Date }[];
 };
@@ -82,7 +84,8 @@ export function dueSlaNotices(leads: SlaLead[], now: Date, start: Date, t: SlaTh
     if (lead.createdAt.getTime() < start.getTime() || !ACTIVE.has(lead.status)) continue;
     const sent = (rule: SlaRule, since = -Infinity) => lead.notified.some((n) => n.rule === rule && n.at.getTime() >= since);
 
-    if (!lead.assignedToId) {
+    // An owner id that points at no user (ownerName null) is treated as unassigned.
+    if (!lead.assignedToId || lead.ownerName == null) {
       if (lead.createdAt.getTime() + t.unassignedMin * MIN <= nowMs && !sent("UNASSIGNED")) out.push({ rule: "UNASSIGNED", lead });
       continue;
     }
@@ -119,7 +122,7 @@ export function unassignedTelegram(leads: SlaLead[], base: string): string {
 export function escalateTelegram(leads: SlaLead[], now: Date, base: string): string {
   const lines = [`🚨 <b>${leads.length} assigned lead${leads.length === 1 ? "" : "s"} not contacted</b>`];
   for (const l of leads) {
-    const owner = esc(cut(l.ownerName || "(unknown)"));
+    const owner = esc(cut(l.ownerName || "(unknown)")) + (l.ownerActive === false ? " (inactive)" : "");
     const name = esc(cut(l.name || "(no name)"));
     const h = l.assignedAt ? `, assigned ${hoursSince(l.assignedAt, now)} h ago` : "";
     lines.push(`• <b>${owner}</b> — ${name}${h}\n${esc(slaLeadUrl(base, l.id))}`);
@@ -140,4 +143,63 @@ export function uncontactedEmail(lead: SlaLead, now: Date, base: string): { subj
       `Open the lead: ${slaLeadUrl(base, lead.id)}`,
     ].join("\n"),
   };
+}
+
+// ---- sending (I/O injected so the route stays thin and this stays testable) ----
+
+export type SlaSendDeps = {
+  // Resolves null when Telegram is not configured (same contract as sendTelegramMessage).
+  sendTelegram: (text: string) => Promise<unknown>;
+  sendEmail: (mail: { to: string; subject: string; text: string }) => Promise<unknown>;
+  markSent: (leads: SlaLead[], rule: SlaRule) => Promise<unknown>;
+};
+export type SlaSendResult = { sent: Record<SlaRule, number>; skipped: string[]; errors: string[] };
+
+const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+// A notice is marked only after its send succeeded. `skipped` holds conditions
+// that are not failures (Telegram unconfigured, owner inactive or without
+// email); `errors` holds real send/write failures. Nothing marked in either case,
+// so the notice is reconsidered on the next run.
+export async function sendSlaNotices(due: { rule: SlaRule; lead: SlaLead }[], now: Date, base: string, deps: SlaSendDeps): Promise<SlaSendResult> {
+  const sent: Record<SlaRule, number> = { UNASSIGNED: 0, UNCONTACTED: 0, ESCALATE: 0 };
+  const skipped: string[] = [];
+  const errors: string[] = [];
+  const of = (rule: SlaRule) => due.filter((n) => n.rule === rule).map((n) => n.lead);
+
+  const telegram = async (rule: SlaRule, leads: SlaLead[], text: string) => {
+    if (!leads.length) return;
+    try {
+      const res = await deps.sendTelegram(text);
+      if (res == null) { skipped.push(`${rule}: Telegram not configured`); return; }
+      await deps.markSent(leads, rule);
+      sent[rule] = leads.length;
+    } catch (e) {
+      errors.push(`${rule}: ${msg(e)}`);
+    }
+  };
+
+  // UNASSIGNED: one message for all of them; the inbox shows the full list.
+  const unassigned = of("UNASSIGNED");
+  await telegram("UNASSIGNED", unassigned, unassignedTelegram(unassigned, base));
+
+  // UNCONTACTED: one email per lead; one failure never blocks the others.
+  for (const lead of of("UNCONTACTED")) {
+    if (lead.ownerActive === false) { skipped.push(`UNCONTACTED ${lead.id}: owner inactive`); continue; }
+    if (!lead.ownerEmail) { skipped.push(`UNCONTACTED ${lead.id}: owner has no email`); continue; }
+    try {
+      const mail = uncontactedEmail(lead, now, base);
+      await deps.sendEmail({ to: lead.ownerEmail, subject: mail.subject, text: mail.text });
+      await deps.markSent([lead], "UNCONTACTED");
+      sent.UNCONTACTED++;
+    } catch (e) {
+      errors.push(`UNCONTACTED ${lead.id}: ${msg(e)}`);
+    }
+  }
+
+  // ESCALATE: one message naming each lead; beyond the cap the rest wait for the next run.
+  const escalate = of("ESCALATE").slice(0, SLA_TELEGRAM_LIST_MAX);
+  await telegram("ESCALATE", escalate, escalateTelegram(escalate, now, base));
+
+  return { sent, skipped, errors };
 }

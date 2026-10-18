@@ -7,6 +7,9 @@
 // Idempotent: every sent notice writes a SYSTEM "SLA reminder: <rule>" row with
 // metadata.sla, written only after the send succeeded, so a failed or
 // unconfigured channel is retried on the next run and a sent one never repeats.
+// Deactivated owners get no email (ESCALATE still names them, "(inactive)").
+// Not-a-failure conditions (Telegram unconfigured, owner inactive / no email)
+// are returned under `skipped` and do not mark the cron run as failed.
 //
 // Set CRM_SLA_START to the deploy time first (ISO, e.g. 2026-10-18T12:00:00Z):
 // only leads created after it are considered, and without it the job does nothing.
@@ -20,9 +23,8 @@ import { sendEmail } from "@/lib/sendEmail";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ACTIVE_LEAD_STATUSES } from "@/lib/crm/leadStatus";
 import {
-  SLA_OUTBOUND_TYPES, SLA_TELEGRAM_LIST_MAX, dueSlaNotices, escalateTelegram, latestAssignedAt,
-  slaNoticesFromRows, slaStartFromEnv, slaThresholdsFromEnv, uncontactedEmail, unassignedTelegram,
-  type SlaLead, type SlaRule,
+  SLA_OUTBOUND_TYPES, dueSlaNotices, latestAssignedAt, sendSlaNotices, slaNoticesFromRows,
+  slaStartFromEnv, slaThresholdsFromEnv, type SlaLead, type SlaRule, type SlaSendResult,
 } from "@/lib/crm/sla";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +34,7 @@ const LEAD_CAP = 500;
 
 type SlaResult =
   | { skipped: string }
-  | { ok: true; sent: Record<SlaRule, number>; errors: string[] };
+  | ({ ok: true } & SlaSendResult);
 
 async function markSent(leads: SlaLead[], rule: SlaRule) {
   await prisma.leadInteraction.createMany({
@@ -49,17 +51,15 @@ async function runSla(): Promise<SlaResult> {
 
   const rows = await prisma.lead.findMany({
     where: { AND: [EXCLUDE_NEWSLETTER, { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, createdAt: { gte: since } }] },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" }, // the cap drops the oldest, never the newest
     take: LEAD_CAP,
     select: {
       id: true, firstName: true, lastName: true, status: true, createdAt: true, assignedToId: true,
-      assignedTo: { select: { id: true, name: true, email: true } },
+      assignedTo: { select: { id: true, name: true, email: true, isActive: true } },
       interactions: { where: { type: { in: [...SLA_OUTBOUND_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
   });
-  const sent: Record<SlaRule, number> = { UNASSIGNED: 0, UNCONTACTED: 0, ESCALATE: 0 };
-  const errors: string[] = [];
-  if (rows.length === 0) return { ok: true, sent, errors };
+  if (rows.length === 0) return { ok: true, sent: { UNASSIGNED: 0, UNCONTACTED: 0, ESCALATE: 0 }, skipped: [], errors: [] };
 
   // Assignment rows and earlier SLA notices; metadata.sla is checked in JS.
   const systemRows = await prisma.leadInteraction.findMany({
@@ -77,7 +77,7 @@ async function runSla(): Promise<SlaResult> {
     const owner = r.assignedToId && r.assignedTo ? r.assignedTo : null;
     return {
       id: r.id, name: `${r.firstName} ${r.lastName}`.trim(), status: r.status, createdAt: r.createdAt,
-      assignedToId: r.assignedToId, ownerName: owner?.name ?? null, ownerEmail: owner?.email ?? null,
+      assignedToId: r.assignedToId, ownerName: owner?.name ?? null, ownerEmail: owner?.email ?? null, ownerActive: owner?.isActive ?? true,
       assignedAt: owner ? latestAssignedAt(sys, owner) : null,
       lastOutboundContactAt: r.interactions[0]?.occurredAt ?? null,
       notified: slaNoticesFromRows(sys),
@@ -85,51 +85,18 @@ async function runSla(): Promise<SlaResult> {
   });
 
   const due = dueSlaNotices(leads, now, start, slaThresholdsFromEnv(process.env));
-  const of = (rule: SlaRule) => due.filter((n) => n.rule === rule).map((n) => n.lead);
-
-  // UNASSIGNED: one message for all of them; the inbox shows the full list.
-  const unassigned = of("UNASSIGNED");
-  if (unassigned.length) {
-    try {
-      const res = await sendTelegramMessage(unassignedTelegram(unassigned, base));
-      if (res == null) errors.push("UNASSIGNED: Telegram not configured");
-      else { await markSent(unassigned, "UNASSIGNED"); sent.UNASSIGNED = unassigned.length; }
-    } catch (e) {
-      errors.push(`UNASSIGNED: ${e instanceof Error ? e.message : String(e)}`);
-    }
-  }
-
-  // UNCONTACTED: one email per lead; one failure never blocks the others.
-  for (const lead of of("UNCONTACTED")) {
-    if (!lead.ownerEmail) { errors.push(`UNCONTACTED ${lead.id}: owner has no email`); continue; }
-    try {
-      const mail = uncontactedEmail(lead, now, base);
-      await sendEmail({ to: lead.ownerEmail, subject: mail.subject, text: mail.text });
-      await markSent([lead], "UNCONTACTED");
-      sent.UNCONTACTED++;
-    } catch (e) {
-      errors.push(`UNCONTACTED ${lead.id}: ${e instanceof Error ? e.message : String(e)}`);
-    }
-  }
-
-  // ESCALATE: one message naming each lead; beyond the cap the rest wait for the next run.
-  const escalate = of("ESCALATE").slice(0, SLA_TELEGRAM_LIST_MAX);
-  if (escalate.length) {
-    try {
-      const res = await sendTelegramMessage(escalateTelegram(escalate, now, base));
-      if (res == null) errors.push("ESCALATE: Telegram not configured");
-      else { await markSent(escalate, "ESCALATE"); sent.ESCALATE = escalate.length; }
-    } catch (e) {
-      errors.push(`ESCALATE: ${e instanceof Error ? e.message : String(e)}`);
-    }
-  }
-
-  if (errors.length) console.error("[crm-sla]", errors);
-  return { ok: true, sent, errors };
+  const result = await sendSlaNotices(due, now, base, {
+    sendTelegram: (text) => sendTelegramMessage(text),
+    sendEmail: (mail) => sendEmail(mail),
+    markSent,
+  });
+  if (result.errors.length) console.error("[crm-sla]", result.errors);
+  return { ok: true, ...result };
 }
 
 const summarize = (r: SlaResult) =>
-  "skipped" in r ? `skipped: ${r.skipped}` : `sent U${r.sent.UNASSIGNED}/C${r.sent.UNCONTACTED}/E${r.sent.ESCALATE}${r.errors.length ? `, ${r.errors.length} error(s)` : ""}`;
+  !("ok" in r) ? `skipped: ${r.skipped}`
+    : `sent U${r.sent.UNASSIGNED}/C${r.sent.UNCONTACTED}/E${r.sent.ESCALATE}${r.skipped.length ? `, ${r.skipped.length} skipped` : ""}${r.errors.length ? `, ${r.errors.length} error(s)` : ""}`;
 
 export async function GET(req: NextRequest) {
   const key = req.nextUrl.searchParams.get("key");
@@ -137,7 +104,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
-    const result = await withCronLog("crm-sla", runSla, summarize, (r) => "skipped" in r || r.errors.length === 0);
+    const result = await withCronLog("crm-sla", runSla, summarize, (r) => !("ok" in r) || r.errors.length === 0);
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
