@@ -3,6 +3,8 @@ import { STATUS_LABEL, LOST_REASON_LABEL, isLeadStatus, type LostReasonValue } f
 import { SOURCE_LABEL } from "@/lib/crm/boardModel";
 import { ago } from "@/lib/crm/timeline";
 import { adminDateTime } from "@/lib/adminTime";
+import { TemperatureChip } from "./TemperatureDot";
+import type { PublicTemperature } from "@/lib/crm/insights/temperatureWiring";
 import { safeMailto, waDigits } from "@/lib/crm/contactLinks";
 
 // Lead cockpit header and contact panel (CRM v2, 2026-10-18). Server-rendered.
@@ -31,7 +33,7 @@ function budget(min: number | null, max: number | null): string | null {
   return null;
 }
 
-export function CockpitHeader({ lead, now }: { lead: CockpitLead; now: Date }) {
+export function CockpitHeader({ lead, now, temperature = null }: { lead: CockpitLead; now: Date; temperature?: PublicTemperature | null }) {
   const statusLabel = isLeadStatus(lead.status) ? STATUS_LABEL[lead.status] : lead.status;
   const reason = lead.status === "LOST" && lead.lostReason ? LOST_REASON_LABEL[lead.lostReason as LostReasonValue] ?? lead.lostReason : null;
   return (
@@ -42,6 +44,7 @@ export function CockpitHeader({ lead, now }: { lead: CockpitLead; now: Date }) {
         {lead.lang && <span className="crm-ck-lang" title="Language">{lead.lang}</span>}
       </div>
       <div className="crm-ck-chips">
+        {temperature && <TemperatureChip temperature={temperature} />}
         <span className={`crm-ck-status s-${lead.status}`}><span className="dot" />{statusLabel}{reason && <span className="crm-muted"> · {reason}</span>}</span>
         <span className={`crm-ck-src${lead.source === "PARTNER" ? " partner" : ""}`}>{SOURCE_LABEL[lead.source] ?? lead.source}</span>
         <span className="crm-muted">{lead.ownerName ? <>Owner <b className="crm-ck-owner">{lead.ownerName}</b></> : "Unassigned"}</span>

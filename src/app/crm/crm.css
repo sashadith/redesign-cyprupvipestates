@@ -547,3 +547,17 @@
 .crm-ckp-msgs li { padding: 8px 0; border-top: 1px solid var(--line); }
 .crm-ckp-msgs li:first-child { border-top: 0; padding-top: 0; }
 @media (max-width: 720px) { .crm-cr-cols { grid-template-columns: 1fr; } .crm-cr-head .crm-muted { margin-left: 0; } }
+
+/* Lead temperature (phase 4a): hot = bronze filled, warm = champagne ring, cold = muted. */
+.crm-temp { display: inline-flex; align-items: center; margin-right: 6px; vertical-align: middle; }
+.crm-temp-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-sizing: border-box; display: inline-block; }
+.crm-temp-hot .crm-temp-dot { background: #8E6B3D; border: 2px solid #8E6B3D; }
+.crm-temp-warm .crm-temp-dot { background: transparent; border: 2px solid #C29A5E; }
+.crm-temp-cold .crm-temp-dot { background: #A79F92; border: 2px solid #A79F92; }
+.crm-temp-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 99px; padding: 4px 11px; font-size: 12.5px; max-width: 100%; }
+.crm-temp-chip b { font-weight: 700; }
+.crm-temp-chip .crm-temp-why { color: var(--muted); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.crm-temp-chip.crm-temp-hot { border-color: #8E6B3D; }
+.crm-temp-chip.crm-temp-warm { border-color: #C29A5E; }
+.crm-temp-chip.crm-temp-cold { border-color: #A79F92; }
+.crm-card .c-top b .crm-temp { margin-right: 6px; }

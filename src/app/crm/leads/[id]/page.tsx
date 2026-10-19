@@ -8,6 +8,8 @@ import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
 import { buildCockpitPartnerCard, messagePartnerLabel, type ClaimStateValue } from "@/lib/crm/partnerClaims";
 import { CockpitContact, CockpitHeader, type CockpitLead } from "../../components/CockpitHeader";
+import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
+import { toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
 import { CockpitStage } from "../../components/CockpitStage";
 import { CockpitDeals } from "../../components/CockpitDeals";
 import { CockpitLogForm } from "../../components/CockpitLogForm";
@@ -85,6 +87,9 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     project: lead.projectInterest ? [lead.projectInterest.title, lead.projectInterest.city].filter(Boolean).join(" · ") : null,
     createdAt: lead.createdAt, attribution,
   };
+  const temperature = toPublicTemperature(
+    (await temperaturesFor([{ id: lead.id, status: lead.status, timeline: lead.timeline, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, createdAt: lead.createdAt }], now)).get(lead.id),
+  );
   const deals: DealRow[] = lead.deals.map((d) => ({
     id: d.id, leadId: lead.id, leadName: name, project: d.development?.publicName ?? null, unitLabel: d.unitLabel, price: d.price,
     ourRatePercent: d.ourRatePercent?.toNumber() ?? null, rateSource: d.rateSource, ourCommission: d.ourCommission, partnerCommission: d.partnerCommission,
@@ -98,7 +103,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     <ToastProvider>
       <CreatedToast show={searchParams?.created === "1"} />
       <div className="crm-cockpit">
-        <CockpitHeader lead={view} now={now} />
+        <CockpitHeader lead={view} now={now} temperature={temperature} />
         <div className="crm-ck-grid">
           <div className="crm-ck-main">
             <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />

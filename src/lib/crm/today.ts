@@ -9,6 +9,7 @@ export type TodayLead = {
   nextFollowUpAt: Date | null; viewingScheduledAt: Date | null;
   lastContactAt: Date | null; createdAt: Date; assignedAt: Date | null;
   projectLabel: string | null;
+  temperature?: { level: "hot" | "warm" | "cold"; reasons: string[] } | null;
 };
 export type TodaySections = { overdue: TodayLead[]; dueToday: TodayLead[]; viewings: TodayLead[]; fresh: TodayLead[]; stale: TodayLead[] };
 

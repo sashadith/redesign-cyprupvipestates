@@ -1,3 +1,4 @@
+import type { PublicTemperature } from "./insights/temperatureWiring";
 import { FUNNEL_STATUSES, STATUS_LABEL, isLeadStatus, type LeadStatusValue } from "./leadStatus";
 
 // Pure view model for the /crm pipeline (2026-10-18).
@@ -18,12 +19,15 @@ export type BoardLeadInput = {
   deals: { price: number; ourCommission: number | null; commissionStatus: string }[];
   // canEditLead(user, lead), decided on the server (access.ts).
   canEdit: boolean;
+  // Lead temperature (phase 4a); absent / null = none (closed, lost, keep-contact, or scoring failed).
+  temperature?: PublicTemperature | null;
 };
 
 export type BoardCard = {
   id: string; name: string; lang: string | null; project: string | null; sourceLabel: string; isPartner: boolean;
   ownerInitials: string | null; ownerName: string | null; ageLabel: string; stale: boolean;
   dealValue: number | null; dealCommission: number | null; status: LeadStatusValue; canEdit: boolean;
+  temperature: PublicTemperature | null;
 };
 
 export type BoardColumn = { status: LeadStatusValue; label: string; cards: BoardCard[]; total: number };
@@ -66,6 +70,7 @@ export function toCard(lead: BoardLeadInput, now: Date): BoardCard {
     dealCommission: open.some((d) => d.ourCommission != null) ? open.reduce((s, d) => s + (d.ourCommission ?? 0), 0) : null,
     status,
     canEdit: lead.canEdit,
+    temperature: lead.temperature ?? null,
   };
 }
 

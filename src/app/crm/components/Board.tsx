@@ -5,6 +5,7 @@ import type { BoardColumn, BoardCard } from "@/lib/crm/boardModel";
 import { FUNNEL_STATUSES, STATUS_LABEL, type LeadStatusValue } from "@/lib/crm/leadStatus";
 import { useMoveFlow, type MoveRequest } from "./useMoveFlow";
 import { useToast } from "./Toast";
+import { TemperatureDot } from "./TemperatureDot";
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
 const MENU_TARGETS: LeadStatusValue[] = [...FUNNEL_STATUSES, "KEEP_CONTACT", "LOST"];
@@ -64,7 +65,7 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
           if (e.key === "ArrowLeft") { e.preventDefault(); drag.onKeyMove(card.id, -1); }
         }}
       >
-        <div className="c-top"><b>{card.name}</b>{card.lang && <span className="lang">{card.lang}</span>}</div>
+        <div className="c-top"><b>{card.temperature && <TemperatureDot temperature={card.temperature} />}{card.name}</b>{card.lang && <span className="lang">{card.lang}</span>}</div>
         {card.project && <div className="c-proj">{card.project}</div>}
         <div className="c-meta">
           <span className={`src${card.isPartner ? " partner" : ""}`}>{card.sourceLabel}</span>

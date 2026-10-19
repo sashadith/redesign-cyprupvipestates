@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { canEditLead, type CrmUser } from "./access";
+import { temperaturesFor } from "./insights/temperatureQuery";
+import { toPublicTemperature } from "./insights/temperatureWiring";
 import { boardWhere } from "./boardWhere";
 import { STALE_DAYS, type BoardFilter, type BoardLeadInput } from "./boardModel";
 
@@ -17,6 +19,7 @@ export async function loadBoardLeads(user: CrmUser, filter: BoardFilter, now: Da
       take: BOARD_CAP,
       select: {
         id: true, firstName: true, lastName: true, status: true, source: true, languagePreference: true, createdAt: true, assignedToId: true,
+        timeline: true, budgetMin: true, budgetMax: true,
         assignedTo: { select: { id: true, name: true } },
         projectInterest: { select: { title: true } },
         interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
@@ -25,6 +28,7 @@ export async function loadBoardLeads(user: CrmUser, filter: BoardFilter, now: Da
     }),
     prisma.lead.count({ where }),
   ]);
+  const temps = await temperaturesFor(rows, now);
   const leads: BoardLeadInput[] = rows.map((r) => ({
     id: r.id, firstName: r.firstName, lastName: r.lastName, status: r.status, source: r.source,
     languagePreference: r.languagePreference, assignedTo: r.assignedTo, createdAt: r.createdAt,
@@ -32,6 +36,7 @@ export async function loadBoardLeads(user: CrmUser, filter: BoardFilter, now: Da
     lastContactAt: r.interactions[0]?.occurredAt ?? null,
     deals: r.deals,
     canEdit: canEditLead(user, { assignedToId: r.assignedToId }),
+    temperature: toPublicTemperature(temps.get(r.id)),
   }));
   // Guard only: the stale condition is already in the where (cap-safe).
   if (filter !== "stale") return { leads, total };

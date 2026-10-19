@@ -4,6 +4,9 @@ import { requireCrmUser } from "@/lib/crm/session";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ACTIVE_LEAD_STATUSES, STATUS_LABEL, isLeadStatus } from "@/lib/crm/leadStatus";
+import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
+import { sortByTemperature, toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
+import { TemperatureDot } from "../components/TemperatureDot";
 import { CRM_TZ, buildToday, isAssignmentTo, todayGreeting, type TodayLead } from "@/lib/crm/today";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +35,7 @@ export default async function TodayPage() {
     orderBy: [{ nextFollowUpAt: { sort: "asc", nulls: "last" } }, { updatedAt: "desc" }],
     take: LEAD_CAP,
     select: {
-      id: true, firstName: true, lastName: true, status: true, createdAt: true, nextFollowUpAt: true, viewingScheduledAt: true,
+      id: true, firstName: true, lastName: true, status: true, createdAt: true, timeline: true, budgetMin: true, budgetMax: true, nextFollowUpAt: true, viewingScheduledAt: true,
       projectInterest: { select: { title: true } },
       interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
@@ -49,13 +52,18 @@ export default async function TodayPage() {
     if (!assignedAt.has(a.leadId) && isAssignmentTo(a, user)) assignedAt.set(a.leadId, a.occurredAt);
   }
 
+  const temps = await temperaturesFor(rows, now);
   const leads: TodayLead[] = rows.map((r) => ({
     id: r.id, name: `${r.firstName} ${r.lastName}`.trim(), status: r.status,
     nextFollowUpAt: r.nextFollowUpAt, viewingScheduledAt: r.viewingScheduledAt,
     lastContactAt: r.interactions[0]?.occurredAt ?? null, createdAt: r.createdAt,
     assignedAt: assignedAt.get(r.id) ?? null, projectLabel: r.projectInterest?.title ?? null,
+    temperature: toPublicTemperature(temps.get(r.id)),
   }));
-  const t = buildToday(leads, now);
+  const built = buildToday(leads, now);
+  // Hot leads first inside each list (stable, so the date order holds within a group). Viewings stay in time order.
+  const hotFirst = (rs: TodayLead[]) => sortByTemperature(rs, (l) => l.temperature);
+  const t = { ...built, overdue: hotFirst(built.overdue), dueToday: hotFirst(built.dueToday), fresh: hotFirst(built.fresh), stale: hotFirst(built.stale) };
 
   const sections: Section[] = [
     { key: "overdue", title: "Overdue follow-ups", empty: "No follow-ups overdue", rows: t.overdue, when: (l) => `due ${dateOnly.format(l.nextFollowUpAt!)}` },
@@ -89,7 +97,7 @@ export default async function TodayPage() {
                 {s.rows.map((l) => (
                   <li key={l.id}>
                     <Link href={`/crm/leads/${l.id}`}>
-                      <span className="who"><b>{l.name}</b>{l.projectLabel && <span className="proj">{l.projectLabel}</span>}</span>
+                      <span className="who"><b>{l.temperature && <TemperatureDot temperature={l.temperature} />}{l.name}</b>{l.projectLabel && <span className="proj">{l.projectLabel}</span>}</span>
                       <span className="st">{isLeadStatus(l.status) ? STATUS_LABEL[l.status] : l.status}</span>
                       <span className="when">{s.when(l)}</span>
                     </Link>
