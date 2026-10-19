@@ -39,7 +39,7 @@ test("guide cadence: 7 days after the first unanswered contact, KEEP_CONTACT + 6
 
 test("guide cadence never parks a lead that answered or is in a conversation", () => {
   assert.deepEqual(guideCadenceStep({ count: 1, status: "CONTACTED", leadReacted: true }), { kind: "regular" });
-  for (const status of ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT"]) {
+  for (const status of ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"]) {
     assert.deepEqual(guideCadenceStep({ count: 1, status, leadReacted: false }), { kind: "regular" }, status);
   }
 });
@@ -52,4 +52,10 @@ test("guide leads have their own bucket, kept out of the buyer list", () => {
   assert.equal(listBucketOf({ bucket: "guide" }), "guide");
   assert.deepEqual(buildLeadWhere({}, "guide").AND, [ONLY_GUIDE]);
   assert.ok((buildLeadWhere({}, "leads").AND as unknown[]).includes(EXCLUDE_GUIDE));
+});
+
+test("a parked guide lead stays parked: another unanswered call changes nothing, a reaction restarts the regular chain", () => {
+  assert.deepEqual(guideCadenceStep({ count: 2, status: "KEEP_CONTACT", leadReacted: false }), { kind: "silent" });
+  assert.deepEqual(guideCadenceStep({ count: 0, status: "KEEP_CONTACT", leadReacted: false }), { kind: "silent" });
+  assert.deepEqual(guideCadenceStep({ count: 2, status: "KEEP_CONTACT", leadReacted: true }), { kind: "regular" });
 });

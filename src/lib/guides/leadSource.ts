@@ -44,7 +44,9 @@ export function messageStartsWithGuide(message: string | null | undefined): bool
    checkbox (or an inbound message) resets the chain, exactly as for every
    other lead. A lead that has moved past CONTACTED (COMMUNICATING, a viewing,
    an offer) is in a conversation, so it is never parked — the regular
-   cadence applies to it instead (the caller falls through). */
+   cadence applies to it instead (the caller falls through). A lead already
+   parked in KEEP_CONTACT stays parked: another unanswered call must not
+   replace its 60-day follow-up with the regular chain's 14 days. */
 export const GUIDE_MAX_ATTEMPTS = 2;
 export const GUIDE_FIRST_RETRY_DAYS = 7;
 export const GUIDE_PARK_DAYS = 60;
@@ -57,6 +59,7 @@ export type GuideCadenceStep =
 
 export function guideCadenceStep(opts: { count: number; status: string; leadReacted: boolean }): GuideCadenceStep {
   if (opts.leadReacted) return { kind: "regular" };
+  if (opts.status === "KEEP_CONTACT") return { kind: "silent" };
   if (opts.status !== "NEW" && opts.status !== "CONTACTED") return { kind: "regular" };
   if (opts.count >= GUIDE_MAX_ATTEMPTS) return { kind: "silent" };
   if (opts.count === GUIDE_MAX_ATTEMPTS - 1) return { kind: "park", days: GUIDE_PARK_DAYS, count: opts.count + 1 };
