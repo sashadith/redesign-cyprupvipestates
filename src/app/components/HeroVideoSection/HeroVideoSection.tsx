@@ -63,30 +63,41 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("error", markError);
 
-    // The video (2.3 MB) is pure decoration under the poster. Starting it at mount made
-    // it fight the page's JS/CSS and the LCP headline for bandwidth (Lighthouse mobile
-    // 2026-10-16: LCP 17.5 s). Start after the load event, and not at all on Save-Data.
+    // The video is pure decoration under the poster, and it is 6+ MB. Lighthouse 2026-10-19:
+    // starting it 600 ms after `load` put it just BEFORE the first paint, so the lab counted
+    // the whole transfer as work the first paint depended on (FCP 2.4 -> 3.8 s, LCP 4.9 -> 9.6 s).
+    // So: phones and Save-Data visitors keep the poster only; everyone else gets the video 4 s
+    // after load, or at the first interaction if that comes sooner.
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    const phone = window.matchMedia("(max-width: 768px)").matches;
+    if (phone || conn?.saveData) return;
     let started = false;
-    const start = async () => {
-      if (started || conn?.saveData) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
+    const cleanup = () => {
+      events.forEach((ev) => window.removeEventListener(ev, start));
+      window.removeEventListener("load", onWindowLoad);
+      if (timer) clearTimeout(timer);
+    };
+    async function start() {
+      if (started) return;
       started = true;
+      cleanup();
       try {
-        await el.play();
+        await el!.play();
       } catch {
         // autoplay может быть заблокирован — тогда постер останется (это ок)
       }
-    };
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const onWindowLoad = () => {
-      timer = setTimeout(start, 600);
-    };
+    }
+    function onWindowLoad() {
+      timer = setTimeout(start, 4000);
+    }
+    events.forEach((ev) => window.addEventListener(ev, start, { once: true, passive: true }));
     if (document.readyState === "complete") onWindowLoad();
     else window.addEventListener("load", onWindowLoad, { once: true });
 
     return () => {
-      window.removeEventListener("load", onWindowLoad);
-      if (timer) clearTimeout(timer);
+      cleanup();
       el.removeEventListener("loadeddata", onLoadedData);
       el.removeEventListener("playing", onPlaying);
       el.removeEventListener("timeupdate", onTimeUpdate);
