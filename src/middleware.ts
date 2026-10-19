@@ -24,6 +24,7 @@ const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on pr
 // Hoisted to module scope so these are compiled once, not on every request.
 const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
 const FAQ_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?faq$`);
+const HOME_RE = new RegExp(`^/(${NON_DEFAULT})?/?$`);
 const CASE_STUDIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?case-studies(?:/([^/]+))?$`);
 const PARTNERS_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?partners$`);
 
@@ -592,6 +593,17 @@ export default async function middleware(request: NextRequest) {
     localePrefix: "as-needed",
     localeDetection: false,
   });
+
+  // Homepage (/, /de, /pl, /ru) -> home-static/[lang]: the same page, but under a layout with no
+  // cookies()/draftMode(), so it is statically generated and served from the ISR cache (revalidate 1800)
+  // instead of being rendered on every request (TTFB 1.6 s -> cache hit). Locales that are not live yet
+  // (NON_DEFAULT only holds PUBLIC_LOCALES) never match and keep the old guard. Query strings (utm_*) do not affect the cached HTML.
+  const homeMatch = request.nextUrl.pathname.match(HOME_RE);
+  if (homeMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/home-static/${homeMatch[1] || "en"}`;
+    return NextResponse.rewrite(url);
+  }
 
   return handleI18nRouting(request);
 }
