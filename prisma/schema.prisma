@@ -2110,6 +2110,13 @@ model Partner {
   brandLogoUpdatedAt   DateTime?
   telegramCodes        PartnerTelegramCode[]
   presentations        ClientPresentation[]
+  // Phase 4b: tier (commission shares are copied from the tier on promotion), news read marker.
+  tierKey              String?
+  tier                 PartnerTier?   @relation(fields: [tierKey], references: [key], onDelete: SetNull)
+  tierSince            DateTime?
+  newsSeenAt           DateTime?
+  tierProposals        PartnerTierProposal[]
+  pointEvents          PartnerPointEvent[]
   @@index([status])
   @@map("partners")
 }
@@ -2187,6 +2194,65 @@ model PartnerClaim {
   @@map("partner_claims")
 }
 
+// Phase 4b: partner tiers, tier-promotion proposals and the points rating. Hand-written migration 20261020100000.
+model PartnerTier {
+  key            String    @id
+  name           String
+  sort           Int
+  minClosedDeals Int
+  handoverShare  Decimal   @db.Decimal(5, 2)
+  fixShare       Decimal   @db.Decimal(5, 2)
+  active         Boolean   @default(true)
+  updatedAt      DateTime  @updatedAt
+  partners       Partner[]
+  @@map("partner_tiers")
+}
+
+// One OPEN proposal per partner is enforced by a partial unique index that exists only in SQL
+// (migration 20261020100000, "partner_tier_proposals_one_open_per_partner" ON ("partnerId") WHERE "decidedAt" IS NULL) —
+// Prisma cannot express it.
+model PartnerTierProposal {
+  id          String    @id @default(uuid())
+  partnerId   String
+  partner     Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  fromTier    String?
+  toTier      String
+  closedDeals Int
+  createdAt   DateTime  @default(now())
+  decidedAt   DateTime?
+  decidedById String?
+  decision    String?
+  @@index([partnerId])
+  @@map("partner_tier_proposals")
+}
+
+model RatingSeason {
+  id         String              @id @default(uuid())
+  name       String
+  startsAt   DateTime
+  endsAt     DateTime
+  pointRules Json
+  prizes     Json
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  events     PartnerPointEvent[]
+  @@map("rating_seasons")
+}
+
+model PartnerPointEvent {
+  id        String       @id @default(uuid())
+  seasonId  String
+  season    RatingSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  partnerId String
+  partner   Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  kind      String
+  refKey    String       @unique
+  points    Int
+  createdAt DateTime     @default(now())
+  @@index([seasonId, partnerId])
+  @@map("partner_point_events")
+}
+
 enum PartnerNotificationKind {
   STAGE
   MESSAGE
@@ -2194,6 +2260,7 @@ enum PartnerNotificationKind {
   PAYOUT
   MATCH
   PRESENTATION_OPENED
+  TIER_UP
 }
 
 enum PartnerNotifyChannel {

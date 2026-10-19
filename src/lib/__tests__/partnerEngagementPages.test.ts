@@ -20,7 +20,7 @@ test("optOutGate: claim decisions and payouts always go out", () => {
     assert.equal(optOutGate("PAYOUT", on), null);
   }
   // Every kind is covered by the decision above (a new kind must be classified on purpose).
-  assert.deepEqual([...NOTIFICATION_KINDS].sort(), ["CLAIM_OUTCOME", "MATCH", "MESSAGE", "PAYOUT", "PRESENTATION_OPENED", "STAGE"]);
+  assert.deepEqual([...NOTIFICATION_KINDS].sort(), ["CLAIM_OUTCOME", "MATCH", "MESSAGE", "PAYOUT", "PRESENTATION_OPENED", "STAGE", "TIER_UP"]);
 });
 
 test("brochure links: main-site project pages only, en without prefix, slug encoded", () => {
@@ -110,7 +110,8 @@ test("onboarding: VAT-number item only for EU companies, stays visible despite H
 
 test("MATCH and PRESENTATION_OPENED rows have their own builders, never another kind's template", () => {
   const src = readFileSync(join(process.cwd(), "src/lib/partner/notifySend.ts"), "utf8");
-  assert.ok(!src.includes("not implemented yet"), "no kind is skipped as not implemented any more");
+  assert.equal(src.split("not implemented yet").length - 1, 1, "only TIER_UP is skipped as not implemented");
+  assert.match(src, /case "TIER_UP":[^]*?return \{ skip: "not implemented yet" \}/, "TIER_UP is an explicit skip");
   assert.ok(src.includes("buildMatchEmail(locale, {"), "MATCH uses the match builder");
   assert.ok(src.includes("buildPresentationOpenedEmail(locale, {"), "PRESENTATION_OPENED uses its own builder");
 });

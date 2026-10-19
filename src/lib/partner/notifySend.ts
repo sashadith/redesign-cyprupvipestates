@@ -135,7 +135,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
     : null;
   const accepted = obj(row.payload).accepted === true;
   // A rejection, a payout and a presentation-opened row never need the lead; everything else is gated on the claim's effective state.
-  const needsState = !!claim && row.kind !== "PAYOUT" && row.kind !== "PRESENTATION_OPENED" && !(row.kind === "CLAIM_OUTCOME" && !accepted);
+  const needsState = !!claim && row.kind !== "PAYOUT" && row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP" && !(row.kind === "CLAIM_OUTCOME" && !accepted);
   const skip = notificationGate({
     kind: row.kind,
     accepted,
@@ -152,7 +152,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
     telegram: sendTelegram && chatId ? { chatId, html: buildTelegramNotification(locale, tg) } : null,
     fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
   });
-  if (!claim && row.kind !== "PRESENTATION_OPENED") return { skip: "claim missing" };
+  if (!claim && row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP") return { skip: "claim missing" };
   // Every kind but PRESENTATION_OPENED has a claim from here on (checked just above); that case never reads it.
   const own = claim as NonNullable<typeof claim>;
   const common = { partnerFirstName: partner.firstName, clientName: claim ? visibleName(claim) : "", link: claim ? clientLink(base, claim.id) : base };
@@ -245,6 +245,10 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         { kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base },
       );
     }
+    case "TIER_UP":
+      // Phase 4b Task 1: the kind exists, its producer and mail/Telegram builders come in a later task.
+      // Closed explicitly (never another kind's mail) until then.
+      return { skip: "not implemented yet" };
     default:
       return unhandledKind(row.kind);
   }

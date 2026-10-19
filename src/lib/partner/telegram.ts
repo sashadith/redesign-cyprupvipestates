@@ -235,6 +235,10 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
     case "PRESENTATION_OPENED":
       out = `<b>${line(t.presentationOpened, { client })}</b>\n\n${open}`;
       break;
+    case "TIER_UP":
+      // notifySend skips TIER_UP rows ("not implemented yet") before any builder runs; the real text ships with the producer.
+      out = open;
+      break;
     default:
       return unhandledKind(input.kind);
   }

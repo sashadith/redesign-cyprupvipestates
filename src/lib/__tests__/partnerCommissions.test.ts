@@ -234,6 +234,8 @@ test("notification kinds match the enum; the sender switch is exhaustive and han
   assert.equal(payoutDealIdFromRefKey("paid:deal-1"), "deal-1");
   assert.equal(payoutDealIdFromRefKey("paid:"), null);
   assert.equal(payoutDealIdFromRefKey("msg:deal-1"), null);
+  // Phase 4b: TIER_UP exists in both the enum and the kind list (its sender is an explicit skip until implemented).
+  assert.ok((NOTIFICATION_KINDS as readonly string[]).includes("TIER_UP") && (Object.values(PartnerNotificationKind) as string[]).includes("TIER_UP"));
   const src = readFileSync(join(process.cwd(), "src/lib/partner/notifySend.ts"), "utf8");
   for (const k of NOTIFICATION_KINDS) assert.ok(src.includes(`case "${k}":`), `sender has a case for ${k}`);
   assert.ok(src.includes("default:\n      return unhandledKind(row.kind);"), "default branch is the never-check");

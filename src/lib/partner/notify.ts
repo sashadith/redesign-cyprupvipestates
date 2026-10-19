@@ -149,7 +149,7 @@ export function formatPayoutAmount(locale: PartnerLocale, euros: number): string
   return new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(euros);
 }
 
-export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED"] as const;
+export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 /** Compile-time exhaustiveness: a new kind that is not handled fails the build instead of falling through. */
@@ -302,7 +302,7 @@ export function notificationGate(input: {
   const { kind, claim } = input;
   // The partner's own presentation was opened (the row is written for presentation.partnerId): only the
   // partner gate applies, the claim's state is irrelevant to a page the client already holds.
-  if (kind === "PRESENTATION_OPENED") return null;
+  if (kind === "PRESENTATION_OPENED" || kind === "TIER_UP") return null;
   // The money was paid: always told, whatever the claim's state now — but only about the partner's own claim.
   if (kind === "PAYOUT") return claim?.ownedByPartner ? null : "claim missing";
   if (!claim || !claim.ownedByPartner) return kind === "CLAIM_OUTCOME" ? "claim missing" : "claim inactive";
