@@ -31,8 +31,11 @@ export default function PreviewMotion() {
       /* ---------- 2.1 HERO — eyebrow + SplitText headline (on load) ---------- */
       const headline = document.querySelector<HTMLElement>(".hero__headline");
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
-        splits.push(split);
+        // The headline is animated as ONE element, not split into line <div>s. SplitText
+        // replaces the H1's text nodes after hydration, and Chrome then re-reports the
+        // new nodes as the LCP candidate: PageSpeed 2026-10-19 measured LCP 7.0 s (lab
+        // 8.6 s) with a 0.7 s FCP-equivalent paint — the whole gap was the JS delay.
+        // Animating the existing element leaves the SSR text as the LCP node.
         gsap
           .timeline()
           .from(".hero__brand", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
@@ -44,7 +47,7 @@ export default function PreviewMotion() {
           // main-thread bottleneck (confirmed via lab trace, 2026-07-19) — the
           // slide-up motion (y) is kept, only the opacity hide is dropped so
           // the headline paints with the rest of the SSR'd HTML.
-          .from(split.lines, { y: 80, duration: 0.9, stagger: 0.12, ease: "power3.out" }, 0.3)
+          .from(headline, { y: 60, duration: 0.9, ease: "power3.out" }, 0.3)
           .from(".hero__stripe", { scaleX: 0, transformOrigin: "left center", autoAlpha: 0, duration: 0.6, ease: "power3.out" }, 1.2)
           .from(".hero__desc", { autoAlpha: 0, y: 22, duration: 0.6, ease: "power2.out" }, 1.6)
           .from(".hero__cta", { autoAlpha: 0, y: 16, duration: 0.5, ease: "power2.out" }, 1.75);
