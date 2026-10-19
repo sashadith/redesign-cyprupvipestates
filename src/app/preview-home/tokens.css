@@ -405,6 +405,22 @@ img { max-width: 100%; display: block; }
   color: var(--ivory); margin: 0;
 }
 .hero__headline { display: block; }
+/* Hero intro as CSS keyframes (was a GSAP timeline run after hydration: elements were visible from
+   first paint, snapped to their start state when JS arrived, then animated — a flash — and the GSAP
+   chunk sat on the critical path). Same durations/offsets; `backwards` holds the start state during
+   the delay. The headline is transform-only so the H1 text stays the LCP node and is never hidden. */
+@keyframes heroRise { from { opacity: 0; transform: translateY(var(--hero-rise, 20px)); } }
+@keyframes heroSlide { from { transform: translateY(60px); } }
+@keyframes heroStripeIn { from { opacity: 0; transform: scaleX(0); } }
+.hero__brand { --hero-rise: 14px; animation: heroRise 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s backwards; }
+.hero__headline { animation: heroSlide 0.9s cubic-bezier(0.215, 0.61, 0.355, 1) 0.3s backwards; }
+.hero__stripe { transform-origin: left center; animation: heroStripeIn 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) 1.2s backwards; }
+.hero__desc { --hero-rise: 22px; animation: heroRise 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.6s backwards; }
+.hero__cta { --hero-rise: 16px; animation: heroRise 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.75s backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .hero__brand, .hero__headline, .hero__stripe, .hero__desc, .hero__cta { animation: none; }
+}
+
 .hero__stripe { margin-top: var(--s-6); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
 .hero__desc {
   margin-top: var(--s-6); max-width: 54ch;
