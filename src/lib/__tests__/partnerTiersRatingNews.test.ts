@@ -283,16 +283,61 @@ test("pseudonym: collisions resolve via the taken set", () => {
   assert.notEqual(m, n);
   assert.equal(m, n === 999 ? 100 : n + 1);
   assert.ok(taken.has(m), "the assigned number is reserved");
+  // All 900 three-digit numbers taken: continue with 4 digits instead of throwing
   const full = new Set<number>(Array.from({ length: 900 }, (_, i) => i + 100));
-  assert.throws(() => pseudonym("x", "s1", full));
+  const four = pseudonym("x", "s1", full);
+  assert.ok(four >= 1000 && four <= 9999, String(four));
+  assert.ok(full.has(four));
+  const all = new Set<number>([...Array.from({ length: 900 }, (_, i) => i + 100), ...Array.from({ length: 9000 }, (_, i) => i + 1000)]);
+  assert.throws(() => pseudonym("x", "s1", all));
 });
 
+const P = (partnerId: string, firstAt: Date | null = null) => ({ partnerId, firstAt });
+
 test("pseudonyms: no collisions within a season and independent of input order", () => {
-  const ids = Array.from({ length: 300 }, (_, i) => `partner-${i}`);
+  const ids = Array.from({ length: 300 }, (_, i) => P(`partner-${i}`, new Date(NOW.getTime() + i * 1000)));
   const map = pseudonyms(ids, "s1");
   assert.equal(new Set(map.values()).size, 300);
   const reversed = pseudonyms([...ids].reverse(), "s1");
-  for (const id of ids) assert.equal(map.get(id), reversed.get(id));
+  for (const { partnerId } of ids) assert.equal(map.get(partnerId), reversed.get(partnerId));
+});
+
+test("pseudonyms: collisions resolve in order of the first point event (a newcomer never takes a shown number)", () => {
+  // Find two ids that hash to the same 3-digit number in season s1
+  const seen = new Map<number, string>();
+  let pair: [string, string] | null = null;
+  for (let i = 0; !pair; i++) {
+    const id = `p-${i}`;
+    const n = pseudonym(id, "s1");
+    if (seen.has(n)) pair = [seen.get(n)!, id];
+    else seen.set(n, id);
+  }
+  const [x, y] = pair;
+  const n = pseudonym(x, "s1");
+  // y earned points first: y keeps the hashed number even though x sorts first by id
+  const yFirst = pseudonyms([P(x, ago(1)), P(y, ago(5))], "s1");
+  assert.equal(yFirst.get(y), n);
+  assert.notEqual(yFirst.get(x), n);
+  const xFirst = pseudonyms([P(y, ago(1)), P(x, ago(5))], "s1");
+  assert.equal(xFirst.get(x), n);
+  // A partner who joins later never renumbers the earlier ones
+  const before = pseudonyms([P(y, ago(5))], "s1");
+  const after = pseudonyms([P(y, ago(5)), P(x, ago(1))], "s1");
+  assert.equal(after.get(y), before.get(y));
+  // Duplicates keep the earliest first event; unknown dates go last
+  const dup = pseudonyms([P(x, ago(1)), P(y, null), P(x, ago(9))], "s1");
+  assert.equal(dup.get(x), n);
+});
+
+test("pseudonyms: more than 900 partners get 4-digit numbers instead of throwing, earlier ones keep theirs", () => {
+  const ids = Array.from({ length: 950 }, (_, i) => P(`partner-${i}`, new Date(NOW.getTime() + i * 1000)));
+  const map = pseudonyms(ids, "s1");
+  assert.equal(new Set(map.values()).size, 950);
+  const values = Array.from(map.values());
+  assert.equal(values.filter((v) => v >= 100 && v <= 999).length, 900);
+  assert.equal(values.filter((v) => v >= 1000 && v <= 9999).length, 50);
+  const first900 = pseudonyms(ids.slice(0, 900), "s1");
+  for (const { partnerId } of ids.slice(0, 900)) assert.equal(map.get(partnerId), first900.get(partnerId));
 });
 
 test("countdown: days and hours, ended at or after the end", () => {
@@ -435,7 +480,8 @@ test("Telegram TIER_UP: tier and shares, escaped, linked, 4 locales", () => {
 test("dictionary: tiers, rating, news and mail.tierUp sections in every locale", () => {
   for (const l of PARTNER_LOCALES) {
     const t = dict(l);
-    assert.ok(t.tiers.progress.includes("{n}") && t.tiers.progress.includes("{tier}"), l);
+    for (const f of ["one", "few", "many", "other"] as const) assert.ok(t.tiers.progress[f].includes("{tier}"), `${l} ${f}`);
+    assert.ok(t.tiers.progress.other.includes("{n}") && t.tiers.reviewing.includes("{tier}"), l);
     assert.ok(t.rating.pseudonym.includes("{n}"), l);
     for (const k of ["new_project", "price_drop", "back_on_market", "nearly_sold_out"] as const) assert.ok(t.news.kinds[k].trim(), `${l} ${k}`);
     for (const k of ["claim_accepted", "viewing", "reserved", "closed"] as const) assert.ok(t.rating.kinds[k].trim(), `${l} ${k}`);

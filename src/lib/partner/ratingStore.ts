@@ -7,10 +7,11 @@ import { REAL_CONTACT_TYPES } from "./claims";
 import { activeSince, COMMITTED_LEAD_STATUSES, effectiveClaimState, type ClaimStateValue } from "./claimState";
 import { truncateError } from "./notify";
 import {
-  crmRanking, currentSeason, pastSeasons, pointRulesFromJson, pointsRunSeasonWhere, portalRanking, prizesFromJson, seasonTotals,
-  statusChangesByLead, type CrmRankingRow, type KindAggregate, type PartnerSeasonTotal, type PortalRanking,
+  OUTBOUND_CONTACT_TYPES, claimIdFromRefKey, claimPointFacts, contactsByLead, crmRanking, currentSeason, isRevokedClaim, pastSeasons,
+  pointRulesFromJson, pointsCandidateQuery, pointsRunSeasonWhere, portalRanking, prizesFromJson, refKeysToRevoke, seasonOpenForRevocation,
+  seasonTotals, statusChangesByLead, type CrmRankingRow, type KindAggregate, type PartnerSeasonTotal, type PortalRanking,
 } from "./ratingFlow";
-import { pointEventsFor, type ClaimPointFacts, type PointRules, type SeasonPrizes } from "./rating";
+import { pointEventsFor, type PointRules, type SeasonPrizes } from "./rating";
 
 export type SeasonRow = { id: string; name: string; startsAt: Date; endsAt: Date; pointRules: PointRules; prizes: SeasonPrizes };
 
@@ -26,15 +27,18 @@ export async function loadSeasons(): Promise<SeasonRow[]> {
   return rows.map(toSeason);
 }
 
-/** One aggregate query: per (partner, kind) the sum of points and the latest point time of a season. */
+/** One aggregate query: per (partner, kind) the sum of points and the first and latest point time of a season. */
 async function seasonAggregate(seasonId: string): Promise<PartnerSeasonTotal[]> {
   const rows = await prisma.partnerPointEvent.groupBy({
     by: ["partnerId", "kind"],
     where: { seasonId },
     _sum: { points: true },
     _max: { createdAt: true },
+    _min: { createdAt: true },
   });
-  const agg: KindAggregate[] = rows.map((r) => ({ partnerId: r.partnerId, kind: r.kind, points: r._sum.points ?? 0, lastAt: r._max.createdAt ?? null }));
+  const agg: KindAggregate[] = rows.map((r) => ({
+    partnerId: r.partnerId, kind: r.kind, points: r._sum.points ?? 0, lastAt: r._max.createdAt ?? null, firstAt: r._min.createdAt ?? null,
+  }));
   return seasonTotals(agg);
 }
 
@@ -114,22 +118,27 @@ export async function withPointsLock<T>(fn: () => Promise<T>): Promise<T | null>
 
 const chunk = <T,>(xs: T[], n: number): T[][] => Array.from({ length: Math.ceil(xs.length / n) }, (_, i) => xs.slice(i * n, i * n + n));
 
-export type PointsSeasonResult = { seasonId: string; claims: number; truncated: boolean; events: number; inserted: number };
+export type PointsSeasonResult = { seasonId: string; claims: number; truncated: boolean; events: number; inserted: number; revoked: number };
 export type PointsRunResult = { seasons: PointsSeasonResult[]; skipped: string | null; errors: string[] };
 
 /**
  * The claims that may earn points in a season: ACTIVE, created by the season end, on a lead that is not
- * trashed, and effectively ACTIVE now (committed, or protection not run out) — capped, newest first.
+ * trashed and had activity since the season start (pointsCandidateQuery, newest activity first, capped),
+ * not revoked (LOST as INVALID / UNREACHABLE), and effectively ACTIVE now (committed, or protection not run out).
  */
 async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
+  const q = pointsCandidateQuery(season);
   const rows = await prisma.partnerClaim.findMany({
-    where: { state: "ACTIVE", createdAt: { lte: season.endsAt }, lead: { deletedAt: null } },
-    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    where: q.where,
+    orderBy: q.orderBy,
     take: POINTS_CLAIM_CAP + 1,
-    select: { id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, lead: { select: { status: true, deletedAt: true } } },
+    select: {
+      id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true,
+      lead: { select: { status: true, deletedAt: true, lostReason: true } },
+    },
   });
   const truncated = rows.length > POINTS_CLAIM_CAP;
-  const claims = truncated ? rows.slice(0, POINTS_CLAIM_CAP) : rows;
+  const claims = (truncated ? rows.slice(0, POINTS_CLAIM_CAP) : rows).filter((c) => !isRevokedClaim(c));
   if (!claims.length) return { claims, truncated };
   const leadIds = Array.from(new Set(claims.map((c) => c.leadId)));
   const live = new Set<string>();
@@ -157,10 +166,40 @@ async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
   return { claims: active, truncated };
 }
 
-/** Points of one season: claim facts (activeSince, STATUS_CHANGE history up to the season end) → pointEventsFor → ledger. */
+/**
+ * Takes back the points of revoked claims (REJECTED, lead trashed or gone, lead LOST as INVALID / UNREACHABLE)
+ * while the season can still change (until LATE_DATA_DAYS after its end). Returns the number of deleted events.
+ */
+async function revokePoints(season: SeasonRow, now: Date): Promise<number> {
+  if (!seasonOpenForRevocation(season, now)) return 0;
+  const events = await prisma.partnerPointEvent.findMany({ where: { seasonId: season.id }, select: { refKey: true } });
+  const claimIds = Array.from(new Set(events.map((e) => claimIdFromRefKey(e.refKey)).filter((id): id is string => !!id)));
+  if (!claimIds.length) return 0;
+  const claims = new Map<string, { state: string; lead: { deletedAt: Date | null; status: string; lostReason: string | null } | null }>();
+  for (const part of chunk(claimIds, ID_CHUNK)) {
+    const rows = await prisma.partnerClaim.findMany({
+      where: { id: { in: part } },
+      select: { id: true, state: true, lead: { select: { deletedAt: true, status: true, lostReason: true } } },
+    });
+    for (const r of rows) claims.set(r.id, r);
+  }
+  const refKeys = refKeysToRevoke(events, claims);
+  let deleted = 0;
+  for (const part of chunk(refKeys, ID_CHUNK)) {
+    const r = await prisma.partnerPointEvent.deleteMany({ where: { seasonId: season.id, refKey: { in: part } } });
+    deleted += r.count;
+  }
+  return deleted;
+}
+
+/**
+ * Points of one season: first the revocations, then claim facts (activeSince, first outbound contact,
+ * STATUS_CHANGE history up to the season end) → pointEventsFor → ledger.
+ */
 async function pointsForSeason(season: SeasonRow, now: Date): Promise<PointsSeasonResult> {
+  const revoked = await revokePoints(season, now);
   const { claims, truncated } = await effectivelyActiveClaims(season, now);
-  const result: PointsSeasonResult = { seasonId: season.id, claims: claims.length, truncated, events: 0, inserted: 0 };
+  const result: PointsSeasonResult = { seasonId: season.id, claims: claims.length, truncated, events: 0, inserted: 0, revoked };
   if (!claims.length) return result;
 
   // History only up to the season end, and never before the earliest activeSince (pointEventsFor gates per claim).
@@ -168,18 +207,23 @@ async function pointsForSeason(season: SeasonRow, now: Date): Promise<PointsSeas
   const earliest = new Date(Math.min(...claims.map((c) => activeSince(c).getTime())));
   const leadIds = Array.from(new Set(claims.map((c) => c.leadId)));
   const history: { leadId: string; occurredAt: Date; metadata: unknown }[] = [];
+  const contacts: { leadId: string; occurredAt: Date }[] = [];
   for (const part of chunk(leadIds, ID_CHUNK)) {
-    history.push(...(await prisma.leadInteraction.findMany({
-      where: { leadId: { in: part }, type: "STATUS_CHANGE", occurredAt: { gte: earliest, lte: season.endsAt } },
-      select: { leadId: true, occurredAt: true, metadata: true },
-    })));
+    const [h, c] = await Promise.all([
+      prisma.leadInteraction.findMany({
+        where: { leadId: { in: part }, type: "STATUS_CHANGE", occurredAt: { gte: earliest, lte: season.endsAt } },
+        select: { leadId: true, occurredAt: true, metadata: true },
+      }),
+      // Outbound contacts: the first one at/after activeSince dates claim_accepted (anti-farming).
+      prisma.leadInteraction.findMany({
+        where: { leadId: { in: part }, type: { in: [...OUTBOUND_CONTACT_TYPES] }, occurredAt: { gte: earliest, lte: season.endsAt } },
+        select: { leadId: true, occurredAt: true },
+      }),
+    ]);
+    history.push(...h);
+    contacts.push(...c);
   }
-  const byLead = statusChangesByLead(history);
-  const facts: ClaimPointFacts[] = claims.map((c) => {
-    const since = activeSince(c);
-    // The client counts as accepted when the claim became active (a reviewed known contact, or a new lead at submission).
-    return { claimId: c.id, partnerId: c.partnerId, acceptedAt: since, activeSince: since, statusChanges: byLead.get(c.leadId) ?? [] };
-  });
+  const facts = claimPointFacts(claims, statusChangesByLead(history), contactsByLead(contacts));
   const events = pointEventsFor(facts, season);
   result.events = events.length;
   for (const part of chunk(events, ID_CHUNK)) {

@@ -1,18 +1,21 @@
 // Rating seasons glue (partner portal phase 4b, Task 4). Pure, no DB access.
 // - CRM season form: Cyprus calendar days → UTC instants, point fields, prizes per locale → validateSeason.
 // - Season status / overlap warning / the cron's window selection / the portal's current season.
+// - Season edit lock once points exist; the cron's candidate claims, claim facts and revocations.
 // - Stored JSON → typed point rules and prizes (defensive).
 // - Ranking rows: the CRM view (names, all partners) and the portal DTO (anonymised, ACTIVE partners only).
 // - CRM CSV (semicolon, BOM, formula-injection guard).
 // DB side: ratingStore.ts. Core rules: rating.ts.
+import type { Prisma } from "@prisma/client";
 import { cyprusWallTimeToUtc } from "@/lib/booking/timezone";
 import { countryCodeToFlagEmoji } from "@/lib/countries";
 import { cyprusDay } from "./commissions";
 import { csvCell } from "./commissionsCsv";
 import { PARTNER_LOCALES } from "./i18n";
+import { activeSince } from "./claimState";
 import {
   DEFAULT_POINT_RULES, POINT_KINDS, pseudonyms, rankPartners, validateSeason,
-  type PointKind, type PointRules, type SeasonPrizes, type SeasonValidation,
+  type ClaimPointFacts, type PointKind, type PointRules, type SeasonInput, type SeasonPrizes, type SeasonValidation,
 } from "./rating";
 
 const DAY = 86_400_000;
@@ -92,6 +95,25 @@ export function seasonFormValues(s: { name: string; startsAt: Date; endsAt: Date
     points: Object.fromEntries(POINT_KINDS.map((k) => [k, String(rules[k])])) as Record<PointKind, string>,
     prizes: Object.fromEntries(PARTNER_LOCALES.map((l) => [l, prizes[l] ?? ""])) as Record<string, string>,
   };
+}
+
+/**
+ * Once a season has point events, its dates and point rules are frozen (the ledger was computed with them);
+ * the name and prizes stay editable. Returns the English refusal, or null when the edit is allowed.
+ */
+export function seasonLockError(
+  before: { startsAt: Date; endsAt: Date; pointRules: unknown },
+  after: Pick<SeasonInput, "startsAt" | "endsAt" | "pointRules">,
+  hasEvents: boolean,
+): string | null {
+  if (!hasEvents) return null;
+  const rules = pointRulesFromJson(before.pointRules);
+  const changed: string[] = [];
+  if (before.startsAt.getTime() !== after.startsAt.getTime()) changed.push("start date");
+  if (before.endsAt.getTime() !== after.endsAt.getTime()) changed.push("end date");
+  if (POINT_KINDS.some((k) => rules[k] !== after.pointRules[k])) changed.push("point values");
+  if (!changed.length) return null;
+  return `Points have already been recorded in this season, so the ${changed.join(", ")} can no longer be changed. Name and prizes stay editable.`;
 }
 
 // ── Stored JSON ─────────────────────────────────────────────────────────────
@@ -191,12 +213,118 @@ export function statusChangesByLead(rows: { leadId: string; occurredAt: Date; me
   return out;
 }
 
+/** Outbound contact types that make a claim's client count as "accepted" for points (inbound or notes never do). */
+export const OUTBOUND_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "WHATSAPP_OUT"] as const;
+
+/** Group outbound-contact rows by lead (dates only, any order). */
+export function contactsByLead(rows: { leadId: string; occurredAt: Date }[]): Map<string, Date[]> {
+  const out = new Map<string, Date[]>();
+  for (const r of rows) {
+    const list = out.get(r.leadId) ?? [];
+    list.push(r.occurredAt);
+    out.set(r.leadId, list);
+  }
+  return out;
+}
+
+/** The first contact at/after `since`, or null (no contact yet → no claim_accepted points). */
+export function firstContactSince(contacts: Date[], since: Date): Date | null {
+  let best: Date | null = null;
+  for (const c of contacts) if (c.getTime() >= since.getTime() && (!best || c.getTime() < best.getTime())) best = c;
+  return best;
+}
+
+/**
+ * pointEventsFor's facts per claim. Anti-farming: the client counts as accepted only once the office made
+ * the first real outbound contact (call, outgoing email or WhatsApp) at/after activeSince, and the
+ * claim_accepted event is dated by that contact. Milestones come from the lead's STATUS_CHANGE history.
+ */
+export function claimPointFacts(
+  claims: { id: string; partnerId: string; leadId: string; createdAt: Date; reviewedAt: Date | null }[],
+  statusByLead: Map<string, { toStatus: string; at: Date }[]>,
+  contacts: Map<string, Date[]>,
+): ClaimPointFacts[] {
+  return claims.map((c) => {
+    const since = activeSince(c);
+    return {
+      claimId: c.id, partnerId: c.partnerId, activeSince: since,
+      acceptedAt: firstContactSince(contacts.get(c.leadId) ?? [], since),
+      statusChanges: statusByLead.get(c.leadId) ?? [],
+    };
+  });
+}
+
+/** Lost reasons that make a claim worthless for the rating (the client was never real or never reachable). */
+export const REVOKING_LOST_REASONS = ["INVALID", "UNREACHABLE"] as const;
+
+/**
+ * A claim whose points are taken back (and which never earns new ones): the claim was REJECTED, its lead is
+ * trashed or gone, or the lead is LOST as INVALID / UNREACHABLE.
+ */
+export function isRevokedClaim(c: { state: string; lead: { deletedAt: Date | null; status: string; lostReason: string | null } | null } | null): boolean {
+  if (!c || c.state === "REJECTED" || !c.lead || c.lead.deletedAt) return true;
+  return c.lead.status === "LOST" && (REVOKING_LOST_REASONS as readonly string[]).includes(c.lead.lostReason ?? "");
+}
+
+/** The claim id inside a point refKey (`kind:claimId:seasonId`), or null. */
+export function claimIdFromRefKey(refKey: string): string | null {
+  const parts = refKey.split(":");
+  return parts.length === 3 && parts[1] ? parts[1] : null;
+}
+
+/** Revocation runs only while a season can still change: not more than LATE_DATA_DAYS past its end. */
+export function seasonOpenForRevocation(s: { endsAt: Date }, now: Date): boolean {
+  return s.endsAt.getTime() + LATE_DATA_DAYS * DAY >= now.getTime();
+}
+
+/** Revocation decision: refKeys of the season's events whose claim is revoked (a missing claim counts as revoked). */
+export function refKeysToRevoke(
+  events: { refKey: string }[],
+  claims: Map<string, Parameters<typeof isRevokedClaim>[0]>,
+): string[] {
+  return events.filter((e) => {
+    const id = claimIdFromRefKey(e.refKey);
+    return !!id && isRevokedClaim(claims.get(id) ?? null);
+  }).map((e) => e.refKey);
+}
+
+/** Interaction types that count as lead activity for the points run's candidate selection. */
+const ACTIVITY_TYPES = ["STATUS_CHANGE", ...OUTBOUND_CONTACT_TYPES] as const;
+
+/**
+ * The points run's candidate claims for a season: ACTIVE, created by the season end, on a not-trashed lead
+ * that had activity on/after the season start (lead updatedAt, a STATUS_CHANGE or an outbound contact).
+ * Ordered newest activity first (the caller caps), so a cap drops the stalest claims, never the newest.
+ */
+export function pointsCandidateQuery(season: { startsAt: Date; endsAt: Date }): {
+  where: Prisma.PartnerClaimWhereInput; orderBy: Prisma.PartnerClaimOrderByWithRelationInput[];
+} {
+  return {
+    where: {
+      state: "ACTIVE",
+      createdAt: { lte: season.endsAt },
+      lead: {
+        deletedAt: null,
+        OR: [
+          { updatedAt: { gte: season.startsAt } },
+          { interactions: { some: { type: { in: [...ACTIVITY_TYPES] }, occurredAt: { gte: season.startsAt } } } },
+        ],
+      },
+    },
+    orderBy: [{ lead: { updatedAt: "desc" } }, { createdAt: "desc" }, { id: "asc" }],
+  };
+}
+
 // ── Ranking ─────────────────────────────────────────────────────────────────
 
 /** One row of the per-season aggregate: (partner, kind) → sum of points, latest point time. */
-export type KindAggregate = { partnerId: string; kind: string; points: number; lastAt: Date | null };
+export type KindAggregate = { partnerId: string; kind: string; points: number; lastAt: Date | null; firstAt?: Date | null };
 export type PartnerInfo = { id: string; status: string; country: string; firstName?: string; lastName?: string; company?: string | null };
-export type PartnerSeasonTotal = { partnerId: string; points: number; lastAt: Date | null; byKind: Record<PointKind, number> };
+export type PartnerSeasonTotal = {
+  partnerId: string; points: number; lastAt: Date | null; byKind: Record<PointKind, number>;
+  /** The partner's first point event in the season (pseudonym collision order); null when unknown. */
+  firstAt?: Date | null;
+};
 
 const emptyKinds = (): Record<PointKind, number> => ({ claim_accepted: 0, viewing: 0, reserved: 0, closed: 0 });
 
@@ -204,28 +332,33 @@ const emptyKinds = (): Record<PointKind, number> => ({ claim_accepted: 0, viewin
 export function seasonTotals(rows: KindAggregate[]): PartnerSeasonTotal[] {
   const by = new Map<string, PartnerSeasonTotal>();
   for (const r of rows) {
-    const t = by.get(r.partnerId) ?? { partnerId: r.partnerId, points: 0, lastAt: null, byKind: emptyKinds() };
+    const t: PartnerSeasonTotal = by.get(r.partnerId) ?? { partnerId: r.partnerId, points: 0, lastAt: null, byKind: emptyKinds(), firstAt: null };
     t.points += r.points;
     if ((POINT_KINDS as readonly string[]).includes(r.kind)) t.byKind[r.kind as PointKind] += r.points;
     if (r.lastAt && (!t.lastAt || r.lastAt.getTime() > t.lastAt.getTime())) t.lastAt = r.lastAt;
+    if (r.firstAt && (!t.firstAt || r.firstAt.getTime() < t.firstAt.getTime())) t.firstAt = r.firstAt;
     by.set(r.partnerId, t);
   }
   return Array.from(by.values());
 }
 
 export type CrmRankingRow = {
-  rank: number; partnerId: string; name: string; company: string | null; country: string; status: string;
+  rank: number;
+  /** The rank partners see in the portal: among ACTIVE partners only; null for any other status. */
+  portalRank: number | null;
+  partnerId: string; name: string; company: string | null; country: string; status: string;
   points: number; byKind: Record<PointKind, number>; lastAt: Date | null;
 };
 
-/** The CRM's full ranking: every partner with points (any status), with names. */
+/** The CRM's full ranking: every partner with points (any status), with names, plus the portal rank (ACTIVE only). */
 export function crmRanking(totals: PartnerSeasonTotal[], partners: PartnerInfo[]): CrmRankingRow[] {
   const info = new Map(partners.map((p) => [p.id, p]));
   const byId = new Map(totals.map((t) => [t.partnerId, t]));
+  const portal = new Map(rankPartners(totals.filter((t) => info.get(t.partnerId)?.status === "ACTIVE")).map((r) => [r.partnerId, r.rank]));
   return rankPartners(totals).map((r) => {
     const p = info.get(r.partnerId);
     return {
-      rank: r.rank, partnerId: r.partnerId,
+      rank: r.rank, portalRank: portal.get(r.partnerId) ?? null, partnerId: r.partnerId,
       name: p ? `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim() : "(deleted partner)",
       company: p?.company ?? null, country: p?.country ?? "", status: p?.status ?? "",
       points: r.points, byKind: byId.get(r.partnerId)!.byKind, lastAt: r.lastAt,
@@ -252,7 +385,8 @@ export type PortalRanking = {
 /**
  * The portal ranking of one season for the viewer `meId`: only ACTIVE partners are ranked (ranks among
  * them), top `top` plus the viewer's own row always (rank null and 0 points without points). Pseudonyms are assigned over every partner with
- * points in the season (any status), so a suspension never renumbers the others.
+ * points in the season (any status), in order of their first point event, so a suspension or a newcomer never
+ * renumbers the others.
  */
 export function portalRanking(input: {
   seasonId: string; meId: string; meCountry?: string; totals: PartnerSeasonTotal[]; partners: Pick<PartnerInfo, "id" | "status" | "country">[];
@@ -260,7 +394,7 @@ export function portalRanking(input: {
 }): PortalRanking {
   const top = input.top ?? PORTAL_TOP;
   const info = new Map(input.partners.map((p) => [p.id, p]));
-  const names = pseudonyms(input.totals.map((t) => t.partnerId), input.seasonId);
+  const names = pseudonyms(input.totals.map((t) => ({ partnerId: t.partnerId, firstAt: t.firstAt ?? null })), input.seasonId);
   const active = input.totals.filter((t) => info.get(t.partnerId)?.status === "ACTIVE");
   const ranked = rankPartners(active);
   const mine = input.totals.find((t) => t.partnerId === input.meId);
@@ -284,12 +418,12 @@ export function portalRanking(input: {
 const ISO = (d: Date | null) => (d ? d.toISOString().replace("T", " ").slice(0, 16) + " UTC" : null);
 
 export function ratingCsvRows(rows: CrmRankingRow[]): (string | number | null)[][] {
-  return rows.map((r) => [r.rank, r.name, r.company, r.country, r.status, ...POINT_KINDS.map((k) => r.byKind[k]), r.points, ISO(r.lastAt)]);
+  return rows.map((r) => [r.rank, r.portalRank, r.name, r.company, r.country, r.status, ...POINT_KINDS.map((k) => r.byKind[k]), r.points, ISO(r.lastAt)]);
 }
 
 /** CRM ranking CSV (English): semicolon-separated, BOM for Excel, text cells guarded against formulas. */
 export function ratingCsv(rows: CrmRankingRow[]): string {
-  const header = ["Rank", "Partner", "Company", "Country", "Status", "Client accepted", "Viewing", "Reservation", "Closed deal", "Total points", "Last points"];
+  const header = ["Rank", "Portal rank", "Partner", "Company", "Country", "Status", "Client accepted", "Viewing", "Reservation", "Closed deal", "Total points", "Last points"];
   return "﻿" + [header, ...ratingCsvRows(rows)].map((l) => l.map(csvCell).join(";")).join("\r\n") + "\r\n";
 }
 

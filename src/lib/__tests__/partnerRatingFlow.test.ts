@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { dict, PARTNER_LOCALES } from "@/lib/partner/i18n";
 import { DEFAULT_POINT_RULES, pointEventsFor, pseudonyms } from "@/lib/partner/rating";
 import {
+  OUTBOUND_CONTACT_TYPES, claimIdFromRefKey, claimPointFacts, contactsByLead, firstContactSince, isRevokedClaim, pointsCandidateQuery,
+  refKeysToRevoke, seasonLockError, seasonOpenForRevocation,
   crmRanking, currentSeason, cyprusDayEnd, cyprusDayStart, overlappingSeasons, parseSeasonForm, pastSeasons, pointRulesFromJson,
   pointsRunSeasonWhere, pointsStartFromEnv, portalRanking, prizesFromJson, ratingCsv, ratingCsvFilename, ratingCsvRows, seasonFormValues,
   seasonStatus, seasonTotals, seasonsForPointsRun, statusChangesByLead, toStatusOf, type PartnerSeasonTotal,
@@ -204,7 +206,7 @@ test("portalRanking: anonymised (no ids, names or companies), only ACTIVE ranked
   assert.ok(r.meOutsideTop);
   const own = r.rows[20];
   assert.deepEqual(own, { rank: 30, me: true, pseudonym: null, flag: "🇩🇪", points: 5 });
-  const names = pseudonyms(totals.map((t) => t.partnerId), "s1");
+  const names = pseudonyms(totals.map((t) => ({ partnerId: t.partnerId, firstAt: t.firstAt ?? null })), "s1");
   assert.equal(r.rows[0].pseudonym, names.get("p01"));
   assert.equal(r.rows[0].flag, "🇬🇧");
   // The DTO never carries another partner's identity
@@ -229,7 +231,7 @@ test("portalRanking: viewer in the top 20 is not duplicated; viewer without poin
   assert.deepEqual(none.rows.at(-1), { rank: null, me: true, pseudonym: null, flag: "🇦🇹", points: 0 });
   // Pseudonyms do not depend on who is ACTIVE (a suspension never renumbers the others)
   const withSusp = portalRanking({ seasonId: "s1", meId: "self-id", totals: [T("p00", 9, "2026-10-01T00:00:00Z"), T("p01", 200, "2026-10-01T00:00:00Z")], partners: PARTNERS });
-  assert.equal(withSusp.rows[0].pseudonym, pseudonyms(["p00", "p01"], "s1").get("p01"));
+  assert.equal(withSusp.rows[0].pseudonym, pseudonyms([{ partnerId: "p00", firstAt: null }, { partnerId: "p01", firstAt: null }], "s1").get("p01"));
 });
 
 // ── CSV ─────────────────────────────────────────────────────────────────────
@@ -239,11 +241,11 @@ test("ratingCsv: BOM, semicolons, formula guard, points by kind", () => {
     [T("a", 130, "2026-10-05T08:30:00Z", { claim_accepted: 10, viewing: 20, closed: 100 })],
     [{ id: "a", status: "ACTIVE", country: "DE", firstName: "=HYPERLINK(\"x\")", lastName: "", company: "Semi;colon" }],
   );
-  assert.deepEqual(ratingCsvRows(rows)[0], [1, "=HYPERLINK(\"x\")", "Semi;colon", "DE", "ACTIVE", 10, 20, 0, 100, 130, "2026-10-05 08:30 UTC"]);
+  assert.deepEqual(ratingCsvRows(rows)[0], [1, 1, "=HYPERLINK(\"x\")", "Semi;colon", "DE", "ACTIVE", 10, 20, 0, 100, 130, "2026-10-05 08:30 UTC"]);
   const csv = ratingCsv(rows);
-  assert.ok(csv.startsWith("﻿Rank;Partner;Company;"));
+  assert.ok(csv.startsWith("﻿Rank;Portal rank;Partner;Company;"));
   const line = csv.split("\r\n")[1];
-  assert.equal(line, `1;"'=HYPERLINK(""x"")";"Semi;colon";DE;ACTIVE;10;20;0;100;130;2026-10-05 08:30 UTC`);
+  assert.equal(line, `1;1;"'=HYPERLINK(""x"")";"Semi;colon";DE;ACTIVE;10;20;0;100;130;2026-10-05 08:30 UTC`);
   assert.ok(csv.endsWith("\r\n"));
   assert.equal(ratingCsvFilename("Autumn 2026 / Ü", new Date("2026-10-31T22:00:00Z")), "rating-autumn-2026-2026-11-01.csv");
   assert.equal(ratingCsvFilename("!!!", new Date("2026-10-31T22:00:00Z")), "rating-season-2026-11-01.csv");
@@ -262,8 +264,10 @@ test("wiring: cron route, CRM guard + audit, CSV route guard, portal isolation a
   const store = src("src/lib/partner/ratingStore.ts");
   assert.match(store, /skipDuplicates: true/);
   assert.match(store, /POINTS_CLAIM_CAP = 5000/);
-  assert.match(store, /createdAt: \{ lte: season\.endsAt \}/);
+  assert.match(store, /pointsCandidateQuery\(season\)/);
   assert.match(store, /type: "STATUS_CHANGE"/);
+  assert.match(store, /OUTBOUND_CONTACT_TYPES/);
+  assert.match(store, /revokePoints\(season, now\)/);
   // The portal path reads only status + country of other partners
   const portalFn = store.slice(store.indexOf("async function portalSeasonRanking"), store.indexOf("export type MyRatingView"));
   assert.match(portalFn, /select: \{ id: true, status: true, country: true \}/);
@@ -292,4 +296,137 @@ test("dictionary: nav.rating and pastNoPoints in every partner locale, no Hebrew
     assert.ok(dict(l).nav.rating.length > 0, l);
     assert.ok(dict(l).rating.pastNoPoints.length > 0, l);
   }
+});
+
+// ── Final fix wave ──────────────────────────────────────────────────────────
+
+const D = (iso: string) => new Date(iso);
+const SEASON_W = { id: "s1", startsAt: D("2026-10-01T00:00:00Z"), endsAt: D("2026-12-31T21:59:59Z"), pointRules: DEFAULT_POINT_RULES };
+
+test("claim_accepted anti-farming: awarded only at the first outbound contact at/after activeSince, dated by it", () => {
+  assert.deepEqual([...OUTBOUND_CONTACT_TYPES], ["CALL", "EMAIL_OUT", "WHATSAPP_OUT"]);
+  const claim = { id: "c1", partnerId: "p1", leadId: "L1", createdAt: D("2026-10-05T00:00:00Z"), reviewedAt: null };
+  // No outbound contact yet: no claim_accepted event (a farmed, never-contacted claim earns nothing)
+  const none = claimPointFacts([claim], new Map(), new Map());
+  assert.equal(none[0].acceptedAt, null);
+  assert.deepEqual(pointEventsFor(none, SEASON_W), []);
+  // A contact before activeSince does not count; the first one after it dates the event
+  const contacts = contactsByLead([
+    { leadId: "L1", occurredAt: D("2026-10-04T00:00:00Z") },
+    { leadId: "L1", occurredAt: D("2026-10-09T00:00:00Z") },
+    { leadId: "L1", occurredAt: D("2026-10-07T00:00:00Z") },
+    { leadId: "L2", occurredAt: D("2026-10-06T00:00:00Z") },
+  ]);
+  const facts = claimPointFacts([claim], new Map(), contacts);
+  assert.equal(facts[0].acceptedAt!.toISOString(), "2026-10-07T00:00:00.000Z");
+  const ev = pointEventsFor(facts, SEASON_W);
+  assert.deepEqual(ev.map((e) => [e.kind, e.at.toISOString()]), [["claim_accepted", "2026-10-07T00:00:00.000Z"]]);
+  // A reviewed claim gates on reviewedAt
+  const reviewed = claimPointFacts([{ ...claim, reviewedAt: D("2026-10-08T00:00:00Z") }], new Map(), contacts);
+  assert.equal(reviewed[0].acceptedAt!.toISOString(), "2026-10-09T00:00:00.000Z");
+  assert.equal(firstContactSince([], D("2026-10-01T00:00:00Z")), null);
+  assert.equal(firstContactSince([D("2026-10-01T00:00:00Z")], D("2026-10-01T00:00:00Z"))!.toISOString(), "2026-10-01T00:00:00.000Z", "at activeSince counts");
+  // The store reads only outbound types for it
+  const store = src("src/lib/partner/ratingStore.ts");
+  assert.match(store, /type: \{ in: \[\.\.\.OUTBOUND_CONTACT_TYPES\] \}/);
+  assert.match(store, /claimPointFacts\(claims, statusChangesByLead\(history\), contactsByLead\(contacts\)\)/);
+});
+
+test("revocation: REJECTED claim, trashed/missing lead, LOST as INVALID/UNREACHABLE; only while the season can change", () => {
+  const lead = (o: Partial<{ deletedAt: Date | null; status: string; lostReason: string | null }> = {}) => ({ deletedAt: null, status: "QUALIFIED", lostReason: null, ...o });
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead() }), false);
+  assert.equal(isRevokedClaim({ state: "REJECTED", lead: lead() }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ deletedAt: D("2026-10-10T00:00:00Z") }) }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "INVALID" }) }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "UNREACHABLE" }) }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "BUDGET" }) }), false, "a genuine lost client keeps the points");
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "QUALIFIED", lostReason: "INVALID" }) }), false, "stale reason on a live lead");
+  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: null }), true);
+  assert.equal(isRevokedClaim(null), true);
+
+  assert.equal(claimIdFromRefKey("viewing:c1:s1"), "c1");
+  assert.equal(claimIdFromRefKey("broken"), null);
+  const events = [
+    { refKey: "claim_accepted:c1:s1" }, { refKey: "viewing:c1:s1" }, { refKey: "claim_accepted:c2:s1" },
+    { refKey: "claim_accepted:c3:s1" }, { refKey: "claim_accepted:gone:s1" }, { refKey: "odd" },
+  ];
+  const claims = new Map([
+    ["c1", { state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "INVALID" }) }],
+    ["c2", { state: "ACTIVE", lead: lead() }],
+    ["c3", { state: "REJECTED", lead: lead() }],
+  ]);
+  assert.deepEqual(refKeysToRevoke(events, claims), ["claim_accepted:c1:s1", "viewing:c1:s1", "claim_accepted:c3:s1", "claim_accepted:gone:s1"]);
+
+  const s = { endsAt: D("2026-10-31T21:59:59Z") };
+  assert.equal(seasonOpenForRevocation(s, D("2026-10-20T00:00:00Z")), true);
+  assert.equal(seasonOpenForRevocation(s, new Date(s.endsAt.getTime() + 3 * DAY)), true, "end + 3 days still open");
+  assert.equal(seasonOpenForRevocation(s, new Date(s.endsAt.getTime() + 3 * DAY + 1)), false, "final after that");
+
+  const store = src("src/lib/partner/ratingStore.ts");
+  const fn = store.slice(store.indexOf("async function revokePoints"), store.indexOf("async function pointsForSeason"));
+  assert.match(fn, /seasonOpenForRevocation\(season, now\)/);
+  assert.match(fn, /partnerPointEvent\.deleteMany\(\{ where: \{ seasonId: season\.id, refKey: \{ in: part \} \} \}\)/);
+  // Revoked claims never earn new points either
+  assert.match(store, /\.filter\(\(c\) => !isRevokedClaim\(c\)\)/);
+  assert.match(store, /lostReason: true/);
+});
+
+test("seasonLockError: with point events, dates and point rules are frozen; name and prizes stay editable", () => {
+  const before = { startsAt: SEASON_W.startsAt, endsAt: SEASON_W.endsAt, pointRules: { ...DEFAULT_POINT_RULES } };
+  const same = { startsAt: new Date(SEASON_W.startsAt), endsAt: new Date(SEASON_W.endsAt), pointRules: { ...DEFAULT_POINT_RULES } };
+  assert.equal(seasonLockError(before, same, true), null, "name / prize-only edit passes");
+  assert.equal(seasonLockError(before, { ...same, endsAt: D("2027-01-31T21:59:59Z") }, false), null, "no events: anything goes");
+  const end = seasonLockError(before, { ...same, endsAt: D("2027-01-31T21:59:59Z") }, true);
+  assert.ok(end && end.includes("end date") && end.includes("Name and prizes"), String(end));
+  assert.ok(seasonLockError(before, { ...same, startsAt: D("2026-10-02T00:00:00Z") }, true)?.includes("start date"));
+  assert.ok(seasonLockError(before, { ...same, pointRules: { ...DEFAULT_POINT_RULES, viewing: 25 } }, true)?.includes("point values"));
+  // Stored JSON with missing keys reads as the defaults (as the form shows them)
+  assert.equal(seasonLockError({ ...before, pointRules: {} }, same, true), null);
+  const actions = src("src/app/crm/partners/ratingActions.ts");
+  assert.match(actions, /partnerPointEvent\.findFirst\(\{ where: \{ seasonId: id \}/);
+  assert.match(actions, /seasonLockError\(before, s, hasEvents\)/);
+  const page = src("src/app/crm/partners/rating/page.tsx");
+  assert.match(page, /locked=\{ranking\.length > 0\}/);
+  assert.match(src("src/app/crm/components/RatingSeasonForm.tsx"), /dates and point values are locked/);
+});
+
+test("crmRanking: portal rank among ACTIVE partners next to the overall rank; CRM page shows it", () => {
+  const rows = crmRanking(
+    [T("a", 90, "2026-10-05T00:00:00Z"), T("b", 80, "2026-10-03T00:00:00Z"), T("c", 70, "2026-10-01T00:00:00Z"), T("d", 60, "2026-10-01T00:00:00Z")],
+    [
+      { id: "a", status: "SUSPENDED", country: "DE", firstName: "A", lastName: "A" },
+      { id: "b", status: "ACTIVE", country: "DE", firstName: "B", lastName: "B" },
+      { id: "c", status: "PENDING", country: "DE", firstName: "C", lastName: "C" },
+      { id: "d", status: "ACTIVE", country: "DE", firstName: "D", lastName: "D" },
+    ],
+  );
+  assert.deepEqual(rows.map((r) => [r.partnerId, r.rank, r.portalRank]), [["a", 1, null], ["b", 2, 1], ["c", 3, null], ["d", 4, 2]]);
+  assert.match(src("src/app/crm/partners/rating/page.tsx"), /Portal rank/);
+});
+
+test("seasonTotals keeps each partner's first point time; portal pseudonyms follow it", () => {
+  const t = seasonTotals([
+    { partnerId: "a", kind: "viewing", points: 20, lastAt: D("2026-10-09T00:00:00Z"), firstAt: D("2026-10-04T00:00:00Z") },
+    { partnerId: "a", kind: "claim_accepted", points: 10, lastAt: D("2026-10-02T00:00:00Z"), firstAt: D("2026-10-02T00:00:00Z") },
+  ]);
+  assert.equal(t[0].firstAt!.toISOString(), "2026-10-02T00:00:00.000Z");
+  assert.match(src("src/lib/partner/ratingStore.ts"), /_min: \{ createdAt: true \}/);
+});
+
+test("pointsCandidateQuery: lead activity since the season start, newest activity first, created by the end", () => {
+  const q = pointsCandidateQuery(SEASON_W);
+  const w = q.where as {
+    state: string; createdAt: { lte: Date };
+    lead: { deletedAt: null; OR: [{ updatedAt: { gte: Date } }, { interactions: { some: { type: { in: string[] }; occurredAt: { gte: Date } } } }] };
+  };
+  assert.equal(w.state, "ACTIVE");
+  assert.equal(w.createdAt.lte, SEASON_W.endsAt);
+  assert.equal(w.lead.deletedAt, null);
+  assert.equal(w.lead.OR[0].updatedAt.gte, SEASON_W.startsAt);
+  assert.deepEqual(w.lead.OR[1].interactions.some.type.in, ["STATUS_CHANGE", "CALL", "EMAIL_OUT", "WHATSAPP_OUT"]);
+  assert.equal(w.lead.OR[1].interactions.some.occurredAt.gte, SEASON_W.startsAt);
+  assert.deepEqual(q.orderBy, [{ lead: { updatedAt: "desc" } }, { createdAt: "desc" }, { id: "asc" }]);
+  const store = src("src/lib/partner/ratingStore.ts");
+  assert.match(store, /take: POINTS_CLAIM_CAP \+ 1/);
+  assert.match(store, /orderBy: q\.orderBy/);
 });

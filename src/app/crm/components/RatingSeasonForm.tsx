@@ -21,8 +21,11 @@ export type SeasonFormValues = {
   name: string; startsOn: string; endsOn: string; points: Record<string, string>; prizes: Record<string, string>;
 };
 
-/** Create (id null) or edit one season. Days are Cyprus calendar days; the end day is inclusive. */
-export function RatingSeasonForm({ id, initial, active }: { id: string | null; initial: SeasonFormValues; active: boolean }) {
+/**
+ * Create (id null) or edit one season. Days are Cyprus calendar days; the end day is inclusive. `locked`
+ * (the season has points): dates and point values are read-only, the server refuses changes to them.
+ */
+export function RatingSeasonForm({ id, initial, active, locked = false }: { id: string | null; initial: SeasonFormValues; active: boolean; locked?: boolean }) {
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -48,13 +51,13 @@ export function RatingSeasonForm({ id, initial, active }: { id: string | null; i
           <input value={v.name} maxLength={80} required onChange={(e) => setV({ ...v, name: e.target.value })} />
         </label>
         <label>Start (Cyprus)
-          <input type="date" value={v.startsOn} required onChange={(e) => setV({ ...v, startsOn: e.target.value })} />
+          <input type="date" value={v.startsOn} required readOnly={locked} aria-readonly={locked || undefined} onChange={(e) => setV({ ...v, startsOn: e.target.value })} />
         </label>
         <label>End, inclusive (Cyprus)
-          <input type="date" value={v.endsOn} required onChange={(e) => setV({ ...v, endsOn: e.target.value })} />
+          <input type="date" value={v.endsOn} required readOnly={locked} aria-readonly={locked || undefined} onChange={(e) => setV({ ...v, endsOn: e.target.value })} />
         </label>
       </fieldset>
-      <fieldset disabled={pending} className="crm-pt-terms crm-rs-fields">
+      <fieldset disabled={pending || locked} className="crm-pt-terms crm-rs-fields">
         <legend>Points per event</legend>
         {KINDS.map(([k, label]) => (
           <label key={k}>{label}
@@ -62,7 +65,11 @@ export function RatingSeasonForm({ id, initial, active }: { id: string | null; i
           </label>
         ))}
       </fieldset>
-      {active && id && <p className="crm-muted crm-rs-note">This season is running: changed point values apply to events recorded from now on; points already earned keep their value.</p>}
+      {locked ? (
+        <p className="crm-muted crm-rs-note">Points have already been recorded in this season: the dates and point values are locked. Name and prizes stay editable.</p>
+      ) : (
+        active && id && <p className="crm-muted crm-rs-note">This season is running: changed point values apply to events recorded from now on; once points are recorded, dates and point values are locked.</p>
+      )}
       <fieldset disabled={pending} className="crm-pt-terms crm-rs-prizes">
         <legend>Prizes shown to partners</legend>
         {LOCALES.map(([l, label]) => (

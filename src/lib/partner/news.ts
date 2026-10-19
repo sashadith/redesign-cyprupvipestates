@@ -10,6 +10,8 @@ export const NEWS_KINDS = ["new_project", "price_drop", "back_on_market", "nearl
 export type NewsKind = (typeof NEWS_KINDS)[number];
 export const NEWS_MAX_ITEMS = 50;
 export const NEARLY_SOLD_OUT_SHARE = 0.1;
+/** At most this many "nearly sold out" items (a state, not an event) among the NEWS_MAX_ITEMS. */
+export const NEARLY_SOLD_OUT_MAX = 10;
 
 export type NewsItem = {
   id: string;
@@ -98,9 +100,15 @@ export function newsItems(input: {
       url: localizedProjectUrl(en, locale),
     });
   });
-  return items
-    .sort((a, b) => b.at.getTime() - a.at.getTime() || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
-    .slice(0, NEWS_MAX_ITEMS);
+  // Dated events first (newest first); "nearly sold out" is a state dated "now", so it goes after them
+  // (by name), capped at NEARLY_SOLD_OUT_MAX and keeping that many slots of the NEWS_MAX_ITEMS for itself.
+  const byId = (a: NewsItem, b: NewsItem) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const dated = items.filter((i) => i.kind !== "nearly_sold_out").sort((a, b) => b.at.getTime() - a.at.getTime() || byId(a, b));
+  const states = items
+    .filter((i) => i.kind === "nearly_sold_out")
+    .sort((a, b) => a.name.localeCompare(b.name) || byId(a, b))
+    .slice(0, NEARLY_SOLD_OUT_MAX);
+  return [...dated.slice(0, NEWS_MAX_ITEMS - states.length), ...states];
 }
 
 /**

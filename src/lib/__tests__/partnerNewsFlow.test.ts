@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ChangeEvent } from "@/lib/crm/inventoryChanges";
-import { badgeText, newsItems, unreadCount } from "@/lib/partner/news";
+import { NEARLY_SOLD_OUT_MAX, NEWS_MAX_ITEMS, badgeText, newsItems, unreadCount, type NewsAvailability } from "@/lib/partner/news";
 import { ratesById, reviveAvailability, reviveEvents, slimEvents } from "@/lib/partner/newsFlow";
 import { dict, PARTNER_LOCALES } from "@/lib/partner/i18n";
 
@@ -87,4 +87,31 @@ test("wiring: seen action is own-partner + client mount, nav badge is failure-sa
   assert.match(store, /revalidate: 3600/);
   assert.match(store, /tags: \[NEWS_TAG\]/);
   assert.match(store, /catch \(e\)[\s\S]*return 0/);
+});
+
+test("newsItems: nearly sold out listed after the dated events, at most 10 of the 50", () => {
+  const avail = (n: number) => new Map<string, NewsAvailability>(Array.from({ length: n }, (_, i) => [
+    `s${String(i).padStart(2, "0")}`,
+    { available: 1, total: 20, name: `Sold ${String(i).padStart(2, "0")}`, town: null, publicUrl: { en: `/projects/s-${i}` } },
+  ]));
+  const dated = (n: number) => Array.from({ length: n }, (_, i) => ev("published", `d${i}`, new Date(NOW.getTime() - (i + 1) * 3_600_000).toISOString()));
+  // Few dated events: they come first (newest first), then the sold-out states (by name), capped at 10
+  const few = newsItems({ changes: dated(3), availability: avail(14), rates: new Map(), now: NOW });
+  assert.equal(NEARLY_SOLD_OUT_MAX, 10);
+  assert.deepEqual(few.slice(0, 3).map((i) => i.developmentId), ["d0", "d1", "d2"]);
+  assert.equal(few.length, 13);
+  assert.ok(few.slice(3).every((i) => i.kind === "nearly_sold_out"));
+  assert.equal(few[3].name, "Sold 00");
+  // Many dated events: 40 of them + 10 states = 50
+  const many = newsItems({ changes: dated(70), availability: avail(14), rates: new Map(), now: NOW });
+  assert.equal(many.length, NEWS_MAX_ITEMS);
+  assert.equal(many.filter((i) => i.kind === "nearly_sold_out").length, 10);
+  assert.ok(many.slice(0, 40).every((i) => i.kind !== "nearly_sold_out"));
+  assert.equal(many[0].developmentId, "d0");
+  // Without states, dated events fill all 50
+  assert.equal(newsItems({ changes: dated(70), availability: new Map(), rates: new Map(), now: NOW }).length, 50);
+});
+
+test("markNewsSeenAction revalidates the whole portal layout (nav badge)", () => {
+  assert.match(src("src/app/partner-portal/newsActions.ts"), /revalidatePath\("\/partner-portal", "layout"\)/);
 });

@@ -8,13 +8,16 @@ import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { writeAudit } from "@/lib/crm/audit";
-import { overlappingSeasons, parseSeasonForm } from "@/lib/partner/ratingFlow";
+import { overlappingSeasons, parseSeasonForm, seasonLockError } from "@/lib/partner/ratingFlow";
 
 type Result = { ok: true; id: string; notice: string; warning?: string } | { error: string };
 const DENIED = "Only managers can manage rating seasons";
 const validId = (id: unknown): id is string => typeof id === "string" && id.length > 0 && id.length <= 64;
 
-/** Creates (no id) or updates a season. Points already in the ledger keep their value when the rules change. */
+/**
+ * Creates (no id) or updates a season. Once the season has point events, its dates and point rules are
+ * frozen (seasonLockError); the name and prizes stay editable.
+ */
 export async function saveSeasonAction(id: string | null, form: unknown): Promise<Result> {
   const actor = await requireCrmUser();
   if (!canAssignLeads(actor)) return { error: DENIED };
@@ -28,7 +31,7 @@ export async function saveSeasonAction(id: string | null, form: unknown): Promis
   };
   const detail = { name: s.name, startsAt: s.startsAt.toISOString(), endsAt: s.endsAt.toISOString(), pointRules: s.pointRules, prizes: s.prizes };
 
-  const saved = await prisma.$transaction(async (tx) => {
+  const saved = await prisma.$transaction(async (tx): Promise<string | null | { locked: string }> => {
     if (id === null) {
       const row = await tx.ratingSeason.create({ data, select: { id: true } });
       await writeAudit(actor, "rating_season_create", "rating_season", row.id, detail, tx);
@@ -36,6 +39,9 @@ export async function saveSeasonAction(id: string | null, form: unknown): Promis
     }
     const before = await tx.ratingSeason.findUnique({ where: { id }, select: { name: true, startsAt: true, endsAt: true, pointRules: true, prizes: true } });
     if (!before) return null;
+    const hasEvents = !!(await tx.partnerPointEvent.findFirst({ where: { seasonId: id }, select: { id: true } }));
+    const locked = seasonLockError(before, s, hasEvents);
+    if (locked) return { locked };
     await tx.ratingSeason.update({ where: { id }, data });
     await writeAudit(actor, "rating_season_update", "rating_season", id, {
       before: { ...before, startsAt: before.startsAt.toISOString(), endsAt: before.endsAt.toISOString() }, after: detail,
@@ -43,6 +49,7 @@ export async function saveSeasonAction(id: string | null, form: unknown): Promis
     return id;
   });
   if (!saved) return { error: "Season not found." };
+  if (typeof saved !== "string") return { error: saved.locked };
 
   const others = await prisma.ratingSeason.findMany({ where: { id: { not: saved } }, select: { id: true, name: true, startsAt: true, endsAt: true }, take: 200 });
   const overlaps = overlappingSeasons(s, others, saved);

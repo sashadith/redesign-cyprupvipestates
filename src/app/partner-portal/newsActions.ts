@@ -7,5 +7,6 @@ import { requirePartner } from "@/lib/partner/session";
 export async function markNewsSeenAction(): Promise<void> {
   const me = await requirePartner({ active: true });
   await prisma.partner.update({ where: { id: me.partner.id }, data: { newsSeenAt: new Date() } });
-  revalidatePath("/news");
+  // The unread badge lives in the portal layout (nav): revalidate the whole portal, not only /news.
+  revalidatePath("/partner-portal", "layout");
 }

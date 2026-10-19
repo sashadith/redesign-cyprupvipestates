@@ -1,9 +1,11 @@
 // Daily partner rating points (partner portal phase 4b, Decision 6). ENGLISH (internal).
 // For every rating season that has started and ended at most 3 days ago (late reviews / status changes):
-// the effectively ACTIVE claims created by the season end (ACTIVE, lead not trashed, committed or still
-// protected; max 5000, newest first) → claim accepted (at activeSince) and the first VIEWING / RESERVED /
-// CLOSED status change after activeSince → pointEventsFor → the ledger (refKey unique, createMany
-// skipDuplicates, so a rerun never doubles points). Nothing is sent to anyone. One run at a time (advisory lock).
+// first the points of revoked claims are deleted (claim REJECTED, lead trashed, or LOST as INVALID /
+// UNREACHABLE); then the effectively ACTIVE claims created by the season end whose lead had activity since
+// the season start (updatedAt, a STATUS_CHANGE or an outbound contact; max 5000, newest activity first) →
+// claim accepted (at the first outbound CALL / EMAIL_OUT / WHATSAPP_OUT at/after activeSince) and the first
+// VIEWING / RESERVED / CLOSED status change after activeSince → pointEventsFor → the ledger (refKey unique,
+// createMany skipDuplicates, so a rerun never doubles points). Nothing is sent to anyone. One run at a time (advisory lock).
 // Pure parts: src/lib/partner/rating.ts, ratingFlow.ts; DB side: src/lib/partner/ratingStore.ts.
 //
 // Set PARTNER_POINTS_START (ISO, e.g. 2026-10-26T00:00:00Z): without it the job does nothing, and
@@ -31,7 +33,7 @@ async function runPoints(): Promise<RunResult> {
 const summarize = (r: RunResult) => {
   if (!("ok" in r)) return `skipped: ${r.skipped}`;
   if (r.skipped) return `skipped: ${r.skipped}`;
-  const per = r.seasons.map((s) => `${s.claims} claims${s.truncated ? " (capped)" : ""} → ${s.inserted}/${s.events} new`).join("; ");
+  const per = r.seasons.map((s) => `${s.claims} claims${s.truncated ? " (capped)" : ""} → ${s.inserted}/${s.events} new${s.revoked ? `, ${s.revoked} revoked` : ""}`).join("; ");
   return `${r.seasons.length} seasons${per ? `: ${per}` : ""}${r.errors.length ? `, ${r.errors.length} errors` : ""}`;
 };
 

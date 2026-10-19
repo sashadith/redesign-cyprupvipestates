@@ -84,7 +84,7 @@ export default async function RatingSeasonsPage({ searchParams }: { searchParams
 
         {selected && (
           <>
-            <RatingSeasonForm key={`${selected.id}:${selected.startsAt.getTime()}:${selected.endsAt.getTime()}:${selected.name}`} id={selected.id} initial={seasonFormValues(selected)} active={seasonStatus(selected, now) === "active"} />
+            <RatingSeasonForm key={`${selected.id}:${selected.startsAt.getTime()}:${selected.endsAt.getTime()}:${selected.name}`} id={selected.id} initial={seasonFormValues(selected)} active={seasonStatus(selected, now) === "active"} locked={ranking.length > 0} />
             <section className="crm-pt-tiers" aria-labelledby="rs-rank-title">
               <div className="crm-pt-bot-head">
                 <h2 id="rs-rank-title">Ranking: {selected.name}</h2>
@@ -100,7 +100,7 @@ export default async function RatingSeasonsPage({ searchParams }: { searchParams
                   <table className="crm-in-table">
                     <thead>
                       <tr>
-                        <th scope="col" className="num">Rank</th><th scope="col">Partner</th><th scope="col">Country</th><th scope="col">Status</th>
+                        <th scope="col" className="num">Rank</th><th scope="col" className="num" title="Rank among ACTIVE partners, as partners see it in the portal">Portal rank</th><th scope="col">Partner</th><th scope="col">Country</th><th scope="col">Status</th>
                         {POINT_KINDS.map((k) => <th key={k} scope="col" className="num">{KIND_LABEL[k]}</th>)}
                         <th scope="col" className="num">Total</th><th scope="col">Last points</th>
                       </tr>
@@ -109,6 +109,7 @@ export default async function RatingSeasonsPage({ searchParams }: { searchParams
                       {ranking.map((r) => (
                         <tr key={r.partnerId}>
                           <td className="num">{r.rank}</td>
+                          <td className="num">{r.portalRank ?? "—"}</td>
                           <th scope="row">{r.name}{r.company && <span className="crm-muted"> · {r.company}</span>}</th>
                           <td>{r.country}</td>
                           <td>{r.status !== "ACTIVE" ? <span className="crm-pill crm-pt-warn">{r.status || "—"}</span> : "Active"}</td>

@@ -155,32 +155,46 @@ export function rankPartners(totals: PartnerTotal[]): RankedPartner[] {
     .map((r, i) => ({ ...r, rank: i + 1 }));
 }
 
-const PSEUDO_MIN = 100;
-const PSEUDO_SPAN = 900;
+/** Pseudonym number spaces, tried in order: 3 digits (100–999), then 4 digits (1000–9999) once those are all taken. */
+const PSEUDO_SPACES = [{ min: 100, span: 900 }, { min: 1000, span: 9000 }] as const;
 
 /**
- * A stable 3-digit number (100–999) for a partner within a season, from sha256(`${seasonId}:${partnerId}`).
- * With `taken`, a collision moves to the next free number (999 wraps to 100) and the result is added
- * to the set. Assign in a stable order (see pseudonyms) so the numbers stay stable.
+ * A stable number for a partner within a season, from sha256(`${seasonId}:${partnerId}`): 3 digits (100–999)
+ * without `taken`. With `taken`, a collision moves to the next free number (999 wraps to 100) and the result
+ * is added to the set; when all 900 three-digit numbers are taken it continues in the 4-digit space the same
+ * way (so earlier partners keep their numbers). Assign in a stable order (see pseudonyms).
  */
 export function pseudonym(partnerId: string, seasonId: string, taken?: Set<number>): number {
   const h = createHash("sha256").update(`${seasonId}:${partnerId}`).digest("hex");
-  let n = parseInt(h.slice(0, 8), 16) % PSEUDO_SPAN;
-  if (!taken) return PSEUDO_MIN + n;
-  for (let i = 0; i < PSEUDO_SPAN; i++, n = (n + 1) % PSEUDO_SPAN) {
-    if (!taken.has(PSEUDO_MIN + n)) {
-      taken.add(PSEUDO_MIN + n);
-      return PSEUDO_MIN + n;
+  const base = parseInt(h.slice(0, 8), 16);
+  if (!taken) return PSEUDO_SPACES[0].min + (base % PSEUDO_SPACES[0].span);
+  for (const { min, span } of PSEUDO_SPACES) {
+    let n = base % span;
+    for (let i = 0; i < span; i++, n = (n + 1) % span) {
+      if (!taken.has(min + n)) {
+        taken.add(min + n);
+        return min + n;
+      }
     }
   }
   throw new Error("pseudonym: no free number left in this season");
 }
 
-/** Collision-free pseudonyms for all partners of a season, assigned in partnerId order (input order does not matter). */
-export function pseudonyms(partnerIds: string[], seasonId: string): Map<string, number> {
+/**
+ * Collision-free pseudonyms for all partners of a season. Collisions are resolved in the order of each
+ * partner's FIRST point event in the season (then partnerId; no date last), so a partner who joins later
+ * never takes a number away from one already shown. Input order and duplicates do not matter.
+ */
+export function pseudonyms(partners: { partnerId: string; firstAt: Date | null }[], seasonId: string): Map<string, number> {
+  const first = new Map<string, number>();
+  for (const p of partners) {
+    const t = p.firstAt ? p.firstAt.getTime() : Number.POSITIVE_INFINITY;
+    first.set(p.partnerId, Math.min(first.get(p.partnerId) ?? Number.POSITIVE_INFINITY, t));
+  }
+  const order = Array.from(first.keys()).sort((a, b) => first.get(a)! - first.get(b)! || (a < b ? -1 : a > b ? 1 : 0));
   const taken = new Set<number>();
   const out = new Map<string, number>();
-  for (const id of Array.from(new Set(partnerIds)).sort()) out.set(id, pseudonym(id, seasonId, taken));
+  for (const id of order) out.set(id, pseudonym(id, seasonId, taken));
   return out;
 }
 
