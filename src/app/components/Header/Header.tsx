@@ -8,7 +8,7 @@ import HeaderNavLinks from "./HeaderNavLinks";
 import HeaderLangSwitch from "./HeaderLangSwitch";
 import HeaderMobileMenu from "./HeaderMobileMenu";
 import HeaderConsultButton from "./HeaderConsultButton";
-import ModalBrochure from "../ModalBrochure/ModalBrochure";
+import ModalBrochureLazy from "../ModalBrochure/ModalBrochureLazy";
 import { getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
 import type { FormStandardDocument } from "@/types/formStandardDocument";
 
@@ -98,7 +98,7 @@ const Header = async ({ translations, params }: Props) => {
           <HeaderMobileMenu navLinks={data.navLinks} lang={params.lang} translations={translations} />
         </div>
       </div>
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
+      <ModalBrochureLazy lang={params.lang} formDocument={formDocument} />
     </header>
   );
 };
