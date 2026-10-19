@@ -5,14 +5,16 @@ import { inlineStylesheets } from "../homeInline";
 const A = '<link rel="stylesheet" href="/_next/static/css/aaa111.css" data-precedence="next"/>';
 const B = '<link rel="stylesheet" href="/_next/static/css/bbb222.css" data-precedence="next"/>';
 
-test("replaces each Next stylesheet link with an inline style, keeping order", () => {
+test("replaces each Next stylesheet link with an inline style plus an inert (media=print) link, keeping order", () => {
   const html = `<head>${A}${B}</head><body>x</body>`;
   const css: Record<string, string> = { "/_next/static/css/aaa111.css": ".a{color:red}", "/_next/static/css/bbb222.css": ".b{margin:0}" };
   const out = inlineStylesheets(html, (h) => css[h]);
   assert.equal(
     out,
     '<head><style data-href="/_next/static/css/aaa111.css" data-precedence="next">.a{color:red}</style>' +
-      '<style data-href="/_next/static/css/bbb222.css" data-precedence="next">.b{margin:0}</style></head><body>x</body>',
+      '<link rel="stylesheet" href="/_next/static/css/aaa111.css" data-precedence="next" media="print"/>' +
+      '<style data-href="/_next/static/css/bbb222.css" data-precedence="next">.b{margin:0}</style>' +
+      '<link rel="stylesheet" href="/_next/static/css/bbb222.css" data-precedence="next" media="print"/></head><body>x</body>',
   );
 });
 
