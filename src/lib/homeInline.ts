@@ -6,9 +6,14 @@
    built-in way to inline CSS, so src/app/home-inline/[lang]/route.ts does it on the prerendered HTML.
 
    Only `<link rel="stylesheet" href="/_next/static/css/NAME.css" data-precedence="next"/>` tags are touched;
-   anything unexpected leaves the tag as it was (the page still works, just slower). React still inserts its
-   own copy of the link after hydration (it does not adopt `<style>` for a link resource) — the same rules in
-   the same relative order, so the cascade is unchanged. */
+   anything unexpected leaves the tag as it was (the page still works, just slower).
+
+   The inline <style> is followed by the ORIGINAL link, switched off with media="print". React's stylesheet
+   resource looks for `link[rel=stylesheet][href]` at hydration; with no link it inserts its own and the browser
+   applies the same 265 KB of rules a second time (a second full style recalculation: PageSpeed 2026-10-19 showed
+   desktop TBT 30 -> 380 ms and 717 ms of style/layout after the first inlining release). With an inert link
+   present React adopts it, inserts nothing, and nothing is applied twice. The page's styling comes from the
+   inline <style>, which stays in <head> across client-side navigations. */
 
 const LINK_RE = /<link rel="stylesheet" href="(\/_next\/static\/css\/[A-Za-z0-9._-]+\.css)"[^>]*\/>/g;
 
@@ -16,6 +21,6 @@ export function inlineStylesheets(html: string, readCss: (href: string) => strin
   return html.replace(LINK_RE, (tag, href: string) => {
     const css = readCss(href);
     if (!css || /<\/style/i.test(css)) return tag;
-    return `<style data-href="${href}" data-precedence="next">${css}</style>`;
+    return `<style data-href="${href}" data-precedence="next">${css}</style><link rel="stylesheet" href="${href}" data-precedence="next" media="print"/>`;
   });
 }
