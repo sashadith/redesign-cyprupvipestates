@@ -8,6 +8,7 @@ import { localePrefix, type Locale } from "@/lib/locale";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { COOKIE_CONSENT_COPY } from "./CustomCookieConsent.copy";
 import { onMarketingConsentChanged } from "@/lib/attribution";
+import { CONSENT_EVENT } from "../ConsentScripts/ConsentScripts";
 
 const COOKIE_NAME = "cookieConsent";
 
@@ -55,6 +56,7 @@ export default function CustomCookieConsent({ lang }: Props) {
     // be remembered for 90 days (src/lib/attribution.ts).
     onMarketingConsentChanged();
     setVisible(false);
+    window.dispatchEvent(new Event(CONSENT_EVENT)); // static homepage tree re-selects its tags
     router.refresh();
   };
 
@@ -71,6 +73,7 @@ export default function CustomCookieConsent({ lang }: Props) {
     // No marketing consent: drop any 90-day attribution cookie.
     onMarketingConsentChanged();
     setVisible(false);
+    window.dispatchEvent(new Event(CONSENT_EVENT)); // static homepage tree re-selects its tags
     router.refresh();
   };
 
