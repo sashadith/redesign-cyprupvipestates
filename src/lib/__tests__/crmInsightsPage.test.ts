@@ -125,38 +125,35 @@ test("geometry: all-zero data is empty, no NaN anywhere, bars flat on the baseli
   assert.ok(nums.length > 0 && nums.every(Number.isFinite)); // JSON turns NaN into null, so check before it does
 });
 
-test("geometry: heights are proportional to the axis max; stack keeps a 2px gap; tallest reaches the top", () => {
-  const g = monthChartGeometry(months([[10_000, 0], [20_000, 20_000], [0, 5_000]]));
+test("geometry: grouped bars, scale from the tallest single value, both from the baseline", () => {
+  const g = monthChartGeometry(months([[10_000, 0], [20_000, 40_000], [0, 5_000]]));
   const plotH = g.plot.bottom - g.plot.top;
   assert.equal(g.empty, false);
-  assert.equal(g.ticks[g.ticks.length - 1].value, 40_000);
+  assert.equal(g.ticks[g.ticks.length - 1].value, 40_000); // max(earned, paid), not the sum
   const [a, b, c] = g.bars;
   assert.ok(a.earned && !a.developerPaid);
   assert.equal(Math.round(a.earned.height), Math.round(plotH / 4));
-  assert.equal(a.earned.top, true); // rounded data end on the only segment
-  assert.equal(a.earned.y + a.earned.height, g.plot.bottom); // grows from the baseline
+  assert.equal(a.earned.top, true);
+  assert.equal(a.earned.y + a.earned.height, g.plot.bottom);
   assert.ok(b.earned && b.developerPaid);
-  assert.equal(b.earned.top, false);
-  assert.equal(b.developerPaid.top, true);
+  assert.equal(b.earned.y + b.earned.height, g.plot.bottom);
+  assert.equal(b.developerPaid.y + b.developerPaid.height, g.plot.bottom);
   assert.ok(Math.abs(b.developerPaid.y - g.plot.top) < 1e-9); // 40k of 40k
-  assert.ok(Math.abs(b.earned.y - (b.developerPaid.y + b.developerPaid.height) - CHART_DIMENSIONS.gap) < 1e-9);
+  assert.ok(Math.abs(b.earned.height - plotH / 2) < 1e-9); // 20k of 40k
+  assert.ok(b.earned.x + b.earned.width <= b.developerPaid.x); // side by side, no overlap
+  assert.ok(Math.abs(b.earned.x + b.earned.width + CHART_DIMENSIONS.gap / 2 - b.cx) < 1e-9); // centred pair
   assert.ok(!c.earned && c.developerPaid);
-  assert.equal(c.developerPaid.y + c.developerPaid.height, g.plot.bottom); // no gap without an earned segment
+  assert.equal(c.developerPaid.y + c.developerPaid.height, g.plot.bottom);
   for (const bar of g.bars) {
-    for (const s of [bar.earned, bar.developerPaid]) if (s) assert.ok(s.width <= CHART_DIMENSIONS.barWidth && s.width > 0);
+    for (const s of [bar.earned, bar.developerPaid]) if (s) {
+      assert.ok(s.width <= CHART_DIMENSIONS.barWidth && s.width > 0);
+      assert.ok(s.x >= bar.band.x && s.x + s.width <= bar.band.x + bar.band.width);
+    }
   }
   assert.equal(g.bars[0].showYear, true);
   assert.equal(g.bars[1].showYear, false);
   assert.equal(b.earnedValue, 20_000);
-  assert.equal(b.developerPaidValue, 20_000);
-});
-
-test("geometry: a sliver thinner than the gap is dropped from the drawing but kept as a value", () => {
-  const g = monthChartGeometry(months([[1_000_000, 1]]));
-  const [b] = g.bars;
-  assert.equal(b.developerPaid, null);
-  assert.equal(b.earned?.top, true);
-  assert.equal(b.developerPaidValue, 1);
+  assert.equal(b.developerPaidValue, 40_000);
 });
 
 test("geometry: January shows its year; negative amounts never draw downward", () => {

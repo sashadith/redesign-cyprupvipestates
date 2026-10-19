@@ -63,3 +63,13 @@ test("sortByTemperature: hot, warm, cold, none; stable within groups", () => {
   assert.deepEqual(sortByTemperature(items, (x) => x.t).map((x) => x.id), [3, 5, 4, 8, 2, 6, 1, 7]);
   assert.deepEqual(items.map((x) => x.id), [1, 2, 3, 4, 5, 6, 7, 8]); // input untouched
 });
+
+test("TemperatureDot: sr-only text is the level only, reasons stay in the title", async () => {
+  const React = await import("react");
+  (globalThis as unknown as { React: unknown }).React = React; // tsx compiles .tsx with the classic JSX runtime
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { TemperatureDot } = await import("@/app/crm/components/TemperatureDot");
+  const html = renderToStaticMarkup(React.createElement(TemperatureDot, { temperature: { level: "hot", reasons: ["Replied today", "Viewing scheduled"] } }));
+  assert.match(html, /<span class="sr-only">Hot lead<\/span>/);
+  assert.match(html, /title="Hot lead — Replied today, Viewing scheduled"/);
+});

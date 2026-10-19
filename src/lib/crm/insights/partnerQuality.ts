@@ -1,6 +1,6 @@
 // Partner quality rows and flags (CRM v2 phase 4a, Decision 3). Pure: one PartnerClaimFact per
 // claim created in the period, with the lead facts the server has batched for it.
-import { effectiveClaimState, isCommitted, activeSince, type ClaimStateValue } from "../../partner/claimState";
+import { isCommitted, type ClaimStateValue } from "../../partner/claimState";
 import { median, pct1 } from "./channels";
 
 export const LOW_QUALITY_MIN_SUBMITTED = 5;
@@ -60,12 +60,10 @@ export function partnerQualityRows(input: { partners: InsightPartner[]; claims: 
       if (c.state === "REJECTED") rejected += 1;
       if (c.responseMinutes !== null) responses.push(c.responseMinutes);
 
-      const eff = effectiveClaimState({
-        state: c.state, activeSince: activeSince(c), lastRealContactAt: c.lastRealContactAt, now: input.now,
-        leadDeleted: c.leadDeleted, leadStatus: c.leadStatus, hasLiveDeal: c.hasLiveDeal,
-      });
-      // accepted = ACTIVE, or committed (live deal / RESERVED / CLOSED) on a claim that was not rejected or still in review
-      const isAccepted = eff === "ACTIVE" || (c.state !== "IN_REVIEW" && c.state !== "REJECTED" && isCommitted(c));
+      // accepted = passed review: stored state ACTIVE or EXPIRED, or committed; never IN_REVIEW/REJECTED,
+      // never a trashed lead. Protection expiry must not reduce the counts, so no effective-state call.
+      const passedReview = c.state === "ACTIVE" || c.state === "EXPIRED" || (c.state !== "IN_REVIEW" && c.state !== "REJECTED" && isCommitted(c));
+      const isAccepted = passedReview && !c.leadDeleted;
       if (!isAccepted) continue;
       accepted += 1;
       const invalid = c.leadStatus === "LOST" && (INVALID_LOST_REASONS as readonly string[]).includes(c.leadLostReason ?? "");
@@ -74,12 +72,13 @@ export function partnerQualityRows(input: { partners: InsightPartner[]; claims: 
       if (c.leadStatus === "CLOSED") closed += 1;
     }
     const submitted = claims.length;
+    const decided = submitted - inReview;
     return {
       partnerId: p.id, name: p.name, status: p.status, submitted, accepted, inReview, rejected, valid,
       reachedViewing: viewing, closed,
       conversionPct: pct1(closed, accepted),
       medianResponseMin: median(responses),
-      lowQuality: submitted >= LOW_QUALITY_MIN_SUBMITTED && valid / submitted < LOW_QUALITY_VALID_RATIO,
+      lowQuality: decided >= LOW_QUALITY_MIN_SUBMITTED && valid / decided < LOW_QUALITY_VALID_RATIO,
       topPartner: closed >= TOP_PARTNER_MIN_CLOSED,
     };
   });

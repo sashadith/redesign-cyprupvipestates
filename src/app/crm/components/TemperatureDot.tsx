@@ -8,7 +8,7 @@ export function TemperatureDot({ temperature }: { temperature: PublicTemperature
   return (
     <span className={`crm-temp crm-temp-${temperature.level}`} title={text}>
       <span className="crm-temp-dot" aria-hidden="true" />
-      <span className="sr-only">{text}</span>
+      <span className="sr-only">{temperatureLabel(temperature.level)} lead</span>
     </span>
   );
 }

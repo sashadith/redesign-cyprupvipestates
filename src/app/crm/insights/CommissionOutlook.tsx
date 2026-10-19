@@ -64,7 +64,7 @@ function MonthlyChart({ months }: { months: CommissionOutlook["months"] }) {
             <svg viewBox={`0 0 ${g.width} ${g.height}`} role="img" aria-labelledby="crm-in-chart-t crm-in-chart-d" className="crm-in-svg">
               <title id="crm-in-chart-t">Commission earned and developer paid per month</title>
               <desc id="crm-in-chart-d">
-                Stacked columns from {first ? monthLabel(first) : ""} to {last ? monthLabel(last) : ""}; earned at the base, developer paid on top. The table below lists every value.
+                Paired columns from {first ? monthLabel(first) : ""} to {last ? monthLabel(last) : ""}; earned on the left, developer paid on the right, both from the same baseline. The table below lists every value.
               </desc>
               {g.ticks.map((tk) => (
                 <g key={tk.value}>
@@ -74,7 +74,7 @@ function MonthlyChart({ months }: { months: CommissionOutlook["months"] }) {
               ))}
               {g.bars.map((b) => (
                 <g key={b.month} className="col">
-                  {b.earned && <path d={columnPath(b.earned, b.earned.top)} fill={EARNED} />}
+                  {b.earned && <path d={columnPath(b.earned, true)} fill={EARNED} />}
                   {b.developerPaid && <path d={columnPath(b.developerPaid, true)} fill={DEV_PAID} />}
                   <text x={b.cx} y={g.plot.bottom + 18} className="tick" textAnchor="middle">{b.label}</text>
                   {b.showYear && <text x={b.cx} y={g.plot.bottom + 33} className="tick year" textAnchor="middle">{b.month.slice(0, 4)}</text>}

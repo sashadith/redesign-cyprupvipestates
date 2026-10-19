@@ -61,9 +61,9 @@ export default async function TodayPage() {
     temperature: toPublicTemperature(temps.get(r.id)),
   }));
   const built = buildToday(leads, now);
-  // Hot leads first inside each list (stable, so the date order holds within a group). Viewings stay in time order.
+  // Hot leads first only in the two lists with no time order (Newly assigned, Going quiet); Overdue, Due today and Viewings keep their time order.
   const hotFirst = (rs: TodayLead[]) => sortByTemperature(rs, (l) => l.temperature);
-  const t = { ...built, overdue: hotFirst(built.overdue), dueToday: hotFirst(built.dueToday), fresh: hotFirst(built.fresh), stale: hotFirst(built.stale) };
+  const t = { ...built, fresh: hotFirst(built.fresh), stale: hotFirst(built.stale) };
 
   const sections: Section[] = [
     { key: "overdue", title: "Overdue follow-ups", empty: "No follow-ups overdue", rows: t.overdue, when: (l) => `due ${dateOnly.format(l.nextFollowUpAt!)}` },

@@ -86,7 +86,7 @@ export function monthLabel(key: string): string {
   return `${MONTHS[m - 1] ?? "?"} ${y}`;
 }
 
-// ── Chart geometry (monthly stacked bars) ──────────────────────────────
+// ── Chart geometry (monthly grouped bars) ──────────────────────────────
 
 /** A "nice" axis: max rounded up to 1/2/2.5/5 × 10^k steps; zero data → a 0..1 axis with one tick. */
 export function niceScale(maxValue: number, tickCount = 4): { max: number; step: number; ticks: number[] } {
@@ -113,32 +113,29 @@ export type MonthChart = {
 export const CHART_DIMENSIONS = { width: 720, height: 260, left: 64, right: 12, top: 16, bottom: 44, barWidth: 24, gap: 2 } as const;
 
 /**
- * Stacked columns: earned at the baseline, developer paid on top, a 2px surface gap between them.
- * Bars are capped at 24px and centred in their band; zero segments are null (no sliver), and the
- * topmost non-empty segment carries `top` (it gets the rounded data end). All-zero data → `empty`.
+ * Grouped columns: earned and developer paid side by side per month, both from the baseline, a
+ * `gap` between them. Each bar is capped at `barWidth`, the pair is centred in its band, and the
+ * scale comes from the tallest single value. Zero values are null (no sliver); every drawn bar
+ * has the rounded data end (`top`). All-zero data -> `empty`.
  */
 export function monthChartGeometry(months: OutlookMonth[], dims: { width: number; height: number; left: number; right: number; top: number; bottom: number; barWidth: number; gap: number } = CHART_DIMENSIONS): MonthChart {
   const plot = { left: dims.left, right: dims.width - dims.right, top: dims.top, bottom: dims.height - dims.bottom };
   const plotH = plot.bottom - plot.top;
-  const totals = months.map((m) => Math.max(0, m.earned) + Math.max(0, m.developerPaid));
-  const scale = niceScale(Math.max(0, ...totals));
+  const peaks = months.map((m) => Math.max(Math.max(0, m.earned), Math.max(0, m.developerPaid)));
+  const scale = niceScale(Math.max(0, ...peaks));
   const yOf = (v: number) => (scale.max > 0 ? plot.bottom - (v / scale.max) * plotH : plot.bottom);
   const bandW = months.length > 0 ? (plot.right - plot.left) / months.length : 0;
-  const barW = Math.min(dims.barWidth, Math.max(0, bandW - 8));
+  const barW = Math.min(dims.barWidth, Math.max(0, (bandW - 8 - dims.gap) / 2));
 
   const bars = months.map((m, i): MonthBar => {
     const bandX = plot.left + i * bandW;
     const cx = bandX + bandW / 2;
-    const x = cx - barW / 2;
     const e = Math.max(0, m.earned);
     const d = Math.max(0, m.developerPaid);
     const eH = scale.max > 0 ? (e / scale.max) * plotH : 0;
     const dH = scale.max > 0 ? (d / scale.max) * plotH : 0;
-    // The gap is taken out of the upper segment so the stack's total height stays true to scale;
-    // a developer-paid sliver thinner than the gap is left to the tooltip and the table.
-    const dHeight = e > 0 ? Math.max(0, dH - dims.gap) : dH;
-    const developerPaid: BarSegment | null = d > 0 && dHeight > 0 ? { x, y: plot.bottom - eH - dH, width: barW, height: dHeight, value: d, top: true } : null;
-    const earned: BarSegment | null = e > 0 ? { x, y: plot.bottom - eH, width: barW, height: eH, value: e, top: !developerPaid } : null;
+    const earned: BarSegment | null = e > 0 && eH > 0 ? { x: cx - dims.gap / 2 - barW, y: plot.bottom - eH, width: barW, height: eH, value: e, top: true } : null;
+    const developerPaid: BarSegment | null = d > 0 && dH > 0 ? { x: cx + dims.gap / 2, y: plot.bottom - dH, width: barW, height: dH, value: d, top: true } : null;
     const [, mo] = m.month.split("-").map(Number);
     return {
       month: m.month, label: MONTHS[mo - 1] ?? "?", showYear: i === 0 || mo === 1, cx,
@@ -150,7 +147,7 @@ export function monthChartGeometry(months: OutlookMonth[], dims: { width: number
     width: dims.width, height: dims.height, plot,
     ticks: scale.ticks.map((v) => ({ value: v, y: yOf(v), label: eurCompact(v) })),
     bars,
-    empty: totals.every((t) => t === 0),
+    empty: peaks.every((t) => t === 0),
   };
 }
 

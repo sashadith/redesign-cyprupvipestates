@@ -315,20 +315,26 @@ test("partner quality: counts, valid, viewing, closed, conversion, response medi
   assert.deepEqual([b.lowQuality, b.topPartner], [false, false]);
 });
 
-test("partner quality: accepted covers ACTIVE (live or committed), not expired or review or rejected", () => {
+test("partner quality: accepted = passed review (ACTIVE or EXPIRED), expiry never reduces it, trashed excluded", () => {
   const rows = partnerQualityRows({
     partners: [partners[0]], now: NOW,
     claims: [
       cf(), // plain active
       cf({ state: "ACTIVE", createdAt: ago(400), lastRealContactAt: null, leadStatus: "RESERVED" }), // old but committed
-      cf({ state: "ACTIVE", createdAt: ago(400), lastRealContactAt: null }), // protection ran out -> EXPIRED
-      cf({ state: "ACTIVE", reviewedAt: ago(10), createdAt: ago(400), lastRealContactAt: null }), // active since review
+      cf({ state: "ACTIVE", createdAt: ago(400), lastRealContactAt: null }), // protection ran out: still accepted, valid
+      cf({ state: "EXPIRED" }), // stored EXPIRED: still accepted
+      cf({ state: "ACTIVE", leadDeleted: true }), // trashed lead: not accepted
+      cf({ state: "IN_REVIEW", leadStatus: "RESERVED" }), // never
+      cf({ state: "REJECTED", hasLiveDeal: true }), // never
     ],
   });
-  assert.equal(rows[0].accepted, 3);
+  assert.equal(rows[0].accepted, 4);
+  assert.equal(rows[0].valid, 4);
+  assert.equal(rows[0].inReview, 1);
+  assert.equal(rows[0].rejected, 1);
 });
 
-test("partner quality: low quality flag needs 5 submitted and valid/submitted < 40%", () => {
+test("partner quality: low quality = valid / decided < 40%, decided = submitted - inReview, needs 5 decided", () => {
   const bad = (n: number, validN: number) => [
     ...Array.from({ length: validN }, () => cf()),
     ...Array.from({ length: n - validN }, () => cf({ leadStatus: "LOST", leadLostReason: "INVALID" })),
@@ -339,6 +345,10 @@ test("partner quality: low quality flag needs 5 submitted and valid/submitted < 
   assert.equal(run(bad(4, 0)).lowQuality, false); // too few
   assert.equal(run(bad(10, 3)).lowQuality, true); // 30%
   assert.equal(run(bad(10, 4)).lowQuality, false); // exactly 40%
+  const inReview = (k: number) => Array.from({ length: k }, () => cf({ state: "IN_REVIEW" }));
+  assert.equal(run([...bad(4, 0), ...inReview(10)]).lowQuality, false); // only 4 decided
+  assert.equal(run([...bad(5, 2), ...inReview(10)]).lowQuality, false); // 2/5 = 40%, review claims do not dilute
+  assert.equal(run([...bad(5, 1), ...inReview(10)]).lowQuality, true); // 1/5
 });
 
 test("partner quality: top partner needs 2 closed", () => {
