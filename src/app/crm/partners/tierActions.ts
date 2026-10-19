@@ -62,10 +62,10 @@ export async function saveTierConfigAction(rows: unknown): Promise<Result> {
   return { ok: true, notice: "Tiers saved" };
 }
 
-type LockedPartner = { tierKey: string | null; handoverShare: number; fixShare: number };
+type LockedPartner = { tierKey: string | null; handoverShare: number; fixShare: number; status: string };
 const lockPartner = async (tx: Prisma.TransactionClient, id: string) =>
   (await tx.$queryRaw<LockedPartner[]>`
-    SELECT "tierKey", "handoverShare"::float8 AS "handoverShare", "fixShare"::float8 AS "fixShare" FROM partners WHERE id = ${id} FOR UPDATE`)[0];
+    SELECT "tierKey", "handoverShare"::float8 AS "handoverShare", "fixShare"::float8 AS "fixShare", status::text AS status FROM partners WHERE id = ${id} FOR UPDATE`)[0];
 
 /**
  * Accepts an open proposal: closes it (guarded, only while undecided), sets the partner's tier and tier date,
@@ -168,6 +168,8 @@ export async function setPartnerTierAction(partnerId: string, tierKey: string | 
       const now = new Date();
       const before = await lockPartner(tx, partnerId);
       if (!before) throw new Refusal("Partner not found.");
+      // Tiers belong to approved partners only (a direct call must not queue TIER_UP for a pending/suspended one).
+      if (before.status !== "ACTIVE") throw new Refusal("Only active partners can have a tier.");
       const tiers = await loadTiers(tx);
       const change = manualTierChange({
         currentKey: before.tierKey, targetKey: tierKey, shares: { handoverShare: before.handoverShare, fixShare: before.fixShare }, tiers, now,
