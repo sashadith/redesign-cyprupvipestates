@@ -601,7 +601,12 @@ export default async function middleware(request: NextRequest) {
   const homeMatch = request.nextUrl.pathname.match(HOME_RE);
   if (homeMatch) {
     const url = request.nextUrl.clone();
-    url.pathname = `/home-static/${homeMatch[1] || "en"}`;
+    // A browser/crawler document request (Accept: text/html) gets the same prerendered HTML with its stylesheets
+    // inlined (src/app/home-inline/[lang]/route.ts, why: src/lib/homeInline.ts). Anything else — notably the App
+    // Router's client-side RSC/prefetch fetches, which send Accept: */* — goes to the real page. (Middleware does not
+    // see the RSC/_rsc markers: Next strips them before it runs, so Accept is the reliable signal.)
+    const wantsDocument = (request.headers.get("accept") || "").includes("text/html") && request.headers.get("rsc") !== "1";
+    url.pathname = `${wantsDocument ? "/home-inline" : "/home-static"}/${homeMatch[1] || "en"}`;
     return NextResponse.rewrite(url);
   }
 
@@ -653,6 +658,6 @@ export const config = {
   // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
   // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
   matcher: [
-    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|home-static|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

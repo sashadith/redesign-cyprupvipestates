@@ -23,6 +23,8 @@ const nextConfig = {
       // — belt-and-braces alongside the page's own <meta robots> (see
       // src/app/c/[token]/page.tsx generateMetadata) and robots.ts's disallow.
       { source: "/c/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      // The static twin of the homepage is an implementation detail (middleware rewrites "/" to it); never index it.
+      { source: "/home-static/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
     ];
   },
   async rewrites() {
