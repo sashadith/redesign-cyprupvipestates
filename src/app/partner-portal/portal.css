@@ -504,3 +504,13 @@
 .pp-rt-past li:last-child { border-bottom: 0; padding-bottom: 0; }
 .pp-rt-pastname { font: 400 1.0625rem / 1.3 var(--pp-display); }
 @media (max-width: 640px) { .pp-rt-figures { grid-template-columns: 1fr; } }
+
+/* ── News (phase 4b) ────────────────────────────────────────────────────── */
+.pp-badge { display: inline-block; min-width: 18px; margin-inline-start: 6px; padding: 1px 6px; border-radius: 999px; background: var(--pp-bronze-ink);
+  color: #fff; font: 600 0.6875rem / 1.5 var(--pp-body); text-align: center; vertical-align: 1px; }
+.pp-news { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.pp-news-item p { margin: 6px 0 0; }
+.pp-news-item h2 { margin: 8px 0 0; }
+.pp-news-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.pp-news-kind { padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--pp-bronze-ink);
+  font: 600 var(--text-caption) / 1.3 var(--pp-body); letter-spacing: 0.08em; text-transform: uppercase; }

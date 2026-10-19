@@ -5,6 +5,7 @@ import "@/app/design-tokens.css";
 import "@/app/fonts/vendored.css";
 import "./portal.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
+import { partnerNewsUnread } from "@/lib/partner/newsStore";
 import { portalContext } from "./portalContext";
 import { PortalShell } from "./components/PortalShell";
 
@@ -18,10 +19,12 @@ const fontVars = `${frauncesFontDisplay.variable} ${mulishFontBody.variable} ${p
 
 export default async function PartnerPortalLayout({ children }: { children: React.ReactNode }) {
   const { me, locale, t } = await portalContext();
+  const active = me?.partner.status === "ACTIVE";
+  const newsUnread = me && active ? await partnerNewsUnread(me.partner.id) : 0;
   return (
     <html lang={locale} data-theme="light" className="pp-html">
       <body className={`pp-app antialiased ${fontVars}`}>
-        <PortalShell locale={locale} t={t} loggedIn={!!me} active={me?.partner.status === "ACTIVE"}>{children}</PortalShell>
+        <PortalShell locale={locale} t={t} loggedIn={!!me} active={active} newsUnread={newsUnread}>{children}</PortalShell>
       </body>
     </html>
   );

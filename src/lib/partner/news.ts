@@ -103,8 +103,16 @@ export function newsItems(input: {
     .slice(0, NEWS_MAX_ITEMS);
 }
 
-/** Items strictly newer than seenAt; all of them when the partner never opened the news. */
-export function unreadCount(items: { at: Date }[], seenAt: Date | null): number {
-  if (!seenAt) return items.length;
-  return items.filter((i) => i.at.getTime() > seenAt.getTime()).length;
+/**
+ * Items strictly newer than seenAt; all of them when the partner never opened the news.
+ * "Nearly sold out" is a state dated "now", not an event: it never counts as unread (it would never clear).
+ */
+export function unreadCount(items: { at: Date; kind?: NewsKind }[], seenAt: Date | null): number {
+  return items.filter((i) => i.kind !== "nearly_sold_out" && (!seenAt || i.at.getTime() > seenAt.getTime())).length;
+}
+
+/** Nav badge text: nothing for 0, the number up to 9, "9+" above. */
+export function badgeText(n: number): string | null {
+  if (!(n > 0)) return null;
+  return n > 9 ? "9+" : String(n);
 }

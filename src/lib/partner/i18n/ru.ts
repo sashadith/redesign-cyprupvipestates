@@ -2,7 +2,7 @@ import type { PartnerDict } from "./en";
 
 /** Партнёрский портал — русский (вежливое «Вы»). */
 export const ru: PartnerDict = {
-  nav: { home: "Главная", profile: "Профиль", logout: "Выйти", language: "Язык", login: "Войти", register: "Стать партнёром", overview: "Обзор", submit: "Передать клиента", clients: "Мои клиенты", projects: "Проекты", commissions: "Комиссии", calculator: "Калькулятор", materials: "Материалы", presentations: "Презентации", rating: "Рейтинг" },
+  nav: { home: "Главная", profile: "Профиль", logout: "Выйти", language: "Язык", login: "Войти", register: "Стать партнёром", overview: "Обзор", submit: "Передать клиента", clients: "Мои клиенты", projects: "Проекты", commissions: "Комиссии", calculator: "Калькулятор", materials: "Материалы", presentations: "Презентации", rating: "Рейтинг", news: "Новости" },
   footer: { brand: "Cyprus VIP Estates", rights: "Все права защищены.", agreement: "Партнёрское соглашение", contact: "Связаться с нами" },
   landing: {
     title: "Партнёрская программа",
