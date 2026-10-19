@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useModal } from "@/app/context/ModalContext";
+import { preloadBrochureModal } from "@/app/components/ModalBrochure/ModalBrochureLazy";
 import { trackBrochureOpen, type BrochureSource } from "@/app/components/ModalBrochure/trackBrochureOpen";
 
 /* Home CTA that opens the brochure/consultation modal (production lead-gen).
@@ -29,7 +30,7 @@ export default function ConsultButton({
     openBrochure();
   };
   return (
-    <button type="button" className={className} onClick={onClick}>
+    <button type="button" className={className} onClick={onClick} onPointerEnter={preloadBrochureModal} onFocus={preloadBrochureModal} onTouchStart={preloadBrochureModal}>
       {children}
     </button>
   );
