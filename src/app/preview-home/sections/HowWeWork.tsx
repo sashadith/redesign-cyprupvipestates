@@ -76,7 +76,7 @@ export default function HowWeWork({
             const icon = safeUrl(s.icon);
             return (
               <li className="about__bullet" key={s._key}>
-                <span className="about__medallion">{icon && <img src={icon} alt="" />}</span>
+                <span className="about__medallion">{icon && <img src={icon} alt="" loading="lazy" decoding="async" />}</span>
                 {s.text && <span className="about__bullet-text">{s.text.replace(/\s*ceremoniously/i, "")}</span>}
               </li>
             );

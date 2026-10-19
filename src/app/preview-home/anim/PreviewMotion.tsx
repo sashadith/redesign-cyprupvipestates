@@ -31,7 +31,7 @@ export default function PreviewMotion() {
       /* ---------- 2.1 HERO — eyebrow + SplitText headline (on load) ---------- */
       const headline = document.querySelector<HTMLElement>(".hero__headline");
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap
           .timeline()
@@ -54,7 +54,7 @@ export default function PreviewMotion() {
       const titleSel =
         ".brochure__title, .about__title, .featured__title, .cities__title, .descblock__title, .newlist__title, .casestudies__title, .faq__title, .content__title";
       toArr(titleSel).forEach((el) => {
-        const split = new SplitText(el, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(el, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap.from(split.lines, {
           y: 60,

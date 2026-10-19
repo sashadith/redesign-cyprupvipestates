@@ -12,6 +12,7 @@ import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "
 import { consentCopy } from "@/app/components/consentCopy";
 import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
+import OptImg from "./OptImg";
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
    preserved verbatim from the live FormStatic (lead → /api/leads,
@@ -386,7 +387,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
 
           <aside className="formsec__aside">
             <div className="formsec__consultant-wrap">
-              <img className="formsec__consultant" src={CONSULTANT_IMAGE} alt="Sascha Dith, CEO Cyprus VIP Estates" />
+              <OptImg className="formsec__consultant" src={CONSULTANT_IMAGE} alt="Sascha Dith, CEO Cyprus VIP Estates" sizes="(max-width: 768px) 80vw, 420px" maxWidth={828} />
             </div>
             <div className="formsec__caption">
               <strong>Sascha Dith</strong>

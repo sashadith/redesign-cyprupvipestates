@@ -1,6 +1,7 @@
 import React, { FC } from "react";
 import type { Brochure as BrochureType } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
+import OptImg from "./OptImg";
 
 /* Restyled "brochure" band — DARK card matching the original structure:
    content on the left, the image tilted -5deg behind it, anchored bottom-right.
@@ -33,7 +34,7 @@ const Brochure: FC<Props> = ({ brochure, cta }) => {
         <div className="brochure__card">
           <div className="brochure__content">
             <div className="brochure__start">
-              {logoUrl && <img className="brochure__logo" src={logoUrl} alt="" />}
+              {logoUrl && <img className="brochure__logo" src={logoUrl} alt="" loading="lazy" decoding="async" />}
               <div className="brochure__start-text">
                 <h2 className="brochure__title">{title}</h2>
                 {subtitle && <p className="brochure__subtitle">{subtitle}</p>}
@@ -62,7 +63,7 @@ const Brochure: FC<Props> = ({ brochure, cta }) => {
 
           {imageUrl && (
             <div className="brochure__image">
-              <img className="brochure__media" src={imageUrl} alt={title} />
+              <OptImg className="brochure__media" src={imageUrl} alt={title} sizes="(max-width: 768px) 100vw, 50vw" />
             </div>
           )}
         </div>
