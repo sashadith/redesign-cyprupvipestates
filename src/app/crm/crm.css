@@ -509,6 +509,17 @@
 .crm-pt-bot-status dt { font-size: 12px; color: var(--muted); }
 .crm-pt-bot-status dd { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .crm-pt-vat { border-top: 0; margin: 0; padding: 0; }
+/* Partner tiers (phase 4b): settings table and open proposals. */
+.crm-pt-tiers { margin: 0 0 16px; display: grid; gap: 12px; }
+.crm-pt-tiers h2 { margin: 0; font-size: 15px; }
+.crm-pt-tiers p { margin: 0; color: var(--muted); font-size: 13px; }
+.crm-pt-tierset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+.crm-pt-tierset input:not([type="checkbox"]) { border: 1px solid var(--field-line); border-radius: 10px; padding: 6px 8px; font: 500 13px var(--body); background: var(--field-bg); color: var(--ink); width: 96px; }
+.crm-pt-tierset td:nth-child(2) input { width: 140px; }
+.crm-pt-tierset input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-pt-tierset input[type="checkbox"] { accent-color: var(--accent); }
+.crm-pt-tier { color: var(--accent-ink); border-color: currentColor; }
+
 .crm-pay-anyway { font-weight: 600; color: var(--warn); }
 .crm-pay-anyway input { accent-color: var(--accent); }
 .crm-credit-note { font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }

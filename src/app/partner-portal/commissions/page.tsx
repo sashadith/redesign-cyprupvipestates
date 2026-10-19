@@ -2,8 +2,10 @@ import Link from "next/link";
 import { PERIOD_PRESETS, parsePeriod, periodQuery, type PeriodPreset } from "@/lib/partner/commissions";
 import { myCommissions } from "@/lib/partner/scope";
 import { requirePartner } from "@/lib/partner/session";
+import { myTierStatus } from "@/lib/partner/tierStore";
 import { CommissionsTable, periodLabel } from "../components/commissionsBits";
 import { CommissionFigures } from "../components/portalBits";
+import { TierCard } from "../components/TierCard";
 import { portalContext } from "../portalContext";
 
 type SP = Record<string, string | string[] | undefined>;
@@ -14,7 +16,7 @@ export default async function PartnerCommissions({ searchParams }: { searchParam
   const { t, locale } = await portalContext();
   const C = t.commissions;
   const period = parsePeriod({ period: one(searchParams.period), from: one(searchParams.from), to: one(searchParams.to) });
-  const data = await myCommissions(me.partner.id, period);
+  const [data, tier] = await Promise.all([myCommissions(me.partner.id, period), myTierStatus(me.partner.id)]);
   const q = periodQuery(period);
   const presetLabel: Record<PeriodPreset, string> = { "this-year": C.presetThisYear, "last-year": C.presetLastYear, all: C.presetAll };
 
@@ -59,6 +61,8 @@ export default async function PartnerCommissions({ searchParams }: { searchParam
         <h2 className="pp-h3">{C.totals}</h2>
         <CommissionFigures t={t} locale={locale} totals={data.totals} />
       </section>
+
+      {tier && <TierCard t={t} locale={locale} status={tier} />}
 
       {data.truncated && <p className="pp-alert pp-alert-info">{C.truncated}</p>}
 

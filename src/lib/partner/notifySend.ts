@@ -13,12 +13,13 @@ import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
   INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMatchEmail, buildMessageEmail, buildPayoutEmail,
-  buildPresentationOpenedEmail, buildStageEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage,
+  buildPresentationOpenedEmail, buildStageEmail, buildTierUpEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage,
   stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
   planStageNotifications, presentationsLink, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
 import { MATCH_CHANGE_TYPES } from "./matchAlerts";
 import { isOwnProjectUrl, localizedProjectUrl } from "./matchGlue";
+import { parseTierUpPayload } from "./tierFlow";
 
 export { notifyStartFromEnv };
 
@@ -153,7 +154,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
     fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
   });
   if (!claim && row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP") return { skip: "claim missing" };
-  // Every kind but PRESENTATION_OPENED has a claim from here on (checked just above); that case never reads it.
+  // Every kind but PRESENTATION_OPENED and TIER_UP has a claim from here on (checked just above); those cases never read it.
   const own = claim as NonNullable<typeof claim>;
   const common = { partnerFirstName: partner.firstName, clientName: claim ? visibleName(claim) : "", link: claim ? clientLink(base, claim.id) : base };
   const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
@@ -245,10 +246,16 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         { kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base },
       );
     }
-    case "TIER_UP":
-      // Phase 4b Task 1: the kind exists, its producer and mail/Telegram builders come in a later task.
-      // Closed explicitly (never another kind's mail) until then.
-      return { skip: "not implemented yet" };
+    case "TIER_UP": {
+      // Gated on the partner only (ACTIVE, above); no claim. The tier and shares come from the CRM Accept's payload.
+      const tier = parseTierUpPayload(row.payload);
+      if (!tier) return { skip: "invalid payload" };
+      const link = commissionsLink(base);
+      return deliver(
+        buildTierUpEmail(locale, { partnerFirstName: partner.firstName, tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, portalUrl: link }),
+        { kind: "TIER_UP", tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, url: link, portalUrl: base },
+      );
+    }
     default:
       return unhandledKind(row.kind);
   }

@@ -16,6 +16,9 @@ export type PartnerRow = {
   vatMode: VatModeValue; vatModeManual: boolean; vatId: string | null; bank: PartnerBankView;
   /** A Telegram chat is linked (never the chat id). */
   telegramLinked: boolean;
+  /** Tier badge text ("Silver (default)" when no tier is set) and closed deals of the last 12 months. */
+  tierLabel: string;
+  closedDeals12m: number;
 };
 
 const VAT_LABEL: Record<VatModeValue, string> = { NONE: "No VAT", CY_VAT: "CY VAT 19%", REVERSE_CHARGE: "Reverse charge" };
@@ -163,6 +166,10 @@ function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: st
         </div>
         {row.status !== "PENDING" && (
           <div className="crm-pt-meta">
+            <span className="crm-pt-badges">
+              <span className="crm-pill crm-pt-tier" title="Partner tier">{row.tierLabel}</span>
+              <span className="crm-pill" title="Closed deals in the last 12 months">{row.closedDeals12m} closed / 12 mo</span>
+            </span>
             <span>Handover {row.handoverShare}% · Fix {row.fixShare}%</span>
             <span>Trust: {row.trustMode ? "on" : "off"} · Manager: {row.managerName ?? "none"}</span>
             <span>Ref: {row.refCode ?? "none"} · VAT: {vatModeText(row)}</span>

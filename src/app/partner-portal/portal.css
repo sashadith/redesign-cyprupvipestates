@@ -441,6 +441,10 @@
 .pp-progress::-webkit-progress-bar { background: var(--hairline-strong); border-radius: 999px; }
 .pp-progress::-webkit-progress-value { background: var(--bronze); border-radius: 999px; }
 .pp-progress::-moz-progress-bar { background: var(--bronze); border-radius: 999px; }
+/* Partner tier card (phase 4b) */
+.pp-tier p { margin: 6px 0 0; }
+.pp-tier .pp-progress { margin: 14px 0 6px; }
+.pp-tier-name { font: 400 1.25rem / 1.3 var(--pp-display); color: var(--pp-bronze-ink); }
 .pp-onboarding-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .pp-onboarding-steps li { display: flex; align-items: center; gap: 12px; }
 .pp-onboarding-mark { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;

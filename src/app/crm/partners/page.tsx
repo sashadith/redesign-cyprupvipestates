@@ -10,6 +10,9 @@ import { PartnersTable, type PartnerRow } from "../components/PartnersTable";
 import { ToastProvider } from "../components/Toast";
 import { PartnerTelegramPanel } from "../components/PartnerTelegramPanel";
 import { partnerBotConfigured } from "@/lib/partner/telegramApi";
+import { PartnerTiersPanel, type TierProposalRow } from "../components/PartnerTiersPanel";
+import { closedDealCounts, loadTiers } from "@/lib/partner/tierStore";
+import { tierLabel } from "@/lib/partner/tierFlow";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +27,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
   if (!canAssignLeads(user)) redirect("/crm/today");
 
   const tab = TABS.find((t) => t.key === searchParams?.tab) ?? TABS[0];
-  const [counts, partners, managers, telegramLinked] = await Promise.all([
+  const [counts, partners, managers, telegramLinked, tiers, openProposals] = await Promise.all([
     prisma.partner.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.partner.findMany({
       where: { status: tab.status },
@@ -37,11 +40,24 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         acceptances: { orderBy: { acceptedAt: "desc" }, take: 1, select: { version: true } },
         bankDetailsEnc: true, ibanLast4: true, ibanChangedAt: true, vatMode: true, vatModeManual: true, vatId: true,
         telegramChatId: true, // mapped to a boolean below; the chat id never reaches the client
+        tierKey: true,
       },
     }),
     prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     user.isOwner ? prisma.partner.count({ where: { telegramChatId: { not: null } } }) : Promise.resolve(0),
+    loadTiers(),
+    prisma.partnerTierProposal.findMany({
+      where: { decidedAt: null },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: 200,
+      select: {
+        id: true, fromTier: true, toTier: true, closedDeals: true, createdAt: true,
+        partner: { select: { firstName: true, lastName: true, company: true } },
+      },
+    }),
   ]);
+  // One batched query for the listed partners' closed deals (last 12 months).
+  const closedDeals = await closedDealCounts(partners.map((p) => p.id), new Date());
   const countOf = (s: string) => counts.find((c) => c.status === s)?._count._all ?? 0;
 
   // Decrypted here, on the server; only the masked view (no full IBAN) reaches the client.
@@ -63,6 +79,13 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
     refCode: p.refCode, managerUserId: p.managerUserId, managerName: p.manager?.name ?? null,
     vatMode: p.vatMode, vatModeManual: p.vatModeManual, vatId: p.vatId, bank: bankOf(p),
     telegramLinked: !!p.telegramChatId,
+    tierLabel: tierLabel(p.tierKey, tiers),
+    closedDeals12m: closedDeals.get(p.id) ?? 0,
+  }));
+  const proposals: TierProposalRow[] = openProposals.map((p) => ({
+    id: p.id, partnerName: `${p.partner.firstName} ${p.partner.lastName}`, company: p.partner.company,
+    fromLabel: tierLabel(p.fromTier, tiers), toLabel: tierLabel(p.toTier, tiers), closedDeals: p.closedDeals,
+    created: p.createdAt.toISOString().slice(0, 10),
   }));
   // Pending: verified first, then unverified; each oldest first (query is already oldest first, sort is stable).
   if (tab.key === "pending") rows.sort((a, b) => Number(b.verified) - Number(a.verified));
@@ -84,6 +107,10 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
       </nav>
       {user.isOwner && <PartnerTelegramPanel configured={partnerBotConfigured()} linkedCount={telegramLinked} />}
       <ToastProvider>
+        <PartnerTiersPanel
+          tiers={tiers.map((t) => ({ key: t.key, name: t.name, minClosedDeals: t.minClosedDeals, handoverShare: t.handoverShare, fixShare: t.fixShare, active: t.active }))}
+          proposals={proposals}
+        />
         <PartnersTable rows={rows} managers={managers} canReveal={user.isOwner} />
       </ToastProvider>
     </>

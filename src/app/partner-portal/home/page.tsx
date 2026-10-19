@@ -10,7 +10,9 @@ import { vatIdRequired } from "@/lib/partner/vat";
 import { myOverview } from "@/lib/partner/scope";
 import { partnerBotConfigured } from "@/lib/partner/telegramApi";
 import { requirePartner } from "@/lib/partner/session";
+import { myTierStatus } from "@/lib/partner/tierStore";
 import { CopyLink } from "../components/forms";
+import { TierCard } from "../components/TierCard";
 import { CommissionFigures, ContactCard, dateFmt, tr, type Contact } from "../components/portalBits";
 import { portalContext } from "../portalContext";
 import { dismissOnboardingAction } from "../settingsActions";
@@ -58,10 +60,11 @@ export default async function PartnerHome() {
   }
 
   const office = officeContact();
-  const [manager, overview, onboarding] = await Promise.all([
+  const [manager, overview, onboarding, tier] = await Promise.all([
     managerContact(me.partner.managerUserId),
     myOverview(me.partner.id),
     onboardingFor(me.partner.id, me.partner.status),
+    me.partner.status === "ACTIVE" ? myTierStatus(me.partner.id) : Promise.resolve(null),
   ]);
   const OB = t.onboarding;
   const contact = manager ?? (office && { name: null, ...office });
@@ -122,6 +125,8 @@ export default async function PartnerHome() {
         <h2 className="pp-h3">{O.commissionTitle}</h2>
         {hasCommission ? <CommissionFigures t={t} locale={locale} totals={overview.commission} /> : <p className="pp-muted">{O.commissionNone}</p>}
       </section>
+
+      {tier && <TierCard t={t} locale={locale} status={tier} />}
 
       <section className="pp-panel">
         <h2 className="pp-h3">{O.latestTitle}</h2>
