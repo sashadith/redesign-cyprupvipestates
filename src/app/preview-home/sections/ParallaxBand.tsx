@@ -32,7 +32,8 @@ export default function ParallaxBand({ image, videoSrc }: { image?: ImageType; v
     const el = ref.current;
     if (!videoSrc || !el) return;
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    if (conn?.saveData) return;
+    // Phones keep the poster only: the 3.9 MB clip is decoration, not worth the mobile data.
+    if (conn?.saveData || window.matchMedia("(max-width: 768px)").matches) return;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
