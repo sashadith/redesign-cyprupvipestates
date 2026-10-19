@@ -4,7 +4,7 @@ import type { LeadInteractionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { crmRules } from "@/lib/actionCenter/rules/crm";
 import { filterSnoozed } from "@/lib/actionCenter/snooze";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
 import { LAST_CONTACT_TYPES } from "@/app/admin/(panel)/crm/leadListShared";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
@@ -20,7 +20,7 @@ export function registerWorklist(server: McpServer) {
     {
       title: "Lead worklist",
       description:
-        "Leads that need attention right now, most urgent first — the same follow-up rules as the admin Action Center (never contacted, stale >7 days, viewing without follow-up), plus the leads whose nextFollowUpAt is due (this tool's own query, not subject to Action Center snoozes) and the count of new leads in the last 7 days. Call this first in a session.",
+        "Leads that need attention right now, most urgent first — the same follow-up rules as the admin Action Center (never contacted, stale >7 days, viewing without follow-up), plus the leads whose nextFollowUpAt is due (this tool's own query, not subject to Action Center snoozes) and the count of new leads in the last 7 days. Leads who only asked for a PDF guide (source GUIDE_DOWNLOAD) are kept apart from buyer leads in `guideLeads` (same shape: followUps + dueFollowUps). Call this first in a session.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
@@ -37,7 +37,7 @@ export function registerWorklist(server: McpServer) {
           prisma.lead.findMany({
             where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER },
             select: {
-              id: true, firstName: true, lastName: true, status: true, hotAt: true, nextFollowUpAt: true, languagePreference: true,
+              id: true, firstName: true, lastName: true, status: true, source: true, hotAt: true, nextFollowUpAt: true, languagePreference: true,
               interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true, type: true } },
             },
           }),
@@ -50,27 +50,34 @@ export function registerWorklist(server: McpServer) {
           prisma.lead.count({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } }),
           prisma.lead.findMany({
             where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } },
-            select: { id: true, firstName: true, lastName: true, status: true, nextFollowUpAt: true },
+            select: { id: true, firstName: true, lastName: true, status: true, source: true, nextFollowUpAt: true },
             orderBy: { nextFollowUpAt: "asc" },
             take: limit,
           }),
         ]);
         const byId = new Map(leads.map((l) => [l.id, l]));
         const presentationItemById = new Map(presentationItems.map((p) => [p.presentationId, p]));
+        // Guide leads (2026-10-19) are readers who asked for a PDF, not buyers:
+        // reported in their own group so they never crowd the buyer list.
+        const isGuide = (source: string) => bucketOf(source) === "guide";
+        const toFollowUp = (f: (typeof leadFollowups)[number]) => {
+          const l = byId.get(f.leadId)!;
+          return {
+            leadId: f.leadId, name: `${l.firstName} ${l.lastName}`.trim(), severity: f.severity, reason: f.title, detail: f.description,
+            status: l.status, language: l.languagePreference, hotSince: fmtDate(l.hotAt), nextFollowUpAt: fmtDate(l.nextFollowUpAt),
+            lastContact: l.interactions[0] ? { type: l.interactions[0].type, at: fmtDate(l.interactions[0].occurredAt) } : null,
+            waitingSince: fmtDate(f.since),
+          };
+        };
+        const toDue = (l: (typeof dueFollowUps)[number]) => ({ leadId: l.id, name: `${l.firstName} ${l.lastName}`.trim(), status: l.status, dueAt: fmtDate(l.nextFollowUpAt) });
+        const known = leadFollowups.filter((f) => byId.has(f.leadId));
         return {
-          followUps: leadFollowups
-            .filter((f) => byId.has(f.leadId))
-            .slice(0, limit)
-            .map((f) => {
-              const l = byId.get(f.leadId)!;
-              return {
-                leadId: f.leadId, name: `${l.firstName} ${l.lastName}`.trim(), severity: f.severity, reason: f.title, detail: f.description,
-                status: l.status, language: l.languagePreference, hotSince: fmtDate(l.hotAt), nextFollowUpAt: fmtDate(l.nextFollowUpAt),
-                lastContact: l.interactions[0] ? { type: l.interactions[0].type, at: fmtDate(l.interactions[0].occurredAt) } : null,
-                waitingSince: fmtDate(f.since),
-              };
-            }),
-          dueFollowUps: dueFollowUps.map((l) => ({ leadId: l.id, name: `${l.firstName} ${l.lastName}`.trim(), status: l.status, dueAt: fmtDate(l.nextFollowUpAt) })),
+          followUps: known.filter((f) => !isGuide(byId.get(f.leadId)!.source)).slice(0, limit).map(toFollowUp),
+          dueFollowUps: dueFollowUps.filter((l) => !isGuide(l.source)).map(toDue),
+          guideLeads: {
+            followUps: known.filter((f) => isGuide(byId.get(f.leadId)!.source)).slice(0, limit).map(toFollowUp),
+            dueFollowUps: dueFollowUps.filter((l) => isGuide(l.source)).map(toDue),
+          },
           presentationItems: presentations.map((p) => {
             const item = presentationItemById.get(p.id);
             return {

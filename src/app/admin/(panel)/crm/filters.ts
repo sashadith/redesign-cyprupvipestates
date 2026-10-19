@@ -1,30 +1,37 @@
 // Shared lead list filtering/sorting — used by the CRM list page and the CSV export
 // route so both honour exactly the same query parameters.
 import type { Prisma } from "@prisma/client";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_PARTNER, bucketOf } from "@/lib/crm/leadBucket";
+import { EXCLUDE_GUIDE, EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_GUIDE, ONLY_PARTNER, bucketOf } from "@/lib/crm/leadBucket";
 import { LOCALES } from "@/lib/locale";
 
 export const LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
-export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER", "META_LEAD_AD", "PRIVATE_COLLECTION"];
+export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER", "META_LEAD_AD", "PRIVATE_COLLECTION", "GUIDE_DOWNLOAD"];
 // The Leads page's own dropdown. NEWSLETTER is missing on purpose: those leads
 // live on their own page now, so filtering the leads list by it could only ever
 // return an empty list.
 export const LEAD_LIST_SOURCES = LEAD_SOURCES.filter((s) => bucketOf(s) === "leads");
 // Which list a CRM list view shows. "leads" is everything that is neither a
-// newsletter subscriber nor a partner; "partner" is the Partner page.
-export type LeadListBucket = "leads" | "partner";
+// newsletter subscriber, a partner nor a guide lead; "partner" is the Partner
+// page, "guide" the Guide Leads page (2026-10-19).
+export type LeadListBucket = "leads" | "partner" | "guide";
 export const LEAD_LOCALES: string[] = [...LOCALES];
 
 export type LeadSearchParams = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v ?? "").trim();
-export const listBucketOf = (sp: LeadSearchParams): LeadListBucket => (one(sp.bucket) === "partner" ? "partner" : "leads");
+export const listBucketOf = (sp: LeadSearchParams): LeadListBucket => {
+  const b = one(sp.bucket);
+  return b === "partner" ? "partner" : b === "guide" ? "guide" : "leads";
+};
 
 export function buildLeadWhere(sp: LeadSearchParams, bucket: LeadListBucket = "leads"): Prisma.LeadWhereInput {
   // The exclusion goes in AND, never as a top-level `source` key: the URL's own
   // source filter is assigned to where.source further down, and would silently
   // overwrite it. The exclusion would then evaporate for exactly the query that
   // went looking for newsletter leads.
-  const where: Prisma.LeadWhereInput = { deletedAt: null, AND: bucket === "partner" ? [ONLY_PARTNER] : [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER] };
+  const where: Prisma.LeadWhereInput = {
+    deletedAt: null,
+    AND: bucket === "partner" ? [ONLY_PARTNER] : bucket === "guide" ? [ONLY_GUIDE] : [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, EXCLUDE_GUIDE],
+  };
   const q = one(sp.q);
   if (q) {
     where.OR = [

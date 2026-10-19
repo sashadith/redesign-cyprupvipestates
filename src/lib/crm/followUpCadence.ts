@@ -17,6 +17,7 @@
 // admin/actions.ts) does NOT touch this counter — only resetFollowUpCadence
 // does.
 import { prisma } from "@/lib/prisma";
+import { guideCadenceStep } from "@/lib/guides/leadSource";
 
 export type FollowUpTrigger = "presentation_sent" | "presentation_viewed" | "manual_contact";
 
@@ -70,8 +71,25 @@ export async function applyFollowUpCadence(
   // return without touching the lead, and a contact still happened either way.
   if (trigger === "manual_contact") await promoteNewToContacted(leadId);
 
-  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { autoFollowUpCount: true } });
+  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { autoFollowUpCount: true, source: true, status: true } });
   if (!lead) return;
+
+  // Guide leads (2026-10-19) get their own, shorter chain for logged contacts:
+  // two attempts, then KEEP_CONTACT with a 60-day follow-up. Every other
+  // source, and every other trigger, goes on exactly as before.
+  if (lead.source === "GUIDE_DOWNLOAD" && trigger === "manual_contact") {
+    const step = guideCadenceStep({ count: lead.autoFollowUpCount, status: lead.status, leadReacted: !!opts?.leadReacted });
+    if (step.kind === "silent") return;
+    if (step.kind === "schedule") {
+      await prisma.lead.update({ where: { id: leadId }, data: { nextFollowUpAt: new Date(Date.now() + step.days * DAY_MS), autoFollowUpCount: step.count } });
+      return;
+    }
+    if (step.kind === "park") {
+      await parkGuideLead(leadId, step.days, step.count);
+      return;
+    }
+    // "regular": the lead reacted or is in a conversation — fall through.
+  }
 
   let count = lead.autoFollowUpCount;
   if (opts?.leadReacted) count = 0; // fresh chain starts here
@@ -98,6 +116,28 @@ export async function applyFollowUpCadence(
     data: {
       nextFollowUpAt: new Date(Date.now() + days * DAY_MS),
       autoFollowUpCount: count + 1,
+    },
+  });
+}
+
+/* The second unanswered attempt on a guide lead: park it in KEEP_CONTACT and
+   come back in 60 days. Same two timeline rows as promoteNewToContacted, so the
+   automatic status change is as visible as one a person clicked. */
+async function parkGuideLead(leadId: string, days: number, count: number): Promise<void> {
+  const content = `Status changed to KEEP_CONTACT (guide lead: ${count} attempts without a reply, follow-up in ${days} days)`;
+  await prisma.lead.update({
+    where: { id: leadId },
+    data: { status: "KEEP_CONTACT", nextFollowUpAt: new Date(Date.now() + days * DAY_MS), autoFollowUpCount: count },
+  });
+  await prisma.leadActivity.create({ data: { leadId, type: "STATUS_CHANGE", content, createdBy: "system" } });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId,
+      type: "STATUS_CHANGE",
+      channel: "SYSTEM",
+      body: content,
+      metadata: { toStatus: "KEEP_CONTACT", automatic: true, guideLead: true },
+      createdByName: "system",
     },
   });
 }

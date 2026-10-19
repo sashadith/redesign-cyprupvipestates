@@ -6,9 +6,9 @@ import { buildLeadWhere, listBucketOf, LEAD_LIST_SOURCES } from "@/app/admin/(pa
    page of their own. The two lists must be disjoint and together cover every
    non-newsletter lead. */
 
-test("the leads list excludes newsletter AND partner leads", () => {
+test("the leads list excludes newsletter, partner AND guide leads", () => {
   const w = buildLeadWhere({});
-  assert.deepEqual(w.AND, [{ source: { not: "NEWSLETTER" } }, { source: { not: "PARTNER" } }]);
+  assert.deepEqual(w.AND, [{ source: { not: "NEWSLETTER" } }, { source: { not: "PARTNER" } }, { source: { not: "GUIDE_DOWNLOAD" } }]);
 });
 
 test("the partner list holds only partner leads", () => {

@@ -15,6 +15,7 @@ test("leadRow maps a Prisma lead to the compact shape and never leaks extra fiel
   assert.deepEqual(r.budget, { min: 300000, max: 500000 });
   assert.equal(r.projectInterest, "Limassol Marina");
   assert.equal(r.hot, false);
+  assert.equal(r.guide, null);
   assert.equal(r.lastContact?.type, "EMAIL_OUT");
-  assert.deepEqual(Object.keys(r).sort(), ["bucket", "budget", "countryOfResidence", "createdAt", "email", "hot", "hotSince", "language", "lastContact", "leadId", "name", "nextFollowUpAt", "phone", "projectInterest", "source", "status"]);
+  assert.deepEqual(Object.keys(r).sort(), ["bucket", "budget", "countryOfResidence", "createdAt", "email", "guide", "hot", "hotSince", "language", "lastContact", "leadId", "name", "nextFollowUpAt", "phone", "projectInterest", "source", "status"]);
 });

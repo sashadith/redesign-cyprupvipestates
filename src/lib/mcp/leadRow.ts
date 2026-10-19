@@ -12,6 +12,7 @@ export const CONTACT_TYPES = [...LAST_CONTACT_TYPES] as LeadInteractionType[];
 export const LEAD_ROW_SELECT = {
   id: true, firstName: true, lastName: true, email: true, phone: true, status: true, source: true, countryOfResidence: true,
   languagePreference: true, budgetMin: true, budgetMax: true, hotAt: true, nextFollowUpAt: true, createdAt: true,
+  guideTitle: true, guideLanguage: true,
   projectInterest: { select: { title: true } },
   interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" as const }, take: 1, select: { type: true, occurredAt: true } },
 } satisfies Prisma.LeadSelect;
@@ -32,6 +33,8 @@ export function leadRow(l: LeadRowSource) {
     language: l.languagePreference,
     budget: { min: l.budgetMin, max: l.budgetMax },
     projectInterest: l.projectInterest?.title ?? null,
+    // GUIDE_DOWNLOAD leads (2026-10-19): the PDF guide they asked for. Null otherwise.
+    guide: l.guideTitle ? { title: l.guideTitle, language: l.guideLanguage } : null,
     hot: l.hotAt != null,
     hotSince: fmtDate(l.hotAt),
     nextFollowUpAt: fmtDate(l.nextFollowUpAt),

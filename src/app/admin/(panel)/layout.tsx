@@ -5,7 +5,7 @@ import { logout } from "../actions";
 import Sidebar, { type NavModule } from "./Sidebar";
 import AdminPerfProbe from "./AdminPerfProbe";
 import ActivityTracker from "./ActivityTracker";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_NEWSLETTER, ONLY_PARTNER } from "@/lib/crm/leadBucket";
+import { EXCLUDE_GUIDE, EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, ONLY_GUIDE, ONLY_NEWSLETTER, ONLY_PARTNER } from "@/lib/crm/leadBucket";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ const LOGO_SRC = "/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x
 // The admin is organised into application MODULES. The primary rail shows the
 // modules; multi-page modules (CRM, Website) open a secondary sidebar with their
 // pages. `isAdmin` gates ADMIN-only pages (Footer/site settings, Users module).
-function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, activeLeadCount: number, activePartnerCount: number, newsletterCount: number): NavModule[] {
+function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, activeLeadCount: number, activePartnerCount: number, newsletterCount: number, activeGuideCount: number): NavModule[] {
   const websitePages = [
     { href: "/admin/content/featured", label: "Homepage" },
     { href: "/admin/content/projects", label: "Projects" },
@@ -50,6 +50,7 @@ function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, ac
         { href: "/admin/crm/board", label: "Pipeline" },
         { href: "/admin/crm/calendar", label: "Calendar" },
         { href: "/admin/crm/partners", label: "Partner", count: activePartnerCount, countVariant: "neutral" },
+        { href: "/admin/crm/guides", label: "Guide Leads", count: activeGuideCount, countVariant: "neutral" },
         { href: "/admin/crm/newsletter", label: "Newsletter", count: newsletterCount, countVariant: "neutral" },
         { href: "/admin/crm/trash", label: "Trash", count: trashCount, countVariant: "neutral" },
       ],
@@ -94,13 +95,14 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true, isOwner: true } });
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
   const user = session.user as any;
-  const [trashCount, activeLeadCount, activePartnerCount, newsletterCount] = await Promise.all([
+  const [trashCount, activeLeadCount, activePartnerCount, newsletterCount, activeGuideCount] = await Promise.all([
     prisma.lead.count({ where: { deletedAt: { not: null } } }),
-    prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER] } }),
+    prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER, EXCLUDE_GUIDE] } }),
     prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, ...ONLY_PARTNER } }),
     prisma.lead.count({ where: { deletedAt: null, ...ONLY_NEWSLETTER } }),
+    prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, ...ONLY_GUIDE } }),
   ]);
-  const modules = buildModules(user?.role === "ADMIN", dbUser.isOwner, trashCount, activeLeadCount, activePartnerCount, newsletterCount);
+  const modules = buildModules(user?.role === "ADMIN", dbUser.isOwner, trashCount, activeLeadCount, activePartnerCount, newsletterCount, activeGuideCount);
 
   // Developer-grouped nav for the Developments module: WITH FEED vs NO FEED, A-Z.
   // "With feed" = the developer has at least one live (URL/API) feed analysis.
