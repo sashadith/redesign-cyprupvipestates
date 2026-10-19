@@ -5,7 +5,7 @@
 import { randomInt } from "node:crypto";
 import { dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { escapeHtml } from "./mail";
-import { unhandledKind, type NotificationKind } from "./notify";
+import { formatShare, unhandledKind, type NotificationKind } from "./notify";
 import { makeThrottle } from "./throttle";
 import { hashToken } from "./tokens";
 
@@ -186,6 +186,10 @@ export type TelegramNotificationInput = {
   changeType?: string | null;
   /** Pre-formatted price. */
   priceFrom?: string | null;
+  /** TIER_UP: the new tier's name and shares (percent). */
+  tierName?: string | null;
+  handoverShare?: number | null;
+  fixShare?: number | null;
   /** Target of the main link (client page, project page, presentations page). */
   url: string;
   portalUrl: string;
@@ -235,10 +239,14 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
     case "PRESENTATION_OPENED":
       out = `<b>${line(t.presentationOpened, { client })}</b>\n\n${open}`;
       break;
-    case "TIER_UP":
-      // notifySend skips TIER_UP rows ("not implemented yet") before any builder runs; the real text ships with the producer.
-      out = open;
+    case "TIER_UP": {
+      const lines = [`<b>${line(t.tierUp, { tier: text(input.tierName, 40) })}</b>`];
+      if (input.handoverShare != null && input.fixShare != null) {
+        lines.push(line(t.tierShares, { handover: esc(formatShare(locale, input.handoverShare)), fix: esc(formatShare(locale, input.fixShare)) }));
+      }
+      out = `${lines.join("\n")}\n\n${open}`;
       break;
+    }
     default:
       return unhandledKind(input.kind);
   }

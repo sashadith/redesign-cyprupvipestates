@@ -149,6 +149,29 @@ export function formatPayoutAmount(locale: PartnerLocale, euros: number): string
   return new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(euros);
 }
 
+/** A share percentage in the partner's locale (35 → "35", 32.5 → "32,5" in de/pl/ru). */
+export function formatShare(locale: PartnerLocale, percent: number): string {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(percent);
+}
+
+/** "You are now a {tier} partner" (phase 4b, Decision 8): the new tier, its shares, and that existing deals stay unchanged. */
+export function buildTierUpEmail(
+  locale: PartnerLocale,
+  p: { partnerFirstName: string; tierName: string; handoverShare: number; fixShare: number; portalUrl: string },
+): BuiltEmail {
+  const t = dict(locale).mail.tierUp;
+  const vars = { tier: p.tierName.trim() || "—", handover: formatShare(locale, p.handoverShare), fix: formatShare(locale, p.fixShare) };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars),
+    greeting: greet(t.greeting, p.partnerFirstName),
+    intro: fmt(t.intro, vars),
+    button: t.button,
+    link: p.portalUrl,
+    notes: [t.note],
+    signature: dict(locale).mail.signature,
+  });
+}
+
 export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
