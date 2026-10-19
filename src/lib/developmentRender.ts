@@ -28,6 +28,14 @@ type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverri
 // structural typing means every existing ProjectVM consumer just ignores them).
 export type DbProjectVM = ProjectVM & {
   slug: string | null;
+  /** The Development row's own UUID.
+   *
+   *  `ProjectVM.id` above is NOT this — it is `feedProjectId`, the vendor's own
+   *  identifier, which changes if a project moves to a different source. The
+   *  Meta pixel's `content_ids` and the Xellex bridge both key on the UUID, and
+   *  a catalog whose ids disagree with the pixel's matches nothing at all while
+   *  looking perfectly healthy from either side. */
+  developmentId: string;
   publishStatus: string;
   seoOverride: SeoOverride | null;
   // Long-form promotional content block (rendered between the map and units
@@ -90,7 +98,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
   const { priceFrom, priceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, units);
 
   return {
-    id: d.feedProjectId, dev: d.dev, publicName: ov?.alias || d.publicName, developerName: d.developerName, developer: d.developer ?? "",
+    id: d.feedProjectId, developmentId: d.id, dev: d.dev, publicName: ov?.alias || d.publicName, developerName: d.developerName, developer: d.developer ?? "",
     location: resolveDevelopmentLocation(district, town, area), district, town, area,
     status: d.status ?? "", category: d.category ?? undefined,
     stage: ov?.stage || d.stage || undefined, completion: resolveRelativeCompletion(ov?.completion || d.completion), energy: ov?.energy || d.energy || "",

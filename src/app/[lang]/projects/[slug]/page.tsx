@@ -82,7 +82,6 @@ import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFou
 // ROI modal (recharts) is client-only (opens on click); related-projects slider (Swiper)
 // keeps SSR so its internal links stay in the HTML for SEO, but its JS chunk is split.
 const ModalRoiCalculator = nextDynamic(() => import("@/app/components/ModalRoiCalculator/ModalRoiCalculator"), { ssr: false });
-import MetaViewContentTracker from "@/app/components/MetaViewContentTracker/MetaViewContentTracker";
 import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
 import ProjectPdfButton from "@/app/components/ProjectPdfButton/ProjectPdfButton";
 import { languageAlternates, pathBuilders } from "@/lib/seo";
@@ -273,13 +272,6 @@ const ProjectPage = async ({ params }: Props) => {
       )}
       <Header params={params} translations={translations} />
       <main>
-        <MetaViewContentTracker
-          title={project.title}
-          projectId={project._id}
-          price={project.keyFeatures?.price ?? null}
-          city={project.keyFeatures?.city}
-          propertyType={project.keyFeatures?.propertyType}
-        />
         <LinkedInConversionTracker conversionId={27871513} />
         <PropertyIntro
           title={project.title}

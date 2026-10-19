@@ -54,7 +54,7 @@ test("Sonnet 5.5 gets auto + between_tools + an instruction, never a forced tool
   assert.equal(sent.length, 1);
   assert.deepEqual(sent[0].tool_choice, { type: "auto", disable_parallel_tool_use: true });
   assert.deepEqual(sent[0].thinking, { type: "between_tools" });
-  assert.equal(sent[0].max_tokens, 1000, "between_tools does no extended thinking, so the calibrated budget stands");
+  assert.equal(sent[0].max_tokens, 9000, "a text block before the call + a heavier tokenizer: the steered path needs room");
   assert.equal(sent[0].output_config, undefined);
   assert.match(sent[0].system, /`data` tool exactly once/);
 });
