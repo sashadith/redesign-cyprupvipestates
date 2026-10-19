@@ -97,6 +97,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
           <h1>Partners</h1>
           <p>Approve, suspend and configure partners registered on the partner portal.</p>
         </div>
+        <Link href="/crm/partners/rating" className="crm-btn">Rating seasons</Link>
       </div>
       <nav className="crm-pt-tabs" aria-label="Partner status">
         {TABS.map((t) => (

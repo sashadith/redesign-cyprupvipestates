@@ -26,6 +26,7 @@ export function PortalShell({ locale, t, loggedIn, active = false, children }: P
                   <Link href="/clients">{t.nav.clients}</Link>
                   <Link href="/presentations">{t.nav.presentations}</Link>
                   <Link href="/commissions">{t.nav.commissions}</Link>
+                  <Link href="/rating">{t.nav.rating}</Link>
                   <Link href="/projects">{t.nav.projects}</Link>
                   <Link href="/calculator">{t.nav.calculator}</Link>
                   <Link href="/materials">{t.nav.materials}</Link>

@@ -635,3 +635,18 @@
 .crm-in-details[open] summary { margin-bottom: 8px; }
 .crm-in-details .crm-in-tablewrap { box-shadow: none; }
 @media (forced-colors: active) { .crm-in-won-bar { background: CanvasText; } .crm-in-legend i { forced-color-adjust: none; } }
+
+/* ── Rating seasons (phase 4b) ─────────────────────────────────────────── */
+.crm-rs-form { margin: 0 0 16px; display: grid; gap: 4px; }
+.crm-rs-form h2 { margin: 0; font-size: 15px; }
+.crm-rs-fields legend, .crm-rs-prizes legend { padding: 0 0 4px; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.crm-rs-fields input[inputmode="numeric"] { min-width: 0; width: 96px; }
+.crm-rs-name input { min-width: 260px; }
+.crm-rs-prizes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.crm-rs-prizes textarea { border: 1px solid var(--field-line); border-radius: 10px; padding: 7px 9px; font: 500 13px var(--body); background: var(--field-bg); color: var(--ink); width: 100%; resize: vertical; box-sizing: border-box; }
+.crm-rs-prizes textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-rs-note { margin: 8px 0 0; font-size: 12.5px; }
+.crm-rs-form > .crm-warn { margin: 8px 0 0; font-size: 13px; }
+.crm-rs-form > .crm-pt-actions { margin-top: 12px; }
+.crm-in-table tr[aria-current="true"] > * { background: var(--hover); }
+@media (max-width: 700px) { .crm-rs-prizes { grid-template-columns: 1fr; } .crm-rs-name input { min-width: 0; } }

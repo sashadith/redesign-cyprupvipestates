@@ -1,6 +1,6 @@
 /** Partner portal dictionary — English. Placeholders use {name}; escape HTML at the call site. */
 export const en = {
-  nav: { home: "Home", profile: "Profile", logout: "Log out", language: "Language", login: "Log in", register: "Become a partner", overview: "Overview", submit: "Submit client", clients: "My clients", projects: "Projects", commissions: "Commissions", calculator: "Calculator", materials: "Materials", presentations: "Presentations" },
+  nav: { home: "Home", profile: "Profile", logout: "Log out", language: "Language", login: "Log in", register: "Become a partner", overview: "Overview", submit: "Submit client", clients: "My clients", projects: "Projects", commissions: "Commissions", calculator: "Calculator", materials: "Materials", presentations: "Presentations", rating: "Rating" },
   footer: { brand: "Cyprus VIP Estates", rights: "All rights reserved.", agreement: "Partner agreement", contact: "Contact us" },
   landing: {
     title: "Partner programme",
@@ -776,6 +776,7 @@ export const en = {
     finalRank: "Final rank: {rank}",
     noSeason: "There is no active rating season at the moment.",
     noPoints: "No points in this season yet.",
+    pastNoPoints: "You earned no points in this season.",
   },
   news: {
     title: "News",

@@ -2,7 +2,7 @@ import type { PartnerDict } from "./en";
 
 /** Partnerportal — Deutsch (formelle Anrede „Sie“). */
 export const de: PartnerDict = {
-  nav: { home: "Startseite", profile: "Profil", logout: "Abmelden", language: "Sprache", login: "Anmelden", register: "Partner werden", overview: "Übersicht", submit: "Kunden einreichen", clients: "Meine Kunden", projects: "Projekte", commissions: "Provisionen", calculator: "Rechner", materials: "Materialien", presentations: "Präsentationen" },
+  nav: { home: "Startseite", profile: "Profil", logout: "Abmelden", language: "Sprache", login: "Anmelden", register: "Partner werden", overview: "Übersicht", submit: "Kunden einreichen", clients: "Meine Kunden", projects: "Projekte", commissions: "Provisionen", calculator: "Rechner", materials: "Materialien", presentations: "Präsentationen", rating: "Rangliste" },
   footer: { brand: "Cyprus VIP Estates", rights: "Alle Rechte vorbehalten.", agreement: "Partnervereinbarung", contact: "Kontakt" },
   landing: {
     title: "Partnerprogramm",
@@ -778,6 +778,7 @@ export const de: PartnerDict = {
     finalRank: "Endplatzierung: {rank}",
     noSeason: "Derzeit läuft keine Saison.",
     noPoints: "In dieser Saison noch keine Punkte.",
+    pastNoPoints: "In dieser Saison haben Sie keine Punkte gesammelt.",
   },
   news: {
     title: "Neuigkeiten",
