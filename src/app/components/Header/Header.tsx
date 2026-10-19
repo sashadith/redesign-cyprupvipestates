@@ -11,6 +11,7 @@ import HeaderConsultButton from "./HeaderConsultButton";
 import ModalBrochureLazy from "../ModalBrochure/ModalBrochureLazy";
 import { getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
 import type { FormStandardDocument } from "@/types/formStandardDocument";
+import OptImg from "@/app/preview-home/sections/OptImg"; // logos: resized WebP; the hidden one (display:none per breakpoint) is lazy so it is never fetched
 
 /* Global site header — quiet-luxury redesign (migrated from the staging preview).
    Transparent at the top of the page, frosted on scroll. Content (logo + menu)
@@ -86,8 +87,8 @@ const Header = async ({ translations, params }: Props) => {
             } as React.CSSProperties
           }
         >
-          {logo && <img className="nav__logo-full" src={logo} alt="Cyprus VIP Estates" />}
-          {logoMobile && <img className="nav__logo-mark" src={logoMobile} alt="Cyprus VIP Estates" />}
+          {logo && <OptImg className="nav__logo-full" src={logo} alt="Cyprus VIP Estates" sizes="300px" widths={[384, 640]} />}
+          {logoMobile && <OptImg className="nav__logo-mark" src={logoMobile} alt="Cyprus VIP Estates" sizes="32px" widths={[64, 96, 128]} />}
         </Link>
 
         <HeaderNavLinks navLinks={data.navLinks} lang={params.lang} />

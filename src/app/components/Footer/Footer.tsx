@@ -16,6 +16,7 @@ import { footerCopy } from "./Footer.copy";
 import { GUIDE_LANGS, type GuideLang } from "@/lib/guides/types";
 import { guidesPagePath } from "@/lib/guidesPage";
 import { guidesPageCopy } from "@/app/preview-guides/copy";
+import OptImg from "@/app/preview-home/sections/OptImg"; // footer sits below the fold on every page: lazy + resized, and no <link rel=preload> hint (those competed with the render-blocking CSS)
 
 /* Global site footer — quiet-luxury redesign (migrated from the staging preview).
    All content still comes from the CMS via getFooterByLang; contact links and the
@@ -63,7 +64,7 @@ const Footer = async ({ params }: Props) => {
       <div className="pf__container">
         <div className="pf__top">
           <div className="pf__brand">
-            {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" />}
+            {logoUrl && <OptImg className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" sizes="235px" widths={[384, 640]} />}
           </div>
 
           <div className="pf__col">
@@ -97,7 +98,7 @@ const Footer = async ({ params }: Props) => {
                       className="pf__social-link"
                       aria-label={s.label}
                     >
-                      {icon && <img src={icon} alt="" width={20} height={20} />}
+                      {icon && <img src={icon} alt="" width={20} height={20} loading="lazy" decoding="async" />}
                     </a>
                   );
                 })}

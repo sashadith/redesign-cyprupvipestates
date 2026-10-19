@@ -21,14 +21,15 @@ type Props = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet"> &
   src: string;
   alt: string;
   maxWidth?: number; // widest variant worth generating (CSS px * DPR ceiling)
+  widths?: number[]; // explicit variant widths (must be Next image sizes), e.g. small logos
 };
 
-export default function OptImg({ src, alt, sizes = "(max-width: 768px) 100vw, 50vw", maxWidth = 1200, ...rest }: Props) {
+export default function OptImg({ src, alt, sizes = "(max-width: 768px) 100vw, 50vw", maxWidth = 1200, widths: explicitWidths, ...rest }: Props) {
   if (!RASTER.test(src)) {
     return <img src={src} alt={alt} loading="lazy" decoding="async" {...rest} />;
   }
   const enc = encodeURIComponent(src);
-  const widths = WIDTHS.filter((w) => w <= maxWidth);
+  const widths = explicitWidths ?? WIDTHS.filter((w) => w <= maxWidth);
   const srcSet = widths.map((w) => `/_next/image?url=${enc}&w=${w}&q=75 ${w}w`).join(", ");
   const fallback = `/_next/image?url=${enc}&w=${widths[Math.min(2, widths.length - 1)]}&q=75`;
   return <img src={fallback} srcSet={srcSet} sizes={sizes} alt={alt} loading="lazy" decoding="async" {...rest} />;
