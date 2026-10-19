@@ -36,7 +36,7 @@ export function closedDealsLast12Months(deals: { commissionStatus: string; earne
 const activeSorted = (tiers: TierConfig[]) => tiers.filter((t) => t.active).sort((a, b) => a.sort - b.sort || a.key.localeCompare(b.key));
 
 /** The partner's tier for comparison and display: the stored key, else (unset or unknown) the lowest active tier. */
-function currentTier(currentKey: string | null, tiers: TierConfig[]): TierConfig | null {
+export function currentTier(currentKey: string | null, tiers: TierConfig[]): TierConfig | null {
   return tiers.find((t) => t.key === currentKey) ?? activeSorted(tiers)[0] ?? null;
 }
 

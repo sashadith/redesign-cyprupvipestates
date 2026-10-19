@@ -742,7 +742,13 @@ export const ru: PartnerDict = {
     current: "Уровень: {tier}",
     shares: "Ваши доли: {handover} % передача · {fix} % Fix",
     closedDeals: "Закрытые сделки за последние 12 месяцев: {n}",
-    progress: "Осталось закрытых сделок до уровня {tier}: {n}",
+    progress: {
+      one: "Ещё {n} закрытая сделка до уровня {tier}",
+      few: "Ещё {n} закрытые сделки до уровня {tier}",
+      many: "Ещё {n} закрытых сделок до уровня {tier}",
+      other: "Ещё {n} закрытой сделки до уровня {tier}",
+    },
+    reviewing: "Повышение до уровня {tier} на рассмотрении",
     progressAria: "Прогресс до уровня {tier}",
     highest: "Высший уровень",
     highestText: "Вы достигли высшего уровня партнёра.",
@@ -778,7 +784,7 @@ export const ru: PartnerDict = {
     finalRank: "Итоговое место: {rank}",
     noSeason: "Сейчас нет активного сезона рейтинга.",
     noPoints: "В этом сезоне баллов пока нет.",
-    pastNoPoints: "В этом сезоне вы не набрали баллов.",
+    pastNoPoints: "В этом сезоне Вы не набрали баллов.",
   },
   news: {
     title: "Новости",

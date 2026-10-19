@@ -32,19 +32,24 @@ export async function closedDealCounts(partnerIds: string[], now: Date): Promise
   return closedDealsByPartner(claims, now, partnerIds);
 }
 
-export type MyTierStatus = { progress: TierProgress; closedDeals: number; handoverShare: number; fixShare: number };
+export type MyTierStatus = {
+  progress: TierProgress; closedDeals: number; handoverShare: number; fixShare: number;
+  /** An upgrade proposal is open (the card says "being reviewed" instead of counting down). */
+  reviewing: boolean;
+};
 
 /**
  * The partner's own tier card: the tier (unset → lowest active), the partner's actual shares (an unset tier
- * keeps the individually agreed ones), closed deals and the progress to the next tier. Partner-scoped reads
- * only; null when no tier is configured.
+ * keeps the individually agreed ones), closed deals, the progress to the next tier and whether an upgrade
+ * proposal is open. Partner-scoped reads only; null when no tier is configured.
  */
 export async function myTierStatus(partnerId: string, now: Date = new Date()): Promise<MyTierStatus | null> {
   if (typeof partnerId !== "string" || !partnerId.trim()) throw new Error("tier scope: partnerId required");
-  const [partner, tiers, counts] = await Promise.all([
+  const [partner, tiers, counts, open] = await Promise.all([
     prisma.partner.findUnique({ where: { id: partnerId }, select: { tierKey: true, handoverShare: true, fixShare: true } }),
     loadTiers(),
     closedDealCounts([partnerId], now),
+    prisma.partnerTierProposal.count({ where: { partnerId, decidedAt: null } }),
   ]);
   if (!partner || !tiers.some((t) => t.active)) return null;
   const closedDeals = counts.get(partnerId) ?? 0;
@@ -53,6 +58,7 @@ export async function myTierStatus(partnerId: string, now: Date = new Date()): P
     closedDeals,
     handoverShare: Number(partner.handoverShare),
     fixShare: Number(partner.fixShare),
+    reviewing: open > 0,
   };
 }
 

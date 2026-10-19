@@ -52,7 +52,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
       take: 200,
       select: {
         id: true, fromTier: true, toTier: true, closedDeals: true, createdAt: true,
-        partner: { select: { firstName: true, lastName: true, company: true } },
+        partner: { select: { firstName: true, lastName: true, company: true, handoverShare: true, fixShare: true } },
       },
     }),
   ]);
@@ -80,13 +80,19 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
     vatMode: p.vatMode, vatModeManual: p.vatModeManual, vatId: p.vatId, bank: bankOf(p),
     telegramLinked: !!p.telegramChatId,
     tierLabel: tierLabel(p.tierKey, tiers),
+    tierKey: p.tierKey,
     closedDeals12m: closedDeals.get(p.id) ?? 0,
   }));
-  const proposals: TierProposalRow[] = openProposals.map((p) => ({
-    id: p.id, partnerName: `${p.partner.firstName} ${p.partner.lastName}`, company: p.partner.company,
-    fromLabel: tierLabel(p.fromTier, tiers), toLabel: tierLabel(p.toTier, tiers), closedDeals: p.closedDeals,
-    created: p.createdAt.toISOString().slice(0, 10),
-  }));
+  const proposals: TierProposalRow[] = openProposals.map((p) => {
+    const to = tiers.find((t) => t.key === p.toTier) ?? null;
+    return {
+      id: p.id, partnerName: `${p.partner.firstName} ${p.partner.lastName}`, company: p.partner.company,
+      fromLabel: tierLabel(p.fromTier, tiers), toLabel: tierLabel(p.toTier, tiers), closedDeals: p.closedDeals,
+      created: p.createdAt.toISOString().slice(0, 10),
+      currentShares: { handover: Number(p.partner.handoverShare), fix: Number(p.partner.fixShare) },
+      tierShares: to ? { handover: to.handoverShare, fix: to.fixShare } : null,
+    };
+  });
   // Pending: verified first, then unverified; each oldest first (query is already oldest first, sort is stable).
   if (tab.key === "pending") rows.sort((a, b) => Number(b.verified) - Number(a.verified));
 
@@ -112,7 +118,10 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
           tiers={tiers.map((t) => ({ key: t.key, name: t.name, minClosedDeals: t.minClosedDeals, handoverShare: t.handoverShare, fixShare: t.fixShare, active: t.active }))}
           proposals={proposals}
         />
-        <PartnersTable rows={rows} managers={managers} canReveal={user.isOwner} />
+        <PartnersTable
+          rows={rows} managers={managers} canReveal={user.isOwner}
+          tiers={tiers.filter((t) => t.active).map((t) => ({ key: t.key, name: t.name, handoverShare: t.handoverShare, fixShare: t.fixShare }))}
+        />
       </ToastProvider>
     </>
   );

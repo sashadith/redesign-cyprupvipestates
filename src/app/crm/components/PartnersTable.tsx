@@ -4,6 +4,7 @@ import type { PartnerType } from "@prisma/client";
 import {
   approvePartnerAction, reactivatePartnerAction, revealBankDetailsAction, suspendPartnerAction, updatePartnerTermsAction, updatePartnerVatIdAction, updatePartnerVatModeAction,
 } from "../partners/actions";
+import { setPartnerTierAction } from "../partners/tierActions";
 import { VAT_MODES, type PartnerBankView, type VatModeValue } from "@/lib/crm/payoutRules";
 import type { BankDetails } from "@/lib/partner/bank";
 import { deriveVatMode } from "@/lib/partner/vat";
@@ -18,8 +19,12 @@ export type PartnerRow = {
   telegramLinked: boolean;
   /** Tier badge text ("Silver (default)" when no tier is set) and closed deals of the last 12 months. */
   tierLabel: string;
+  /** The stored tier key (null = default tier). */
+  tierKey: string | null;
   closedDeals12m: number;
 };
+
+export type TierOption = { key: string; name: string; handoverShare: number; fixShare: number };
 
 const VAT_LABEL: Record<VatModeValue, string> = { NONE: "No VAT", CY_VAT: "CY VAT 19%", REVERSE_CHARGE: "Reverse charge" };
 const vatModeText = (r: Pick<PartnerRow, "vatMode" | "vatModeManual">) =>
@@ -55,6 +60,30 @@ function TermsEditor({ row, managers }: { row: PartnerRow; managers: { id: strin
       </label>
       <label className="crm-pt-check"><input type="checkbox" checked={trust} onChange={(e) => setTrust(e.target.checked)} /><span>Trust mode</span></label>
       <button type="button" className="crm-btn primary" onClick={save}>Save</button>
+    </fieldset>
+  );
+}
+
+/** Manual tier change: a tier sets exactly its shares (may lower them); "None" clears the tier and keeps the shares. */
+function TierEditor({ row, tiers }: { row: PartnerRow; tiers: TierOption[] }) {
+  const toast = useToast();
+  const [pending, start] = useTransition();
+  const [choice, setChoice] = useState(row.tierKey ?? "");
+  const picked = tiers.find((t) => t.key === choice) ?? null;
+  const save = () => start(async () => {
+    const r = await setPartnerTierAction(row.id, choice || null);
+    if ("error" in r) toast.show(r.error, "error"); else toast.show(r.notice ?? "Saved");
+  });
+  return (
+    <fieldset disabled={pending} className="crm-pt-terms">
+      <label><span>Tier · now {row.tierLabel}</span>
+        <select value={choice} onChange={(e) => setChoice(e.target.value)}>
+          <option value="">None (default tier, shares unchanged)</option>
+          {tiers.map((t) => <option key={t.key} value={t.key}>{t.name} (Handover {t.handoverShare}% · Fix {t.fixShare}%)</option>)}
+        </select>
+      </label>
+      {picked && <span className="crm-muted">Sets the shares to exactly {picked.handoverShare}% / {picked.fixShare}% for new deals; an upgrade notifies the partner.</span>}
+      <button type="button" className="crm-btn" onClick={save} disabled={choice === (row.tierKey ?? "")}>Set tier</button>
     </fieldset>
   );
 }
@@ -135,7 +164,7 @@ function BankPanel({ row, canReveal }: { row: PartnerRow; canReveal: boolean }) 
   );
 }
 
-function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: string; name: string }[]; canReveal: boolean }) {
+function Row({ row, managers, canReveal, tiers }: { row: PartnerRow; managers: { id: string; name: string }[]; canReveal: boolean; tiers: TierOption[] }) {
   const toast = useToast();
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -183,19 +212,23 @@ function Row({ row, managers, canReveal }: { row: PartnerRow; managers: { id: st
           <button type="button" className="crm-btn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? "Hide details" : "Terms & bank"}</button>
         </div>
       </div>
-      {open && <TermsEditor row={row} managers={managers} />}
+      {/* Keyed on the stored terms: after a tier change (revalidated row) the share inputs start from the new values. */}
+      {open && <TermsEditor key={`${row.handoverShare}|${row.fixShare}|${row.trustMode}|${row.managerUserId ?? ""}`} row={row} managers={managers} />}
+      {open && row.status !== "PENDING" && tiers.length > 0 && <TierEditor key={row.tierKey ?? ""} row={row} tiers={tiers} />}
       {/* Keyed on the stored VAT state: after a save (revalidated row) the inputs start from the new values. */}
       {open && <BankPanel key={`${row.vatId ?? ""}|${row.vatMode}|${row.vatModeManual}`} row={row} canReveal={canReveal} />}
     </li>
   );
 }
 
-export function PartnersTable({ rows, managers, canReveal }: { rows: PartnerRow[]; managers: { id: string; name: string }[]; canReveal: boolean }) {
+export function PartnersTable({ rows, managers, canReveal, tiers }: {
+  rows: PartnerRow[]; managers: { id: string; name: string }[]; canReveal: boolean; tiers: TierOption[];
+}) {
   const toast = useToast();
   if (rows.length === 0) return <p className="crm-pt-empty">No partners here.</p>;
   return (
     <>
-      <ul className="crm-pt">{rows.map((r) => <Row key={r.id} row={r} managers={managers} canReveal={canReveal} />)}</ul>
+      <ul className="crm-pt">{rows.map((r) => <Row key={r.id} row={r} managers={managers} canReveal={canReveal} tiers={tiers} />)}</ul>
       {toast.node}
     </>
   );

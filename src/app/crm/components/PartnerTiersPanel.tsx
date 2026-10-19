@@ -6,7 +6,20 @@ import { useToast } from "./Toast";
 export type TierSettingsRow = { key: string; name: string; minClosedDeals: number; handoverShare: number; fixShare: number; active: boolean };
 export type TierProposalRow = {
   id: string; partnerName: string; company: string | null; fromLabel: string; toLabel: string; closedDeals: number; created: string;
+  /** The partner's shares now and the proposed tier's (null when the tier no longer exists). Accept keeps the higher of each. */
+  currentShares: { handover: number; fix: number };
+  tierShares: { handover: number; fix: number } | null;
 };
+
+/** "30% → 35%"; when the current share is higher, Accept keeps it. */
+function ShareChange({ label, from, to }: { label: string; from: number; to: number | null }) {
+  if (to == null) return <span>{label} {from}%</span>;
+  return (
+    <span>
+      {label} {from}% → {to}%{from > to && <span className="crm-muted"> (current kept)</span>}
+    </span>
+  );
+}
 
 type Draft = { key: string; name: string; minClosedDeals: string; handoverShare: string; fixShare: string; active: boolean };
 const toDraft = (r: TierSettingsRow): Draft => ({
@@ -77,6 +90,11 @@ function Proposal({ p }: { p: TierProposalRow }) {
     <tr aria-busy={pending}>
       <th scope="row">{p.partnerName}{p.company && <span className="crm-muted"> · {p.company}</span>}</th>
       <td>{p.fromLabel} → <b>{p.toLabel}</b></td>
+      <td>
+        <ShareChange label="Handover" from={p.currentShares.handover} to={p.tierShares?.handover ?? null} />
+        {" · "}
+        <ShareChange label="Fix" from={p.currentShares.fix} to={p.tierShares?.fix ?? null} />
+      </td>
       <td className="num">{p.closedDeals}</td>
       <td>{p.created}</td>
       <td>
@@ -94,7 +112,7 @@ function OpenProposals({ proposals }: { proposals: TierProposalRow[] }) {
     <section className="crm-panel crm-pt-tiers" aria-labelledby="pt-proposals-title">
       <div className="crm-pt-bot-head">
         <h2 id="pt-proposals-title">Open tier proposals</h2>
-        <span className="crm-pt-bot-count">{proposals.length} open · Accept sets the tier and its shares and notifies the partner</span>
+        <span className="crm-pt-bot-count">{proposals.length} open · Accept sets the tier, raises shares to the tier&apos;s (never lowers them) and notifies the partner</span>
       </div>
       {proposals.length === 0 ? (
         <p>No open proposals.</p>
@@ -102,7 +120,7 @@ function OpenProposals({ proposals }: { proposals: TierProposalRow[] }) {
         <div className="crm-in-tablewrap">
           <table className="crm-in-table">
             <thead>
-              <tr><th scope="col">Partner</th><th scope="col">Tier</th><th scope="col" className="num">Closed deals</th><th scope="col">Created</th><th scope="col"><span className="sr-only">Actions</span></th></tr>
+              <tr><th scope="col">Partner</th><th scope="col">Tier</th><th scope="col">Shares (current → tier)</th><th scope="col" className="num">Closed deals</th><th scope="col">Created</th><th scope="col"><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>{proposals.map((p) => <Proposal key={p.id} p={p} />)}</tbody>
           </table>

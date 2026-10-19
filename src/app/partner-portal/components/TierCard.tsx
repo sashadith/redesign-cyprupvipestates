@@ -1,8 +1,9 @@
 // The partner's own tier card (phase 4b, Decision 5) on Overview and Commissions. Server-rendered; the data
 // comes from myTierStatus (partner-scoped). Shows the tier, the partner's actual shares, closed deals and the
-// progress to the next tier, or "Highest tier" at the top.
+// progress to the next tier ("being reviewed" while an upgrade is pending), or "Highest tier" at the top.
 import { fmt, type PartnerDict, type PartnerLocale } from "@/lib/partner/i18n";
 import { formatShare } from "@/lib/partner/notify";
+import { tierProgressLine } from "@/lib/partner/tierFlow";
 import type { MyTierStatus } from "@/lib/partner/tierStore";
 
 export function TierCard({ t, locale, status }: { t: PartnerDict; locale: PartnerLocale; status: MyTierStatus }) {
@@ -18,7 +19,7 @@ export function TierCard({ t, locale, status }: { t: PartnerDict; locale: Partne
       {next ? (
         <>
           <progress className="pp-progress" value={progress.pct} max={100} aria-label={fmt(T.progressAria, { tier: next.name })} />
-          <p className="pp-small">{fmt(T.progress, { n: progress.remaining, tier: next.name })}</p>
+          <p className="pp-small">{tierProgressLine(T, locale, progress, status.reviewing)}</p>
         </>
       ) : (
         <>

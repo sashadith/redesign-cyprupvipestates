@@ -2,8 +2,9 @@
 // the partner-tiers cron, the TIER_UP outbox row). Pure, no DB access, so every decision is testable.
 import type { Prisma } from "@prisma/client";
 import { activeSince } from "./claimState";
+import { fmt, type PartnerDict, type PartnerLocale } from "./i18n";
 import { escapeHtml } from "./mail";
-import { CLOSED_DEAL_STATUSES, TIER_WINDOW_DAYS, closedDealsLast12Months, type TierConfig } from "./tiers";
+import { CLOSED_DEAL_STATUSES, TIER_WINDOW_DAYS, closedDealsLast12Months, currentTier, type TierConfig, type TierProgress } from "./tiers";
 
 const DAY = 86_400_000;
 
@@ -86,29 +87,97 @@ export function proposalEligibility(input: {
   return { ok: true, tier: input.proposed };
 }
 
+export type Shares = { handoverShare: number; fixShare: number };
+
 /**
- * What Accept writes on the partner: the tier and its shares (new deals only; existing deals keep their
- * share). The tier must still exist and be active, and must rank above the partner's current tier (a manual
- * change since the proposal may have made it stale; accepting must never be a downgrade).
+ * What Accept writes on the partner: the tier and shares (new deals only; existing deals keep their share).
+ * Accept never lowers a share: each one is max(the partner's current share, the tier's share), so an
+ * individually agreed higher share survives the upgrade. The tier must still exist and be active, and must
+ * rank above the partner's current tier (a manual change since the proposal may have made it stale;
+ * accepting must never be a downgrade).
  */
 export function tierAcceptData(
   tier: TierConfig | null,
   now: Date,
   current: TierConfig | null = null,
+  shares: Shares | null = null,
 ): { error: string } | { data: { tierKey: string; tierSince: Date; handoverShare: number; fixShare: number } } {
   if (!tier) return { error: "The proposed tier no longer exists." };
   if (!tier.active) return { error: `The tier "${tier.name}" is inactive. Activate it or decline the proposal.` };
   if (current && current.sort >= tier.sort) return { error: `The partner is already ${current.name}. Decline this proposal.` };
-  return { data: { tierKey: tier.key, tierSince: now, handoverShare: tier.handoverShare, fixShare: tier.fixShare } };
+  const handoverShare = shares ? Math.max(shares.handoverShare, tier.handoverShare) : tier.handoverShare;
+  const fixShare = shares ? Math.max(shares.fixShare, tier.fixShare) : tier.fixShare;
+  return { data: { tierKey: tier.key, tierSince: now, handoverShare, fixShare } };
 }
 
 export const tierUpRefKey = (proposalId: string) => `tierup:${proposalId}`;
+/** TIER_UP refKey of a manual upgrade in the CRM (one per partner and moment). */
+export const tierUpManualRefKey = (partnerId: string, now: Date) => `tierup:manual:${partnerId}:${now.toISOString()}`;
 
 export type TierUpPayload = { tierKey: string; tierName: string; handoverShare: number; fixShare: number };
 
-export const tierUpPayload = (tier: TierConfig): TierUpPayload => ({
-  tierKey: tier.key, tierName: tier.name, handoverShare: tier.handoverShare, fixShare: tier.fixShare,
+/** The TIER_UP payload: the tier and the shares the partner actually has after the change (default: the tier's). */
+export const tierUpPayload = (tier: TierConfig, shares: Shares = tier): TierUpPayload => ({
+  tierKey: tier.key, tierName: tier.name, handoverShare: shares.handoverShare, fixShare: shares.fixShare,
 });
+
+export type ManualTierChange =
+  | { error: string }
+  | { unchanged: true }
+  | {
+      data: { tierKey: string | null; tierSince?: Date | null; handoverShare?: number; fixShare?: number };
+      /** Compared on the effective tier (unset = lowest active). Only "up" queues a TIER_UP notice. */
+      direction: "up" | "down" | "same";
+      tier: TierConfig | null;
+    };
+
+/**
+ * A manager sets the tier by hand (CRM partners list). A chosen tier must exist and be active; the partner
+ * then gets exactly the tier's shares (an explicit operator choice, so it may lower them) and tierSince =
+ * now (kept when the tier itself does not change). "None" (null) clears tierKey and tierSince and leaves the
+ * shares alone. Unchanged when nothing would change.
+ */
+export function manualTierChange(input: {
+  currentKey: string | null;
+  targetKey: string | null;
+  shares: Shares;
+  tiers: TierConfig[];
+  now: Date;
+}): ManualTierChange {
+  const { currentKey, targetKey, shares, tiers, now } = input;
+  const before = currentTier(currentKey, tiers);
+  if (targetKey == null) {
+    if (currentKey == null) return { unchanged: true };
+    const after = currentTier(null, tiers);
+    const direction = before && after && after.sort > before.sort ? "up" : before && after && after.sort === before.sort ? "same" : "down";
+    return { data: { tierKey: null, tierSince: null }, direction, tier: null };
+  }
+  const tier = tiers.find((t) => t.key === targetKey) ?? null;
+  if (!tier) return { error: "This tier does not exist." };
+  if (!tier.active) return { error: `The tier "${tier.name}" is inactive.` };
+  const sameKey = currentKey === tier.key;
+  if (sameKey && shares.handoverShare === tier.handoverShare && shares.fixShare === tier.fixShare) return { unchanged: true };
+  const direction = !before || tier.sort > before.sort ? "up" : tier.sort === before.sort ? "same" : "down";
+  return {
+    data: { tierKey: tier.key, ...(sameKey ? {} : { tierSince: now }), handoverShare: tier.handoverShare, fixShare: tier.fixShare },
+    direction: sameKey ? "same" : direction,
+    tier,
+  };
+}
+
+/**
+ * The portal tier card's progress line (null at the top tier). With an open proposal, or once the next
+ * threshold is reached (remaining 0), it says the upgrade is being reviewed; otherwise "n more closed
+ * deals" in the locale's plural form (Intl.PluralRules: EN/DE one/other, PL/RU one/few/many).
+ */
+export function tierProgressLine(T: PartnerDict["tiers"], locale: PartnerLocale, progress: TierProgress, reviewing: boolean): string | null {
+  const next = progress.next;
+  if (!next) return null;
+  if (reviewing || progress.remaining <= 0) return fmt(T.reviewing, { tier: next.name });
+  const cat = new Intl.PluralRules(locale).select(progress.remaining) as keyof PartnerDict["tiers"]["progress"];
+  const template = T.progress[cat] ?? T.progress.other;
+  return fmt(template, { n: progress.remaining, tier: next.name });
+}
 
 const share = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100 ? v : null);
 

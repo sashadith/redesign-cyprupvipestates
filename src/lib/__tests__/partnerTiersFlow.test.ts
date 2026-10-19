@@ -5,10 +5,12 @@ import { join } from "node:path";
 import { notificationGate, partnerStatusGate, optOutGate } from "@/lib/partner/notify";
 import { routeNotification } from "@/lib/partner/telegram";
 import {
-  closedDealClaimsWhere, closedDealsByPartner, mergeTierEdits, parseTierEdits, parseTierUpPayload, proposalEligibility, tierAcceptData,
-  tierConfigDiff, tierFromRow, tierLabel, tierProposalTelegram, tierUpPayload, tierUpRefKey, tiersStartFromEnv, type ClaimWithDeals,
+  closedDealClaimsWhere, closedDealsByPartner, manualTierChange, mergeTierEdits, parseTierEdits, parseTierUpPayload, proposalEligibility,
+  tierAcceptData, tierConfigDiff, tierFromRow, tierLabel, tierProgressLine, tierProposalTelegram, tierUpManualRefKey, tierUpPayload,
+  tierUpRefKey, tiersStartFromEnv, type ClaimWithDeals,
 } from "@/lib/partner/tierFlow";
-import { proposeTier, validateTierConfig, type TierConfig } from "@/lib/partner/tiers";
+import { dict } from "@/lib/partner/i18n";
+import { proposeTier, tierProgress, validateTierConfig, type TierConfig } from "@/lib/partner/tiers";
 
 const DAY = 86_400_000;
 const NOW = new Date("2026-10-19T12:00:00Z");
@@ -242,4 +244,101 @@ test("portal: tier card on Overview (ACTIVE) and Commissions, partner-scoped sta
   assert.ok(comm.includes("myTierStatus(me.partner.id)") && comm.includes("<TierCard"));
   const store = src("src/lib/partner/tierStore.ts");
   assert.ok(store.includes("closedDealCounts([partnerId], now)"));
+});
+
+// ── Final fix wave ──────────────────────────────────────────────────────────
+
+test("tierAcceptData: Accept never lowers a share (max of current and tier), payload carries the result", () => {
+  // Individually agreed higher handover share survives; the lower fix share is raised to the tier's.
+  const r = tierAcceptData(GOLD, NOW, TIERS[0], { handoverShare: 38, fixShare: 50 });
+  assert.ok("data" in r);
+  assert.deepEqual(r.data, { tierKey: "gold", tierSince: NOW, handoverShare: 38, fixShare: 55 });
+  assert.deepEqual(tierUpPayload(GOLD, r.data), { tierKey: "gold", tierName: "Gold", handoverShare: 38, fixShare: 55 });
+  // Both lower: both raised to the tier's
+  const low = tierAcceptData(GOLD, NOW, null, { handoverShare: 20, fixShare: 40 });
+  assert.ok("data" in low && low.data.handoverShare === 35 && low.data.fixShare === 55);
+  // Both higher: both kept
+  const high = tierAcceptData(GOLD, NOW, null, { handoverShare: 50, fixShare: 70 });
+  assert.ok("data" in high && high.data.handoverShare === 50 && high.data.fixShare === 70);
+  // The action passes the locked partner's shares and the resulting shares into the payload
+  const actions = src("src/app/crm/partners/tierActions.ts");
+  assert.match(actions, /tierAcceptData\(tier, now, current, \{ handoverShare: before\.handoverShare, fixShare: before\.fixShare \}\)/);
+  assert.match(actions, /tierUpPayload\(tier!, accepted\.data\)/);
+});
+
+test("manualTierChange: exact tier shares (may lower), direction by effective tier, none clears, refusals", () => {
+  const shares = { handoverShare: 38, fixShare: 58 };
+  const up = manualTierChange({ currentKey: null, targetKey: "gold", shares, tiers: TIERS, now: NOW });
+  assert.ok("data" in up);
+  assert.equal(up.direction, "up");
+  assert.deepEqual(up.data, { tierKey: "gold", tierSince: NOW, handoverShare: 35, fixShare: 55 }, "exact shares, even lower ones");
+  const down = manualTierChange({ currentKey: "platinum", targetKey: "silver", shares, tiers: TIERS, now: NOW });
+  assert.ok("data" in down && down.direction === "down" && down.data.handoverShare === 30);
+  // Unset tier = Silver (lowest): choosing Silver explicitly is "same", never a notice
+  const same = manualTierChange({ currentKey: null, targetKey: "silver", shares, tiers: TIERS, now: NOW });
+  assert.ok("data" in same && same.direction === "same");
+  // Same key with other shares: shares re-applied, tierSince kept
+  const reapply = manualTierChange({ currentKey: "gold", targetKey: "gold", shares, tiers: TIERS, now: NOW });
+  assert.ok("data" in reapply && reapply.direction === "same" && !("tierSince" in reapply.data) && reapply.data.fixShare === 55);
+  assert.ok("unchanged" in manualTierChange({ currentKey: "gold", targetKey: "gold", shares: { handoverShare: 35, fixShare: 55 }, tiers: TIERS, now: NOW }));
+  // None: clears tier and date, keeps shares
+  const none = manualTierChange({ currentKey: "gold", targetKey: null, shares, tiers: TIERS, now: NOW });
+  assert.ok("data" in none);
+  assert.deepEqual(none.data, { tierKey: null, tierSince: null });
+  assert.equal(none.direction, "down");
+  assert.equal(none.tier, null);
+  assert.ok("unchanged" in manualTierChange({ currentKey: null, targetKey: null, shares, tiers: TIERS, now: NOW }));
+  assert.ok("error" in manualTierChange({ currentKey: null, targetKey: "diamond", shares, tiers: TIERS, now: NOW }));
+  const inactive = manualTierChange({ currentKey: null, targetKey: "gold", shares, tiers: [TIERS[0], { ...GOLD, active: false }], now: NOW });
+  assert.ok("error" in inactive && inactive.error.includes("inactive"));
+  assert.equal(tierUpManualRefKey("p1", NOW), "tierup:manual:p1:2026-10-19T12:00:00.000Z");
+});
+
+test("wiring: manual tier action guarded, audited, TIER_UP only for upgrades; CRM list has the select", () => {
+  const actions = src("src/app/crm/partners/tierActions.ts");
+  const fn = actions.slice(actions.indexOf("export async function setPartnerTierAction"));
+  assert.match(fn, /await guard\(\)/);
+  assert.match(fn, /"partner_tier_manual"/);
+  assert.match(fn, /FOR UPDATE|lockPartner\(tx, partnerId\)/);
+  assert.match(fn, /if \(change\.direction === "up" && change\.tier\) \{\s*await tx\.partnerNotification\.create/);
+  assert.match(fn, /tierUpManualRefKey\(partnerId, now\)/);
+  const table = src("src/app/crm/components/PartnersTable.tsx");
+  assert.match(table, /setPartnerTierAction\(row\.id, choice \|\| null\)/);
+  assert.match(table, /None \(default tier, shares unchanged\)/);
+  const panel = src("src/app/crm/components/PartnerTiersPanel.tsx");
+  assert.match(panel, /Shares \(current → tier\)/);
+});
+
+test("tierProgressLine: plural forms per locale, 'being reviewed' with an open proposal or at 0, null at the top", () => {
+  const at = (n: number) => tierProgress("silver", 3 - n, TIERS); // Gold needs 3
+  const line = (l: "en" | "de" | "pl" | "ru", remaining: number, reviewing = false) => {
+    const tiers = TIERS.map((t) => (t.key === "gold" ? { ...t, minClosedDeals: 30 } : t.key === "platinum" ? { ...t, minClosedDeals: 60 } : t));
+    return tierProgressLine(dict(l).tiers, l, tierProgress("silver", 30 - remaining, tiers), reviewing);
+  };
+  assert.equal(tierProgressLine(dict("en").tiers, "en", at(1), false), "1 more closed deal to Gold");
+  assert.equal(tierProgressLine(dict("en").tiers, "en", at(2), false), "2 more closed deals to Gold");
+  assert.equal(line("de", 1), "Noch 1 abgeschlossenes Geschäft bis Gold");
+  assert.equal(line("de", 5), "Noch 5 abgeschlossene Geschäfte bis Gold");
+  assert.equal(line("pl", 1), "Jeszcze 1 zamknięta transakcja do poziomu Gold");
+  assert.equal(line("pl", 3), "Jeszcze 3 zamknięte transakcje do poziomu Gold");
+  assert.equal(line("pl", 5), "Jeszcze 5 zamkniętych transakcji do poziomu Gold");
+  assert.equal(line("pl", 22), "Jeszcze 22 zamknięte transakcje do poziomu Gold");
+  assert.equal(line("pl", 12), "Jeszcze 12 zamkniętych transakcji do poziomu Gold");
+  assert.equal(line("ru", 1), "Ещё 1 закрытая сделка до уровня Gold");
+  assert.equal(line("ru", 21), "Ещё 21 закрытая сделка до уровня Gold");
+  assert.equal(line("ru", 3), "Ещё 3 закрытые сделки до уровня Gold");
+  assert.equal(line("ru", 11), "Ещё 11 закрытых сделок до уровня Gold");
+  // Open proposal, or the threshold already reached: "being reviewed", never "0 more"
+  assert.equal(tierProgressLine(dict("en").tiers, "en", at(2), true), "Upgrade to Gold is being reviewed");
+  assert.equal(tierProgressLine(dict("en").tiers, "en", tierProgress("silver", 4, TIERS), false), "Upgrade to Gold is being reviewed");
+  for (const l of ["de", "pl", "ru"] as const) assert.ok(!line(l, 0)!.includes("0"), l);
+  assert.equal(tierProgressLine(dict("en").tiers, "en", tierProgress("platinum", 9, TIERS), false), null);
+  // The card uses it with the store's reviewing flag
+  assert.match(src("src/app/partner-portal/components/TierCard.tsx"), /tierProgressLine\(T, locale, progress, status\.reviewing\)/);
+  assert.match(src("src/lib/partner/tierStore.ts"), /partnerTierProposal\.count\(\{ where: \{ partnerId, decidedAt: null \} \}\)/);
+});
+
+test("dictionary: RU partner copy always capitalises Вы / Ваш", () => {
+  const ru = src("src/lib/partner/i18n/ru.ts");
+  assert.ok(!/(^|[^А-Яа-яЁё])(вы|вас|вам|вами|ваш[а-яё]*)(?![А-Яа-яЁё])/.test(ru));
 });

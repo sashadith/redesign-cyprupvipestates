@@ -1,5 +1,6 @@
 "use server";
-// Partner tiers in the CRM (phase 4b, Decision 4): tier settings, Accept / Decline of open proposals.
+// Partner tiers in the CRM (phase 4b, Decision 4): tier settings, Accept / Decline of open proposals, and the
+// manual tier change per partner.
 // Managers only (canAssignLeads). Every write is audited in the same transaction.
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
@@ -7,7 +8,9 @@ import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { writeAudit } from "@/lib/crm/audit";
-import { mergeTierEdits, parseTierEdits, tierAcceptData, tierConfigDiff, tierUpPayload, tierUpRefKey } from "@/lib/partner/tierFlow";
+import {
+  manualTierChange, mergeTierEdits, parseTierEdits, tierAcceptData, tierConfigDiff, tierUpManualRefKey, tierUpPayload, tierUpRefKey,
+} from "@/lib/partner/tierFlow";
 import { validateTierConfig } from "@/lib/partner/tiers";
 import { loadTiers } from "@/lib/partner/tierStore";
 
@@ -65,9 +68,10 @@ const lockPartner = async (tx: Prisma.TransactionClient, id: string) =>
     SELECT "tierKey", "handoverShare"::float8 AS "handoverShare", "fixShare"::float8 AS "fixShare" FROM partners WHERE id = ${id} FOR UPDATE`)[0];
 
 /**
- * Accepts an open proposal: closes it (guarded, only while undecided), sets the partner's tier, tier date and
- * shares from the tier as it is now (must be active), audits, and queues the TIER_UP notification. Existing
- * deals keep their share; only deals created afterwards use the new one.
+ * Accepts an open proposal: closes it (guarded, only while undecided), sets the partner's tier and tier date,
+ * raises each share to the tier's share as it is now (never lowers one; the tier must be active), audits, and
+ * queues the TIER_UP notification with the resulting shares. Existing deals keep their share; only deals
+ * created afterwards use the new one.
  */
 export async function acceptTierProposalAction(proposalId: string): Promise<Result> {
   const actor = await guard();
@@ -93,7 +97,7 @@ export async function acceptTierProposalAction(proposalId: string): Promise<Resu
       const tiers = await loadTiers(tx);
       const tier = tiers.find((t) => t.key === proposal.toTier) ?? null;
       const current = tiers.find((t) => t.key === before.tierKey) ?? null;
-      const accepted = tierAcceptData(tier, now, current);
+      const accepted = tierAcceptData(tier, now, current, { handoverShare: before.handoverShare, fixShare: before.fixShare });
       if ("error" in accepted) throw new Refusal(accepted.error);
       await tx.partner.update({ where: { id: proposal.partnerId }, data: accepted.data });
       await writeAudit(actor, "partner_tier_accept", "partner", proposal.partnerId, {
@@ -103,7 +107,7 @@ export async function acceptTierProposalAction(proposalId: string): Promise<Resu
         after: { tierKey: accepted.data.tierKey, handoverShare: accepted.data.handoverShare, fixShare: accepted.data.fixShare },
       }, tx);
       await tx.partnerNotification.create({
-        data: { kind: "TIER_UP", refKey: tierUpRefKey(proposalId), partnerId: proposal.partnerId, payload: tierUpPayload(tier!) },
+        data: { kind: "TIER_UP", refKey: tierUpRefKey(proposalId), partnerId: proposal.partnerId, payload: tierUpPayload(tier!, accepted.data) },
       });
       tierName = tier!.name;
       return "done";
@@ -145,4 +149,57 @@ export async function declineTierProposalAction(proposalId: string): Promise<Res
   if (outcome === "decided") return { error: "Already decided by someone else." };
   revalidatePath("/crm/partners");
   return { ok: true, notice: "Declined" };
+}
+
+/**
+ * Sets a partner's tier by hand (or "none" = back to the default). A chosen tier brings exactly its shares
+ * (explicit operator choice, may lower them); "none" leaves the shares alone. Audited as partner_tier_manual;
+ * an upgrade queues a TIER_UP notice, a downgrade or "none" does not. Open proposals stay; Accept refuses
+ * one that is no longer an upgrade.
+ */
+export async function setPartnerTierAction(partnerId: string, tierKey: string | null): Promise<Result> {
+  const actor = await guard();
+  if (!actor) return { error: DENIED };
+  if (!validId(partnerId)) return { error: "Partner not found." };
+  if (tierKey !== null && !validId(tierKey)) return { error: "This tier does not exist." };
+  let notice = "";
+  try {
+    const outcome = await prisma.$transaction(async (tx): Promise<"unchanged" | "done"> => {
+      const now = new Date();
+      const before = await lockPartner(tx, partnerId);
+      if (!before) throw new Refusal("Partner not found.");
+      const tiers = await loadTiers(tx);
+      const change = manualTierChange({
+        currentKey: before.tierKey, targetKey: tierKey, shares: { handoverShare: before.handoverShare, fixShare: before.fixShare }, tiers, now,
+      });
+      if ("error" in change) throw new Refusal(change.error);
+      if ("unchanged" in change) return "unchanged";
+      await tx.partner.update({ where: { id: partnerId }, data: change.data });
+      const after = {
+        tierKey: change.data.tierKey,
+        handoverShare: change.data.handoverShare ?? before.handoverShare,
+        fixShare: change.data.fixShare ?? before.fixShare,
+      };
+      await writeAudit(actor, "partner_tier_manual", "partner", partnerId, {
+        direction: change.direction,
+        before: { tierKey: before.tierKey, handoverShare: before.handoverShare, fixShare: before.fixShare },
+        after,
+      }, tx);
+      if (change.direction === "up" && change.tier) {
+        await tx.partnerNotification.create({
+          data: { kind: "TIER_UP", refKey: tierUpManualRefKey(partnerId, now), partnerId, payload: tierUpPayload(change.tier, after) },
+        });
+      }
+      notice = change.tier
+        ? `Tier set to ${change.tier.name} (Handover ${after.handoverShare}% · Fix ${after.fixShare}%)${change.direction === "up" ? " — partner notified" : ""}`
+        : "Tier cleared — the partner falls back to the default tier; shares unchanged";
+      return "done";
+    });
+    if (outcome === "unchanged") return { ok: true, notice: "No changes" };
+  } catch (e) {
+    if (e instanceof Refusal) return { error: e.message };
+    throw e;
+  }
+  revalidatePath("/crm/partners");
+  return { ok: true, notice };
 }
