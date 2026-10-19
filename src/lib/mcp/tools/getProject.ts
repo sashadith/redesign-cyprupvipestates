@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
 import { computeAvailability, listedUnits } from "@/lib/developmentAvailability";
 import { publicUrlFor } from "@/lib/crm/inventorySearch";
+import { heroImageUrl, absoluteUrls } from "@/lib/developmentHero";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
@@ -23,7 +24,7 @@ export function registerGetProject(server: McpServer) {
     {
       title: "Get project / development",
       description:
-        "One development with its real, current figures: price range, availability computed from the unit list (not the cached counters), completion, location, public URL, and up to 50 units (type, beds, area, price, status). The source of truth for any number you put in a message. Pass exactly one of `developmentId`, `slug` or `query`; with `query`, returns candidate projects to pick from.",
+        "One development with its real, current figures: price range, availability computed from the unit list (not the cached counters), completion, location, public URL (relative and absolute), the hero image URL the public page uses (for social posts), and up to 50 units (type, beds, area, price, status). The source of truth for any number you put in a message. Pass exactly one of `developmentId`, `slug` or `query`; with `query`, returns candidate projects to pick from.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
@@ -43,6 +44,8 @@ export function registerGetProject(server: McpServer) {
           select: {
             id: true, publicName: true, developer: true, category: true, status: true, stage: true, completion: true, district: true, town: true, area: true,
             priceFrom: true, priceTo: true, currency: true, slug: true, publishStatus: true, soldOutSince: true, updatedAt: true,
+            // Only the hero (gallery[0] after the admin override) ever leaves — never the gallery itself.
+            gallery: true, override: { select: { mainImage: true, gallery: true } },
             units: {
               orderBy: { sortIndex: "asc" },
               select: { id: true, ref: true, label: true, type: true, status: true, price: true, currency: true, beds: true, baths: true, areaBuilt: true, areaPlot: true, floor: true },
@@ -67,6 +70,9 @@ export function registerGetProject(server: McpServer) {
           availability: { available: availability.available, total: availability.total, soldOut: availability.soldOut, soldOutSince: fmtDate(d.soldOutSince) },
           publishStatus: d.publishStatus,
           publicUrl: publicUrlFor(d.slug, d.publishStatus),
+          publicUrlAbsolute: absoluteUrls(publicUrlFor(d.slug, d.publishStatus)),
+          // The page's own hero / og:image at its largest hosted tier; null unless published.
+          heroImageUrl: heroImageUrl(d),
           dataUpdatedAt: fmtDate(d.updatedAt),
           units: { total: listed.length, returned: Math.min(listed.length, MAX_UNITS), rows: listed.slice(0, MAX_UNITS) },
         };
