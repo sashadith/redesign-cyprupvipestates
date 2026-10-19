@@ -62,7 +62,7 @@ export default function FooterContact({ contact }: { contact: Contact }) {
       target={contact.type === "Link" ? "_blank" : undefined}
       rel={contact.type === "Link" ? "noopener" : undefined}
     >
-      {icon && <img className="pf__contact-icon" src={icon} alt="" width={20} height={20} />}
+      {icon && <img className="pf__contact-icon" src={icon} alt="" width={20} height={20} loading="lazy" decoding="async" />}
       <span><Bdi ltr>{contact.label}</Bdi></span>
     </Link>
   );

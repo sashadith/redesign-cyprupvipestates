@@ -145,8 +145,8 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
           // priority — no visual change: the poster overlay already covers
           // the video until `isVideoReady` flips, exactly as before.
           preload="none"
-          // poster можно оставить как фоллбек, но главный контроль у overlay:
-          poster={posterUrl}
+          // No `poster` attribute: the next/image overlay above already is the poster. The attribute made the
+          // browser fetch the raw 1920 px JPEG a second time (146 KB, High priority) in the CSS window (2026-10-19).
         >
           <source src={videoSrc} type="video/mp4" />
         </video>
