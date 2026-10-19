@@ -34,6 +34,7 @@ export function Shell({ user, children }: Props) {
           {user.canAssign && <Link href="/crm/partners" className={on("/crm/partners")}>Partners</Link>}
           {user.canAssign && <Link href="/crm/team" className={on("/crm/team")}>Team</Link>}
           {user.canAssign && <Link href="/crm/commissions" className={on("/crm/commissions")}>Commissions</Link>}
+          {user.canAssign && <Link href="/crm/insights" className={on("/crm/insights")}>Insights</Link>}
           {user.oldCrm && <Link href="/admin/crm">Old CRM</Link>}
         </nav>
         <button type="button" className="crm-search-btn" onClick={() => palette.current?.open()} aria-label="Search (Command K)">Search <kbd>⌘K</kbd></button>

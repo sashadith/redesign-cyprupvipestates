@@ -31,6 +31,7 @@ export function paletteActions(canAssign: boolean, oldCrm: boolean): { id: strin
           { id: "inbox", label: "Inbox", href: "/crm/inbox" },
           { id: "team", label: "Team", href: "/crm/team" },
           { id: "commissions", label: "Commissions", href: "/crm/commissions" },
+          { id: "insights", label: "Insights", href: "/crm/insights" },
         ]
       : []),
     { id: "new-lead", label: "New lead", href: "/crm/leads/new" },
