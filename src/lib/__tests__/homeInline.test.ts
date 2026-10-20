@@ -48,6 +48,16 @@ test("deferScripts lifts async chunk scripts and their preload into a post-paint
   assert.ok(loader.endsWith("</script></body>"));
 });
 
+test("deferScripts starts the scripts after the paint only: no load trigger, a 4 s fallback", () => {
+  const html = '<body><script src="/_next/static/chunks/a.js" async=""></script></body>';
+  const loader = deferScripts(html).slice(deferScripts(html).indexOf("<script data-cve-defer>"));
+  // a `load` that fires before the first paint would start the requests ahead of the observed LCP
+  assert.ok(!loader.includes("'load'"));
+  assert.ok(loader.includes("type:'paint'"));
+  assert.ok(loader.includes("setTimeout(go,100)"));
+  assert.ok(loader.includes("setTimeout(go,4000)"));
+});
+
 test("deferScripts is a no-op without chunk scripts or without a body", () => {
   assert.equal(deferScripts("<body>x</body>"), "<body>x</body>");
   const noBody = '<script src="/_next/static/chunks/a.js" async=""></script>';
