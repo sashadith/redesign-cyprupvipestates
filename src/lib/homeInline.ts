@@ -24,3 +24,34 @@ export function inlineStylesheets(html: string, readCss: (href: string) => strin
     return `<style data-href="${href}" data-precedence="next">${css}</style><link rel="stylesheet" href="${href}" data-precedence="next" media="print"/>`;
   });
 }
+
+/* Start the page's JavaScript only after the first paint.
+
+   Lighthouse's simulated LCP/FCP charge every request that STARTED before the observed paint to the metric,
+   together with the CPU work of the scripts: on the homepage that was ~105 KB of chunks plus 0.9 s of script
+   evaluation (PageSpeed mobile, 2026-10-20: observed LCP 0.31 s, simulated 4.2 s). Next emits the chunks as
+   `<script src async>` tags that the preload scanner fetches at parse time; here they are lifted out and re-added
+   by a tiny inline loader once the browser reports a paint (or the load event, or 4 s — whichever first).
+   The page is fully rendered HTML either way; only interactivity (hydration) starts a few hundred ms later.
+   The `noModule` polyfill tag and every inline script (flight data, JSON-LD) are left untouched; the webpack
+   runtime's script preload hint is dropped together with its script. */
+
+const SCRIPT_TAG_RE = /<script src="(\/_next\/static\/chunks\/[A-Za-z0-9_\/%.-]+\.js)" async=""><\/script>/g;
+
+export function deferScripts(html: string): string {
+  const srcs: string[] = [];
+  let out = html.replace(SCRIPT_TAG_RE, (_tag, src: string) => {
+    srcs.push(src);
+    return "";
+  });
+  if (srcs.length === 0 || !out.includes("</body>")) return html;
+  const set = new Set(srcs);
+  out = out.replace(/<link rel="preload" as="script"[^>]*href="([^"]+)"[^>]*\/>/g, (tag, href: string) => (set.has(href) ? "" : tag));
+  const loader =
+    "<script data-cve-defer>(function(){var u=" +
+    JSON.stringify(srcs) +
+    ",d=0;function go(){if(d)return;d=1;for(var i=0;i<u.length;i++){var s=document.createElement('script');s.src=u[i];s.async=true;document.body.appendChild(s)}}" +
+    "try{new PerformanceObserver(function(l,o){o.disconnect();setTimeout(go,0)}).observe({type:'paint',buffered:true})}catch(e){}" +
+    "addEventListener('load',function(){setTimeout(go,300)});setTimeout(go,4000)})()</script>";
+  return out.replace("</body>", loader + "</body>");
+}
