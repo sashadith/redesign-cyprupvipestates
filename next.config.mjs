@@ -41,6 +41,9 @@ const nextConfig = {
     ];
   },
   experimental: {
+    // Each route loads only the CSS of the modules it imports. The default ("loose") merges CSS chunks
+    // across routes, so the homepage carried ~100 KB of blog / case-study / accordion rules it never uses.
+    cssChunking: "strict",
     // Developer brochures uploaded to the PDF-import server action
     // (src/app/admin/(panel)/developments/[id]/actions.ts) can be ~20 MB —
     // well over Next's default 1 MB server-action body limit, which would
