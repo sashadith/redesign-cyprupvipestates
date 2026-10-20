@@ -4,7 +4,6 @@ import React, { FC, useEffect, useId, useRef, useState } from "react";
 import { Formik, Form as FormikForm, Field, ErrorMessage, FormikHelpers, FormikProps } from "formik";
 import * as Yup from "yup";
 import dynamic from "next/dynamic";
-import "react-phone-number-input/style.css";
 import { getAttribution } from "@/lib/attribution";
 import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "@/app/components/qualifierFields";
 import { consentCopy } from "@/app/components/consentCopy";
@@ -16,7 +15,7 @@ import OptImg from "./OptImg";
    to ship with the first load of every page that carries this form — the homepage included — although
    the form sits at the bottom. They now load when the visitor gets near the form, focuses the phone
    field, or submits. Until then the field is a plain input in the same box (same height: no layout shift). */
-const PhoneInput = dynamic(() => import("react-phone-number-input"), { ssr: false });
+const PhoneInput = dynamic(() => import("./PhoneInputLazy"), { ssr: false });
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
    preserved verbatim from the live FormStatic (lead → /api/leads,
