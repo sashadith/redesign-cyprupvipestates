@@ -64,6 +64,10 @@ export type MatchedDevelopment = {
   completion: string | null;
   slug: string | null;
   publishStatus: string | null;
+  /** The project pin (override wins) — for the admin matching map. Null when
+   *  the project has no coordinates yet; such projects are simply not drawn. */
+  lat: number | null;
+  lng: number | null;
   // 2026-08-11 correction — used to be every available unit regardless of
   // match; now the count of units that actually satisfy the active filters
   // (same set as `matchedUnits` below), so the admin table's "Available"
@@ -311,6 +315,7 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
         mainImage, unitsAvailable: matchedUnits.length, unitsAvailableAll: available.length, unitsTotal: d.units.length,
         developer: d.developer, completion: resolveRelativeCompletion(ov?.completion || d.completion) || null,
         slug: d.slug, publishStatus: d.publishStatus,
+        lat: ov?.latitude ?? d.latitude ?? null, lng: ov?.longitude ?? d.longitude ?? null,
       },
       score,
       matchedUnits,

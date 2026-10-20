@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import type { MatchingMapMarker } from "./MatchingMap";
 import { matchLeadAction, saveMatchFiltersAction, type LocationOptions } from "./presentationActions";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
@@ -19,6 +21,9 @@ type LeadBrief = {
   email: string | null;
   lastMatchFilters: MatchFilters | null;
 };
+
+// MapLibre touches window — client-only, like the presentation page's map.
+const MatchingMap = dynamic(() => import("./MatchingMap"), { ssr: false });
 
 type Locale = (typeof PUBLIC_LOCALES)[number];
 const PROPERTY_TYPES = PROPERTY_VALUES;
@@ -200,6 +205,18 @@ export default function PropertyMatching({
   };
 
   const selectedCount = selectedDevs.size;
+  // Pins for the matching map: the ticked projects that have coordinates.
+  const mapMarkers = useMemo<MatchingMapMarker[]>(() => results
+    .filter((m) => selectedDevs.has(m.development.id) && m.development.lat != null && m.development.lng != null)
+    .map((m) => {
+      const d = m.development;
+      return {
+        id: d.id, lat: d.lat as number, lng: d.lng as number, title: d.publicName, image: d.mainImage, price: d.priceFrom,
+        city: [d.area, d.district || d.town].filter(Boolean).join(", ") || null,
+        href: d.publishStatus === "published" && d.slug ? `/projects/${d.slug}` : null,
+      };
+    }), [results, selectedDevs]);
+  const selectedWithoutPin = results.filter((m) => selectedDevs.has(m.development.id) && (m.development.lat == null || m.development.lng == null)).length;
   const unitCount = useMemo(() => {
     let total = 0;
     for (const m of results) {
@@ -423,9 +440,16 @@ export default function PropertyMatching({
                       ) : (
                         d.publicName
                       )}
-                      {d.developer && <span className="ml-1.5 font-normal text-[#9CA3AF]">{d.developer}</span>}
+                      {d.developer && <span className="block text-xs font-normal text-[#9CA3AF]">{d.developer}</span>}
                     </td>
-                    <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
+                    <td className="px-3 py-2 text-[#6B7280]">
+                      {d.district || d.town || d.area ? (
+                        <>
+                          <span className="block">{d.district || d.town || d.area}</span>
+                          {d.area && (d.district || d.town) && <span className="block text-xs text-[#9CA3AF]">{d.area}</span>}
+                        </>
+                      ) : "—"}
+                    </td>
                     <td className="px-3 py-2 text-[#6B7280]">{d.completion || "—"}</td>
                     <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(priceFromSelection)}</td>
                     <td className="px-3 py-2 text-right text-[#6B7280]">{d.unitsAvailable}</td>
@@ -491,6 +515,16 @@ export default function PropertyMatching({
           </tbody>
         </table>
       </div>
+
+      {/* ---- MAP of the ticked projects ---- */}
+      {mapMarkers.length > 0 && (
+        <div className="space-y-1">
+          <MatchingMap markers={mapMarkers} />
+          {selectedWithoutPin > 0 && (
+            <p className="text-xs text-[#9CA3AF]">{selectedWithoutPin} selected project{selectedWithoutPin === 1 ? " has" : "s have"} no map pin yet and {selectedWithoutPin === 1 ? "is" : "are"} not shown.</p>
+          )}
+        </div>
+      )}
 
       {/* ---- SELECTION BAR ---- */}
       {selectedCount > 0 && (
