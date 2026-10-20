@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { isPublicLocale } from "@/lib/locale";
-import { inlineStylesheets } from "@/lib/homeInline";
+import { deferScripts, inlineStylesheets } from "@/lib/homeInline";
 
 /* The homepage document, with its stylesheets inlined (see src/lib/homeInline.ts for the why).
 
@@ -86,7 +86,7 @@ export async function GET(req: Request, { params }: { params: { lang: string } }
     const st = fs.statSync(file);
     let entry = memo.get(lang);
     if (!entry || entry.mtimeMs !== st.mtimeMs) {
-      entry = { mtimeMs: st.mtimeMs, html: inlineStylesheets(fs.readFileSync(file, "utf8"), readCss) };
+      entry = { mtimeMs: st.mtimeMs, html: deferScripts(inlineStylesheets(fs.readFileSync(file, "utf8"), readCss)) };
       memo.set(lang, entry);
     }
     if (Date.now() - st.mtimeMs > (REVALIDATE_SECONDS - 120) * 1000) pokePage(lang);
