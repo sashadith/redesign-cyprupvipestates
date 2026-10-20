@@ -101,17 +101,22 @@ export function parseBeds(raw: string | null | undefined): number | null {
 }
 
 // Order matters: "townhouse"/"penthouse" contain "house", so they must be matched before the villa aliases.
+// Studio / maisonette / duplex (2026-10-20): apartments for matching purposes —
+// before, normalizeType returned null for them, so those units answered no type
+// filter at all. Semi-detached / terraced are townhouses, bungalow a villa,
+// matching the unit-type vocabulary in src/lib/unitType.ts.
 const TYPE_ALIASES: Record<string, string> = {
   apartment: "apartment", flat: "apartment",
-  townhouse: "townhouse",
+  townhouse: "townhouse", "semi-detached": "townhouse", terraced: "townhouse",
   penthouse: "penthouse",
-  villa: "villa", house: "villa",
+  studio: "apartment", maisonette: "apartment", duplex: "apartment",
+  villa: "villa", bungalow: "villa", house: "villa",
   /* Commercial stock: 68 units are typed "Office", ~50 more carry a commercial
      label ("Shops / Commercial Buildings", "Commercial", "Shop"). Without these
      aliases normalizeType returns null for all of them, so an Office lead would
      silently match nothing. Existing leads are unaffected — none of them can
      carry "Office", the value only became selectable now. */
-  office: "office", commercial: "office", shop: "office", retail: "office",
+  office: "office", commercial: "office", shop: "office", retail: "office", hotel: "office",
 };
 export function normalizeType(raw: string | null | undefined): string | null {
   const s = (raw || "").trim().toLowerCase();

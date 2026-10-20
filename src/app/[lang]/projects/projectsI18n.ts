@@ -111,6 +111,7 @@ const EN: ProjectsStrings = {
   typePlaceholder: "Any type",
   types: [
     { value: "Apartment", label: "Apartment" },
+    { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Villa" },
     { value: "Townhouse", label: "Townhouse" },
     { value: "Commercial", label: "Commercial" },
@@ -199,6 +200,7 @@ const DE: ProjectsStrings = {
   typePlaceholder: "Beliebiger Typ",
   types: [
     { value: "Apartment", label: "Apartment" },
+    { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Villa" },
     { value: "Townhouse", label: "Reihenhaus" },
     { value: "Commercial", label: "Gewerbe" },
@@ -287,6 +289,7 @@ const PL: ProjectsStrings = {
   typePlaceholder: "Dowolny typ",
   types: [
     { value: "Apartment", label: "Mieszkanie" },
+    { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Willa" },
     { value: "Townhouse", label: "Dom szeregowy" },
     { value: "Commercial", label: "Komercyjne" },
@@ -375,6 +378,7 @@ const RU: ProjectsStrings = {
   typePlaceholder: "Любой тип",
   types: [
     { value: "Apartment", label: "Квартира" },
+    { value: "Penthouse", label: "Пентхаус" },
     { value: "Villa", label: "Вилла" },
     { value: "Townhouse", label: "Таунхаус" },
     { value: "Commercial", label: "Коммерческая" },
@@ -468,6 +472,7 @@ const HE: ProjectsStrings = {
   typePlaceholder: "כל הסוגים",
   types: [
     { value: "Apartment", label: "דירה" },
+    { value: "Penthouse", label: "פנטהאוז" },
     { value: "Villa", label: "וילה" },
     { value: "Townhouse", label: "בית טורי" },
     { value: "Commercial", label: "נכס מסחרי" },
