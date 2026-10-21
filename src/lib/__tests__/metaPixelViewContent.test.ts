@@ -60,6 +60,23 @@ test("eventID goes in fbq's fourth argument, not inside the payload", () => {
   );
 });
 
+test("the tracker waits for fbq instead of giving up when it is missing", () => {
+  // The pixel is injected with next/script strategy="afterInteractive", so it
+  // does not exist yet while this effect runs during hydration. The original
+  // `if (!window.fbq) return` therefore gave up permanently on every cold page
+  // load. Measured over seven days: Meta saw 966 PageView against our 1,695
+  // real views (57%, normal attrition) but 6 ViewContent against 670
+  // project-page views — 0.9%. Nothing failed; the event simply never fired.
+  const src = read(TRACKER);
+  assert.equal(
+    /if \(typeof window === "undefined" \|\| !window\.fbq/.test(src), false,
+    "the tracker bails out when fbq is absent again — on a cold load that is always, because the pixel loads afterInteractive",
+  );
+  assert.ok(/setTimeout\(attempt/.test(src), "the retry loop is gone");
+  assert.ok(/FBQ_MAX_WAIT_MS/.test(src), "the retry has no ceiling — a blocked pixel would poll forever");
+  assert.ok(/cancelled = true/.test(src), "the effect no longer cancels its timer on unmount");
+});
+
 test("the id sent to Meta is the row UUID, never the vendor's feedProjectId", () => {
   // `ProjectVM.id` is feedProjectId. It changes when a project moves source,
   // and it is not what the catalog or the Xellex bridge key on — ids that
