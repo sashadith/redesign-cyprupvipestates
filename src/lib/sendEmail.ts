@@ -5,11 +5,13 @@ export async function sendEmail({
   text,
   html,
   replyTo,
+  to,
 }: {
   subject: string;
   text: string;
   html?: string;
   replyTo?: string;
+  to?: string;
 }) {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -23,7 +25,7 @@ export async function sendEmail({
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER!,
-    to: process.env.EMAIL_TO || process.env.EMAIL_USER!,
+    to: to || process.env.EMAIL_TO || process.env.EMAIL_USER!,
     subject,
     text,
     html,

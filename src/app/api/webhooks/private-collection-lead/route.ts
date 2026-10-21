@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       const occurredAt = new Date();
       if (dup) {
         if (dup.status === "LOST") {
-          await tx.lead.update({ where: { id: dup.id }, data: { status: "NEW" } });
+          await tx.lead.update({ where: { id: dup.id }, data: { status: "NEW", lostReason: null } });
           await tx.leadInteraction.create({
             data: { leadId: dup.id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "private_collection" } },
           });

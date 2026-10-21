@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 import { sendEmailDraft } from "../drafts/sendDraft";
 
 const Input = z.object({
@@ -21,7 +22,7 @@ export function registerSendEmail(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_send_email", contextFromAuthInfo(ctx.http?.authInfo), null, async (c) => {
-        const r = await sendEmailDraft({ userId: c.userId, userName: c.userName }, input.draftId, input.approvalCode);
+        const r = await sendEmailDraft({ userId: c.userId, userName: c.userName }, input.draftId, input.approvalCode, await loadScope(c));
         return { sent: true, ...r };
       }),
   );

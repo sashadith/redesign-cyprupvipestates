@@ -5,9 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { crmRules } from "@/lib/actionCenter/rules/crm";
 import { filterSnoozed } from "@/lib/actionCenter/snooze";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { seesAllLeads } from "@/lib/crm/access";
 import { LAST_CONTACT_TYPES } from "@/app/admin/(panel)/crm/leadListShared";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope, withScope } from "../leadScope";
 import { fmtDate } from "../format";
 import { mapWorklistItems } from "./worklistMap";
 
@@ -25,7 +27,8 @@ export function registerWorklist(server: McpServer) {
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ limit }, ctx) =>
-      runTool("crm_worklist", contextFromAuthInfo(ctx.http?.authInfo), null, async () => {
+      runTool("crm_worklist", contextFromAuthInfo(ctx.http?.authInfo), null, async (c) => {
+        const { user, where: scope } = await loadScope(c);
         const items = await filterSnoozed(await crmRules());
         const { leadFollowups, presentationItems } = mapWorklistItems(items);
         // Query leads/presentations for ALL ids (not pre-sliced by limit) — the
@@ -35,21 +38,21 @@ export function registerWorklist(server: McpServer) {
         const presentationIds = presentationItems.map((p) => p.presentationId);
         const [leads, presentations, newLeadsLast7Days, dueFollowUps] = await Promise.all([
           prisma.lead.findMany({
-            where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER },
+            where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
             select: {
               id: true, firstName: true, lastName: true, status: true, hotAt: true, nextFollowUpAt: true, languagePreference: true,
               interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true, type: true } },
             },
           }),
           prisma.clientPresentation.findMany({
-            where: { id: { in: presentationIds }, lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER } },
+            where: { id: { in: presentationIds }, lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope } },
             select: { id: true, leadId: true, createdAt: true, expiresAt: true, lead: { select: { firstName: true, lastName: true } }, _count: { select: { views: true } } },
             orderBy: { createdAt: "desc" },
             take: limit,
           }),
-          prisma.lead.count({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } }),
+          prisma.lead.count({ where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } }, scope) }),
           prisma.lead.findMany({
-            where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } },
+            where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } }, scope),
             select: { id: true, firstName: true, lastName: true, status: true, nextFollowUpAt: true },
             orderBy: { nextFollowUpAt: "asc" },
             take: limit,
@@ -79,7 +82,9 @@ export function registerWorklist(server: McpServer) {
             };
           }),
           newLeadsLast7Days,
-          totalFollowUpItems: leadFollowups.length,
+          // The Action Center rules run over every lead; a restricted employee
+          // counts only the items on leads they can see.
+          totalFollowUpItems: seesAllLeads(user) ? leadFollowups.length : leadFollowups.filter((f) => byId.has(f.leadId)).length,
         };
       }),
   );

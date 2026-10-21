@@ -16,7 +16,7 @@ import { gsap, safeReveal, focusRevealVars, deepFadeVars, isMobileViewport } fro
    hidden-state here is applied by GSAP itself, never by static CSS, so any
    animation failure leaves the hero fully visible instead of stuck blank. */
 export default function HeroGreeting({
-  eyebrowTag, greetingWord, name, introLine, requirementsTitle, requirementChips, note, advisorName, districtImage, locale,
+  eyebrowTag, greetingWord, name, introLine, requirementsTitle, requirementChips, note, advisorName, districtImage, locale, brand,
 }: {
   eyebrowTag: string;
   greetingWord: string;
@@ -30,6 +30,9 @@ export default function HeroGreeting({
   /** Drives the two `he`-only typographic rules below; every LTR locale
    *  renders exactly what it rendered before. */
   locale?: string;
+  /** Partner-branded presentation (phase 3e): the partner's logo or name replaces the CVE logo.
+   *  Omitted for every CVE presentation, which renders exactly as before. */
+  brand?: { name: string; logoUrl: string | null };
 }) {
   const isHe = locale === "he";
   const rootRef = useRef<HTMLDivElement>(null);
@@ -108,7 +111,15 @@ export default function HeroGreeting({
       {districtImage && <div className="cp-hero__bg" data-fx="bg" style={{ backgroundImage: `url(${districtImage})` }} />}
       {districtImage && <div className="cp-hero__cloud" data-fx="cloud" aria-hidden="true" />}
       <div className="cp-hero__inner">
-        <img src="/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x2048.png" alt="Cyprus VIP Estates" className="cp-hero__logo" data-fx="logo" />
+        {brand ? (
+          brand.logoUrl ? (
+            <img src={brand.logoUrl} alt={brand.name} className="cp-hero__partnerlogo" data-fx="logo" />
+          ) : brand.name ? (
+            <p className="cp-hero__partnername" data-fx="logo">{brand.name}</p>
+          ) : null
+        ) : (
+          <img src="/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x2048.png" alt="Cyprus VIP Estates" className="cp-hero__logo" data-fx="logo" />
+        )}
         <p className="eyebrow cp-hero__tag" data-fx="eyebrow">{eyebrowTag}</p>
         {/* Latin client name bidi-isolated inside the Hebrew greeting
             (styleguide §11.4), and the exclamation mark dropped for `he` —

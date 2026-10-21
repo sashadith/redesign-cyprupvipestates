@@ -11,6 +11,7 @@ import { shapeThread, type RawMessage } from "@/lib/openwa/shapeMessages";
 import { decideSend, nicosiaDayStart } from "@/lib/openwa/sendGuards";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, type LeadScope, loadScope } from "../leadScope";
 import { fmtDate } from "../format";
 
 // Repo convention: a named ZodObject, passed whole as inputSchema.
@@ -50,15 +51,21 @@ function logRedacted(what: string, e: unknown): void {
   );
 }
 
-export function realSendDeps(): SendDeps {
+export function realSendDeps(access: LeadScope): SendDeps {
   const cfg = readOpenWaConfig();
   const client = createOpenWaClient();
   return {
-    findLead: (leadId) =>
-      prisma.lead.findFirst({
-        where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
-        select: { id: true, phone: true },
-      }),
+    // Outside the scope → null → the guards' ordinary "Lead not found.";
+    // visible but not editable → refused here, before anything is sent.
+    findLead: async (leadId) => {
+      const lead = await prisma.lead.findFirst({
+        where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
+        select: { id: true, phone: true, assignedToId: true },
+      });
+      if (!lead) return null;
+      assertCanEdit(access.user, lead);
+      return { id: lead.id, phone: lead.phone };
+    },
     countSentToday: (since) =>
       prisma.leadInteraction.count({
         where: {
@@ -156,7 +163,7 @@ export function registerWhatsappSend(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_whatsapp_send", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) =>
-        performSend(realSendDeps(), input, { userId: c.userId, userName: c.userName }),
+        performSend(realSendDeps(await loadScope(c)), input, { userId: c.userId, userName: c.userName }),
       ),
   );
 }

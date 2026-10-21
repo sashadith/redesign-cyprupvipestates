@@ -66,3 +66,15 @@ Both snippets blank the client's `x-middleware-subrequest` header
 (CVE-2025-29927: on Next.js < 14.2.25 that header makes the app skip its
 middleware — the gated-locale 404, the merged/retired redirects and any host
 routing). The app is on 14.2.35 since 2026-10-18, so this is defence in depth.
+
+## Partner portal vhost (template, not live yet)
+
+`partner.cyprusvipestates.conf` is the vhost for `partner.cyprusvipestates.com`
+(2026-10-18). Unlike `cyprusvipestates.conf` it is **not** a mirror of a live
+file: the operator applies it by hand after the DNS A record exists and the
+certificate has been issued with certbot (steps in the file header). It is an
+allowlist — portal pages plus `/_next/`, `/crm/fonts/` and the icons are
+proxied; API, admin, CRM, booking/presentation links, previews, uploads and
+SEO files answer 404. Once it is live, copy it back here like the main vhost.
+The main vhost answers 404 for `/partner-portal` so the internal segment is
+never reachable on cyprusvipestates.com.

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { partnerRewritePath } from "@/lib/partner/host";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
@@ -397,6 +398,15 @@ export function nestedCanonicalFor(pathname: string): string | null {
 }
 
 export default async function middleware(request: NextRequest) {
+  // Partner portal host: rewrite into the internal /partner-portal segment and skip all
+  // locale logic. The main host must never reach that segment.
+  const partnerTarget = partnerRewritePath(request.headers.get("host"), request.nextUrl.pathname, process.env);
+  if (partnerTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = partnerTarget === "block" ? "/_gated-locale-404" : partnerTarget;
+    return NextResponse.rewrite(url);
+  }
+
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
   // launch): answer 404 instead of letting next-intl treat "he" as a plain
   // path segment and the singlepage catch-all serve English content at a
@@ -657,7 +667,8 @@ export const config = {
   // matcher's blast radius beyond what's actually needed right now.
   // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
   // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
+  // crm (2026-10-18): the new CRM at /crm (own layout, own auth check) — anchored so /crmfoo still localises.
   matcher: [
-    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|home-static|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|crm(?![\\w-])|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|home-static|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

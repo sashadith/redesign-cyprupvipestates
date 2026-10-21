@@ -3,9 +3,11 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
-import { applyLeadStatusChange, LEAD_STATUSES } from "@/lib/crm/updateLeadStatus";
+import { LOST_REASONS } from "@/lib/crm/leadStatus";
+import { applyLeadStatusChange, LEAD_STATUSES, standaloneLostReason } from "@/lib/crm/updateLeadStatus";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, loadScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 import { LOCALES } from "@/lib/locale";
 
@@ -14,6 +16,7 @@ const isoOrNull = z.string().datetime({ offset: true }).nullable().optional().de
 const Input = z.object({
   leadId: z.string().uuid(),
   status: z.enum([...LEAD_STATUSES]).optional(),
+  lostReason: z.enum([...LOST_REASONS]).optional().describe("Why the lead was lost; only with status LOST"),
   viewingScheduledAt: isoOrNull.describe("Required when status becomes VIEWING_SCHEDULED; the appointment date/time"),
   nextFollowUpAt: isoOrNull,
   hot: z.boolean().optional(),
@@ -35,14 +38,19 @@ export function registerUpdateLead(server: McpServer) {
     {
       title: "Update a lead",
       description:
-        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing or admin notes. Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Does not touch name, email, phone, bucket or assignment.",
+        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing or admin notes. Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Does not touch name, email, phone, bucket or assignment. With status LOST, pass lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NOT_INTERESTED, TIMING, INVALID, OTHER).",
       inputSchema: Input,
       annotations: { readOnlyHint: false, idempotentHint: true, destructiveHint: false },
     },
     async (input, ctx) =>
       runTool("crm_update_lead", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { id: true, status: true, hotAt: true } });
+        const { user, where: scope } = await loadScope(c);
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, status: true, hotAt: true, assignedToId: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
+        assertCanEdit(user, lead);
+        if (input.lostReason && input.status !== "LOST") {
+          throw new ToolError("validation", "lostReason is only allowed together with status LOST");
+        }
         if (input.status === "VIEWING_SCHEDULED" && input.status !== lead.status && !input.viewingScheduledAt) {
           throw new ToolError("validation", "viewingScheduledAt is required when setting status VIEWING_SCHEDULED.");
         }
@@ -52,6 +60,7 @@ export function registerUpdateLead(server: McpServer) {
         if (input.status && input.status !== lead.status) {
           await applyLeadStatusChange(actor, input.leadId, input.status, {
             via: "mcp",
+            lostReason: input.lostReason,
             ...(input.viewingScheduledAt !== undefined ? { viewingScheduledAt: input.viewingScheduledAt ? new Date(input.viewingScheduledAt) : null } : {}),
           });
           changed.push("status");
@@ -60,6 +69,8 @@ export function registerUpdateLead(server: McpServer) {
 
         const data: Prisma.LeadUpdateInput = {};
         const set = <K extends keyof Prisma.LeadUpdateInput>(key: K, value: Prisma.LeadUpdateInput[K], name: string) => { data[key] = value; changed.push(name); };
+        const reasonOnly = standaloneLostReason(lead.status, input.status, input.lostReason);
+        if (reasonOnly) set("lostReason", reasonOnly, "lostReason");
         if (input.viewingScheduledAt !== undefined && !(input.status && input.status !== lead.status)) set("viewingScheduledAt", input.viewingScheduledAt ? new Date(input.viewingScheduledAt) : null, "viewingScheduledAt");
         if (input.nextFollowUpAt !== undefined) set("nextFollowUpAt", input.nextFollowUpAt ? new Date(input.nextFollowUpAt) : null, "nextFollowUpAt");
         if (input.hot !== undefined && input.hot !== (lead.hotAt != null)) set("hotAt", input.hot ? new Date() : null, "hot");

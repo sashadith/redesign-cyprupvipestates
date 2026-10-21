@@ -5,6 +5,7 @@ import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { matchDevelopmentsForLead, type MatchFilters } from "@/lib/crm/matching";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 
 const Input = z.object({
   leadId: z.string().uuid(),
@@ -33,9 +34,10 @@ export function registerMatchProperties(server: McpServer) {
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ leadId, filters, limit }, ctx) =>
-      runTool("crm_match_properties", contextFromAuthInfo(ctx.http?.authInfo), leadId, async () => {
+      runTool("crm_match_properties", contextFromAuthInfo(ctx.http?.authInfo), leadId, async (c) => {
+        const { where: scope } = await loadScope(c);
         const lead = await prisma.lead.findFirst({
-          where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
+          where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
           select: { budgetMin: true, budgetMax: true, propertyTypeInterest: true, lastMatchFilters: true },
         });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
