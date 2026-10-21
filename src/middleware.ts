@@ -186,7 +186,7 @@ export const DE_LANDING_MERGES: Record<string, string> = {
 // ships, the old URL redirects immediately, even while the row is still
 // PUBLISHED — that's intentional, so the redirect can go out ahead of the
 // unpublish with no 404 gap.
-const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
+export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
 
   // German-retiree cannibalization pair (2026-09-30 content inventory):
