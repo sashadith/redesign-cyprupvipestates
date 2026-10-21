@@ -511,6 +511,7 @@ const HE: ProjectsStrings = {
   ],
   projectOne: "פרויקט",
   projectMany: "פרויקטים",
+  h1: "נדל״ן למכירה בקפריסין: וילות ודירות בפאפוס, בלימסול ובלרנקה", // REVIEW(he): written 2026-10-21 at the operator's request, not native-reviewed
   inThisMapArea: "באזור הזה במפה",
   inThisArea: "באזור הזה",
   empty: "לא נמצאו פרויקטים שמתאימים לחיפוש. כדאי להרחיב את הסינון.",
