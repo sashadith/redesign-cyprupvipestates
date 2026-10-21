@@ -1,7 +1,8 @@
+import { corporatePath } from "@/lib/corporatePageSlugs";
 import React from "react";
 import Link from "next/link";
 import { PortableText } from "@portabletext/react";
-import { localizedHref, localeDir, type Locale } from "@/lib/locale";
+import { localeDir, type Locale } from "@/lib/locale";
 import { urlFor } from "@/sanity/sanity.client";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import LandingProjectsGrid from "./LandingProjectsGrid";
@@ -159,7 +160,7 @@ export default function LandingBody({
               <h1 className="iart__title">{intro.title || page.title}</h1>
               {intro.description && <p className="pl-hero__lead">{intro.description}</p>}
               {intro.buttonLabel && (
-                <a className="btn btn--glass" href={`${localizedHref(lang)}/contacts`}>
+                <a className="btn btn--glass" href={corporatePath("contacts", lang)}>
                   {intro.buttonLabel}
                 </a>
               )}
@@ -213,7 +214,7 @@ export default function LandingBody({
         {snapshot && (
           <section className={`pl__sec--tight pl__sec pl-atmos ${side(firstProseIndex)}`}>
             <div className="pl__wrap">
-              <OffPlanSnapshot block={snapshot} ctaHref={`${localizedHref(lang)}/contacts`} />
+              <OffPlanSnapshot block={snapshot} ctaHref={corporatePath("contacts", lang)} />
             </div>
           </section>
         )}
