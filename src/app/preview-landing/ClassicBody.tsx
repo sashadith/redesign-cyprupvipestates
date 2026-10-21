@@ -1,5 +1,6 @@
+import { corporatePath } from "@/lib/corporatePageSlugs";
 import React from "react";
-import { localizedHref, type Locale } from "@/lib/locale";
+import { type Locale } from "@/lib/locale";
 import { HEADINGS } from "@/app/components/SectionLinks/SectionLinks";
 import { renderClassicBlock, isSelfContained, isFlow, isClassicPage, headingOnlyText } from "./ClassicBlocks";
 import { urlFor } from "@/sanity/sanity.client";
@@ -27,7 +28,7 @@ export default async function ClassicBody({
   relatedLinks?: { title: string; href: string }[];
 }) {
   const blocks: any[] = Array.isArray(page.contentBlocks) ? page.contentBlocks : [];
-  const ctaHref = `${localizedHref(lang)}/contacts`;
+  const ctaHref = corporatePath("contacts", lang);
   /* The homepage's parallax band closes the page above the footer, exactly as
      it does there: same video under /uploads, same CMS image as its poster.
      getHomePageByLang is wrapped in React cache(), so this is deduplicated
