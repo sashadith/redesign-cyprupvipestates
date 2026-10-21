@@ -1093,13 +1093,28 @@ async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStud
   // Related projects may be linked to a different language's row — map to the same-language
   // sibling so the slug matches `lang` (otherwise /<lang>/projects/<wrong-slug> 404s).
   const relatedMapped = await mapProjectRowsToLang(related.map((r) => r.project as AnyRow), lang);
+  // A related-project card must open the project's CURRENT page. These rows are legacy Project rows, and
+  // most of them have since been archived in favour of a Development under another slug: linking
+  // /projects/<old-slug> works only through a 308 (and 41 such cards were found across the case studies,
+  // 2026-10-21). An archived row therefore carries the redirect target as its href; if that target is
+  // not a project page (the project is gone and only the developer page remains) the card is dropped
+  // rather than pointing a "property" card at a developer.
+  const relatedCards = (
+    await Promise.all(
+      relatedMapped.map(async (p) => {
+        if (p.status !== "ARCHIVED") return { p, href: null as string | null };
+        const target = await getLegacyProjectRedirect(lang, String(p.slug ?? ""));
+        return target && /^(?:\/[a-z]{2})?\/projects\/[^/?#]+$/.test(target) ? { p, href: target } : null;
+      }),
+    )
+  ).filter((x): x is { p: AnyRow; href: string | null } => x !== null);
   const out: AnyRow = {
     ...base(row, "caseStudy"),
     title: row.title, slug: slugObj(row), seo: row.seo, category: row.category, fullTitle: row.fullTitle,
     excerpt: row.excerpt, clientOverview: row.clientOverview, previewImage: D(row.previewImage),
     caseDetails: D(row.caseDetails), mainContent: await resolveBlocks(row.mainContent as any[], lang),
-    relatedProjects: relatedMapped.map((p) => ({
-      _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug,
+    relatedProjects: relatedCards.map(({ p, href }) => ({
+      _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug, href,
       previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: p.isSold,
     })),
     publishedAt: row.publishedAt?.toISOString?.() ?? null, language: row.language,
