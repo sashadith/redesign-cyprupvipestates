@@ -31,7 +31,7 @@ export default function CaseStudiesMotion() {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.from(".ins__eyebrow", { y: 18, autoAlpha: 0, duration: 0.6 }, 0);
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         tl.from(split.lines, { y: 32, autoAlpha: 0, duration: 0.9 }, 0.08);
       }

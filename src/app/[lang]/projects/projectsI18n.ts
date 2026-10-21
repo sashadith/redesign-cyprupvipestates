@@ -45,6 +45,8 @@ export type ProjectsStrings = {
   sorts: Opt[];
   projectOne: string;
   projectMany: string;
+  /** Visible page heading (the one <h1>). Optional: a locale without it renders no heading rather than an unreviewed one (he). */
+  h1?: string;
   inThisMapArea: string; // after the count in the results header
   inThisArea: string; // after the count in the overlay bar
   empty: string;
@@ -111,6 +113,7 @@ const EN: ProjectsStrings = {
   typePlaceholder: "Any type",
   types: [
     { value: "Apartment", label: "Apartment" },
+    { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Villa" },
     { value: "Townhouse", label: "Townhouse" },
     { value: "Commercial", label: "Commercial" },
@@ -143,6 +146,7 @@ const EN: ProjectsStrings = {
   ],
   projectOne: "project",
   projectMany: "projects",
+  h1: "New-build property for sale in Cyprus",
   inThisMapArea: "in this map area",
   inThisArea: "in this area",
   empty: "No projects match your search. Try widening the filters.",
@@ -199,6 +203,7 @@ const DE: ProjectsStrings = {
   typePlaceholder: "Beliebiger Typ",
   types: [
     { value: "Apartment", label: "Apartment" },
+    { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Villa" },
     { value: "Townhouse", label: "Reihenhaus" },
     { value: "Commercial", label: "Gewerbe" },
@@ -231,6 +236,7 @@ const DE: ProjectsStrings = {
   ],
   projectOne: "Projekt",
   projectMany: "Projekte",
+  h1: "Neubau-Immobilien auf Zypern kaufen",
   inThisMapArea: "in diesem Kartenbereich",
   inThisArea: "in diesem Bereich",
   empty: "Keine Projekte entsprechen Ihrer Suche. Erweitern Sie die Filter.",
@@ -287,6 +293,7 @@ const PL: ProjectsStrings = {
   typePlaceholder: "Dowolny typ",
   types: [
     { value: "Apartment", label: "Mieszkanie" },
+    { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Willa" },
     { value: "Townhouse", label: "Dom szeregowy" },
     { value: "Commercial", label: "Komercyjne" },
@@ -319,6 +326,7 @@ const PL: ProjectsStrings = {
   ],
   projectOne: "projekt",
   projectMany: "projekty",
+  h1: "Nowe nieruchomości na sprzedaż na Cyprze",
   inThisMapArea: "w tym obszarze mapy",
   inThisArea: "w tym obszarze",
   empty: "Brak projektów pasujących do wyszukiwania. Rozszerz filtry.",
@@ -375,6 +383,7 @@ const RU: ProjectsStrings = {
   typePlaceholder: "Любой тип",
   types: [
     { value: "Apartment", label: "Квартира" },
+    { value: "Penthouse", label: "Пентхаус" },
     { value: "Villa", label: "Вилла" },
     { value: "Townhouse", label: "Таунхаус" },
     { value: "Commercial", label: "Коммерческая" },
@@ -407,6 +416,7 @@ const RU: ProjectsStrings = {
   ],
   projectOne: "проект",
   projectMany: "проектов",
+  h1: "Новостройки на Кипре: недвижимость на продажу",
   inThisMapArea: "в этой области карты",
   inThisArea: "в этой области",
   empty: "Нет проектов по вашему запросу. Расширьте фильтры.",
@@ -468,6 +478,7 @@ const HE: ProjectsStrings = {
   typePlaceholder: "כל הסוגים",
   types: [
     { value: "Apartment", label: "דירה" },
+    { value: "Penthouse", label: "פנטהאוז" },
     { value: "Villa", label: "וילה" },
     { value: "Townhouse", label: "בית טורי" },
     { value: "Commercial", label: "נכס מסחרי" },

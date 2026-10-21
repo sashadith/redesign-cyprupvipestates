@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { resolveGalleryOrder } from "@/lib/developmentHero";
 import { prisma } from "@/lib/prisma";
 import type { Development, DevelopmentOverride, DevelopmentUnit } from "@prisma/client";
 import type { ProjectVM } from "@/app/preview-project/feeds";
@@ -57,10 +58,9 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
   const district = ov?.district || d.district || "";
   const town = ov?.town || d.town || "";
   const area = ov?.area || d.area || "";
-  // Admin-managed gallery (reordered/uploaded) wins over the feed gallery.
-  const gallery = arr<string>(ov?.gallery).length ? arr<string>(ov?.gallery) : arr<string>(d.gallery);
-  const main = ov?.mainImage || null;
-  const finalGallery = main ? [main, ...gallery.filter((u) => u !== main)] : gallery;
+  // Admin hero → admin-managed gallery → feed gallery: the one rule the page
+  // and the MCP connector share (src/lib/developmentHero.ts, 2026-10-19).
+  const finalGallery = resolveGalleryOrder({ gallery: d.gallery, override: ov ? { mainImage: ov.mainImage, gallery: ov.gallery } : null });
   const amenities = Array.from(new Set([...arr<string>(ov?.amenities), ...arr<string>(d.amenities)]));
 
   const units: UnitVM[] = d.units.map((u) => ({

@@ -23,6 +23,8 @@ const nextConfig = {
       // — belt-and-braces alongside the page's own <meta robots> (see
       // src/app/c/[token]/page.tsx generateMetadata) and robots.ts's disallow.
       { source: "/c/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      // The static twin of the homepage is an implementation detail (middleware rewrites "/" to it); never index it.
+      { source: "/home-static/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
     ];
   },
   async rewrites() {
@@ -39,6 +41,9 @@ const nextConfig = {
     ];
   },
   experimental: {
+    // Each route loads only the CSS of the modules it imports. The default ("loose") merges CSS chunks
+    // across routes, so the homepage carried ~100 KB of blog / case-study / accordion rules it never uses.
+    cssChunking: "strict",
     // Developer brochures uploaded to the PDF-import server action
     // (src/app/admin/(panel)/developments/[id]/actions.ts) can be ~20 MB —
     // well over Next's default 1 MB server-action body limit, which would

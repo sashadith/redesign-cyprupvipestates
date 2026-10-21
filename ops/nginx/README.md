@@ -64,7 +64,8 @@ Always `nginx -t` on the VPS before reloading, and `systemctl reload nginx`
 
 Both snippets blank the client's `x-middleware-subrequest` header
 (CVE-2025-29927: on Next.js < 14.2.25 that header makes the app skip its
-middleware, i.e. host routing and auth checks).
+middleware — the gated-locale 404, the merged/retired redirects and any host
+routing). The app is on 14.2.35 since 2026-10-18, so this is defence in depth.
 
 ## Partner portal vhost (template, not live yet)
 

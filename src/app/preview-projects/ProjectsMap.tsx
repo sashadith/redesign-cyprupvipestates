@@ -38,9 +38,11 @@ export const wazeNavUrl = (lat: number, lng: number) =>
  *  is not a link, since it would only point back at the page it sits on.
  *  Distances are deliberately not shown here (Sascha, 2026-10-13). */
 export function MapCard({
-  href, image, title, price, city, lat, lng, locale, s,
+  href, newTab, image, title, price, city, lat, lng, locale, s,
 }: {
   href?: string;
+  /** Open the project page in a new tab (the admin matching map, which must not navigate away). */
+  newTab?: boolean;
   image?: string | null;
   title: string;
   price: number | null;
@@ -64,7 +66,7 @@ export function MapCard({
   );
   return (
     <>
-      {href ? <a className="px-pop__card" href={href}>{inner}</a> : <div className="px-pop__card">{inner}</div>}
+      {href ? <a className="px-pop__card" href={href} {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{inner}</a> : <div className="px-pop__card">{inner}</div>}
       {/* Siblings of the card link, not inside it: a link inside a link is
           invalid HTML and browsers split the outer one apart. */}
       <span className="px-pop__nav">

@@ -30,7 +30,7 @@ export function registerSearchProjects(server: McpServer) {
     {
       title: "Search the project catalogue",
       description:
-        "Browse the published project catalogue without a lead — filters for location, type, bedrooms, budget (applied to unit prices), completion, amenities and developer. Rows carry computed availability, the units that match your filters (count, price span, types), a summary by district/developer over the whole result set, and a `publicUrl` only when the project is published; never quote a row without `publicUrl` to a customer. For lead-specific ranking use `crm_match_properties`; for the full unit table of one project use `crm_get_project`.",
+        "Browse the published project catalogue without a lead — filters for location, type, bedrooms, budget (applied to unit prices), completion, amenities and developer. Rows carry computed availability, the units that match your filters (count, price span, types), a summary by district/developer over the whole result set, `publicUrl`/`publicUrlAbsolute` and `heroImageUrl` (the page's hero image, for social posts) only when the project is published; never quote a row without `publicUrl` to a customer. For lead-specific ranking use `crm_match_properties`; for the full unit table of one project use `crm_get_project`.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },

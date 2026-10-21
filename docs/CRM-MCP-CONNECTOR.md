@@ -115,6 +115,9 @@ A connection can only be approved while a **pairing window** is open in the same
 
 ## Inventory tools (Phase 3)
 
+Since 2026-10-19 `crm_get_project` and `crm_search_projects` also return `publicUrlAbsolute` (the `publicUrl` paths prefixed with `https://cyprusvipestates.com`) and `heroImageUrl` — the exact image the public project page uses as hero and `og:image` (admin hero → admin gallery → feed gallery, see `src/lib/developmentHero.ts`), at the largest tier we host (`_large.webp`); `null` for anything not published, including `includeReady` rows. No other image ever leaves the connector. `scripts/qa/project-image-check.mts` (testbed only) verifies it and lists the published projects whose hero is still a vendor-hosted URL.
+
+
 Two read-only tools over the project database; no lead involved, `McpToolCall.leadId` stays null.
 
 - `crm_search_projects` — the published catalogue with filters (location, type, bedrooms, budget on unit prices, completion "YYYY"/"YYYY-MM", amenity, developer). `includeReady: true` adds unpublished "ready" rows — they carry `publicUrl: null` and the instructions tell the model never to quote them.

@@ -63,16 +63,41 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("error", markError);
 
-    // Важно: пробуем play сразу после монтирования
-    (async () => {
+    // The video is pure decoration under the poster, and it is 6+ MB. Lighthouse 2026-10-19:
+    // starting it 600 ms after `load` put it just BEFORE the first paint, so the lab counted
+    // the whole transfer as work the first paint depended on (FCP 2.4 -> 3.8 s, LCP 4.9 -> 9.6 s).
+    // So: phones and Save-Data visitors keep the poster only; everyone else gets the video 4 s
+    // after load, or at the first interaction if that comes sooner.
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    const phone = window.matchMedia("(max-width: 768px)").matches;
+    if (phone || conn?.saveData) return;
+    let started = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
+    const cleanup = () => {
+      events.forEach((ev) => window.removeEventListener(ev, start));
+      window.removeEventListener("load", onWindowLoad);
+      if (timer) clearTimeout(timer);
+    };
+    async function start() {
+      if (started) return;
+      started = true;
+      cleanup();
       try {
-        await el.play();
+        await el!.play();
       } catch {
         // autoplay может быть заблокирован — тогда постер останется (это ок)
       }
-    })();
+    }
+    function onWindowLoad() {
+      timer = setTimeout(start, 4000);
+    }
+    events.forEach((ev) => window.addEventListener(ev, start, { once: true, passive: true }));
+    if (document.readyState === "complete") onWindowLoad();
+    else window.addEventListener("load", onWindowLoad, { once: true });
 
     return () => {
+      cleanup();
       el.removeEventListener("loadeddata", onLoadedData);
       el.removeEventListener("playing", onPlaying);
       el.removeEventListener("timeupdate", onTimeUpdate);
@@ -105,7 +130,6 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
         <video
           ref={videoRef}
           className={styles.video}
-          autoPlay
           muted
           loop
           playsInline
@@ -121,8 +145,8 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
           // priority — no visual change: the poster overlay already covers
           // the video until `isVideoReady` flips, exactly as before.
           preload="none"
-          // poster можно оставить как фоллбек, но главный контроль у overlay:
-          poster={posterUrl}
+          // No `poster` attribute: the next/image overlay above already is the poster. The attribute made the
+          // browser fetch the raw 1920 px JPEG a second time (146 KB, High priority) in the CSS window (2026-10-19).
         >
           <source src={videoSrc} type="video/mp4" />
         </video>

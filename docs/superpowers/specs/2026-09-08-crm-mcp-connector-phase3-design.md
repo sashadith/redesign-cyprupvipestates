@@ -134,8 +134,10 @@ Output:
 ```
 
 Never returned: `feedKey`, `feedProjectId`, `driveFolderId`, `newFromFeed`,
-`imageDriftDetectedAt`, override internals, gallery/plan URLs (Claude gets the public URL;
-images are not useful in chat).
+`imageDriftDetectedAt`, override internals, gallery/plan URLs — with one exception since
+2026-10-19: `heroImageUrl`, the single image the public page uses as hero/og:image, at its
+largest hosted tier, only for published projects (for the social-media routine); plus
+`publicUrlAbsolute`.
 
 Description text (for the model): "Browse the published project catalogue without a lead —
 filters for location, type, bedrooms, budget, completion, amenities and developer. Rows carry

@@ -25,6 +25,7 @@ const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on pr
 // Hoisted to module scope so these are compiled once, not on every request.
 const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
 const FAQ_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?faq$`);
+const HOME_RE = new RegExp(`^/(${NON_DEFAULT})?/?$`);
 const CASE_STUDIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?case-studies(?:/([^/]+))?$`);
 const PARTNERS_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?partners$`);
 
@@ -603,6 +604,22 @@ export default async function middleware(request: NextRequest) {
     localeDetection: false,
   });
 
+  // Homepage (/, /de, /pl, /ru) -> home-static/[lang]: the same page, but under a layout with no
+  // cookies()/draftMode(), so it is statically generated and served from the ISR cache (revalidate 1800)
+  // instead of being rendered on every request (TTFB 1.6 s -> cache hit). Locales that are not live yet
+  // (NON_DEFAULT only holds PUBLIC_LOCALES) never match and keep the old guard. Query strings (utm_*) do not affect the cached HTML.
+  const homeMatch = request.nextUrl.pathname.match(HOME_RE);
+  if (homeMatch) {
+    const url = request.nextUrl.clone();
+    // A browser/crawler document request (Accept: text/html) gets the same prerendered HTML with its stylesheets
+    // inlined (src/app/home-inline/[lang]/route.ts, why: src/lib/homeInline.ts). Anything else — notably the App
+    // Router's client-side RSC/prefetch fetches, which send Accept: */* — goes to the real page. (Middleware does not
+    // see the RSC/_rsc markers: Next strips them before it runs, so Accept is the reliable signal.)
+    const wantsDocument = (request.headers.get("accept") || "").includes("text/html") && request.headers.get("rsc") !== "1";
+    url.pathname = `${wantsDocument ? "/home-inline" : "/home-static"}/${homeMatch[1] || "en"}`;
+    return NextResponse.rewrite(url);
+  }
+
   return handleI18nRouting(request);
 }
 
@@ -652,6 +669,6 @@ export const config = {
   // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
   // crm (2026-10-18): the new CRM at /crm (own layout, own auth check) — anchored so /crmfoo still localises.
   matcher: [
-    "/((?!api|\\.well-known|_next/static|_next/image|admin|crm(?![\\w-])|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|crm(?![\\w-])|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|home-static|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

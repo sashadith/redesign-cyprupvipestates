@@ -4,6 +4,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { localePrefix, type Locale } from "@/lib/locale";
 import { homeStrings, CASE_CATEGORY_LABELS } from "./homeI18n";
 import { highlightAccents } from "./highlightAccents";
+import OptImg from "./OptImg";
 
 /* Featured Case Studies — dark editorial section: image-top cards with a
    category badge, title + excerpt, linking to each case study. Reuses the
@@ -70,7 +71,7 @@ export default function CaseStudies({ block, lang = "en" }: { block: FeaturedCas
             return (
               <a key={cs._id} className="cscard" href={`${px}/case-studies/${current}`}>
                 <div className="cscard__media">
-                  <img src={img} alt={cs.title} />
+                  <OptImg src={img} alt={cs.title} sizes="(max-width: 768px) 100vw, 34vw" />
                   {cat && <span className="cscard__cat">{cat}</span>}
                 </div>
                 <div className="cscard__body">
