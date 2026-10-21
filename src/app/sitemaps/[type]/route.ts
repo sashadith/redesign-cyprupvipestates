@@ -142,7 +142,7 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const rows: any[] = (await cfg.model.findMany({
     where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}), ...(cfg.where ?? {}) },
     select: { language: true, slug: true, translationGroupId: true, ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}) },
-  })).filter((r: any) => (langs as readonly string[]).includes(r.language) && !isRedirectedRow(typeKey, r));
+  })).filter((r: any) => (langs as readonly string[]).includes(r.language));
 
   // Resolve a row to its full path segments. Detail types are always single-segment
   // ("/{seg}/{slug}"); nested singlepages walk their parentSanityId chain (within a language) so
@@ -173,6 +173,11 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const groups = new Map<string, any[]>();
   for (const r of rows) {
     if (!r.translationGroupId) continue;
+    // A redirected row (merged landing, retired article) is not a page: it advertises no hreflang and none
+    // is advertised to it. It stays in `rows` above on purpose: a merged PARENT still anchors the nested
+    // URL of its children (/pl/sprzedaz-domow-na-cyprze/domy-w-limassol); dropping it from the parent
+    // lookup collapsed those children to flat paths that redirect.
+    if (isRedirectedRow(typeKey, r)) continue;
     (groups.get(r.translationGroupId) ?? groups.set(r.translationGroupId, []).get(r.translationGroupId)!).push(r);
   }
   const index = new Map<string, Alt[]>();
