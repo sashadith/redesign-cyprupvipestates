@@ -1,6 +1,7 @@
 // src/app/crm/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import "@/app/globals.css";
 import "@/app/fonts/vendored.css";
 import "./crm.css";
@@ -22,7 +23,8 @@ export const metadata: Metadata = { title: "CVE Office", robots: { index: false,
 // The viewer's colour set + global design settings. Never throws: on any error the CRM renders
 // in Classic with the default settings (identical to the pre-design-settings look).
 type ViewerDesign = { values: SetValues; global: GlobalSettings; options: ThemeOption[]; choiceId: string | null };
-async function viewerDesign(userId: string): Promise<ViewerDesign> {
+// React cache() = one lookup per request, shared by generateViewport and the layout.
+const viewerDesign = cache(async (userId: string): Promise<ViewerDesign> => {
   try {
     const d = await designForStaff(userId);
     const options = toOptions(d.offered);
@@ -32,7 +34,7 @@ async function viewerDesign(userId: string): Promise<ViewerDesign> {
     console.error("[crm design]", err);
     return { values: CLASSIC, global: DEFAULT_GLOBAL, options: [], choiceId: null };
   }
-}
+});
 
 // Browser chrome colour follows the viewer's page colour.
 export async function generateViewport(): Promise<Viewport> {
