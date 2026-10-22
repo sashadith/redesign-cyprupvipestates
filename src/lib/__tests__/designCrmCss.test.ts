@@ -108,7 +108,11 @@ test("(a) every font size is scaled by --ds-crm-scale, display fonts also by --d
   assert.equal(value(block(".crm-app"), "font-size"), "calc(14px * var(--ds-crm-scale))");
 });
 
-test("(b) every radius 1-998px is scaled by --ds-radius-scale", () => {
+// Pills (nav pills, round badges) stay pills at every radius setting (spec; controller ruling R5):
+// radii >= 99px are pills and stay literal, everything from 1px to 98px scales.
+const PILL_SELECTORS = [".crm-nav .n", ".crm-chip", ".crm-pill", ".crm-switch-track", ".crm-ck-status", ".crm-temp-chip", ".crm-in-flag"];
+
+test("(b) every radius 1-98px is scaled by --ds-radius-scale, pills (>= 99px) stay literal", () => {
   for (const r of ALL) {
     for (const d of decls(r.body)) {
       if (d.prop !== "border-radius") continue;
@@ -116,10 +120,15 @@ test("(b) every radius 1-998px is scaled by --ds-radius-scale", () => {
       const bare = stripCalc(d.value);
       for (let m = re.exec(bare); m; m = re.exec(bare)) {
         const px = Number(m[1]);
-        assert.ok(px === 0 || px >= 999, `${r.selector} { border-radius: ${d.value} }`);
+        assert.ok(px === 0 || px >= 99, `${r.selector} { border-radius: ${d.value} }`);
+      }
+      const calcRe = /calc\((\d+(?:\.\d+)?)px \* var\(--ds-radius-scale\)\)/g;
+      for (let m = calcRe.exec(d.value); m; m = calcRe.exec(d.value)) {
+        assert.ok(Number(m[1]) < 99, `pill radius must stay literal: ${r.selector} { border-radius: ${d.value} }`);
       }
     }
   }
+  for (const sel of PILL_SELECTORS) assert.equal(value(block(sel), "border-radius"), "99px", sel);
   assert.equal(value(block(".crm-app"), "--r"), "calc(16px * var(--ds-radius-scale))");
 });
 
