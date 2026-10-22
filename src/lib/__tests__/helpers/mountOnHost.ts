@@ -29,7 +29,7 @@ import { JSDOM } from "jsdom";
    — exposing React globally restores production semantics for the test. */
 (globalThis as unknown as { React: typeof React }).React = React;
 
-type Loaded = { default: React.ComponentType };
+type Loaded = { default: React.ComponentType<any> };
 
 /**
  * Mounts a component in a fresh document served from `url` and reports whether
@@ -39,6 +39,20 @@ type Loaded = { default: React.ComponentType };
  * `import()` keeps the path alias resolvable.
  */
 export async function tagReachesDomOn(url: string, load: () => Promise<Loaded>, needle: string): Promise<boolean> {
+  const win = await mountComponentOn(url, load);
+  return win.document.documentElement.outerHTML.includes(needle);
+}
+
+/**
+ * Mounts a component in a fresh document served from `url` and hands back that
+ * document's window, for tags whose effect is a global rather than markup —
+ * Clarity renders null and only creates `window.clarity`.
+ */
+export async function mountComponentOn(
+  url: string,
+  load: () => Promise<Loaded>,
+  props: Record<string, unknown> = {},
+): Promise<any> {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", { url, pretendToBeVisual: true });
   const g = globalThis as unknown as Record<string, unknown>;
   g.window = dom.window;
@@ -57,10 +71,10 @@ export async function tagReachesDomOn(url: string, load: () => Promise<Loaded>, 
   const mountPoint = dom.window.document.createElement("div");
   dom.window.document.body.appendChild(mountPoint);
   await (act as unknown as (cb: () => Promise<void>) => Promise<void>)(async () => {
-    createRoot(mountPoint).render(React.createElement(mod.default));
+    createRoot(mountPoint).render(React.createElement(mod.default, props));
   });
 
-  return dom.window.document.documentElement.outerHTML.includes(needle);
+  return dom.window;
 }
 
 /** The hosts no tag may ever report from. The shape of the 26 September
