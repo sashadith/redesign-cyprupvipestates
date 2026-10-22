@@ -1,6 +1,7 @@
 // src/app/crm-preview/portal/layout.tsx — the partner-portal live-preview frame of /crm/settings/design.
 // Same CSS and font wiring as src/app/partner-portal/layout.tsx; no DsStyle (controller ruling R2):
-// the :where(.pp-html) fallbacks give Classic until PreviewBridge writes the owner's draft.
+// the :where(.pp-html) fallbacks give Classic until the design page writes
+// the owner's draft into its srcdoc copy of this page (see ../previewSrcdoc.ts).
 import type { Metadata } from "next";
 import "@/app/globals.css";
 import "@/app/design-tokens.css";
@@ -8,7 +9,6 @@ import "@/app/fonts/vendored.css";
 import "@/app/partner-portal/portal.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import { requireOwner } from "../guard";
-import { PreviewBridge } from "../PreviewBridge";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Partner portal preview", robots: { index: false, follow: false } };
@@ -20,7 +20,6 @@ export default async function PortalPreviewLayout({ children }: { children: Reac
   return (
     <html lang="en" data-theme="light" className="pp-html">
       <body className={`pp-app antialiased ${fontVars}`}>
-        <PreviewBridge />
         {children}
       </body>
     </html>

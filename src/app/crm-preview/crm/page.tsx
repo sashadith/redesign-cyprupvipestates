@@ -3,6 +3,8 @@ import { requireOwner } from "../guard";
 
 // Static sample of the CRM (no DB data) built from the real crm.css classes, so the owner's draft
 // colours, fonts, sizes and corners show exactly as the CRM would render them.
+// Shown as a script-free srcdoc with <base href="/">: links carry no href and there is no <form>,
+// so nothing in the pane can navigate it away.
 export default async function CrmPreviewPage() {
   await requireOwner();
   return (
@@ -14,9 +16,9 @@ export default async function CrmPreviewPage() {
           <span aria-hidden="true">Office</span>
         </span>
         <nav className="crm-nav" aria-label="CRM">
-          <a href="#">Today</a>
-          <a href="#" className="on">Pipeline</a>
-          <a href="#">Inbox <span className="n">3</span></a>
+          <a>Today</a>
+          <a className="on">Pipeline</a>
+          <a>Inbox <span className="n">3</span></a>
         </nav>
         <div className="crm-me"><span>Sample User</span><b aria-hidden="true">SU</b></div>
       </header>
