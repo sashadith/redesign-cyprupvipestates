@@ -14,7 +14,7 @@ function lum(hex: string): number {
 
 test("cssVars emits defaults", () => {
   const css = cssVars(CLASSIC, DEFAULT_GLOBAL);
-  for (const s of ["--ds-page:#F5F1E8", "--ds-crm-scale:1", "--ds-radius-scale:1", "--ds-font-heading:'Fraunces'", "--ds-portal-base:16px", "--ds-accent-text:#7A5A30", "--ds-on-accent:#FFFFFF", "--ds-heading-scale:1", "--ds-font-body:'Mulish'"]) {
+  for (const s of ["--ds-page:#F5F1E8", "--ds-crm-scale:1", "--ds-radius-scale:1", "--ds-font-heading:'Fraunces'", "--ds-portal-scale:1", "--ds-accent-text:#7A5A30", "--ds-on-accent:#FFFFFF", "--ds-heading-scale:1", "--ds-font-body:'Mulish'"]) {
     assert.ok(css.includes(s), s);
   }
   assert.ok(!css.includes(" "), "no spaces besides inside quoted fonts");
@@ -117,4 +117,9 @@ test("emailTheme", () => {
   assert.equal(t.radius, 16);
   assert.equal(t.muted, "#59534C");
   assert.equal(t.headingFamily, "Georgia,'Times New Roman',serif");
+});
+
+test("cssVars portal scale is portalBase/16, no px", () => {
+  assert.ok(cssVars(CLASSIC, { ...DEFAULT_GLOBAL, portalBase: 18 }).includes("--ds-portal-scale:1.125"));
+  assert.ok(!cssVars(CLASSIC, DEFAULT_GLOBAL).includes("--ds-portal-base"));
 });

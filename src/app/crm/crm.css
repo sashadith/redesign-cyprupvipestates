@@ -28,7 +28,7 @@
   --ds-accent: #8E6B3D; --ds-accent-text: #7A5A30; --ds-accent-hover: #6E512B; --ds-gold: #C29A5E;
   --ds-border: #E4DCCB; --ds-on-accent: #FFFFFF; --ds-field: #FFFFFF;
   --ds-font-heading: 'Fraunces'; --ds-font-body: 'Mulish';
-  --ds-crm-scale: 1; --ds-portal-base: 16px; --ds-heading-scale: 1; --ds-radius-scale: 1;
+  --ds-crm-scale: 1; --ds-portal-scale: 1; --ds-heading-scale: 1; --ds-radius-scale: 1;
 }
 .crm-html { background: var(--ds-page); color-scheme: light; }
 

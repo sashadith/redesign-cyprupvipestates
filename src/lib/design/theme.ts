@@ -216,7 +216,7 @@ export function cssVars(v: SetValues, g: GlobalSettings): string {
   parts.push(`--ds-font-heading:'${g.headingFont}'`);
   parts.push(`--ds-font-body:'${g.bodyFont}'`);
   parts.push(`--ds-crm-scale:${num(g.crmBase / 14)}`);
-  parts.push(`--ds-portal-base:${num(g.portalBase)}px`);
+  parts.push(`--ds-portal-scale:${num(g.portalBase / 16)}`);
   parts.push(`--ds-heading-scale:${num(g.headingScale)}`);
   parts.push(`--ds-radius-scale:${num(g.radius / 16)}`);
   return parts.join(";");

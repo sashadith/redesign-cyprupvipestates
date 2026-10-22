@@ -188,10 +188,12 @@ test("fields: no white background literal remains outside print; the select chev
   assert.match(value(block(".pp-field select"), "background") ?? "", /^var\(--ds-field\) url\(.*%237A5A30/);
 });
 
-test(".pp-html: page colour, base font size from --ds-portal-base; no :root rule in portal.css", () => {
+test(".pp-html: page colour, base font size is a percentage of the browser default; no :root rule in portal.css", () => {
   const html = block(".pp-html");
   assert.equal(value(html, "background"), "var(--ds-page)");
-  assert.equal(value(html, "font-size"), "var(--ds-portal-base)");
+  assert.equal(value(html, "font-size"), "calc(100% * var(--ds-portal-scale))");
+  assert.doesNotMatch(value(html, "font-size") ?? "", /px|portal-base/);
+  assert.doesNotMatch(CSS, /--ds-portal-base/);
   assert.doesNotMatch(CSS, /:root/);
 });
 
