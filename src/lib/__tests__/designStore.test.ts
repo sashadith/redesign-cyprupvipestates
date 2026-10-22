@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { CLASSIC, WEBSITE, STARTER_SETS, ROLE_KEYS } from "../design/theme";
-import { resolveViewerSet, canChooseSet, validateSetMutation, offeredOn, type ThemeRow } from "../design/store";
+import { resolveViewerSet, canChooseSet, validateSetMutation, offeredOn, needsVersionRow, choicesToClear, type ThemeRow } from "../design/store";
 
 function row(id: string, o: Partial<ThemeRow> = {}): ThemeRow {
   return { id, key: null, name: id, values: CLASSIC, offeredToStaff: true, offeredToPartners: true, isDefault: false, sort: 1, ...o };
@@ -66,4 +66,25 @@ test("migration seed matches theme constants", () => {
     assert.deepEqual(found[i], e);
     assert.deepEqual(Object.keys(found[i]), [...ROLE_KEYS]);
   });
+});
+
+test("needsVersionRow: new set, renamed or recoloured set yes; offer-flag-only change no", () => {
+  const base = row("x");
+  const inp = { name: "x", values: { ...CLASSIC }, offeredToStaff: true, offeredToPartners: true };
+  assert.equal(needsVersionRow(undefined, inp), true);
+  assert.equal(needsVersionRow(base, inp), false);
+  assert.equal(needsVersionRow(base, { ...inp, offeredToStaff: false }), false);
+  assert.equal(needsVersionRow(base, { ...inp, name: "y" }), true);
+  assert.equal(needsVersionRow(base, { ...inp, values: { ...CLASSIC, accent: "#123456" } }), true);
+});
+
+test("choicesToClear: only a side that turns from offered to not offered", () => {
+  const base = row("x");
+  const inp = { name: "x", values: CLASSIC, offeredToStaff: true, offeredToPartners: true };
+  assert.deepEqual(choicesToClear(undefined, inp), { staff: false, partners: false });
+  assert.deepEqual(choicesToClear(base, inp), { staff: false, partners: false });
+  assert.deepEqual(choicesToClear(base, { ...inp, offeredToStaff: false }), { staff: true, partners: false });
+  assert.deepEqual(choicesToClear(base, { ...inp, offeredToPartners: false }), { staff: false, partners: true });
+  const staffOnly = row("s", { offeredToPartners: false });
+  assert.deepEqual(choicesToClear(staffOnly, { ...inp, offeredToStaff: false, offeredToPartners: false }), { staff: true, partners: false });
 });

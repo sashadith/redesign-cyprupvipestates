@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/lib/crm/audit";
 import {
-  CLASSIC, WEBSITE, DEFAULT_GLOBAL, normalizeSetValues, normalizeGlobal, emailTheme, CLASSIC_EMAIL_THEME,
+  CLASSIC, WEBSITE, DEFAULT_GLOBAL, ROLE_KEYS, normalizeSetValues, normalizeGlobal, emailTheme, CLASSIC_EMAIL_THEME,
   type SetValues, type GlobalSettings, type EmailTheme,
 } from "./theme";
 
@@ -55,6 +55,23 @@ export function validateSetMutation(m: SetMutation, rows: ThemeRow[]): string | 
     if (!(row.offeredToStaff && row.offeredToPartners)) return "The default set must be offered to staff and partners";
   }
   return null;
+}
+
+type SaveInput = { name: string; values: SetValues; offeredToStaff: boolean; offeredToPartners: boolean };
+
+// A history row is only worth keeping when the name or the colours changed (offer flags alone are not versioned).
+export function needsVersionRow(before: ThemeRow | undefined, input: SaveInput): boolean {
+  if (!before) return true;
+  if (before.name !== input.name) return true;
+  return ROLE_KEYS.some((k) => before.values[k] !== input.values[k]);
+}
+
+// A set no longer offered to a side drops that side's stored choices (they fall back to the default set).
+export function choicesToClear(before: ThemeRow | undefined, input: SaveInput): { staff: boolean; partners: boolean } {
+  return {
+    staff: !!before && before.offeredToStaff && !input.offeredToStaff,
+    partners: !!before && before.offeredToPartners && !input.offeredToPartners,
+  };
 }
 
 // ---- DB ----
@@ -124,7 +141,12 @@ export async function saveTheme(
       const sort = rows.reduce((m, r) => Math.max(m, r.sort), 0) + 1;
       id = (await tx.designTheme.create({ data: { ...data, sort }, select: { id: true } })).id;
     }
-    await tx.designThemeVersion.create({ data: { themeId: id, values: input.values as Prisma.InputJsonValue, name: input.name, createdById: actor.id } });
+    if (needsVersionRow(before, input)) {
+      await tx.designThemeVersion.create({ data: { themeId: id, values: input.values as Prisma.InputJsonValue, name: input.name, createdById: actor.id } });
+    }
+    const clear = choicesToClear(before, input);
+    if (clear.staff) await tx.user.updateMany({ where: { designThemeId: id }, data: { designThemeId: null } });
+    if (clear.partners) await tx.partner.updateMany({ where: { designThemeId: id }, data: { designThemeId: null } });
     await writeAudit(actor, "design_theme_save", "design_theme", id, {
       before: before ? { name: before.name, values: before.values, offeredToStaff: before.offeredToStaff, offeredToPartners: before.offeredToPartners } : null,
       after: { name: input.name, values: input.values, offeredToStaff: input.offeredToStaff, offeredToPartners: input.offeredToPartners },
