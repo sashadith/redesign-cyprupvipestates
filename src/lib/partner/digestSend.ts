@@ -9,6 +9,7 @@ import {
   digestLogAction, digestProfileLink, digestStartFromEnv, digestTotals, isoWeekKey, newProjectUrl,
 } from "./digest";
 import { pickPartnerLocale } from "./i18n";
+import { emailThemeForPartner } from "@/lib/design/store";
 import { partnerBaseUrl } from "./mail";
 import { TRANSPORT_BREAKER, truncateError } from "./notify";
 import { myCommissions, myRecentMilestones, projectRates, recentlyPublishedProjects, type PublishedProjects } from "./scope";
@@ -180,7 +181,7 @@ export async function sendWeeklyDigests(now: Date, start: Date, limit = 200): Pr
         content,
         portalUrl: `${base}/home`,
         profileUrl: `${digestProfileLink(base)}#settings`,
-      });
+      }, await emailThemeForPartner(p.id)); // one lookup per partner per run (one digest each); never throws
     } catch (e) {
       await fail(logId, p.id, e);
       continue;

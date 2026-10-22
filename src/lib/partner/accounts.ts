@@ -1,6 +1,7 @@
 /** Server-side account helpers for the partner portal (tokens, verification, mails). Never import from client code. */
 import type { PartnerTokenKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { emailThemeForPartner } from "@/lib/design/store";
 import { sendEmail } from "@/lib/sendEmail";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { pickPartnerLocale, type PartnerLocale } from "./i18n";
@@ -84,11 +85,22 @@ export async function markEmailVerified(partnerUserId: string): Promise<void> {
   );
 }
 
+/** Colour set of the partner behind a portal account (Classic when it cannot be resolved). Never throws. */
+async function partnerThemeOf(partnerUserId: string) {
+  let partnerId: string | null = null;
+  try {
+    partnerId = (await prisma.partnerUser.findUnique({ where: { id: partnerUserId }, select: { partnerId: true } }))?.partnerId ?? null;
+  } catch (e) {
+    console.error("[partner] theme lookup failed", e);
+  }
+  return emailThemeForPartner(partnerId);
+}
+
 /** Issues a fresh verify token and mails it. */
 export async function sendVerifyMail(u: { id: string; email: string; language: unknown; firstName: string }): Promise<void> {
   const token = await issueToken(u.id, "VERIFY_EMAIL", VERIFY_HOURS);
   const link = `${partnerBaseUrl()}/verify?token=${encodeURIComponent(token)}`;
-  const mail = buildVerifyEmail(asLocale(u.language), link, u.firstName);
+  const mail = buildVerifyEmail(asLocale(u.language), link, u.firstName, await partnerThemeOf(u.id));
   await sendEmail({ to: u.email, subject: mail.subject, text: mail.text, html: mail.html });
 }
 
@@ -96,7 +108,7 @@ export async function sendVerifyMail(u: { id: string; email: string; language: u
 export async function sendResetMail(u: { id: string; email: string; language: unknown; firstName: string }): Promise<void> {
   const token = await issueToken(u.id, "RESET_PASSWORD", RESET_HOURS);
   const link = `${partnerBaseUrl()}/reset?token=${encodeURIComponent(token)}`;
-  const mail = buildResetEmail(asLocale(u.language), link, u.firstName);
+  const mail = buildResetEmail(asLocale(u.language), link, u.firstName, await partnerThemeOf(u.id));
   await sendEmail({ to: u.email, subject: mail.subject, text: mail.text, html: mail.html });
 }
 

@@ -14,6 +14,7 @@ import { buildBankChangedEmail } from "@/lib/partner/mail";
 import { verifyPassword } from "@/lib/partner/password";
 import { requirePartner } from "@/lib/partner/session";
 import { prisma } from "@/lib/prisma";
+import { emailThemeForPartner } from "@/lib/design/store";
 import { sendEmail } from "@/lib/sendEmail";
 import { sendTelegramMessage } from "@/lib/telegram";
 import type { FormState } from "./formState";
@@ -58,7 +59,7 @@ export async function saveBankDetailsAction(_prev: FormState, fd: FormData): Pro
   inBackground(
     "bank changed mail",
     (async () => {
-      const mail = buildBankChangedEmail(asLocale(me.partner.language), { name: me.partner.firstName, ibanLast4: last4, changedAt: now });
+      const mail = buildBankChangedEmail(asLocale(me.partner.language), { name: me.partner.firstName, ibanLast4: last4, changedAt: now }, await emailThemeForPartner(me.partner.id));
       await sendEmail({ to: me.user.email, subject: mail.subject, text: mail.text, html: mail.html });
     })(),
   );

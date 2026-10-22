@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { emailThemeForPartner } from "@/lib/design/store";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { writeAudit } from "@/lib/crm/audit";
@@ -68,7 +69,7 @@ export async function approvePartnerAction(id: string): Promise<Result> {
   revalidatePath("/crm/partners");
 
   try {
-    const mail = buildApprovedEmail(asLocale(partner.language), partner.firstName, `${partnerBaseUrl()}/login`);
+    const mail = buildApprovedEmail(asLocale(partner.language), partner.firstName, `${partnerBaseUrl()}/login`, await emailThemeForPartner(id));
     await sendEmail({ to: pu.email, subject: mail.subject, text: mail.text, html: mail.html });
     return { ok: true, notice: "Approved — email sent" };
   } catch (e) {
