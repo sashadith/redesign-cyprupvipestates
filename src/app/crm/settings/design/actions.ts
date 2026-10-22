@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getCrmUser } from "@/lib/crm/session";
 import { deleteTheme, listThemes, makeDefaultTheme, restoreBuiltIn, restoreThemeVersion, saveGlobal, saveTheme } from "@/lib/design/store";
-import { makeDesignActions, type GlobalResult, type IdResult, type SaveThemeInput, type SaveThemeResult, type SimpleResult } from "./actionsCore";
+import { makeDesignActions, type GlobalResult, type HtmlResult, type IdResult, type SaveThemeInput, type SaveThemeResult, type SimpleResult } from "./actionsCore";
 
 // Owner design page writes (/crm/settings/design). Thin wrapper: the owner guard, validation
 // and refusal handling live in actionsCore.ts (unit-tested); the store audits every write.
@@ -30,3 +30,4 @@ export async function restoreBuiltInAction(id: string): Promise<SimpleResult> { 
 export async function duplicateThemeAction(id: string): Promise<IdResult> { return core().duplicateTheme(id); }
 export async function saveGlobalAction(input: Record<string, unknown>): Promise<GlobalResult> { return core().saveGlobal(input); }
 export async function resetGlobalAction(): Promise<SimpleResult> { return core().resetGlobal(); }
+export async function previewEmailAction(values: unknown, global: unknown): Promise<HtmlResult> { return core().previewEmail(values, global); }

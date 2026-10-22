@@ -1,7 +1,8 @@
 // Owner design page: the server-action logic with the store injected (controller ruling R8).
 // actions.ts ("use server") wires in getCrmUser, the Prisma store and revalidatePath.
 // No Prisma / Next imports here, so the guard and the validation order are unit-tested.
-import { DEFAULT_GLOBAL, validateGlobal, type ContrastWarning, type GlobalSettings, type RoleKey, type SetValues } from "@/lib/design/theme";
+import { DEFAULT_GLOBAL, emailTheme, normalizeGlobal, normalizeSetValues, validateGlobal, type ContrastWarning, type GlobalSettings, type RoleKey, type SetValues } from "@/lib/design/theme";
+import { buildApprovedEmail, partnerBaseUrl } from "@/lib/partner/mail";
 import type { ThemeRow } from "@/lib/design/store";
 import { copyName, isIdArg, needsContrastConfirm, parseThemeInput } from "./designForm";
 
@@ -32,8 +33,10 @@ export type SaveThemeResult =
 export type SimpleResult = { ok: true } | Fail;
 export type IdResult = { ok: true; id: string } | Fail;
 export type GlobalResult = { ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string> };
+export type HtmlResult = { ok: true; html: string } | Fail;
 
-type Deps = { getUser: () => Promise<Viewer | null>; store: DesignStore; revalidate: () => void };
+// baseUrl: the partner host for the sample login link (defaults to partnerBaseUrl()).
+type Deps = { getUser: () => Promise<Viewer | null>; store: DesignStore; revalidate: () => void; baseUrl?: () => string };
 
 // The store throws Error(<refusal text>) when a rule is broken; that text goes to the owner.
 // Database errors carry internals, so they get a generic message (and the log).
@@ -43,7 +46,7 @@ function refusal(e: unknown): Fail {
   return { ok: false, error: GENERIC };
 }
 
-export function makeDesignActions({ getUser, store, revalidate }: Deps) {
+export function makeDesignActions({ getUser, store, revalidate, baseUrl = () => partnerBaseUrl() }: Deps) {
   async function owner(): Promise<Actor | null> {
     const u = await getUser();
     return u && u.isOwner ? { id: u.id, name: u.name, email: u.email } : null;
@@ -120,5 +123,19 @@ export function makeDesignActions({ getUser, store, revalidate }: Deps) {
     },
 
     resetGlobal: () => write((a) => store.saveGlobal(a, { ...DEFAULT_GLOBAL }, "reset")),
+
+    // Live preview of a partner email in the unsaved draft: the "account approved" mail to a
+    // sample partner. Read-only (no store, no revalidate); junk input falls back to Classic and
+    // the default settings, so only validated colours and numbers reach the HTML.
+    async previewEmail(values: unknown, global: unknown): Promise<HtmlResult> {
+      if (!(await owner())) return { ok: false, error: OWNER_ONLY };
+      try {
+        const theme = emailTheme(normalizeSetValues(values), normalizeGlobal(global));
+        return { ok: true, html: buildApprovedEmail("en", "Anna", `${baseUrl()}/login`, theme).html };
+      } catch (e) {
+        console.error("[design preview]", e);
+        return { ok: false, error: "Could not render the email preview." };
+      }
+    },
   };
 }

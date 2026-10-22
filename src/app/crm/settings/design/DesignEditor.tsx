@@ -12,7 +12,8 @@ import {
 import { DesignPreview } from "./DesignPreview";
 
 // Owner design page (/crm/settings/design): set list, set editor, global type/shape, preview.
-// The draft set and draft global settings live here and go to <DesignPreview> (Task 7 fills it).
+// The draft set and draft global settings live here and go to <DesignPreview>, which shows them
+// live in the CRM, portal and email frames before anything is saved.
 
 export type ThemeVersion = { id: string; name: string; values: SetValues; createdAt: string };
 export type GlobalVersion = { id: string; values: GlobalSettings; note: string | null; createdAt: string };
