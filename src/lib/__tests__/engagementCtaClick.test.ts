@@ -90,8 +90,14 @@ async function mountTracker(): Promise<{
   await actAsync(async () => {
     root.render(
       React.createElement(
-        PathnameContext.Provider as unknown as React.ComponentType<{ value: string; children: React.ReactNode }>,
-        { value: "/en/projects/x", children: React.createElement(Tracker, { locale: "en", contentId: "dev-uuid-1" }) },
+        PathnameContext.Provider as unknown as React.ComponentType<{ value: string; children?: React.ReactNode }>,
+        { value: "/en/projects/x" },
+        // Children as the THIRD argument, not a prop: `next build` runs eslint
+        // over src/ including __tests__, and react/no-children-prop is an error
+        // there. It broke a production build on 2026-10-22 — the worktree
+        // cannot run `npx next lint` (duplicate @next/next plugin between this
+        // .eslintrc.json and the main checkout's), so nothing caught it locally.
+        React.createElement(Tracker, { locale: "en", contentId: "dev-uuid-1" }),
       ),
     );
   });
