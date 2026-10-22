@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Script from "next/script";
-import { isTrackingHost } from "@/lib/trackingHost";
+import { useTrackingAllowed } from "@/lib/useTrackingAllowed";
 
 const FACEBOOK_PIXEL_ID = "1238429281352397";
 
@@ -18,24 +17,17 @@ const FACEBOOK_PIXEL_ID = "1238429281352397";
  * developer clicking through modals, and the audiences and optimisations built
  * on it were trained on exactly that.
  *
- * The host decision has to happen after mount. `window` does not exist during
- * SSR, and a server-rendered <Script> is already in the browser's hands before
- * any check could refuse it — so the component renders nothing on the server
- * and nothing on the client's first pass (state starts false, hence no
- * hydration mismatch), then mounts the tag once the hostname is known. The tag
- * is `afterInteractive` anyway, so the delay of one effect costs nothing.
+ * The host decision has to happen after mount — see useTrackingAllowed() for
+ * why, and for the same guard on the Google Ads and LinkedIn tags.
  *
  * Nothing else needs a guard: every other fbq call site in the app is written
  * `if (window.fbq) …`, and when this component declines to init, `window.fbq`
  * simply never exists.
  */
 const FacebookPixel = () => {
-  const [allowed, setAllowed] = useState(false);
-
-  useEffect(() => {
-    setAllowed(isTrackingHost(window.location.hostname));
-  }, []);
-
+  // Hook first, then the early return — a hook inside the `if` condition is
+  // legal but invites the next person to add one below the return.
+  const allowed = useTrackingAllowed();
   if (!allowed) return null;
 
   return (
