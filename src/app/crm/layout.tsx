@@ -57,7 +57,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         <DsStyle scope="crm" vars={cssVars(design.values, design.global)} />
       </head>
       <body className={`crm-app antialiased ${fontVars}${isDarkSet(design.values) ? " ds-dark" : ""}`}>
-        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user) }}>{children}</Shell>
+        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner }}>{children}</Shell>
       </body>
     </html>
   );
