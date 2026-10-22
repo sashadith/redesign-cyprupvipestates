@@ -151,6 +151,24 @@ test("(e) dark semantic colours reach 4.5:1 on dark cards; dark sets switch nati
   assert.match(LAYOUT, /isDarkSet\(/);
 });
 
+test("print: a dark set prints in the Classic roles and light semantic colours (white paper)", () => {
+  const pr = ALL.find((r) => r.selector === ".pp-app.ds-dark" && isPrint(r));
+  assert.ok(pr, "@media print .pp-app.ds-dark reset exists");
+  const roles = cssVars(CLASSIC, DEFAULT_GLOBAL).split(";").filter((d) => /^--ds-[a-z-]+:#/.test(d));
+  assert.equal(roles.length, 12);
+  for (const d of roles) {
+    const [k, v] = d.split(/:(.*)/);
+    assert.equal(value(pr.body, k), v, `print reset ${k}`);
+  }
+  for (const [k, v] of Object.entries(LIGHT_SEMANTIC)) assert.equal(value(pr.body, k), v, `print reset ${k}`);
+  assert.equal(value(pr.body, "color-scheme"), "light");
+  const html = ALL.find((r) => r.selector === ".pp-html.ds-dark" && isPrint(r));
+  assert.ok(html, "@media print .pp-html.ds-dark exists");
+  assert.equal(value(html.body, "color-scheme"), "light");
+  // It must come after the screen dark block so it wins at equal specificity.
+  assert.ok(CSS.indexOf("@media print") > CSS.indexOf(".pp-app.ds-dark {"), "print reset after the dark block");
+});
+
 test("(f) light semantic values are unchanged", () => {
   const app = block(".pp-app");
   for (const [k, v] of Object.entries(LIGHT_SEMANTIC)) assert.equal(value(app, k), v, k);

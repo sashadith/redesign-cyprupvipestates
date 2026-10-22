@@ -448,6 +448,15 @@
   .pp-comm-range .pp-field { flex: 1 1 140px; }
 }
 @media print {
+  /* Paper is white: a dark set prints in the Classic roles and light semantic colours (= CLASSIC in theme.ts). */
+  .pp-html.ds-dark { color-scheme: light; }
+  .pp-app.ds-dark {
+    --ds-page: #F5F1E8; --ds-surface: #EDE7D9; --ds-card: #FBF9F3; --ds-text: #221C15; --ds-muted: #59534C;
+    --ds-accent: #8E6B3D; --ds-accent-text: #7A5A30; --ds-accent-hover: #6E512B; --ds-gold: #C29A5E;
+    --ds-border: #E4DCCB; --ds-on-accent: #FFFFFF; --ds-field: #FFFFFF;
+    --pp-good: #3F6B3A; --pp-warn: #8A5A12; --pp-danger: #A3361F;
+    color-scheme: light;
+  }
   .pp-top, .pp-foot, .pp-noprint, .pp-btn, .pp-toolbar { display: none !important; }
   .pp-app, .pp-html, .pp-main { background: #fff !important; }
   .pp-main { max-width: none; padding: 0; }
