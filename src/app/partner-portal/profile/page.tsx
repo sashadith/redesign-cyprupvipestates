@@ -3,6 +3,9 @@ import { fmt } from "@/lib/partner/i18n";
 import { isPayoutBlocked } from "@/lib/partner/bank";
 import { ibanLast4 } from "@/lib/partner/bankFlow";
 import { loadBankDetails } from "@/lib/partner/bankStore";
+import { designForPartner } from "@/lib/design/store";
+import { toOptions, effectiveChoice } from "@/lib/design/options";
+import { ThemeSwitcher } from "../components/ThemeSwitcher";
 import { requirePartner } from "@/lib/partner/session";
 import { vatIdMissing } from "@/lib/partner/vat";
 import { partnerBotConfigured } from "@/lib/partner/telegramApi";
@@ -19,7 +22,7 @@ export default async function PartnerProfile() {
     where: { id: me.partner.id },
     select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true,
       notifyChannel: true, telegramChatId: true, telegramLinkedAt: true,
-      brandName: true, brandPhone: true, brandEmail: true, brandWebsite: true, brandLogoType: true, brandLogoUpdatedAt: true },
+      brandName: true, brandPhone: true, brandEmail: true, brandWebsite: true, brandLogoType: true, brandLogoUpdatedAt: true, designThemeId: true },
   });
   if (!p) return null;
   const P = t.profile;
@@ -35,6 +38,9 @@ export default async function PartnerProfile() {
   const botAvailable = partnerBotConfigured();
   const linked = !!p.telegramChatId;
   const linkedAt = linked ? dates.format(p.telegramLinkedAt ?? new Date()) : null;
+  // Colour set: only offered sets are listed; a stale/unoffered stored choice shows as the default.
+  const themeOptions = active ? toOptions((await designForPartner(me.partner.id)).offered) : [];
+  const themeChoice = effectiveChoice(p.designThemeId, themeOptions);
   return (
     <div className="pp-stack">
       <section className="pp-card pp-card-wide">
@@ -115,6 +121,13 @@ export default async function PartnerProfile() {
             values={{ emailNotifications: p.emailNotifications, digestOptIn: p.digestOptIn }}
             telegram={botAvailable || linked ? { channel: p.notifyChannel, linked } : undefined}
           />
+        </section>
+      )}
+      {active && themeOptions.length > 1 && (
+        <section className="pp-panel pp-anchor" id="colours" aria-labelledby="colours-title">
+          <h2 className="pp-h3" id="colours-title">{t.theme.title}</h2>
+          <p className="pp-muted">{t.theme.hint}</p>
+          <ThemeSwitcher variant="full" options={themeOptions} choiceId={themeChoice} t={t.theme} />
         </section>
       )}
       <section className="pp-panel">

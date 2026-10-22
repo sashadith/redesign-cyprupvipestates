@@ -9,6 +9,8 @@ import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } fr
 import { partnerNewsUnread } from "@/lib/partner/newsStore";
 import { DsStyle } from "@/lib/design/DsStyle";
 import { designForPartner } from "@/lib/design/store";
+import { toOptions, effectiveChoice, type ThemeOption } from "@/lib/design/options";
+import { prisma } from "@/lib/prisma";
 import { CLASSIC, DEFAULT_GLOBAL, cssVars, isDarkSet, type SetValues, type GlobalSettings } from "@/lib/design/theme";
 import { portalContext } from "./portalContext";
 import { PortalShell } from "./components/PortalShell";
@@ -20,14 +22,17 @@ export const metadata: Metadata = { title: "Cyprus VIP Estates · Partner", robo
 // Never throws: on any error the portal renders in Classic with the default settings, identical
 // to the pre-design-settings look. React cache() = one lookup per request, shared by
 // generateViewport and the layout (per-request memoisation, not an in-memory cache).
-const viewerDesign = cache(async (): Promise<{ values: SetValues; global: GlobalSettings }> => {
+type ViewerDesign = { values: SetValues; global: GlobalSettings; options: ThemeOption[]; choiceId: string | null };
+const viewerDesign = cache(async (): Promise<ViewerDesign> => {
   try {
     const { me } = await portalContext();
     const d = await designForPartner(me?.partner.id ?? null);
-    return { values: d.set.values, global: d.global };
+    const options = toOptions(d.offered);
+    const p = me ? await prisma.partner.findUnique({ where: { id: me.partner.id }, select: { designThemeId: true } }) : null;
+    return { values: d.set.values, global: d.global, options, choiceId: effectiveChoice(p?.designThemeId ?? null, options) };
   } catch (err) {
     console.error("[portal design]", err);
-    return { values: CLASSIC, global: DEFAULT_GLOBAL };
+    return { values: CLASSIC, global: DEFAULT_GLOBAL, options: [], choiceId: null };
   }
 });
 
@@ -53,7 +58,7 @@ export default async function PartnerPortalLayout({ children }: { children: Reac
         <DsStyle scope="portal" vars={cssVars(design.values, design.global)} />
       </head>
       <body className={`pp-app antialiased ${fontVars}${dark}`}>
-        <PortalShell locale={locale} t={t} loggedIn={!!me} active={active} newsUnread={newsUnread}>{children}</PortalShell>
+        <PortalShell locale={locale} t={t} loggedIn={!!me} active={active} newsUnread={newsUnread} themes={me && active ? { options: design.options, choiceId: design.choiceId } : undefined}>{children}</PortalShell>
       </body>
     </html>
   );

@@ -13,6 +13,7 @@ import { inboxWhere } from "@/lib/crm/inboxWhere";
 import { Shell } from "./components/Shell";
 import { DsStyle } from "@/lib/design/DsStyle";
 import { designForStaff } from "@/lib/design/store";
+import { toOptions, effectiveChoice, type ThemeOption } from "@/lib/design/options";
 import { CLASSIC, DEFAULT_GLOBAL, cssVars, isDarkSet, type SetValues, type GlobalSettings } from "@/lib/design/theme";
 
 export const dynamic = "force-dynamic";
@@ -20,13 +21,16 @@ export const metadata: Metadata = { title: "CVE Office", robots: { index: false,
 
 // The viewer's colour set + global design settings. Never throws: on any error the CRM renders
 // in Classic with the default settings (identical to the pre-design-settings look).
-async function viewerDesign(userId: string): Promise<{ values: SetValues; global: GlobalSettings }> {
+type ViewerDesign = { values: SetValues; global: GlobalSettings; options: ThemeOption[]; choiceId: string | null };
+async function viewerDesign(userId: string): Promise<ViewerDesign> {
   try {
     const d = await designForStaff(userId);
-    return { values: d.set.values, global: d.global };
+    const options = toOptions(d.offered);
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { designThemeId: true } });
+    return { values: d.set.values, global: d.global, options, choiceId: effectiveChoice(u?.designThemeId ?? null, options) };
   } catch (err) {
     console.error("[crm design]", err);
-    return { values: CLASSIC, global: DEFAULT_GLOBAL };
+    return { values: CLASSIC, global: DEFAULT_GLOBAL, options: [], choiceId: null };
   }
 }
 
@@ -57,7 +61,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         <DsStyle scope="crm" vars={cssVars(design.values, design.global)} />
       </head>
       <body className={`crm-app antialiased ${fontVars}${isDarkSet(design.values) ? " ds-dark" : ""}`}>
-        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner }}>{children}</Shell>
+        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner }} themes={{ options: design.options, choiceId: design.choiceId }}>{children}</Shell>
       </body>
     </html>
   );

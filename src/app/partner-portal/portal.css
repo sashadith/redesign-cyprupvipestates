@@ -560,3 +560,14 @@
 .pp-news-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .pp-news-kind { padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--pp-bronze-ink);
   font: 600 var(--text-caption) / 1.3 var(--pp-body); letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ── Personal colour-set switcher (header select + profile cards) ───────── */
+.pp-theme { margin-inline-start: 0; }
+.pp-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
+.pp-picker button { display: flex; align-items: center; gap: 12px; text-align: start; cursor: pointer; background: var(--ds-card); color: var(--text); border: 1px solid var(--hairline-strong);
+  border-radius: calc(12px * var(--ds-radius-scale)); padding: 12px 14px; font: 500 var(--text-sm) / 1.3 var(--pp-body); }
+.pp-picker button:hover { border-color: var(--bronze); }
+.pp-picker button[aria-checked="true"] { border-color: var(--bronze); box-shadow: 0 0 0 1px var(--bronze); }
+.pp-picker button:disabled { opacity: 0.6; cursor: progress; }
+.pp-swatch { display: inline-grid; grid-template-columns: repeat(4, 14px); gap: 2px; flex: none; }
+.pp-swatch i { width: 14px; height: 22px; border-radius: calc(2px * var(--ds-radius-scale)); border: 1px solid var(--hairline-strong); box-sizing: border-box; }

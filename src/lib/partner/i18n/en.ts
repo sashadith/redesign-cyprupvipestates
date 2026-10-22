@@ -1,6 +1,7 @@
 /** Partner portal dictionary — English. Placeholders use {name}; escape HTML at the call site. */
 export const en = {
   nav: { home: "Home", profile: "Profile", logout: "Log out", language: "Language", login: "Log in", register: "Become a partner", overview: "Overview", submit: "Submit client", clients: "My clients", projects: "Projects", commissions: "Commissions", calculator: "Calculator", materials: "Materials", presentations: "Presentations", rating: "Rating", news: "News" },
+  theme: { label: "Colours", title: "Colour set", hint: "Choose how your portal looks. This only changes your view and your e-mails.", saved: "Saved", default: "Default ({name})" },
   footer: { brand: "Cyprus VIP Estates", rights: "All rights reserved.", agreement: "Partner agreement", contact: "Contact us" },
   landing: {
     title: "Partner programme",
