@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { GoogleTagManager } from "@next/third-parties/google";
+import GoogleTagManagerScript from "@/app/components/GoogleTagManagerScript/GoogleTagManagerScript";
 import MicrosoftClarity from "../MicrosoftClarity/MicrosoftClarity";
 import GoogleAdsScript from "../GoogleAdsScript/GoogleAdsScript";
 import FacebookPixel from "../FacebookPixel/FacebookPixel";
@@ -42,7 +42,7 @@ export default function ConsentScripts({ disableTracking }: { disableTracking: b
   return hasAnalytics ? (
     <>
       {!disableTracking && <MicrosoftClarity hasConsent={true} />}
-      <GoogleTagManager gtmId="GTM-MQNF6L9V" />
+      <GoogleTagManagerScript />
       <GoogleAdsScript />
       {!disableTracking && <FacebookPixel />}
       <LinkedInPixel />
