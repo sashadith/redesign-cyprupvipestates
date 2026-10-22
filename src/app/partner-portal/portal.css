@@ -18,17 +18,49 @@
    - Field borders are ink at 50% (3.2:1 against the card, WCAG 1.4.11).
    ===================================================================== */
 
-.pp-html { background: var(--paper); color-scheme: light; }
+/* Design settings: the layout injects the viewer's colour set and global settings as
+   :root{--ds-...} (src/lib/design/DsStyle.tsx). These zero-specificity fallbacks carry the
+   Classic values (identical to the pre-design-settings look), so the injected :root always
+   wins and the portal still renders correctly without it. */
+:where(.pp-html) {
+  --ds-page: #F5F1E8; --ds-surface: #EDE7D9; --ds-card: #FBF9F3; --ds-text: #221C15; --ds-muted: #59534C;
+  --ds-accent: #8E6B3D; --ds-accent-text: #7A5A30; --ds-accent-hover: #6E512B; --ds-gold: #C29A5E;
+  --ds-border: #E4DCCB; --ds-on-accent: #FFFFFF; --ds-field: #FFFFFF;
+  --ds-font-heading: 'Fraunces'; --ds-font-body: 'Mulish';
+  --ds-crm-scale: 1; --ds-portal-base: 16px; --ds-heading-scale: 1; --ds-radius-scale: 1;
+}
+/* 16px at the default = the browser default, so every rem in the token scale is unchanged. */
+.pp-html { background: var(--ds-page); color-scheme: light; font-size: var(--ds-portal-base); }
+/* Dark sets: the root scrollbar and native controls follow (the layout adds ds-dark to <html> too). */
+.pp-html.ds-dark { color-scheme: dark; }
 
 .pp-app {
-  --pp-bronze-ink: #7A5A30;
-  --pp-bronze-deep: #6E512B;
-  --pp-card: var(--surface-raised);          /* #FBF9F3 */
-  --pp-field-line: rgba(34, 28, 21, 0.5);
+  /* design-tokens.css names, re-pointed at the design roles on .pp-app only (never :root).
+     At the Classic defaults every value equals the light tokens. --text-soft and --text-faint
+     stay translucent ink (74% / 48%), exactly as in design-tokens.css. */
+  --bg: var(--ds-page); --surface: var(--ds-surface); --surface-raised: var(--ds-card);
+  --paper: var(--ds-page); --paper-2: var(--ds-surface);
+  --text: var(--ds-text); --text-soft: color-mix(in srgb, var(--ds-text) 74%, transparent);
+  --text-faint: color-mix(in srgb, var(--ds-text) 48%, transparent);
+  --bronze: var(--ds-accent); --accent: var(--ds-accent); --accent-ink: var(--ds-on-accent); --champagne: var(--ds-gold);
+  --accent-soft: color-mix(in srgb, var(--ds-accent) 10%, transparent);
+  --hairline: color-mix(in srgb, var(--ds-text) 14%, transparent);
+  --hairline-strong: color-mix(in srgb, var(--ds-text) 24%, transparent);
+  --glass-solid: color-mix(in srgb, var(--ds-page) 92%, transparent);
+  --glass-border: color-mix(in srgb, var(--ds-text) 10%, transparent);
+  --gold-contour: linear-gradient(90deg, transparent, var(--ds-gold), transparent);
+  --r-ui: calc(16px * var(--ds-radius-scale));
+
+  --pp-bronze-ink: var(--ds-accent-text);
+  --pp-bronze-deep: var(--ds-accent-hover);
+  --pp-card: var(--ds-card);
+  --pp-field-line: color-mix(in srgb, var(--ds-text) 50%, transparent);
   --pp-good: #3F6B3A; --pp-warn: #8A5A12; --pp-danger: #A3361F;
-  --pp-shadow: 0 1px 2px rgba(34, 28, 21, 0.04), 0 28px 56px -34px rgba(34, 28, 21, 0.22);
-  --pp-display: var(--font-display), var(--font-display-cyr), Georgia, serif;
-  --pp-body: var(--font-body), system-ui, sans-serif;
+  --pp-shadow: 0 1px 2px color-mix(in srgb, var(--ds-text) 4%, transparent), 0 28px 56px -34px color-mix(in srgb, var(--ds-text) 22%, transparent);
+  /* Today's computed chains (R6): --font-display was 'Fraunces', Georgia, 'Times New Roman', serif and
+     --font-body 'Mulish', system-ui, sans-serif; the role font takes the first family's place. */
+  --pp-display: var(--ds-font-heading), Georgia, 'Times New Roman', serif, var(--font-display-cyr), Georgia, serif;
+  --pp-body: var(--ds-font-body), system-ui, sans-serif, system-ui, sans-serif;
   --pp-mono: ui-monospace, "SF Mono", Menlo, monospace;
   --pp-maxw: 1080px;
 
@@ -37,14 +69,19 @@
   font-family: var(--pp-body); font-size: 1rem; line-height: 1.6; overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
+/* Semantic colours re-tuned for dark sets: each reaches >= 4.5:1 on the WEBSITE card #102826
+   and the Anthracite card #23272A. */
+.pp-app.ds-dark { --pp-good: #8DC385; --pp-warn: #E2AA55; --pp-danger: #F08C74; color-scheme: dark; }
 .pp-app *, .pp-app *::before, .pp-app *::after { box-sizing: border-box; }
+/* Headings inherit their size (Tailwind preflight); 1em x the heading scale is identical at 1. */
 .pp-app h1, .pp-app h2, .pp-app h3 {
+  font-size: calc(1em * var(--ds-heading-scale));
   font-family: var(--pp-display); font-weight: 400; letter-spacing: -0.015em; line-height: 1.15;
   color: var(--text); margin: 0 0 0.5em; text-wrap: balance;
 }
 .pp-app p { text-wrap: pretty; }
 .pp-app a:not(.pp-btn) { color: var(--pp-bronze-ink); text-decoration: underline; text-decoration-thickness: 1px;
-  text-underline-offset: 3px; text-decoration-color: rgba(122, 90, 48, 0.35);
+  text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--ds-accent-text) 35%, transparent);
   transition: color var(--dur-sm) var(--ease), text-decoration-color var(--dur-sm) var(--ease); }
 .pp-app a:not(.pp-btn):hover { color: var(--pp-bronze-deep); text-decoration-color: currentColor; }
 .pp-app :focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
@@ -57,7 +94,7 @@
 .pp-top-in { max-width: var(--pp-maxw); margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap;
   gap: 10px 20px; padding: 14px 16px; padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 
-.pp-app a.pp-logo { display: inline-flex; align-items: center; gap: 16px; flex: none; text-decoration: none; color: var(--text); border-radius: 8px; }
+.pp-app a.pp-logo { display: inline-flex; align-items: center; gap: 16px; flex: none; text-decoration: none; color: var(--text); border-radius: calc(8px * var(--ds-radius-scale)); }
 .pp-logo img { display: block; width: auto; }
 .pp-logo .pp-logo-full { display: none; height: 34px; }
 .pp-logo .pp-logo-mark { height: 36px; }
@@ -108,8 +145,8 @@
 .pp-muted { color: var(--text-soft); }
 .pp-small { font-size: var(--text-sm); margin: 14px 0 0; }
 .pp-eyebrow { margin: 0 0 14px; color: var(--pp-bronze-ink); font: 600 var(--text-caption) / 1.4 var(--pp-body); letter-spacing: 0.26em; text-transform: uppercase; }
-.pp-app .pp-h2 { font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem); }
-.pp-app .pp-h3, .pp-app h3 { font-size: 1.25rem; letter-spacing: -0.01em; margin: 0 0 10px; }
+.pp-app .pp-h2 { font-size: calc(clamp(1.5rem, 1.25rem + 1vw, 2rem) * var(--ds-heading-scale)); }
+.pp-app .pp-h3, .pp-app h3 { font-size: calc(1.25rem * var(--ds-heading-scale)); letter-spacing: -0.01em; margin: 0 0 10px; }
 /* Gold rule under a heading — left-aligned variant of the style guide's .sg__rule. */
 .pp-ruled::after, .pp-card > h1::after { content: ""; display: block; width: 88px; height: 1px; margin-top: 18px;
   background: linear-gradient(90deg, var(--champagne), transparent); }
@@ -120,7 +157,7 @@
 .pp-card { width: 100%; max-width: 460px; margin: 0 auto; padding: clamp(28px, 5vw, 44px) clamp(20px, 5vw, 44px); box-shadow: var(--pp-shadow); }
 .pp-card-wide { max-width: 640px; }
 .pp-stack .pp-card { margin: 0; max-width: none; }
-.pp-card > h1 { font-size: clamp(1.75rem, 1.45rem + 1.1vw, 2.25rem); margin-bottom: 22px; }
+.pp-card > h1 { font-size: calc(clamp(1.75rem, 1.45rem + 1.1vw, 2.25rem) * var(--ds-heading-scale)); margin-bottom: 22px; }
 .pp-panel { padding: clamp(20px, 4vw, 28px); }
 
 /* Auth cards (login, register, verify, forgot, reset): the mark centred above the title. */
@@ -131,7 +168,7 @@
 
 /* ── Buttons — the style guide's .btn shape (16px radius, Mulish 500, 0.03em) in bronze ── */
 .pp-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  border: 1px solid var(--bronze); background: var(--bronze); color: #fff; text-decoration: none;
+  border: 1px solid var(--bronze); background: var(--bronze); color: var(--accent-ink); text-decoration: none;
   font: 500 var(--text-sm) / 1.2 var(--pp-body); letter-spacing: 0.03em; padding: 13px 22px; border-radius: var(--r-ui); cursor: pointer;
   transition: background var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease),
               transform var(--dur-sm) var(--ease-soft); }
@@ -155,11 +192,11 @@
 .pp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .pp-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .pp-field label { font: 600 0.8125rem / 1.35 var(--pp-body); letter-spacing: 0.02em; color: var(--text); }
-.pp-field input, .pp-field select, .pp-copy input { width: 100%; min-width: 0; border: 1px solid var(--pp-field-line); background: #fff; color: var(--text);
-  border-radius: 12px; padding: 12px 14px; font: 400 1rem / 1.35 var(--pp-body);
+.pp-field input, .pp-field select, .pp-copy input { width: 100%; min-width: 0; border: 1px solid var(--pp-field-line); background: var(--ds-field); color: var(--text);
+  border-radius: calc(12px * var(--ds-radius-scale)); padding: 12px 14px; font: 400 1rem / 1.35 var(--pp-body);
   transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease); }
 .pp-field select { appearance: none; -webkit-appearance: none; padding-inline-end: 40px; cursor: pointer;
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237A5A30' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center; }
+  background: var(--ds-field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237A5A30' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center; }
 .pp-field input:hover, .pp-field select:hover { border-color: var(--text-soft); }
 .pp-app .pp-field input:focus-visible, .pp-app .pp-field select:focus-visible, .pp-app .pp-copy input:focus-visible {
   outline: 2px solid var(--bronze); outline-offset: 1px; border-color: var(--bronze); box-shadow: 0 0 0 4px var(--accent-soft); }
@@ -173,17 +210,17 @@
 .pp-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .pp-saved { color: var(--pp-good); font-weight: 600; font-size: var(--text-sm); }
 
-.pp-alert { margin: 0; padding: 12px 16px; border-radius: 12px; font-size: var(--text-sm); border: 1px solid; }
-.pp-alert-error { color: var(--pp-danger); background: rgba(163, 54, 31, 0.06); border-color: rgba(163, 54, 31, 0.22); }
-.pp-alert-ok { color: var(--pp-good); background: rgba(63, 107, 58, 0.07); border-color: rgba(63, 107, 58, 0.24); }
+.pp-alert { margin: 0; padding: 12px 16px; border-radius: calc(12px * var(--ds-radius-scale)); font-size: var(--text-sm); border: 1px solid; }
+.pp-alert-error { color: var(--pp-danger); background: color-mix(in srgb, var(--pp-danger) 6%, transparent); border-color: color-mix(in srgb, var(--pp-danger) 22%, transparent); }
+.pp-alert-ok { color: var(--pp-good); background: color-mix(in srgb, var(--pp-good) 7%, transparent); border-color: color-mix(in srgb, var(--pp-good) 24%, transparent); }
 .pp-done { text-align: center; }
-.pp-app .pp-done h2 { font-size: 1.5rem; margin-top: 8px; }
+.pp-app .pp-done h2 { font-size: calc(1.5rem * var(--ds-heading-scale)); margin-top: 8px; }
 
 /* ── Landing ────────────────────────────────────────────────────────────── */
 .pp-landing { display: flex; flex-direction: column; gap: clamp(48px, 8vw, 96px); }
 .pp-hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: clamp(8px, 3vw, 32px) 0 0; }
 .pp-mark-hero { height: clamp(56px, 8vw, 72px); margin-bottom: 28px; }
-.pp-app .pp-hero h1 { font-size: clamp(2rem, 1.35rem + 2.8vw, 3.35rem); line-height: 1.08; letter-spacing: -0.02em; max-width: 20ch; margin-bottom: 0; }
+.pp-app .pp-hero h1 { font-size: calc(clamp(2rem, 1.35rem + 2.8vw, 3.35rem) * var(--ds-heading-scale)); line-height: 1.08; letter-spacing: -0.02em; max-width: 20ch; margin-bottom: 0; }
 .pp-hero h1::after { content: ""; display: block; width: 140px; height: 1px; margin: 28px auto 0; background: var(--gold-contour); }
 .pp-lead { font-size: var(--text-lead); line-height: 1.6; color: var(--text-soft); max-width: 58ch; margin: 24px 0 32px; }
 .pp-cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -195,14 +232,14 @@
 .pp-steps .pp-panel { padding: clamp(24px, 3vw, 32px); }
 .pp-steps p { margin: 0; color: var(--text-soft); font-size: 0.9375rem; }
 /* Numerals: Fraunces italic in bronze — 4.6:1 on the card, passes the 3:1 large-text rule at this size. */
-.pp-step-n { display: block; margin-bottom: 18px; font: italic 300 2rem / 1 var(--pp-display); color: var(--bronze); letter-spacing: 0; }
+.pp-step-n { display: block; margin-bottom: 18px; font: italic 300 calc(2rem * var(--ds-heading-scale)) / 1 var(--pp-display); color: var(--bronze); letter-spacing: 0; }
 
 /* ── Home / profile ─────────────────────────────────────────────────────── */
 .pp-copy { display: flex; gap: 10px; margin-top: 6px; }
 .pp-copy input { font: 400 0.875rem / 1.35 var(--pp-mono); background: var(--paper); color: var(--text); }
 .pp-copy .pp-btn { flex: none; }
 .pp-contact p { margin: 0 0 4px; }
-.pp-contact .pp-contact-name { font: 400 1.125rem / 1.3 var(--pp-display); color: var(--text); margin: 0 0 8px; }
+.pp-contact .pp-contact-name { font: 400 calc(1.125rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); color: var(--text); margin: 0 0 8px; }
 .pp-dl { margin: 0; display: grid; gap: 0; }
 .pp-dl div { display: grid; grid-template-columns: 180px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
 .pp-dl div:first-child { padding-top: 0; }
@@ -211,11 +248,11 @@
 
 /* ── Agreement ──────────────────────────────────────────────────────────── */
 .pp-doc { max-width: 760px; }
-.pp-app .pp-doc h2 { font-size: 1.25rem; margin: 30px 0 8px; }
+.pp-app .pp-doc h2 { font-size: calc(1.25rem * var(--ds-heading-scale)); margin: 30px 0 8px; }
 .pp-doc p { margin: 0 0 12px; }
 .pp-doc > p, .pp-doc section { max-width: 68ch; }
-.pp-draft { margin: 0 0 24px; padding: 10px 14px; border-radius: 12px; background: rgba(138, 90, 18, 0.07);
-  color: var(--pp-warn); font-weight: 600; font-size: var(--text-sm); border: 1px dashed rgba(138, 90, 18, 0.4); }
+.pp-draft { margin: 0 0 24px; padding: 10px 14px; border-radius: calc(12px * var(--ds-radius-scale)); background: color-mix(in srgb, var(--pp-warn) 7%, transparent);
+  color: var(--pp-warn); font-weight: 600; font-size: var(--text-sm); border: 1px dashed color-mix(in srgb, var(--pp-warn) 40%, transparent); }
 
 /* ── Submit client ──────────────────────────────────────────────────────── */
 /* Nav (phase 3d: 8 entries for ACTIVE partners): one row that scrolls sideways instead of wrapping, like the CRM. */
@@ -225,33 +262,33 @@
 .pp-nav > * { flex: 0 0 auto; }
 .pp-card-form { max-width: 760px; }
 .pp-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.pp-fieldset > legend { padding: 0; margin: 0 0 12px; font: 400 1.125rem / 1.3 var(--pp-display); color: var(--text); }
-.pp-field textarea { width: 100%; min-width: 0; border: 1px solid var(--pp-field-line); background: #fff; color: var(--text);
-  border-radius: 12px; padding: 12px 14px; font: 400 1rem / 1.5 var(--pp-body); resize: vertical; }
+.pp-fieldset > legend { padding: 0; margin: 0 0 12px; font: 400 calc(1.125rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); color: var(--text); }
+.pp-field textarea { width: 100%; min-width: 0; border: 1px solid var(--pp-field-line); background: var(--ds-field); color: var(--text);
+  border-radius: calc(12px * var(--ds-radius-scale)); padding: 12px 14px; font: 400 1rem / 1.5 var(--pp-body); resize: vertical; }
 .pp-app .pp-field textarea:focus-visible, .pp-app .pp-search:focus-visible {
   outline: 2px solid var(--bronze); outline-offset: 1px; border-color: var(--bronze); box-shadow: 0 0 0 4px var(--accent-soft); }
 .pp-field-bad textarea { border-color: var(--pp-danger); }
 
 .pp-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .pp-tab { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 16px 16px 16px 44px; cursor: pointer;
-  border: 1px solid var(--hairline-strong); border-radius: var(--r-ui); background: #fff;
+  border: 1px solid var(--hairline-strong); border-radius: var(--r-ui); background: var(--ds-field);
   transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease); }
 .pp-tab input { position: absolute; top: 19px; left: 16px; width: 18px; height: 18px; margin: 0; accent-color: var(--bronze); }
 .pp-tab:hover { border-color: var(--bronze); }
 .pp-tab:has(input:checked) { border-color: var(--bronze); box-shadow: 0 0 0 3px var(--accent-soft); }
 .pp-tab:has(input:focus-visible) { outline: 2px solid var(--bronze); outline-offset: 2px; }
-.pp-tab-title { font: 400 1.25rem / 1.2 var(--pp-display); color: var(--text); }
+.pp-tab-title { font: 400 calc(1.25rem * var(--ds-heading-scale)) / 1.2 var(--pp-display); color: var(--text); }
 .pp-tab-text { font-size: var(--text-sm); color: var(--text-soft); }
 .pp-tab-share { margin-top: 6px; font-size: var(--text-sm); font-weight: 600; color: var(--pp-bronze-ink); }
 
-.pp-search { width: 100%; border: 1px solid var(--pp-field-line); background: #fff; color: var(--text); border-radius: 12px;
+.pp-search { width: 100%; border: 1px solid var(--pp-field-line); background: var(--ds-field); color: var(--text); border-radius: calc(12px * var(--ds-radius-scale));
   padding: 11px 14px; font: 400 1rem / 1.35 var(--pp-body); }
 .pp-projects { list-style: none; margin: 0; padding: 4px; max-height: 340px; overflow-y: auto; border: 1px solid var(--hairline-strong);
-  border-radius: 12px; background: #fff; }
+  border-radius: calc(12px * var(--ds-radius-scale)); background: var(--ds-field); }
 .pp-field-bad .pp-projects { border-color: var(--pp-danger); }
-.pp-proj { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; padding: 10px 12px; border-radius: 10px; cursor: pointer; }
+.pp-proj { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; padding: 10px 12px; border-radius: calc(10px * var(--ds-radius-scale)); cursor: pointer; }
 .pp-proj:hover { background: var(--accent-soft); }
-.pp-proj-on { background: rgba(142, 107, 61, 0.08); }
+.pp-proj-on { background: color-mix(in srgb, var(--ds-accent) 8%, transparent); }
 .pp-proj input { width: 18px; height: 18px; margin: 0; align-self: center; accent-color: var(--bronze); }
 .pp-proj-name { min-width: 0; overflow-wrap: anywhere; }
 .pp-proj-town { color: var(--text-soft); }
@@ -261,8 +298,8 @@
 .pp-chips-count { font-size: 0.8125rem; color: var(--text-soft); margin-inline-end: 4px; }
 .pp-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; cursor: pointer;
   border: 1px solid var(--bronze); background: var(--accent-soft); color: var(--text); font: 500 0.8125rem / 1.3 var(--pp-body); }
-.pp-chip:hover { background: rgba(142, 107, 61, 0.16); }
-.pp-estimate { margin: 0; font: 400 1.125rem / 1.4 var(--pp-display); color: var(--bronze); }
+.pp-chip:hover { background: color-mix(in srgb, var(--ds-accent) 16%, transparent); }
+.pp-estimate { margin: 0; font: 400 calc(1.125rem * var(--ds-heading-scale)) / 1.4 var(--pp-display); color: var(--bronze); }
 
 .pp-radios { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
 .pp-radio { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: var(--text-sm); }
@@ -288,9 +325,9 @@
 .pp-stack-wide { max-width: var(--pp-maxw); }
 .pp-card-full { max-width: none; }
 /* Figures: Fraunces in bronze. --bronze only at >= 24px (3:1 large-text rule); smaller figures use the ink tone. */
-.pp-figure { font: 300 clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem) / 1.1 var(--pp-display); color: var(--bronze); letter-spacing: -0.01em;
+.pp-figure { font: 300 calc(clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem) * var(--ds-heading-scale)) / 1.1 var(--pp-display); color: var(--bronze); letter-spacing: -0.01em;
   font-variant-numeric: lining-nums tabular-nums; }
-.pp-figure-sm { font: 400 1.0625rem / 1.3 var(--pp-display); color: var(--pp-bronze-ink); font-variant-numeric: lining-nums tabular-nums; }
+.pp-figure-sm { font: 400 calc(1.0625rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); color: var(--pp-bronze-ink); font-variant-numeric: lining-nums tabular-nums; }
 
 .pp-kpis { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .pp-kpi { display: flex; flex-direction: column; gap: 8px; }
@@ -305,14 +342,14 @@
 .pp-timeline li:last-child { border-bottom: 0; }
 .pp-timeline time { color: var(--text-soft); font-size: var(--text-sm); padding-top: 1px; }
 .pp-message { display: block; margin-top: 6px; padding: 10px 14px; border-inline-start: 2px solid var(--champagne); background: var(--paper);
-  border-radius: 0 10px 10px 0; white-space: pre-line; overflow-wrap: anywhere; }
+  border-radius: 0 calc(10px * var(--ds-radius-scale)) calc(10px * var(--ds-radius-scale)) 0; white-space: pre-line; overflow-wrap: anywhere; }
 
 .pp-toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
 .pp-segment { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--hairline-strong); border-radius: 999px; margin: 0; }
 .pp-segment-btn { border: 0; background: none; cursor: pointer; padding: 8px 14px; border-radius: 999px; color: var(--text-soft);
   font: 500 var(--text-sm) / 1.2 var(--pp-body); letter-spacing: 0.02em; transition: background var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease); }
 .pp-segment-btn:hover { color: var(--text); background: var(--accent-soft); }
-.pp-segment-btn[aria-pressed="true"] { background: var(--bronze); color: #fff; }
+.pp-segment-btn[aria-pressed="true"] { background: var(--bronze); color: var(--accent-ink); }
 .pp-searchform { display: flex; gap: 8px; flex: 1 1 280px; max-width: 420px; }
 .pp-searchform .pp-search { flex: 1; min-width: 0; }
 
@@ -328,15 +365,15 @@
 
 .pp-state { display: inline-block; padding: 3px 10px; border-radius: 999px; border: 1px solid; font: 600 0.75rem / 1.4 var(--pp-body);
   letter-spacing: 0.04em; white-space: nowrap; }
-.pp-state-stage { color: var(--pp-bronze-ink); border-color: rgba(142, 107, 61, 0.45); background: var(--accent-soft); }
-.pp-state-review { color: var(--pp-warn); border-color: rgba(138, 90, 18, 0.35); background: rgba(138, 90, 18, 0.06); }
-.pp-state-sold { color: var(--pp-good); border-color: rgba(63, 107, 58, 0.35); background: rgba(63, 107, 58, 0.07); }
+.pp-state-stage { color: var(--pp-bronze-ink); border-color: color-mix(in srgb, var(--ds-accent) 45%, transparent); background: var(--accent-soft); }
+.pp-state-review { color: var(--pp-warn); border-color: color-mix(in srgb, var(--pp-warn) 35%, transparent); background: color-mix(in srgb, var(--pp-warn) 6%, transparent); }
+.pp-state-sold { color: var(--pp-good); border-color: color-mix(in srgb, var(--pp-good) 35%, transparent); background: color-mix(in srgb, var(--pp-good) 7%, transparent); }
 .pp-state-closed, .pp-state-lost { color: var(--text-soft); border-color: var(--hairline-strong); background: transparent; }
 
 .pp-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--text-sm); }
 
 .pp-back { margin: 0 0 14px; }
-.pp-alert-info { color: var(--pp-warn); background: rgba(138, 90, 18, 0.06); border-color: rgba(138, 90, 18, 0.24); }
+.pp-alert-info { color: var(--pp-warn); background: color-mix(in srgb, var(--pp-warn) 6%, transparent); border-color: color-mix(in srgb, var(--pp-warn) 24%, transparent); }
 .pp-alert-neutral { color: var(--text); background: var(--paper-2); border-color: var(--hairline-strong); }
 .pp-pre { white-space: pre-line; }
 
@@ -350,7 +387,7 @@
 .pp-stagebar-current:first-child::before { background: var(--hairline-strong); }
 .pp-stagebar-dot { position: relative; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--hairline-strong); background: var(--pp-card); }
 .pp-stagebar-done .pp-stagebar-dot { background: var(--bronze); border-color: var(--bronze); }
-.pp-stagebar-current .pp-stagebar-dot { border-color: var(--bronze); box-shadow: 0 0 0 4px var(--accent-soft); background: #fff; }
+.pp-stagebar-current .pp-stagebar-dot { border-color: var(--bronze); box-shadow: 0 0 0 4px var(--accent-soft); background: var(--ds-field); }
 .pp-stagebar-label { font-size: 0.75rem; line-height: 1.3; color: var(--text-soft); overflow-wrap: anywhere; }
 .pp-stagebar-current .pp-stagebar-label { color: var(--text); font-weight: 600; }
 .pp-facts { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: var(--text-sm); color: var(--text-soft); }
@@ -358,7 +395,7 @@
 .pp-deals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
 .pp-deals li { padding-bottom: 14px; border-bottom: 1px solid var(--hairline); }
 .pp-deals li:last-child { padding-bottom: 0; border-bottom: 0; }
-.pp-deal-title { margin: 0 0 8px; font: 400 1.125rem / 1.3 var(--pp-display); }
+.pp-deal-title { margin: 0 0 8px; font: 400 calc(1.125rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); }
 .pp-deal-figs { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .pp-deal-figs dt { color: var(--text-soft); font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
 .pp-deal-figs dd { margin: 2px 0 0; }
@@ -368,7 +405,7 @@
 .pp-projlist { list-style: none; margin: 8px 0 0; padding: 0; }
 .pp-projlist li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
 .pp-projlist li:last-child { border-bottom: 0; }
-.pp-projlist-name { font: 400 1.0625rem / 1.3 var(--pp-display); }
+.pp-projlist-name { font: 400 calc(1.0625rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); }
 .pp-projlist-rates { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--text-sm); color: var(--text-soft); }
 
 @media (max-width: 860px) {
@@ -399,7 +436,7 @@
 /* Commissions (phase 3c): period links styled as the segment control, date range, print report. */
 .pp-app a.pp-segment-btn { display: inline-block; text-decoration: none; color: var(--text-soft); }
 .pp-app a.pp-segment-btn:hover { color: var(--text); text-decoration: none; }
-.pp-app a.pp-segment-btn[aria-current="true"] { background: var(--bronze); color: #fff; }
+.pp-app a.pp-segment-btn[aria-current="true"] { background: var(--bronze); color: var(--accent-ink); }
 .pp-comm-range { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
 .pp-comm-range .pp-field { flex: 0 1 170px; }
 .pp-comm-actions { justify-content: flex-start; margin-top: 16px; }
@@ -444,11 +481,11 @@
 /* Partner tier card (phase 4b) */
 .pp-tier p { margin: 6px 0 0; }
 .pp-tier .pp-progress { margin: 14px 0 6px; }
-.pp-tier-name { font: 400 1.25rem / 1.3 var(--pp-display); color: var(--pp-bronze-ink); }
+.pp-tier-name { font: 400 calc(1.25rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); color: var(--pp-bronze-ink); }
 .pp-onboarding-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .pp-onboarding-steps li { display: flex; align-items: center; gap: 12px; }
 .pp-onboarding-mark { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
-  border-radius: 50%; border: 2px solid var(--hairline-strong); font-size: 0.75rem; line-height: 1; color: #fff; }
+  border-radius: 50%; border: 2px solid var(--hairline-strong); font-size: 0.75rem; line-height: 1; color: var(--accent-ink); }
 .pp-onboarding-done .pp-onboarding-mark { background: var(--bronze); border-color: var(--bronze); }
 .pp-onboarding-done > span:not(.pp-onboarding-mark) { color: var(--text-soft); }
 .pp-calc-empty { margin: 0; padding: 18px; }
@@ -459,16 +496,16 @@
 .pp-faq-item:last-child { border-bottom: 0; }
 .pp-faq-item summary { font-weight: 600; }
 .pp-faq-item p { margin: 0; max-width: 72ch; color: var(--text-soft); }
-.pp-response { margin: -16px 0 28px; font: 400 1.0625rem / 1.4 var(--pp-display); color: var(--pp-bronze-ink); }
+.pp-response { margin: -16px 0 28px; font: 400 calc(1.0625rem * var(--ds-heading-scale)) / 1.4 var(--pp-display); color: var(--pp-bronze-ink); }
 
 /* Telegram connection (phase 3e) */
 .pp-tg { display: flex; flex-direction: column; gap: 12px; }
 .pp-tg-linked { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 600; color: var(--text); }
 .pp-tg-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pp-good); flex: none; }
-.pp-tg-code { padding: 16px 18px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--pp-card); }
+.pp-tg-code { padding: 16px 18px; border: 1px solid var(--hairline); border-radius: calc(12px * var(--ds-radius-scale)); background: var(--pp-card); }
 .pp-tg-code p { margin: 0 0 10px; }
 .pp-tg-code p:last-child { margin-bottom: 0; }
-.pp-tg-start { display: inline-block; padding: 6px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--text);
+.pp-tg-start { display: inline-block; padding: 6px 10px; border-radius: calc(8px * var(--ds-radius-scale)); background: var(--accent-soft); color: var(--text);
   font: 600 1rem / 1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.08em; user-select: all; word-break: break-all; }
 .pp-radios-3 { grid-template-columns: repeat(3, auto); justify-content: start; }
 @media (max-width: 640px) { .pp-radios-3 { grid-template-columns: 1fr; } }
@@ -485,11 +522,11 @@
 .pp-danger { color: var(--pp-danger); }
 
 /* Phase 4b: rating */
-.pp-rt-season { margin: 4px 0 2px; font: 400 1.25rem / 1.3 var(--pp-display); color: var(--pp-bronze-ink); }
-.pp-rt-countdown { margin: 12px 0 0; font: 300 clamp(1.5rem, 1.25rem + 0.9vw, 2rem) / 1.15 var(--pp-display); color: var(--bronze);
+.pp-rt-season { margin: 4px 0 2px; font: 400 calc(1.25rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); color: var(--pp-bronze-ink); }
+.pp-rt-countdown { margin: 12px 0 0; font: 300 calc(clamp(1.5rem, 1.25rem + 0.9vw, 2rem) * var(--ds-heading-scale)) / 1.15 var(--pp-display); color: var(--bronze);
   font-variant-numeric: lining-nums tabular-nums; }
 .pp-rt-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 8px; }
-.pp-rt-sub { margin-top: 22px !important; font-size: 1rem !important; }
+.pp-rt-sub { margin-top: 22px !important; font-size: calc(1rem * var(--ds-heading-scale)) !important; }
 .pp-rt-prizes { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 .pp-rt-rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .pp-rt-rules li { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
@@ -502,12 +539,12 @@
 .pp-rt-past { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
 .pp-rt-past li { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--hairline); }
 .pp-rt-past li:last-child { border-bottom: 0; padding-bottom: 0; }
-.pp-rt-pastname { font: 400 1.0625rem / 1.3 var(--pp-display); }
+.pp-rt-pastname { font: 400 calc(1.0625rem * var(--ds-heading-scale)) / 1.3 var(--pp-display); }
 @media (max-width: 640px) { .pp-rt-figures { grid-template-columns: 1fr; } }
 
 /* ── News (phase 4b) ────────────────────────────────────────────────────── */
 .pp-badge { display: inline-block; min-width: 18px; margin-inline-start: 6px; padding: 1px 6px; border-radius: 999px; background: var(--pp-bronze-ink);
-  color: #fff; font: 600 0.6875rem / 1.5 var(--pp-body); text-align: center; vertical-align: 1px; }
+  color: var(--accent-ink); font: 600 0.6875rem / 1.5 var(--pp-body); text-align: center; vertical-align: 1px; }
 .pp-news { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
 .pp-news-item p { margin: 6px 0 0; }
 .pp-news-item h2 { margin: 8px 0 0; }
