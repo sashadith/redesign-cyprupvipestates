@@ -8,6 +8,10 @@ import type { AssignResult } from "@/lib/crm/assignMessage";
 import { leadAccessWhere } from "@/lib/crm/access";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { leadSearchParts } from "@/lib/crm/leadSearch";
+import { redirect } from "next/navigation";
+import { trashLead, restoreLead } from "@/lib/crm/trashLead";
+import { writeAudit } from "@/lib/crm/audit";
+import { normalizeTrashReason, canTrashLead, canRestoreLead } from "@/lib/crm/trashView";
 import { moveLead, type DealInput, type MoveResult } from "@/lib/crm/moveLead";
 
 export async function moveLeadAction(
@@ -89,4 +93,34 @@ export async function searchLeadsAction(q: string): Promise<LeadHit[]> {
     statusLabel: isLeadStatus(r.status) ? STATUS_LABEL[r.status] : r.status,
     sub: r.email ?? r.phone ?? "",
   }));
+}
+
+// Move to trash (new CRM). Returns only on failure: success redirects to the pipeline.
+export async function trashLeadAction(leadId: string, reason: string | null): Promise<{ error: string }> {
+  const user = await requireCrmUser();
+  const r = normalizeTrashReason(reason);
+  if (!r.ok) return { error: r.error };
+  const lead = typeof leadId === "string" && leadId
+    ? await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true } })
+    : null;
+  const ok = canTrashLead(user, lead);
+  if (!ok.allowed || !lead) return { error: ok.allowed ? "Lead not found." : ok.error };
+  await trashLead({ userId: user.id, userName: user.name }, lead.id, { reason: r.reason });
+  await writeAudit(user, "crm_lead_trash", "Lead", lead.id, r.reason ? { reason: r.reason } : undefined);
+  revalidatePath("/crm/pipeline"); revalidatePath("/crm/inbox"); revalidatePath("/crm/today"); revalidatePath("/crm/trash");
+  redirect("/crm/pipeline?trashed=1");
+}
+
+export async function restoreLeadAction(leadId: string): Promise<{ ok: true } | { error: string }> {
+  const user = await requireCrmUser();
+  const ok = canRestoreLead(user);
+  if (!ok.allowed) return { error: ok.error };
+  const lead = typeof leadId === "string" && leadId
+    ? await prisma.lead.findFirst({ where: { id: leadId, deletedAt: { not: null } }, select: { id: true } })
+    : null;
+  if (!lead) return { error: "Lead is not in the trash." };
+  await restoreLead({ userId: user.id, userName: user.name }, lead.id);
+  await writeAudit(user, "crm_lead_restore", "Lead", lead.id);
+  revalidatePath("/crm/pipeline"); revalidatePath("/crm/inbox"); revalidatePath("/crm/today"); revalidatePath("/crm/trash");
+  return { ok: true };
 }

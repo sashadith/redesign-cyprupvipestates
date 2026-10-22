@@ -19,6 +19,7 @@ import { CockpitSummary } from "../../components/CockpitSummary";
 import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
 import { ToastProvider } from "../../components/Toast";
 import { CreatedToast } from "../../components/CreatedToast";
+import { TrashLeadButton } from "../../components/TrashLeadButton";
 import type { DealRow } from "../../components/DealsTable";
 
 export const dynamic = "force-dynamic";
@@ -103,7 +104,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     <ToastProvider>
       <CreatedToast show={searchParams?.created === "1"} />
       <div className="crm-cockpit">
-        <CockpitHeader lead={view} now={now} temperature={temperature} />
+        <CockpitHeader lead={view} now={now} temperature={temperature} actions={canEdit ? <TrashLeadButton leadId={lead.id} leadName={name} /> : null} />
         <div className="crm-ck-grid">
           <div className="crm-ck-main">
             <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />

@@ -33,7 +33,7 @@ function budget(min: number | null, max: number | null): string | null {
   return null;
 }
 
-export function CockpitHeader({ lead, now, temperature = null }: { lead: CockpitLead; now: Date; temperature?: PublicTemperature | null }) {
+export function CockpitHeader({ lead, now, temperature = null, actions = null }: { lead: CockpitLead; now: Date; temperature?: PublicTemperature | null; actions?: React.ReactNode }) {
   const statusLabel = isLeadStatus(lead.status) ? STATUS_LABEL[lead.status] : lead.status;
   const reason = lead.status === "LOST" && lead.lostReason ? LOST_REASON_LABEL[lead.lostReason as LostReasonValue] ?? lead.lostReason : null;
   return (
@@ -42,6 +42,7 @@ export function CockpitHeader({ lead, now, temperature = null }: { lead: Cockpit
       <div className="crm-ck-title">
         <h1>{lead.name}</h1>
         {lead.lang && <span className="crm-ck-lang" title="Language">{lead.lang}</span>}
+        {actions && <div className="crm-ck-actions">{actions}</div>}
       </div>
       <div className="crm-ck-chips">
         {temperature && <TemperatureChip temperature={temperature} />}
