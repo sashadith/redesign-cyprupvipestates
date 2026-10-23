@@ -133,3 +133,21 @@ test("page: a nested URL whose last segment is a flat page of its own goes to th
   const same = repo([], [row("ru", "doma-na-kipre-s-basseinom", null)]);
   assert.equal(await resolveMissing(same, env, { kind: "page", lang: "ru", segments: ["old-parent", "doma-na-kipre-s-basseinom"] }), "/ru/doma-na-kipre-s-basseinom");
 });
+
+// Hebrew landing pages have English slugs and no translation group, so a slug that exists only in Hebrew used to win
+// for every other locale (/ru/paphos -> /he/paphos). Seen in Search Console, 2026-10-23.
+test("a page that exists only in Hebrew is not a target for other locales", async () => {
+  const pages = [...PAGE, row("he", "paphos", null), row("he", "limassol/new-projects", null), row("he", "villas-cyprus", null)];
+  const r = (lang: string, segs: string[]) => resolveMissing(repo(BLOG, pages), env, { kind: "page", lang, segments: segs });
+  assert.equal(await r("ru", ["paphos"]), "/ru");
+  assert.equal(await r("de", ["villas-cyprus"]), "/de");
+  assert.equal(await r("de", ["limassol", "new-projects"]), "/de");
+  // Hebrew itself still resolves its own pages and falls back like any locale
+  assert.equal(await r("he", ["nothing-here"]), "/he");
+});
+
+test("blog: an article that exists only in Hebrew is not a target for other locales", async () => {
+  const blog = [...BLOG, row("he", "only-in-hebrew", null)];
+  assert.equal(await resolveMissing(repo(blog, PAGE), env, { kind: "blog", lang: "ru", segments: ["only-in-hebrew"] }), "/ru/blog");
+  assert.equal(await resolveMissing(repo(blog, PAGE), env, { kind: "blog", lang: "he", segments: ["steuern-auf-immobilien-in-zypern"] }), "/blog/taxes-on-real-estate-in-cyprus");
+});

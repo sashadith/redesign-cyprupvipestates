@@ -73,6 +73,12 @@ export function looksLikeContentPath(segments: string[]): boolean {
   return segments.every((s) => s.length > 0 && s.length <= 140 && s[0] !== "-" && !BAD_SEGMENT.test(s) && !SCANNER_SEGMENTS.has(s.toLowerCase()));
 }
 
+/* Hebrew pages are authored on their own (English slugs, no translation group), so a slug that exists ONLY in
+   Hebrew would otherwise win for every other locale: /ru/paphos, /de/villas-cyprus and /de/limassol/new-projects all
+   redirected to a Hebrew page (2026-10-23, found through the Search Console "Page with redirect" report). A
+   non-Hebrew visitor is never sent to a Hebrew page; Hebrew requests still resolve normally. */
+const reachableFrom = (lang: string) => (r: SlugRow) => r.language !== "he" || lang === "he";
+
 const prefer = (rows: SlugRow[], isPublic: (l: string) => boolean): SlugRow | null => {
   const ok = rows.filter((r) => isPublic(r.language));
   return ok.find((r) => r.language === "en") ?? ok[0] ?? null;
@@ -125,7 +131,7 @@ async function resolveRaw(
   const ok = (t: string | null | undefined): string | null => (t && t !== self ? t : null);
 
   if (kind === "blog") {
-    const rows = await repo.blogsBySlug(segments[0]);
+    const rows = (await repo.blogsBySlug(segments[0])).filter(reachableFrom(lang));
     const row = prefer(rows, env.isPublicLocale);
     if (row) {
       if (row.translationGroupId && env.isPublicLocale(lang)) {
@@ -165,7 +171,7 @@ async function resolveRaw(
       }
       return ok(env.href(row.language, row.slug.split("/")));
     };
-    const row = prefer((await repo.pagesBySlug(full)).filter((r) => r.language !== lang), env.isPublicLocale);
+    const row = prefer((await repo.pagesBySlug(full)).filter((r) => r.language !== lang && reachableFrom(lang)(r)), env.isPublicLocale);
     if (row) {
       const t = await viaRow(row);
       if (t) return t;
@@ -178,7 +184,7 @@ async function resolveRaw(
       const same = leaf.find((r) => r.language === lang);
       const t = same ? ok(env.href(lang, last.split("/"))) : null;
       if (t) return t;
-      const other = prefer(leaf.filter((r) => r.language !== lang), env.isPublicLocale);
+      const other = prefer(leaf.filter((r) => r.language !== lang && reachableFrom(lang)(r)), env.isPublicLocale);
       const t2 = other && (await viaRow(other));
       if (t2) return t2;
     }
