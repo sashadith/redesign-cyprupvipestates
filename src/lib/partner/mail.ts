@@ -1,4 +1,5 @@
 /** Partner portal e-mails — pure builders (no I/O). Plain text + minimal HTML (CI-styled, logo only), no tracking. */
+import { CLASSIC_EMAIL_THEME, type EmailTheme } from "@/lib/design/theme";
 import { dict, fmt, type PartnerLocale } from "./i18n";
 
 export type BuiltEmail = { subject: string; text: string; html: string };
@@ -38,7 +39,7 @@ export type EmailParts = {
 };
 
 /** The CI partner mail layout (logo, paper card, bronze button). Every value is escaped here. */
-export function renderPartnerEmail(p: EmailParts): BuiltEmail {
+export function renderPartnerEmail(p: EmailParts, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const quote = p.quote ? p.quote.replace(/\r\n?/g, "\n") : null;
   const text = [p.greeting, p.intro, quote, `${p.button}: ${p.link}`, ...p.notes, p.signature]
     .filter((x): x is string => !!x)
@@ -47,19 +48,23 @@ export function renderPartnerEmail(p: EmailParts): BuiltEmail {
   // champagne #C29A5E only as a decorative rule. Inline styles + a solid rule: mail clients drop gradients and <style>.
   const para = (s: string) => `<p style="margin:0 0 16px">${escapeHtml(s).replace(/\n/g, "<br>")}</p>`;
   const logo = `${partnerBaseUrl()}/crm/brand/logo-full.png`;
+  const T = theme;
+  const r16 = `${T.radius}px`;
+  const r4 = `${Math.round((4 * T.radius) / 16)}px`;
+  const small = `${Math.round((T.base * 13) / 15)}px`;
   const html =
-    `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#F5F1E8;font-family:Arial,Helvetica,sans-serif;color:#221C15;font-size:15px;line-height:1.6">` +
+    `<!doctype html><html><body style="margin:0;padding:32px 16px;background:${T.page};font-family:Arial,Helvetica,sans-serif;color:${T.text};font-size:${T.base}px;line-height:1.6">` +
     `<div style="max-width:520px;margin:0 auto">` +
     `<div style="text-align:center;padding:0 0 24px"><img src="${escapeHtml(logo)}" width="250" height="35" alt="Cyprus VIP Estates" style="display:inline-block;border:0;width:250px;height:35px"></div>` +
-    `<div style="background:#FBF9F3;border:1px solid #E4DCCB;border-radius:16px;padding:32px 28px">` +
+    `<div style="background:${T.card};border:1px solid ${T.border};border-radius:${r16};padding:32px 28px">` +
     (p.greeting ? para(p.greeting) : "") +
     para(p.intro) +
     (quote
-      ? `<div style="margin:0 0 16px;padding:12px 16px;background:#F5F1E8;border-left:3px solid #C29A5E;border-radius:4px">${escapeHtml(quote).replace(/\n/g, "<br>")}</div>`
+      ? `<div style="margin:0 0 16px;padding:12px 16px;background:${T.page};border-left:3px solid ${T.gold};border-radius:${r4}">${escapeHtml(quote).replace(/\n/g, "<br>")}</div>`
       : "") +
-    `<p style="margin:24px 0 16px"><a href="${escapeHtml(p.link)}" style="display:inline-block;background:#8E6B3D;color:#ffffff;text-decoration:none;font-weight:bold;letter-spacing:0.03em;padding:13px 24px;border-radius:16px">${escapeHtml(p.button)}</a></p>` +
-    `<p style="margin:0 0 20px;font-size:13px;color:#6B5E4E;word-break:break-all">${escapeHtml(p.link)}</p>` +
-    `<div style="height:1px;line-height:1px;font-size:0;background:#C29A5E;margin:0 0 20px">&nbsp;</div>` +
+    `<p style="margin:24px 0 16px"><a href="${escapeHtml(p.link)}" style="display:inline-block;background:${T.accent};color:${T.onAccent.toLowerCase()};text-decoration:none;font-weight:bold;letter-spacing:0.03em;padding:13px 24px;border-radius:${r16}">${escapeHtml(p.button)}</a></p>` +
+    `<p style="margin:0 0 20px;font-size:${small};color:${T.muted};word-break:break-all">${escapeHtml(p.link)}</p>` +
+    `<div style="height:1px;line-height:1px;font-size:0;background:${T.gold};margin:0 0 20px">&nbsp;</div>` +
     p.notes.map(para).join("") +
     para(p.signature) +
     `</div></div></body></html>`;
@@ -72,7 +77,7 @@ export const greet = (template: string, name: string | undefined) => {
   return fmt(template, { name: n });
 };
 
-export function buildVerifyEmail(locale: PartnerLocale, link: string, name?: string): BuiltEmail {
+export function buildVerifyEmail(locale: PartnerLocale, link: string, name?: string, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   return renderPartnerEmail({
     subject: t.verify.subject,
@@ -82,10 +87,10 @@ export function buildVerifyEmail(locale: PartnerLocale, link: string, name?: str
     link,
     notes: [t.verify.validity, t.verify.ignore],
     signature: t.signature,
-  });
+  }, theme);
 }
 
-export function buildResetEmail(locale: PartnerLocale, link: string, name?: string): BuiltEmail {
+export function buildResetEmail(locale: PartnerLocale, link: string, name?: string, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   return renderPartnerEmail({
     subject: t.reset.subject,
@@ -95,10 +100,10 @@ export function buildResetEmail(locale: PartnerLocale, link: string, name?: stri
     link,
     notes: [t.reset.validity, t.reset.ignore],
     signature: t.signature,
-  });
+  }, theme);
 }
 
-export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLink: string): BuiltEmail {
+export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLink: string, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   return renderPartnerEmail({
     subject: t.approved.subject,
@@ -108,7 +113,7 @@ export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLin
     link: loginLink,
     notes: [],
     signature: t.signature,
-  });
+  }, theme);
 }
 
 /** Office Telegram notice for a newly verified registration (HTML parse mode → values escaped). */
@@ -124,6 +129,7 @@ export function buildRegistrationNotice(p: { company: string | null; firstName: 
 export function buildBankChangedEmail(
   locale: PartnerLocale,
   i: { name?: string; ibanLast4: string; changedAt: Date },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
 ): BuiltEmail {
   const t = dict(locale).mail;
   const when = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Nicosia" }).format(i.changedAt);
@@ -135,5 +141,5 @@ export function buildBankChangedEmail(
     link: `${partnerBaseUrl()}/profile`,
     notes: [fmt(t.bankChanged.changedOn, { date: when }), t.bankChanged.warning],
     signature: t.signature,
-  });
+  }, theme);
 }

@@ -3,12 +3,14 @@ import { badgeText } from "@/lib/partner/news";
 import { PARTNER_LOCALES, fmt, type PartnerDict, type PartnerLocale } from "@/lib/partner/i18n";
 import { logoutAction } from "../sessionActions";
 import { LogoFull, LogoMark } from "./Brand";
+import type { ThemeOption } from "@/lib/design/options";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 /** `active`: the partner is approved (ACTIVE) — pending partners keep the 3a home/profile navigation. */
-type Props = { locale: PartnerLocale; t: PartnerDict; loggedIn: boolean; active?: boolean; newsUnread?: number; children: React.ReactNode };
+type Props = { locale: PartnerLocale; t: PartnerDict; loggedIn: boolean; active?: boolean; newsUnread?: number; themes?: { options: ThemeOption[]; choiceId: string | null }; children: React.ReactNode };
 
-export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 0, children }: Props) {
+export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 0, themes, children }: Props) {
   return (
     <>
       <header className="pp-top">
@@ -47,6 +49,7 @@ export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 
               </form>
             </nav>
           )}
+          {loggedIn && active && themes && <ThemeSwitcher variant="compact" options={themes.options} choiceId={themes.choiceId} t={t.theme} />}
           <LanguageSwitcher current={locale} locales={PARTNER_LOCALES} label={t.nav.language} />
         </div>
       </header>

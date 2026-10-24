@@ -7,6 +7,8 @@ import { activeSince } from "./claimState";
 import { visibleName } from "./clientDto";
 import { creditNoteWhere } from "./commissions";
 import { pickPartnerLocale } from "./i18n";
+import { emailThemeForPartner } from "@/lib/design/store";
+import type { EmailTheme } from "@/lib/design/theme";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
 import { buildTelegramNotification, routeNotification, type TelegramNotificationInput } from "./telegram";
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
@@ -100,7 +102,7 @@ type OutboxRow = {
 };
 
 /** Decides what to do with one outbox row: a reason to drop it, or what to send on which channel(s). */
-async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Promise<Outcome> {
+async function prepare(row: OutboxRow, now: Date, start: Date, base: string, themes: Map<string, EmailTheme>): Promise<Outcome> {
   if (beforeStart(row, start)) return { skip: "before start" };
   const partner = await prisma.partner.findUnique({
     where: { id: row.partnerId },
@@ -147,6 +149,12 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
   if (skip) return { skip };
 
   const locale = pickPartnerLocale({ partnerLanguage: partner.language });
+  // One theme lookup per partner per run; emailThemeForPartner never throws (falls back to Classic).
+  let theme = themes.get(row.partnerId);
+  if (!theme) {
+    theme = await emailThemeForPartner(row.partnerId);
+    themes.set(row.partnerId, theme);
+  }
   const deliver = (mail: BuiltEmail, tg: TelegramNotificationInput): Delivery => ({
     partnerId: row.partnerId,
     email: sendEmailToo && to ? { to, mail } : null,
@@ -174,7 +182,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         select: { payload: true },
       });
       if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
-      return deliver(buildStageEmail(locale, { ...common, stageKey }), { ...tgCommon, kind: "STAGE", stageKey });
+      return deliver(buildStageEmail(locale, { ...common, stageKey }, theme), { ...tgCommon, kind: "STAGE", stageKey });
     }
     case "MESSAGE": {
       const messageId = messageIdFromRefKey(row.refKey);
@@ -186,12 +194,12 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
         : null;
       if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== own.leadId) return { skip: "message missing" };
       return deliver(
-        buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }),
+        buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }, theme),
         { ...tgCommon, kind: "MESSAGE", messageBody: msg.body },
       );
     }
     case "CLAIM_OUTCOME":
-      return deliver(buildClaimOutcomeEmail(locale, { ...common, accepted }), { ...tgCommon, kind: "CLAIM_OUTCOME", accepted });
+      return deliver(buildClaimOutcomeEmail(locale, { ...common, accepted }, theme), { ...tgCommon, kind: "CLAIM_OUTCOME", accepted });
     case "PAYOUT": {
       const creditNoteId = obj(row.payload).creditNoteId;
       const note = typeof creditNoteId === "string" && creditNoteId
@@ -214,7 +222,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
           unit: note.deal.unitLabel,
           amount,
           creditNoteNumber: note.number,
-        }),
+        }, theme),
         { ...tgCommon, kind: "PAYOUT", url: commissionsLink(base), amount, creditNoteNumber: note.number },
       );
     }
@@ -229,7 +237,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       return deliver(
         buildMatchEmail(locale, {
           partnerFirstName: partner.firstName, clientName: common.clientName, projectName, changeType, priceFrom: price, url, portalUrl: common.link,
-        }),
+        }, theme),
         {
           ...tgCommon, kind: "MATCH", projectName, changeType, url, portalUrl: common.link,
           priceFrom: price != null ? formatPayoutAmount(locale, price) : null,
@@ -242,7 +250,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       const clientName = typeof raw === "string" ? raw.trim().slice(0, 120) : "";
       const link = presentationsLink(base);
       return deliver(
-        buildPresentationOpenedEmail(locale, { partnerFirstName: partner.firstName, clientName, link }),
+        buildPresentationOpenedEmail(locale, { partnerFirstName: partner.firstName, clientName, link }, theme),
         { kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base },
       );
     }
@@ -252,7 +260,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string): Pr
       if (!tier) return { skip: "invalid payload" };
       const link = commissionsLink(base);
       return deliver(
-        buildTierUpEmail(locale, { partnerFirstName: partner.firstName, tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, portalUrl: link }),
+        buildTierUpEmail(locale, { partnerFirstName: partner.firstName, tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, portalUrl: link }, theme),
         { kind: "TIER_UP", tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, url: link, portalUrl: base },
       );
     }
@@ -368,6 +376,7 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
       .catch((e2) => result.errors.push(`${row.refKey}: could not record failure: ${truncateError(e2)}`));
   };
 
+  const themes = new Map<string, EmailTheme>();
   let tripped = false;
   for (const row of rows) {
     const claimed = await prisma.partnerNotification.updateMany({ where: { id: row.id, sentAt: null }, data: { sentAt: new Date(), error: SENDING_MARK } /* claim time, not run start: stuck-row recovery measures from here */ });
@@ -375,7 +384,7 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
 
     let o: Outcome;
     try {
-      o = await prepare(row, now, start, base);
+      o = await prepare(row, now, start, base, themes);
     } catch (e) {
       await release(row, truncateError(e), true);
       continue;

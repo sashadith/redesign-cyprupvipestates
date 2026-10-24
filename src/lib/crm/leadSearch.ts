@@ -22,7 +22,8 @@ export function leadSearchParts(raw: string): { text: Prisma.LeadWhereInput; dig
   };
 }
 
-export function paletteActions(canAssign: boolean, oldCrm: boolean): { id: string; label: string; href: string }[] {
+// isOwner: the owner-only design page (/crm/settings/design) is listed for the owner alone.
+export function paletteActions(canAssign: boolean, oldCrm: boolean, isOwner = false): { id: string; label: string; href: string }[] {
   return [
     { id: "today", label: "Today", href: "/crm/today" },
     { id: "pipeline", label: "Pipeline", href: "/crm/pipeline" },
@@ -35,6 +36,7 @@ export function paletteActions(canAssign: boolean, oldCrm: boolean): { id: strin
         ]
       : []),
     { id: "new-lead", label: "New lead", href: "/crm/leads/new" },
+    ...(isOwner ? [{ id: "design", label: "Design", href: "/crm/settings/design" }] : []),
     ...(oldCrm ? [{ id: "old-crm", label: "Old CRM", href: "/admin/crm" }] : []),
   ];
 }

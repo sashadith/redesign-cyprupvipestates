@@ -27,4 +27,6 @@ test("palette actions follow the user's rights", () => {
   for (const id of ["inbox", "team", "commissions", "old-crm"]) assert.ok(all.includes(id));
   assert.ok(!ids(true, false).includes("old-crm"));
   assert.ok(!ids(false, true).includes("team"));
+  assert.ok(!ids(true, true).includes("design"), "design page only for the owner");
+  assert.ok(paletteActions(true, false, true).some((a) => a.id === "design" && a.href === "/crm/settings/design"));
 });

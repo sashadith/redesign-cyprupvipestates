@@ -3,6 +3,7 @@ import type { PartnerDict } from "./en";
 /** Portal partnerski — polski (formalnie, forma „Państwo“). */
 export const pl: PartnerDict = {
   nav: { home: "Strona główna", profile: "Profil", logout: "Wyloguj", language: "Język", login: "Zaloguj się", register: "Zostań partnerem", overview: "Przegląd", submit: "Zgłoś klienta", clients: "Moi klienci", projects: "Projekty", commissions: "Prowizje", calculator: "Kalkulator", materials: "Materiały", presentations: "Prezentacje", rating: "Ranking", news: "Aktualności" },
+  theme: { label: "Kolory", title: "Zestaw kolorów", hint: "Proszę wybrać wygląd portalu. Zmienia to tylko Państwa widok i Państwa e-maile.", saved: "Zapisano", default: "Domyślny ({name})" },
   footer: { brand: "Cyprus VIP Estates", rights: "Wszelkie prawa zastrzeżone.", agreement: "Umowa partnerska", contact: "Kontakt" },
   landing: {
     title: "Program partnerski",
