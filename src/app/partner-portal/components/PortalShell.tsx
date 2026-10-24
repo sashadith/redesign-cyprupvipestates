@@ -18,8 +18,17 @@ export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 
           <Link href={loggedIn ? "/home" : "/"} className="pp-logo">
             <LogoFull className="pp-logo-full" />
             <LogoMark className="pp-logo-mark" />
-            <span className="pp-logo-tag">{t.landing.title}</span>
           </Link>
+          <span className="pp-logo-tag">{t.landing.title}</span>
+          <div className="pp-tools">
+            {loggedIn && active && themes && <ThemeSwitcher variant="compact" options={themes.options} choiceId={themes.choiceId} t={t.theme} />}
+            <LanguageSwitcher current={locale} locales={PARTNER_LOCALES} label={t.nav.language} />
+            {loggedIn && (
+              <form action={logoutAction}>
+                <button type="submit" className="pp-logout">{t.nav.logout}</button>
+              </form>
+            )}
+          </div>
           {loggedIn && (
             <nav className="pp-nav" aria-label="Partner">
               {active ? (
@@ -44,13 +53,8 @@ export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 
                 <Link href="/home">{t.nav.home}</Link>
               )}
               <Link href="/profile">{t.nav.profile}</Link>
-              <form action={logoutAction}>
-                <button type="submit" className="pp-linkbtn">{t.nav.logout}</button>
-              </form>
             </nav>
           )}
-          {loggedIn && active && themes && <ThemeSwitcher variant="compact" options={themes.options} choiceId={themes.choiceId} t={t.theme} />}
-          <LanguageSwitcher current={locale} locales={PARTNER_LOCALES} label={t.nav.language} />
         </div>
       </header>
       <main className="pp-main">{children}</main>

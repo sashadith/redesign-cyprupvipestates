@@ -14,8 +14,11 @@ export default async function PortalPreviewPage() {
           <a className="pp-logo">
             <LogoFull className="pp-logo-full" />
             <LogoMark className="pp-logo-mark" />
-            <span className="pp-logo-tag">Partner programme</span>
           </a>
+          <span className="pp-logo-tag">Partner programme</span>
+          <div className="pp-tools">
+            <button type="button" className="pp-logout">Log out</button>
+          </div>
           <nav className="pp-nav" aria-label="Partner">
             <a>Overview</a>
             <a>Submit a client</a>
