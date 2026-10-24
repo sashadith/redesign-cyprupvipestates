@@ -23,19 +23,33 @@
 // overlapping runs cannot both send, and released again if Telegram fails, so
 // the next run (still inside the grace) retries.
 //
+// Typefully being unreachable (2026-10-24 tuning, against false alarms): each
+// run is one check, already retried twice by the client (5 s, 15 s). A failed
+// check is logged, not alerted. The alert goes out once per outage, after
+// ALERT_MIN_FAILURES failed checks in a row spanning ALERT_MIN_SPAN_MS — or
+// after the first failed check if a planned draft (from the last good check)
+// is due within DUE_SOON_MS. When Typefully answers again after an alert, ONE
+// recovery message. The count lives in social_monitor_state, not in a worker.
+//
 // Read-only towards Typefully: the only call is the client's list GET.
 import { CYPRUS_TZ, cyprusWallTimeToUtc } from "@/lib/booking/timezone";
 import type { DraftListResult, TypefullyDraft } from "./typefully";
-import { buildMessage } from "./socialFormat";
+import { buildMessage, cyprusDayTime, cyprusHm } from "./socialFormat";
 
 const MIN = 60_000;
 export const GRACE_MS = 10 * MIN;
 
 export type ReminderKind = "evening" | "t90" | "t30" | "missed";
 export const REMINDER_KINDS: ReminderKind[] = ["evening", "t90", "t30", "missed"];
-/** Marker kind for "the Typefully-unreachable alert for the current outage was sent". */
-export const API_DOWN_KIND = "api-unreachable";
-export const API_DOWN_DRAFT_ID = 0;
+
+export const ALERT_MIN_FAILURES = 3;
+export const ALERT_MIN_SPAN_MS = 15 * MIN;
+export const DUE_SOON_MS = 2 * 60 * MIN;
+/* A draft due a few minutes ago still counts: its "missed" reminder (+15 min)
+   needs Typefully too. */
+const DUE_SOON_LOOKBACK_MS = 15 * MIN;
+const MAX_UPCOMING = 50;
+export const RECOVERY_MESSAGE = "✅ Typefully reachable again — social reminders are running.";
 
 function cyprusClock(date: Date): { y: number; m: number; d: number; hour: number; minute: number } {
   const p: Record<string, string> = {};
@@ -106,12 +120,51 @@ export function reminderMessage(group: ReminderGroup): string {
   }
 }
 
-export function apiDownMessage(r: Extract<DraftListResult, { ok: false }>): string {
+export function apiDownMessage(r: Extract<DraftListResult, { ok: false }>, ctx: { failures: number; since: Date; dueAt: Date | null; now: Date }): string {
+  const sameDay = cyprusDayTime(ctx.since).slice(0, -6) === cyprusDayTime(ctx.now).slice(0, -6);
   return [
     `🚨 Typefully unreachable (${r.status !== null ? `HTTP ${r.status}` : r.message.slice(0, 120)})`,
+    `Failing since ${sameDay ? cyprusHm(ctx.since) : cyprusDayTime(ctx.since)} — ${ctx.failures} ${ctx.failures === 1 ? "check" : "checks in a row"}, each retried twice.`,
+    ctx.dueAt ? `⏰ A planned draft is due at ${cyprusHm(ctx.dueAt)} — confirm it in Typefully directly.` : "",
     "Social reminders cannot be checked until this is fixed — planned drafts may go unconfirmed without a warning.",
     r.status !== null ? r.message.slice(0, 200) : "",
   ].filter(Boolean).join("\n");
+}
+
+/* ── Outage rules ───────────────────────────────────────────────────────── */
+
+/** The durable monitoring state (social_monitor_state). */
+export type MonitorState = {
+  consecutiveFailures: number;
+  firstFailureAt: Date | null;
+  alertedAt: Date | null;
+  recoveryPending: boolean;
+  upcomingPlannedAt: Date[];
+};
+
+/** Planned-draft dates worth remembering for the next outage, earliest first. */
+export function upcomingPlannedDates(drafts: TypefullyDraft[], now: Date): Date[] {
+  const from = now.getTime() - DUE_SOON_LOOKBACK_MS;
+  return drafts
+    .filter((d) => d.status === "planned" && d.scheduled_date)
+    .map((d) => new Date(d.scheduled_date!))
+    .filter((d) => !Number.isNaN(d.getTime()) && d.getTime() >= from)
+    .sort((a, b) => a.getTime() - b.getTime())
+    .slice(0, MAX_UPCOMING);
+}
+
+/** The earliest remembered planned draft due within 2 hours (or a few minutes ago), else null. */
+export function dueSoon(upcoming: Date[], now: Date): Date | null {
+  const t = now.getTime();
+  return upcoming.find((d) => d.getTime() >= t - DUE_SOON_LOOKBACK_MS && d.getTime() <= t + DUE_SOON_MS) ?? null;
+}
+
+/** Has this outage earned the alert? */
+export function outageConfirmed(state: MonitorState, now: Date): boolean {
+  if (state.consecutiveFailures < 1) return false;
+  if (dueSoon(state.upcomingPlannedAt, now)) return true;
+  return state.consecutiveFailures >= ALERT_MIN_FAILURES
+    && !!state.firstFailureAt && now.getTime() - state.firstFailureAt.getTime() >= ALERT_MIN_SPAN_MS;
 }
 
 /* ── Runner ─────────────────────────────────────────────────────────────── */
@@ -130,6 +183,17 @@ export type ReminderDeps = {
   /** "skipped" = Telegram not configured on this server (staging): not a failure. */
   send(text: string): Promise<SendOutcome>;
   now(): Date;
+  /** One failed check: count +1, first-failure time kept, an owed recovery
+   *  dropped (it is down again). Returns the state after the update. */
+  recordFailure(now: Date, error: string): Promise<MonitorState>;
+  /** One good check: count reset; if an alert was out, a recovery becomes owed.
+   *  Stores the planned dates. Returns whether a recovery message is owed. */
+  recordSuccess(now: Date, upcoming: Date[]): Promise<{ recoveryPending: boolean }>;
+  /** Exactly-once claims (true = this call got it), released if Telegram fails. */
+  claimAlert(now: Date): Promise<boolean>;
+  releaseAlert(): Promise<void>;
+  claimRecovery(): Promise<boolean>;
+  releaseRecovery(): Promise<void>;
 };
 
 export type ReminderRunResult = {
@@ -138,30 +202,51 @@ export type ReminderRunResult = {
   planned: number;
   sent: Record<ReminderKind, number>;
   failed: number;
-  apiAlert: "sent" | "already-sent" | "quiet-hours" | "failed" | null;
+  /** Failed checks in a row, this one included (0 when Typefully answered). */
+  consecutiveFailures: number;
+  apiAlert: "below-threshold" | "sent" | "already-sent" | "quiet-hours" | "failed" | null;
+  recovery: "sent" | "quiet-hours" | "failed" | null;
 };
 
 export async function runSocialReminders(deps: ReminderDeps): Promise<ReminderRunResult> {
   const now = deps.now();
-  const result: ReminderRunResult = { apiOk: true, planned: 0, sent: { evening: 0, t90: 0, t30: 0, missed: 0 }, failed: 0, apiAlert: null };
-  const marker: ClaimRow = { draftId: API_DOWN_DRAFT_ID, kind: API_DOWN_KIND };
+  const result: ReminderRunResult = {
+    apiOk: true, planned: 0, sent: { evening: 0, t90: 0, t30: 0, missed: 0 }, failed: 0,
+    consecutiveFailures: 0, apiAlert: null, recovery: null,
+  };
 
   const list = await deps.listPlanned();
   if (!list.ok) {
-    // An outage is said out loud — once per outage, never every 5 minutes —
-    // and never turns into "no drafts, nothing to remind".
+    // An outage is said out loud — once per outage, never every 5 minutes, and
+    // never for one bad check — and never turns into "no drafts, nothing to remind".
     result.apiOk = false;
     result.apiStatus = list.status;
+    const state = await deps.recordFailure(now, `${list.status ?? "no response"}: ${list.message}`.slice(0, 300));
+    result.consecutiveFailures = state.consecutiveFailures;
+    if (!outageConfirmed(state, now)) { result.apiAlert = "below-threshold"; return result; }
+    if (state.alertedAt) { result.apiAlert = "already-sent"; return result; }
     if (inQuietHours(now)) { result.apiAlert = "quiet-hours"; return result; }
-    const claimed = await deps.claim([marker]);
-    if (!claimed.length) { result.apiAlert = "already-sent"; return result; }
-    const outcome = await deps.send(apiDownMessage(list));
-    if (outcome === "failed") { await deps.release(claimed); result.apiAlert = "failed"; }
+    if (!(await deps.claimAlert(now))) { result.apiAlert = "already-sent"; return result; }
+    const text = apiDownMessage(list, {
+      failures: state.consecutiveFailures, since: state.firstFailureAt ?? now, dueAt: dueSoon(state.upcomingPlannedAt, now), now,
+    });
+    const outcome = await deps.send(text);
+    if (outcome === "failed") { await deps.releaseAlert(); result.apiAlert = "failed"; }
     else result.apiAlert = "sent";
     return result;
   }
-  // Reachable again: the next outage gets its own alert.
-  await deps.release([marker]);
+
+  // Reachable: the count starts over, and if an alert went out for this outage
+  // the owner hears — once — that it is over. Held through quiet hours.
+  const { recoveryPending } = await deps.recordSuccess(now, upcomingPlannedDates(list.drafts, now));
+  if (recoveryPending) {
+    if (inQuietHours(now)) result.recovery = "quiet-hours";
+    else if (await deps.claimRecovery()) {
+      const outcome = await deps.send(RECOVERY_MESSAGE);
+      if (outcome === "failed") { await deps.releaseRecovery(); result.recovery = "failed"; result.failed++; }
+      else result.recovery = "sent";
+    }
+  }
 
   const planned = list.drafts.filter((d) => d.status === "planned");
   result.planned = planned.length;

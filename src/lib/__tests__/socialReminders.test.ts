@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { DraftListResult, TypefullyDraft } from "@/lib/social/typefully";
 import {
-  runSocialReminders, planReminders, inQuietHours, triggerAt, sentKey, GRACE_MS,
-  type ReminderDeps, type ClaimRow, type SendOutcome,
+  runSocialReminders, planReminders, inQuietHours, triggerAt, sentKey, GRACE_MS, RECOVERY_MESSAGE,
+  type ReminderDeps, type ClaimRow, type SendOutcome, type MonitorState,
 } from "@/lib/social/socialReminders";
 import { weekLabel, isoWeek, platformGroups, isNewsDraft, buildMessage, MESSAGE_BUDGET } from "@/lib/social/socialFormat";
 
@@ -23,9 +23,32 @@ function draft(scheduledAt: Date | null, extra: Partial<TypefullyDraft> = {}): T
   };
 }
 
-/** A whole fake world: Typefully's planned list, the ledger, Telegram, the clock. */
-function world(initial: TypefullyDraft[] | DraftListResult, opts: { telegram?: () => SendOutcome } = {}) {
+/** social_monitor_state in memory, with the same transitions as monitorState.ts. */
+const freshState = (): MonitorState => ({ consecutiveFailures: 0, firstFailureAt: null, alertedAt: null, recoveryPending: false, upcomingPlannedAt: [] });
+function stateDeps(state: MonitorState) {
+  return {
+    recordFailure: async (now: Date) => {
+      state.consecutiveFailures++;
+      state.firstFailureAt ??= now;
+      state.recoveryPending = false;
+      return { ...state, upcomingPlannedAt: [...state.upcomingPlannedAt] };
+    },
+    recordSuccess: async (_now: Date, upcoming: Date[]) => {
+      if (state.alertedAt) { state.alertedAt = null; state.recoveryPending = true; }
+      state.consecutiveFailures = 0; state.firstFailureAt = null; state.upcomingPlannedAt = upcoming;
+      return { recoveryPending: state.recoveryPending };
+    },
+    claimAlert: async (now: Date) => { if (state.alertedAt) return false; state.alertedAt = now; return true; },
+    releaseAlert: async () => { state.alertedAt = null; },
+    claimRecovery: async () => { if (!state.recoveryPending) return false; state.recoveryPending = false; return true; },
+    releaseRecovery: async () => { state.recoveryPending = true; },
+  };
+}
+
+/** A whole fake world: Typefully's planned list, the ledger, the monitor state, Telegram, the clock. */
+function world(initial: TypefullyDraft[] | DraftListResult, opts: { telegram?: () => SendOutcome; state?: MonitorState } = {}) {
   let list: DraftListResult = Array.isArray(initial) ? { ok: true, drafts: initial, truncated: false } : initial;
+  const state = opts.state ?? freshState();
   const ledger = new Set<string>();
   const messages: string[] = [];
   let clock = new Date(0);
@@ -45,9 +68,10 @@ function world(initial: TypefullyDraft[] | DraftListResult, opts: { telegram?: (
       return outcome;
     },
     now: () => clock,
+    ...stateDeps(state),
   };
   return {
-    deps, ledger, messages,
+    deps, ledger, messages, state,
     setList(l: TypefullyDraft[] | DraftListResult) { list = Array.isArray(l) ? { ok: true, drafts: l, truncated: false } : l; },
     /** Run the cron every 5 minutes from `from` to `to` inclusive, like the crontab does. */
     async runEvery5(from: Date, to: Date) {
@@ -195,30 +219,146 @@ test("nothing is sent inside quiet hours even if the trigger was just before 22:
 
 /* ── Failures ────────────────────────────────────────────────────────────── */
 
-test("API failure produces ONE unreachable alert per outage — not silence, not every 5 minutes", async () => {
-  const w = world({ ok: false, status: 401, message: "Invalid API key" });
+const DOWN: DraftListResult = { ok: false, status: 503, message: "Service Unavailable" };
+const TIMEOUT: DraftListResult = { ok: false, status: null, message: "request failed: The operation was aborted due to timeout" };
+
+test("one failed check (a timeout that survived the retries) → logged, no alert", async () => {
+  const w = world(TIMEOUT);
   const r = await w.runAt(cy(13, 9, 3));
   assert.equal(r.apiOk, false);
-  assert.equal(r.apiAlert, "sent");
-  await w.runEvery5(cy(13, 9, 8), cy(13, 11, 3));
-  assert.equal(w.messages.length, 1);
-  assert.match(w.messages[0], /^🚨 Typefully unreachable \(HTTP 401\)\n/);
-  // Recovery clears the marker; the next outage alerts again.
+  assert.equal(r.apiAlert, "below-threshold");
+  assert.equal(r.consecutiveFailures, 1);
+  assert.deepEqual(w.messages, []);
+  // …and the next good check clears it without any message.
   w.setList([]);
-  await w.runAt(cy(13, 11, 8));
-  w.setList({ ok: false, status: null, message: "request failed: fetch failed" });
-  await w.runAt(cy(13, 11, 13));
-  assert.equal(w.messages.length, 2);
-  assert.match(w.messages[1], /^🚨 Typefully unreachable \(request failed: fetch failed\)/);
+  const ok = await w.runAt(cy(13, 9, 8));
+  assert.equal(ok.recovery, null);
+  assert.equal(w.state.consecutiveFailures, 0);
+  assert.deepEqual(w.messages, []);
 });
 
-test("API failure in quiet hours is held until 06:30, then said", async () => {
-  const w = world({ ok: false, status: 503, message: "down" });
-  const r = await w.runAt(cy(14, 2, 3));
-  assert.equal(r.apiAlert, "quiet-hours");
-  assert.equal(w.messages.length, 0);
-  await w.runAt(cy(14, 6, 33));
+test("three failed checks are not enough until they span 15 minutes → then exactly ONE alert", async () => {
+  const w = world(DOWN);
+  await w.runEvery5(cy(13, 9, 3), cy(13, 9, 13)); // 09:03, 09:08, 09:13 — 3 failures, 10 minutes
+  assert.deepEqual(w.messages, []);
+  const r = await w.runAt(cy(13, 9, 18)); // 4th failure, 15 minutes after the first
+  assert.equal(r.apiAlert, "sent");
   assert.equal(w.messages.length, 1);
+  assert.match(w.messages[0], /^🚨 Typefully unreachable \(HTTP 503\)\nFailing since 09:03 — 4 checks in a row, each retried twice\./);
+  assert.doesNotMatch(w.messages[0], /due at/);
+  // The outage goes on for two hours: still that one alert.
+  await w.runEvery5(cy(13, 9, 23), cy(13, 11, 23));
+  assert.equal(w.messages.length, 1);
+});
+
+test("15 minutes alone is not enough either: 2 failed checks far apart do not alert", async () => {
+  const w = world(DOWN);
+  await w.runAt(cy(13, 9, 3));
+  await w.runAt(cy(13, 9, 40)); // the cron skipped (e.g. a deploy) — only 2 checks
+  assert.deepEqual(w.messages, []);
+  await w.runAt(cy(13, 9, 45));
+  assert.equal(w.messages.length, 1);
+});
+
+test("recovery after an alert → exactly ONE recovery message; the next outage alerts again", async () => {
+  const w = world(DOWN);
+  await w.runEvery5(cy(13, 9, 3), cy(13, 9, 33));
+  assert.equal(w.messages.length, 1);
+  w.setList([]);
+  const r = await w.runAt(cy(13, 9, 38));
+  assert.equal(r.recovery, "sent");
+  await w.runEvery5(cy(13, 9, 43), cy(13, 11, 3));
+  assert.deepEqual(w.messages.slice(1), [RECOVERY_MESSAGE]);
+  // A new outage is a new incident: threshold again, alert again, recovery again.
+  w.setList(DOWN);
+  await w.runEvery5(cy(13, 11, 8), cy(13, 11, 23));
+  w.setList([]);
+  await w.runAt(cy(13, 11, 28));
+  assert.deepEqual(w.messages.map((m) => m.split("\n")[0]), [
+    "🚨 Typefully unreachable (HTTP 503)", RECOVERY_MESSAGE, "🚨 Typefully unreachable (HTTP 503)", RECOVERY_MESSAGE,
+  ]);
+});
+
+test("no alert was sent → no recovery message", async () => {
+  const w = world(DOWN);
+  await w.runEvery5(cy(13, 9, 3), cy(13, 9, 13));
+  w.setList([]);
+  await w.runEvery5(cy(13, 9, 18), cy(13, 9, 38));
+  assert.deepEqual(w.messages, []);
+});
+
+test("a planned draft due within 2 hours → alert after the FIRST failed check", async () => {
+  const d = draft(cy(13, 11, 0));
+  const w = world([d]);
+  await w.runAt(cy(13, 9, 3)); // good check: remembers the 11:00 draft
+  assert.deepEqual(w.messages, []);
+  w.setList(TIMEOUT);
+  const r = await w.runAt(cy(13, 9, 8));
+  assert.equal(r.apiAlert, "sent");
+  assert.equal(r.consecutiveFailures, 1);
+  assert.equal(w.messages.length, 1);
+  assert.match(w.messages[0], /^🚨 Typefully unreachable \(request failed: .*\)\nFailing since 09:08 — 1 check, each retried twice\.\n⏰ A planned draft is due at 11:00/);
+  await w.runEvery5(cy(13, 9, 13), cy(13, 10, 3));
+  assert.equal(w.messages.length, 1, "still one alert per outage");
+});
+
+test("a planned draft due in more than 2 hours does not shorten the threshold", async () => {
+  const w = world([draft(cy(13, 12, 0))]);
+  await w.runAt(cy(13, 9, 3));
+  w.setList(DOWN);
+  await w.runAt(cy(13, 9, 8)); // 11:00 would be within 2h, 12:00 is not
+  assert.deepEqual(w.messages, []);
+});
+
+test("the failure count survives a worker restart (state is durable, not in the process)", async () => {
+  const state = freshState();
+  const a = world(DOWN, { state });
+  await a.runEvery5(cy(13, 9, 3), cy(13, 9, 13));
+  // pm2 restart: a brand-new process, same DB row.
+  const b = world(DOWN, { state });
+  const r = await b.runAt(cy(13, 9, 18));
+  assert.equal(r.consecutiveFailures, 4);
+  assert.equal(r.apiAlert, "sent");
+  assert.equal(a.messages.length + b.messages.length, 1);
+});
+
+test("an outage that earns its alert at night is said at 06:30, once", async () => {
+  const w = world(DOWN);
+  const r = await w.runAt(cy(13, 21, 58));
+  assert.equal(r.apiAlert, "below-threshold");
+  await w.runEvery5(cy(13, 22, 3), cy(14, 6, 28));
+  assert.deepEqual(w.messages, []);
+  await w.runEvery5(cy(14, 6, 33), cy(14, 7, 3));
+  assert.equal(w.messages.length, 1);
+  assert.match(w.messages[0], /Failing since Tue 13 Oct 21:58/);
+});
+
+test("a recovery inside quiet hours is held until 06:30, then sent once", async () => {
+  const w = world(DOWN);
+  await w.runEvery5(cy(13, 21, 3), cy(13, 21, 23));
+  assert.equal(w.messages.length, 1);
+  w.setList([]);
+  const r = await w.runAt(cy(13, 23, 3));
+  assert.equal(r.recovery, "quiet-hours");
+  await w.runEvery5(cy(13, 23, 8), cy(14, 7, 3));
+  assert.deepEqual(w.messages.slice(1), [RECOVERY_MESSAGE]);
+});
+
+test("a failed Telegram send of the alert or the recovery is retried, never doubled", async () => {
+  let fail = true;
+  const w = world(DOWN, { telegram: () => (fail ? "failed" : "sent") });
+  await w.runEvery5(cy(13, 9, 3), cy(13, 9, 18));
+  assert.equal(w.state.alertedAt, null, "released for the next run");
+  fail = false;
+  await w.runEvery5(cy(13, 9, 23), cy(13, 9, 33));
+  assert.equal(w.messages.length, 1);
+  fail = true;
+  w.setList([]);
+  const r = await w.runAt(cy(13, 9, 38));
+  assert.equal(r.recovery, "failed");
+  fail = false;
+  await w.runEvery5(cy(13, 9, 43), cy(13, 9, 53));
+  assert.deepEqual(w.messages.slice(1), [RECOVERY_MESSAGE]);
 });
 
 test("a failed Telegram send is released and retried on the next run, then sent once", async () => {

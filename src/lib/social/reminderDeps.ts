@@ -1,15 +1,17 @@
 // Real dependencies for runSocialReminders (socialReminders.ts): a FRESH
 // Typefully read (never the 2-minute memo — a draft confirmed a minute ago must
-// not get a T-30), the social_reminders_sent ledger, and the owner's Telegram
-// chat as plain text.
+// not get a T-30) with the monitoring retries, the social_reminders_sent
+// ledger, the social_monitor_state row, and the owner's Telegram chat as plain
+// text.
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { typefully } from "./typefully";
+import { claimAlert, claimRecovery, recordFailure, recordSuccess, releaseAlert, releaseRecovery } from "./monitorState";
 import { sentKey, type ClaimRow, type ReminderDeps } from "./socialReminders";
 
 export function realReminderDeps(): ReminderDeps {
   return {
-    listPlanned: () => typefully.listDrafts("planned", { fresh: true }),
+    listPlanned: () => typefully.listDrafts("planned", { monitor: true }),
     async sentKeys(draftIds) {
       const rows = await prisma.socialReminderSent.findMany({ where: { draftId: { in: draftIds } }, select: { draftId: true, kind: true } });
       return new Set(rows.map((r) => sentKey(r.draftId, r.kind)));
@@ -39,5 +41,6 @@ export function realReminderDeps(): ReminderDeps {
       }
     },
     now: () => new Date(),
+    recordFailure, recordSuccess, claimAlert, releaseAlert, claimRecovery, releaseRecovery,
   };
 }

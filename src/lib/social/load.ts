@@ -1,15 +1,19 @@
 // Social monitoring — the network half: fetch the draft lists from Typefully
-// (read-only client, 5-minute memo) and hand them to the pure functions in
-// socialMonitor.ts. Neither function throws: the client turns every failure
+// (read-only client, 2-minute memo) and hand them to the pure functions in
+// socialMonitor.ts, with the reminder cron's outage verdict when a fetch failed. Neither function throws: the client turns every failure
 // into a result, and the pure functions turn that into an explicit item/line.
 import type { ActionItem } from "@/lib/actionCenter/types";
 import { typefully } from "./typefully";
 import { socialActionItems, socialDigestLines } from "./socialMonitor";
 import { CYPRUS_TZ } from "@/lib/booking/timezone";
+import { outageConfirmedNow } from "./monitorState";
 
 export async function loadSocialActionItems(now = new Date()): Promise<ActionItem[]> {
   const [planned, errored] = await Promise.all([typefully.listDrafts("planned"), typefully.listDrafts("error")]);
-  return socialActionItems({ planned, errored }, now);
+  // The state is only read when a fetch actually failed — no extra query per
+  // admin page while Typefully is fine.
+  const outageConfirmed = planned.ok && errored.ok ? undefined : await outageConfirmedNow(now);
+  return socialActionItems({ planned, errored, outageConfirmed }, now);
 }
 
 export async function loadSocialDigestLines(now = new Date()): Promise<string[]> {
@@ -23,5 +27,7 @@ export async function loadSocialDigestLines(now = new Date()): Promise<string[]>
   const rest = isMonday
     ? await Promise.all([typefully.listDrafts("draft"), typefully.listDrafts("published"), typefully.listDrafts("publishing")])
     : undefined;
-  return socialDigestLines({ scheduled, planned, errored, rest }, now);
+  const failed = [scheduled, planned, errored, ...(rest ?? [])].some((r) => !r.ok);
+  const outageConfirmed = failed ? await outageConfirmedNow(now) : undefined;
+  return socialDigestLines({ scheduled, planned, errored, rest, outageConfirmed }, now);
 }

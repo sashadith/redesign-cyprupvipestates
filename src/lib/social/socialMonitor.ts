@@ -62,11 +62,17 @@ const sinceOf = (d: TypefullyDraft, fallback: Date) => {
   return parsed && !Number.isNaN(parsed.getTime()) ? parsed : fallback;
 };
 
-function apiFailureItems(results: DraftListResult[], now: Date): ActionItem[] {
+/* `outageConfirmed` comes from the reminder cron's durable state (2026-10-24):
+   false = Typefully failed a check or two but the outage has not earned an
+   alert, so this page's own failed fetch is not shouted either. A missing key
+   is configuration, not flakiness, and is always shown. */
+function apiFailureItems(results: DraftListResult[], now: Date, outageConfirmed?: boolean | null): ActionItem[] {
   const failures = results.filter((r): r is Extract<DraftListResult, { ok: false }> => !r.ok);
   if (!failures.length) return [];
   const f = failures[0];
-  if (f.status === null && /TYPEFULLY_API_KEY/.test(f.message)) {
+  const keyMissing = f.status === null && /TYPEFULLY_API_KEY/.test(f.message);
+  if (!keyMissing && outageConfirmed === false) return [];
+  if (keyMissing) {
     return [{
       // Its own id: "dismiss forever" on a missing key must not also hide every
       // future real outage (social-api-unreachable) from the Action Center.
@@ -91,8 +97,8 @@ function apiFailureItems(results: DraftListResult[], now: Date): ActionItem[] {
 }
 
 /** Action Center items from the two lists the rules need. */
-export function socialActionItems(input: { planned: DraftListResult; errored: DraftListResult }, now: Date): ActionItem[] {
-  const items: ActionItem[] = apiFailureItems([input.planned, input.errored], now);
+export function socialActionItems(input: { planned: DraftListResult; errored: DraftListResult; outageConfirmed?: boolean | null }, now: Date): ActionItem[] {
+  const items: ActionItem[] = apiFailureItems([input.planned, input.errored], now, input.outageConfirmed);
   const t = now.getTime();
 
   if (input.planned.ok) {
@@ -182,6 +188,9 @@ export type SocialDigestInput = {
    *  for the "no drafts this week" check: with scheduled/planned/error that is
    *  every status a Monday–Friday draft of this week can be in. */
   rest?: DraftListResult[];
+  /** From the reminder cron's durable state: false hides the "unreachable"
+   *  block for a failure that has not earned an alert (see apiFailureItems). */
+  outageConfirmed?: boolean | null;
 };
 
 /** The digest's Social section (Telegram HTML) — [] when there is nothing to report.
@@ -190,7 +199,7 @@ export type SocialDigestInput = {
  *    ⚠️ Not confirmed yet         planned, due within 48h
  *    ❌ Missed (last 24 h)        planned, date passed in the 24h before the digest
  *    🚨 Publish failed            status "error"
- *    🚨 Typefully unreachable     any list failed
+ *    🚨 Typefully unreachable     any list failed, and the outage is confirmed
  *    📭 KW …                      Mondays: no drafts at all for Mon–Fri
  *  Every draft line ends with its Typefully link. */
 export function socialDigestLines(input: SocialDigestInput, now: Date): string[] {
@@ -221,7 +230,8 @@ export function socialDigestLines(input: SocialDigestInput, now: Date): string[]
   }
 
   const failures = [input.scheduled, input.planned, input.errored, ...(input.rest ?? [])].filter((r) => !r.ok) as Extract<DraftListResult, { ok: false }>[];
-  if (failures.length) {
+  const keyMissing = failures.some((f) => f.status === null && /TYPEFULLY_API_KEY/.test(f.message));
+  if (failures.length && (keyMissing || input.outageConfirmed !== false)) {
     const f = failures[0];
     blocks.push([`<b>🚨 Typefully unreachable (${f.status !== null ? `HTTP ${f.status}` : esc(f.message.slice(0, 120))})</b>`]);
   }

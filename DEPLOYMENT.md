@@ -417,8 +417,29 @@ hardcoded in the crontab):
 | `0 6 * * 0` | `seo-advisor` (weekly Claude-analyzed SEO suggestions, Sundays — see src/lib/seoAdvisor/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op until `ANTHROPIC_API_KEY` is set (it already is) |
 | `2,7,12,17,22,27,32,37,42,47,52,57 * * * *` | `email-inbound` (files matched lead replies into their timeline, read-only IMAP — see src/lib/emailInbound/) | production, `?key=$CRON_SECRET` — installed 2026-07-25; offset from `publish-scheduled`'s `*/5` so the two never fire in the same wall-clock second |
 | `4,9,14,19,24,29,34,39,44,49,54,59 * * * *` | `booking-reminders` (Telegram 1h/10m meeting reminders for confirmed bookings — see src/app/api/cron/booking-reminders/) | production, `?key=$CRON_SECRET` — installed 2026-07-25; offset +4 from `publish-scheduled`'s `*/5` and distinct from `email-inbound`'s +2, so no two of the three ever land on the same wall-clock second |
-| `3,8,13,18,23,28,33,38,43,48,53,58 * * * *` | `social-reminders` (Telegram reminders for planned, unconfirmed Typefully drafts: evening before at 20:00, T-90, T-30, missed at +15 min; quiet hours 22:00–06:30 Cyprus — see src/lib/social/socialReminders.ts) | production, `?key=$CRON_SECRET` — installed 2026-10-09; offset +3, distinct from the +0/+2/+4 five-minute jobs. Times and quiet hours are computed in Cyprus time inside the job, so this entry needs no winter adjustment. Read-only towards Typefully; exactly-once state in `social_reminders_sent` |
+| `3,8,13,18,23,28,33,38,43,48,53,58 * * * *` | `social-reminders` (Telegram reminders for planned, unconfirmed Typefully drafts: evening before at 20:00, T-90, T-30, missed at +15 min; quiet hours 22:00–06:30 Cyprus — see src/lib/social/socialReminders.ts) | production, `?key=$CRON_SECRET` — installed 2026-10-09; offset +3, distinct from the +0/+2/+4 five-minute jobs. Times and quiet hours are computed in Cyprus time inside the job, so this entry needs no winter adjustment. Read-only towards Typefully; exactly-once state in `social_reminders_sent`, outage state in `social_monitor_state` (see "Typefully outage alerts" below) |
 | `1,16,31,46 * * * *` | `meta-leadgen-poll` (Meta Lead Ads safety net: imports every instant-form lead of the last 48 h the webhook missed, idempotent on leadgen_id — see docs/META-LEADGEN.md) | production, `?key=$CRON_SECRET` — added 2026-10-11; one-off catch-up with `&sinceHours=168`. Watched by email-inbound (alert after 45 min without a run). Needs `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `META_PAGE_ACCESS_TOKEN`, `META_PAGE_ID` in shared/.env |
+
+**Typefully outage alerts (2026-10-24, against false alarms).** Each
+`social-reminders` run is one check of Typefully: 20 s timeout, and a timeout,
+network error, 429 or 5xx is retried twice (after 5 s, then 15 s) before the
+check counts as failed. A failed check is only logged — the cron row stays
+`ok=true` with "Typefully check failed N× in a row — logged, no alert yet", so
+cron-health does not turn it into an URGENT item. The Telegram alert "🚨
+Typefully unreachable" goes out once per outage, after **3 failed checks in a
+row spanning at least 15 minutes** (with the 5-minute cron that is the 4th
+check), or after the **first** failed check if a planned draft remembered from
+the last good check is due within 2 hours. From then on the run is `ok=false`,
+and the Action Center item / digest line "Typefully unreachable" appear (below
+the threshold they stay hidden; a missing `TYPEFULLY_API_KEY` is always shown).
+When Typefully answers again, ONE message: "✅ Typefully reachable again —
+social reminders are running." Quiet hours (22:00–06:30 Cyprus) hold both
+until 06:30. Count, first-failure time, alert/recovery flags and the remembered
+draft dates live in the one-row table `social_monitor_state` (id `typefully`),
+so pm2 restarts do not reset them. Admin pages keep their single 5-second
+Typefully request — the retries apply to the cron check only. To see the state:
+`SELECT * FROM social_monitor_state;`. Testbed check:
+`scripts/qa/social-reminders-db-check.mts` (gated by `assert-not-prod-db`).
 
 VPS system clock is UTC (confirmed: `Development.syncedAt` rows written by
 `feed-sync`'s `0 4 * * *` entry land at `04:00:xx.xxxZ`) — crontab times above
