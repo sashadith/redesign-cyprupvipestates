@@ -440,6 +440,10 @@ so pm2 restarts do not reset them. Admin pages keep their single 5-second
 Typefully request — the retries apply to the cron check only. To see the state:
 `SELECT * FROM social_monitor_state;`. Testbed check:
 `scripts/qa/social-reminders-db-check.mts` (gated by `assert-not-prod-db`).
+**The deploy that introduces this needs `CVP_RUN_MIGRATE=1`** (migration
+`20261024150000_social_monitor_state`): without the table every check fails
+to record, so outage alerts stop working. The reminders themselves keep
+running, because a good check's state write is guarded.
 
 VPS system clock is UTC (confirmed: `Development.syncedAt` rows written by
 `feed-sync`'s `0 4 * * *` entry land at `04:00:xx.xxxZ`) — crontab times above

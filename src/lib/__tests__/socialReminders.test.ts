@@ -28,9 +28,9 @@ const freshState = (): MonitorState => ({ consecutiveFailures: 0, firstFailureAt
 function stateDeps(state: MonitorState) {
   return {
     recordFailure: async (now: Date) => {
+      if (state.recoveryPending) { state.recoveryPending = false; state.alertedAt = now; }
       state.consecutiveFailures++;
       state.firstFailureAt ??= now;
-      state.recoveryPending = false;
       return { ...state, upcomingPlannedAt: [...state.upcomingPlannedAt] };
     },
     recordSuccess: async (_now: Date, upcoming: Date[]) => {
@@ -38,7 +38,7 @@ function stateDeps(state: MonitorState) {
       state.consecutiveFailures = 0; state.firstFailureAt = null; state.upcomingPlannedAt = upcoming;
       return { recoveryPending: state.recoveryPending };
     },
-    claimAlert: async (now: Date) => { if (state.alertedAt) return false; state.alertedAt = now; return true; },
+    claimAlert: async (now: Date) => { if (state.alertedAt || state.consecutiveFailures < 1) return false; state.alertedAt = now; return true; },
     releaseAlert: async () => { state.alertedAt = null; },
     claimRecovery: async () => { if (!state.recoveryPending) return false; state.recoveryPending = false; return true; },
     releaseRecovery: async () => { state.recoveryPending = true; },
@@ -342,6 +342,29 @@ test("a recovery inside quiet hours is held until 06:30, then sent once", async 
   assert.equal(r.recovery, "quiet-hours");
   await w.runEvery5(cy(13, 23, 8), cy(14, 7, 3));
   assert.deepEqual(w.messages.slice(1), [RECOVERY_MESSAGE]);
+});
+
+test("checks a few ms short of 15 minutes still alert at the 4th check (cron jitter)", async () => {
+  const w = world(DOWN);
+  await w.runAt(new Date(cy(13, 9, 3).getTime() + 140));
+  await w.runAt(new Date(cy(13, 9, 8).getTime() + 90));
+  await w.runAt(new Date(cy(13, 9, 13).getTime() + 70));
+  assert.deepEqual(w.messages, []);
+  await w.runAt(new Date(cy(13, 9, 18).getTime() + 90)); // 14:59.95 after the first
+  assert.equal(w.messages.length, 1);
+});
+
+test("a held recovery is not lost when Typefully fails once more: the incident just continues", async () => {
+  const w = world(DOWN);
+  await w.runEvery5(cy(13, 21, 3), cy(13, 21, 23)); // alert 21:18
+  w.setList([]);
+  await w.runAt(cy(13, 22, 8)); // back, recovery held (quiet hours)
+  w.setList(DOWN);
+  const r = await w.runAt(cy(14, 2, 13)); // one more failed check at night
+  assert.equal(r.apiAlert, "already-sent", "same incident, no second alert");
+  w.setList([]);
+  await w.runEvery5(cy(14, 2, 18), cy(14, 7, 3));
+  assert.deepEqual(w.messages.map((m) => m.split("\n")[0]), ["🚨 Typefully unreachable (HTTP 503)", RECOVERY_MESSAGE]);
 });
 
 test("a failed Telegram send of the alert or the recovery is retried, never doubled", async () => {

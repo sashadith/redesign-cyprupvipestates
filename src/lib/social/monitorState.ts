@@ -25,9 +25,14 @@ export async function readMonitorState(): Promise<MonitorState | null> {
 
 export async function recordFailure(now: Date, error: string): Promise<MonitorState> {
   await ensureRow();
+  // A recovery still owed (held through quiet hours, or its send failed) means
+  // the alerted outage is simply continuing: re-arm alerted_at instead of
+  // dropping the recovery, so the incident still ends with "reachable again"
+  // and is not alerted a second time.
+  await prisma.socialMonitorState.updateMany({ where: { ...where, recoveryPending: true }, data: { recoveryPending: false, alertedAt: now } });
   await prisma.socialMonitorState.update({
     where,
-    data: { consecutiveFailures: { increment: 1 }, lastFailureAt: now, lastError: error, recoveryPending: false },
+    data: { consecutiveFailures: { increment: 1 }, lastFailureAt: now, lastError: error },
   });
   await prisma.socialMonitorState.updateMany({ where: { ...where, firstFailureAt: null }, data: { firstFailureAt: now } });
   return toState(await prisma.socialMonitorState.findUniqueOrThrow({ where }));
@@ -45,7 +50,9 @@ export async function recordSuccess(_now: Date, upcoming: Date[]): Promise<{ rec
 }
 
 export async function claimAlert(now: Date): Promise<boolean> {
-  const { count } = await prisma.socialMonitorState.updateMany({ where: { ...where, alertedAt: null }, data: { alertedAt: now } });
+  // consecutive_failures > 0: a good check that overlapped this run and reset
+  // the count wins — no "unreachable" right after "reachable again".
+  const { count } = await prisma.socialMonitorState.updateMany({ where: { ...where, alertedAt: null, consecutiveFailures: { gt: 0 } }, data: { alertedAt: now } });
   return count === 1;
 }
 export async function releaseAlert(): Promise<void> {

@@ -99,6 +99,16 @@ async function main() {
   const after = (await readMonitorState())!;
   assert.equal(after.consecutiveFailures, 0); assert.equal(after.alertedAt, null); assert.equal(after.recoveryPending, false);
 
+  // 5b. A held recovery survives one more failed check in the real row: the
+  //     failure re-arms alerted_at, the next good check owes the recovery again.
+  await prisma.socialMonitorState.update({ where: { id: MONITOR_STATE_ID }, data: { recoveryPending: true, alertedAt: null } });
+  const rearmed = await real.recordFailure(cy(13, 10, 9), "503: down");
+  assert.ok(rearmed.alertedAt && !rearmed.recoveryPending, "re-armed, recovery not dropped");
+  assert.equal((await real.recordSuccess(cy(13, 10, 10), [])).recoveryPending, true);
+  assert.equal(await real.claimRecovery(), true); assert.equal(await real.claimRecovery(), false);
+  // A claim after a good check reset the count is refused (overlap race).
+  assert.equal(await real.claimAlert(cy(13, 10, 11)), false, "no alert claim with 0 failures");
+
   // 6. Due-soon exception through the real row: a good check remembers a draft
   //    due at 12:00; the first failed check at 10:13 alerts at once.
   await resetState();

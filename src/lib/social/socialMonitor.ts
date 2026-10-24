@@ -69,8 +69,9 @@ const sinceOf = (d: TypefullyDraft, fallback: Date) => {
 function apiFailureItems(results: DraftListResult[], now: Date, outageConfirmed?: boolean | null): ActionItem[] {
   const failures = results.filter((r): r is Extract<DraftListResult, { ok: false }> => !r.ok);
   if (!failures.length) return [];
-  const f = failures[0];
-  const keyMissing = f.status === null && /TYPEFULLY_API_KEY/.test(f.message);
+  const isKeyMissing = (r: Extract<DraftListResult, { ok: false }>) => r.status === null && /TYPEFULLY_API_KEY/.test(r.message);
+  const keyMissing = failures.some(isKeyMissing);
+  const f = failures.find(isKeyMissing) ?? failures[0];
   if (!keyMissing && outageConfirmed === false) return [];
   if (keyMissing) {
     return [{

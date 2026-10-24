@@ -44,6 +44,10 @@ export const REMINDER_KINDS: ReminderKind[] = ["evening", "t90", "t30", "missed"
 
 export const ALERT_MIN_FAILURES = 3;
 export const ALERT_MIN_SPAN_MS = 15 * MIN;
+/* Checks start on the crontab tick plus a little latency, so the 4th check
+   can land at 14:59.9 after the first; without this slack the alert would
+   slip to the 5th check (20 minutes) on unlucky jitter. */
+const SPAN_JITTER_MS = 60_000;
 export const DUE_SOON_MS = 2 * 60 * MIN;
 /* A draft due a few minutes ago still counts: its "missed" reminder (+15 min)
    needs Typefully too. */
@@ -164,7 +168,7 @@ export function outageConfirmed(state: MonitorState, now: Date): boolean {
   if (state.consecutiveFailures < 1) return false;
   if (dueSoon(state.upcomingPlannedAt, now)) return true;
   return state.consecutiveFailures >= ALERT_MIN_FAILURES
-    && !!state.firstFailureAt && now.getTime() - state.firstFailureAt.getTime() >= ALERT_MIN_SPAN_MS;
+    && !!state.firstFailureAt && now.getTime() - state.firstFailureAt.getTime() >= ALERT_MIN_SPAN_MS - SPAN_JITTER_MS;
 }
 
 /* ── Runner ─────────────────────────────────────────────────────────────── */
@@ -223,8 +227,9 @@ export async function runSocialReminders(deps: ReminderDeps): Promise<ReminderRu
     result.apiStatus = list.status;
     const state = await deps.recordFailure(now, `${list.status ?? "no response"}: ${list.message}`.slice(0, 300));
     result.consecutiveFailures = state.consecutiveFailures;
-    if (!outageConfirmed(state, now)) { result.apiAlert = "below-threshold"; return result; }
+    // Already alerted for this outage (also: a held recovery re-armed by recordFailure).
     if (state.alertedAt) { result.apiAlert = "already-sent"; return result; }
+    if (!outageConfirmed(state, now)) { result.apiAlert = "below-threshold"; return result; }
     if (inQuietHours(now)) { result.apiAlert = "quiet-hours"; return result; }
     if (!(await deps.claimAlert(now))) { result.apiAlert = "already-sent"; return result; }
     const text = apiDownMessage(list, {
@@ -238,7 +243,13 @@ export async function runSocialReminders(deps: ReminderDeps): Promise<ReminderRu
 
   // Reachable: the count starts over, and if an alert went out for this outage
   // the owner hears — once — that it is over. Held through quiet hours.
-  const { recoveryPending } = await deps.recordSuccess(now, upcomingPlannedDates(list.drafts, now));
+  // A state-table problem must not cost the reminders themselves.
+  let recoveryPending = false;
+  try {
+    ({ recoveryPending } = await deps.recordSuccess(now, upcomingPlannedDates(list.drafts, now)));
+  } catch (e) {
+    console.error("social-reminders: could not record the good check:", e instanceof Error ? e.message : e);
+  }
   if (recoveryPending) {
     if (inQuietHours(now)) result.recovery = "quiet-hours";
     else if (await deps.claimRecovery()) {

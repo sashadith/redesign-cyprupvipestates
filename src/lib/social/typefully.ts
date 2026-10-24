@@ -107,7 +107,9 @@ export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
     }
     let text: string;
     try { text = await res.text(); } catch (e) {
-      return { ok: false, status: 200, message: `could not read the response: ${e instanceof Error ? e.message : String(e)}` };
+      // A timeout or reset mid-body is a network failure (status null, so the
+      // monitoring check retries it), not an answer.
+      return { ok: false, status: null, message: `could not read the response: ${e instanceof Error ? e.message : String(e)}` };
     }
     let json: { results?: unknown; next?: unknown };
     try { json = JSON.parse(text); } catch { return { ok: false, status: 200, message: "response was not JSON" }; }
