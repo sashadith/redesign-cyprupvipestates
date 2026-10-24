@@ -22,11 +22,15 @@ export async function GET(req: NextRequest) {
       "social-reminders",
       () => runSocialReminders(realReminderDeps()),
       (r) => r.apiOk
-        ? `planned ${r.planned}, sent evening=${r.sent.evening} t90=${r.sent.t90} t30=${r.sent.t30} missed=${r.sent.missed}, failed sends=${r.failed}`
-        : `Typefully unreachable (${r.apiStatus ?? "no response"}), alert: ${r.apiAlert}`,
-      // An unreachable API or a failed Telegram send is a failed run, so the
-      // cron-health rule raises it in the Action Center as well.
-      (r) => r.apiOk && r.failed === 0,
+        ? `planned ${r.planned}, sent evening=${r.sent.evening} t90=${r.sent.t90} t30=${r.sent.t30} missed=${r.sent.missed}, failed sends=${r.failed}${r.recovery ? `, recovery: ${r.recovery}` : ""}`
+        : r.apiAlert === "below-threshold"
+          ? `Typefully check failed ${r.consecutiveFailures}× in a row (${r.apiStatus ?? "no response"}) — logged, no alert yet`
+          : `Typefully unreachable (${r.apiStatus ?? "no response"}), ${r.consecutiveFailures} failed checks in a row, alert: ${r.apiAlert}`,
+      // A confirmed outage or a failed Telegram send is a failed run, so the
+      // cron-health rule raises it in the Action Center as well. A failed check
+      // below the alert threshold is logged as ok — cron-health would otherwise
+      // turn every single slow Typefully answer into an URGENT item.
+      (r) => (r.apiOk || r.apiAlert === "below-threshold") && r.failed === 0,
     );
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {

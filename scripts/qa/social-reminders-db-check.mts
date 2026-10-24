@@ -14,7 +14,8 @@ assertNotProdDb();
 import assert from "node:assert/strict";
 import { prisma } from "@/lib/prisma";
 import { realReminderDeps } from "@/lib/social/reminderDeps";
-import { runSocialReminders, sentKey, type ReminderDeps } from "@/lib/social/socialReminders";
+import { runSocialReminders, sentKey, RECOVERY_MESSAGE, type ReminderDeps } from "@/lib/social/socialReminders";
+import { MONITOR_STATE_ID, readMonitorState, outageConfirmedNow } from "@/lib/social/monitorState";
 import { realNotifyDeps, NOTIFY_TOOL } from "@/lib/mcp/tools/notifyOwnerTelegram";
 import type { TypefullyDraft } from "@/lib/social/typefully";
 
@@ -25,8 +26,19 @@ const draft: TypefullyDraft = {
   linkedin_post_enabled: true, created_at: cy(10, 9).toISOString(),
 };
 
+const resetState = () => prisma.socialMonitorState.upsert({
+  where: { id: MONITOR_STATE_ID },
+  create: { id: MONITOR_STATE_ID },
+  update: { consecutiveFailures: 0, firstFailureAt: null, lastFailureAt: null, lastError: null, alertedAt: null, recoveryPending: false, upcomingPlannedAt: [] },
+});
+
 async function main() {
+  // The migration inserted the one state row and removed the old outage marker.
+  assert.ok(await readMonitorState(), "social_monitor_state row exists after migrate deploy");
+  assert.equal(await prisma.socialReminderSent.count({ where: { draftId: 0, kind: "api-unreachable" } }), 0, "old marker gone");
   await prisma.socialReminderSent.deleteMany({ where: { draftId: { in: [ID, 0] } } });
+  const savedState = await prisma.socialMonitorState.findUnique({ where: { id: MONITOR_STATE_ID } });
+  await resetState();
   const real = realReminderDeps();
   const sent: string[] = [];
   let clock = cy(13, 8, 33);
@@ -61,15 +73,55 @@ async function main() {
   await Promise.all([runSocialReminders(deps), runSocialReminders(deps), runSocialReminders(deps)]);
   assert.equal(sent.filter((t) => t.startsWith("🚨 Last reminder")).length, 1);
 
-  // 4. Outage marker: claimed once, cleared by a successful read.
-  const downDeps: ReminderDeps = { ...deps, listPlanned: async () => ({ ok: false, status: 503, message: "down" }) };
-  clock = cy(13, 9, 43);
-  await runSocialReminders(downDeps); await runSocialReminders(downDeps);
-  assert.equal(sent.filter((t) => t.startsWith("🚨 Typefully unreachable")).length, 1);
-  await runSocialReminders(deps);
-  assert.equal(await prisma.socialReminderSent.count({ where: { draftId: 0 } }), 0, "marker cleared on recovery");
+  // 4. Outage threshold in the REAL state row: 3 failed checks in 10 minutes
+  //    are logged only; the 4th (15 minutes) alerts once — also across a
+  //    "restart" (fresh deps) and three overlapping runs.
+  await resetState(); // forget the 10:00 draft remembered by the good runs above
+  const down = (): ReminderDeps => ({ ...deps, ...realReminderDeps(), listPlanned: async () => ({ ok: false, status: 503, message: "down" }), send: deps.send, now: () => clock });
+  const alerts = () => sent.filter((t) => t.startsWith("🚨 Typefully unreachable")).length;
+  for (const m of [43, 48, 53]) { clock = cy(13, 9, m); await runSocialReminders(down()); }
+  assert.equal(alerts(), 0, "below threshold: logged, no alert");
+  assert.equal((await readMonitorState())!.consecutiveFailures, 3);
+  assert.equal(await outageConfirmedNow(clock), false, "Action Center / digest stay quiet below the threshold");
+  clock = cy(13, 9, 58);
+  await Promise.all([runSocialReminders(down()), runSocialReminders(down()), runSocialReminders(down())]);
+  assert.equal(alerts(), 1, "exactly one alert");
+  assert.equal(await outageConfirmedNow(clock), true);
+  clock = cy(13, 10, 3);
+  await runSocialReminders(down());
+  assert.equal(alerts(), 1);
 
-  // 5. The notify rate-limit count reads the real audit table (ok rows of this tool only).
+  // 5. Recovery: exactly one message, even from overlapping runs; count reset.
+  clock = cy(13, 10, 8);
+  await Promise.all([runSocialReminders(deps), runSocialReminders(deps), runSocialReminders(deps)]);
+  await runSocialReminders(deps);
+  assert.equal(sent.filter((t) => t === RECOVERY_MESSAGE).length, 1, "exactly one recovery message");
+  const after = (await readMonitorState())!;
+  assert.equal(after.consecutiveFailures, 0); assert.equal(after.alertedAt, null); assert.equal(after.recoveryPending, false);
+
+  // 5b. A held recovery survives one more failed check in the real row: the
+  //     failure re-arms alerted_at, the next good check owes the recovery again.
+  await prisma.socialMonitorState.update({ where: { id: MONITOR_STATE_ID }, data: { recoveryPending: true, alertedAt: null } });
+  const rearmed = await real.recordFailure(cy(13, 10, 9), "503: down");
+  assert.ok(rearmed.alertedAt && !rearmed.recoveryPending, "re-armed, recovery not dropped");
+  assert.equal((await real.recordSuccess(cy(13, 10, 10), [])).recoveryPending, true);
+  assert.equal(await real.claimRecovery(), true); assert.equal(await real.claimRecovery(), false);
+  // A claim after a good check reset the count is refused (overlap race).
+  assert.equal(await real.claimAlert(cy(13, 10, 11)), false, "no alert claim with 0 failures");
+
+  // 6. Due-soon exception through the real row: a good check remembers a draft
+  //    due at 12:00; the first failed check at 10:13 alerts at once.
+  await resetState();
+  const soon: TypefullyDraft = { ...draft, id: ID + 1, scheduled_date: cy(13, 12).toISOString() };
+  clock = cy(13, 10, 13);
+  await runSocialReminders({ ...deps, listPlanned: async () => ({ ok: true, drafts: [soon], truncated: false }) });
+  assert.deepEqual((await readMonitorState())!.upcomingPlannedAt.map((d) => d.toISOString()), [soon.scheduled_date]);
+  clock = cy(13, 10, 18);
+  await runSocialReminders(down());
+  assert.equal(alerts(), 2, "due within 2 h → alert after the first failed check");
+  assert.ok(sent.some((t) => /due at 12:00/.test(t)));
+
+  // 7. The notify rate-limit count reads the real audit table (ok rows of this tool only).
   const since = new Date(Date.now() - 3_600_000);
   const before = await realNotifyDeps().countSentSince(since);
   const user = await prisma.user.findFirst({ select: { id: true } });
@@ -81,7 +133,8 @@ async function main() {
   ] });
   assert.equal(await realNotifyDeps().countSentSince(since), before + 1, "only successful notify calls count");
 
-  await prisma.socialReminderSent.deleteMany({ where: { draftId: { in: [ID, 0] } } });
+  await prisma.socialReminderSent.deleteMany({ where: { draftId: { in: [ID, ID + 1, 0] } } });
+  if (savedState) await prisma.socialMonitorState.update({ where: { id: MONITOR_STATE_ID }, data: savedState });
   console.log(`OK — ${sent.length} fake sends:\n${sent.map((s) => s.split("\n")[0]).join("\n")}`);
 }
 
