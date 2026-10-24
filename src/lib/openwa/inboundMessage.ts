@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { matchLeadForInboundWhatsApp } from "./matchLead";
+import { toMsisdn } from "./phoneMatch";
+import { parseSiteButtonMessage } from "./siteButtonMessage";
+import { createLeadFromButtonMessage } from "./buttonLead";
 
 export type InboundResult =
   | { status: "logged"; leadId: string; ambiguous: boolean }
-  | { status: "skipped"; reason: "duplicate" | "no-lead" | "from-us" | "empty" | "not-a-chat" };
+  | { status: "lead-created"; leadId: string }
+  | { status: "skipped"; reason: "duplicate" | "no-lead" | "from-us" | "empty" | "not-a-chat" | "unresolved-lid" };
 
 /** One inbound WhatsApp message, as the gateway reports it. */
 export type InboundMessage = {
@@ -12,6 +16,15 @@ export type InboundMessage = {
   body: string | null;
   fromMe?: boolean | null;
   timestamp?: number | null;
+  /** The gateway's own phone lookup for an …@lid sender, when it managed one. */
+  senderPhone?: string | null;
+  /** The sender's WhatsApp display name. */
+  pushName?: string | null;
+};
+
+export type InboundDeps = {
+  /** Asks the gateway for the number behind an …@lid. */
+  resolvePhone?: (contactId: string) => Promise<string | null>;
 };
 
 /**
@@ -33,7 +46,7 @@ export type InboundMessage = {
  * `ambiguous` flag in metadata. Two inbound paths that drift apart are two
  * things to debug.
  */
-export async function processInboundWhatsApp(msg: InboundMessage): Promise<InboundResult> {
+export async function processInboundWhatsApp(msg: InboundMessage, deps: InboundDeps = {}): Promise<InboundResult> {
   // Our own outgoing messages come back over the same stream. Logging them
   // would double-count every send and, worse, mark the LEAD as having reacted.
   if (msg.fromMe) return { status: "skipped", reason: "from-us" };
@@ -44,7 +57,22 @@ export async function processInboundWhatsApp(msg: InboundMessage): Promise<Inbou
   const from = (msg.from ?? "").trim();
   // Only one-to-one chats. A group id ends in @g.us — the team announcement
   // group is one, and its traffic must never land on a customer's timeline.
-  if (!from.endsWith("@c.us")) return { status: "skipped", reason: "not-a-chat" };
+  //
+  // A one-to-one sender is either a phone (…@c.us) or a privacy id (…@lid)
+  // that WhatsApp uses instead of the number, often for first contacts. Those
+  // were dropped as "not-a-chat" until 2026-10-18, which lost exactly the
+  // website-button enquiries (lead V, La Mer). The gateway's inline lookup
+  // comes first, then an explicit one; no number means no match, never a guess.
+  let msisdn: string | null;
+  if (from.endsWith("@c.us")) {
+    msisdn = toMsisdn(from.replace(/@c\.us$/, ""));
+  } else if (from.endsWith("@lid")) {
+    msisdn = toMsisdn(msg.senderPhone) ?? toMsisdn(await deps.resolvePhone?.(from).catch(() => null));
+    if (!msisdn) return { status: "skipped", reason: "unresolved-lid" };
+  } else {
+    return { status: "skipped", reason: "not-a-chat" };
+  }
+  if (!msisdn) return { status: "skipped", reason: "no-lead" };
 
   // The gateway can deliver the same event more than once, and a retry must
   // not produce a second timeline entry. Same guard the email path uses.
@@ -53,10 +81,26 @@ export async function processInboundWhatsApp(msg: InboundMessage): Promise<Inbou
     if (already) return { status: "skipped", reason: "duplicate" };
   }
 
-  const match = await matchLeadForInboundWhatsApp(from.replace(/@c\.us$/, ""));
-  // An unknown number is NOT an error: people message the business number who
-  // are not leads. Dropped quietly rather than inventing a lead for them.
-  if (!match) return { status: "skipped", reason: "no-lead" };
+  const match = await matchLeadForInboundWhatsApp(msisdn);
+  if (!match) {
+    // An unknown number is NOT an error: people message the business number
+    // who are not leads, and they are dropped quietly. The one exception is
+    // the text the site's WhatsApp button pre-fills — that is an enquiry.
+    const site = parseSiteButtonMessage(body);
+    if (!site) return { status: "skipped", reason: "no-lead" };
+    const created = await createLeadFromButtonMessage({
+      messageId: msg.id,
+      msisdn,
+      from,
+      pushName: msg.pushName ?? null,
+      body,
+      occurredAt: msg.timestamp ? new Date(msg.timestamp * 1000) : new Date(),
+      site,
+    });
+    if (created.status === "duplicate") return { status: "skipped", reason: "duplicate" };
+    if (created.status === "attached") return { status: "logged", leadId: created.leadId, ambiguous: false };
+    return { status: "lead-created", leadId: created.leadId };
+  }
 
   await prisma.leadInteraction.create({
     data: {
@@ -68,7 +112,7 @@ export async function processInboundWhatsApp(msg: InboundMessage): Promise<Inbou
       // The gateway timestamp is seconds, not milliseconds.
       occurredAt: msg.timestamp ? new Date(msg.timestamp * 1000) : new Date(),
       messageId: msg.id,
-      metadata: { ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}), via: "openwa-webhook" },
+      metadata: { ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}), via: "openwa-webhook", ...(from.endsWith("@lid") ? { from } : {}) },
     },
   });
 

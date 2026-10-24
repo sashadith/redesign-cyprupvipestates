@@ -12,6 +12,9 @@ const fakeClient = (sent: { chatId: string; text: string }[], fail = false) => (
     if (fail) throw new Error("gateway down");
     sent.push({ chatId, text });
   },
+  resolvePhone: async () => null,
+  getSession: async () => ({ status: "ready", lastError: null }),
+  startSession: async () => {},
 });
 
 const partner = buildInboundLeadTelegramMessage({

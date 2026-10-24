@@ -56,9 +56,12 @@ test("our own outgoing messages are never logged as the customer reacting", () =
 
 test("group traffic never lands on a customer timeline", () => {
   // The team announcement group is a @g.us chat. Its messages must not be
-  // recorded against any lead.
+  // recorded against any lead. Since 2026-10-18 a one-to-one sender is either
+  // …@c.us or a privacy id …@lid; everything else is refused. The behavioural
+  // check (a @g.us message with button text) is in whatsappButtonLead.test.ts.
   const src = read("src/lib/openwa/inboundMessage.ts");
-  assert.ok(/@c\.us"\)\) return .*not-a-chat/.test(src), "the one-to-one chat guard is gone");
+  assert.ok(/if \(from\.endsWith\("@c\.us"\)\)/.test(src) && /else if \(from\.endsWith\("@lid"\)\)/.test(src), "the one-to-one sender check changed shape");
+  assert.ok(/\} else \{\s*return \{ status: "skipped", reason: "not-a-chat" \};/.test(src), "the one-to-one chat guard is gone");
 });
 
 test("a repeated delivery does not create a second timeline entry", () => {
