@@ -1165,6 +1165,28 @@ model SocialReminderSent {
   @@map("social_reminders_sent")
 }
 
+// Typefully monitoring state (2026-10-24): one row, id "typefully". Lives in the
+// DB, not in a pm2 worker, so a restart cannot reset the failure count. Written
+// only by the social-reminders cron (one row per check); see
+// src/lib/social/socialReminders.ts for the alert/recovery rules.
+model SocialMonitorState {
+  id                  String     @id
+  consecutiveFailures Int        @default(0) @map("consecutive_failures")
+  firstFailureAt      DateTime?  @map("first_failure_at")
+  lastFailureAt       DateTime?  @map("last_failure_at")
+  lastError           String?    @map("last_error")
+  // The "Typefully unreachable" alert for the current outage was sent at.
+  alertedAt           DateTime?  @map("alerted_at")
+  // Reachable again after an alert; the one recovery message is still owed.
+  recoveryPending     Boolean    @default(false) @map("recovery_pending")
+  // Dates of planned drafts from the last successful check — the outage cannot
+  // read Typefully, so "a draft is due within 2 hours" is judged from these.
+  upcomingPlannedAt   DateTime[] @default([]) @map("upcoming_planned_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  @@map("social_monitor_state")
+}
+
 // Nightly catalogue snapshot for crm_inventory_changes (MCP connector Phase 3,
 // 2026-09-08). One row per development per capture; `units` is
 // [{ key, label, status, price }] over listedUnits(), where key is
