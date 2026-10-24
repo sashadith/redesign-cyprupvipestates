@@ -43,6 +43,11 @@ export const teamReplies = [];
 export async function updateTeamMemberAction() { const r = teamReplies.shift(); if (!r) throw new Error("no reply queued"); return r; }
 `);
 
+const themeStub = w("theme-actions.js", `
+export const themeCalls = [];
+export async function setMyCrmThemeAction(id) { themeCalls.push(id); return { ok: true }; }
+`);
+
 const entryPath = join(ROOT, `.qa-crm-shell-entry-${process.pid}.jsx`);
 const bundlePath = join(ROOT, `.qa-crm-shell-bundle-${process.pid}.mjs`);
 const cleanup = () => { rmSync(tmp, { recursive: true, force: true }); rmSync(entryPath, { force: true }); rmSync(bundlePath, { force: true }); };
@@ -58,7 +63,8 @@ import { TeamTable } from ${comp("TeamTable.tsx")};
 import { CockpitStage } from ${comp("CockpitStage.tsx")};
 import { replies } from ${JSON.stringify(moveStub)};
 import { teamReplies } from ${JSON.stringify(teamStub)};
-export { React, createRoot, act, Shell, ToastProvider, useToast, TeamTable, CockpitStage, replies, teamReplies };
+import { themeCalls } from ${JSON.stringify(themeStub)};
+export { React, createRoot, act, Shell, ToastProvider, useToast, TeamTable, CockpitStage, replies, teamReplies, themeCalls };
 `);
 try {
   const out = await build({
@@ -74,6 +80,7 @@ try {
         b.onResolve({ filter: /^next\/link$/ }, () => ({ path: "next-link", namespace: "stub" }));
         b.onLoad({ filter: /.*/, namespace: "stub" }, () => ({ contents: linkStub, loader: "js", resolveDir: ROOT }));
         b.onResolve({ filter: /^\.\.\/actions$/ }, () => ({ path: moveStub }));
+        b.onResolve({ filter: /^\.\.\/themeActions$/ }, () => ({ path: themeStub }));
         b.onResolve({ filter: /^\.\.\/team\/actions$/ }, () => ({ path: teamStub }));
       },
     }],
@@ -109,7 +116,7 @@ globalThis.MessageChannel = class {
 
 let mod;
 try { mod = await import(bundlePath); } finally { cleanup(); }
-const { React, createRoot, act, Shell, ToastProvider, useToast, TeamTable, CockpitStage, replies, teamReplies } = mod;
+const { React, createRoot, act, Shell, ToastProvider, useToast, TeamTable, CockpitStage, replies, teamReplies, themeCalls } = mod;
 after(() => win.close());
 
 const doc = win.document;
@@ -232,5 +239,24 @@ test("the stage button gets focus back after the move dialog is cancelled", asyn
   assert.equal(doc.querySelector("dialog.crm-dialog"), null);
   assert.equal(lost.disabled, false);
   assert.equal(doc.activeElement, lost, "focus is back on the Lost button");
+  await act(async () => root.unmount());
+});
+
+test("the name button opens the colour-set menu: picker, owner link, Escape closes", async () => {
+  const options = [
+    { id: "a", name: "Classic", isDefault: true, swatch: { page: "#fff", card: "#fff", accent: "#000", text: "#000" } },
+    { id: "b", name: "Live website", isDefault: false, swatch: { page: "#081512", card: "#102826", accent: "#C29A5E", text: "#EFE9DB" } },
+  ];
+  const root = await mount(h(Shell, { user: { name: "Sophie Keller", canAssign: true, inboxCount: 0, oldCrm: false, isOwner: true }, themes: { options, choiceId: null } }, h("p", null, "page")));
+  assert.equal(doc.querySelector(".crm-me-menu"), null);
+  await act(async () => doc.querySelector(".crm-me-btn").click());
+  const radios = [...doc.querySelectorAll(".crm-me-menu [role=radio]")];
+  assert.deepEqual(radios.map((r) => r.textContent), ["Default (Classic)", "Live website"]);
+  assert.equal(radios[0].getAttribute("aria-checked"), "true");
+  assert.ok(links().filter((x) => x === "/crm/settings/design").length >= 2, "owner link in menu");
+  await act(async () => radios[1].click());
+  assert.deepEqual(themeCalls, ["b"]);
+  await act(async () => doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+  assert.equal(doc.querySelector(".crm-me-menu"), null);
   await act(async () => root.unmount());
 });

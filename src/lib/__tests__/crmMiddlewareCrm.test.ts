@@ -31,3 +31,16 @@ test("look-alike public paths are still localised", () => {
   assert.equal(re.test("/crmfoo"), true);
   assert.equal(re.test("/en/projects"), true);
 });
+
+test("the design live preview at /crm-preview bypasses the locale middleware", () => {
+  const re = matcher();
+  assert.equal(re.test("/crm-preview"), false);
+  assert.equal(re.test("/crm-preview/crm"), false);
+  assert.equal(re.test("/crm-preview/portal"), false);
+});
+
+test("look-alikes of /crm-preview are still localised", () => {
+  const re = matcher();
+  assert.equal(re.test("/crm-previewx"), true);
+  assert.equal(re.test("/crm-preview-foo"), true);
+});

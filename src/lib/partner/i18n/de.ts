@@ -3,6 +3,7 @@ import type { PartnerDict } from "./en";
 /** Partnerportal — Deutsch (formelle Anrede „Sie“). */
 export const de: PartnerDict = {
   nav: { home: "Startseite", profile: "Profil", logout: "Abmelden", language: "Sprache", login: "Anmelden", register: "Partner werden", overview: "Übersicht", submit: "Kunden einreichen", clients: "Meine Kunden", projects: "Projekte", commissions: "Provisionen", calculator: "Rechner", materials: "Materialien", presentations: "Präsentationen", rating: "Rangliste", news: "Neuigkeiten" },
+  theme: { label: "Farben", title: "Farbset", hint: "Wählen Sie, wie Ihr Portal aussieht. Das ändert nur Ihre Ansicht und Ihre E-Mails.", saved: "Gespeichert", default: "Standard ({name})" },
   footer: { brand: "Cyprus VIP Estates", rights: "Alle Rechte vorbehalten.", agreement: "Partnervereinbarung", contact: "Kontakt" },
   landing: {
     title: "Partnerprogramm",

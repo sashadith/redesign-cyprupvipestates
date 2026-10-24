@@ -3,6 +3,7 @@
 import { cyprusDateParts } from "./creditNote";
 import { publicProjectUrl } from "./clientDto";
 import { PARTNER_LOCALES, dict, fmt, lookup, type PartnerLocale } from "./i18n";
+import { CLASSIC_EMAIL_THEME, type EmailTheme } from "@/lib/design/theme";
 import { greet, partnerBaseUrl, renderPartnerEmail, type BuiltEmail } from "./mail";
 
 export const DIGEST_MAX_UPDATES = 10;
@@ -44,6 +45,7 @@ export function digestContent(input: { updates: DigestUpdate[]; totals: DigestTo
 export function buildDigestEmail(
   locale: PartnerLocale,
   p: { partnerFirstName: string; content: DigestContent; portalUrl: string; profileUrl: string },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
 ): BuiltEmail {
   const d = dict(locale);
   const t = d.digest;
@@ -96,7 +98,7 @@ export function buildDigestEmail(
     link: p.portalUrl,
     notes: [`${t.optOut}\n${p.profileUrl}`],
     signature: d.mail.signature,
-  });
+  }, theme);
 }
 
 /** Portal profile page (the opt-out link target). */

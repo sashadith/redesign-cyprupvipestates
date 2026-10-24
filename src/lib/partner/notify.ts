@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { isLeadStatus } from "@/lib/crm/leadStatus";
 import type { EffectiveClaimState } from "./claimState";
 import { dict, fmt, lookup, type PartnerLocale } from "./i18n";
+import { CLASSIC_EMAIL_THEME, type EmailTheme } from "@/lib/design/theme";
 import { greet, renderPartnerEmail, type BuiltEmail } from "./mail";
 import { partnerStage } from "./milestones";
 
@@ -20,7 +21,7 @@ export function clientLink(base: string, claimId: string): string {
   return `${base}/clients/${encodeURIComponent(claimId)}`;
 }
 
-export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: string }): BuiltEmail {
+export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: string }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   const vars = { client: client(p.clientName), stage: lookup(locale, p.stageKey) ?? lookup(locale, "stages.onHold")! };
   return renderPartnerEmail({
@@ -31,10 +32,10 @@ export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: s
     link: p.link,
     notes: [],
     signature: t.signature,
-  });
+  }, theme);
 }
 
-export function buildMessageEmail(locale: PartnerLocale, p: Common & { body: string; authorFirstName?: string | null }): BuiltEmail {
+export function buildMessageEmail(locale: PartnerLocale, p: Common & { body: string; authorFirstName?: string | null }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   const author = (p.authorFirstName ?? "").trim();
   const vars = { client: client(p.clientName), author };
@@ -47,11 +48,11 @@ export function buildMessageEmail(locale: PartnerLocale, p: Common & { body: str
     link: p.link,
     notes: [],
     signature: t.signature,
-  });
+  }, theme);
 }
 
 /** Accepted, or a neutral "not accepted" — nothing about why or about any existing lead. */
-export function buildClaimOutcomeEmail(locale: PartnerLocale, p: Common & { accepted: boolean }): BuiltEmail {
+export function buildClaimOutcomeEmail(locale: PartnerLocale, p: Common & { accepted: boolean }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail.claimOutcome;
   const vars = { client: client(p.clientName) };
   return renderPartnerEmail({
@@ -62,7 +63,7 @@ export function buildClaimOutcomeEmail(locale: PartnerLocale, p: Common & { acce
     link: p.link,
     notes: [],
     signature: dict(locale).mail.signature,
-  });
+  }, theme);
 }
 
 /** Portal commissions page (credit notes are downloaded there; the mail never attaches the PDF). */
@@ -77,6 +78,7 @@ export function commissionsLink(base: string): string {
 export function buildPayoutEmail(
   locale: PartnerLocale,
   p: Common & { project?: string | null; unit?: string | null; amount: string; creditNoteNumber: string },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
 ): BuiltEmail {
   const t = dict(locale).mail.payout;
   const dash = (v: string | null | undefined) => (v ?? "").trim() || "—";
@@ -89,7 +91,7 @@ export function buildPayoutEmail(
     link: p.link,
     notes: [fmt(t.creditNoteLine, { number: p.creditNoteNumber })],
     signature: dict(locale).mail.signature,
-  });
+  }, theme);
 }
 
 /**
@@ -103,6 +105,7 @@ export function buildMatchEmail(
     partnerFirstName: string; clientName: string; projectName: string; changeType: string;
     priceFrom: number | null; url: string; portalUrl: string;
   },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
 ): BuiltEmail {
   const d = dict(locale);
   const t = d.mail.match;
@@ -121,11 +124,11 @@ export function buildMatchEmail(
     link: p.url,
     notes,
     signature: d.mail.signature,
-  });
+  }, theme);
 }
 
 /** "Your presentation for {client} has been opened" (phase 3e, Decision 7); link = the portal's presentations page. */
-export function buildPresentationOpenedEmail(locale: PartnerLocale, p: Common): BuiltEmail {
+export function buildPresentationOpenedEmail(locale: PartnerLocale, p: Common, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail.presentationOpened;
   const vars = { client: client(p.clientName) };
   return renderPartnerEmail({
@@ -136,7 +139,7 @@ export function buildPresentationOpenedEmail(locale: PartnerLocale, p: Common): 
     link: p.link,
     notes: [],
     signature: dict(locale).mail.signature,
-  });
+  }, theme);
 }
 
 /** Portal presentations page. */
@@ -158,6 +161,7 @@ export function formatShare(locale: PartnerLocale, percent: number): string {
 export function buildTierUpEmail(
   locale: PartnerLocale,
   p: { partnerFirstName: string; tierName: string; handoverShare: number; fixShare: number; portalUrl: string },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
 ): BuiltEmail {
   const t = dict(locale).mail.tierUp;
   const vars = { tier: p.tierName.trim() || "—", handover: formatShare(locale, p.handoverShare), fix: formatShare(locale, p.fixShare) };
@@ -169,7 +173,7 @@ export function buildTierUpEmail(
     link: p.portalUrl,
     notes: [t.note],
     signature: dict(locale).mail.signature,
-  });
+  }, theme);
 }
 
 export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP"] as const;

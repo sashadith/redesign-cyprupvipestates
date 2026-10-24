@@ -764,6 +764,9 @@ model User {
   mcpAuthCodes           McpAuthCode[]
   mcpTokens              McpToken[]
   emailDrafts            LeadEmailDraft[]
+  // Design settings (2026-10-22): chosen colour set.
+  designThemeId          String?
+  designTheme            DesignTheme? @relation(fields: [designThemeId], references: [id], onDelete: SetNull)
 
   @@map("users")
 }
@@ -2117,6 +2120,9 @@ model Partner {
   newsSeenAt           DateTime?
   tierProposals        PartnerTierProposal[]
   pointEvents          PartnerPointEvent[]
+  // Design settings (2026-10-22): chosen colour set.
+  designThemeId        String?
+  designTheme          DesignTheme? @relation(fields: [designThemeId], references: [id], onDelete: SetNull)
   @@index([status])
   @@map("partners")
 }
@@ -2364,4 +2370,49 @@ model PartnerDigestLog {
 
   @@unique([partnerId, weekKey])
   @@map("partner_digest_logs")
+}
+
+// Design settings (2026-10-22): colour sets for the CRM and partner portal.
+// "design_themes_one_default" (partial unique index on isDefault) lives in the migration SQL only.
+model DesignTheme {
+  id                String               @id @default(uuid())
+  key               String?              @unique
+  name              String
+  values            Json
+  offeredToStaff    Boolean              @default(true)
+  offeredToPartners Boolean              @default(true)
+  isDefault         Boolean              @default(false)
+  sort              Int                  @default(0)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  updatedById       String?
+  versions          DesignThemeVersion[]
+  users             User[]
+  partners          Partner[]
+
+  @@map("design_themes")
+}
+
+model DesignThemeVersion {
+  id          String      @id @default(uuid())
+  themeId     String
+  theme       DesignTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  values      Json
+  name        String
+  createdAt   DateTime    @default(now())
+  createdById String?
+
+  @@index([themeId, createdAt])
+  @@map("design_theme_versions")
+}
+
+model DesignSettingsVersion {
+  id          String   @id @default(uuid())
+  values      Json
+  note        String?
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  @@index([createdAt])
+  @@map("design_settings_versions")
 }

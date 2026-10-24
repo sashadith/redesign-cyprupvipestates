@@ -7,7 +7,7 @@ import { searchLeadsAction, type LeadHit } from "../actions";
 export type PaletteHandle = { open: () => void };
 type Item = { key: string; label: string; sub?: string; href: string };
 
-export const CommandPalette = forwardRef<PaletteHandle, { canAssign: boolean; oldCrm: boolean }>(function CommandPalette({ canAssign, oldCrm }, handle) {
+export const CommandPalette = forwardRef<PaletteHandle, { canAssign: boolean; oldCrm: boolean; isOwner: boolean }>(function CommandPalette({ canAssign, oldCrm, isOwner }, handle) {
   const router = useRouter();
   const dlg = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -56,8 +56,8 @@ export const CommandPalette = forwardRef<PaletteHandle, { canAssign: boolean; ol
 
   const term = q.trim().toLowerCase();
   const goTo: Item[] = useMemo(
-    () => paletteActions(canAssign, oldCrm).filter((a) => !term || a.label.toLowerCase().includes(term)).map((a) => ({ key: a.id, label: a.label, href: a.href })),
-    [canAssign, oldCrm, term],
+    () => paletteActions(canAssign, oldCrm, isOwner).filter((a) => !term || a.label.toLowerCase().includes(term)).map((a) => ({ key: a.id, label: a.label, href: a.href })),
+    [canAssign, oldCrm, isOwner, term],
   );
   const leads: Item[] = hits.map((h) => ({ key: h.id, label: h.name, sub: [h.statusLabel, h.sub].filter(Boolean).join(" · "), href: `/crm/leads/${h.id}` }));
   const items = [...goTo, ...leads];
