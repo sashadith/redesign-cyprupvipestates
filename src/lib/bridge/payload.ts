@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { imagesFor, type BridgeImage } from "./images";
 import { resolveDevelopmentPrice } from "@/lib/developmentCard";
 import { computeAvailability, listedUnits } from "@/lib/developmentAvailability";
+import { resolveRate } from "@/lib/crm/commission";
 
 /**
  * The shape Task 4's query must select. Declared here, next to the allowlist
@@ -11,7 +12,9 @@ import { computeAvailability, listedUnits } from "@/lib/developmentAvailability"
 export const BRIDGE_INCLUDE = {
   override: true,
   units: { orderBy: { sortIndex: "asc" } },
-  developerAccount: { select: { slug: true } },
+  // commissionRates: the account's default and project rates, so the applying
+  // rate can be resolved per project without a query per row (2026-10-24).
+  developerAccount: { select: { slug: true, commissionRates: { select: { developerAccountId: true, developmentId: true, ratePercent: true } } } },
   // A RELATION, not a JSON array — DevelopmentSlugHistory rows, one per
   // retired slug. Verified against the schema 2026-10-09, because treating it
   // as a scalar array would have silently delivered [] for every project and
@@ -73,6 +76,10 @@ export type BridgeProject = {
   developerName: string;
   developer: string | null;
   developerAccount: { slug: string };
+  /** Our commission with the developer for this project (2026-10-24): the
+   *  project's own rate if set, else the developer default; ratePercent null
+   *  and source "MISSING" when neither is set. */
+  commission: { ratePercent: number | null; source: "PROJECT" | "DEVELOPER" | "MISSING" };
   category: string | null; status: string | null; stage: string | null;
   completion: string | null; energy: string | null;
   district: string | null; town: string | null; area: string | null;
@@ -214,6 +221,11 @@ export async function buildProject(row: DevelopmentWithRelations): Promise<Bridg
     // stable grouping key and carries no label; `developer` above is the public
     // name, the one cyprusvipestates.com itself displays.
     developerAccount: { slug: row.developerAccount.slug },
+    commission: resolveRate(
+      row.developerAccount.commissionRates.map((r) => ({ developerAccountId: r.developerAccountId, developmentId: r.developmentId, ratePercent: r.ratePercent.toNumber() })),
+      row.developerAccountId,
+      row.id,
+    ),
     category: row.category, status: row.status,
     stage: o?.stage ?? row.stage,
     completion: o?.completion ?? row.completion,

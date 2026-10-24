@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { effectiveRatesFor } from "./rateLookup";
+import type { EffectiveRate } from "./rateFormat";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { resolveRelativeCompletion } from "@/lib/completionDate";
 
@@ -68,6 +70,8 @@ export type MatchedDevelopment = {
    *  the project has no coordinates yet; such projects are simply not drawn. */
   lat: number | null;
   lng: number | null;
+  /** The commission rate that applies (project rate, else developer default). */
+  commission: EffectiveRate;
   // 2026-08-11 correction — used to be every available unit regardless of
   // match; now the count of units that actually satisfy the active filters
   // (same set as `matchedUnits` below), so the admin table's "Available"
@@ -167,6 +171,7 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     where: { publishStatus: { in: statuses } },
     include: { units: true, override: true },
   });
+  const rates = await effectiveRatesFor(rows.map((r) => ({ id: r.id, developerAccountId: r.developerAccountId })));
 
   // Budget: filters override the lead's own numbers when provided (the admin
   // is deliberately widening/narrowing the search, not just re-reading the lead).
@@ -316,6 +321,7 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
         developer: d.developer, completion: resolveRelativeCompletion(ov?.completion || d.completion) || null,
         slug: d.slug, publishStatus: d.publishStatus,
         lat: ov?.latitude ?? d.latitude ?? null, lng: ov?.longitude ?? d.longitude ?? null,
+        commission: rates.get(d.id) ?? { ratePercent: null, source: "MISSING" },
       },
       score,
       matchedUnits,

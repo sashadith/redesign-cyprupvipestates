@@ -23,6 +23,7 @@ import { computeAvailability, availabilityContradiction } from "@/lib/developmen
 import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
 import SyncControlPanel from "./SyncControlPanel";
+import ProjectCommission from "./ProjectCommission";
 import { SYNCED_DEVS, FORCE_SYNC_DEVS } from "@/lib/feedSync";
 import { LOCALES } from "@/lib/locale";
 
@@ -46,7 +47,8 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
       override: true,
       _count: { select: { units: true } },
       units: { orderBy: [{ sortIndex: "asc" }] },
-      developerAccount: { select: { driveFolderUrl: true } },
+      developerAccount: { select: { driveFolderUrl: true, name: true, commissionRates: { where: { developmentId: null }, select: { ratePercent: true } } } },
+      commissionRate: { select: { id: true, ratePercent: true } },
     },
   });
   if (!d) notFound();
@@ -375,6 +377,13 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
 
         {/* ── SIDEBAR: publication + feed reference ── */}
         <div className="space-y-5">
+          <ProjectCommission
+            developmentId={d.id}
+            developerAccountId={d.developerAccountId}
+            developerName={d.developerAccount.name}
+            developerRate={d.developerAccount.commissionRates[0]?.ratePercent.toNumber() ?? null}
+            own={d.commissionRate ? { id: d.commissionRate.id, ratePercent: d.commissionRate.ratePercent.toNumber() } : null}
+          />
           <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-3">
             <h2 className="text-sm font-semibold text-[#111827]">Publication</h2>
             <ul className="space-y-1.5 text-sm">

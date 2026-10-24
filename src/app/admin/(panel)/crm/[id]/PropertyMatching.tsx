@@ -10,6 +10,7 @@ import ComposeEmailModal from "./ComposeEmailModal";
 import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
+import { fmtRate, RATE_SOURCE_SHORT } from "@/lib/crm/rateFormat";
 
 type LeadBrief = {
   firstName: string;
@@ -390,6 +391,7 @@ export default function PropertyMatching({
               <th className="px-3 py-2 font-medium">Location</th>
               <th className="px-3 py-2 font-medium">Delivery</th>
               <th className="px-3 py-2 font-medium">Price from</th>
+              <th className="px-3 py-2 font-medium" title="Our commission: the project's own rate, else the developer's default">Commission</th>
               <th className="px-3 py-2 font-medium text-right">Available</th>
               <th className="px-3 py-2 font-medium text-right">Match</th>
               <th className="px-3 py-2 w-8"></th>
@@ -397,7 +399,7 @@ export default function PropertyMatching({
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {results.length === 0 && !loading && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#9CA3AF]">No published developments match these filters.</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-[#9CA3AF]">No published developments match these filters.</td></tr>
             )}
             {results.map((m) => {
               const d = m.development;
@@ -452,6 +454,10 @@ export default function PropertyMatching({
                     </td>
                     <td className="px-3 py-2 text-[#6B7280]">{d.completion || "—"}</td>
                     <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(priceFromSelection)}</td>
+                    <td className="px-3 py-2 text-[#6B7280]" title={d.commission.source === "PROJECT" ? "Project rate (overrides the developer default)" : d.commission.source === "DEVELOPER" ? "Developer default" : "No rate set for this developer or project"}>
+                      {fmtRate(d.commission.ratePercent)}
+                      {d.commission.ratePercent != null && <span className="block text-xs text-[#9CA3AF]">{RATE_SOURCE_SHORT[d.commission.source]}</span>}
+                    </td>
                     <td className="px-3 py-2 text-right text-[#6B7280]">{d.unitsAvailable}</td>
                     <td className="px-3 py-2 text-right">
                       <span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: scoreBg(m.score), color: scoreColor(m.score) }}>{m.score}%</span>
@@ -462,7 +468,7 @@ export default function PropertyMatching({
                   </tr>
                   {isOpen && (
                     <tr>
-                      <td colSpan={9} className="px-4 py-3 bg-[#FAFAFA]">
+                      <td colSpan={10} className="px-4 py-3 bg-[#FAFAFA]">
                         {selectedDevs.has(d.id) && (
                           <input
                             value={comments.get(d.id) ?? ""}

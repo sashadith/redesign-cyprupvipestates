@@ -1,5 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { effectiveRatesFor } from "@/lib/crm/rateLookup";
+import { fmtRate } from "@/lib/crm/rateFormat";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { isLeadStatus, STATUS_LABEL, LOST_REASONS, type LostReasonValue } from "@/lib/crm/leadStatus";
@@ -48,9 +50,15 @@ export async function searchDevelopmentsAction(q: string): Promise<{ id: string;
     where: { publishStatus: "published", ...(term ? { publicName: { contains: term, mode: "insensitive" } } : {}) },
     orderBy: { publicName: "asc" },
     take: 20,
-    select: { id: true, publicName: true, town: true },
+    select: { id: true, publicName: true, town: true, developerAccountId: true },
   });
-  return rows.map((r) => ({ id: r.id, label: r.town ? `${r.publicName} · ${r.town}` : r.publicName }));
+  // The rate the deal will be created with, so it is visible before saving (2026-10-24).
+  const rates = await effectiveRatesFor(rows);
+  return rows.map((r) => {
+    const rate = rates.get(r.id);
+    const pct = rate?.ratePercent != null ? ` · ${fmtRate(rate.ratePercent)}` : " · no rate";
+    return { id: r.id, label: `${r.town ? `${r.publicName} · ${r.town}` : r.publicName}${pct}` };
+  });
 }
 
 export async function assignLeadAction(leadId: string, userId: string): Promise<AssignResult> {

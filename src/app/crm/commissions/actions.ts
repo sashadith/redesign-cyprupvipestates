@@ -16,6 +16,19 @@ import type { PAYOUT_PAUSED_CODE } from "@/lib/crm/payoutRules";
 // existing deals — they keep the rate stored on them when they were created.
 
 type Result = { ok: true } | { error: string };
+
+// Rates are edited here, on the admin developer page and on the admin project
+// page (2026-10-24) — the same two actions behind all three, so the rights,
+// the audit row and the Xellex re-delivery stamp cannot differ between them.
+// commissionChangedAt makes the bridge re-send every project of the account:
+// a rate lives on no Development row, so its change is otherwise invisible.
+async function stampCommissionChange(tx: Prisma.TransactionClient, developerAccountId: string) {
+  await tx.developerAccount.update({ where: { id: developerAccountId }, data: { commissionChangedAt: new Date() } });
+}
+function revalidateRates() {
+  revalidatePath("/crm/commissions");
+  revalidatePath("/admin/developments", "layout");
+}
 const DENIED = { error: "Only admins can change commissions." } as const;
 
 async function manager() {
@@ -55,6 +68,7 @@ export async function saveRateAction(input: { developerAccountId: string; develo
         ? await tx.commissionRate.update({ where: { id: existing.id }, data: { ratePercent: after, developerAccountId } })
         : await tx.commissionRate.create({ data: { developerAccountId, developmentId, ratePercent: after } });
       await writeAudit(actor, "crm_rate_save", "CommissionRate", row.id, { developerAccountId, developmentId, before, after }, tx);
+      await stampCommissionChange(tx, developerAccountId);
     });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return { error: "Someone else just saved this rate — reload." };
@@ -62,7 +76,7 @@ export async function saveRateAction(input: { developerAccountId: string; develo
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return { error: "This rate no longer exists — reload." };
     throw e;
   }
-  revalidatePath("/crm/commissions");
+  revalidateRates();
   return { ok: true };
 }
 
@@ -79,6 +93,7 @@ export async function deleteRateAction(rateId: string): Promise<Result> {
       await writeAudit(actor, "crm_rate_delete", "CommissionRate", rateId, {
         developerAccountId: row.developerAccountId, developmentId: row.developmentId, ratePercent: row.ratePercent.toFixed(2), note: row.note,
       }, tx);
+      await stampCommissionChange(tx, row.developerAccountId);
       return true;
     });
   } catch (e) {
@@ -88,7 +103,7 @@ export async function deleteRateAction(rateId: string): Promise<Result> {
     else throw e;
   }
   if (!deleted) return { error: "This rate no longer exists — reload." };
-  revalidatePath("/crm/commissions");
+  revalidateRates();
   return { ok: true };
 }
 

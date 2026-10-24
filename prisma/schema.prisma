@@ -1365,6 +1365,10 @@ model DeveloperAccount {
   // stamp; see removedSince() in src/lib/bridge/query.ts.
   bridgeEnabled   Boolean   @default(false)
   bridgeChangedAt DateTime?
+  // 2026-10-24 — last time any commission rate of this account (its default or a
+  // project override) was saved or deleted. The Xellex bridge re-delivers every
+  // project of the account when it moves (rates live on no Development row).
+  commissionChangedAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
