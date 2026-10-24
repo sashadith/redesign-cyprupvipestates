@@ -388,8 +388,14 @@ check("the sync's own columns are never carried", Object.keys(poisoned).sort(), 
    writing one of these columns, it must come off the list in the same commit,
    or the preserved value would shadow every fresh one. */
 const syncSrc = readFileSync(join(process.cwd(), "src/lib/cybarcoSync.ts"), "utf8");
-const block = syncSrc.slice(syncSrc.indexOf("data: units.map((u, i) => ({"));
-const writtenKeys = Array.from(block.slice(0, block.indexOf("})),")).matchAll(/^\s{14}([a-zA-Z]+):/gm)).map((m) => m[1]);
+/* Located by the map expression rather than by its indentation: the writer
+   moved out of the createMany() call into a `const unitRows = units.map(...)`
+   on 2026-10-24, when published projects stopped being wiped and re-created,
+   and pinning 14 spaces made this guard fail on a pure refactor. Any indent,
+   and either terminator, so the guard survives the next move too. */
+const block = syncSrc.slice(syncSrc.indexOf("units.map((u, i) => ({"));
+const blockEnd = Math.min(...["}));", "})),"].map((t) => block.indexOf(t)).filter((i) => i >= 0));
+const writtenKeys = Array.from(block.slice(0, blockEnd).matchAll(/^\s+([a-zA-Z]+):/gm)).map((m) => m[1]);
 check("the writer's own column list was found", writtenKeys.length > 8, true);
 check("no preserved column is also written by the sync",
   S.MANUAL_UNIT_FIELDS.filter((f) => writtenKeys.includes(f)), []);
