@@ -10,6 +10,7 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { developmentSlug } from "./developmentSeo";
 import { normalizeRef } from "./unitRef";
 import { publicDeveloperLabel } from "./developerPublicLabel";
+import { writeFeedUnitsPreservingIds } from "./feedUnitWrite";
 
 /* Cybarco's sync (2026-09-11).
 
@@ -1366,36 +1367,62 @@ export async function syncCybarco(
           units.map((u) => keepByRef.get(cybarcoUnitRef(u))?.type as string | null | undefined),
           units.map((u) => cybarcoUnitTypeFromLabel(cybarcoUnitLabel(u))),
         );
-        await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
-        if (units.length) {
-          await prisma.developmentUnit.createMany({
-            data: units.map((u, i) => ({
-              developmentId: dev.id,
-              ref: cybarcoUnitRef(u),
-              feedRef: cybarcoUnitRef(u),
-              ...carryOverManualUnitFields(keepByRef.get(cybarcoUnitRef(u))),
-              /* Manual beats derived, always: an admin who corrected a type
-                 must not be overruled by a label the next night. Computed for
-                 the whole development above, because the derived half only
-                 applies when it can name every unit. */
-              type: unitTypes[i],
-              label: cybarcoUnitLabel(u),
-              status: u.status,
-              /* null for every sold and reserved unit — the document prints a
-                 word where the price would be. That is "not for sale", not
-                 "price unknown". */
-              price: typeof u.price === "number" ? Math.round(u.price) : null,
-              currency: "EUR",
-              beds: u.beds,
-              floor: u.floor,
-              areaInternal: u.areaInternal,
-              areaVeranda: u.areaVeranda,
-              areaBuilt: u.areaBuilt,
-              areaPlot: u.areaPlot,
-              sortIndex: i,
-            })),
-          });
-          unitsWritten += units.length;
+        /* Rows first, write strategy second — because WHICH write is used
+           decides whether these units keep their identity.
+
+           Until 2026-10-24 this deleted every feed row and re-created it, on
+           every run, for every project. The primary key is @default(uuid()),
+           so Xellex — which the bridge hands `id: u.id` — got a brand-new
+           identifier set each night. Measured the day it was reported: all 442
+           Cybarco units across 10 PUBLISHED projects carried createdAt = that
+           day, one single distinct day for a developer live since September.
+           It also made the bridge's `changedSince` cursor worthless, since
+           updatedAt jumped for all 442 rows nightly.
+
+           feedSync and plusPropertiesSync already did the right thing for
+           published developments; this was the only pipeline that did not. The
+           draft branch below keeps the wipe on purpose: a draft has no external
+           consumer, and a clean rewrite is the simpler guarantee there. */
+        const unitRows = units.map((u, i) => ({
+          developmentId: dev.id,
+          ref: cybarcoUnitRef(u),
+          feedRef: cybarcoUnitRef(u),
+          ...carryOverManualUnitFields(keepByRef.get(cybarcoUnitRef(u))),
+          /* Manual beats derived, always: an admin who corrected a type
+             must not be overruled by a label the next night. Computed for
+             the whole development above, because the derived half only
+             applies when it can name every unit. */
+          type: unitTypes[i],
+          label: cybarcoUnitLabel(u),
+          status: u.status,
+          /* null for every sold and reserved unit — the document prints a
+             word where the price would be. That is "not for sale", not
+             "price unknown". */
+          price: typeof u.price === "number" ? Math.round(u.price) : null,
+          currency: "EUR",
+          beds: u.beds,
+          floor: u.floor,
+          areaInternal: u.areaInternal,
+          areaVeranda: u.areaVeranda,
+          areaBuilt: u.areaBuilt,
+          areaPlot: u.areaPlot,
+          sortIndex: i,
+        }));
+        if (published) {
+          const diff = await writeFeedUnitsPreservingIds(prisma, dev.id, unitRows);
+          unitsWritten += diff.updated + diff.created.length;
+          /* A unit the price list stopped carrying is unlisted rather than
+             removed, like everywhere else on the site: listedUnits() filters
+             "unlisted" so it leaves the public page and the bridge payload,
+             but the row — and therefore its id — survives for when the next
+             document lists it again. */
+          if (diff.unlisted.length) notes.push(`${dev.slug ?? dev.id}: ${diff.unlisted.length} unit(s) no longer listed`);
+        } else {
+          await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
+          if (unitRows.length) {
+            await prisma.developmentUnit.createMany({ data: unitRows });
+            unitsWritten += unitRows.length;
+          }
         }
       }
 
