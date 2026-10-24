@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { partnerRewritePath } from "@/lib/partner/host";
+import { partnerRewritePath, routingHost } from "@/lib/partner/host";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
@@ -400,7 +400,11 @@ export function nestedCanonicalFor(pathname: string): string | null {
 export default async function middleware(request: NextRequest) {
   // Partner portal host: rewrite into the internal /partner-portal segment and skip all
   // locale logic. The main host must never reach that segment.
-  const partnerTarget = partnerRewritePath(request.headers.get("host"), request.nextUrl.pathname, process.env);
+  const partnerTarget = partnerRewritePath(
+    routingHost(request.headers.get("host"), request.headers.get("x-forwarded-host")),
+    request.nextUrl.pathname,
+    process.env,
+  );
   if (partnerTarget) {
     const url = request.nextUrl.clone();
     url.pathname = partnerTarget === "block" ? "/_gated-locale-404" : partnerTarget;

@@ -32,3 +32,14 @@ export function partnerRewritePath(
   }
   return internal ? "block" : null;
 }
+
+/**
+ * The host the visitor actually asked for. A server action's redirect("/login") is rendered by an
+ * internal fetch to Next's own localhost origin: the Host header is lost, X-Forwarded-Host survives.
+ * Reading only Host sent that render to the main site's /login (its 404). nginx sets X-Forwarded-Host
+ * to $host on every proxied request, so it is never client-controlled in production.
+ */
+export function routingHost(host: string | null, forwardedHost: string | null): string | null {
+  const fwd = forwardedHost?.split(",")[0].trim();
+  return fwd || host;
+}
