@@ -27,6 +27,7 @@ import {
   RoiScenario,
   RoiStrategy,
 } from "@/lib/roi";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 const NAME_MIN = 2;
 const NAME_MAX = 22;
@@ -288,7 +289,7 @@ const FormRoi: FC<Props> = ({
             preferred_contact: values.preferredContact,
             roi_strategy: strategy,
             roi_scenario: scenario,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
         resetForm({});
         setFilled({ name: false, surname: false, phone: false, email: false });

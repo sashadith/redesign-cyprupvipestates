@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 /**
  * Meta pixel ViewContent for one property page.
@@ -65,11 +66,15 @@ export default function MetaViewContentTracker({ title, contentId, price, city, 
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const fire = () => {
-      // Recomputed at send time: built at render time it would be baked into a
-      // cached server payload and repeat across visitors, which is the opposite
-      // of what a deduplication key is for.
-      const eventId = `vc-${contentId}-${Date.now()}`;
-      window.fbq!(
+      // Read through a local so the existence check is visible to the caller
+      // sweep in trackingTagCallerSafety.test.ts, which cannot see through a
+      // `window.fbq!(...)` non-null assertion. This check can never be what
+      // silences the event — attempt() below only calls fire() once fbq is
+      // there, and keeps polling until then. Do not turn it into an early
+      // return from the effect: that was the 2026-10-17 bug.
+      const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;
+      if (typeof fbq !== "function") return;
+      fbq(
         "track",
         "ViewContent",
         {
@@ -81,7 +86,9 @@ export default function MetaViewContentTracker({ title, contentId, price, city, 
           city: city || "",
           property_type: propertyType || "",
         },
-        { eventID: eventId },
+        // Built at send time, never at render: an id baked into a cached server
+        // payload would repeat across visitors (see src/lib/metaEventId.ts).
+        { eventID: newMetaEventId("vc") },
       );
     };
 

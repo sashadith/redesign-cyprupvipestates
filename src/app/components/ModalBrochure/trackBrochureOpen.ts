@@ -14,6 +14,8 @@
  * reporting groups on, so anything built before today keeps working and the new
  * dimension is additive.
  */
+import { newMetaEventId } from "@/lib/metaEventId";
+
 export type BrochureSource = "header" | "hero" | "brochure_block";
 
 export function trackBrochureOpen(source: BrochureSource): void {
@@ -24,5 +26,5 @@ export function trackBrochureOpen(source: BrochureSource): void {
     form_name: "brochure_modal",
     source,
     page_location: window.location.href,
-  });
+  }, { eventID: newMetaEventId("ic") });
 }
