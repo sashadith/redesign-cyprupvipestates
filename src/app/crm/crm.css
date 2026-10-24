@@ -676,6 +676,17 @@
 .crm-in-table tr[aria-current="true"] > * { background: var(--hover); }
 @media (max-width: 700px) { .crm-rs-prizes { grid-template-columns: 1fr; } .crm-rs-name input { min-width: 0; } }
 
+/* Trash (move to trash / restore) */
+.crm-ck-actions { margin-left: auto; }
+.crm-trash-btn { font-size: calc(12.5px * var(--ds-crm-scale)); padding: 6px 12px; color: var(--danger); border-color: var(--line-strong); }
+.crm-trash-btn:hover:not(:disabled) { border-color: var(--danger); }
+.crm-dialog textarea.crm-trash-reason { border: 1px solid var(--field-line); border-radius: calc(12px * var(--ds-radius-scale)); padding: 9px 11px; font: 500 calc(14px * var(--ds-crm-scale)) var(--body); color: var(--ink); background: var(--field-bg); resize: vertical; }
+.crm-dialog textarea.crm-trash-reason:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-trash-wrap { overflow-x: auto; margin-top: 16px; }
+.crm-trash-table { width: 100%; border-collapse: collapse; font-size: calc(13.5px * var(--ds-crm-scale)); }
+.crm-trash-table th { text-align: left; font-size: calc(11.5px * var(--ds-crm-scale)); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 6px 10px; }
+.crm-trash-table td { padding: 8px 10px; border-top: 1px solid var(--line); white-space: nowrap; }
+
 /* ── Design settings page (/crm/settings/design, owner only) ────────────── */
 .crm-ds { margin-top: 18px; display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
 .crm-ds-sets { grid-row: span 2; }

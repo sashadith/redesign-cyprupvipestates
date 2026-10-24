@@ -33,6 +33,7 @@ export function paletteActions(canAssign: boolean, oldCrm: boolean, isOwner = fa
           { id: "team", label: "Team", href: "/crm/team" },
           { id: "commissions", label: "Commissions", href: "/crm/commissions" },
           { id: "insights", label: "Insights", href: "/crm/insights" },
+          { id: "trash", label: "Trash", href: "/crm/trash" },
         ]
       : []),
     { id: "new-lead", label: "New lead", href: "/crm/leads/new" },

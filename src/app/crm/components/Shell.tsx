@@ -51,6 +51,7 @@ export function Shell({ user, themes = { options: [], choiceId: null }, children
           {user.canAssign && <Link href="/crm/team" className={on("/crm/team")}>Team</Link>}
           {user.canAssign && <Link href="/crm/commissions" className={on("/crm/commissions")}>Commissions</Link>}
           {user.canAssign && <Link href="/crm/insights" className={on("/crm/insights")}>Insights</Link>}
+          {user.canAssign && <Link href="/crm/trash" className={on("/crm/trash")}>Trash</Link>}
           {user.isOwner && <Link href="/crm/settings/design" className={on("/crm/settings/design")}>Design</Link>}
           {user.oldCrm && <Link href="/admin/crm">Old CRM</Link>}
         </nav>
