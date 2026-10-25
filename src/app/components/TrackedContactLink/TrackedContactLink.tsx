@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 type Props = {
   href: string;
@@ -34,7 +35,7 @@ const TrackedContactLink: React.FC<Props> = ({
         method,
         placement,
         page_location: pageUrl,
-      });
+      }, { eventID: newMetaEventId("contact") });
     }
 
     if (window.dataLayer) {

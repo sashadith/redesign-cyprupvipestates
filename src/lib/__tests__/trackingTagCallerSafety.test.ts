@@ -113,8 +113,12 @@ test("every dataLayer push checks that the container created it", () => {
 });
 
 test("every fbq call checks that the pixel initialised", () => {
+  // `fbq!?` because a non-null assertion used to walk straight past this
+  // sweep: MetaViewContentTracker spelled its call `window.fbq!("track", …)`,
+  // `fbq\s*\(` did not match it, and the file reported clean for an event the
+  // check had never looked at. Found 2026-10-24 while adding eventIDs.
   assert.deepEqual(
-    unguardedCallers(/\bfbq\s*\(\s*["']track["']/, "fbq", "FacebookPixel/FacebookPixel.tsx"),
+    unguardedCallers(/\bfbq!?\s*\(\s*["']track["']/, "fbq", "FacebookPixel/FacebookPixel.tsx"),
     [],
     "an fbq call has no existence check before it",
   );
@@ -156,6 +160,11 @@ test("the check still catches what it is for, and clears what it should", () => 
 
   // Must be REPORTED:
   assert.equal(g('export function f() {\n  window.fbq("track", "Lead", {});\n}'), false, "a bare call");
+  assert.equal(
+    callIsGuarded('export function f() {\n  window.fbq!("track", "Lead", {});\n}', /\bfbq!?\s*\(\s*["']track["']/, "fbq"),
+    false,
+    "a non-null-asserted call: the shape that used to dodge this sweep entirely",
+  );
   assert.equal(
     g('export function f() {\n  window.fbq("track", "Lead", {});\n  if (window.fbq) console.log(1);\n}'),
     false,

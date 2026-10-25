@@ -6,6 +6,7 @@ import GoogleTagManagerScript from "@/app/components/GoogleTagManagerScript/Goog
 import MicrosoftClarity from "../MicrosoftClarity/MicrosoftClarity";
 import GoogleAdsScript from "../GoogleAdsScript/GoogleAdsScript";
 import FacebookPixel from "../FacebookPixel/FacebookPixel";
+import MetaPageViewTracker from "../MetaPageViewTracker/MetaPageViewTracker";
 import LinkedInPixel from "../LinkedInPixel/LinkedInPixel";
 
 /* Consent-gated tracking tags for the STATIC homepage tree (home-static). The dynamic [lang] layout
@@ -45,6 +46,7 @@ export default function ConsentScripts({ disableTracking }: { disableTracking: b
       <GoogleTagManagerScript />
       <GoogleAdsScript />
       {!disableTracking && <FacebookPixel />}
+      {!disableTracking && <MetaPageViewTracker />}
       <LinkedInPixel />
     </>
   ) : (

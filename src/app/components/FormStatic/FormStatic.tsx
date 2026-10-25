@@ -21,6 +21,7 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formStaticCopy } from "./FormStatic.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 export type FormData = {
   name: string;
@@ -109,7 +110,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
             form_name: "form_static",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
         if (
           typeof window !== "undefined" &&

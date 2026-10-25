@@ -5,6 +5,7 @@ import styles from "./WhatsAppButton.module.scss";
 import { isLocale } from "@/lib/locale";
 import { messageWithUrl, label as labelByLang } from "./WhatsAppButton.copy";
 import { getAttribution, attributionTag } from "@/lib/attribution";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 type Props = {
   lang: string;
@@ -33,7 +34,7 @@ const WhatsAppButton: FC<Props> = ({ lang }) => {
           method: "whatsapp",
           placement: "floating_whatsapp_button",
           page_location: pageUrl,
-        });
+        }, { eventID: newMetaEventId("contact") });
       }
 
       if (window.dataLayer) {

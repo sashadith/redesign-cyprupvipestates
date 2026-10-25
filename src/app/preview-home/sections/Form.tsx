@@ -10,6 +10,7 @@ import { consentCopy } from "@/app/components/consentCopy";
 import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
 import OptImg from "./OptImg";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 /* Phone number input, axios and libphonenumber (~220 KB raw together, 2026-10-19 bundle analysis) used
    to ship with the first load of every page that carries this form — the homepage included — although
@@ -154,7 +155,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
             form_name: "form_static",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
         if (typeof window !== "undefined" && typeof (window as any).lintrk === "function") {
           (window as any).lintrk("track", { conversion_id: 27871505 });

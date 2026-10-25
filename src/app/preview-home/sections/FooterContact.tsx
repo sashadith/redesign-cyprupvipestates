@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Contact } from "@/types/footer";
 import { urlFor } from "@/sanity/sanity.client";
 import Bdi from "@/app/components/Bdi";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 /* Footer contact link — preview restyle of ContactLink, keeping the href logic
    + fbq/dataLayer click tracking verbatim. */
@@ -38,7 +39,7 @@ export default function FooterContact({ contact }: { contact: Contact }) {
     if (contact.type === "Email") method = "email";
     if (contact.type === "Link" && contact.label.match(/^\+?\d+$/)) method = "whatsapp";
     if (window.fbq) {
-      window.fbq("track", "Contact", { method, placement: "footer_contact", page_location: pageUrl });
+      window.fbq("track", "Contact", { method, placement: "footer_contact", page_location: pageUrl }, { eventID: newMetaEventId("contact") });
     }
     if (window.dataLayer) {
       window.dataLayer.push({

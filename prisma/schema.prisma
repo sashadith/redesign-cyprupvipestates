@@ -1278,6 +1278,16 @@ model PageView {
   utmMedium   String? @db.VarChar(100)
   utmCampaign String? @db.VarChar(100)
 
+  // The visitor's answer to the cookie banner at the time of this view
+  // (2026-10-24). TRUE accepted, FALSE declined, NULL not answered yet — and
+  // NULL on every row written before this field existed. Three states on
+  // purpose: the Meta pixel only renders behind this same gate, so without the
+  // distinction "the pixel saw 69 % of our views" cannot be split into refusal
+  // and technical blocking, which is the number that decides whether a
+  // Conversions API is worth building. Not an identifier and not PII; see
+  // analyticsConsentFrom() in src/lib/attribution.ts.
+  analyticsConsent Boolean?
+
   @@index([path])
   @@index([createdAt])
   @@index([visitorHash])

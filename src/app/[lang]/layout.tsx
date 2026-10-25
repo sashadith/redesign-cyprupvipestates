@@ -13,6 +13,7 @@ import MicrosoftClarity from "../components/MicrosoftClarity/MicrosoftClarity";
 import CustomCookieConsent from "../components/CustomCookieConsent/CustomCookieConsent";
 import GoogleAdsScript from "../components/GoogleAdsScript/GoogleAdsScript";
 import FacebookPixel from "../components/FacebookPixel/FacebookPixel";
+import MetaPageViewTracker from "../components/MetaPageViewTracker/MetaPageViewTracker";
 import LenisProvider from "../components/LenisProvider/LenisProvider";
 import LinkedInPixel from "../components/LinkedInPixel/LinkedInPixel";
 import AnalyticsTracker from "../components/AnalyticsTracker/AnalyticsTracker";
@@ -185,6 +186,7 @@ export default function RootLayout({
             <GoogleTagManagerScript />
             <GoogleAdsScript />
             {!DISABLE_TRACKING && <FacebookPixel />}
+            {!DISABLE_TRACKING && <MetaPageViewTracker />}
             <LinkedInPixel />
           </>
         )}
