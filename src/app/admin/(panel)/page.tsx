@@ -116,7 +116,7 @@ export default async function Dashboard() {
                       them and the NEWSLETTER option no longer exists in its source filter — so send
                       that one row to the dedicated Newsletter page instead of a self-contradicting
                       empty CRM list. */}
-                  <Link href={bucketOf(s.key) === "newsletter" ? "/admin/crm/newsletter" : `/admin/crm?source=${s.key}`} className="flex items-center justify-between text-sm text-[#6B7280] hover:text-[#1B4B43]">
+                  <Link href={bucketOf(s.key) === "newsletter" ? "/admin/crm/newsletter" : bucketOf(s.key) === "guide" ? "/admin/crm/guides" : `/admin/crm?source=${s.key}`} className="flex items-center justify-between text-sm text-[#6B7280] hover:text-[#1B4B43]">
                     <span>{s.key.replace(/_/g, " ")}</span><span className="font-medium">{s.count}</span>
                   </Link>
                   <div className="h-1.5 bg-[#F1F1F1] rounded mt-1"><div className="h-1.5 bg-[#1B4B43] rounded" style={{ width: `${(s.count / maxSource) * 100}%` }} /></div>

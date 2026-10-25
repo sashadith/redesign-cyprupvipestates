@@ -14,12 +14,13 @@
 // this import still erases fully.
 import type { LeadSource, Prisma } from "@prisma/client";
 
-export const LEAD_BUCKETS = ["leads", "partner", "newsletter"] as const;
+export const LEAD_BUCKETS = ["leads", "partner", "guide", "newsletter"] as const;
 export type LeadBucket = (typeof LEAD_BUCKETS)[number];
 
 export const BUCKET_LABEL: Record<LeadBucket, string> = {
   leads: "Leads",
   partner: "Partner",
+  guide: "Guide Leads",
   newsletter: "Newsletter",
 };
 
@@ -31,6 +32,7 @@ export const BUCKET_LABEL: Record<LeadBucket, string> = {
 const NEWSLETTER_SOURCE: LeadSource = "NEWSLETTER";
 const PARTNER_SOURCE: LeadSource = "PARTNER";
 const MANUAL_SOURCE: LeadSource = "MANUAL";
+const GUIDE_SOURCE: LeadSource = "GUIDE_DOWNLOAD";
 
 // Anything unrecognised lands in "leads". A source this function has never seen
 // is far more likely to be a new enquiry channel than a new kind of mailing
@@ -38,6 +40,7 @@ const MANUAL_SOURCE: LeadSource = "MANUAL";
 export function bucketOf(source: string | null | undefined): LeadBucket {
   if (source === NEWSLETTER_SOURCE) return "newsletter";
   if (source === PARTNER_SOURCE) return "partner";
+  if (source === GUIDE_SOURCE) return "guide";
   return "leads";
 }
 
@@ -53,6 +56,7 @@ export function bucketOf(source: string | null | undefined): LeadBucket {
 export function sourceForBucket(bucket: LeadBucket): LeadSource {
   if (bucket === "newsletter") return NEWSLETTER_SOURCE;
   if (bucket === "partner") return PARTNER_SOURCE;
+  if (bucket === "guide") return GUIDE_SOURCE;
   return MANUAL_SOURCE;
 }
 
@@ -74,3 +78,9 @@ export const ONLY_NEWSLETTER: Prisma.LeadWhereInput = { source: "NEWSLETTER" };
 // partner relationship that goes quiet is still a follow-up someone owes.
 export const EXCLUDE_PARTNER: Prisma.LeadWhereInput = { source: { not: "PARTNER" } };
 export const ONLY_PARTNER: Prisma.LeadWhereInput = { source: "PARTNER" };
+
+// Guide leads (2026-10-19): readers who asked for a PDF guide, kept apart from
+// buyer leads in the list views the same way partners are. Like partners they
+// stay on the pipeline board and in the Action Center's follow-up rules.
+export const EXCLUDE_GUIDE: Prisma.LeadWhereInput = { source: { not: "GUIDE_DOWNLOAD" } };
+export const ONLY_GUIDE: Prisma.LeadWhereInput = { source: "GUIDE_DOWNLOAD" };

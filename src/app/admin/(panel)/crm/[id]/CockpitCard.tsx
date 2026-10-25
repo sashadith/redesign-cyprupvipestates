@@ -236,6 +236,8 @@ export default function CockpitCard({
     message: string | null;
     notes: string | null;
     pageSource: string | null;
+    guideTitle: string | null;
+    guideLanguage: string | null;
     utm: string;
     clickId: string;
     referrer: string | null;
@@ -434,6 +436,7 @@ export default function CockpitCard({
         {groupLabel("Acquisition")}
         <div className={groupGrid}>
           {field("Source", lead.source.replace(/_/g, " "))}
+          {lead.guideTitle && field("Guide", `${lead.guideTitle}${lead.guideLanguage ? ` (${lead.guideLanguage.toUpperCase()})` : ""}`)}
           {urlField("Page", lead.pageSource)}
           {field("UTM", lead.utm)}
           {field("Click ID", lead.clickId)}

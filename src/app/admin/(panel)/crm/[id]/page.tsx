@@ -240,7 +240,9 @@ export default async function LeadDetail({ params }: { params: { id: string } })
       {/* A partner lead lives on the Partner page (2026-10-08), so that is where "back" goes. */}
       {lead.source === "PARTNER"
         ? <Link href="/admin/crm/partners" className="text-sm text-[#1B4B43] hover:underline">← Back to partners</Link>
-        : <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>}
+        : lead.source === "GUIDE_DOWNLOAD"
+          ? <Link href="/admin/crm/guides" className="text-sm text-[#1B4B43] hover:underline">← Back to guide leads</Link>
+          : <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>}
 
       <div className="mt-2 mb-6">
         <CockpitCard
@@ -270,6 +272,8 @@ export default async function LeadDetail({ params }: { params: { id: string } })
             message: lead.message,
             notes: lead.notes,
             pageSource: lead.pageSource,
+            guideTitle: lead.guideTitle,
+            guideLanguage: lead.guideLanguage,
             utm,
             clickId,
             referrer: lead.referrer,

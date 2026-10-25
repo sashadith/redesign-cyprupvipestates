@@ -35,7 +35,7 @@ export type BoardColumn = { status: LeadStatusValue; label: string; cards: Board
 export const SOURCE_LABEL: Record<string, string> = {
   CONTACT_FORM: "Website", PROJECT_ENQUIRY: "Project page", BLOG_ENQUIRY: "Blog", WHATSAPP: "WhatsApp", PHONE: "Phone",
   REFERRAL: "Referral", MANUAL: "Manual", PARTNER: "Partner", ROI_CALCULATOR: "ROI calculator", NEWSLETTER: "Newsletter",
-  OTHER: "Other", META_LEAD_AD: "Meta ad", PRIVATE_COLLECTION: "Private Collection",
+  OTHER: "Other", META_LEAD_AD: "Meta ad", PRIVATE_COLLECTION: "Private Collection", GUIDE_DOWNLOAD: "Guide download",
 };
 
 const OPEN_DEAL = new Set(["EXPECTED", "EARNED", "DEVELOPER_PAID", "PAID_OUT"]);

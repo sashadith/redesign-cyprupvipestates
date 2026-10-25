@@ -134,6 +134,7 @@ enum LeadSource {
   OTHER
   META_LEAD_AD // 2026-10-11 — Meta Lead Ads instant forms (src/lib/metaLeadgen/)
   PRIVATE_COLLECTION // 2026-10-15 — private.cyprusvipestates.com enquiry form (src/lib/privateCollectionLead.ts)
+  GUIDE_DOWNLOAD // 2026-10-19 — lead-magnet PDF guide requested on a blog page (src/lib/guides/leadSource.ts); was BLOG_ENQUIRY before
 }
 
 enum LeadTimeline {
@@ -922,6 +923,11 @@ model Lead {
   // used elsewhere: null = not hot, set = hot since that instant. Cleared
   // back to null on un-hot, never left stale.
   hotAt                DateTime?
+  // 2026-10-19 — the PDF guide a GUIDE_DOWNLOAD lead asked for, as the
+  // visitor saw it: the guide's title in the language it was sent in, and that
+  // language ("en" | "de" | "pl" | "ru"). Null on every other source.
+  guideTitle           String?
+  guideLanguage        String?
   // 2026-08-11 — the site locale the enquiry form was actually submitted
   // from, set ONCE at creation and never edited afterward (unlike
   // languagePreference, which an admin can update as they learn the

@@ -16,6 +16,7 @@ import { PROPERTY_VALUES, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, lea
 import { LOCALES } from "@/lib/locale";
 import { parseGuideRequest, messageWithGuide, guideNote, guideLink } from "@/lib/guides/request";
 import { getGuideEmail } from "@/lib/guides/email";
+import { formLeadSource } from "@/lib/guides/leadSource";
 
 const ALLOWED_LANGS = new Set<string>(LOCALES);  // locally named ALLOWED_LANGS to avoid shadowing the imported LOCALES constant
 
@@ -28,12 +29,6 @@ const transporter = nodemailer.createTransport({
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();
-
-function leadSource(page: string) {
-  if (/\/projects\//.test(page)) return "PROJECT_ENQUIRY" as const;
-  if (/\/blog\//.test(page)) return "BLOG_ENQUIRY" as const;
-  return "CONTACT_FORM" as const;
-}
 
 export async function POST(request: Request) {
   const guard = guardRequest(request, ipLimiter);
@@ -99,7 +94,7 @@ export async function POST(request: Request) {
 
     // Link to a project when the form was submitted from / pre-selected a project
     let projectInterestId: string | null = null;
-    let source = leadSource(page);
+    let source: string = formLeadSource(page, false);
     const projectSlug = String(body.projectSlug ?? "").trim();
     if (projectSlug && ALLOWED_LANGS.has(langNorm)) {
       // Legacy Project row first (today's behaviour, byte-identical for
@@ -109,6 +104,10 @@ export async function POST(request: Request) {
       const interest = await resolveProjectInterest({ projectSlug, lang: langNorm, prisma });
       if (interest.projectInterestId) { projectInterestId = interest.projectInterestId; source = interest.source ?? source; }
     }
+    // A guide request is a reader asking for a PDF, not a buyer's enquiry
+    // (2026-10-19): it gets its own source whatever page it came from.
+    const isGuideLead = guide != null;
+    if (isGuideLead) source = formLeadSource(page, true);
 
     // Persist to Postgres
     const lead = await prisma.lead.create({
@@ -130,6 +129,8 @@ export async function POST(request: Request) {
         projectInterestId,
         languagePreference: ALLOWED_LANGS.has(langNorm) ? (langNorm as any) : null,
         pageSource: page,
+        guideTitle: guide?.title ?? null,
+        guideLanguage: guide?.lang ?? null,
         ...parseAttribution(body),
       },
     });
@@ -144,8 +145,10 @@ export async function POST(request: Request) {
     // Top property matches (non-fatal, best-effort) — auto-match against the
     // lead's own data, no admin filters, so this is necessarily a rough first
     // pass (no bedroom/location signal exists on a fresh Lead — see matching.ts).
+    // Not for guide leads: without a budget or a property type the matcher has
+    // nothing to go on, and its top three would only be noise.
     let matchLines = "";
-    try {
+    if (!isGuideLead) try {
       const matches = await matchDevelopmentsForLead({ budgetMin, budgetMax, propertyTypeInterest });
       const top3 = matches.filter((m) => m.score > 0).slice(0, 3);
       if (top3.length) {
@@ -181,7 +184,7 @@ export async function POST(request: Request) {
     // Telegram notification (non-fatal)
     const langTag = telegramLanguageTag(ALLOWED_LANGS.has(langNorm) ? langNorm : null);
     const tg =
-      `<b>New Lead — Cyprus VIP Estates</b>\n\n` +
+      `<b>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</b>\n\n` +
       `<b>${escapeHtml(fullName || "-")}</b>\n` +
       `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
@@ -204,11 +207,11 @@ export async function POST(request: Request) {
       await transporter.sendMail({
         from: process.env.EMAIL_USER!,
         to: process.env.EMAIL_TO || "office@cyprusvipestates.com",
-        subject: `New Lead: ${fullName}`,
-        text: `New lead ${fullName} — ${emailNorm} / ${phoneNorm}\n`
+        subject: `${isGuideLead ? "New Guide Lead" : "New Lead"}: ${fullName}`,
+        text: `${isGuideLead ? "New guide lead" : "New lead"} ${fullName} — ${emailNorm} / ${phoneNorm}\n`
           + qualification.map(([k, v]) => `${k}: ${v}`).join("\n")
           + `${qualification.length ? "\n" : ""}Page: ${page}\nCRM: ${crmLink}`,
-        html: `<h2>New Lead — Cyprus VIP Estates</h2>
+        html: `<h2>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</h2>
           <p><b>Name:</b> ${escapeHtml(fullName)}</p>
           <p><b>Email:</b> ${escapeHtml(emailNorm)}</p>
           <p><b>Phone:</b> ${escapeHtml(phoneNorm)}</p>
