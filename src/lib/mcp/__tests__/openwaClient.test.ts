@@ -48,3 +48,12 @@ test("a non-2xx response becomes a ToolError and does not leak the body", async 
     (e: unknown) => e instanceof ToolError && !(e as Error).message.includes("owa_k1_abc"),
   );
 });
+test("getSession / startSession: status read from the session, start is a POST", async () => {
+  const s = stub(200, { id: "sess-1", status: "failed", lastError: "bridge" });
+  assert.deepEqual(await createOpenWaClient({ fetch: s.f, env }).getSession(), { status: "failed", lastError: "bridge" });
+  assert.match(s.calls[0].url, /\/api\/sessions\/sess-1$/);
+  const st = stub(200, {});
+  await createOpenWaClient({ fetch: st.f, env }).startSession();
+  assert.match(st.calls[0].url, /\/api\/sessions\/sess-1\/start$/);
+  assert.equal(st.calls[0].init?.method, "POST");
+});
