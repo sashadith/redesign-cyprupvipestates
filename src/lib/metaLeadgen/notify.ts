@@ -4,7 +4,7 @@
 // successful Telegram call, which is the wrong order for "Telegram is down").
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
-import { BUDGETS, CHANNEL_LABEL, REGION_BY_LANGUAGE, type BudgetKey } from "./mapFields";
+import { BUDGETS, CHANNEL_LABEL, leadRegion, type BudgetKey } from "./mapFields";
 import type { LeadPreferredChannel } from "@prisma/client";
 import { teamWhatsAppChat, telegramHtmlToWhatsApp } from "@/lib/teamWhatsApp";
 
@@ -31,7 +31,8 @@ export function buildLeadMessage(o: {
   priorStatus?: string | null; // existing lead's status when it isn't an active one worth stating (e.g. CLOSED)
   reopened?: boolean; // existing lead was LOST and has been set back to NEW
 }): string {
-  const region = o.language ? ` (${REGION_BY_LANGUAGE[o.language]})` : "";
+  const r = leadRegion(o.campaignName, o.language);
+  const region = r ? ` (${esc(r)})` : "";
   const head =
     o.outcome === "CREATED"
       ? `🏛 <b>New Private Collection lead${region}</b>`
