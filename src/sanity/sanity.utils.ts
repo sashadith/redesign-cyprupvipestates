@@ -8,6 +8,7 @@ import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref, isLocale, PUBLIC_LOCALES, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
+import { mergedTargetFor } from "@/middleware";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -969,8 +970,8 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
   let related: any[] = [];
   if (relRefs.length) {
     const [blogs, pages] = await Promise.all([
-      prisma.blog.findMany({ where: { sanityId: { in: relRefs } }, include: { category: true } }),
-      prisma.singlepage.findMany({ where: { sanityId: { in: relRefs } } }),
+      prisma.blog.findMany({ where: { sanityId: { in: relRefs }, ...draftFilter() }, include: { category: true } }),
+      prisma.singlepage.findMany({ where: { sanityId: { in: relRefs }, ...draftFilter() } }),
     ]);
     const m = new Map<string, any>();
     blogs.forEach((b) => m.set(b.sanityId, {
@@ -984,18 +985,37 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
     // full parent/child path per language so related links don't 404 (the old code always linked
     // /blog/<slug>) or bounce through the flat->nested redirect.
     const pathCache = new Map<string, Map<string, string[]>>();
-    for (const p of pages) {
-      if (!pathCache.has(p.language)) {
-        const all = await getAllPathsForLang(p.language);
-        pathCache.set(p.language, new Map(all.map((s) => [s[s.length - 1], s])));
+    const pathsFor = async (language: string) => {
+      if (!pathCache.has(language)) {
+        const all = await getAllPathsForLang(language);
+        pathCache.set(language, new Map(all.map((s) => [s[s.length - 1], s])));
       }
-      const segs = pathCache.get(p.language)!.get(p.slug) ?? [p.slug];
-      m.set(p.sanityId, {
-        _id: p.sanityId, _type: "singlepage", title: p.title, slug: slugObj(p),
-        previewImage: D(p.previewImage), href: localizedHref(p.language, segs),
-      });
+      return pathCache.get(language)!;
+    };
+    const pageCard = async (p: { sanityId: string; language: string; slug: string; title: string | null; previewImage: unknown }) => {
+      const segs = (await pathsFor(p.language)).get(p.slug) ?? [p.slug];
+      return {
+        _id: p.sanityId, _type: "singlepage", title: p.title, slug: slugObj(p as any),
+        previewImage: D(p.previewImage), href: localizedHref(p.language as any, segs),
+      };
+    };
+    for (const p of pages) {
+      // A merged landing page keeps status PUBLISHED but 301s (middleware *_LANDING_MERGES), so its card
+      // would link a redirect. Show the merge target instead, with its own title and image; drop the card
+      // when the target is not a published page.
+      let card: any = await pageCard(p);
+      const target = mergedTargetFor(card.href);
+      if (target) {
+        const tp = await prisma.singlepage.findFirst({
+          where: { language: p.language, slug: target.split("/").filter(Boolean).pop(), status: "PUBLISHED" },
+        });
+        card = tp ? await pageCard(tp) : null;
+        if (card && card.href !== target) card = null;
+      }
+      if (card) m.set(p.sanityId, card);
     }
-    related = relRefs.map((id) => m.get(id)).filter(Boolean);
+    const seen = new Set<string>([localizedHref(row.language as any, ["blog", row.slug])]);
+    related = relRefs.map((id) => m.get(id)).filter((a) => a && !seen.has(a.href) && seen.add(a.href));
   }
 
   const out: AnyRow = {
@@ -1073,13 +1093,28 @@ async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStud
   // Related projects may be linked to a different language's row — map to the same-language
   // sibling so the slug matches `lang` (otherwise /<lang>/projects/<wrong-slug> 404s).
   const relatedMapped = await mapProjectRowsToLang(related.map((r) => r.project as AnyRow), lang);
+  // A related-project card must open the project's CURRENT page. These rows are legacy Project rows, and
+  // most of them have since been archived in favour of a Development under another slug: linking
+  // /projects/<old-slug> works only through a 308 (and 41 such cards were found across the case studies,
+  // 2026-10-21). An archived row therefore carries the redirect target as its href; if that target is
+  // not a project page (the project is gone and only the developer page remains) the card is dropped
+  // rather than pointing a "property" card at a developer.
+  const relatedCards = (
+    await Promise.all(
+      relatedMapped.map(async (p) => {
+        if (p.status !== "ARCHIVED") return { p, href: null as string | null };
+        const target = await getLegacyProjectRedirect(lang, String(p.slug ?? ""));
+        return target && /^(?:\/[a-z]{2})?\/projects\/[^/?#]+$/.test(target) ? { p, href: target } : null;
+      }),
+    )
+  ).filter((x): x is { p: AnyRow; href: string | null } => x !== null);
   const out: AnyRow = {
     ...base(row, "caseStudy"),
     title: row.title, slug: slugObj(row), seo: row.seo, category: row.category, fullTitle: row.fullTitle,
     excerpt: row.excerpt, clientOverview: row.clientOverview, previewImage: D(row.previewImage),
     caseDetails: D(row.caseDetails), mainContent: await resolveBlocks(row.mainContent as any[], lang),
-    relatedProjects: relatedMapped.map((p) => ({
-      _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug,
+    relatedProjects: relatedCards.map(({ p, href }) => ({
+      _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug, href,
       previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: p.isSold,
     })),
     publishedAt: row.publishedAt?.toISOString?.() ?? null, language: row.language,

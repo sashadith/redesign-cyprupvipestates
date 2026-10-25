@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { partnerRewritePath, routingHost } from "@/lib/partner/host";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
@@ -186,7 +187,7 @@ export const DE_LANDING_MERGES: Record<string, string> = {
 // ships, the old URL redirects immediately, even while the row is still
 // PUBLISHED — that's intentional, so the redirect can go out ahead of the
 // unpublish with no 404 gap.
-const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
+export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
 
   // German-retiree cannibalization pair (2026-09-30 content inventory):
@@ -397,6 +398,19 @@ export function nestedCanonicalFor(pathname: string): string | null {
 }
 
 export default async function middleware(request: NextRequest) {
+  // Partner portal host: rewrite into the internal /partner-portal segment and skip all
+  // locale logic. The main host must never reach that segment.
+  const partnerTarget = partnerRewritePath(
+    routingHost(request.headers.get("host"), request.headers.get("x-forwarded-host")),
+    request.nextUrl.pathname,
+    process.env,
+  );
+  if (partnerTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = partnerTarget === "block" ? "/_gated-locale-404" : partnerTarget;
+    return NextResponse.rewrite(url);
+  }
+
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
   // launch): answer 404 instead of letting next-intl treat "he" as a plain
   // path segment and the singlepage catch-all serve English content at a
@@ -601,7 +615,12 @@ export default async function middleware(request: NextRequest) {
   const homeMatch = request.nextUrl.pathname.match(HOME_RE);
   if (homeMatch) {
     const url = request.nextUrl.clone();
-    url.pathname = `/home-static/${homeMatch[1] || "en"}`;
+    // A browser/crawler document request (Accept: text/html) gets the same prerendered HTML with its stylesheets
+    // inlined (src/app/home-inline/[lang]/route.ts, why: src/lib/homeInline.ts). Anything else — notably the App
+    // Router's client-side RSC/prefetch fetches, which send Accept: */* — goes to the real page. (Middleware does not
+    // see the RSC/_rsc markers: Next strips them before it runs, so Accept is the reliable signal.)
+    const wantsDocument = (request.headers.get("accept") || "").includes("text/html") && request.headers.get("rsc") !== "1";
+    url.pathname = `${wantsDocument ? "/home-inline" : "/home-static"}/${homeMatch[1] || "en"}`;
     return NextResponse.rewrite(url);
   }
 
@@ -652,7 +671,9 @@ export const config = {
   // matcher's blast radius beyond what's actually needed right now.
   // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
   // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
+  // crm (2026-10-18): the new CRM at /crm (own layout, own auth check) — anchored so /crmfoo still localises.
+  // crm-preview (2026-10-22): the owner's design live-preview frames (own layouts, owner check) — anchored like crm.
   matcher: [
-    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|crm(?![\\w-])|crm-preview(?![\\w-])|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|home-static|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

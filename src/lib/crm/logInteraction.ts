@@ -16,8 +16,11 @@
 import { prisma } from "@/lib/prisma";
 import { applyFollowUpCadence } from "./followUpCadence";
 import type { EmailActor } from "./sendLeadEmail";
+import { bodyRequirement, type LoggableInteractionType } from "./logRule";
 
-export type LoggableInteractionType = "CALL" | "NOTE" | "WHATSAPP_OUT" | "WHATSAPP_IN" | "EMAIL_OUT" | "EMAIL_IN";
+// The type list and bodyRequirement() live in the import-free logRule.ts (the
+// cockpit's client form uses them too); re-exported here for existing callers.
+export { bodyRequirement, type LoggableInteractionType } from "./logRule";
 
 export type InteractionShape = {
   direction: "INBOUND" | "OUTBOUND" | null;
@@ -49,23 +52,6 @@ export type LogInteractionInput = {
   aiGenerated?: boolean;
   via?: "mcp" | "mcp-whatsapp";
 };
-
-// Pure rule for what counts as "enough to log": every type needs a non-empty
-// body, except an email log (EMAIL_OUT/EMAIL_IN) with a subject — the admin's
-// email-log form has always allowed subject-only entries. Returns the
-// trimmed-or-null content/subject alongside whether the combination is
-// loggable at all, so logLeadInteraction and its test share one source of
-// truth instead of duplicating the trim/require logic.
-export function bodyRequirement(
-  type: LoggableInteractionType,
-  body: string | null | undefined,
-  subject: string | null | undefined,
-): { content: string | null; subject: string | null; ok: boolean } {
-  const content = body?.trim() || null;
-  const trimmedSubject = subject?.trim() || null;
-  const ok = !!content || (type.startsWith("EMAIL_") && !!trimmedSubject);
-  return { content, subject: trimmedSubject, ok };
-}
 
 export async function logLeadInteraction(actor: EmailActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {
   const { content, subject, ok } = bodyRequirement(input.type, input.body, input.subject);

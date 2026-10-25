@@ -2,6 +2,8 @@
 import React from "react";
 import { permanentRedirect } from "next/navigation";
 import { redirectMissingOrNotFound } from "@/lib/missingPageRedirect";
+import { siblingAlternatePath } from "@/lib/pageAlternates";
+import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES } from "@/middleware";
 import AccordionContainer from "@/app/components/AccordionContainer/AccordionContainer";
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
@@ -216,17 +218,17 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const translations = (page as any)?._translations as
     | { slug?: Record<string, { current?: string } | undefined> }[]
     | undefined;
+  // Always from the sibling language's own path tree (siblingAlternatePath): a top-level page used to assume its
+  // siblings were top-level too, and a sibling merged into another page was advertised although its URL redirects.
+  const pathsByLang = new Map<string, string[][]>();
+  const MERGED: Record<string, Record<string, string>> = { de: DE_LANDING_MERGES, pl: PL_LANDING_MERGES, en: EN_LANDING_MERGES, ru: RU_LANDING_MERGES };
   for (const t of translations ?? []) {
     for (const [l, v] of Object.entries(t.slug ?? {})) {
       const leaf = v?.current;
       if (!l || !leaf || languages[l]) continue;
-      if (slug.length === 1) {
-        languages[l] = abs(localizedPath(l, [leaf]));
-      } else {
-        const paths = await getAllPathsForLang(l);
-        const match = paths.find((arr) => arr[arr.length - 1] === leaf);
-        if (match) languages[l] = abs(localizedPath(l, match));
-      }
+      if (!pathsByLang.has(l)) pathsByLang.set(l, await getAllPathsForLang(l));
+      const match = siblingAlternatePath(pathsByLang.get(l)!, leaf, MERGED[l]);
+      if (match) languages[l] = abs(localizedPath(l, match));
     }
   }
   languages["x-default"] = languages["en"] ?? canonical;

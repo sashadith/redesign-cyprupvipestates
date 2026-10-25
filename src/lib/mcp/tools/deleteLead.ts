@@ -6,6 +6,7 @@ import { trashLead } from "@/lib/crm/trashLead";
 import { nameMatches } from "@/lib/crm/leadIdentity";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, loadScope } from "../leadScope";
 import { fmtDate } from "../format";
 
 export const TRASH_RETENTION_DAYS = 90;
@@ -28,11 +29,13 @@ export function registerDeleteLead(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_delete_lead", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
+        const { user, where: scope } = await loadScope(c);
         const lead = await prisma.lead.findFirst({
-          where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
-          select: { id: true, firstName: true, lastName: true },
+          where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
+          select: { id: true, firstName: true, lastName: true, assignedToId: true },
         });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
+        assertCanEdit(user, lead);
         if (!nameMatches(input.confirmName, lead.firstName, lead.lastName)) {
           throw new ToolError("validation", "confirmName does not match this lead's name — re-read it with crm_get_lead and pass it exactly.");
         }

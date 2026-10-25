@@ -1,0 +1,151 @@
+import { PartnerType } from "@prisma/client";
+import { passwordProblem } from "./password";
+import { checkPartnerVatId, vatIdSoftExempt } from "./vat";
+
+import { PARTNER_LOCALES, type PartnerLocale } from "./i18n";
+
+export const PARTNER_LANGUAGES = PARTNER_LOCALES;
+export type PartnerLanguage = PartnerLocale;
+
+export interface RegistrationInput {
+  firstName: string;
+  lastName: string;
+  company: string | null;
+  country: string;
+  /** Normalised; required for a company in an EU member state (see ./vat). */
+  vatId: string | null;
+  phone: string;
+  email: string;
+  language: PartnerLanguage;
+  type: PartnerType;
+  password: string;
+}
+
+export type RegistrationResult =
+  | { ok: true; data: RegistrationInput }
+  | { ok: false; field: string; code: string };
+
+/** Every `code` validateRegistration can return (dotted keys into the partner dictionary). */
+export const REGISTRATION_ERROR_CODES = [
+  "err.invalid", "err.unknownField", "err.firstName", "err.lastName", "err.company",
+  "err.country", "err.phone", "err.email", "err.language", "err.type",
+  "err.passwordShort", "err.passwordLong", "err.passwordDigits", "err.agreement",
+  "err.vatIdRequired", "err.vatIdFormat",
+] as const;
+
+const ALLOWED = new Set([
+  "firstName", "lastName", "company", "country", "vatId", "phone", "email", "language", "type", "password", "acceptAgreement",
+]);
+export const PARTNER_EMAIL_RE = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[^\s@<>()[\],;:"]{2,}$/;
+// eslint-disable-next-line no-control-regex
+const CONTROL_RE = /[\u0000-\u001f\u007f]/;
+const HEBREW_RE = /[֐-׿]/;
+const TYPES = Object.values(PartnerType) as string[];
+
+/** Phone as typed (≤ 40 chars, digits/space/().-, optional leading +) → "+digits" (6–20 digits); null when invalid. */
+export function normalizePartnerPhone(raw: unknown): string | null {
+  if (typeof raw !== "string" || raw.length > 40) return null;
+  const phoneRaw = raw.trim();
+  if (!/^\+?[\d\s().-]+$/.test(phoneRaw)) return null;
+  const digits = phoneRaw.replace(/\D/g, "");
+  if (digits.length < 6 || digits.length > 20) return null;
+  return (phoneRaw.startsWith("+") ? "+" : "") + digits;
+}
+
+const fail = (field: string, code: string): RegistrationResult => ({ ok: false, field, code });
+const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+const badText = (s: string) => CONTROL_RE.test(s) || HEBREW_RE.test(s);
+
+export function validateRegistration(raw: unknown): RegistrationResult {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return fail("_", "err.invalid");
+  const r = raw as Record<string, unknown>;
+  for (const k of Object.keys(r)) if (!ALLOWED.has(k)) return fail(k, "err.unknownField");
+
+  const firstName = str(r.firstName);
+  if (!firstName || firstName.length > 80 || badText(firstName)) return fail("firstName", "err.firstName");
+  const lastName = str(r.lastName);
+  if (!lastName || lastName.length > 80 || badText(lastName)) return fail("lastName", "err.lastName");
+
+  let company: string | null = null;
+  if (r.company !== undefined && r.company !== null && r.company !== "") {
+    const c = str(r.company);
+    if (typeof r.company !== "string" || c.length > 120 || badText(c)) return fail("company", "err.company");
+    company = c || null;
+  }
+
+  const country = str(r.country);
+  if (!/^[A-Z]{2}$/.test(country)) return fail("country", "err.country");
+
+  const vat = checkPartnerVatId({ country, company, vatId: r.vatId });
+  if (!vat.ok) return fail("vatId", vat.code);
+
+  const phone = normalizePartnerPhone(r.phone);
+  if (!phone) return fail("phone", "err.phone");
+
+  const email = str(r.email).toLowerCase();
+  if (email.length > 254 || !PARTNER_EMAIL_RE.test(email)) return fail("email", "err.email");
+
+  const language = str(r.language);
+  if (!(PARTNER_LANGUAGES as readonly string[]).includes(language)) return fail("language", "err.language");
+
+  const type = str(r.type);
+  if (!TYPES.includes(type)) return fail("type", "err.type");
+
+  const password = typeof r.password === "string" ? r.password : "";
+  const pp = passwordProblem(password);
+  if (pp) {
+    return fail("password", pp === "too_short" ? "err.passwordShort" : pp === "too_long" ? "err.passwordLong" : "err.passwordDigits");
+  }
+
+  if (r.acceptAgreement !== true) return fail("acceptAgreement", "err.agreement");
+
+  return {
+    ok: true,
+    data: {
+      firstName, lastName, company, country, vatId: vat.vatId, phone, email,
+      language: language as PartnerLanguage, type: type as PartnerType, password,
+    },
+  };
+}
+
+export interface ProfileInput {
+  firstName: string;
+  lastName: string;
+  company: string | null;
+  vatId: string | null;
+  language: PartnerLanguage;
+}
+
+export type ProfileResult = { ok: true; data: ProfileInput } | { ok: false; field: string; code: string };
+
+const PROFILE_ALLOWED = new Set(["firstName", "lastName", "company", "vatId", "language"]);
+
+/**
+ * Profile edit: same rules as registration for the editable fields; phone, email, type and country are
+ * locked. `ctx.country` is the partner's stored country (drives the VAT-number rule with the new company);
+ * `ctx.stored` (stored VAT number and company) enables the soft path of vatIdSoftExempt.
+ */
+export function validateProfile(
+  raw: unknown,
+  ctx: { country: string; stored?: { vatId: string | null; company: string | null } },
+): ProfileResult {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ok: false, field: "_", code: "err.invalid" };
+  const r = raw as Record<string, unknown>;
+  for (const k of Object.keys(r)) if (!PROFILE_ALLOWED.has(k)) return { ok: false, field: k, code: "err.unknownField" };
+  const firstName = str(r.firstName);
+  if (!firstName || firstName.length > 80 || badText(firstName)) return { ok: false, field: "firstName", code: "err.firstName" };
+  const lastName = str(r.lastName);
+  if (!lastName || lastName.length > 80 || badText(lastName)) return { ok: false, field: "lastName", code: "err.lastName" };
+  let company: string | null = null;
+  if (r.company !== undefined && r.company !== null && r.company !== "") {
+    const c = str(r.company);
+    if (typeof r.company !== "string" || c.length > 120 || badText(c)) return { ok: false, field: "company", code: "err.company" };
+    company = c || null;
+  }
+  const allowMissing = !!ctx.stored && vatIdSoftExempt(ctx.stored, company);
+  const vat = checkPartnerVatId({ country: ctx.country, company, vatId: r.vatId, allowMissing });
+  if (!vat.ok) return { ok: false, field: "vatId", code: vat.code };
+  const language = str(r.language);
+  if (!(PARTNER_LANGUAGES as readonly string[]).includes(language)) return { ok: false, field: "language", code: "err.language" };
+  return { ok: true, data: { firstName, lastName, company, vatId: vat.vatId, language: language as PartnerLanguage } };
+}

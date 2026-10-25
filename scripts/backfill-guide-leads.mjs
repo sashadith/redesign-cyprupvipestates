@@ -1,6 +1,6 @@
 // One-off backfill (2026-10-19): guide (lead-magnet) leads that arrived before
 // GUIDE_DOWNLOAD existed were stored as BLOG_ENQUIRY. Run AFTER the migration
-// 20261019120000_lead_source_guide_download is deployed:
+// 20261025120000_lead_source_guide_download is deployed:
 //   node scripts/backfill-guide-leads.mjs           (lists the affected leads, writes nothing)
 //   node scripts/backfill-guide-leads.mjs --apply   (re-labels them)
 //

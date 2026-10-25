@@ -17,6 +17,7 @@ import { developerImpact, deactivateDeveloperGroup, reactivateDeveloperGroup, de
 import { developerAccountDeleteImpact, type AccountDeleteImpact } from "@/lib/developerAccountDelete";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
+import { placeholderSlug, slugProblem, PER_LANGUAGE_SLUG_TYPES } from "@/lib/translationSlug";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
 import { resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
@@ -29,6 +30,7 @@ import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
+import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -74,6 +76,20 @@ async function slugFromForm(
     slug = `${desired}-${n++}`;
   }
   return { slug };
+}
+
+// A slug must be written in the language of its page: refuse to PUBLISH or SCHEDULE a blog post, landing page or
+// case study whose slug is still a translation placeholder or identical to a sibling's in another language
+// (src/lib/translationSlug.ts says why and which duplicates are fine). Drafts are never blocked. Returns the
+// editor-facing message, or null.
+async function ownLanguageSlugError(model: any, type: string, id: string, patchSlug: string | undefined, status: string): Promise<string | null> {
+  if (status !== "PUBLISHED" && status !== "SCHEDULED") return null;
+  const row = await model.findUnique({ where: { id }, select: { slug: true, language: true, translationGroupId: true } });
+  if (!row) return null;
+  const siblings = row.translationGroupId
+    ? await model.findMany({ where: { translationGroupId: row.translationGroupId, NOT: { id } }, select: { language: true, slug: true } })
+    : [];
+  return slugProblem({ type, language: row.language, slug: patchSlug ?? row.slug, siblings });
 }
 
 // Stamp publishedAt the first time a document transitions into PUBLISHED, so
@@ -124,6 +140,8 @@ function revalidateCaseStudyPublic(language: string, slug: string) {
   revalPublic(language, ["case-studies"]);
 }
 
+// The old admin CRM keeps its own eight statuses on purpose (operator, 2026-10-17:
+// "lass unser altes CRM vorerst unberührt"). The reservation stage is set only from the new CRM.
 const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 
@@ -673,6 +691,8 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
       ...(await slugFromForm(prisma.blog, id, formData)),
       ...(explicitPublishedAt ? { publishedAt: explicitPublishedAt } : await publishedAtOnPublish(prisma.blog, id, status)),
     };
+    const slugError = await ownLanguageSlugError(prisma.blog, "blog", id, patch.slug, status);
+    if (slugError) return { error: slugError };
     const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
     // Bitten twice on prod by a new-style projectsSectionBlock with neither a
     // city/type/price filter nor any pinned projects — it resolves to
@@ -1126,6 +1146,8 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   await prisma.$transaction([
     prisma.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
     prisma.leadInteraction.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
+    // Deals are money records and block the delete below (ON DELETE RESTRICT).
+    prisma.deal.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
     prisma.leadActivity.create({
       data: { leadId: targetId, type: "MERGE", content: summary, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
     }),
@@ -1200,12 +1222,15 @@ export async function restoreLeadAction(id: string) {
 // Hard delete — cascades to LeadActivity + ClientPresentation (and, via that,
 // ClientPresentationItem/PresentationView) per the schema's onDelete: Cascade.
 // ADMIN only — this is the one truly irreversible step in the whole flow.
-export async function permanentlyDeleteLeadAction(id: string) {
+// Refused for a lead with deals (money records, ON DELETE RESTRICT).
+export async function permanentlyDeleteLeadAction(id: string): Promise<{ error?: string }> {
   const session = await requireSession();
   if ((session.user as any)?.role !== "ADMIN") throw new Error("Forbidden");
+  if (await prisma.deal.count({ where: { leadId: id } })) return { error: LEAD_HAS_DEALS_ERROR };
   await prisma.lead.delete({ where: { id } });
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
+  return {};
 }
 
 // Bulk hard-delete of everything currently in the trash — same cascade as
@@ -1213,20 +1238,27 @@ export async function permanentlyDeleteLeadAction(id: string) {
 // audit-log row recording the count (not the individual leads).
 export async function emptyTrashAction(): Promise<{ ok?: string; error?: string }> {
   const session = await requireAdmin();
-  const trashed = await prisma.lead.findMany({ where: { deletedAt: { not: null } }, select: { id: true } });
-  if (trashed.length === 0) return { error: "Trash is already empty." };
+  const inTrash = { deletedAt: { not: null } };
+  const [trashed, keptWithDeals] = await Promise.all([
+    prisma.lead.findMany({ where: hardDeletableLeadWhere(inTrash), select: { id: true } }),
+    prisma.lead.count({ where: { ...inTrash, deals: { some: {} } } }),
+  ]);
+  if (trashed.length === 0) {
+    return keptWithDeals ? { ok: emptyTrashMessage(0, keptWithDeals) } : { error: "Trash is already empty." };
+  }
+  // Leads with deals stay in the trash (hardDeletableLeadWhere above).
   await prisma.$transaction(trashed.map((l) => prisma.lead.delete({ where: { id: l.id } })));
   const actor = session.user as any;
   await prisma.adminAuditLog.create({
     data: {
       actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
       action: "empty_trash", targetType: "Lead", targetId: "bulk",
-      detail: { count: trashed.length },
+      detail: { count: trashed.length, keptWithDeals },
     },
   });
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
-  return { ok: `${trashed.length} lead${trashed.length === 1 ? "" : "s"} permanently deleted.` };
+  return { ok: emptyTrashMessage(trashed.length, keptWithDeals) };
 }
 
 // Homepage "Featured Projects" slider — per-language curated list stored on the homepage
@@ -1380,6 +1412,8 @@ export async function saveSinglepageAll(id: string, _prev: any, formData: FormDa
     const status = String(formData.get("status") ?? "PUBLISHED");
     if (!CONTENT_STATUSES.includes(status)) return { error: "Invalid status." };
     const patch = { ...(await slugFromForm(prisma.singlepage, id, formData)), ...(await publishedAtOnPublish(prisma.singlepage, id, status)) };
+    const slugError = await ownLanguageSlugError(prisma.singlepage, "singlepage", id, patch.slug, status);
+    if (slugError) return { error: slugError };
     const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
 
     // Related Landing Pages — same validation rule as before: only real,
@@ -1761,7 +1795,13 @@ export async function createTranslation(type: string, sourceId: string, targetLa
   data.language = targetLang;
   data.translationGroupId = groupId;
   if (cfg.hasStatus) data.status = "DRAFT";
-  if (cfg.hasSlug) {
+  if (cfg.hasSlug && (PER_LANGUAGE_SLUG_TYPES as readonly string[]).includes(type)) {
+    // The slug is written per language. The source's slug is in the SOURCE language, so copying it made URLs like
+    // /de/blog/<polish-slug> that could only ever redirect. Placeholder now; the editor writes the real slug from the
+    // translated title, and publishing is refused until they do (ownLanguageSlugError).
+    data.slug = placeholderSlug(targetLang);
+  } else if (cfg.hasSlug) {
+    // projects and developers: the slug is a Latin name shared by every locale, so the copy is the right slug
     const taken = async (s: string) => !!(await cfg.model.findFirst({ where: { language: targetLang as any, slug: s }, select: { id: true } }));
     const base = String(source.slug || "untitled");
     let slug = base;
@@ -1927,6 +1967,8 @@ export async function saveCaseStudyAll(id: string, _prev: any, formData: FormDat
     const status = String(formData.get("status") ?? "PUBLISHED");
     if (!CONTENT_STATUSES.includes(status)) return { error: "Invalid status." };
     const patch = { ...(await slugFromForm(prisma.caseStudy, id, formData)), ...(await publishedAtOnPublish(prisma.caseStudy, id, status)) };
+    const slugError = await ownLanguageSlugError(prisma.caseStudy, "caseStudy", id, patch.slug, status);
+    if (slugError) return { error: slugError };
     const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
     const caseDetails = Object.fromEntries(
       CASE_STUDY_DETAIL_FIELDS.map((f) => [f, htmlToPortableText(String(formData.get(`caseDetail_${f}`) ?? ""))]),

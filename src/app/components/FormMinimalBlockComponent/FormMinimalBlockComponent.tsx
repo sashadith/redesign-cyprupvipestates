@@ -22,6 +22,7 @@ import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { consentCopy } from "../consentCopy";
 import { formMinimalCopy } from "./FormMinimalBlockComponent.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 export type FormData = {
   name: string;
@@ -182,7 +183,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
             form_name: guideId ? `guide_${guideId}` : "form_minimal",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
         if (
           typeof window !== "undefined" &&

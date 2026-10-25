@@ -1,6 +1,8 @@
 // Lead CSV export (audit H3). Auth-gated; honours the same filters as the list page.
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { loadCrmUser } from "@/lib/crm/accessUser";
+import { mayUseOldCrm } from "@/lib/crm/oldCrmGate";
 import { buildLeadWhere, listBucketOf, orderForSort, type LeadSearchParams } from "../filters";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +22,8 @@ export async function GET(request: Request) {
   if (!session || !uid) return new Response("Unauthorized", { status: 401 });
   const u = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
   if (!u?.isActive) return new Response("Unauthorized", { status: 401 });
+  const crmUser = await loadCrmUser(uid);
+  if (!mayUseOldCrm(crmUser)) return new Response("Forbidden", { status: 403 });
 
   const sp: LeadSearchParams = Object.fromEntries(new URL(request.url).searchParams.entries());
   const leads = await prisma.lead.findMany({

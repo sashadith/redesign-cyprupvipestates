@@ -10,6 +10,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getAttribution } from "@/lib/attribution";
 import { partnersCopy } from "./copy";
 import "@/app/components/formFeedback.css";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 /* Partner registration form — redesign styling (reuses the shared .formsec__*
    design-system classes from tokens.css, same as preview-home/sections/Form.tsx),
@@ -71,7 +72,7 @@ export default function PartnersForm({ lang }: { lang: string }) {
 
       if (response.status === 200 && response.data?.ok === true) {
         if (typeof window !== "undefined" && window.fbq) {
-          window.fbq("track", "Lead", { form_name: "partners_form", page_location: currentPage });
+          window.fbq("track", "Lead", { form_name: "partners_form", page_location: currentPage }, { eventID: newMetaEventId("lead") });
         }
         resetForm({});
         if (typeof window !== "undefined" && (window as any).dataLayer) {

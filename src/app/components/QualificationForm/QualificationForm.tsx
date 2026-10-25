@@ -10,6 +10,7 @@ import Link from "next/link";
 import { consentCopy } from "../consentCopy";
 import { PROPERTY_VALUES, TIMELINE_VALUES, qualifierCopy } from "@/app/components/qualifierFields";
 import { bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 type Lang = Locale;
 
@@ -108,7 +109,7 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
       });
       if (res.status === 200 && res.data?.ok) {
         setStatus("ok");
-        if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq("track", "Lead", { form_name: "qualification" });
+        if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq("track", "Lead", { form_name: "qualification" }, { eventID: newMetaEventId("lead") });
       } else { setStatus("err"); setErrMsg(t.error); }
     } catch { setStatus("err"); setErrMsg(t.error); }
   }

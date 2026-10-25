@@ -10,7 +10,7 @@ export const CONTACT_TYPES = [...LAST_CONTACT_TYPES] as LeadInteractionType[];
 // those are crm_get_lead's business; lastMatchFilters is never returned raw —
 // crm_match_properties uses it as an input only).
 export const LEAD_ROW_SELECT = {
-  id: true, firstName: true, lastName: true, email: true, phone: true, status: true, source: true, countryOfResidence: true,
+  id: true, firstName: true, lastName: true, email: true, phone: true, status: true, lostReason: true, source: true, countryOfResidence: true,
   languagePreference: true, budgetMin: true, budgetMax: true, hotAt: true, nextFollowUpAt: true, createdAt: true,
   guideTitle: true, guideLanguage: true,
   projectInterest: { select: { title: true } },
@@ -27,6 +27,7 @@ export function leadRow(l: LeadRowSource) {
     email: l.email,
     phone: l.phone,
     status: l.status,
+    lostReason: l.lostReason,
     source: l.source,
     bucket: bucketOf(l.source),
     countryOfResidence: l.countryOfResidence,

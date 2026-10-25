@@ -1,7 +1,13 @@
-// Self-hosted, cookieless page-view tracking. The public layout's <AnalyticsTracker>
+// Self-hosted page-view tracking. The public layout's <AnalyticsTracker>
 // beacons here on each navigation. We store no IP and no PII — only a daily-rotating
 // visitor hash (sha256 of salt+date+ip+UA) so unique visitors can be counted without
 // identifying anyone. Errors are swallowed: analytics must never break the page.
+//
+// It sets no cookie, and since 2026-10-24 it READS exactly one: the visitor's own
+// cookieConsent record, stored as a single tri-state boolean (analyticsConsent).
+// That cookie is strictly necessary — it IS the consent record — so reading it needs
+// no consent of its own, and the stored value identifies nobody. The word
+// "cookieless" left this header with that change rather than quietly becoming untrue.
 //
 // Non-human/non-confirmed-view traffic is RECORDED (not silently dropped) with an
 // isBot/isPrefetch/isTest flag set — every analytics query excludes flagged rows, but
@@ -14,6 +20,7 @@ import crypto from "node:crypto";
 import { detectDeviceType } from "@/lib/deviceType";
 import { lookupCountry } from "@/lib/geoCountry";
 import { extractUtm, hasUtm, utmFromBody } from "@/lib/analytics/pageViewUtm";
+import { analyticsConsentFrom } from "@/lib/attribution";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,6 +102,11 @@ export async function POST(req: NextRequest) {
     // e.g. scripts/qa/smoke.sh) or a header (easy from a fetch()-based check) works.
     const isTest = req.nextUrl.searchParams.get("test") === "1" || req.headers.get("x-analytics-test") === "1";
 
+    // Tri-state: true accepted, false declined, null not answered. The pixel is
+    // behind this same gate, so this is what lets "Meta saw 69 % of our views" be
+    // split into refusal and technical blocking.
+    const analyticsConsent = analyticsConsentFrom(req.cookies.get("cookieConsent")?.value);
+
     await prisma.pageView.create({
       data: {
         path, locale, referrer, userAgent: ua.slice(0, 512), visitorHash,
@@ -104,6 +116,7 @@ export async function POST(req: NextRequest) {
         isBot: isBotUA(ua),
         isPrefetch: isPrefetchRequest(req),
         isTest,
+        analyticsConsent,
       },
     });
     return new NextResponse(null, { status: 204 });

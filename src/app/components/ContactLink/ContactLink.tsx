@@ -6,6 +6,7 @@ import { Contact } from "@/types/footer";
 import styles from "../Footer/Footer.module.scss";
 import { urlFor } from "@/sanity/sanity.client";
 import Bdi from "@/app/components/Bdi";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 type Props = {
   contact: Contact;
@@ -58,7 +59,7 @@ export default function ContactLink({ contact }: Props) {
         method,
         placement: "footer_contact",
         page_location: pageUrl,
-      });
+      }, { eventID: newMetaEventId("contact") });
     }
 
     // ✅ GTM (у тебя уже было — просто чуть улучшим)

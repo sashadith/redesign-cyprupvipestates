@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { effectiveRatesFor } from "./rateLookup";
+import type { EffectiveRate } from "./rateFormat";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { resolveRelativeCompletion } from "@/lib/completionDate";
 
@@ -64,6 +66,12 @@ export type MatchedDevelopment = {
   completion: string | null;
   slug: string | null;
   publishStatus: string | null;
+  /** The project pin (override wins) — for the admin matching map. Null when
+   *  the project has no coordinates yet; such projects are simply not drawn. */
+  lat: number | null;
+  lng: number | null;
+  /** The commission rate that applies (project rate, else developer default). */
+  commission: EffectiveRate;
   // 2026-08-11 correction — used to be every available unit regardless of
   // match; now the count of units that actually satisfy the active filters
   // (same set as `matchedUnits` below), so the admin table's "Available"
@@ -101,17 +109,22 @@ export function parseBeds(raw: string | null | undefined): number | null {
 }
 
 // Order matters: "townhouse"/"penthouse" contain "house", so they must be matched before the villa aliases.
+// Studio / maisonette / duplex (2026-10-20): apartments for matching purposes —
+// before, normalizeType returned null for them, so those units answered no type
+// filter at all. Semi-detached / terraced are townhouses, bungalow a villa,
+// matching the unit-type vocabulary in src/lib/unitType.ts.
 const TYPE_ALIASES: Record<string, string> = {
   apartment: "apartment", flat: "apartment",
-  townhouse: "townhouse",
+  townhouse: "townhouse", "semi-detached": "townhouse", terraced: "townhouse",
   penthouse: "penthouse",
-  villa: "villa", house: "villa",
+  studio: "apartment", maisonette: "apartment", duplex: "apartment",
+  villa: "villa", bungalow: "villa", house: "villa",
   /* Commercial stock: 68 units are typed "Office", ~50 more carry a commercial
      label ("Shops / Commercial Buildings", "Commercial", "Shop"). Without these
      aliases normalizeType returns null for all of them, so an Office lead would
      silently match nothing. Existing leads are unaffected — none of them can
      carry "Office", the value only became selectable now. */
-  office: "office", commercial: "office", shop: "office", retail: "office",
+  office: "office", commercial: "office", shop: "office", retail: "office", hotel: "office",
 };
 export function normalizeType(raw: string | null | undefined): string | null {
   const s = (raw || "").trim().toLowerCase();
@@ -158,6 +171,7 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     where: { publishStatus: { in: statuses } },
     include: { units: true, override: true },
   });
+  const rates = await effectiveRatesFor(rows.map((r) => ({ id: r.id, developerAccountId: r.developerAccountId })));
 
   // Budget: filters override the lead's own numbers when provided (the admin
   // is deliberately widening/narrowing the search, not just re-reading the lead).
@@ -306,6 +320,8 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
         mainImage, unitsAvailable: matchedUnits.length, unitsAvailableAll: available.length, unitsTotal: d.units.length,
         developer: d.developer, completion: resolveRelativeCompletion(ov?.completion || d.completion) || null,
         slug: d.slug, publishStatus: d.publishStatus,
+        lat: ov?.latitude ?? d.latitude ?? null, lng: ov?.longitude ?? d.longitude ?? null,
+        commission: rates.get(d.id) ?? { ratePercent: null, source: "MISSING" },
       },
       score,
       matchedUnits,

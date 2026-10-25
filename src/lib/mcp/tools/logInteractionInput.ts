@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { bodyRequirement } from "@/lib/crm/logInteraction";
+import { LOGGABLE_TYPES, bodyRequirement } from "@/lib/crm/logRule";
 
 // Input contract of crm_log_interaction, kept prisma-free so the pure test can
 // import it. The six types are exactly what the admin's log buttons write
 // (+ Note, + Call, WhatsApp sent/received, + Email log in either direction);
 // the body/subject rule is the admin form's: everything needs a body except an
 // email log, which may be subject-only — bodyRequirement() is that one rule.
-export const LOGGABLE_TYPES = ["CALL", "NOTE", "WHATSAPP_OUT", "WHATSAPP_IN", "EMAIL_OUT", "EMAIL_IN"] as const;
+export { LOGGABLE_TYPES };
 
 export const LogInteractionInput = z
   .object({

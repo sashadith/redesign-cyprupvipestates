@@ -21,6 +21,7 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formPartnersCopy } from "./FormPartners.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 function tpl(str: string | undefined, vars: Record<string, string | number>) {
   return String(str ?? "").replace(/\{(\w+)\}/g, (_, k) =>
@@ -236,7 +237,7 @@ const FormPartners: FC<ContactFormProps> = ({
           window.fbq("track", "Lead", {
             form_name: "partners_form",
             page_location: currentPage,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
 
         resetForm({});

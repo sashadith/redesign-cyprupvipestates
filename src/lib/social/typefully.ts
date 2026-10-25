@@ -20,6 +20,13 @@ const MAX_PAGES = 10; // 500 drafts per status — far above anything a weekly r
 /* Short on purpose: the admin layout counts Action Center items on EVERY admin
    page render, so a hanging Typefully must not add more than this to any page. */
 const TIMEOUT_MS = 5_000;
+/* The monitoring check (the social-reminders cron, 2026-10-24) can afford to
+   wait: 20 s per request, and a timeout, network error, 429 or 5xx is retried
+   twice — after 5 s, then 15 s — before it counts as a failed check. A single
+   slow answer from Typefully used to page the owner. Worst case ~80 s per
+   request, well inside the 5-minute cron interval. */
+export const MONITOR_TIMEOUT_MS = 20_000;
+export const MONITOR_RETRY_DELAYS_MS = [5_000, 15_000];
 /* 2 minutes (was 5 until 2026-10-09): the reminder job reads fresh anyway, but
    the Action Center should not show a draft as unconfirmed for long after it
    was confirmed in Typefully. */
@@ -56,51 +63,74 @@ export type TypefullyClientOptions = {
   fetchImpl?: FetchLike;
   now?: () => number;
   socialSetId?: number;
+  sleep?: (ms: number) => Promise<void>;
 };
+
+/* Worth asking again: no answer at all (timeout, network), rate-limited, or a
+   server error. 401/403/404 and malformed bodies will not fix themselves. */
+const retryable = (r: Extract<DraftListResult, { ok: false }>) =>
+  r.status === null || r.status === 429 || r.status >= 500;
 
 export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
   const apiKey = opts.apiKey ?? (() => process.env.TYPEFULLY_API_KEY);
   const fetchImpl: FetchLike = opts.fetchImpl ?? ((url, init) => fetch(url, init));
   const now = opts.now ?? Date.now;
   const socialSetId = opts.socialSetId ?? TYPEFULLY_SOCIAL_SET_ID;
+  const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   // Per process (each pm2 worker keeps its own). Successes for CACHE_TTL_MS,
   // failures for FAILURE_TTL_MS; concurrent callers (the admin layout and the
   // Action Center page render together) share one in-flight request.
   const cache = new Map<DraftStatus, { at: number; value: DraftListResult }>();
   const inFlight = new Map<DraftStatus, Promise<DraftListResult>>();
 
-  async function fetchStatus(status: DraftStatus, key: string): Promise<DraftListResult> {
+  type Page = { ok: true; results: TypefullyDraft[]; more: boolean } | Extract<DraftListResult, { ok: false }>;
+
+  async function fetchPage(url: string, key: string, timeoutMs: number): Promise<Page> {
+    let res: Response;
+    try {
+      res = await fetchImpl(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+        // Never let Next.js' fetch cache hold an API answer: it once replayed
+        // a stale 401 for weeks. The 5-minute memo above is the only cache.
+        cache: "no-store",
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (e) {
+      return { ok: false, status: null, message: `request failed: ${e instanceof Error ? e.message : String(e)}` };
+    }
+    if (res.status !== 200) {
+      const body = await res.text().catch(() => "");
+      let message = body.slice(0, 200);
+      try { message = (JSON.parse(body) as { error?: { message?: string } }).error?.message || message; } catch { /* not JSON */ }
+      return { ok: false, status: res.status, message: message || `HTTP ${res.status}` };
+    }
+    let text: string;
+    try { text = await res.text(); } catch (e) {
+      // A timeout or reset mid-body is a network failure (status null, so the
+      // monitoring check retries it), not an answer.
+      return { ok: false, status: null, message: `could not read the response: ${e instanceof Error ? e.message : String(e)}` };
+    }
+    let json: { results?: unknown; next?: unknown };
+    try { json = JSON.parse(text); } catch { return { ok: false, status: 200, message: "response was not JSON" }; }
+    if (!Array.isArray(json.results)) return { ok: false, status: 200, message: "response had no results array" };
+    return { ok: true, results: json.results as TypefullyDraft[], more: json.results.length >= PAGE_SIZE && !!json.next };
+  }
+
+  async function fetchStatus(status: DraftStatus, key: string, monitor: boolean): Promise<DraftListResult> {
     const drafts: TypefullyDraft[] = [];
+    const delays = monitor ? MONITOR_RETRY_DELAYS_MS : [];
     for (let page = 0; page < MAX_PAGES; page++) {
       const url = `${API_BASE}/v2/social-sets/${socialSetId}/drafts?status=${status}&limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`;
-      let res: Response;
-      try {
-        res = await fetchImpl(url, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
-          // Never let Next.js' fetch cache hold an API answer: it once replayed
-          // a stale 401 for weeks. The 5-minute memo above is the only cache.
-          cache: "no-store",
-          signal: AbortSignal.timeout(TIMEOUT_MS),
-        });
-      } catch (e) {
-        return { ok: false, status: null, message: `request failed: ${e instanceof Error ? e.message : String(e)}` };
+      let r = await fetchPage(url, key, monitor ? MONITOR_TIMEOUT_MS : TIMEOUT_MS);
+      for (const delay of delays) {
+        if (r.ok || !retryable(r)) break;
+        await sleep(delay);
+        r = await fetchPage(url, key, MONITOR_TIMEOUT_MS);
       }
-      if (res.status !== 200) {
-        const body = await res.text().catch(() => "");
-        let message = body.slice(0, 200);
-        try { message = (JSON.parse(body) as { error?: { message?: string } }).error?.message || message; } catch { /* not JSON */ }
-        return { ok: false, status: res.status, message: message || `HTTP ${res.status}` };
-      }
-      let text: string;
-      try { text = await res.text(); } catch (e) {
-        return { ok: false, status: 200, message: `could not read the response: ${e instanceof Error ? e.message : String(e)}` };
-      }
-      let json: { results?: unknown; next?: unknown };
-      try { json = JSON.parse(text); } catch { return { ok: false, status: 200, message: "response was not JSON" }; }
-      if (!Array.isArray(json.results)) return { ok: false, status: 200, message: "response had no results array" };
-      drafts.push(...(json.results as TypefullyDraft[]));
-      if (json.results.length < PAGE_SIZE || !json.next) return { ok: true, drafts, truncated: false };
+      if (!r.ok) return r;
+      drafts.push(...r.results);
+      if (!r.more) return { ok: true, drafts, truncated: false };
     }
     return { ok: true, drafts, truncated: true };
   }
@@ -108,15 +138,22 @@ export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
   return {
     /** `fresh: true` skips the memo (the result is still stored for others):
      *  the reminder job must never remind about a draft from a 2-minute-old
-     *  list in which it was not yet confirmed. */
-    async listDrafts(status: DraftStatus, opts: { fresh?: boolean } = {}): Promise<DraftListResult> {
+     *  list in which it was not yet confirmed. `monitor: true` is the
+     *  monitoring check itself — fresh, 20 s timeout, two retries — and never
+     *  joins an admin page's 5-second in-flight request. */
+    async listDrafts(status: DraftStatus, opts: { fresh?: boolean; monitor?: boolean } = {}): Promise<DraftListResult> {
       const key = apiKey()?.trim();
       if (!key) return { ok: false, status: null, message: "TYPEFULLY_API_KEY is not set" };
+      if (opts.monitor) {
+        const value = await fetchStatus(status, key, true);
+        cache.set(status, { at: now(), value });
+        return value;
+      }
       const hit = opts.fresh ? undefined : cache.get(status);
       if (hit && now() - hit.at < (hit.value.ok ? CACHE_TTL_MS : FAILURE_TTL_MS)) return hit.value;
       const pending = inFlight.get(status);
       if (pending) return pending;
-      const request = fetchStatus(status, key)
+      const request = fetchStatus(status, key, false)
         .then((value) => { cache.set(status, { at: now(), value }); return value; })
         .finally(() => inFlight.delete(status));
       inFlight.set(status, request);

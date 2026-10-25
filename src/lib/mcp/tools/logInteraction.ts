@@ -4,6 +4,7 @@ import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, loadScope } from "../leadScope";
 import { fmtDate } from "../format";
 import { LogInteractionInput } from "./logInteractionInput";
 
@@ -19,8 +20,10 @@ export function registerLogInteraction(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_log_interaction", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { id: true } });
+        const { user, where: scope } = await loadScope(c);
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, assignedToId: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
+        assertCanEdit(user, lead);
         const occurredAt = input.occurredAt ? new Date(input.occurredAt) : undefined;
         const { interactionId } = await logLeadInteraction({ userId: c.userId, userName: c.userName }, input.leadId, {
           type: input.type, body: input.body, subject: input.subject, occurredAt, leadReacted: input.leadReacted, via: "mcp",

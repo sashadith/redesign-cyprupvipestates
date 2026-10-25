@@ -66,3 +66,32 @@ Both snippets blank the client's `x-middleware-subrequest` header
 (CVE-2025-29927: on Next.js < 14.2.25 that header makes the app skip its
 middleware — the gated-locale 404, the merged/retired redirects and any host
 routing). The app is on 14.2.35 since 2026-10-18, so this is defence in depth.
+
+## Partner portal vhost (template, not live yet)
+
+`partner.cyprusvipestates.conf` is the vhost for `partner.cyprusvipestates.com`
+(2026-10-18). Unlike `cyprusvipestates.conf` it is **not** a mirror of a live
+file: the operator applies it by hand after the DNS A record exists and the
+certificate has been issued with certbot (steps in the file header). It is an
+allowlist — portal pages plus `/_next/`, `/crm/fonts/` and the icons are
+proxied; API, admin, CRM, booking/presentation links, previews, uploads and
+SEO files answer 404. Once it is live, copy it back here like the main vhost.
+The main vhost answers 404 for `/partner-portal` so the internal segment is
+never reachable on cyprusvipestates.com.
+
+## The `/en/` chain map (2026-10-23)
+
+nginx strips every `/en` prefix with a generic rule, and the app then redirects a second time when the unprefixed URL
+is a retired project slug or a `/preview-project/<slug>` URL (`301 -> /projects/old -> 308 -> /projects/new`). The map
+`cvp_en_final` (top of `cyprusvipestates.conf`, between the `BEGIN/END cvp_en_final` markers) sends the known chain
+starts straight to the final page, via one `if ($cvp_en_final) { return 301 $cvp_en_final; }` before `location = /en`.
+
+Regenerate it when legacy redirects change (new archived project, renamed slug):
+
+```bash
+node scripts/gen-nginx-en-chain-map.cjs ops/nginx/cyprusvipestates.conf   # needs the DB tunnel on 5433
+```
+
+then apply it by hand like any nginx change above (backup, copy, `nginx -t`, `systemctl reload nginx`). A slug that is
+not in the map still works, it only costs the extra hop. The live file also carries a WhatsApp-webhook `location`
+that the mirror lacked before this sync.

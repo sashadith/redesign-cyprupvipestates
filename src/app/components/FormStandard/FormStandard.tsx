@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formStandardCopy } from "./FormStandard.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 const NAME_MIN = 2;
 const NAME_MAX = 22;
@@ -303,7 +304,7 @@ const FormStandard: FC<ContactFormProps> = ({
             form_name: guideId ? `guide_${guideId}` : "standard_form",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
         if (
           typeof window !== "undefined" &&

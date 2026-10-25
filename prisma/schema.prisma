@@ -27,6 +27,49 @@ enum Locale {
   he
 }
 
+// Partner portal (2026-10-19)
+enum PartnerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum PartnerType {
+  REAL_ESTATE
+  PRIVATE_BROKER
+  BANK
+  INVESTMENT
+  FAMILY_OFFICE
+  TOURISM
+  DESIGN
+  LEGAL
+  OTHER
+}
+
+enum PartnerTokenKind {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum PartnerMode {
+  HANDOVER
+  FIX
+}
+
+enum ContactMode {
+  DIRECT
+  VIA_PARTNER
+  VIA_PARTNER_REP
+  VIA_CLIENT_REP
+}
+
+enum PartnerClaimState {
+  ACTIVE
+  IN_REVIEW
+  REJECTED
+  EXPIRED
+}
+
 enum ContentStatus {
   DRAFT
   PUBLISHED
@@ -52,6 +95,9 @@ enum LeadStatus {
   COMMUNICATING
   VIEWING_SCHEDULED
   OFFER
+  // 2026-10-18 (CRM v2) — reservation fee paid or reservation agreement signed.
+  // The deal and its commission are created at this step (src/lib/crm/commission.ts).
+  RESERVED
   // 2026-08-11 — parallel to the funnel, not a stage in it: reachable from
   // any active status when the admin wants to stay in loose touch without
   // triggering stale-follow-up reminders. See ACTIVE_LEAD_STATUSES split in
@@ -60,6 +106,18 @@ enum LeadStatus {
   KEEP_CONTACT
   CLOSED
   LOST
+}
+
+// 2026-10-18 (CRM v2) — why a lead was lost. Optional server-side until the old
+// CRM is retired; the new CRM requires it when moving a lead to LOST.
+enum LostReason {
+  BUDGET
+  BOUGHT_ELSEWHERE
+  UNREACHABLE
+  NOT_INTERESTED
+  TIMING
+  INVALID
+  OTHER
 }
 
 enum LeadSource {
@@ -668,6 +726,10 @@ model MediaFolder {
 
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
+  dealsCreated Deal[] @relation("DealsCreated")
+  managedPartners Partner[] @relation("PartnerManager")
+  partnerMessagesAuthored PartnerMessage[] @relation("PartnerMessagesAuthored")
+  creditNotesIssued CreditNote[] @relation("CreditNotesIssued")
   id                     String               @id @default(uuid())
   email                  String               @unique
   password               String
@@ -678,6 +740,15 @@ model User {
   photoPng               String? // transparent-background cutout PNG, used free-floating (no frame) in the Client Presentation closing section — distinct from the small square `avatar`
   phone                  String? // advisor's own contact number, shown large/clickable in the Client Presentation closing section (distinct from the company WhatsApp number used by the contact buttons there)
   isActive               Boolean              @default(true)
+  // CRM v2 (2026-10-18) — visibility rights, see src/lib/crm/access.ts. Existing
+  // users were backfilled to true so nobody lost access; new users start false.
+  canSeeColleagues       Boolean              @default(false)
+  canEditColleagues      Boolean              @default(false)
+  // Owner suggestion inputs for the inbox (Phase 2): spoken locales, regions or
+  // development ids, and whether the employee takes new leads right now.
+  languages              String[]             @default([])
+  specialties            String[]             @default([])
+  acceptsLeads           Boolean              @default(true)
   lastLoginAt            DateTime?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
@@ -694,6 +765,9 @@ model User {
   mcpAuthCodes           McpAuthCode[]
   mcpTokens              McpToken[]
   emailDrafts            LeadEmailDraft[]
+  // Design settings (2026-10-22): chosen colour set.
+  designThemeId          String?
+  designTheme            DesignTheme? @relation(fields: [designThemeId], references: [id], onDelete: SetNull)
 
   @@map("users")
 }
@@ -764,6 +838,16 @@ model Session {
 
 // ─── CRM / LEADS ─────────────────────────────────────────────────────────────
 model Lead {
+  deals Deal[]
+  partnerId        String?
+  partner          Partner?       @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  partnerMessages  PartnerMessage[]
+  partnerMode      PartnerMode?
+  contactMode      ContactMode?
+  contactRepName   String?
+  contactRepPhone  String?
+  claims           PartnerClaim[]
+  @@index([partnerId])
   id                   String                @id @default(uuid())
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -860,6 +944,8 @@ model Lead {
   // since — not the generic 7-day threshold, since post-viewing follow-up
   // is the single most important moment in a lead's whole lifecycle.
   viewingScheduledAt   DateTime?
+  // 2026-10-18 (CRM v2) — set together with status LOST, cleared when the lead leaves LOST.
+  lostReason           LostReason?
 
   @@index([status])
   @@index([createdAt])
@@ -1085,6 +1171,28 @@ model SocialReminderSent {
   @@map("social_reminders_sent")
 }
 
+// Typefully monitoring state (2026-10-24): one row, id "typefully". Lives in the
+// DB, not in a pm2 worker, so a restart cannot reset the failure count. Written
+// only by the social-reminders cron (one row per check); see
+// src/lib/social/socialReminders.ts for the alert/recovery rules.
+model SocialMonitorState {
+  id                  String     @id
+  consecutiveFailures Int        @default(0) @map("consecutive_failures")
+  firstFailureAt      DateTime?  @map("first_failure_at")
+  lastFailureAt       DateTime?  @map("last_failure_at")
+  lastError           String?    @map("last_error")
+  // The "Typefully unreachable" alert for the current outage was sent at.
+  alertedAt           DateTime?  @map("alerted_at")
+  // Reachable again after an alert; the one recovery message is still owed.
+  recoveryPending     Boolean    @default(false) @map("recovery_pending")
+  // Dates of planned drafts from the last successful check — the outage cannot
+  // read Typefully, so "a draft is due within 2 hours" is judged from these.
+  upcomingPlannedAt   DateTime[] @default([]) @map("upcoming_planned_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  @@map("social_monitor_state")
+}
+
 // Nightly catalogue snapshot for crm_inventory_changes (MCP connector Phase 3,
 // 2026-09-08). One row per development per capture; `units` is
 // [{ key, label, status, price }] over listedUnits(), where key is
@@ -1176,6 +1284,16 @@ model PageView {
   utmMedium   String? @db.VarChar(100)
   utmCampaign String? @db.VarChar(100)
 
+  // The visitor's answer to the cookie banner at the time of this view
+  // (2026-10-24). TRUE accepted, FALSE declined, NULL not answered yet — and
+  // NULL on every row written before this field existed. Three states on
+  // purpose: the Meta pixel only renders behind this same gate, so without the
+  // distinction "the pixel saw 69 % of our views" cannot be split into refusal
+  // and technical blocking, which is the number that decides whether a
+  // Conversions API is worth building. Not an identifier and not PII; see
+  // analyticsConsentFrom() in src/lib/attribution.ts.
+  analyticsConsent Boolean?
+
   @@index([path])
   @@index([createdAt])
   @@index([visitorHash])
@@ -1238,6 +1356,7 @@ model AiGenerationQueue {
 // ─────────────────────────────────────────────────────────────────────────
 
 model DeveloperAccount {
+  commissionRates CommissionRate[]
   id                String    @id @default(uuid())
   name              String
   slug              String    @unique
@@ -1284,6 +1403,10 @@ model DeveloperAccount {
   // stamp; see removedSince() in src/lib/bridge/query.ts.
   bridgeEnabled   Boolean   @default(false)
   bridgeChangedAt DateTime?
+  // 2026-10-24 — last time any commission rate of this account (its default or a
+  // project override) was saved or deleted. The Xellex bridge re-delivers every
+  // project of the account when it moves (rates live on no Development row).
+  commissionChangedAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -1350,6 +1473,8 @@ model DeveloperFeedAnalysis {
 // mirrored to our object storage; only our URLs are stored here.
 // ─────────────────────────────────────────────────────────────────────────
 model Development {
+  deals Deal[]
+  commissionRate CommissionRate?
   id                 String  @id @default(uuid())
   developerAccountId String
   dev                String // adapter key: island-blue|inex|bbf|aristo|pafilia|domenica|medousa|agg
@@ -1758,6 +1883,8 @@ model ClientPresentation {
   criteria        Json? // { districts, areas, bedrooms, budgetMin, budgetMax, propertyTypes } — the actual matching-panel filter state at generation time (or last edit-save). The public page's "your preferences" chips render EXCLUSIVELY from this, never from Lead fields directly — a lead's own profile (budget/type) can differ from what was actually searched for this specific presentation.
   advisorId       String? // User relation — whose contact card shows in the closing section
   advisor         User?     @relation(fields: [advisorId], references: [id])
+  partnerId       String? // Phase 3e: the partner who created this presentation (null = created by staff)
+  partner         Partner?  @relation(fields: [partnerId], references: [id], onDelete: SetNull)
   expiresAt       DateTime? // default now + 30 days, extendable from the admin
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -1767,6 +1894,7 @@ model ClientPresentation {
   views PresentationView[]
 
   @@index([leadId])
+  @@index([partnerId])
   @@map("client_presentations")
 }
 
@@ -1903,4 +2031,430 @@ model PageImprovement {
   // the database, and renaming a live table after Task 8's deploy is its own
   // migration. The Prisma accessor stays `prisma.pageImprovement` either way.
   @@map("page_improvements")
+}
+
+// CRM v2 (2026-10-18) — commission lifecycle of one deal; transitions in src/lib/crm/commission.ts.
+enum CommissionStatus {
+  EXPECTED
+  EARNED
+  DEVELOPER_PAID
+  PAID_OUT
+  CANCELLED
+}
+
+enum RateSource {
+  PROJECT
+  DEVELOPER
+  MANUAL
+  MISSING
+}
+
+// One purchase by a lead (a lead can buy several units). Amounts are whole euros.
+model Deal {
+  id                     String           @id @default(uuid())
+  leadId                 String
+  lead                   Lead             @relation(fields: [leadId], references: [id], onDelete: Restrict)
+  developmentId          String?
+  development            Development?     @relation(fields: [developmentId], references: [id], onDelete: SetNull)
+  unitLabel              String?
+  price                  Int
+  ourRatePercent         Decimal?         @db.Decimal(5, 2)
+  rateSource             RateSource       @default(MISSING)
+  ourCommission          Int?
+  partnerSharePercent    Decimal?         @db.Decimal(5, 2)
+  partnerCommission      Int?
+  commissionStatus       CommissionStatus @default(EXPECTED)
+  expectedAt             DateTime         @default(now())
+  earnedAt               DateTime?
+  developerPaidAt        DateTime?
+  paidOutAt              DateTime?
+  cancelledAt            DateTime?
+  createdById            String?
+  createdBy              User?            @relation("DealsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  creditNote             CreditNote?
+
+  @@index([leadId])
+  @@index([commissionStatus])
+  @@map("deals")
+}
+
+// Our contractual commission with a developer: developmentId null = the
+// developer-wide default; set = a project override that wins (resolveRate()).
+// The partial unique index commission_rates_one_default_per_account (one
+// developer-wide default per account, WHERE "developmentId" IS NULL) lives only
+// in migration 20261018100200_crm_v2_deals — Prisma cannot express it. Never let
+// a generated migration drop it.
+model CommissionRate {
+  id                 String           @id @default(uuid())
+  developerAccountId String
+  developerAccount   DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  developmentId      String?          @unique
+  development        Development?     @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  ratePercent        Decimal          @db.Decimal(5, 2)
+  note               String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([developerAccountId])
+  @@map("commission_rates")
+}
+
+model Partner {
+  id             String        @id @default(uuid())
+  status         PartnerStatus @default(PENDING)
+  type           PartnerType
+  firstName      String
+  lastName       String
+  company        String?
+  country        String        // ISO 3166-1 alpha-2
+  phone          String
+  language       Locale        @default(en)
+  handoverShare  Decimal       @default(30) @db.Decimal(5, 2)
+  fixShare       Decimal       @default(50) @db.Decimal(5, 2)
+  trustMode      Boolean       @default(false)
+  refCode        String?       @unique
+  managerUserId  String?
+  manager        User?         @relation("PartnerManager", fields: [managerUserId], references: [id], onDelete: SetNull)
+  approvedAt     DateTime?
+  approvedById   String?
+  suspendedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  users          PartnerUser[]
+  acceptances    PartnerAgreementAcceptance[]
+  leads          Lead[]
+  claims         PartnerClaim[]
+  messages       PartnerMessage[]
+  notifications  PartnerNotification[]
+  bankDetailsEnc       String?
+  ibanLast4            String?
+  bankDetailsUpdatedAt DateTime?
+  ibanChangedAt        DateTime?
+  vatMode              PartnerVatMode @default(NONE)
+  // Phase 3d (Decision 10): VAT number (public business data, normalised). vatMode is derived from
+  // country + vatId (src/lib/partner/vat.ts) unless an operator picked a mode in /crm/partners (vatModeManual).
+  vatId                String?
+  vatModeManual        Boolean        @default(false)
+  creditNotes          CreditNote[]
+  // Phase 3d preferences: stage/message emails on/off (claim outcomes and payouts always send), weekly digest.
+  emailNotifications   Boolean        @default(true)
+  digestOptIn          Boolean        @default(true)
+  digestLogs           PartnerDigestLog[]
+  // Phase 3e: Telegram notifications + white-label branding for partner presentations.
+  notifyChannel        PartnerNotifyChannel @default(EMAIL)
+  telegramChatId       String?        @unique
+  telegramLinkedAt     DateTime?
+  brandName            String?
+  brandPhone           String?
+  brandEmail           String?
+  brandWebsite         String?
+  brandLogo            Bytes?
+  brandLogoType        String?
+  brandLogoUpdatedAt   DateTime?
+  telegramCodes        PartnerTelegramCode[]
+  presentations        ClientPresentation[]
+  // Phase 4b: tier (commission shares are copied from the tier on promotion), news read marker.
+  tierKey              String?
+  tier                 PartnerTier?   @relation(fields: [tierKey], references: [key], onDelete: SetNull)
+  tierSince            DateTime?
+  newsSeenAt           DateTime?
+  tierProposals        PartnerTierProposal[]
+  pointEvents          PartnerPointEvent[]
+  // Design settings (2026-10-22): chosen colour set.
+  designThemeId        String?
+  designTheme          DesignTheme? @relation(fields: [designThemeId], references: [id], onDelete: SetNull)
+  @@index([status])
+  @@map("partners")
+}
+
+model PartnerUser {
+  id              String         @id @default(uuid())
+  partnerId       String
+  partner         Partner        @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  email           String         @unique   // stored lower-cased
+  passwordHash    String
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  sessions        PartnerSession[]
+  tokens          PartnerToken[]
+  @@map("partner_users")
+}
+
+model PartnerSession {
+  id            String      @id @default(uuid())
+  partnerUserId String
+  partnerUser   PartnerUser @relation(fields: [partnerUserId], references: [id], onDelete: Cascade)
+  tokenHash     String      @unique
+  createdAt     DateTime    @default(now())
+  expiresAt     DateTime
+  lastSeenAt    DateTime    @default(now())
+  revokedAt     DateTime?
+  @@index([partnerUserId])
+  @@map("partner_sessions")
+}
+
+model PartnerToken {
+  id            String           @id @default(uuid())
+  partnerUserId String
+  partnerUser   PartnerUser      @relation(fields: [partnerUserId], references: [id], onDelete: Cascade)
+  kind          PartnerTokenKind
+  tokenHash     String           @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime         @default(now())
+  @@index([partnerUserId, kind])
+  @@map("partner_tokens")
+}
+
+model PartnerAgreementAcceptance {
+  id         String   @id @default(uuid())
+  partnerId  String
+  partner    Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  version    String
+  acceptedAt DateTime @default(now())
+  ip         String?
+  @@index([partnerId])
+  @@map("partner_agreement_acceptances")
+}
+
+// One ACTIVE claim per lead is enforced by a partial unique index that exists only in SQL
+// (migration 20261019110000, "partner_claims_one_active_per_lead") — Prisma cannot express it.
+model PartnerClaim {
+  id           String            @id @default(uuid())
+  leadId       String
+  lead         Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  partnerId    String
+  partner      Partner           @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  state        PartnerClaimState
+  mode         PartnerMode
+  contactMode  ContactMode
+  submission   Json
+  outcomeNote  String?
+  createdAt    DateTime          @default(now())
+  reviewedAt   DateTime?
+  reviewedById String?
+  @@index([leadId])
+  @@index([partnerId, state])
+  @@map("partner_claims")
+}
+
+// Phase 4b: partner tiers, tier-promotion proposals and the points rating. Hand-written migration 20261020100000.
+model PartnerTier {
+  key            String    @id
+  name           String
+  sort           Int
+  minClosedDeals Int
+  handoverShare  Decimal   @db.Decimal(5, 2)
+  fixShare       Decimal   @db.Decimal(5, 2)
+  active         Boolean   @default(true)
+  updatedAt      DateTime  @updatedAt
+  partners       Partner[]
+  @@map("partner_tiers")
+}
+
+// One OPEN proposal per partner is enforced by a partial unique index that exists only in SQL
+// (migration 20261020100000, "partner_tier_proposals_one_open_per_partner" ON ("partnerId") WHERE "decidedAt" IS NULL) —
+// Prisma cannot express it.
+model PartnerTierProposal {
+  id          String    @id @default(uuid())
+  partnerId   String
+  partner     Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  fromTier    String?
+  toTier      String
+  closedDeals Int
+  createdAt   DateTime  @default(now())
+  decidedAt   DateTime?
+  decidedById String?
+  decision    String?
+  @@index([partnerId])
+  @@map("partner_tier_proposals")
+}
+
+model RatingSeason {
+  id         String              @id @default(uuid())
+  name       String
+  startsAt   DateTime
+  endsAt     DateTime
+  pointRules Json
+  prizes     Json
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  events     PartnerPointEvent[]
+  @@map("rating_seasons")
+}
+
+model PartnerPointEvent {
+  id        String       @id @default(uuid())
+  seasonId  String
+  season    RatingSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  partnerId String
+  partner   Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  kind      String
+  refKey    String       @unique
+  points    Int
+  createdAt DateTime     @default(now())
+  @@index([seasonId, partnerId])
+  @@map("partner_point_events")
+}
+
+enum PartnerNotificationKind {
+  STAGE
+  MESSAGE
+  CLAIM_OUTCOME
+  PAYOUT
+  MATCH
+  PRESENTATION_OPENED
+  TIER_UP
+}
+
+enum PartnerNotifyChannel {
+  EMAIL
+  TELEGRAM
+  BOTH
+}
+
+model PartnerTelegramCode {
+  id        String    @id @default(uuid())
+  partnerId String
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  codeHash  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  @@index([partnerId])
+  @@map("partner_telegram_codes")
+}
+
+enum PartnerVatMode {
+  NONE
+  CY_VAT
+  REVERSE_CHARGE
+}
+
+model CreditNote {
+  id          String         @id @default(uuid())
+  number      String         @unique
+  year        Int
+  seq         Int
+  partnerId   String
+  partner     Partner        @relation(fields: [partnerId], references: [id], onDelete: Restrict)
+  dealId      String         @unique
+  deal        Deal           @relation(fields: [dealId], references: [id], onDelete: Restrict)
+  netAmount   Int
+  vatMode     PartnerVatMode
+  vatRate     Decimal?       @db.Decimal(5, 2)
+  vatAmount   Int
+  totalAmount Int
+  issuedAt    DateTime       @default(now())
+  issuedById  String?
+  issuedBy    User?          @relation("CreditNotesIssued", fields: [issuedById], references: [id], onDelete: SetNull)
+  pdf         Bytes
+  pdfSha256   String
+
+  @@unique([year, seq])
+  @@index([partnerId])
+  @@map("credit_notes")
+}
+
+model CreditNoteCounter {
+  year    Int @id
+  lastSeq Int @default(0)
+
+  @@map("credit_note_counters")
+}
+
+model PartnerMessage {
+  id           String   @id @default(uuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  partnerId    String
+  partner      Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  authorUserId String?
+  author       User?    @relation("PartnerMessagesAuthored", fields: [authorUserId], references: [id], onDelete: SetNull)
+  body         String
+  createdAt    DateTime @default(now())
+  @@index([leadId, createdAt])
+  @@map("partner_messages")
+}
+
+model PartnerNotification {
+  id        String                  @id @default(uuid())
+  partnerId String
+  partner   Partner                 @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  kind      PartnerNotificationKind
+  refKey    String                  @unique
+  leadId    String?
+  claimId   String?
+  payload   Json
+  attempts  Int                     @default(0)
+  createdAt DateTime                @default(now())
+  sentAt    DateTime?
+  failedAt  DateTime?
+  error     String?
+  @@index([sentAt, createdAt])
+  @@map("partner_notifications")
+}
+
+// Weekly partner digest (phase 3d): one row per partner and ISO week (Asia/Nicosia),
+// inserted before sending so a week is never mailed twice.
+model PartnerDigestLog {
+  id        String    @id @default(uuid())
+  partnerId String
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  weekKey   String
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@unique([partnerId, weekKey])
+  @@map("partner_digest_logs")
+}
+
+// Design settings (2026-10-22): colour sets for the CRM and partner portal.
+// "design_themes_one_default" (partial unique index on isDefault) lives in the migration SQL only.
+model DesignTheme {
+  id                String               @id @default(uuid())
+  key               String?              @unique
+  name              String
+  values            Json
+  offeredToStaff    Boolean              @default(true)
+  offeredToPartners Boolean              @default(true)
+  isDefault         Boolean              @default(false)
+  sort              Int                  @default(0)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  updatedById       String?
+  versions          DesignThemeVersion[]
+  users             User[]
+  partners          Partner[]
+
+  @@map("design_themes")
+}
+
+model DesignThemeVersion {
+  id          String      @id @default(uuid())
+  themeId     String
+  theme       DesignTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  values      Json
+  name        String
+  createdAt   DateTime    @default(now())
+  createdById String?
+
+  @@index([themeId, createdAt])
+  @@map("design_theme_versions")
+}
+
+model DesignSettingsVersion {
+  id          String   @id @default(uuid())
+  values      Json
+  note        String?
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  @@index([createdAt])
+  @@map("design_settings_versions")
 }

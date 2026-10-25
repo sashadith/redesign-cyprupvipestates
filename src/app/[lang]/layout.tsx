@@ -7,12 +7,13 @@ import "@/app/header-footer.css"; // global header + footer chrome (redesign) â€
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import type { Metadata } from "next";
 import { cookies, draftMode } from "next/headers";
-import { GoogleTagManager } from "@next/third-parties/google";
+import GoogleTagManagerScript from "@/app/components/GoogleTagManagerScript/GoogleTagManagerScript";
 import { ModalProvider } from "../context/ModalContext";
 import MicrosoftClarity from "../components/MicrosoftClarity/MicrosoftClarity";
 import CustomCookieConsent from "../components/CustomCookieConsent/CustomCookieConsent";
 import GoogleAdsScript from "../components/GoogleAdsScript/GoogleAdsScript";
 import FacebookPixel from "../components/FacebookPixel/FacebookPixel";
+import MetaPageViewTracker from "../components/MetaPageViewTracker/MetaPageViewTracker";
 import LenisProvider from "../components/LenisProvider/LenisProvider";
 import LinkedInPixel from "../components/LinkedInPixel/LinkedInPixel";
 import AnalyticsTracker from "../components/AnalyticsTracker/AnalyticsTracker";
@@ -182,9 +183,10 @@ export default function RootLayout({
         {hasAnalytics && (
           <>
             {!DISABLE_TRACKING && <MicrosoftClarity hasConsent={true} />}
-            <GoogleTagManager gtmId="GTM-MQNF6L9V" />
+            <GoogleTagManagerScript />
             <GoogleAdsScript />
             {!DISABLE_TRACKING && <FacebookPixel />}
+            {!DISABLE_TRACKING && <MetaPageViewTracker />}
             <LinkedInPixel />
           </>
         )}

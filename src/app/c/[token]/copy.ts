@@ -276,6 +276,57 @@ export const COPY: Record<PLocale, PresentationCopy> = {
   }, // REVIEW(he)
 };
 
+/** Partner-branded presentations (partner portal phase 3e): the only strings that differ from COPY.
+ *  No Cyprus VIP Estates name or contact in any of them. Partners send presentations in en/de/pl/ru
+ *  only; `he` reuses the English text (no Hebrew is written for partner surfaces). */
+export type PartnerPresentationCopy = {
+  metaTitle: string;
+  /** Footer line; {name} = the partner's display name. */
+  presentedBy: string;
+  contactEyebrow: string;
+  contactTrust: string;
+  website: string;
+  notAvailableBody: string;
+};
+
+const PARTNER_COPY_EN: PartnerPresentationCopy = {
+  metaTitle: "Your Property Selection",
+  presentedBy: "Presented by {name}",
+  contactEyebrow: "YOUR CONTACT",
+  contactTrust: "Questions about the properties in your selection, or would you like to arrange a viewing? Get in touch - no obligation, no rush.",
+  website: "Website",
+  notAvailableBody: "The link you used has expired or is no longer active. Please contact the person who sent it to you.",
+};
+
+export const PARTNER_COPY: Record<PLocale, PartnerPresentationCopy> = {
+  en: PARTNER_COPY_EN,
+  de: {
+    metaTitle: "Ihre Immobilienauswahl",
+    presentedBy: "Präsentiert von {name}",
+    contactEyebrow: "IHR KONTAKT",
+    contactTrust: "Haben Sie Fragen zu den Objekten Ihrer Auswahl oder möchten Sie eine Besichtigung vereinbaren? Nehmen Sie gerne Kontakt auf - ohne Verpflichtung und ohne Eile.",
+    website: "Website",
+    notAvailableBody: "Der verwendete Link ist abgelaufen oder wurde deaktiviert. Bitte wenden Sie sich an die Person, die Ihnen den Link gesendet hat.",
+  },
+  pl: {
+    metaTitle: "Państwa wybór nieruchomości",
+    presentedBy: "Przygotowane przez {name}",
+    contactEyebrow: "PAŃSTWA KONTAKT",
+    contactTrust: "Mają Państwo pytania dotyczące nieruchomości z tej selekcji lub chcieliby Państwo umówić oględziny? Kontakt jest niezobowiązujący - bez pośpiechu.",
+    website: "Strona internetowa",
+    notAvailableBody: "Użyty link wygasł lub został dezaktywowany. Prosimy o kontakt z osobą, która go Państwu przesłała.",
+  },
+  ru: {
+    metaTitle: "Ваш подбор объектов",
+    presentedBy: "Подготовлено: {name}",
+    contactEyebrow: "ВАШ КОНТАКТ",
+    contactTrust: "Есть вопросы по объектам из вашей подборки или хотите договориться о просмотре? Пишите или звоните - без обязательств и без спешки.",
+    website: "Сайт",
+    notAvailableBody: "Использованная ссылка истекла или была отключена. Пожалуйста, обратитесь к человеку, который её вам отправил.",
+  },
+  he: PARTNER_COPY_EN,
+};
+
 /** "N <localized unit noun>" with correct plural form per locale (RU/PL are
  *  3-way: one/few/many with the standard mod-10/mod-100 teen exceptions;
  *  EN/DE are a plain singular/plural binary). */

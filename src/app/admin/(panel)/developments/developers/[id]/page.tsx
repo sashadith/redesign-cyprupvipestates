@@ -10,6 +10,7 @@ import DriveSyncButton from "./DriveSyncButton";
 import DriveFolderPreviewButton from "./DriveFolderPreviewButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
 import MonthlySyncControl from "./MonthlySyncControl";
+import CommissionRates from "./CommissionRates";
 import { currentRound, doneForRound, nextRound } from "@/lib/monthlyManualSync";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
@@ -45,6 +46,9 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
     || dev.developments.some((d) => d.dev && d.dev !== "manual");
   const activeDevelopments = dev.developments.filter((d) => d.publishStatus !== "archived");
   const archivedDevelopments = dev.developments.filter((d) => d.publishStatus === "archived");
+  const rateRows = await prisma.commissionRate.findMany({ where: { developerAccountId: dev.id }, select: { id: true, developmentId: true, ratePercent: true } });
+  const defaultRateRow = rateRows.find((r) => r.developmentId === null) ?? null;
+  const ownRate = new Map(rateRows.filter((r) => r.developmentId).map((r) => [r.developmentId as string, r]));
   const availableUnits = await prisma.developmentUnit.count({
     where: { status: "available", development: { developerAccountId: dev.id, publishStatus: { not: "archived" } } },
   });
@@ -94,6 +98,15 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
             broken={linkBroken}
           />
         }
+      />
+
+      <CommissionRates
+        developerAccountId={dev.id}
+        defaultRate={defaultRateRow ? { id: defaultRateRow.id, ratePercent: defaultRateRow.ratePercent.toNumber() } : null}
+        projects={activeDevelopments.map((d) => {
+          const r = ownRate.get(d.id);
+          return { id: d.id, name: d.override?.alias || d.publicName, status: d.publishStatus, rateId: r?.id ?? null, ownRate: r ? r.ratePercent.toNumber() : null };
+        })}
       />
 
       {/* Developments */}

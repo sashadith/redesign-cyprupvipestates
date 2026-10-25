@@ -27,16 +27,21 @@ export default function ParallaxBand({ image, videoSrc }: { image?: ImageType; v
   const poster = rawPoster ? optUrl(rawPoster, 1080) : undefined;
   const ref = useRef<HTMLVideoElement | null>(null);
   const [src, setSrc] = useState<string | undefined>();
+  // The poster attribute fetches its image immediately (147 KB at the time the header fonts and
+  // render-blocking CSS are still in flight), so it is only set once the band is near the viewport.
+  const [near, setNear] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!videoSrc || !el) return;
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    if (conn?.saveData) return;
+    // Phones keep the poster only: the 3.9 MB clip is decoration, not worth the mobile data.
+    const playVideo = !(conn?.saveData || window.matchMedia("(max-width: 768px)").matches);
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setSrc(videoSrc);
+          setNear(true);
+          if (playVideo) setSrc(videoSrc);
           io.disconnect();
         }
       },
@@ -57,7 +62,7 @@ export default function ParallaxBand({ image, videoSrc }: { image?: ImageType; v
           ref={ref}
           className="parallax__video"
           src={src}
-          poster={poster}
+          poster={near ? poster : undefined}
           autoPlay
           loop
           muted

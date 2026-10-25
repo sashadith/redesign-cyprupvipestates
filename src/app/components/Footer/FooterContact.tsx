@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Contact } from "@/types/footer";
 import { urlFor } from "@/sanity/sanity.client";
 import Bdi from "@/app/components/Bdi";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 /* Footer contact link (redesign look) — keeps the previous live ContactLink
    behaviour verbatim: mailto/tel/wa.me/http resolution + fbq "Contact" and GTM
@@ -39,7 +40,7 @@ export default function FooterContact({ contact }: { contact: Contact }) {
     if (contact.type === "Email") method = "email";
     if (contact.type === "Link" && contact.label.match(/^\+?\d+$/)) method = "whatsapp";
     if (window.fbq) {
-      window.fbq("track", "Contact", { method, placement: "footer_contact", page_location: pageUrl });
+      window.fbq("track", "Contact", { method, placement: "footer_contact", page_location: pageUrl }, { eventID: newMetaEventId("contact") });
     }
     if (window.dataLayer) {
       window.dataLayer.push({
@@ -62,7 +63,7 @@ export default function FooterContact({ contact }: { contact: Contact }) {
       target={contact.type === "Link" ? "_blank" : undefined}
       rel={contact.type === "Link" ? "noopener" : undefined}
     >
-      {icon && <img className="pf__contact-icon" src={icon} alt="" width={20} height={20} />}
+      {icon && <img className="pf__contact-icon" src={icon} alt="" width={20} height={20} loading="lazy" decoding="async" />}
       <span><Bdi ltr>{contact.label}</Bdi></span>
     </Link>
   );

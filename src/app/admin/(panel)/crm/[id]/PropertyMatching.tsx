@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import type { MatchingMapMarker } from "./MatchingMap";
 import { matchLeadAction, saveMatchFiltersAction, type LocationOptions } from "./presentationActions";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
@@ -8,6 +10,7 @@ import ComposeEmailModal from "./ComposeEmailModal";
 import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
+import { fmtRate, RATE_SOURCE_SHORT } from "@/lib/crm/rateFormat";
 
 type LeadBrief = {
   firstName: string;
@@ -19,6 +22,9 @@ type LeadBrief = {
   email: string | null;
   lastMatchFilters: MatchFilters | null;
 };
+
+// MapLibre touches window — client-only, like the presentation page's map.
+const MatchingMap = dynamic(() => import("./MatchingMap"), { ssr: false });
 
 type Locale = (typeof PUBLIC_LOCALES)[number];
 const PROPERTY_TYPES = PROPERTY_VALUES;
@@ -200,6 +206,18 @@ export default function PropertyMatching({
   };
 
   const selectedCount = selectedDevs.size;
+  // Pins for the matching map: the ticked projects that have coordinates.
+  const mapMarkers = useMemo<MatchingMapMarker[]>(() => results
+    .filter((m) => selectedDevs.has(m.development.id) && m.development.lat != null && m.development.lng != null)
+    .map((m) => {
+      const d = m.development;
+      return {
+        id: d.id, lat: d.lat as number, lng: d.lng as number, title: d.publicName, image: d.mainImage, price: d.priceFrom,
+        city: [d.area, d.district || d.town].filter(Boolean).join(", ") || null,
+        href: d.publishStatus === "published" && d.slug ? `/projects/${d.slug}` : null,
+      };
+    }), [results, selectedDevs]);
+  const selectedWithoutPin = results.filter((m) => selectedDevs.has(m.development.id) && (m.development.lat == null || m.development.lng == null)).length;
   const unitCount = useMemo(() => {
     let total = 0;
     for (const m of results) {
@@ -373,6 +391,7 @@ export default function PropertyMatching({
               <th className="px-3 py-2 font-medium">Location</th>
               <th className="px-3 py-2 font-medium">Delivery</th>
               <th className="px-3 py-2 font-medium">Price from</th>
+              <th className="px-3 py-2 font-medium" title="Our commission: the project's own rate, else the developer's default">Commission</th>
               <th className="px-3 py-2 font-medium text-right">Available</th>
               <th className="px-3 py-2 font-medium text-right">Match</th>
               <th className="px-3 py-2 w-8"></th>
@@ -380,7 +399,7 @@ export default function PropertyMatching({
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {results.length === 0 && !loading && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#9CA3AF]">No published developments match these filters.</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-[#9CA3AF]">No published developments match these filters.</td></tr>
             )}
             {results.map((m) => {
               const d = m.development;
@@ -423,11 +442,22 @@ export default function PropertyMatching({
                       ) : (
                         d.publicName
                       )}
-                      {d.developer && <span className="ml-1.5 font-normal text-[#9CA3AF]">{d.developer}</span>}
+                      {d.developer && <span className="block text-xs font-normal text-[#9CA3AF]">{d.developer}</span>}
                     </td>
-                    <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
+                    <td className="px-3 py-2 text-[#6B7280]">
+                      {d.district || d.town || d.area ? (
+                        <>
+                          <span className="block">{d.district || d.town || d.area}</span>
+                          {d.area && (d.district || d.town) && <span className="block text-xs text-[#9CA3AF]">{d.area}</span>}
+                        </>
+                      ) : "—"}
+                    </td>
                     <td className="px-3 py-2 text-[#6B7280]">{d.completion || "—"}</td>
                     <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(priceFromSelection)}</td>
+                    <td className="px-3 py-2 text-[#6B7280]" title={d.commission.source === "PROJECT" ? "Project rate (overrides the developer default)" : d.commission.source === "DEVELOPER" ? "Developer default" : "No rate set for this developer or project"}>
+                      {fmtRate(d.commission.ratePercent)}
+                      {d.commission.ratePercent != null && <span className="block text-xs text-[#9CA3AF]">{RATE_SOURCE_SHORT[d.commission.source]}</span>}
+                    </td>
                     <td className="px-3 py-2 text-right text-[#6B7280]">{d.unitsAvailable}</td>
                     <td className="px-3 py-2 text-right">
                       <span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: scoreBg(m.score), color: scoreColor(m.score) }}>{m.score}%</span>
@@ -438,7 +468,7 @@ export default function PropertyMatching({
                   </tr>
                   {isOpen && (
                     <tr>
-                      <td colSpan={9} className="px-4 py-3 bg-[#FAFAFA]">
+                      <td colSpan={10} className="px-4 py-3 bg-[#FAFAFA]">
                         {selectedDevs.has(d.id) && (
                           <input
                             value={comments.get(d.id) ?? ""}
@@ -491,6 +521,16 @@ export default function PropertyMatching({
           </tbody>
         </table>
       </div>
+
+      {/* ---- MAP of the ticked projects ---- */}
+      {mapMarkers.length > 0 && (
+        <div className="space-y-1">
+          <MatchingMap markers={mapMarkers} />
+          {selectedWithoutPin > 0 && (
+            <p className="text-xs text-[#9CA3AF]">{selectedWithoutPin} selected project{selectedWithoutPin === 1 ? " has" : "s have"} no map pin yet and {selectedWithoutPin === 1 ? "is" : "are"} not shown.</p>
+          )}
+        </div>
+      )}
 
       {/* ---- SELECTION BAR ---- */}
       {selectedCount > 0 && (

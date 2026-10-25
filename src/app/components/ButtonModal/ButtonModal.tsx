@@ -3,6 +3,7 @@
 import React from "react";
 import styles from "./ButtonModal.module.scss";
 import { useModal } from "@/app/context/ModalContext";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 type Props = {
   children: React.ReactNode;
@@ -27,7 +28,7 @@ export const ButtonModal = ({
               ? "roi_calculator_modal"
               : "brochure_modal",
         page_location: window.location.href,
-      });
+      }, { eventID: newMetaEventId("ic") });
     }
 
     if (modalType === "roi") {

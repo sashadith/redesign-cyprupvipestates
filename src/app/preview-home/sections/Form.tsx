@@ -3,16 +3,20 @@
 import React, { FC, useEffect, useId, useRef, useState } from "react";
 import { Formik, Form as FormikForm, Field, ErrorMessage, FormikHelpers, FormikProps } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
+import dynamic from "next/dynamic";
 import { getAttribution } from "@/lib/attribution";
 import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "@/app/components/qualifierFields";
 import { consentCopy } from "@/app/components/consentCopy";
 import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
 import OptImg from "./OptImg";
+import { newMetaEventId } from "@/lib/metaEventId";
+
+/* Phone number input, axios and libphonenumber (~220 KB raw together, 2026-10-19 bundle analysis) used
+   to ship with the first load of every page that carries this form — the homepage included — although
+   the form sits at the bottom. They now load when the visitor gets near the form, focuses the phone
+   field, or submits. Until then the field is a plain input in the same box (same height: no layout shift). */
+const PhoneInput = dynamic(() => import("./PhoneInputLazy"), { ssr: false });
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
    preserved verbatim from the live FormStatic (lead → /api/leads,
@@ -83,6 +87,19 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
   const [messageIsError, setMessageIsError] = useState(false);
   const [formStartTime] = useState(() => Date.now());
   const formikRef = useRef<FormikProps<FormData> | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [phoneArmed, setPhoneArmed] = useState(false);
+  const [focusPhone, setFocusPhone] = useState(false);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || phoneArmed) return;
+    if (typeof IntersectionObserver === "undefined") { setPhoneArmed(true); return; }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { setPhoneArmed(true); io.disconnect(); }
+    }, { rootMargin: "900px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [phoneArmed]);
   /* Per-unit "Enquire about this unit" buttons (project page, UnitsView)
      dispatch a `cve:enquire` event with a ready-made message; the form
      reveals its question field pre-filled and the anchor jump (#enquiry)
@@ -119,6 +136,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
     setSubmitting(true);
     try {
       const currentPage = window.location.href;
+      const [{ default: axios }, { parsePhoneNumberFromString }] = await Promise.all([import("axios"), import("libphonenumber-js")]);
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
@@ -137,7 +155,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
             form_name: "form_static",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: newMetaEventId("lead") });
         }
         if (typeof window !== "undefined" && typeof (window as any).lintrk === "function") {
           (window as any).lintrk("track", { conversion_id: 27871505 });
@@ -167,7 +185,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
   };
 
   return (
-    <section className="section is-light formsec">
+    <section className="section is-light formsec" ref={sectionRef}>
       <div className="wrap">
         <div className="formsec__grid">
           <div className="formsec__main">
@@ -216,22 +234,41 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
 
                     <div className="formsec__field">
                       <label className="formsec__label" htmlFor={`${uid}-phone`}>{t.labelPhone}</label>
-                      <PhoneInput
-                        id={`${uid}-phone`}
-                        name="phone"
-                        aria-label={t.labelPhone}
-                        className="formsec__phone"
-                        value={values.phone}
-                        defaultCountry="CY"
-                        international
-                        withCountryCallingCode
-                        smartCaret={false}
-                        autoComplete="tel"
-                        inputMode="tel"
-                        type="tel"
-                        onChange={(value) => setFieldValue("phone", value || "", false)}
-                        onBlur={() => formikRef.current?.setFieldTouched("phone", true, true)}
-                      />
+                      {phoneArmed ? (
+                        <PhoneInput
+                          id={`${uid}-phone`}
+                          name="phone"
+                          aria-label={t.labelPhone}
+                          className="formsec__phone"
+                          value={values.phone}
+                          defaultCountry="CY"
+                          international
+                          withCountryCallingCode
+                          smartCaret={false}
+                          autoComplete="tel"
+                          inputMode="tel"
+                          type="tel"
+                          autoFocus={focusPhone}
+                          onChange={(value) => setFieldValue("phone", value || "", false)}
+                          onBlur={() => formikRef.current?.setFieldTouched("phone", true, true)}
+                        />
+                      ) : (
+                        <div className="PhoneInput formsec__phone">
+                          <input
+                            id={`${uid}-phone`}
+                            name="phone"
+                            aria-label={t.labelPhone}
+                            className="PhoneInputInput"
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="+357"
+                            value={values.phone}
+                            readOnly
+                            onFocus={() => { setFocusPhone(true); setPhoneArmed(true); }}
+                          />
+                        </div>
+                      )}
                       <div className="formsec__errorSlot">
                         <ErrorMessage name="phone">
                           {(msg) => <div className="formsec__error">{msg}</div>}
