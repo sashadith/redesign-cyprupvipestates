@@ -135,7 +135,7 @@ test("telegram text: new lead, below threshold, duplicate, placeholder", () => {
   assert.match(t, /\/admin\/crm\/abc/);
   assert.doesNotMatch(t, /threshold/);
   assert.match(buildLeadMessage({ ...base, budget: "<2" }), /below Private Collection threshold/);
-  assert.match(buildLeadMessage({ ...base, outcome: "ATTACHED", language: "de" }), /Existing lead submitted the form again \(DACH\)/);
+  assert.match(buildLeadMessage({ ...base, outcome: "ATTACHED", language: "de", campaignName: "CVE Private Collection — DE Leads (Instant Form)" }), /Existing lead submitted the form again \(DACH\)/);
   assert.match(buildLeadMessage({ ...base, placeholderReason: "x" }), /phone looks like a placeholder/);
   assert.match(buildLeadMessage({ ...base, name: "<b>x</b>" }), /&lt;b&gt;x/);
 });
@@ -180,4 +180,19 @@ test("unknown contact keys: email and phone recognised by their value", () => {
   assert.equal(m.email, "a.b@example.pl");
   assert.equal(m.phone, "+48601234567");
   assert.deepEqual([m.firstName, m.lastName], ["Jan", "Kowalski"]);
+});
+
+test("region tag comes from the campaign, not the form language (2026-10-25: ZA leads were announced as UK)", () => {
+  const base = {
+    outcome: "CREATED" as const, language: "en" as const, name: "Tiyo Tonisi", email: null, phone: null,
+    budget: "2-3" as const, preferredChannel: null, campaignName: "CVE Private Collection — ZA Leads (Instant Form)", formName: "CVE PC Briefing EN v2",
+    placeholderReason: null, unmatchedCount: 0, leadId: "abc",
+  };
+  assert.match(buildLeadMessage(base), /New Private Collection lead \(ZA\)/);
+  assert.match(buildLeadMessage({ ...base, campaignName: "CVE Private Collection — UK Leads (Instant Form)" }), /lead \(UK\)/);
+  assert.match(buildLeadMessage({ ...base, campaignName: "CVE Private Collection — AE Leads (Instant Form)" }), /lead \(AE\)/);
+  assert.match(buildLeadMessage({ ...base, language: "de", campaignName: "CVE Private Collection — DE Leads (Instant Form)" }), /lead \(DACH\)/);
+  // No market in the campaign name: an English form says nothing rather than guess UK.
+  assert.match(buildLeadMessage({ ...base, campaignName: null }), /New Private Collection lead<\/b>/);
+  assert.match(buildLeadMessage({ ...base, language: "de", campaignName: null }), /lead \(DACH\)/);
 });
