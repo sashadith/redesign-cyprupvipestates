@@ -91,38 +91,49 @@
 .pp-top { position: sticky; top: 0; z-index: 20; background: var(--glass-solid);
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
 .pp-top::after { content: ""; position: absolute; inset: auto 0 0; height: 1px; background: var(--gold-contour); opacity: 0.75; }
-.pp-top-in { max-width: var(--pp-maxw); margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap;
-  gap: 10px 20px; padding: 14px 16px; padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+/* Two rows: logo · "Partner programme" · tools (colours, language, log out) on top, the nav below,
+   its text flush with the logo (-12px = a link's own padding). Starting the nav under "Partner
+   programme" instead leaves ~800px for ~1000px of links. The tools never sit inside the scrolling
+   nav, so log out can't be pushed off-screen. */
+.pp-top-in { max-width: var(--pp-maxw); margin: 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "logo tag tools" "nav nav nav"; align-items: center;
+  gap: 10px 0; padding: 14px 16px; padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+.pp-top-in > .pp-logo { grid-area: logo; }
+.pp-top-in > .pp-logo-tag { grid-area: tag; justify-self: start; }
+.pp-tools { grid-area: tools; display: flex; align-items: center; gap: 8px; }
+.pp-tools form { margin: 0; }
 
 .pp-app a.pp-logo { display: inline-flex; align-items: center; gap: 16px; flex: none; text-decoration: none; color: var(--text); border-radius: calc(8px * var(--ds-radius-scale)); }
 .pp-logo img { display: block; width: auto; }
 .pp-logo .pp-logo-full { display: none; height: 34px; }
 .pp-logo .pp-logo-mark { height: 36px; }
-.pp-logo-tag { display: none; padding-inline-start: 16px; border-inline-start: 1px solid var(--hairline-strong);
+.pp-logo-tag { display: none; margin-inline-start: 16px; padding-inline-start: 16px; border-inline-start: 1px solid var(--hairline-strong);
   font: 600 var(--text-caption) / 1.2 var(--pp-body); letter-spacing: 0.22em; text-transform: uppercase; color: var(--pp-bronze-ink); white-space: nowrap; }
 
-.pp-nav { display: flex; align-items: center; gap: 2px; order: 3; flex: 1 1 100%; margin-inline: -10px; }
+.pp-nav { grid-area: nav; display: flex; align-items: center; gap: 2px; margin-inline: -12px; }
 .pp-nav form { margin: 0; }
 .pp-app .pp-nav a, .pp-linkbtn { display: inline-block; padding: 8px 12px; border-radius: 999px; border: 0; background: none; cursor: pointer;
   color: var(--text-soft); text-decoration: none; font: 500 var(--text-sm) / 1.3 var(--pp-body); letter-spacing: 0.02em;
   transition: color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
 .pp-app .pp-nav a:hover, .pp-linkbtn:hover { color: var(--text); background: var(--accent-soft); }
 
-.pp-lang { margin-inline-start: auto; order: 2; }
 .pp-lang select { appearance: none; -webkit-appearance: none; cursor: pointer; border: 1px solid var(--hairline-strong); border-radius: 999px;
   background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237A5A30' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
   color: var(--text); padding: 8px 34px 8px 14px; font: 500 var(--text-sm) / 1.3 var(--pp-body); letter-spacing: 0.02em;
   transition: border-color var(--dur-sm) var(--ease); }
 .pp-lang select:hover { border-color: var(--bronze); }
 .pp-lang select:disabled { opacity: 0.6; cursor: progress; }
+.pp-logout { cursor: pointer; border: 1px solid var(--hairline-strong); border-radius: 999px; background: transparent; color: var(--text);
+  padding: 8px 14px; font: 500 var(--text-sm) / 1.3 var(--pp-body); letter-spacing: 0.02em; white-space: nowrap;
+  transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
+.pp-logout:hover { border-color: var(--bronze); background: var(--accent-soft); }
+.pp-tools .pp-theme { display: none; }
 
 @media (min-width: 720px) {
-  .pp-top-in { padding-block: 18px; flex-wrap: nowrap; }
+  .pp-top-in { padding-block: 18px 12px; row-gap: 8px; }
   .pp-logo .pp-logo-full { display: block; }
   .pp-logo .pp-logo-mark { display: none; }
-  .pp-nav { order: 0; flex: 0 1 auto; margin: 0 0 0 auto; }
-  .pp-lang { order: 0; margin-inline-start: 0; }
-  .pp-nav + .pp-lang { margin-inline-start: 4px; }
+  .pp-tools .pp-theme { display: block; }
 }
 @media (min-width: 1000px) { .pp-logo-tag { display: inline-block; } }
 
@@ -562,7 +573,6 @@
   font: 600 var(--text-caption) / 1.3 var(--pp-body); letter-spacing: 0.08em; text-transform: uppercase; }
 
 /* ── Personal colour-set switcher (header select + profile cards) ───────── */
-.pp-theme { margin-inline-start: 0; }
 .pp-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 12px; }
 .pp-picker button { display: flex; align-items: center; gap: 12px; text-align: start; cursor: pointer; background: var(--ds-card); color: var(--text); border: 1px solid var(--hairline-strong);
   border-radius: calc(12px * var(--ds-radius-scale)); padding: 12px 14px; font: 500 var(--text-sm) / 1.3 var(--pp-body); }
