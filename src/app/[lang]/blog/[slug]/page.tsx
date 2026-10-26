@@ -25,6 +25,7 @@ import {
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
 import { isNewStyleProjectsBlock } from "@/lib/projectsBlockValidation";
+import { getPopularPropertyCards } from "@/lib/popularProperties";
 import { urlFor } from "@/sanity/sanity.client";
 import {
   abs,
@@ -221,7 +222,12 @@ const PagePost = async ({ params }: Props) => {
   const offeredGuide = guideForArticle(lang, slug);
   const guideForm = offeredGuide ? await getFormStandardDocumentByLang(lang) : null;
 
-  const fallbackProjects = hasProjectsBlock
+  // The three projects an editor picked for this article (blogs.popularProperties).
+  // Resolved to the same cards a Projects block shows. When there are any they
+  // are the article's property step, so the generic fallback below is skipped.
+  const popularCards = await getPopularPropertyCards(blog.popularProperties, lang);
+
+  const fallbackProjects = hasProjectsBlock || popularCards.length > 0
     ? []
     : await (async () => {
         const withCity = cityHit ? await getArticleFallbackProjects(lang, cityHit) : [];
@@ -401,8 +407,20 @@ const PagePost = async ({ params }: Props) => {
                   <GuidesStrip lang={lang} />
                 ) : null}
 
-                {/* Only when the article carries no Projects block of its own —
-                    see the resolution above. Rendered through the same component
+                {popularCards.length > 0 && (
+                  <ProjectsSectionBlockComponent
+                    block={{
+                      _key: "popular-properties",
+                      _type: "projectsSectionBlock",
+                      title: t.popularProperties,
+                      projects: popularCards,
+                    } as any}
+                    lang={lang}
+                  />
+                )}
+
+                {/* Only when the article carries no Projects block of its own and
+                    no popular properties — see the resolution above. Rendered through the same component
                     an editor-placed block uses, so it is visually identical. */}
                 {fallbackProjects.length > 0 && (
                   <ProjectsSectionBlockComponent
