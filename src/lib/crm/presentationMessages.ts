@@ -77,19 +77,19 @@ export const PRESENTATION_EMAIL_TEMPLATE: Record<Locale, (name: string, url: str
   // Same text as WHATSAPP_MSG (operator 2026-10-26), signed with the first name
   // only — the signature block (logo/contact) follows right after.
   en: (name, url) => ({
-    subject: "Your personal property selection",
+    subject: "Your personal property selection from Cyprus VIP Estates",
     body: `${GREETING.en(name)}\n\n${SELECTION_LINES.en(url)}\n\n${SIGN_OFF.en}\n${SIGNER_FIRST}`,
   }),
   de: (name, url) => ({
-    subject: "Ihre persönliche Immobilienauswahl",
+    subject: "Ihre persönliche Immobilienauswahl von Cyprus VIP Estates",
     body: `${GREETING.de(name)}\n\n${SELECTION_LINES.de(url)}\n\n${SIGN_OFF.de}\n${SIGNER_FIRST}`,
   }),
   pl: (name, url) => ({
-    subject: "Państwa osobisty wybór nieruchomości",
+    subject: "Państwa osobisty wybór nieruchomości od Cyprus VIP Estates",
     body: `${GREETING.pl(name)}\n\n${SELECTION_LINES.pl(url)}\n\n${SIGN_OFF.pl}\n${SIGNER_FIRST}`,
   }),
   ru: (name, url) => ({
-    subject: "Ваша персональная подборка объектов",
+    subject: "Ваша персональная подборка объектов от Cyprus VIP Estates",
     body: `${GREETING.ru(name)}\n\n${SELECTION_LINES.ru(url)}\n\n${SIGN_OFF.ru}\n${SIGNER_FIRST}`,
   }),
   // `|` instead of the em dash the LTR subjects use (styleguide §3: no `—` in
