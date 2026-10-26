@@ -100,15 +100,6 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
         }
       />
 
-      <CommissionRates
-        developerAccountId={dev.id}
-        defaultRate={defaultRateRow ? { id: defaultRateRow.id, ratePercent: defaultRateRow.ratePercent.toNumber() } : null}
-        projects={activeDevelopments.map((d) => {
-          const r = ownRate.get(d.id);
-          return { id: d.id, name: d.override?.alias || d.publicName, status: d.publishStatus, rateId: r?.id ?? null, ownRate: r ? r.ratePercent.toNumber() : null };
-        })}
-      />
-
       {/* Developments */}
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
         <h2 className="text-sm font-semibold text-[#111827]">
@@ -199,6 +190,17 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
         </form>
         <p className="text-xs text-[#9CA3AF]">After creating, open the development to scan a developer PDF with Claude — it fills the description and units automatically.</p>
       </div>
+
+      {/* Commission sits BELOW the clickable developments list: placed above it
+          (2026-10-24) it looked like the project list and its names led nowhere. */}
+      <CommissionRates
+        developerAccountId={dev.id}
+        defaultRate={defaultRateRow ? { id: defaultRateRow.id, ratePercent: defaultRateRow.ratePercent.toNumber() } : null}
+        projects={activeDevelopments.map((d) => {
+          const r = ownRate.get(d.id);
+          return { id: d.id, name: d.override?.alias || d.publicName, status: d.publishStatus, rateId: r?.id ?? null, ownRate: r ? r.ratePercent.toNumber() : null };
+        })}
+      />
 
       {/* Drive / Dropbox availability sync. Which one a developer uses is read
           off the link itself — DeveloperAccount has no provider column, both

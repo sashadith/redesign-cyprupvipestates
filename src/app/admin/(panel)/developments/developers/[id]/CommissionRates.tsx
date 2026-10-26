@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { saveRateAction, deleteRateAction } from "@/app/crm/commissions/actions";
 import { fmtRate } from "@/lib/crm/rateFormat";
@@ -75,7 +76,7 @@ export default function CommissionRates({ developerAccountId, defaultRate, proje
                 const applies = p.ownRate ?? defaultRate?.ratePercent ?? null;
                 return (
                   <tr key={p.id}>
-                    <td className="px-3 py-2 text-[#111827]">{p.name}{p.status !== "published" && <span className="ml-1.5 text-xs text-[#9CA3AF]">{p.status}</span>}</td>
+                    <td className="px-3 py-2"><Link href={`/admin/developments/${p.id}`} className="font-medium text-[#111827] hover:text-[#1B4B43] hover:underline">{p.name}</Link>{p.status !== "published" && <span className="ml-1.5 text-xs text-[#9CA3AF]">{p.status}</span>}</td>
                     <td className="px-3 py-2 text-[#374151]">
                       {fmtRate(applies)}
                       {applies != null && <span className="ml-1.5 text-xs text-[#9CA3AF]">{p.ownRate != null ? "project" : "developer"}</span>}
