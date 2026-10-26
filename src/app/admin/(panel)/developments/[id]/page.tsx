@@ -317,8 +317,19 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             />
           </div>
 
-          <div>
-            <label className={label}>Promotional content <span className="font-normal text-[#9CA3AF]">— rendered between the map and the units list</span></label>
+          {/* Collapsed by default (2026-10-26): the long text takes a lot of room. The
+              editors stay mounted inside the closed <details>, so saving still sends them. */}
+          <details className="rounded-md border border-[#E5E7EB] p-3">
+            <summary className="text-sm font-semibold text-[#111827] cursor-pointer select-none">
+              SEO Content{" "}
+              <span className="font-normal text-[#9CA3AF]">
+                {(() => {
+                  const filled = (["EN", "DE", "PL", "RU", "HE"] as const).filter((l) => ((ov as any)?.[`promoBlocks${l}`] as any[] | undefined)?.length);
+                  return filled.length ? `· ${filled.join(" ")}` : "· empty";
+                })()}
+              </span>
+            </summary>
+            <div className="mt-3">
             <PromoBlocksField
               initial={{
                 en: (ov?.promoBlocksEN as any[]) ?? [],
@@ -328,7 +339,8 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 he: (ov?.promoBlocksHE as any[]) ?? [],
               }}
             />
-          </div>
+            </div>
+          </details>
 
           <div className="grid grid-cols-3 gap-3">
             <div><label className={label}>Completion</label><input name="completion" defaultValue={ov?.completion ?? ""} placeholder={d.completion ?? ""} className={field} /></div>
