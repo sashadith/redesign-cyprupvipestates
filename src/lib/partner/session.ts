@@ -2,7 +2,8 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { addHours, hashToken, newToken } from "./tokens";
+import { hashToken, newToken } from "./tokens";
+import { partnerSessionMs, partnerSessionWasRemembered } from "@/lib/loginPersistence";
 
 /**
  * Session cookie name. Production (HTTPS) uses the __Host- prefix, which the browser only accepts
@@ -12,7 +13,6 @@ import { addHours, hashToken, newToken } from "./tokens";
 export const PARTNER_COOKIE = process.env.NODE_ENV === "production" ? "__Host-cve_partner" : "cve_partner";
 // Host-only (no Domain); Secure in production, which the __Host- prefix requires.
 const COOKIE_OPTS = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" } as const;
-const SESSION_DAYS = 30;
 const TOUCH_EVERY_MS = 5 * 60_000;
 
 export type PartnerSessionInfo = {
@@ -29,12 +29,24 @@ export type PartnerSessionInfo = {
   };
 };
 
-/** Creates a session row and sets the host-only cookie (no Domain attribute). */
-export async function createPartnerSession(partnerUserId: string): Promise<void> {
+/**
+ * Creates a session row and sets the host-only cookie (no Domain attribute).
+ * remember ("Keep me signed in", 2026-10-26): 30 days with a persistent cookie; without it 8 hours
+ * and a browser-session cookie (no expires), so closing the browser also ends it.
+ */
+export async function createPartnerSession(partnerUserId: string, remember = true): Promise<void> {
   const { token, hash } = newToken();
-  const expiresAt = addHours(new Date(), SESSION_DAYS * 24);
+  const expiresAt = new Date(Date.now() + partnerSessionMs(remember));
   await prisma.partnerSession.create({ data: { partnerUserId, tokenHash: hash, expiresAt } });
-  cookies().set(PARTNER_COOKIE, token, { ...COOKIE_OPTS, expires: expiresAt });
+  cookies().set(PARTNER_COOKIE, token, remember ? { ...COOKIE_OPTS, expires: expiresAt } : COOKIE_OPTS);
+}
+
+/** Whether the session behind the current cookie was a remembered one (true when there is none). */
+export async function currentSessionRemembered(): Promise<boolean> {
+  const token = cookies().get(PARTNER_COOKIE)?.value;
+  if (!token) return true;
+  const s = await prisma.partnerSession.findUnique({ where: { tokenHash: hashToken(token) }, select: { createdAt: true, expiresAt: true } });
+  return s ? partnerSessionWasRemembered(s) : true;
 }
 
 /**

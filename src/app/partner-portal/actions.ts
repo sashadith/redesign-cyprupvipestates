@@ -24,7 +24,8 @@ import { deriveVatMode, vatModeAfterChange, type DerivedVatMode } from "@/lib/pa
 import { buildVatModeChangedNotice } from "@/lib/partner/vatNotice";
 import { partnerDisplayName } from "@/lib/partner/bankFlow";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { createPartnerSession, getPartner, revokeAllSessionsForPartner, revokeCurrentSession } from "@/lib/partner/session";
+import { createPartnerSession, currentSessionRemembered, getPartner, revokeAllSessionsForPartner, revokeCurrentSession } from "@/lib/partner/session";
+import { wantsRemember } from "@/lib/loginPersistence";
 import type { FormState } from "./formState";
 
 const field = (fd: FormData, k: string): string => {
@@ -35,9 +36,9 @@ const normEmail = (s: string) => s.trim().toLowerCase().slice(0, 254);
 const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const requestIp = () => partnerClientIp(headers());
 /** Log in fresh: any session behind an existing cookie is revoked first, so its token cannot stay valid. */
-async function startFreshSession(partnerUserId: string): Promise<void> {
+async function startFreshSession(partnerUserId: string, remember = true): Promise<void> {
   await revokeCurrentSession();
-  await createPartnerSession(partnerUserId);
+  await createPartnerSession(partnerUserId, remember);
 }
 const pwCode = (p: NonNullable<ReturnType<typeof passwordProblem>>) =>
   p === "too_short" ? "err.passwordShort" : p === "too_long" ? "err.passwordLong" : "err.passwordDigits";
@@ -154,7 +155,7 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
 
   L.loginEmail.reset(email);
   await prisma.partnerUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await startFreshSession(user.id);
+  await startFreshSession(user.id, wantsRemember(fd.get("remember")));
   redirect("/home");
 }
 
@@ -215,9 +216,11 @@ export async function changePasswordAction(_prev: FormState, fd: FormData): Prom
   const pp = passwordProblem(next);
   if (pp) return { error: pwCode(pp), field: "newPassword" };
 
+  // The replacement session keeps the kind of the current one (an 8-hour login must not turn into 30 days).
+  const remember = await currentSessionRemembered();
   await prisma.partnerUser.update({ where: { id: me.user.id }, data: { passwordHash: await hashPassword(next) } });
   await revokeAllSessionsForPartner(me.partner.id);
-  await createPartnerSession(me.user.id);
+  await createPartnerSession(me.user.id, remember);
   return { ok: true };
 }
 

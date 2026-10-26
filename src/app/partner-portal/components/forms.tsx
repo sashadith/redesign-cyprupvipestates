@@ -233,6 +233,10 @@ export function LoginForm({ t }: { t: PartnerDict }) {
         <Field t={t} state={state} name="password" label={t.login.password}>
           {(a) => <input {...a} name="password" type="password" autoComplete="current-password" required />}
         </Field>
+        <div className="pp-check">
+          <input id="f-remember" type="checkbox" name="remember" defaultChecked />
+          <label htmlFor="f-remember">{t.login.remember}</label>
+        </div>
         <Submit>{t.login.submit}</Submit>
         <p className="pp-alt"><Link href="/forgot">{t.login.forgot}</Link></p>
       </form>

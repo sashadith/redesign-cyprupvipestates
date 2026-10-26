@@ -72,6 +72,7 @@ export const de: PartnerDict = {
     email: "E-Mail-Adresse",
     password: "Passwort",
     submit: "Anmelden",
+    remember: "Angemeldet bleiben (30 Tage)",
     forgot: "Passwort vergessen?",
     errorGeneric: "E-Mail-Adresse oder Passwort ist nicht korrekt.",
     verifyFirst: "Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Den Link finden Sie in Ihrem Postfach.",

@@ -39,7 +39,7 @@ export default function PromoBlocksField({ initial }: { initial: Record<Locale, 
         </div>
       ))}
       <p className="text-[11px] text-[#9CA3AF]">
-        Long-form promotional text, rendered between the map and the units list — separate from the short description above. Headings, lists and comparison tables; no accordion/collapse wrapper.
+        Long-form SEO text, shown in full on the project page between the map and the units list — separate from the short description above. Headings, lists and comparison tables.
       </p>
     </div>
   );

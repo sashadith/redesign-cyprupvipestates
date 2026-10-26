@@ -70,6 +70,7 @@ export const en = {
     email: "Email address",
     password: "Password",
     submit: "Log in",
+    remember: "Keep me signed in for 30 days",
     forgot: "Forgot your password?",
     errorGeneric: "Email or password is incorrect.",
     verifyFirst: "Please confirm your email address first. Check your inbox for the link.",
