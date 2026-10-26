@@ -5,7 +5,7 @@
 // fix) — the signature block itself (logo/contact/social) starts right
 // after this, appended separately by sendCrmEmailAction via getSignatureHtml.
 
-const SIGNER_NAME = "Sascha Dith";
+export const SIGNER_NAME = "Sascha Dith";
 const COMPANY_NAME = "Cyprus VIP Estates";
 
 // VALEDICTION and ROLE_LINE are exported so scripts/qa/copy-snapshot.mjs can
