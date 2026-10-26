@@ -86,7 +86,10 @@ export default function MatchingMap({ markers }: { markers: MatchingMapMarker[] 
   const pin = pinMarkup(true);
 
   return (
-    <div className="px-mapwrap" style={{ height: 460, borderRadius: 8, overflow: "hidden" }}>
+    // isolation: the map's own z-indexes (life-nearby bar 500, MapLibre controls)
+    // must stay inside this box, or they paint over the page's z-50 dialogs
+    // ("Presentation created", 2026-10-26) — same as .cp-mapsection on /c/[token].
+    <div className="px-mapwrap" style={{ height: 460, borderRadius: 8, overflow: "hidden", isolation: "isolate" }}>
       <MapContainer
         center={[markers[0].lng, markers[0].lat]}
         zoom={10}
