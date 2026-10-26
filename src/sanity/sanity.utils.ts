@@ -306,6 +306,15 @@ function resolvedPropertyType(row: any): string | undefined {
 // anything available.
 const MAX_FILTERED_PROJECTS = 60;
 
+// Page size of a landingProjectsBlock with pagesEnabled: the block's own `pageSize` when it is a whole number
+// between 1 and MAX_FILTERED_PROJECTS, otherwise MAX_FILTERED_PROJECTS (what every existing paginated block uses,
+// none of them stores a pageSize). resolveBlocks and getPaginatedLandingPageSlugs both call this so the page count a
+// sitemap advertises always equals the page count the live page serves.
+function landingPageSize(b: any): number {
+  const n = b?.pageSize;
+  return Number.isInteger(n) && n >= 1 && n <= MAX_FILTERED_PROJECTS ? n : MAX_FILTERED_PROJECTS;
+}
+
 // Thrown by resolveBlocks when a requested ?page=N exceeds a pagesEnabled
 // block's real totalPages -- caught in _getSinglePageByLang and converted to
 // a `null` return, reusing the exact same "page not found" contract every
@@ -614,7 +623,7 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // 2026-07-22 bug — a real published article's hand-picked selection
         // rendered nothing because the guard treated it like a weak query).
         b._hasLiveCriteria = hasCriteria;
-      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null || b.filterStage) {
+      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null || b.filterStage || (b._type === "landingProjectsBlock" && b.pagesEnabled)) {
         // Only compute the live query when a page actually opts in — avoids an
         // unbounded Project+Development query (now uncapped, for pagination) on
         // every one of the other manual-array pages that never read this field.
@@ -654,7 +663,7 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         if (b.pagesEnabled && b._type === "landingProjectsBlock") {
           pageConsumed = true;
           const requestedPage = page ?? 1;
-          const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, MAX_FILTERED_PROJECTS);
+          const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, landingPageSize(b));
           if (requestedPage > paged.totalPages) throw new PageOutOfRangeError();
           b.filteredProjects = paged.items;
           b.totalPages = paged.totalPages;
@@ -866,10 +875,10 @@ export async function getPaginatedLandingPageSlugs(lang: string): Promise<{ slug
       priceMin: block.priceMin,
       priceMax: block.priceMax,
     };
-    // Page size must match resolveBlocks' own call exactly (MAX_FILTERED_PROJECTS)
+    // Page size must match resolveBlocks' own call exactly (landingPageSize)
     // -- a mismatch here would advertise a totalPages the live page disagrees
     // with, either 404ing a listed URL or leaving a real page unlisted.
-    const { totalPages } = await computeFilteredProjectsPaged(lang, block.filterCity, block.filterPropertyType, liveOpts, 1, MAX_FILTERED_PROJECTS);
+    const { totalPages } = await computeFilteredProjectsPaged(lang, block.filterCity, block.filterPropertyType, liveOpts, 1, landingPageSize(block));
     if (totalPages > 1) out.push({ slug: row.slug, totalPages });
   }
   return out;
