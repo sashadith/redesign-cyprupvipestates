@@ -143,7 +143,7 @@ export async function generateDescription(developmentId: string, words: number, 
     ].filter(Boolean).join(", ");
 
     const texts = await generateProjectDescription({
-      publicName: ov?.alias || d.publicName, developer: d.developer ?? undefined,
+      publicName: ov?.alias || d.publicName, otherNames: ov?.alias ? [d.publicName] : undefined, developer: d.developer ?? undefined,
       district: ov?.district || d.district || "",
       town: ov?.town || d.town || "",
       area,
