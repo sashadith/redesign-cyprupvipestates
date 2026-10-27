@@ -13,6 +13,8 @@ import { partnerBotConfigured } from "@/lib/partner/telegramApi";
 import { PartnerTiersPanel, type TierProposalRow } from "../components/PartnerTiersPanel";
 import { closedDealCounts, loadTiers } from "@/lib/partner/tierStore";
 import { tierLabel } from "@/lib/partner/tierFlow";
+import { loadPartnerEnquiries } from "@/lib/crm/partnerEnquiries";
+import { PartnerEnquiries } from "../components/PartnerEnquiries";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
   if (!canAssignLeads(user)) redirect("/crm/today");
 
   const tab = TABS.find((t) => t.key === searchParams?.tab) ?? TABS[0];
-  const [counts, partners, managers, telegramLinked, tiers, openProposals] = await Promise.all([
+  const [counts, partners, managers, telegramLinked, tiers, openProposals, enquiries] = await Promise.all([
     prisma.partner.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.partner.findMany({
       where: { status: tab.status },
@@ -55,6 +57,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         partner: { select: { firstName: true, lastName: true, company: true, handoverShare: true, fixShare: true } },
       },
     }),
+    loadPartnerEnquiries(),
   ]);
   // One batched query for the listed partners' closed deals (last 12 months).
   const closedDeals = await closedDealCounts(partners.map((p) => p.id), new Date());
@@ -105,6 +108,7 @@ export default async function PartnersPage({ searchParams }: { searchParams?: { 
         </div>
         <Link href="/crm/partners/rating" className="crm-btn">Rating seasons</Link>
       </div>
+      <PartnerEnquiries rows={enquiries} />
       <nav className="crm-pt-tabs" aria-label="Partner status">
         {TABS.map((t) => (
           <Link key={t.key} href={`/crm/partners?tab=${t.key}`} aria-current={t.key === tab.key ? "page" : undefined} className={`crm-chip${t.key === tab.key ? " on" : ""}`}>

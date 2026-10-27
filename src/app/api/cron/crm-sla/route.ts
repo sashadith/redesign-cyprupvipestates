@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog } from "@/lib/cronLog";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY } from "@/lib/crm/leadBucket";
 import { ACTIVE_LEAD_STATUSES } from "@/lib/crm/leadStatus";
 import {
   SLA_OUTBOUND_TYPES, dueSlaNotices, latestAssignedAt, sendSlaNotices, slaNoticesFromRows,
@@ -51,7 +51,7 @@ async function runSla(): Promise<SlaResult> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
 
   const rows = await prisma.lead.findMany({
-    where: { AND: [EXCLUDE_NEWSLETTER, { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, createdAt: { gte: since } }] },
+    where: { AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, createdAt: { gte: since } }] },
     orderBy: { createdAt: "desc" }, // the cap drops the oldest, never the newest
     take: LEAD_CAP,
     select: {

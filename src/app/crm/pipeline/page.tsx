@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireCrmUser } from "@/lib/crm/session";
-import { BOARD_CAP, loadBoardLeads } from "@/lib/crm/pipelineQuery";
-import { CLOSED_WINDOW_DAYS, buildBoard, isBoardFilter, type BoardFilter } from "@/lib/crm/boardModel";
+import { BOARD_CAP, loadBoardLeads, loadSideLeads } from "@/lib/crm/pipelineQuery";
+import { CLOSED_WINDOW_DAYS, buildBoard, buildSide, isBoardFilter, type BoardFilter } from "@/lib/crm/boardModel";
 import { CreatedToast } from "../components/CreatedToast";
 import { Board } from "../components/Board";
 
@@ -15,8 +15,9 @@ export default async function PipelinePage({ searchParams }: { searchParams: { f
   const user = await requireCrmUser();
   const filter: BoardFilter = isBoardFilter(searchParams.f) ? searchParams.f : "all";
   const now = new Date();
-  const { leads, total } = await loadBoardLeads(user, filter, now);
+  const [{ leads, total }, sideLeads] = await Promise.all([loadBoardLeads(user, filter, now), loadSideLeads(user, filter, now)]);
   const columns = buildBoard(leads, now);
+  const side = buildSide(sideLeads.leads, now);
   // The Closed column is a recent-sales window, not active work: counted apart.
   const sold = columns.find((c) => c.status === "CLOSED")?.cards.length ?? 0;
   const active = columns.reduce((n, c) => n + c.cards.length, 0) - sold;
@@ -37,7 +38,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: { f
       {total > BOARD_CAP && (
         <p className="crm-notice" role="status">Showing the {BOARD_CAP} most recently updated of {total} leads.</p>
       )}
-      <Board columns={columns} />
+      <Board columns={columns} side={side} sideTotal={sideLeads.total} />
     </>
   );
 }

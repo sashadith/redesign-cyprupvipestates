@@ -10,6 +10,7 @@ import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
 import { makeLimiter } from "@/lib/crm/ai/rateLimit";
 import { summariseLead, type SummaryResult } from "@/lib/crm/ai/summary";
+import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { INTAKE_MAX, INTAKE_MIN, intakeFromText, type IntakeResult } from "@/lib/crm/ai/intake";
 
 // Lead cockpit writes (CRM v2, 2026-10-18). Same validation as the MCP tool
@@ -86,13 +87,26 @@ const summaryLimiter = makeLimiter(10, 60_000);
 const intakeLimiter = makeLimiter(10, 60_000);
 const SLOW_DOWN = "Too many Claude requests — wait a minute and try again.";
 
-export async function summariseLeadAction(leadId: string): Promise<SummaryResult> {
+// The picked language is remembered per user (User.crmSummaryLocale), so the
+// cockpit opens with it next time. A save failure never blocks the summary.
+export async function setSummaryLocaleAction(locale: string): Promise<{ ok: boolean }> {
+  const user = await requireCrmUser();
+  if (!isSummaryLocale(locale)) return { ok: false };
+  try {
+    await prisma.user.update({ where: { id: user.id }, data: { crmSummaryLocale: locale } });
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+}
+
+export async function summariseLeadAction(leadId: string, locale?: string): Promise<SummaryResult> {
   const user = await requireCrmUser();
   if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { ok: false, error: "Lead not found." };
   const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
   if (!lead || !canViewLead(user, lead)) return { ok: false, error: "Lead not found." };
   if (!summaryLimiter(user.id)) return { ok: false, error: SLOW_DOWN };
-  return summariseLead(leadId);
+  return summariseLead(leadId, isSummaryLocale(locale) ? locale : DEFAULT_SUMMARY_LOCALE);
 }
 
 export async function intakeFromTextAction(text: string): Promise<IntakeResult> {

@@ -181,6 +181,12 @@
 .crm-droprow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .crm-drop { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px dashed var(--line-strong); border-radius: var(--r); padding: 16px; color: var(--muted); font-weight: 700; font-size: calc(13px * var(--ds-crm-scale)); transition: border-color .2s, background .2s; }
 .crm-drop.over { border-color: var(--sc); background: var(--panel); color: var(--ink); }
+/* Keep contact / Lost: the drop zones are also toggles for the list below. */
+button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--ds-crm-scale)); background: none; cursor: pointer; }
+.crm-drop .cnt { color: var(--muted); font-weight: 600; }
+.crm-drop.on { border-style: solid; border-color: var(--sc); color: var(--ink); background: var(--panel); }
+.crm-sidelist { margin-top: 10px; }
+.crm-sidegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .crm-dialog { border: 1px solid var(--line); border-radius: calc(18px * var(--ds-radius-scale)); padding: 0; width: min(440px, calc(100vw - 32px)); color: var(--ink); background: var(--panel);
   box-shadow: 0 30px 70px -30px color-mix(in srgb, var(--ds-text) 45%, transparent); }
 .crm-dialog::backdrop { background: color-mix(in srgb, var(--ds-text) 32%, transparent); backdrop-filter: blur(2px); }
@@ -342,6 +348,8 @@
 @media (min-width: 1024px) { .crm-ck-grid { grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); } }
 .crm-ck-sechead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .crm-ck-sechead span { font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-ck-sumctl { display: flex; align-items: center; gap: 6px; }
+.crm-ck-sumlang { font: inherit; font-size: calc(13px * var(--ds-crm-scale)); font-weight: 600; padding: 7px 8px; border: 1px solid var(--line-strong); border-radius: calc(10px * var(--ds-radius-scale)); background: var(--panel); color: var(--ink); }
 
 .crm-ck-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .crm-ck-steps button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted);
@@ -536,6 +544,7 @@
 .crm-pt-vat { border-top: 0; margin: 0; padding: 0; }
 /* Partner tiers (phase 4b): settings table and open proposals. */
 .crm-pt-tiers { margin: 0 0 16px; display: grid; gap: 12px; }
+.crm-pt-enq { margin: 16px 0 0; display: grid; gap: 12px; }
 .crm-pt-tiers h2 { margin: 0; font-size: calc(15px * var(--ds-crm-scale)); }
 .crm-pt-tiers p { margin: 0; color: var(--muted); font-size: calc(13px * var(--ds-crm-scale)); }
 .crm-pt-tierset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
