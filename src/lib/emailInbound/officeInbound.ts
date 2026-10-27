@@ -39,7 +39,7 @@ export type OfficeReplyDeps = {
   match: typeof matchRegistrationReply;
   alreadyStored(messageId: string): Promise<boolean>;
   storeReply(i: { leadId: string; registrationId: string; messageId: string | null; subject: string | null; body: string; from: string; occurredAt: Date; verdict: ReplyVerdict }): Promise<void>;
-  loadContext(registrationId: string): Promise<{ status: RegStatus; clientName: string; developerName: string } | null>;
+  loadContext(registrationId: string): Promise<{ status: RegStatus; clientName: string; clientLastName: string; developerName: string } | null>;
   classify: typeof classifyDeveloperReply;
   markAuto(registrationId: string, evidence: string): Promise<void>;
   alert(html: string): Promise<void>;
@@ -47,6 +47,11 @@ export type OfficeReplyDeps = {
 };
 
 export type OfficeOutcome = "ignored" | "stored" | "marked" | "alerted";
+
+export function mentionsName(text: string, lastName: string): boolean {
+  const n = lastName.trim().toLowerCase();
+  return n.length >= 2 && text.toLowerCase().includes(n);
+}
 
 export async function handleOfficeMessage(deps: OfficeReplyDeps, m: OfficeMessage, officeAddress: string): Promise<OfficeOutcome> {
   if (canonicalizeEmail(m.from) === canonicalizeEmail(officeAddress)) return "ignored";
@@ -77,11 +82,14 @@ export async function handleOfficeMessage(deps: OfficeReplyDeps, m: OfficeMessag
     body: m.body.slice(0, MAX_BODY_LENGTH), from: m.from, occurredAt: m.date, verdict,
   });
 
-  if (verdict.verdict === "confirmed" && ctx.status === "SENT") {
+  // A sender-only match may be about another client: auto-confirm only when the
+  // email names this client; otherwise a human looks.
+  const namesClient = match.matchedBy === "header" || mentionsName(`${m.subject ?? ""}\n${m.body}`, ctx.clientLastName);
+  if (verdict.verdict === "confirmed" && ctx.status === "SENT" && namesClient) {
     await deps.markAuto(match.registrationId, verdict.evidence);
     return "marked";
   }
-  if (verdict.verdict === "rejected" || verdict.verdict === "unclear") {
+  if (verdict.verdict === "rejected" || verdict.verdict === "unclear" || (verdict.verdict === "confirmed" && ctx.status === "SENT")) {
     await deps.alert(
       `<b>Developer reply needs a look</b>\n${esc(ctx.developerName)} about ${esc(ctx.clientName)}: ${verdict.verdict}` +
         `${verdict.evidence ? `\n${esc(verdict.evidence)}` : ""}\n<a href="${deps.siteUrl}/crm/leads/${match.leadId}">Open lead</a>`,
@@ -109,7 +117,7 @@ function realOfficeDeps(): OfficeReplyDeps {
         where: { id },
         select: { status: true, developerAccount: { select: { name: true } }, lead: { select: { firstName: true, lastName: true } } },
       });
-      return r ? { status: r.status, developerName: r.developerAccount.name, clientName: `${r.lead.firstName} ${r.lead.lastName ?? ""}`.trim() } : null;
+      return r ? { status: r.status, developerName: r.developerAccount.name, clientName: `${r.lead.firstName} ${r.lead.lastName ?? ""}`.trim(), clientLastName: r.lead.lastName?.trim() || r.lead.firstName } : null;
     },
     classify: (i) => classifyDeveloperReply(i),
     async markAuto(registrationId, evidence) {

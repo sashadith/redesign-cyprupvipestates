@@ -118,7 +118,11 @@ async function runRegistrationReminders(): Promise<RegistrationResult> {
 }
 
 async function runAll(): Promise<CronResult> {
-  const registrations = await runRegistrationReminders();
+  // Guarded: a reminder failure must never stop the SLA notices below.
+  const registrations = await runRegistrationReminders().catch((e): RegistrationResult => {
+    console.error("[crm-sla] registration reminders failed", e);
+    return { reminded: 0, errors: [e instanceof Error ? e.message : String(e)] };
+  });
   const sla = await runSlaNotices();
   return { sla, registrations };
 }

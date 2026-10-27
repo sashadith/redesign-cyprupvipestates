@@ -13,10 +13,10 @@ const DEVTS = [
   { id: "P2", publicName: "Blue", developerAccountId: "D1" },
 ];
 
-type Calls = { emails: any[]; whatsapp: [string, string][]; sent: any[]; failed: [string, string][]; claims: any[] };
+type Calls = { emails: any[]; whatsapp: [string, string][]; sent: any[]; failed: [string, string][]; claims: any[]; unrecorded: [string, string][] };
 
 function fakeDeps(over: Partial<RegisterDeps> = {}, phone: string | null = "+35799278285"): { deps: RegisterDeps; calls: Calls } {
-  const calls: Calls = { emails: [], whatsapp: [], sent: [], failed: [], claims: [] };
+  const calls: Calls = { emails: [], whatsapp: [], sent: [], failed: [], claims: [], unrecorded: [] };
   const deps: RegisterDeps = {
     loadLead: async () => ({ id: "L", firstName: "Anna", lastName: "Muster", phone }),
     loadDevelopers: async (ids) => DEVS.filter((d) => ids.includes(d.id)),
@@ -28,6 +28,7 @@ function fakeDeps(over: Partial<RegisterDeps> = {}, phone: string | null = "+357
     dailyCap: 25,
     recordSent: async (i) => { calls.sent.push(i); },
     recordFailed: async (id, e) => { calls.failed.push([id, e]); },
+    markSentUnrecorded: async (id, note) => { calls.unrecorded.push([id, note]); },
     ...over,
   };
   return { deps, calls };
@@ -84,7 +85,7 @@ test("the cap counts numbers already sent in this run", async () => {
   const r = await registerLead(deps, { leadId: "L", picks: [pick("DWA")], budgetMin: null, budgetMax: null, actor: A });
   assert.ok(r.ok && r.outcomes[0].result === "sent");
   assert.equal(calls.whatsapp.length, 1);
-  assert.match(calls.sent[0].partialError, new RegExp(CAP_REACHED));
+  assert.match(calls.sent[0].partialError, new RegExp(`\\+35799333444: ${CAP_REACHED}`));
 });
 
 test("an email send that throws marks FAILED and does not stop the next developer", async () => {
@@ -120,4 +121,41 @@ test("a project picked under the wrong developer is refused", async () => {
   const { deps } = fakeDeps();
   const r = await registerLead(deps, { leadId: "L", picks: [pick("DWA", ["P1"])], budgetMin: null, budgetMax: null, actor: A });
   assert.equal(r.ok, false);
+});
+
+test("timeline write fails after a successful send: still sent, never FAILED, retried once, honest note", async () => {
+  let attempts = 0;
+  const { deps, calls } = fakeDeps({ recordSent: async () => { attempts++; throw new Error("db down"); } });
+  const r = await registerLead(deps, { leadId: "L", picks: [pick("D1")], budgetMin: null, budgetMax: null, actor: A });
+  assert.ok(r.ok);
+  assert.equal(r.outcomes[0].result, "sent");
+  assert.match(r.outcomes[0].error ?? "", /do not resend/);
+  assert.equal(attempts, 2);
+  assert.deepEqual(calls.failed, []);
+  assert.equal(calls.unrecorded.length, 1);
+});
+
+test("a send timeout is reported as possibly delivered", async () => {
+  const { deps, calls } = fakeDeps({ sendEmail: async () => { throw new Error("Email timed out"); } });
+  const r = await registerLead(deps, { leadId: "L", picks: [pick("D1")], budgetMin: null, budgetMax: null, actor: A });
+  assert.ok(r.ok && r.outcomes[0].result === "failed");
+  assert.match(calls.failed[0][1], /may have been delivered/);
+});
+
+test("a claim error for one developer does not hide the others' results", async () => {
+  const { deps, calls } = fakeDeps({ claimRecord: async (i) => { if (i.developerAccountId === "D1") throw new Error("deadlock"); return { id: "R-" + i.developerAccountId }; } });
+  const r = await registerLead(deps, { leadId: "L", picks: [pick("D1"), pick("DWA")], budgetMin: null, budgetMax: null, actor: A });
+  assert.ok(r.ok);
+  assert.deepEqual(r.outcomes.map((o) => o.result), ["failed", "sent"]);
+  assert.match(r.outcomes[0].error ?? "", /nothing was sent/);
+  assert.equal(calls.emails.length, 0);
+});
+
+test("a name that carries contact data or is empty is refused", async () => {
+  for (const [first, last] of [["Anna", "+357 99278285"], ["anna@x.com", null], ["", null]] as [string, string | null][]) {
+    const { deps, calls } = fakeDeps({ loadLead: async () => ({ id: "L", firstName: first, lastName: last, phone: "+35799278285" }) });
+    const r = await registerLead(deps, { leadId: "L", picks: [pick("D1")], budgetMin: null, budgetMax: null, actor: A });
+    assert.equal(r.ok, false, `${first} ${last}`);
+    assert.equal(calls.claims.length, 0);
+  }
 });

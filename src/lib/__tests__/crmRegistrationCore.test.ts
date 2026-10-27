@@ -71,3 +71,7 @@ test("transitions follow §12.7", () => {
   assert.ok(canResend("FAILED") && canResend("REJECTED") && !canResend("SENT"));
   assert.equal(REMINDER_AFTER_MS, 172_800_000);
 });
+
+test("office@ is refused in To as well as CC", () => {
+  assert.equal(normalizeProfile({ channel: "EMAIL", emailTo: "Office@X.com", emailCc: "", whatsApp: "" }, "office@x.com").ok, false);
+});

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { pickBySender, type RegCandidate } from "@/lib/emailInbound/registrationMatch";
+import { isRegistrationRow } from "@/lib/emailInbound/matchLead";
 import { handleOfficeMessage, officeImapCredentials, type OfficeMessage, type OfficeReplyDeps } from "@/lib/emailInbound/officeInbound";
 import { inboundDisposition } from "@/lib/emailInbound/processInbound";
 import type { ReplyVerdict } from "@/lib/crm/registration/classify";
@@ -31,10 +32,10 @@ type Rec = { stored: any[]; marked: [string, string][]; alerts: string[]; classi
 function deps(over: Partial<OfficeReplyDeps> & { verdict?: ReplyVerdict; status?: "SENT" | "PRELIMINARY" } = {}): { d: OfficeReplyDeps; rec: Rec } {
   const rec: Rec = { stored: [], marked: [], alerts: [], classified: 0 };
   const d: OfficeReplyDeps = {
-    match: async () => ({ kind: "single", registrationId: "R1", leadId: "L1", developerName: "Marinakis" }),
+    match: async () => ({ kind: "single", registrationId: "R1", leadId: "L1", developerName: "Marinakis", matchedBy: "header" }),
     alreadyStored: async () => false,
     storeReply: async (i) => { rec.stored.push(i); },
-    loadContext: async () => ({ status: over.status ?? "SENT", clientName: "Anna Muster", developerName: "Marinakis" }),
+    loadContext: async () => ({ status: over.status ?? "SENT", clientName: "Anna Muster", clientLastName: "Muster", developerName: "Marinakis" }),
     classify: async () => { rec.classified++; return over.verdict ?? { verdict: "confirmed", evidence: "Registered, thank you" }; },
     markAuto: async (id, ev) => { rec.marked.push([id, ev]); },
     alert: async (h) => { rec.alerts.push(h); },
@@ -114,4 +115,25 @@ test("staff mailbox: a reply threaded to a registration is skipped, never filed 
   assert.equal(inboundDisposition({ leadId: "L", ambiguous: false }, false), "file");
   assert.equal(inboundDisposition(null, false), "skip");
   assert.equal(inboundDisposition({ leadId: "L", ambiguous: false }, true), "skip");
+});
+
+test("sender-only match: auto-confirm only when the email names the client, else a human looks", async () => {
+  const sender = async () => ({ kind: "single" as const, registrationId: "R1", leadId: "L1", developerName: "Marinakis", matchedBy: "sender" as const });
+  const a = deps({ match: sender });
+  assert.equal(await handleOfficeMessage(a.d, { ...MSG, inReplyTo: null, body: "Confirmed, Mrs Muster is registered." }, OFFICE), "marked");
+  const b = deps({ match: sender });
+  assert.equal(await handleOfficeMessage(b.d, { ...MSG, inReplyTo: null, subject: "Viewing", body: "Confirmed: viewing on Tuesday for Mr Novak." }, OFFICE), "alerted");
+  assert.equal(b.rec.marked.length, 0);
+  assert.equal(b.rec.stored.length, 1);
+});
+
+test("a follow-up to a stored developer reply is a registration thread too (Review Focus 1)", () => {
+  assert.ok(isRegistrationRow({ type: "SYSTEM", metadata: { kind: "developer_registration" } }));
+  assert.ok(isRegistrationRow({ type: "SYSTEM", metadata: { kind: "developer_registration_reply" } }));
+  assert.ok(!isRegistrationRow({ type: "SYSTEM", metadata: { kind: "developer_registration_status" } }));
+  assert.ok(!isRegistrationRow({ type: "EMAIL_OUT", metadata: { kind: "developer_registration" } }));
+});
+
+test("Cyprus ISP domain never matches by domain", () => {
+  assert.equal(pickBySender("someone@cytanet.com.cy", [C("r1", "L1", "D1", ["dev@cytanet.com.cy"])]), null);
 });

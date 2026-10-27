@@ -43,6 +43,8 @@ export type RegisterDeps = {
     channel: "email" | "whatsapp"; to: string[]; cc: string[]; partialError: string | null;
   }): Promise<void>;
   recordFailed(registrationId: string, error: string): Promise<void>;
+  // Fallback when recordSent keeps failing after a successful send: SENT, sentAt now, note in sendError.
+  markSentUnrecorded(registrationId: string, note: string): Promise<void>;
 };
 
 export const BUDGET_ERROR = "Budget must be a whole number in euros.";
@@ -74,6 +76,12 @@ export function planMessages(
 
   const devById = new Map(devs.map((d) => [d.id, d]));
   const clientName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
+  // The name is the only free text in the message: refuse it empty, or when it
+  // carries what looks like contact data (anti-goal: no full phone, no email).
+  if (!clientName) return { ok: false, error: "The lead has no name." };
+  if (clientName.includes("@") || /\d{6}/.test(clientName.replace(/[\s\-().]/g, ""))) {
+    return { ok: false, error: "The lead's name contains contact data — fix the name first." };
+  }
   const budgetText = formatBudget(budget.min, budget.max);
   const plans: PlannedMessage[] = [];
   for (const [devId, ids] of Array.from(byDev)) {
@@ -113,47 +121,82 @@ export async function prepareRegistration(
   return planned.ok ? { ...planned, lead } : planned;
 }
 
+// A transport timeout means delivery is unknown, not "failed": say so, so
+// nobody resends blindly.
+function sendErrorText(e: unknown): string {
+  const t = errText(e);
+  return /timed out/i.test(t) ? `${t} — it may have been delivered; check with the developer before resending` : t;
+}
+
+// After the transport reported success the registration is SENT, whatever the
+// bookkeeping does: a FAILED here would invite a resend and a second message to
+// the developer. One retry, then a bare status fallback with an honest note.
+async function recordSuccess(deps: RegisterDeps, i: Parameters<RegisterDeps["recordSent"]>[0]): Promise<string | undefined> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await deps.recordSent(i);
+      return undefined;
+    } catch (e) {
+      console.error(`registration: recordSent failed (attempt ${attempt + 1})`, e);
+    }
+  }
+  const note = "Sent, but not recorded on the timeline — do not resend";
+  await deps.markSentUnrecorded(i.registrationId, note).catch((e) => console.error("registration: markSentUnrecorded failed", e));
+  return note;
+}
+
 async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, actor: Actor, sentSoFar: { whatsapp: number }): Promise<RegisterOutcome> {
   const base = { developerAccountId: plan.developerAccountId, developerName: plan.developerName };
-  const claim = await deps.claimRecord({ leadId: lead.id, developerAccountId: plan.developerAccountId, developmentIds: plan.developmentIds, channel: plan.channel, sentById: actor.userId });
-  if (claim === "already") return { ...base, result: "already" };
-  const registrationId = claim.id;
-
+  let registrationId: string;
   try {
-    if (plan.channel === "EMAIL") {
-      const { messageId } = await deps.sendEmail({ to: plan.targets, cc: plan.cc, subject: plan.subject, text: plan.text });
-      await deps.recordSent({ registrationId, leadId: lead.id, actor, subject: plan.subject, text: plan.text, messageId, channel: "email", to: plan.targets, cc: plan.cc, partialError: null });
-      return { ...base, result: "sent" };
-    }
-
-    const reached: string[] = [];
-    const failures: string[] = [];
-    const already = await deps.countWhatsAppToday();
-    for (const number of plan.targets) {
-      if (already + sentSoFar.whatsapp >= deps.dailyCap) { failures.push(`${number}: ${CAP_REACHED}`); break; }
-      try {
-        await deps.sendWhatsApp(number, plan.text);
-        reached.push(number);
-        sentSoFar.whatsapp++;
-      } catch (e) {
-        failures.push(`${number}: ${errText(e)}`);
-      }
-    }
-    if (reached.length === 0) {
-      const error = failures.length === 1 && failures[0].endsWith(CAP_REACHED) ? CAP_REACHED : failures.join("; ") || "nothing sent";
-      await deps.recordFailed(registrationId, error);
-      return { ...base, result: "failed", error };
-    }
-    await deps.recordSent({
-      registrationId, leadId: lead.id, actor, subject: null, text: plan.text, messageId: null, channel: "whatsapp",
-      to: reached, cc: [], partialError: failures.length ? failures.join("; ") : null,
-    });
-    return { ...base, result: "sent" };
+    const claim = await deps.claimRecord({ leadId: lead.id, developerAccountId: plan.developerAccountId, developmentIds: plan.developmentIds, channel: plan.channel, sentById: actor.userId });
+    if (claim === "already") return { ...base, result: "already" };
+    registrationId = claim.id;
   } catch (e) {
-    const error = errText(e);
+    console.error("registration: claim failed", e);
+    return { ...base, result: "failed", error: "Could not save the registration — nothing was sent." };
+  }
+
+  const fail = async (error: string): Promise<RegisterOutcome> => {
     await deps.recordFailed(registrationId, error).catch((err) => console.error("registration: recordFailed failed", err));
     return { ...base, result: "failed", error };
+  };
+  const sent = (warning: string | undefined): RegisterOutcome => ({ ...base, result: "sent", ...(warning ? { error: warning } : {}) });
+
+  if (plan.channel === "EMAIL") {
+    let messageId: string;
+    try {
+      ({ messageId } = await deps.sendEmail({ to: plan.targets, cc: plan.cc, subject: plan.subject, text: plan.text }));
+    } catch (e) {
+      return fail(sendErrorText(e));
+    }
+    return sent(await recordSuccess(deps, { registrationId, leadId: lead.id, actor, subject: plan.subject, text: plan.text, messageId, channel: "email", to: plan.targets, cc: plan.cc, partialError: null }));
   }
+
+  const reached: string[] = [];
+  const failures: string[] = [];
+  let already: number;
+  try {
+    already = await deps.countWhatsAppToday();
+  } catch (e) {
+    return fail(`could not check the daily WhatsApp limit: ${errText(e)}`);
+  }
+  for (const number of plan.targets) {
+    if (already + sentSoFar.whatsapp >= deps.dailyCap) { failures.push(`${number}: ${CAP_REACHED}`); continue; }
+    try {
+      await deps.sendWhatsApp(number, plan.text);
+      reached.push(number);
+      sentSoFar.whatsapp++;
+    } catch (e) {
+      failures.push(`${number}: ${sendErrorText(e)}`);
+    }
+  }
+  if (reached.length === 0) {
+    return fail(failures.every((f) => f.endsWith(CAP_REACHED)) ? CAP_REACHED : failures.join("; ") || "nothing sent");
+  }
+  const partialError = failures.length ? failures.join("; ") : null;
+  const warning = await recordSuccess(deps, { registrationId, leadId: lead.id, actor, subject: null, text: plan.text, messageId: null, channel: "whatsapp", to: reached, cc: [], partialError });
+  return sent(warning ?? partialError ?? undefined);
 }
 
 export async function registerLead(
@@ -165,6 +208,7 @@ export async function registerLead(
     if (!prepared.ok) return prepared;
     const outcomes: RegisterOutcome[] = [];
     const sentSoFar = { whatsapp: 0 };
+    // sendOne never throws; one developer's trouble never hides another's result.
     for (const plan of prepared.plans) outcomes.push(await sendOne(deps, plan, prepared.lead, input.actor, sentSoFar));
     return { ok: true, outcomes };
   } catch (e) {
@@ -239,6 +283,9 @@ export function realRegisterDeps(): RegisterDeps {
           data: { sentAt: new Date(), outboundInteractionId: row.id, sendError: i.partialError },
         });
       });
+    },
+    async markSentUnrecorded(id, note) {
+      await prisma.developerRegistration.update({ where: { id }, data: { status: "SENT", sentAt: new Date(), sendError: note } });
     },
     async recordFailed(id, error) {
       await prisma.developerRegistration.update({ where: { id }, data: { status: "FAILED", sendError: error } });

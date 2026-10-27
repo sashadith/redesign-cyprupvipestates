@@ -106,6 +106,7 @@ export function normalizeProfile(
     if (!EMAIL_RE.test(a)) return { ok: false, error: `Not a valid email address: ${a}` };
   }
   if (emailCc.includes(office)) return { ok: false, error: "office@ is the sender; remove it from CC." };
+  if (emailTo.includes(office)) return { ok: false, error: "office@ is the sender; remove it from To." };
   emailCc = emailCc.filter((a) => !emailTo.includes(a));
 
   const waRaw = (input.whatsApp || "").split(/[\n,;]+/).map((x) => x.trim()).filter(Boolean);

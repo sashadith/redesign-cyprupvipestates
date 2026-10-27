@@ -7,15 +7,23 @@ import { canonicalizeEmail } from "./matchLead";
 // a registration still waiting for an answer (status SENT).
 
 export type RegCandidate = { registrationId: string; leadId: string; developerAccountId: string; developerName: string; addresses: string[] };
+// matchedBy: "header" = a reply in our registration thread; "sender" = only the
+// sender fits, so the email may well be about another client.
 export type RegistrationReplyMatch =
-  | { kind: "single"; registrationId: string; leadId: string; developerName: string }
+  | { kind: "single"; registrationId: string; leadId: string; developerName: string; matchedBy: "header" | "sender" }
   | { kind: "several"; candidates: { registrationId: string; leadId: string }[] };
 
 // A shared mailbox provider says nothing about who the sender works for, so
 // these domains only ever match by exact address, never by domain.
 export const PUBLIC_MAIL_DOMAINS: ReadonlySet<string> = new Set([
-  "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "yahoo.com", "icloud.com", "me.com",
-  "gmx.de", "gmx.net", "web.de", "mail.ru", "yandex.ru", "proton.me", "protonmail.com",
+  "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "hotmail.co.uk", "live.com", "live.co.uk", "msn.com",
+  "yahoo.com", "yahoo.co.uk", "ymail.com", "aol.com", "icloud.com", "me.com", "mac.com", "proton.me", "protonmail.com",
+  // Cyprus ISPs — small developers use these
+  "cytanet.com.cy", "primehome.com", "cablenet.com.cy", "logosnet.cy.net",
+  // client markets
+  "gmx.de", "gmx.net", "gmx.at", "web.de", "t-online.de", "freenet.de", "posteo.de",
+  "wp.pl", "o2.pl", "onet.pl", "interia.pl", "op.pl", "gazeta.pl",
+  "mail.ru", "bk.ru", "list.ru", "inbox.ru", "yandex.ru", "yandex.com", "ya.ru", "rambler.ru",
 ]);
 
 const domainOf = (a: string) => a.slice(a.lastIndexOf("@") + 1);
@@ -41,14 +49,18 @@ const metaRegistrationId = (m: unknown): string | null => {
 export async function matchRegistrationReply(o: { inReplyTo: string | null; references: string[]; fromAddress: string }): Promise<RegistrationReplyMatch | null> {
   const ids = [o.inReplyTo, ...o.references].filter((id): id is string => !!id);
   for (const messageId of ids) {
+    // Our registration email, or a developer reply we stored (a follow-up in that thread).
     const hit = await prisma.leadInteraction.findFirst({
-      where: { messageId, type: "SYSTEM", metadata: { path: ["kind"], equals: "developer_registration" } },
+      where: { messageId, type: "SYSTEM", OR: [
+        { metadata: { path: ["kind"], equals: "developer_registration" } },
+        { metadata: { path: ["kind"], equals: "developer_registration_reply" } },
+      ] },
       select: { leadId: true, metadata: true },
     });
     const registrationId = hit ? metaRegistrationId(hit.metadata) : null;
     if (!hit || !registrationId) continue;
     const reg = await prisma.developerRegistration.findUnique({ where: { id: registrationId }, select: { developerAccount: { select: { name: true } } } });
-    if (reg) return { kind: "single", registrationId, leadId: hit.leadId, developerName: reg.developerAccount.name };
+    if (reg) return { kind: "single", registrationId, leadId: hit.leadId, developerName: reg.developerAccount.name, matchedBy: "header" };
   }
 
   const waiting = await prisma.developerRegistration.findMany({
@@ -60,6 +72,6 @@ export async function matchRegistrationReply(o: { inReplyTo: string | null; refe
     addresses: [...r.developerAccount.registrationEmailTo, ...r.developerAccount.registrationEmailCc],
   })));
   if (!picked) return null;
-  if (picked.kind === "single") return { kind: "single", registrationId: picked.c.registrationId, leadId: picked.c.leadId, developerName: picked.c.developerName };
+  if (picked.kind === "single") return { kind: "single", registrationId: picked.c.registrationId, leadId: picked.c.leadId, developerName: picked.c.developerName, matchedBy: "sender" };
   return { kind: "several", candidates: picked.cs.map((c) => ({ registrationId: c.registrationId, leadId: c.leadId })) };
 }

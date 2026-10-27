@@ -28,6 +28,7 @@ function ddmmyy(iso: string): string {
 function dateLine(r: RegistrationRow): string {
   const parts: string[] = [];
   if (r.sentAt) parts.push(`Sent ${ddmmyy(r.sentAt)}`);
+  else if (r.status === "SENT") parts.push("Sending… (if this stays, mark rejected and resend)");
   if (r.preliminaryAt) parts.push(`Preliminary ${ddmmyy(r.preliminaryAt)}${r.preliminarySource ? ` (${r.preliminarySource})` : ""}`);
   if (r.fixedAt) parts.push(`Fixed ${ddmmyy(r.fixedAt)}`);
   return parts.join(" · ");
