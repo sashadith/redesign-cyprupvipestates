@@ -28,7 +28,7 @@ import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 import type { GoldPhrase } from "@/lib/developmentCopy";
 import { fmtPrice, bidiIsolate, ltrIsolate, localeDir } from "@/lib/locale";
 import { hePlaceList } from "@/lib/hePlaces";
-import { heFeedLabel } from "@/lib/heFeedVocab";
+import { typeLabel } from "@/lib/typeLabels";
 import Bdi from "@/app/components/Bdi";
 
 // Shared render body for both the SEO-facing slug route (the Development
@@ -125,7 +125,7 @@ export default async function ProjectPageBody({
   const types = resolveDevelopmentType(p.category, p.units)
     .split(" · ")
     .filter(Boolean)
-    .map((x) => (lang === "he" ? heFeedLabel(x) : x));
+    .map((x) => typeLabel(x, lang));
   // Same story for the place string ("Peyia, Paphos"): raw feed text, shown
   // twice (hero eyebrow + facts panel). Transliterated per he-glossary.md §1
   // for `he`, unknown parts kept Latin and bidi-isolated.

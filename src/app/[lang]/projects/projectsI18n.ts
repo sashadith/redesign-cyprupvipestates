@@ -202,7 +202,7 @@ const DE: ProjectsStrings = {
   typeLabel: "Immobilientyp",
   typePlaceholder: "Beliebiger Typ",
   types: [
-    { value: "Apartment", label: "Apartment" },
+    { value: "Apartment", label: "Wohnung" },
     { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Villa" },
     { value: "Townhouse", label: "Reihenhaus" },
@@ -292,7 +292,7 @@ const PL: ProjectsStrings = {
   typeLabel: "Typ nieruchomości",
   typePlaceholder: "Dowolny typ",
   types: [
-    { value: "Apartment", label: "Mieszkanie" },
+    { value: "Apartment", label: "Apartament" },
     { value: "Penthouse", label: "Penthouse" },
     { value: "Villa", label: "Willa" },
     { value: "Townhouse", label: "Dom szeregowy" },
