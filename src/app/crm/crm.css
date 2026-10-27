@@ -348,6 +348,8 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 @media (min-width: 1024px) { .crm-ck-grid { grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); } }
 .crm-ck-sechead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .crm-ck-sechead span { font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-ck-sumctl { display: flex; align-items: center; gap: 6px; }
+.crm-ck-sumlang { font: inherit; font-size: calc(13px * var(--ds-crm-scale)); font-weight: 600; padding: 7px 8px; border: 1px solid var(--line-strong); border-radius: calc(10px * var(--ds-radius-scale)); background: var(--panel); color: var(--ink); }
 
 .crm-ck-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .crm-ck-steps button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted);
