@@ -1,5 +1,5 @@
 import type { PublicTemperature } from "./insights/temperatureWiring";
-import { FUNNEL_STATUSES, STATUS_LABEL, isLeadStatus, type LeadStatusValue } from "./leadStatus";
+import { FUNNEL_STATUSES, SIDE_STATUSES, STATUS_LABEL, isLeadStatus, type LeadStatusValue } from "./leadStatus";
 
 // Pure view model for the /crm pipeline (2026-10-18).
 
@@ -65,7 +65,8 @@ export function toCard(lead: BoardLeadInput, now: Date): BoardCard {
     ownerInitials: lead.assignedTo ? initials(lead.assignedTo.name) : null,
     ownerName: lead.assignedTo?.name ?? null,
     ageLabel: a.label,
-    stale: a.days >= STALE_DAYS && status !== "CLOSED",
+    // Keep contact / Lost are parked on purpose: never flagged stale.
+    stale: a.days >= STALE_DAYS && status !== "CLOSED" && !(SIDE_STATUSES as readonly string[]).includes(status),
     dealValue: open.length ? open.reduce((s, d) => s + d.price, 0) : null,
     dealCommission: open.some((d) => d.ourCommission != null) ? open.reduce((s, d) => s + (d.ourCommission ?? 0), 0) : null,
     status,
@@ -76,6 +77,15 @@ export function toCard(lead: BoardLeadInput, now: Date): BoardCard {
 
 export function buildBoard(leads: BoardLeadInput[], now: Date): BoardColumn[] {
   return FUNNEL_STATUSES.map((status) => {
+    const cards = leads.filter((l) => l.status === status).map((l) => toCard(l, now));
+    return { status, label: STATUS_LABEL[status], cards, total: cards.reduce((s, c) => s + (c.dealValue ?? 0), 0) };
+  });
+}
+
+// Keep contact and Lost, in the same column shape so the board can move cards
+// between them and the funnel with one state.
+export function buildSide(leads: BoardLeadInput[], now: Date): BoardColumn[] {
+  return SIDE_STATUSES.map((status) => {
     const cards = leads.filter((l) => l.status === status).map((l) => toCard(l, now));
     return { status, label: STATUS_LABEL[status], cards, total: cards.reduce((s, c) => s + (c.dealValue ?? 0), 0) };
   });

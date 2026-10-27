@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY } from "@/lib/crm/leadBucket";
 import { ACTIVE_LEAD_STATUSES, STATUS_LABEL, isLeadStatus } from "@/lib/crm/leadStatus";
 import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
 import { sortByTemperature, toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
@@ -27,6 +27,7 @@ export default async function TodayPage() {
       AND: [
         { assignedToId: user.id, deletedAt: null },
         EXCLUDE_NEWSLETTER,
+        EXCLUDE_PARTNER_ENQUIRY,
         // Viewings are shown for any status; a day of slack on the lower bound
         // keeps the Cyprus midnight edge safe, buildToday does the exact cut.
         { OR: [{ status: { in: [...ACTIVE_LEAD_STATUSES] } }, { viewingScheduledAt: { gte: new Date(now.getTime() - 86_400_000) } }] },

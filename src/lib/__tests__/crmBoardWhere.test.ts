@@ -45,3 +45,23 @@ test("stale is decided in the query, not after the row cap", () => {
   assert.equal(s.createdAt.lt.getTime(), cutoff);
   assert.equal(s.interactions.none.occurredAt.gte.getTime(), cutoff);
 });
+
+test("partner enquiries (PARTNER without partnerId) stay off the board and the side lists; portal clients stay on", async () => {
+  const { sideWhere } = await import("@/lib/crm/boardWhere");
+  const { EXCLUDE_PARTNER_ENQUIRY } = await import("@/lib/crm/leadBucket");
+  assert.deepEqual(EXCLUDE_PARTNER_ENQUIRY, { NOT: { source: "PARTNER", partnerId: null } });
+  assert.ok(ands("all").includes(EXCLUDE_PARTNER_ENQUIRY));
+  assert.ok((sideWhere(user, "all") as { AND: unknown[] }).AND.includes(EXCLUDE_PARTNER_ENQUIRY));
+});
+
+test("side lists hold only Keep contact and Lost, scoped like the board", async () => {
+  const { sideWhere } = await import("@/lib/crm/boardWhere");
+  const a = (sideWhere(user, "all") as { AND: unknown[] }).AND;
+  assert.ok(a.some((x) => JSON.stringify(x) === JSON.stringify(leadAccessWhere(user))));
+  assert.ok(a.includes(EXCLUDE_NEWSLETTER));
+  const st = a.find((x) => (x as { status?: unknown }).status) as { deletedAt: unknown; status: { in: string[] } };
+  assert.equal(st.deletedAt, null);
+  assert.deepEqual(st.status.in, ["KEEP_CONTACT", "LOST"]);
+  const m = (sideWhere(user, "mine") as { AND: unknown[] }).AND;
+  assert.ok(m.some((x) => JSON.stringify(x) === JSON.stringify({ assignedToId: "u1" })));
+});

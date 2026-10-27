@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BoardColumn, BoardCard } from "@/lib/crm/boardModel";
-import { FUNNEL_STATUSES, STATUS_LABEL, type LeadStatusValue } from "@/lib/crm/leadStatus";
+import { FUNNEL_STATUSES, SIDE_STATUSES, STATUS_LABEL, type LeadStatusValue } from "@/lib/crm/leadStatus";
 import { useMoveFlow, type MoveRequest } from "./useMoveFlow";
 import { useToast } from "./Toast";
 import { TemperatureDot } from "./TemperatureDot";
@@ -99,10 +99,18 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
 
 type BoardMove = MoveRequest & { refocus: boolean };
 
-export function Board({ columns: initial }: { columns: BoardColumn[] }) {
+// Stable default: a fresh [] per render would re-run the reset effect forever.
+const NO_SIDE: BoardColumn[] = [];
+const isSide = (s: LeadStatusValue) => (SIDE_STATUSES as readonly string[]).includes(s);
+
+// `side` = Keep contact + Lost (buildSide). They share one state with the funnel
+// columns, so a move between a list and a column is the same move as between columns.
+export function Board({ columns: funnel, side = NO_SIDE, sideTotal = 0 }: { columns: BoardColumn[]; side?: BoardColumn[]; sideTotal?: number }) {
   const router = useRouter();
   const toast = useToast();
+  const initial = useMemo(() => [...funnel, ...side], [funnel, side]);
   const [columns, setColumns] = useState(initial);
+  const [open, setOpen] = useState<LeadStatusValue | null>(null);
   const [popId, setPopId] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
   // Always the latest board, so a move snapshots what is on screen right now
@@ -206,7 +214,7 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
     <>
       <div className="crm-boardwrap">
         <div className="crm-board">
-          {columns.map((col) => (
+          {columns.filter((c) => !isSide(c.status)).map((col) => (
             <section key={col.status} className={`crm-col s-${col.status}`} aria-label={col.label} {...dropProps(col.status)}>
               <div className="colh"><span className="dot" />{col.label}<span className="cnt">{col.cards.length}</span>{col.total > 0 && <span className="sum">€{Math.round(col.total / 1000)}k</span>}</div>
               {col.cards.map((c) => <CardView key={c.id} card={c} drag={drag} />)}
@@ -215,9 +223,31 @@ export function Board({ columns: initial }: { columns: BoardColumn[] }) {
         </div>
       </div>
       <div className="crm-droprow">
-        <div className="crm-drop s-KEEP_CONTACT" {...dropProps("KEEP_CONTACT")}><span className="dot" />Keep contact</div>
-        <div className="crm-drop s-LOST" {...dropProps("LOST")}><span className="dot" />Lost</div>
+        {columns.filter((c) => isSide(c.status)).map((col) => (
+          <button
+            key={col.status} type="button" className={`crm-drop s-${col.status}${open === col.status ? " on" : ""}`}
+            aria-expanded={open === col.status} aria-controls="crm-sidelist"
+            onClick={() => setOpen((o) => (o === col.status ? null : col.status))}
+            {...dropProps(col.status)}
+          >
+            <span className="dot" />{col.label}<span className="cnt">{col.cards.length}</span>
+          </button>
+        ))}
       </div>
+      {open && (() => {
+        const col = columns.find((c) => c.status === open);
+        if (!col) return null;
+        return (
+          <section id="crm-sidelist" className={`crm-sidelist s-${col.status}`} aria-label={col.label}>
+            {col.cards.length === 0
+              ? <p className="crm-empty">No leads in {col.label}.</p>
+              : <div className="crm-sidegrid">{col.cards.map((c) => <CardView key={c.id} card={c} drag={drag} />)}</div>}
+            {sideTotal > side.reduce((n, c) => n + c.cards.length, 0) && (
+              <p className="crm-notice" role="status">Showing the most recently updated leads only.</p>
+            )}
+          </section>
+        );
+      })()}
       {flow.node}
       {toast.node}
     </>

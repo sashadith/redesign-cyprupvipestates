@@ -12,6 +12,9 @@ export const FUNNEL_STATUSES = [
   "NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "RESERVED", "CLOSED",
 ] as const satisfies readonly LeadStatusValue[];
 
+// Listed under the board, outside the funnel columns.
+export const SIDE_STATUSES = ["KEEP_CONTACT", "LOST"] as const satisfies readonly LeadStatusValue[];
+
 // Statuses the stale-follow-up rules nag about (see actionCenter/rules/crm.ts).
 export const ACTIVE_LEAD_STATUSES = [
   "NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "RESERVED",

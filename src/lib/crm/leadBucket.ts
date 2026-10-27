@@ -79,6 +79,14 @@ export const ONLY_NEWSLETTER: Prisma.LeadWhereInput = { source: "NEWSLETTER" };
 export const EXCLUDE_PARTNER: Prisma.LeadWhereInput = { source: { not: "PARTNER" } };
 export const ONLY_PARTNER: Prisma.LeadWhereInput = { source: "PARTNER" };
 
+// Partner ENQUIRIES (2026-10-27): someone asking to become a partner through the
+// website form (/api/email) — a PARTNER lead with no partnerId. They are not buyers,
+// so the /crm work views (pipeline, Today, inbox, SLA, Action Center follow-ups)
+// leave them out and /crm/partners lists them instead. Clients a partner submitted
+// through the portal are PARTNER leads WITH a partnerId and stay everywhere.
+export const PARTNER_ENQUIRY: Prisma.LeadWhereInput = { source: "PARTNER", partnerId: null };
+export const EXCLUDE_PARTNER_ENQUIRY: Prisma.LeadWhereInput = { NOT: PARTNER_ENQUIRY };
+
 // Guide leads (2026-10-19): readers who asked for a PDF guide, kept apart from
 // buyer leads in the list views the same way partners are. Like partners they
 // stay on the pipeline board and in the Action Center's follow-up rules.
