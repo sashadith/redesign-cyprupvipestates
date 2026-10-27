@@ -76,11 +76,11 @@ export function planMessages(
   const clientName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
   const budgetText = formatBudget(budget.min, budget.max);
   const plans: PlannedMessage[] = [];
-  for (const [devId, ids] of byDev) {
+  for (const [devId, ids] of Array.from(byDev)) {
     const dev = devById.get(devId);
     if (!dev) return { ok: false, error: "A picked developer no longer exists." };
     if (!isRegistrable(dev)) return { ok: false, error: `${dev.name} has no registration channel set.` };
-    const developmentIds = [...ids];
+    const developmentIds = Array.from(ids);
     const msg = buildRegistrationMessage({
       clientName, maskedPhone: phone.masked,
       projects: developmentIds.map((id) => devtById.get(id)!.publicName),
@@ -106,8 +106,8 @@ export async function prepareRegistration(
   if (!min.ok || !max.ok) return { ok: false, error: BUDGET_ERROR };
   const lead = await deps.loadLead(input.leadId);
   if (!lead) return { ok: false, error: "Lead not found." };
-  const devIds = [...new Set(input.picks.map((p) => p.developerAccountId))];
-  const devtIds = [...new Set(input.picks.flatMap((p) => p.developmentIds))];
+  const devIds = Array.from(new Set(input.picks.map((p) => p.developerAccountId)));
+  const devtIds = Array.from(new Set(input.picks.flatMap((p) => p.developmentIds)));
   const [devs, devts] = await Promise.all([deps.loadDevelopers(devIds), deps.loadDevelopments(devtIds)]);
   const planned = planMessages(lead, devs, devts, input.picks, { min: min.value, max: max.value }, input.staffName);
   return planned.ok ? { ...planned, lead } : planned;

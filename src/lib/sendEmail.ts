@@ -44,9 +44,9 @@ const SEND_TIMEOUT_MS = 30_000;
 
 export function buildOfficeMail(mail: OfficeMail, office: string, messageId: string) {
   const norm = (a: string) => a.trim().toLowerCase();
-  const to = [...new Set(mail.to.map(norm).filter(Boolean))];
-  const skip = new Set([...to, norm(office)]);
-  const cc = [...new Set((mail.cc ?? []).map(norm).filter((a) => a && !skip.has(a)))];
+  const to = Array.from(new Set(mail.to.map(norm).filter(Boolean)));
+  const skip = new Set(to.concat(norm(office)));
+  const cc = Array.from(new Set((mail.cc ?? []).map(norm).filter((a) => a && !skip.has(a))));
   return {
     from: office,
     to: to.join(", "),

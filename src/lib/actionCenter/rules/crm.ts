@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, bucketOf } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
+import { isUnconfirmed, loadUnconfirmedRegistrations, reminderDate } from "@/lib/crm/registration/reminders";
 import { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES, STATUS_LABEL as CENTRAL_STATUS_LABEL } from "@/lib/crm/leadStatus";
 
 const DAY = 86_400_000;
@@ -331,7 +332,21 @@ async function expiringSoon(): Promise<ActionItem[]> {
     });
 }
 
+// Developer registration sent 2+ days ago and still not confirmed (spec
+// 2026-10-27 §7.7). Stays while the registration is SENT, independent of the
+// one-off reminder email (reminderSentAt).
+async function registrationUnconfirmed(): Promise<ActionItem[]> {
+  const now = new Date();
+  const rows = await loadUnconfirmedRegistrations(now);
+  return rows.filter((r) => isUnconfirmed(r, now)).map((r) => ({
+    id: `dev-registration:${r.id}`, severity: "ACTION", category: "CRM",
+    title: `Registration not confirmed: ${r.lead.name} – ${r.developerName}`,
+    description: `Sent ${r.sentAt ? reminderDate(r.sentAt) : "?"}. Mark preliminary when the developer confirms.`,
+    deepLink: `/crm/leads/${r.lead.id}`, since: r.sentAt ?? now,
+  }));
+}
+
 export async function crmRules(): Promise<ActionItem[]> {
-  const [fg, h, i] = await Promise.all([noFollowUp(), engagedNoFollowUp(), expiringSoon()]);
-  return [...fg, ...h, ...i];
+  const [fg, h, i, reg] = await Promise.all([noFollowUp(), engagedNoFollowUp(), expiringSoon(), registrationUnconfirmed()]);
+  return [...fg, ...h, ...i, ...reg];
 }
