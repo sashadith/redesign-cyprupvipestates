@@ -102,7 +102,7 @@ registrationWhatsApp String?              // E.164
   `saveDeveloperContact`).
 - Validation rules:
   - each address must be a valid email,
-  - office@ is added at send time, so it is never stored in the CC list,
+  - office@ is the sender (§7.4), so it is never stored in the CC list,
   - the WhatsApp number is normalised with libphonenumber-js.
 
 ### 6.2 Registration record
@@ -202,7 +202,7 @@ WhatsApp uses the same text without the subject line.
 ### 7.4 Sending: email
 
 - A new sender. The existing `sendLeadEmail` always sends to the lead.
-- `to = registrationEmailTo`, `cc = registrationEmailCc + office@cyprusvipestates.com`
+- `from = office@`, `to = registrationEmailTo`, `cc = registrationEmailCc`
   (deduplicated).
 - The Message-ID must be returned and stored on the lead-timeline row, because reply
   matching depends on it.
