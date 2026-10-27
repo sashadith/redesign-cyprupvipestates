@@ -1,0 +1,257 @@
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { sendOfficeEmail } from "@/lib/sendEmail";
+import { createOpenWaClient } from "@/lib/openwa/client";
+import { readOpenWaConfig } from "@/lib/openwa/config";
+import { chatIdFor } from "@/lib/openwa/phoneMatch";
+import { nicosiaDayStart } from "@/lib/openwa/sendGuards";
+import { countWhatsAppSentToday } from "@/lib/openwa/sentToday";
+import { buildRegistrationMessage, formatBudget, isRegistrable, maskPhone, parseBudgetInput, type RegChannel } from "./core";
+
+// Developer client registration (spec 2026-10-27, §7). One click registers the
+// lead with several developers: one message per developer, sent one by one, a
+// failure for one never stops the rest. The message is built here, server-side,
+// from the lead record — the client never sends text, only picks and budget
+// numbers, so the masked phone is the only phone that can ever leave.
+
+export type Actor = { userId: string; userName: string };
+export type RegisterPick = { developerAccountId: string; developmentIds: string[] };
+export type RegDeveloper = {
+  id: string; name: string; contactPerson: string | null; registrationChannel: RegChannel;
+  registrationEmailTo: string[]; registrationEmailCc: string[]; registrationWhatsApp: string[];
+};
+export type RegLead = { id: string; firstName: string; lastName: string | null; phone: string | null };
+export type RegDevelopment = { id: string; publicName: string; developerAccountId: string };
+export type RegisterOutcome = { developerAccountId: string; developerName: string; result: "sent" | "failed" | "already"; error?: string };
+export type PlannedMessage = {
+  developerAccountId: string; developerName: string; channel: "EMAIL" | "WHATSAPP";
+  targets: string[]; cc: string[]; subject: string; text: string; developmentIds: string[];
+};
+export type RegisterResult = { ok: true; outcomes: RegisterOutcome[] } | { ok: false; error: string };
+
+export type RegisterDeps = {
+  loadLead(id: string): Promise<RegLead | null>;
+  loadDevelopers(ids: string[]): Promise<RegDeveloper[]>;
+  loadDevelopments(ids: string[]): Promise<RegDevelopment[]>;
+  claimRecord(i: { leadId: string; developerAccountId: string; developmentIds: string[]; channel: "EMAIL" | "WHATSAPP"; sentById: string }): Promise<{ id: string } | "already">;
+  sendEmail(m: { to: string[]; cc: string[]; subject: string; text: string }): Promise<{ messageId: string }>;
+  sendWhatsApp(number: string, text: string): Promise<void>;
+  countWhatsAppToday(): Promise<number>;
+  dailyCap: number;
+  recordSent(i: {
+    registrationId: string; leadId: string; actor: Actor; subject: string | null; text: string; messageId: string | null;
+    channel: "email" | "whatsapp"; to: string[]; cc: string[]; partialError: string | null;
+  }): Promise<void>;
+  recordFailed(registrationId: string, error: string): Promise<void>;
+};
+
+export const BUDGET_ERROR = "Budget must be a whole number in euros.";
+export const CAP_REACHED = "daily WhatsApp limit reached";
+
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e)).slice(0, 300);
+
+export function planMessages(
+  lead: RegLead, devs: RegDeveloper[], devts: RegDevelopment[], picks: RegisterPick[],
+  budget: { min: number | null; max: number | null }, staffName: string,
+): { ok: true; plans: PlannedMessage[] } | { ok: false; error: string } {
+  const phone = maskPhone(lead.phone);
+  if (!phone.ok) return { ok: false, error: phone.reason };
+
+  // Projects imply their developer; several picks of one developer merge into one message.
+  const byDev = new Map<string, Set<string>>();
+  const devtById = new Map(devts.map((d) => [d.id, d]));
+  for (const p of picks) {
+    const set = byDev.get(p.developerAccountId) ?? new Set<string>();
+    for (const id of p.developmentIds) {
+      const d = devtById.get(id);
+      if (!d) return { ok: false, error: "A picked project no longer exists." };
+      if (d.developerAccountId !== p.developerAccountId) return { ok: false, error: "A picked project belongs to another developer." };
+      set.add(id);
+    }
+    byDev.set(p.developerAccountId, set);
+  }
+  if (byDev.size === 0) return { ok: false, error: "Pick at least one developer or project." };
+
+  const devById = new Map(devs.map((d) => [d.id, d]));
+  const clientName = `${lead.firstName} ${lead.lastName ?? ""}`.trim();
+  const budgetText = formatBudget(budget.min, budget.max);
+  const plans: PlannedMessage[] = [];
+  for (const [devId, ids] of byDev) {
+    const dev = devById.get(devId);
+    if (!dev) return { ok: false, error: "A picked developer no longer exists." };
+    if (!isRegistrable(dev)) return { ok: false, error: `${dev.name} has no registration channel set.` };
+    const developmentIds = [...ids];
+    const msg = buildRegistrationMessage({
+      clientName, maskedPhone: phone.masked,
+      projects: developmentIds.map((id) => devtById.get(id)!.publicName),
+      budget: budgetText, contactPerson: dev.contactPerson, staffName,
+    });
+    const email = dev.registrationChannel === "EMAIL";
+    plans.push({
+      developerAccountId: dev.id, developerName: dev.name, channel: email ? "EMAIL" : "WHATSAPP",
+      targets: email ? dev.registrationEmailTo : dev.registrationWhatsApp,
+      cc: email ? dev.registrationEmailCc : [],
+      subject: msg.subject, text: msg.text, developmentIds,
+    });
+  }
+  return { ok: true, plans };
+}
+
+export async function prepareRegistration(
+  deps: Pick<RegisterDeps, "loadLead" | "loadDevelopers" | "loadDevelopments">,
+  input: { leadId: string; picks: RegisterPick[]; budgetMin: unknown; budgetMax: unknown; staffName: string },
+): Promise<{ ok: true; plans: PlannedMessage[]; lead: RegLead } | { ok: false; error: string }> {
+  const min = parseBudgetInput(input.budgetMin);
+  const max = parseBudgetInput(input.budgetMax);
+  if (!min.ok || !max.ok) return { ok: false, error: BUDGET_ERROR };
+  const lead = await deps.loadLead(input.leadId);
+  if (!lead) return { ok: false, error: "Lead not found." };
+  const devIds = [...new Set(input.picks.map((p) => p.developerAccountId))];
+  const devtIds = [...new Set(input.picks.flatMap((p) => p.developmentIds))];
+  const [devs, devts] = await Promise.all([deps.loadDevelopers(devIds), deps.loadDevelopments(devtIds)]);
+  const planned = planMessages(lead, devs, devts, input.picks, { min: min.value, max: max.value }, input.staffName);
+  return planned.ok ? { ...planned, lead } : planned;
+}
+
+async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, actor: Actor, sentSoFar: { whatsapp: number }): Promise<RegisterOutcome> {
+  const base = { developerAccountId: plan.developerAccountId, developerName: plan.developerName };
+  const claim = await deps.claimRecord({ leadId: lead.id, developerAccountId: plan.developerAccountId, developmentIds: plan.developmentIds, channel: plan.channel, sentById: actor.userId });
+  if (claim === "already") return { ...base, result: "already" };
+  const registrationId = claim.id;
+
+  try {
+    if (plan.channel === "EMAIL") {
+      const { messageId } = await deps.sendEmail({ to: plan.targets, cc: plan.cc, subject: plan.subject, text: plan.text });
+      await deps.recordSent({ registrationId, leadId: lead.id, actor, subject: plan.subject, text: plan.text, messageId, channel: "email", to: plan.targets, cc: plan.cc, partialError: null });
+      return { ...base, result: "sent" };
+    }
+
+    const reached: string[] = [];
+    const failures: string[] = [];
+    const already = await deps.countWhatsAppToday();
+    for (const number of plan.targets) {
+      if (already + sentSoFar.whatsapp >= deps.dailyCap) { failures.push(`${number}: ${CAP_REACHED}`); break; }
+      try {
+        await deps.sendWhatsApp(number, plan.text);
+        reached.push(number);
+        sentSoFar.whatsapp++;
+      } catch (e) {
+        failures.push(`${number}: ${errText(e)}`);
+      }
+    }
+    if (reached.length === 0) {
+      const error = failures.length === 1 && failures[0].endsWith(CAP_REACHED) ? CAP_REACHED : failures.join("; ") || "nothing sent";
+      await deps.recordFailed(registrationId, error);
+      return { ...base, result: "failed", error };
+    }
+    await deps.recordSent({
+      registrationId, leadId: lead.id, actor, subject: null, text: plan.text, messageId: null, channel: "whatsapp",
+      to: reached, cc: [], partialError: failures.length ? failures.join("; ") : null,
+    });
+    return { ...base, result: "sent" };
+  } catch (e) {
+    const error = errText(e);
+    await deps.recordFailed(registrationId, error).catch((err) => console.error("registration: recordFailed failed", err));
+    return { ...base, result: "failed", error };
+  }
+}
+
+export async function registerLead(
+  deps: RegisterDeps,
+  input: { leadId: string; picks: RegisterPick[]; budgetMin: unknown; budgetMax: unknown; actor: Actor },
+): Promise<RegisterResult> {
+  try {
+    const prepared = await prepareRegistration(deps, { ...input, staffName: input.actor.userName });
+    if (!prepared.ok) return prepared;
+    const outcomes: RegisterOutcome[] = [];
+    const sentSoFar = { whatsapp: 0 };
+    for (const plan of prepared.plans) outcomes.push(await sendOne(deps, plan, prepared.lead, input.actor, sentSoFar));
+    return { ok: true, outcomes };
+  } catch (e) {
+    console.error("registration: registerLead failed", e);
+    return { ok: false, error: "Registration failed — please try again." };
+  }
+}
+
+const SEND_TIMEOUT_MS = 30_000;
+function withTimeout<T>(p: Promise<T>, what: string): Promise<T> {
+  let t: ReturnType<typeof setTimeout>;
+  return Promise.race([p, new Promise<never>((_, rej) => { t = setTimeout(() => rej(new Error(`${what} timed out`)), SEND_TIMEOUT_MS); })]).finally(() => clearTimeout(t));
+}
+
+const CLEARED = {
+  sentAt: null, sendError: null, outboundInteractionId: null,
+  preliminaryAt: null, preliminarySource: null, preliminaryById: null,
+  fixedAt: null, fixedById: null, rejectedAt: null, reminderSentAt: null,
+};
+
+export function realRegisterDeps(): RegisterDeps {
+  return {
+    loadLead: (id) => prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, firstName: true, lastName: true, phone: true } }),
+    loadDevelopers: (ids) => prisma.developerAccount.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true, contactPerson: true, registrationChannel: true, registrationEmailTo: true, registrationEmailCc: true, registrationWhatsApp: true },
+    }),
+    loadDevelopments: (ids) => prisma.development.findMany({ where: { id: { in: ids } }, select: { id: true, publicName: true, developerAccountId: true } }),
+    async claimRecord(i) {
+      try {
+        const row = await prisma.developerRegistration.create({
+          data: { leadId: i.leadId, developerAccountId: i.developerAccountId, developmentIds: i.developmentIds, channel: i.channel, status: "SENT", sentById: i.sentById },
+          select: { id: true },
+        });
+        return row;
+      } catch (e) {
+        if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+        const existing = await prisma.developerRegistration.findUnique({
+          where: { leadId_developerAccountId: { leadId: i.leadId, developerAccountId: i.developerAccountId } },
+          select: { id: true },
+        });
+        if (!existing) return "already";
+        // Resend: only a FAILED or REJECTED row may be claimed again, atomically.
+        const n = await prisma.developerRegistration.updateMany({
+          where: { id: existing.id, status: { in: ["FAILED", "REJECTED"] } },
+          data: { ...CLEARED, status: "SENT", sentById: i.sentById, channel: i.channel, developmentIds: i.developmentIds },
+        });
+        return n.count === 1 ? existing : "already";
+      }
+    },
+    sendEmail: (m) => withTimeout(sendOfficeEmail(m), "Email"),
+    sendWhatsApp: (number, text) => {
+      const chatId = chatIdFor(number);
+      if (!chatId) return Promise.reject(new Error("unusable number"));
+      return withTimeout(createOpenWaClient().sendText(chatId, text), "WhatsApp");
+    },
+    countWhatsAppToday: () => countWhatsAppSentToday(nicosiaDayStart(new Date())),
+    dailyCap: readOpenWaConfigSafe(),
+    async recordSent(i) {
+      await prisma.$transaction(async (tx) => {
+        const row = await tx.leadInteraction.create({
+          data: {
+            leadId: i.leadId, type: "SYSTEM", channel: "SYSTEM", direction: null,
+            subject: i.subject, body: i.text, messageId: i.messageId,
+            createdByUserId: i.actor.userId, createdByName: i.actor.userName,
+            metadata: { kind: "developer_registration", registrationId: i.registrationId, channel: i.channel, to: i.to, cc: i.cc },
+          },
+          select: { id: true },
+        });
+        await tx.developerRegistration.update({
+          where: { id: i.registrationId },
+          data: { sentAt: new Date(), outboundInteractionId: row.id, sendError: i.partialError },
+        });
+      });
+    },
+    async recordFailed(id, error) {
+      await prisma.developerRegistration.update({ where: { id }, data: { status: "FAILED", sendError: error } });
+    },
+  };
+}
+
+// An unconfigured gateway (local dev) is not "the limit": the cap stays open
+// and the send itself fails with the gateway's own error, recorded as FAILED.
+function readOpenWaConfigSafe(): number {
+  try {
+    return readOpenWaConfig().dailySendCap;
+  } catch {
+    return Number.MAX_SAFE_INTEGER;
+  }
+}
