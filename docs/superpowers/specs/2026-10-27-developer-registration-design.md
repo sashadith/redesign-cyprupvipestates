@@ -1,6 +1,6 @@
 # Developer client registration — design
 
-Status: ready for operator approval, 2026-10-27. Source: conversation with the operator
+Status: APPROVED by the operator 2026-10-27, 2026-10-27. Source: conversation with the operator
 (Sascha) on 2026-10-26/27, plus the Marinakis sales procedure he forwarded.
 
 ## 1. Why
@@ -70,7 +70,7 @@ How registration works in practice (Marinakis procedure, Pafilia/BBF/Korantina n
 
 | Topic | Decision |
 |---|---|
-| Channel | Per developer: email (To + CC list) **or** WhatsApp to one number |
+| Channel | Per developer: email (one or more To + CC list) **or** WhatsApp to one or more numbers — dedicated registration targets, separate from the company's main contact |
 | Office copy | Emails are sent FROM office@, so the office mailbox holds every registration and reply. WhatsApp has no copy, because the operator sees the chat |
 | Sending | Fully automatic on click, no approval step |
 | Email sender | **office@cyprusvipestates.com** (operator, 2026-10-27), signed with the clicking staff member's name; office@ is then the sender, not a CC |
@@ -91,12 +91,19 @@ New fields on `DeveloperAccount`:
 
 ```prisma
 registrationChannel  RegistrationChannel @default(NONE)  // NONE | EMAIL | WHATSAPP
-registrationEmailTo  String?              // one address
+registrationEmailTo  String[]  @default([])  // one or more addresses (To)
 registrationEmailCc  String[]  @default([])
-registrationWhatsApp String?              // E.164
+registrationWhatsApp String[]  @default([])  // one or more numbers, E.164
 ```
 
-- Only developers with a channel other than NONE and a complete target can be selected.
+These are **dedicated registration targets**, separate from the developer's general
+`DeveloperAccount.email` / `phone` — a developer's registration address is often not its
+main company address (operator, 2026-10-27). They are never pre-filled from the contact
+fields. With several WhatsApp numbers, the message goes to each number, and the
+registration counts as sent when at least one send succeeded (failures listed in
+`sendError`).
+
+- Only developers with a channel other than NONE and at least one target for that channel can be selected.
 - Edited on the existing admin developer page, next to the developer contact
   (`src/app/admin/(panel)/developments/developers/[id]/DeveloperContact.tsx`, action
   `saveDeveloperContact`).
@@ -202,7 +209,7 @@ WhatsApp uses the same text without the subject line.
 ### 7.4 Sending: email
 
 - A new sender. The existing `sendLeadEmail` always sends to the lead.
-- `from = office@`, `to = registrationEmailTo`, `cc = registrationEmailCc`
+- `from = office@`, `to = registrationEmailTo` (all addresses), `cc = registrationEmailCc`
   (deduplicated).
 - The Message-ID must be returned and stored on the lead-timeline row, because reply
   matching depends on it.
@@ -214,7 +221,7 @@ WhatsApp uses the same text without the subject line.
 
 ### 7.5 Sending: WhatsApp
 
-- `createOpenWaClient().sendText(chatIdFor(registrationWhatsApp), text)`.
+- `createOpenWaClient().sendText(chatIdFor(number), text)` for each number in `registrationWhatsApp`.
 - This path deliberately skips the "thread must already exist" guard, which protects
   *clients* from cold messages and does not apply to a developer's sales number.
 - It must still respect the daily send cap.
