@@ -126,7 +126,7 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     requirementsTitle: "Ihre Wünsche",
     budgetUpTo: "bis",
     budgetFrom: "ab",
-    propertyTypeNames: { Apartment: "Apartment", Villa: "Villa", Townhouse: "Stadthaus", Penthouse: "Penthouse" },
+    propertyTypeNames: { Apartment: "Wohnung", Villa: "Villa", Townhouse: "Reihenhaus", Penthouse: "Penthouse" },
     timelineLabels: { IMMEDIATE: "Sofort", THREE_MONTHS: "Innerhalb von 3 Monaten", SIX_MONTHS: "Innerhalb von 6 Monaten", ONE_YEAR: "Innerhalb eines Jahres", TWO_YEARS: "Innerhalb von 2 Jahren", JUST_LOOKING: "Nur interessiert" },
     bedroomLabels: { "0": "Studio", "1": "1 Schlafzimmer", "2": "2 Schlafzimmer", "3": "3 Schlafzimmer", "4": "4 Schlafzimmer", "5": "5+ Schlafzimmer" },
     viewDetails: "Details ansehen",
