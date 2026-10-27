@@ -5,6 +5,7 @@ import DeleteDeveloperButton from "./DeleteDeveloperButton";
 import { createManualDevelopment, runSync } from "../../actions";
 import AnalyzeForm from "./analyze-form";
 import DeveloperContact from "./DeveloperContact";
+import RegistrationProfile from "./RegistrationProfile";
 import DeveloperPageLink from "./DeveloperPageLink";
 import DriveSyncButton from "./DriveSyncButton";
 import DriveFolderPreviewButton from "./DriveFolderPreviewButton";
@@ -98,6 +99,10 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
             broken={linkBroken}
           />
         }
+      />
+
+      <RegistrationProfile
+        dev={{ id: dev.id, registrationChannel: dev.registrationChannel, registrationEmailTo: dev.registrationEmailTo, registrationEmailCc: dev.registrationEmailCc, registrationWhatsApp: dev.registrationWhatsApp }}
       />
 
       {/* Developments */}

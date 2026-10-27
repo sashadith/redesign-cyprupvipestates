@@ -60,13 +60,14 @@ export function buildOfficeMail(mail: OfficeMail, office: string, messageId: str
 
 // One attempt, 30 s budget, no retry: a failed registration is resent by hand.
 export async function sendOfficeEmail(mail: OfficeMail): Promise<{ messageId: string }> {
-  const office = process.env.EMAIL_USER!;
+  const office = process.env.EMAIL_USER?.trim();
+  if (!office || !process.env.EMAIL_PASSWORD) throw new Error("Office email is not configured (EMAIL_USER / EMAIL_PASSWORD).");
   const messageId = `<${randomUUID()}@cyprusvipestates.com>`;
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 465),
     secure: String(process.env.EMAIL_SECURE || "true") === "true",
-    auth: { user: office, pass: process.env.EMAIL_PASSWORD! },
+    auth: { user: office, pass: process.env.EMAIL_PASSWORD },
     connectionTimeout: SEND_TIMEOUT_MS,
     greetingTimeout: SEND_TIMEOUT_MS,
     socketTimeout: SEND_TIMEOUT_MS,

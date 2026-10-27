@@ -16,6 +16,7 @@ import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
+import { CockpitRegistrations, type RegistrationRow } from "../../components/CockpitRegistrations";
 import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
 import { ToastProvider } from "../../components/Toast";
@@ -102,6 +103,15 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     creditNote: d.creditNote,
   }));
   const timeline = toTimeline(lead.interactions.slice(0, TIMELINE_CAP));
+  const registrations: RegistrationRow[] = (await prisma.developerRegistration.findMany({
+    where: { leadId: lead.id },
+    include: { developerAccount: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+  })).map((r) => ({
+    id: r.id, developerName: r.developerAccount.name, channel: r.channel === "WHATSAPP" ? "WHATSAPP" : "EMAIL", status: r.status,
+    sentAt: r.sentAt?.toISOString() ?? null, preliminaryAt: r.preliminaryAt?.toISOString() ?? null, preliminarySource: r.preliminarySource,
+    fixedAt: r.fixedAt?.toISOString() ?? null, sendError: r.sendError,
+  }));
 
   return (
     <ToastProvider>
@@ -117,6 +127,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />
+            <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} />
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
             {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
