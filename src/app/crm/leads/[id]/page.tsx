@@ -16,6 +16,7 @@ import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
+import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
 import { ToastProvider } from "../../components/Toast";
 import { CreatedToast } from "../../components/CreatedToast";
@@ -72,6 +73,8 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   const staff = canAssign
     ? await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, acceptsLeads: true } })
     : [];
+  const me = await prisma.user.findUnique({ where: { id: user.id }, select: { crmSummaryLocale: true } });
+  const summaryLocale = isSummaryLocale(me?.crmSummaryLocale) ? me.crmSummaryLocale : DEFAULT_SUMMARY_LOCALE;
 
   const now = new Date();
   const partnerView = await loadPartnerView(lead, canEdit, canAssign, now);
@@ -108,7 +111,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
         <div className="crm-ck-grid">
           <div className="crm-ck-main">
             <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
-            <CockpitSummary leadId={lead.id} />
+            <CockpitSummary leadId={lead.id} initialLocale={summaryLocale} />
             <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
             <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP} />
           </div>

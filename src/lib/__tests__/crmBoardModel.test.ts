@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildBoard, toCard, isBoardFilter, type BoardLeadInput } from "@/lib/crm/boardModel";
+import { buildBoard, buildSide, toCard, isBoardFilter, type BoardLeadInput } from "@/lib/crm/boardModel";
 
 const now = new Date("2026-10-18T12:00:00Z");
 const base: BoardLeadInput = {
@@ -64,4 +64,12 @@ test("an unassigned lead has no owner on its card", () => {
   const c = toCard({ ...base, assignedTo: null }, now);
   assert.equal(c.ownerInitials, null);
   assert.equal(c.ownerName, null);
+});
+
+test("side lists hold Keep contact then Lost, and parked leads are never stale", () => {
+  const old = { createdAt: new Date("2026-08-01T00:00:00Z") };
+  const side = buildSide([base, { ...base, ...old, id: "l2", status: "LOST" }, { ...base, ...old, id: "l3", status: "KEEP_CONTACT" }], now);
+  assert.deepEqual(side.map((c) => c.status), ["KEEP_CONTACT", "LOST"]);
+  assert.deepEqual(side.map((c) => c.cards.map((x) => x.id)), [["l3"], ["l2"]]);
+  assert.ok(side.every((c) => c.cards.every((x) => !x.stale)));
 });

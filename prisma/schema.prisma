@@ -768,6 +768,8 @@ model User {
   // Design settings (2026-10-22): chosen colour set.
   designThemeId          String?
   designTheme            DesignTheme? @relation(fields: [designThemeId], references: [id], onDelete: SetNull)
+  // Last language picked for "Summarise with Claude" in the lead cockpit (2026-10-27); null = English.
+  crmSummaryLocale       Locale?
 
   @@map("users")
 }
