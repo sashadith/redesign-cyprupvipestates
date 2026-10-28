@@ -3,8 +3,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads, canEditLead, canViewLead } from "@/lib/crm/access";
-import { createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
+import { contactToCheck, createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
+import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
 import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
@@ -79,6 +80,58 @@ export async function createLeadAction(raw: unknown): Promise<CreateLeadResult> 
   revalidatePath("/crm/pipeline");
   revalidatePath("/crm/inbox");
   return { ok: true, id, ...(assignWarning ? { assignWarning } : {}) };
+}
+
+export type UpdateLeadResult =
+  | { ok: true; changed: string }
+  | { error: string; field?: string }
+  | { duplicate: { id: string | null; name: string | null; matchedOn: "email" | "phone" } };
+
+// "Edit" on the lead cockpit (2026-10-28): anyone who may work the lead may
+// correct its details. The owner is changed with "Assign", never here. A new
+// email or phone that already belongs to another lead is refused, as on create.
+export async function updateLeadDetailsAction(leadId: string, raw: unknown): Promise<UpdateLeadResult> {
+  const user = await requireCrmUser();
+  const lead = await prisma.lead.findFirst({
+    where: { id: leadId, deletedAt: null },
+    select: {
+      assignedToId: true, firstName: true, lastName: true, email: true, phone: true, salutation: true, languagePreference: true,
+      budgetMin: true, budgetMax: true, timeline: true, financing: true, nationality: true, countryOfResidence: true, message: true, notes: true,
+    },
+  });
+  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  const parsed = validateLeadEdit(raw, lead.languagePreference);
+  if (!parsed.ok) return { error: parsed.error, ...(parsed.field ? { field: parsed.field } : {}) };
+  const data = parsed.data;
+  const { assignedToId: _owner, ...before } = lead;
+  const fields = changedFields(before, data);
+  if (fields.length === 0) return { ok: true, changed: "" };
+
+  const check = contactToCheck(lead, data);
+  if (check.email || check.phone) {
+    const dup = await findDuplicateLead(check.email, check.phone);
+    if (dup && dup.id !== leadId) {
+      const row = await prisma.lead.findUnique({ where: { id: dup.id }, select: { assignedToId: true } });
+      const visible = !!row && canViewLead(user, row);
+      return { duplicate: { id: visible ? dup.id : null, name: visible ? `${dup.firstName} ${dup.lastName}`.trim() : null, matchedOn: dup.matchedOn } };
+    }
+  }
+
+  const changed = changeSummary(fields);
+  await prisma.$transaction([
+    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "" } }),
+    prisma.leadActivity.create({ data: { leadId, type: "EDIT", content: `Lead details edited: ${changed}`, createdBy: user.name, createdById: user.id } }),
+    prisma.leadInteraction.create({
+      data: {
+        leadId, type: "SYSTEM", channel: "SYSTEM", body: `Lead details edited: ${changed}`,
+        createdByUserId: user.id, createdByName: user.name, metadata: { kind: "lead_edit", fields },
+      },
+    }),
+  ]);
+  revalidatePath(`/crm/leads/${leadId}`);
+  // Name and budget show on the board card.
+  revalidatePath("/crm/pipeline");
+  return { ok: true, changed };
 }
 
 // Claude helpers (Phase 2c). Both are read-only: the summary is only shown, the

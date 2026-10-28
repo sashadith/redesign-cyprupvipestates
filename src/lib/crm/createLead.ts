@@ -111,3 +111,12 @@ export async function createLeadRecord(actor: EmailActor, data: CreateLeadData):
   });
   return { id: lead.id };
 }
+
+// Lead edit (2026-10-28): the contact values to run the duplicate check on — only what really changed
+// (same Gmail address in another spelling, or the same number reformatted, is
+// not a change of person).
+export function contactToCheck(before: { email: string | null; phone: string | null }, after: { email: string | null; phone: string | null }) {
+  const email = after.email && emailKey(after.email) !== emailKey(before.email) ? after.email : null;
+  const phone = after.phone && !phonesMatch(after.phone, before.phone) ? after.phone : null;
+  return { email, phone };
+}

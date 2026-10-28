@@ -686,7 +686,7 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 @media (max-width: 700px) { .crm-rs-prizes { grid-template-columns: 1fr; } .crm-rs-name input { min-width: 0; } }
 
 /* Trash (move to trash / restore) */
-.crm-ck-actions { margin-left: auto; }
+.crm-ck-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .crm-trash-btn { font-size: calc(12.5px * var(--ds-crm-scale)); padding: 6px 12px; color: var(--danger); border-color: var(--line-strong); }
 .crm-trash-btn:hover:not(:disabled) { border-color: var(--danger); }
 .crm-dialog textarea.crm-trash-reason { border: 1px solid var(--field-line); border-radius: calc(12px * var(--ds-radius-scale)); padding: 9px 11px; font: 500 calc(14px * var(--ds-crm-scale)) var(--body); color: var(--ink); background: var(--field-bg); resize: vertical; }
@@ -792,6 +792,13 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-pill.r-REJECTED { color: var(--warn); border-color: currentColor; }
 .crm-pill.r-FAILED { color: var(--danger); border-color: currentColor; background: var(--danger-bg); }
 
+/* Edit lead dialog (2026-10-28): the new-lead grid inside .crm-dialog; the
+   field styles come from .crm-ck-field, not the dialog's label caps. */
+.crm-dialog.crm-edit-dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
+.crm-edit-dialog fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.crm-edit-dialog .crm-ck-field { margin-top: 0; text-transform: none; letter-spacing: normal; font-size: calc(12px * var(--ds-crm-scale)); font-weight: 600; }
+.crm-edit-dialog .crm-ck-field textarea { border: 1px solid var(--field-line); border-radius: calc(12px * var(--ds-radius-scale)); padding: 8px 10px; font: 500 calc(14px * var(--ds-crm-scale)) var(--body); color: var(--ink); background: var(--field-bg); }
+@media (max-width: 560px) { .crm-edit-dialog .crm-nl-grid { grid-template-columns: minmax(0, 1fr); } }
 .crm-dialog.crm-reg-dialog { width: min(980px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
 .crm-reg-body { display: flex; flex-direction: column; gap: 10px; padding: 22px; font-family: var(--body); }
 .crm-reg-cols { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
