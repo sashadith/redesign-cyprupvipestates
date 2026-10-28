@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revokePresentation, extendPresentation, deletePresentation } from "@/lib/crm/presentations/core";
+import { listPresentationLocationOptions, type LocationOptions } from "@/lib/crm/presentations/locations";
 import { matchDevelopmentsForLead, type MatchFilters, type DevelopmentMatch } from "@/lib/crm/matching";
 
 // Local, self-contained (mirrors src/app/admin/actions.ts's requireSession —
@@ -36,30 +37,11 @@ export async function saveMatchFiltersAction(leadId: string, filters: MatchFilte
   await prisma.lead.update({ where: { id: leadId }, data: { lastMatchFilters: JSON.parse(JSON.stringify(filters)) } });
 }
 
-export type LocationOptions = { districts: string[]; areasByDistrict: Record<string, string[]> };
+export type { LocationOptions };
 
-// District -> Area cascade for the matching panel's location filter (PART 6).
-// A development with no district falls back to its town, so nothing gets
-// silently excluded from the District list just because a feed left that
-// field empty.
 export async function listPresentationLocations(): Promise<LocationOptions> {
   await requireSession();
-  const rows = await prisma.development.findMany({
-    where: { publishStatus: { in: ["published", "ready"] } },
-    select: { town: true, district: true, area: true, override: { select: { town: true, district: true, area: true } } },
-  });
-  const areasByDistrict: Record<string, Set<string>> = {};
-  for (const r of rows) {
-    const town = r.override?.town || r.town;
-    const district = r.override?.district || r.district || town;
-    const area = r.override?.area || r.area;
-    if (!district) continue;
-    (areasByDistrict[district] ??= new Set()).add(area || "");
-  }
-  const districts = Object.keys(areasByDistrict).sort();
-  const out: Record<string, string[]> = {};
-  for (const d of districts) out[d] = Array.from(areasByDistrict[d]).filter(Boolean).sort();
-  return { districts, areasByDistrict: out };
+  return listPresentationLocationOptions();
 }
 
 function actorOf(session: Awaited<ReturnType<typeof requireSession>>) {

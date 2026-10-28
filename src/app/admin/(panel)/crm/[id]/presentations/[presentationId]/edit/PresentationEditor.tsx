@@ -7,6 +7,7 @@ import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
+import type { EditorItem, EditorUnit } from "@/lib/crm/presentations/editorItems";
 import { selectionPriceFrom } from "@/lib/crm/selectionPriceFrom";
 
 type Locale = (typeof PUBLIC_LOCALES)[number];
@@ -22,27 +23,7 @@ const label = "block text-xs font-medium text-[#6B7280] mb-1";
 const chip = (on: boolean) =>
   `rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${on ? "border-[#1B4B43] bg-[#1B4B43] text-white" : "border-[#E5E7EB] text-[#6B7280] hover:bg-[#F8F9FA]"}`;
 
-export type EditorUnit = {
-  id: string; ref: string | null; label: string | null; type: string | null; beds: string | null;
-  areaBuilt: string | null; price: number | null; currency: string; status: string;
-};
-
-export type EditorItem = {
-  developmentId: string;
-  publicName: string; // real development name — always shown, muted
-  mainImage: string | null;
-  district: string | null;
-  area: string | null;
-  town: string | null;
-  priceFrom: number | null;
-  currency: string;
-  aliasName: string; // editable, "" = no alias
-  advisorComment: string;
-  sortIndex: number;
-  isNew: boolean;
-  units: EditorUnit[];
-  checkedUnitIds: string[];
-};
+export type { EditorUnit, EditorItem };
 
 // Same split used at generation time (PropertyMatching.tsx's
 // splitUnitSelection). 2026-08-11 correction — this used to collapse a
