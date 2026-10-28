@@ -849,6 +849,10 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-ck-dueskipped summary { cursor: pointer; color: var(--muted); }
 .crm-ck-dueskipped li { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 4px; }
 .crm-today-due { border-color: var(--accent); }
+.crm-today-hotrow { display: flex; flex-direction: column; }
+.crm-today-hotext { display: flex; align-items: center; gap: 8px; padding: 0 6px 9px; }
+.crm-today-hotext .crm-btn { padding: 5px 10px; font-size: calc(12px * var(--ds-crm-scale)); }
+.crm-today-hoterr { color: var(--danger); font-size: calc(12px * var(--ds-crm-scale)); }
 .crm-reg-results { list-style: none; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: calc(10px * var(--ds-radius-scale)); display: grid; gap: 4px; font-size: calc(13px * var(--ds-crm-scale)); }
 .crm-reg-results li.r-sent { color: var(--good); }
 .crm-reg-results li.r-already { color: var(--muted); }

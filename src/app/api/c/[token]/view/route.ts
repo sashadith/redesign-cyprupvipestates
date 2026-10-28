@@ -105,7 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     } catch (e) { console.error("Partner presentation-opened outbox failed:", e instanceof Error ? e.name : "error"); }
   }
 
-  const crmLink = `${requestOrigin(req)}/admin/crm`; // per-lead deep link not resolvable from a view alone without another query; kept simple + best-effort
+  const crmLink = `${requestOrigin(req)}/crm/leads/${presentation.leadId}`;
   const name = escapeHtml(presentation.greetingName);
 
   // Alerts are mutually exclusive and best-effort — never let a Telegram hiccup

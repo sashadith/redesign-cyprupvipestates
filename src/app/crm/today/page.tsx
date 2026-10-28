@@ -9,6 +9,9 @@ import { sortByTemperature, toPublicTemperature } from "@/lib/crm/insights/tempe
 import { TemperatureDot } from "../components/TemperatureDot";
 import { CRM_TZ, buildToday, isAssignmentTo, todayGreeting, type TodayLead } from "@/lib/crm/today";
 import { loadRegistrationDue } from "@/lib/crm/registration/due";
+import { loadHotSelections } from "@/lib/crm/presentations/hot";
+import { ago } from "@/lib/crm/timeline";
+import { ExtendSelectionButton } from "../components/ExtendSelectionButton";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +68,8 @@ export default async function TodayPage() {
   const built = buildToday(leads, now);
   // Registrations due: the owner sees every lead, staff their own.
   const regDue = (await loadRegistrationDue(null, now)).filter((l) => l.due.length > 0 && (user.isOwner || l.ownerId === user.id));
+  const hot = await loadHotSelections(user, now);
+  const hotCount = hot.filter((h) => h.kind === "hot").length;
   // Hot leads first only in the two lists with no time order (Newly assigned, Going quiet); Overdue, Due today and Viewings keep their time order.
   const hotFirst = (rs: TodayLead[]) => sortByTemperature(rs, (l) => l.temperature);
   const t = { ...built, fresh: hotFirst(built.fresh), stale: hotFirst(built.stale) };
@@ -79,6 +84,7 @@ export default async function TodayPage() {
   const total = regDue.length + t.overdue.length + t.dueToday.length + t.viewings.length + t.fresh.length;
   const summary = [
     ...(regDue.length ? [`${regDue.length} to register`] : []),
+    ...(hotCount ? [`${hotCount} hot`] : []),
     `${t.overdue.length} overdue`, `${t.dueToday.length} due today`, `${t.viewings.length} viewing${t.viewings.length === 1 ? "" : "s"}`, `${t.fresh.length} new`, `${t.stale.length} quiet`,
   ].join(" · ");
 
@@ -114,6 +120,28 @@ export default async function TodayPage() {
             </ul>
           )}
         </section>
+        {hot.length > 0 && (
+          <section className="crm-panel crm-today-sec" aria-labelledby="today-hot">
+            <h2 id="today-hot">Hot selections <span className="cnt">{hot.length}</span></h2>
+            <ul>
+              {hot.map((h) => {
+                const days = h.expiresAt ? Math.max(1, Math.ceil((h.expiresAt.getTime() - now.getTime()) / 86_400_000)) : 1;
+                return (
+                  <li key={h.presentationId} className="crm-today-hotrow">
+                    <Link href={`/crm/leads/${h.leadId}#presentations`}>
+                      <span className="who"><b>{h.leadName}</b><span className="proj">{h.reasons.join(" · ")}</span></span>
+                      <span className="st">{user.isOwner && h.ownerName ? h.ownerName : ""}</span>
+                      <span className="when" title={dateTime.format(h.signalAt)}>
+                        {h.kind === "expiring" ? `expires in ${days} day${days === 1 ? "" : "s"} · ` : ""}{ago(h.signalAt, now)}
+                      </span>
+                    </Link>
+                    {h.kind === "expiring" && <ExtendSelectionButton presentationId={h.presentationId} />}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
         {sections.map((s) => (
           <section key={s.key} className="crm-panel crm-today-sec" aria-labelledby={`today-${s.key}`}>
             <h2 id={`today-${s.key}`}>{s.title} <span className="cnt">{s.rows.length}</span></h2>
