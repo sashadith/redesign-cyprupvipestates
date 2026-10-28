@@ -57,3 +57,17 @@ test("getSession / startSession: status read from the session, start is a POST",
   assert.match(st.calls[0].url, /\/api\/sessions\/sess-1\/start$/);
   assert.equal(st.calls[0].init?.method, "POST");
 });
+
+test("listGroups: groups endpoint, keeps only group ids, falls back to the id as name", async () => {
+  const { f, calls } = stub(200, [
+    { id: "120363427859674423@g.us", name: "Cyprus VIP Estates - Pafilia", participantsCount: 5, isAdmin: false },
+    { id: "120363400000000000@g.us", name: "  " },
+    { id: "35799111222@c.us", name: "not a group" },
+  ]);
+  const groups = await createOpenWaClient({ fetch: f, env }).listGroups();
+  assert.match(calls[0].url, /\/api\/sessions\/sess-1\/groups\?limit=1000$/);
+  assert.deepEqual(groups, [
+    { id: "120363427859674423@g.us", name: "Cyprus VIP Estates - Pafilia", participants: 5 },
+    { id: "120363400000000000@g.us", name: "120363400000000000@g.us", participants: null },
+  ]);
+});

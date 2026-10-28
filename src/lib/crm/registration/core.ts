@@ -87,11 +87,15 @@ function uniq(a: string[]): string[] {
   return a.filter((v, idx) => a.indexOf(v) === idx);
 }
 
+// A WhatsApp group chat id as the gateway reports it.
+export const isGroupChatId = (s: string) => /^\d{6,40}(-\d{6,20})?@g\.us$/.test(s);
+const GROUP_NAME_MAX = 120;
+
 export function normalizeProfile(
-  input: { channel: string; emailTo: string; emailCc: string; whatsApp: string },
+  input: { channel: string; emailTo: string; emailCc: string; whatsApp: string; whatsAppGroupId?: string; whatsAppGroupName?: string },
   officeAddress: string,
 ):
-  | { ok: true; value: { channel: RegChannel; emailTo: string[]; emailCc: string[]; whatsApp: string[] } }
+  | { ok: true; value: { channel: RegChannel; emailTo: string[]; emailCc: string[]; whatsApp: string[]; whatsAppGroupId: string | null; whatsAppGroupName: string | null } }
   | { ok: false; error: string } {
   if (input.channel !== "NONE" && input.channel !== "EMAIL" && input.channel !== "WHATSAPP") {
     return { ok: false, error: "Unknown channel." };
@@ -118,18 +122,24 @@ export function normalizeProfile(
   }
   const wa = uniq(whatsApp);
 
+  const groupId = (input.whatsAppGroupId || "").trim() || null;
+  const groupName = groupId ? (input.whatsAppGroupName || "").trim().slice(0, GROUP_NAME_MAX) || null : null;
+  if (groupId && !isGroupChatId(groupId)) return { ok: false, error: "Not a WhatsApp group — pick one from the list." };
+  if (groupId && !groupName) return { ok: false, error: "The WhatsApp group has no name — pick it from the list again." };
+
   if (channel === "EMAIL" && emailTo.length === 0) return { ok: false, error: "Add at least one address." };
-  if (channel === "WHATSAPP" && wa.length === 0) return { ok: false, error: "Add at least one WhatsApp number." };
-  return { ok: true, value: { channel, emailTo, emailCc, whatsApp: wa } };
+  if (channel === "WHATSAPP" && wa.length === 0 && !groupId) return { ok: false, error: "Add a WhatsApp number or pick a group." };
+  return { ok: true, value: { channel, emailTo, emailCc, whatsApp: wa, whatsAppGroupId: groupId, whatsAppGroupName: groupName } };
 }
 
 export function isRegistrable(d: {
   registrationChannel: RegChannel;
   registrationEmailTo: string[];
   registrationWhatsApp: string[];
+  registrationWhatsAppGroupId?: string | null;
 }): boolean {
   if (d.registrationChannel === "EMAIL") return d.registrationEmailTo.length > 0;
-  if (d.registrationChannel === "WHATSAPP") return d.registrationWhatsApp.length > 0;
+  if (d.registrationChannel === "WHATSAPP") return d.registrationWhatsApp.length > 0 || !!d.registrationWhatsAppGroupId;
   return false;
 }
 

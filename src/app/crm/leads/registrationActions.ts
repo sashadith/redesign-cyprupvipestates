@@ -55,7 +55,7 @@ export async function registrationOptionsAction(leadId: string): Promise<Registr
   const [devs, projects, existing] = await Promise.all([
     prisma.developerAccount.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, registrationChannel: true, registrationEmailTo: true, registrationWhatsApp: true },
+      select: { id: true, name: true, registrationChannel: true, registrationEmailTo: true, registrationWhatsApp: true, registrationWhatsAppGroupId: true },
     }),
     prisma.development.findMany({ orderBy: { publicName: "asc" }, select: { id: true, publicName: true, developerAccountId: true } }),
     prisma.developerRegistration.findMany({ where: { leadId: lead.id }, select: { developerAccountId: true, status: true } }),

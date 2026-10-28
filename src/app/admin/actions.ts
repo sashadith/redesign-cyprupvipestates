@@ -29,6 +29,7 @@ import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { normalizeProfile } from "@/lib/crm/registration/core";
+import { createOpenWaClient, type WaGroup } from "@/lib/openwa/client";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
@@ -2148,8 +2149,23 @@ export async function saveDeveloperContact(id: string, _prev: any, formData: For
 export async function saveDeveloperRegistrationProfile(id: string, _prev: unknown, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
   await requireSession();
   const g = (k: string) => String(formData.get(k) ?? "");
+  // The group's name comes from WhatsApp, never from the form: the name is what
+  // people check before sending, so it must be the group's real one.
+  const groupId = g("whatsAppGroupId").trim();
+  let groupName = "";
+  if (groupId) {
+    let groups: WaGroup[];
+    try {
+      groups = await createOpenWaClient().listGroups();
+    } catch {
+      return { error: "Could not reach WhatsApp to check the group — try again." };
+    }
+    const hit = groups.find((x) => x.id === groupId);
+    if (!hit) return { error: "That WhatsApp group was not found — our number may have left it." };
+    groupName = hit.name;
+  }
   const r = normalizeProfile(
-    { channel: g("channel"), emailTo: g("emailTo"), emailCc: g("emailCc"), whatsApp: g("whatsApp") },
+    { channel: g("channel"), emailTo: g("emailTo"), emailCc: g("emailCc"), whatsApp: g("whatsApp"), whatsAppGroupId: groupId, whatsAppGroupName: groupName },
     process.env.EMAIL_USER ?? "office@cyprusvipestates.com",
   );
   if (!r.ok) return { error: r.error };
@@ -2160,10 +2176,23 @@ export async function saveDeveloperRegistrationProfile(id: string, _prev: unknow
       registrationEmailTo: r.value.emailTo,
       registrationEmailCc: r.value.emailCc,
       registrationWhatsApp: r.value.whatsApp,
+      registrationWhatsAppGroupId: r.value.whatsAppGroupId,
+      registrationWhatsAppGroupName: r.value.whatsAppGroupName,
     },
   });
   revalidatePath(`/admin/developments/developers/${id}`);
   return { ok: true };
+}
+
+// The registration profile's group picker: the WhatsApp groups our number is in.
+export async function listRegistrationWhatsAppGroups(): Promise<{ ok: true; groups: WaGroup[] } | { ok: false; error: string }> {
+  await requireSession();
+  try {
+    const groups = await createOpenWaClient().listGroups();
+    return { ok: true, groups: groups.sort((x, y) => x.name.localeCompare(y.name)) };
+  } catch {
+    return { ok: false, error: "Could not load the WhatsApp groups — the WhatsApp connection may be down." };
+  }
 }
 
 // What the delete dialog shows before it asks for the typed name.

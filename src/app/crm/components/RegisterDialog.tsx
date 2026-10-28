@@ -206,7 +206,7 @@ export function RegisterDialog({ leadId, options, onClose, onSent }: {
                 <b>{p.developerName}</b>
                 <dl>
                   <div><dt>Channel</dt><dd>{p.channel === "EMAIL" ? "Email" : "WhatsApp"}</dd></div>
-                  <div><dt>To</dt><dd>{p.targets.join(", ")}</dd></div>
+                  <div><dt>To</dt><dd>{p.labels.join(", ")}</dd></div>
                   {p.cc.length > 0 && <div><dt>CC</dt><dd>{p.cc.join(", ")}</dd></div>}
                   {p.channel === "EMAIL" && <div><dt>Subject</dt><dd>{p.subject}</dd></div>}
                 </dl>

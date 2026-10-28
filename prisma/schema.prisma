@@ -1449,6 +1449,10 @@ model DeveloperAccount {
   registrationEmailTo  String[]            @default([])
   registrationEmailCc  String[]            @default([])
   registrationWhatsApp String[]            @default([]) // E.164
+  // A WhatsApp group the developer shares with us (2026-10-28): its chat id
+  // ("…@g.us") and the name as picked, shown wherever it is sent.
+  registrationWhatsAppGroupId   String?
+  registrationWhatsAppGroupName String?
 
   analyses      DeveloperFeedAnalysis[]
   developments  Development[]
