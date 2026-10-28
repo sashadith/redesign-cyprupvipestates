@@ -1,3 +1,4 @@
+import { loadLeadPresentations, buildPresentationRows } from "@/lib/crm/presentations/rows";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -101,14 +102,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   const [session, locations, rawPresentations, bookingRequests] = await Promise.all([
     auth(),
     listPresentationLocations(),
-    prisma.clientPresentation.findMany({
-      where: { leadId: id },
-      orderBy: { createdAt: "desc" },
-      include: {
-        views: { select: { developmentId: true, durationSec: true, createdAt: true } },
-        items: { select: { developmentId: true, isFavorited: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
-      },
-    }),
+    loadLeadPresentations(id),
     prisma.bookingRequest.findMany({ where: { leadId: id }, orderBy: { createdAt: "desc" } }),
   ]);
   const bookingRows: BookingRow[] = bookingRequests.map((b) => ({
@@ -120,27 +114,13 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     confirmedSlotUtc: b.confirmedSlotUtc,
     zoomLinkSentAt: b.zoomLinkSentAt,
   }));
-  const presentationRows: PresentationRow[] = rawPresentations.map((p) => {
-    const uniqueDays = new Set(p.views.map((v) => v.createdAt.toISOString().slice(0, 10))).size;
-    const perDev = new Map<string, { views: number; durationSec: number }>();
-    for (const v of p.views) {
-      if (!v.developmentId) continue;
-      const cur = perDev.get(v.developmentId) ?? { views: 0, durationSec: 0 };
-      cur.views += 1; cur.durationSec += v.durationSec ?? 0;
-      perDev.set(v.developmentId, cur);
-    }
-    const nameOf = (devId: string) => {
-      const it = p.items.find((i) => i.developmentId === devId);
-      return it?.development.override?.alias || it?.development.publicName || "—";
-    };
-    return {
-      id: p.id, token: p.token, status: p.status, createdAt: p.createdAt, expiresAt: p.expiresAt,
-      viewCount: p.views.length, favoritedCount: p.items.filter((i) => i.isFavorited).length,
-      uniqueDays,
-      perDevelopment: Array.from(perDev.entries()).map(([developmentId, v]) => ({ developmentId, name: nameOf(developmentId), views: v.views, durationSec: v.durationSec })),
-      favoritedNames: p.items.filter((i) => i.isFavorited).map((i) => i.development.override?.alias || i.development.publicName),
-    };
-  });
+  // Same rows the new CRM renders; mapped down to what ExistingPresentations shows.
+  const presentationRows: PresentationRow[] = buildPresentationRows(rawPresentations, new Date()).map((r) => ({
+    id: r.id, token: r.token, status: r.status, createdAt: r.createdAt, expiresAt: r.expiresAt,
+    viewCount: r.viewCount, favoritedCount: r.favoritedCount, uniqueDays: r.uniqueDays,
+    perDevelopment: r.items.filter((i) => i.views > 0).map((i) => ({ developmentId: i.developmentId, name: i.name, views: i.views, durationSec: i.durationSec })),
+    favoritedNames: r.items.filter((i) => i.isFavorited).map((i) => i.name),
+  }));
   // Cockpit's compact summary references the most recent presentation only
   // (rawPresentations is already newest-first) — the full per-presentation
   // breakdown, including older ones, stays in ExistingPresentations below.
