@@ -16,7 +16,8 @@ import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
-import { CockpitRegistrations, type RegistrationRow } from "../../components/CockpitRegistrations";
+import { CockpitRegistrations, type DueRow, type RegistrationRow } from "../../components/CockpitRegistrations";
+import { loadRegistrationDue } from "@/lib/crm/registration/due";
 import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
 import { ToastProvider } from "../../components/Toast";
@@ -33,7 +34,7 @@ const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 // Lead cockpit (CRM v2, 2026-10-18). A lead that does not exist and one the
 // user may not see look the same: 404.
-export default async function LeadCockpitPage({ params, searchParams }: { params: { id: string }; searchParams?: { created?: string | string[] } }) {
+export default async function LeadCockpitPage({ params, searchParams }: { params: { id: string }; searchParams?: { created?: string | string[]; register?: string | string[] } }) {
   const user = await requireCrmUser();
   const lead = await prisma.lead.findFirst({
     where: { id: params.id, deletedAt: null },
@@ -113,6 +114,15 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     sentAt: r.sentAt?.toISOString() ?? null, preliminaryAt: r.preliminaryAt?.toISOString() ?? null, preliminarySource: r.preliminarySource,
     fixedAt: r.fixedAt?.toISOString() ?? null, sendError: r.sendError,
   }));
+  const dueLead = (await loadRegistrationDue([lead.id], now))[0];
+  const dueRow = (p: NonNullable<typeof dueLead>["due"][number]): DueRow => ({
+    developerAccountId: p.developerAccountId, developerName: p.developerName, registrable: p.registrable,
+    developmentIds: p.developmentIds, projects: p.projects, since: p.since.toISOString(),
+  });
+  const due = {
+    open: (dueLead?.due ?? []).map(dueRow),
+    skipped: (dueLead?.skipped ?? []).map((p) => ({ ...dueRow(p), skippedAt: p.skippedAt.toISOString(), skippedByName: p.skippedByName, skipReason: p.skipReason })),
+  };
 
   return (
     <ToastProvider>
@@ -137,7 +147,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />
-            <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} />
+            <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
             {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}

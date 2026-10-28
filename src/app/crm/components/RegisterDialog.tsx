@@ -16,13 +16,15 @@ type Outcomes = Extract<SendResult, { ok: true }>["outcomes"];
 
 const matches = (q: string, s: string) => !q || s.toLowerCase().includes(q.toLowerCase());
 
-export function RegisterDialog({ leadId, options, onClose, onSent }: {
+export function RegisterDialog({ leadId, options, onClose, onSent, initial }: {
   leadId: string; options: RegistrationOptions; onClose: () => void; onSent: () => void;
+  // Pre-ticked picks, e.g. the developers from the client's personal selections.
+  initial?: { developerIds: string[]; projectIds: string[] };
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const toast = useToast();
-  const [devPicks, setDevPicks] = useState<string[]>([]);
-  const [projPicks, setProjPicks] = useState<string[]>([]);
+  const [devPicks, setDevPicks] = useState<string[]>(() => initial?.developerIds ?? []);
+  const [projPicks, setProjPicks] = useState<string[]>(() => initial?.projectIds ?? []);
   const [devQ, setDevQ] = useState("");
   const [projQ, setProjQ] = useState("");
   const [bMin, setBMin] = useState(options.budget.min != null ? String(options.budget.min) : "");
