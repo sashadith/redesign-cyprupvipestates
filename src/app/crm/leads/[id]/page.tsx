@@ -17,6 +17,8 @@ import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
 import { CockpitRegistrations, type DueRow, type RegistrationRow } from "../../components/CockpitRegistrations";
+import { CockpitPresentations, type PresentationRowView } from "../../components/CockpitPresentations";
+import { buildPresentationRows, loadLeadPresentations } from "@/lib/crm/presentations/rows";
 import { loadRegistrationDue } from "@/lib/crm/registration/due";
 import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
@@ -80,6 +82,13 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   const summaryLocale = isSummaryLocale(me?.crmSummaryLocale) ? me.crmSummaryLocale : DEFAULT_SUMMARY_LOCALE;
 
   const now = new Date();
+  const presentations: PresentationRowView[] = buildPresentationRows(await loadLeadPresentations(lead.id), now).map((p) => ({
+    id: p.id, token: p.token, effectiveStatus: p.effectiveStatus,
+    createdAt: p.createdAt.toISOString(), expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+    advisorName: p.advisorName, partnerName: p.partnerName,
+    viewCount: p.viewCount, uniqueDays: p.uniqueDays, favoritedCount: p.favoritedCount,
+    items: p.items.map((i) => ({ developmentId: i.developmentId, name: i.name, isFavorited: i.isFavorited, views: i.views, durationSec: i.durationSec })),
+  }));
   const partnerView = await loadPartnerView(lead, canEdit, canAssign, now);
   const name = `${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead";
   const attributionRows: [string, string | null][] = [
@@ -148,10 +157,10 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />
             <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
+            <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner} />
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
             {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
-            {seesAllLeads(user) && <Link className="crm-ck-old" href={`/admin/crm/${lead.id}`}>Presentations, matching, email →</Link>}
           </aside>
         </div>
       </div>

@@ -854,3 +854,22 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-reg-results li.r-already { color: var(--muted); }
 .crm-reg-results li.r-failed { color: var(--danger); overflow-wrap: anywhere; }
 .crm-reg-dialog .crm-dialog-actions { margin-top: 4px; }
+
+/* Client Presentations block (cockpit aside) */
+.crm-ck-pres h2 { margin: 0; }
+.crm-ck-pres .crm-ck-sechead { align-items: center; margin-bottom: 10px; }
+.crm-ck-pres .crm-ck-sechead .crm-btn { padding: 6px 12px; }
+.crm-ck-presempty { margin: 0; font-size: calc(13px * var(--ds-crm-scale)); }
+.crm-ck-preslist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.crm-ck-preslist > li { border: 1px solid var(--line); border-radius: calc(12px * var(--ds-radius-scale)); padding: 10px 12px; display: grid; gap: 5px; background: var(--bg); }
+.crm-ck-preshead { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.crm-ck-presmeta, .crm-ck-presstats { margin: 0; color: var(--muted); font-size: calc(12px * var(--ds-crm-scale)); font-variant-numeric: tabular-nums; }
+.crm-ck-presitems summary { cursor: pointer; font-size: calc(12.5px * var(--ds-crm-scale)); color: var(--accent-ink); font-weight: 600; }
+.crm-ck-presitems ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+.crm-ck-presitems li { display: flex; justify-content: space-between; gap: 8px; font-size: calc(12.5px * var(--ds-crm-scale)); font-variant-numeric: tabular-nums; }
+.crm-ck-presitems li span:first-child { overflow-wrap: anywhere; }
+.crm-ck-presbtns, .crm-ck-presext { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px; }
+.crm-ck-presbtns .crm-btn { padding: 4px 10px; font-size: calc(12px * var(--ds-crm-scale)); text-decoration: none; }
+.crm-pill.p-active { color: var(--good); border-color: currentColor; }
+.crm-pill.p-expired { color: var(--warn); border-color: currentColor; }
+.crm-pill.p-revoked { color: var(--danger); border-color: currentColor; background: var(--danger-bg); }
