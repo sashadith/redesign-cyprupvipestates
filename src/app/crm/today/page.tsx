@@ -68,7 +68,7 @@ export default async function TodayPage() {
   const built = buildToday(leads, now);
   // Registrations due: the owner sees every lead, staff their own.
   const regDue = (await loadRegistrationDue(null, now)).filter((l) => l.due.length > 0 && (user.isOwner || l.ownerId === user.id));
-  const hot = await loadHotSelections(user, now);
+  const hot = await loadHotSelections(user, now).catch((e) => { console.error("Hot selections failed:", e instanceof Error ? e.name : "error"); return []; });
   const hotCount = hot.filter((h) => h.kind === "hot").length;
   // Hot leads first only in the two lists with no time order (Newly assigned, Going quiet); Overdue, Due today and Viewings keep their time order.
   const hotFirst = (rs: TodayLead[]) => sortByTemperature(rs, (l) => l.temperature);
@@ -129,8 +129,8 @@ export default async function TodayPage() {
                 return (
                   <li key={h.presentationId} className="crm-today-hotrow">
                     <Link href={`/crm/leads/${h.leadId}#presentations`}>
-                      <span className="who"><b>{h.leadName}</b><span className="proj">{h.reasons.join(" · ")}</span></span>
-                      <span className="st">{user.isOwner && h.ownerName ? h.ownerName : ""}</span>
+                      <span className="who"><b>{h.leadName}</b><span className="proj">{h.reasons.filter((r) => !r.startsWith("expires in")).join(" · ")}</span></span>
+                      {user.isOwner && h.ownerName && <span className="st">{h.ownerName}</span>}
                       <span className="when" title={dateTime.format(h.signalAt)}>
                         {h.kind === "expiring" ? `expires in ${days} day${days === 1 ? "" : "s"} · ` : ""}{ago(h.signalAt, now)}
                       </span>
