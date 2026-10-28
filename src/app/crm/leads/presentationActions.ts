@@ -10,6 +10,7 @@ import {
 } from "@/lib/crm/presentations/core";
 import { listPresentationLocationOptions, type LocationOptions } from "@/lib/crm/presentations/locations";
 import { buildEditorItems, type EditorItem } from "@/lib/crm/presentations/editorItems";
+import { favoritesSeedFromRows, type FavoritesSeed } from "@/lib/crm/presentations/favoritesSeed";
 import { matchDevelopmentsForLead, type MatchFilters, type DevelopmentMatch } from "@/lib/crm/matching";
 import { sendLeadEmail } from "@/lib/crm/sendLeadEmail";
 
@@ -23,6 +24,8 @@ export type EditPayload = {
     advisorId: string; expiresAt: string; criteria: MatchFilters | null;
   };
   items: EditorItem[];
+  /** Development ids the client hearted, so removing one can ask first. */
+  favoritedIds: string[];
 };
 
 const NOT_FOUND = "Lead not found.";
@@ -111,7 +114,30 @@ export async function loadPresentationForEditAction(id: string): Promise<EditPay
       criteria: (p.criteria as MatchFilters | null) ?? null,
     },
     items,
+    favoritedIds: p.items.filter((i) => i.isFavorited).map((i) => i.developmentId),
   };
+}
+
+// "New from favorites": filters built from the projects the client hearted in
+// this selection, with those projects pre-ticked.
+export async function favoritesSeedAction(id: string): Promise<FavoritesSeed | { error: string }> {
+  const { error } = await guardedPresentation(id, "edit");
+  if (error) return { error };
+  const items = await prisma.clientPresentationItem.findMany({
+    where: { presentationId: id, isFavorited: true },
+    orderBy: { sortIndex: "asc" },
+    select: {
+      development: {
+        select: {
+          id: true, publicName: true, district: true, town: true, area: true,
+          override: { select: { district: true, town: true, area: true } },
+          units: { select: { status: true, price: true, beds: true, type: true } },
+        },
+      },
+    },
+  });
+  if (!items.length) return { error: "The client has not favorited anything in this selection." };
+  return favoritesSeedFromRows(items.map((i) => i.development));
 }
 
 export async function savePresentationEditAction(id: string, body: unknown) {

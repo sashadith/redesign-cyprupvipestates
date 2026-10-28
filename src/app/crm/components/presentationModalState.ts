@@ -1,7 +1,8 @@
-// Pure state helpers for the "New presentation" modal (no React, no Prisma),
-// so the close guard and the item snapshot are testable on their own.
+// Pure state helpers for the presentation modal (no React, no Prisma), so the
+// close guard and the item snapshots of both create and edit are testable.
 import type { DevelopmentMatch } from "@/lib/crm/matching";
 import type { PresentationItemInput } from "@/lib/crm/presentations/core";
+import type { EditorItem, EditorUnit } from "@/lib/crm/presentations/editorItems";
 import { normalizeRef } from "@/lib/unitRef";
 
 /** What the operator would lose by closing. Auto-checked 100 % matches and the
@@ -121,4 +122,103 @@ export function hiddenSelections(
 ): { id: string; name: string }[] {
   const shown = new Set(results.map((r) => r.development.id));
   return selectedDevIds.filter((id) => !shown.has(id)).map((id) => ({ id, name: knownNames.get(id) ?? "Unknown project" }));
+}
+
+// ---- Edit mode ----
+
+/** A project ticked in the "Add projects" panel, as a selection item: every
+ *  available unit listed, the exact matches (or the operator's override) checked. */
+export function editorItemFromMatch(m: DevelopmentMatch, override: ReadonlySet<string> | undefined, comment: string): EditorItem {
+  const d = m.development;
+  const units: EditorUnit[] = [];
+  const seen = new Set<string>();
+  m.matchedUnits.concat(m.allAvailableUnits).forEach((u) => {
+    if (seen.has(u.id)) return;
+    seen.add(u.id);
+    units.push({ id: u.id, ref: u.ref, label: u.label, type: u.type, beds: u.beds, areaBuilt: u.areaBuilt, price: u.price, currency: d.currency, status: u.status });
+  });
+  const checkedUnitIds = override ? Array.from(override) : m.matchedUnits.filter((u) => u.status === "available").map((u) => u.id);
+  return {
+    developmentId: d.id, publicName: d.publicName, mainImage: d.mainImage,
+    district: d.district, area: d.area, town: d.town, priceFrom: d.priceFrom, currency: d.currency,
+    aliasName: "", advisorComment: comment, sortIndex: 0, isNew: true, units, checkedUnitIds,
+  };
+}
+
+const availableIdsOf = (it: EditorItem) => it.units.filter((u) => u.status === "available").map((u) => u.id);
+
+/** Has available units but none checked: would collapse to "whole project", so it is left out (after a warning). */
+export function emptyEditItems(items: EditorItem[]): EditorItem[] {
+  return items.filter((it) => availableIdsOf(it).length > 0 && it.checkedUnitIds.length === 0);
+}
+
+// Same split as the old editor (PresentationEditor.tsx splitUnitSelection):
+// always the explicit checked set, so a save never resets a filtered selection
+// to "every available unit". Null only when there is nothing available.
+function editUnitSelection(it: EditorItem): { unitRefs: string[] | null; unitIds: string[] | null } {
+  if (availableIdsOf(it).length === 0) return { unitRefs: null, unitIds: null };
+  const checked = new Set(it.checkedUnitIds);
+  const refs: string[] = [];
+  const ids: string[] = [];
+  it.units.forEach((u) => {
+    if (!checked.has(u.id)) return;
+    if (u.ref && u.ref.trim()) refs.push(normalizeRef(u.ref, it.publicName));
+    else ids.push(u.id);
+  });
+  return { unitRefs: refs.length ? refs : null, unitIds: ids.length ? ids : null };
+}
+
+/** Items for savePresentationEditAction, in display order. */
+export function editPayloadItems(items: EditorItem[]): PresentationItemInput[] {
+  return items.map((it, i) => ({
+    developmentId: it.developmentId,
+    aliasName: it.aliasName || null,
+    advisorComment: it.advisorComment || null,
+    ...editUnitSelection(it),
+    sortIndex: i,
+  }));
+}
+
+export type EditGeneral = { greetingName: string; personalNote: string; locale: string; advisorId: string; expiresAt: string };
+export type EditSnapshot = EditGeneral & {
+  items: { id: string; alias: string; comment: string; units: string[] }[]; // in display order
+  pending: string[]; // ticked in "Add projects", not yet in the selection
+  pendingOverrides: Record<string, string[]>;
+  pendingComments: Record<string, string>;
+};
+
+export function editSnapshot(
+  items: EditorItem[], general: EditGeneral, pending: string[],
+  pendingOverrides: Overrides, pendingComments: ReadonlyMap<string, string>,
+): EditSnapshot {
+  return {
+    ...general,
+    items: items.map((it) => ({ id: it.developmentId, alias: it.aliasName.trim(), comment: it.advisorComment.trim(), units: sorted(it.checkedUnitIds) })),
+    pending, pendingOverrides: overridesRecord(pendingOverrides), pendingComments: mapRecord(pendingComments),
+  };
+}
+
+export function isEditDirty(state: EditSnapshot, initial: EditSnapshot): boolean {
+  const sameItems = state.items.length === initial.items.length && state.items.every((a, i) => {
+    const b = initial.items[i];
+    return a.id === b.id && a.alias === b.alias && a.comment === b.comment && sameList(a.units, b.units);
+  });
+  return !(
+    sameItems &&
+    sameList(state.pending, initial.pending) &&
+    sameOverrides(state.pendingOverrides, initial.pendingOverrides) &&
+    sameComments(state.pendingComments, initial.pendingComments) &&
+    state.greetingName === initial.greetingName &&
+    state.personalNote === initial.personalNote &&
+    state.locale === initial.locale &&
+    state.advisorId === initial.advisorId &&
+    state.expiresAt === initial.expiresAt
+  );
+}
+
+/** True when the item may be removed. A project the client hearted asks first. */
+export function removeItemConfirm(it: EditorItem, favoritedIds: ReadonlySet<string>, confirmFn: (msg: string) => boolean): boolean {
+  if (!favoritedIds.has(it.developmentId)) return true;
+  const name = it.aliasName.trim() || it.publicName;
+  return confirmFn(`The client favorited ${name}. Remove it anyway?`);
 }

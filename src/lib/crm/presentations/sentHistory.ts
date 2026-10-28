@@ -2,10 +2,15 @@
 // same project goes to the same lead twice.
 import type { PresentationListRow } from "./rows";
 
+/** The part of a list row the history needs, so the client can call it on its own row views. */
+export type SentHistoryRow = Pick<PresentationListRow, "id" | "createdAt"> & {
+  items: Pick<PresentationListRow["items"][number], "developmentId" | "views" | "isFavorited">[];
+};
+
 export type SentInfo = { lastSentAt: Date; views: number; favorited: boolean; times: number };
 
 /** Keyed by developmentId. Revoked and expired selections still count; `excludeId` skips the one being edited. */
-export function sentHistory(rows: PresentationListRow[], excludeId?: string): Record<string, SentInfo> {
+export function sentHistory(rows: SentHistoryRow[], excludeId?: string): Record<string, SentInfo> {
   const out: Record<string, SentInfo> = {};
   for (const r of rows) {
     if (r.id === excludeId) continue;

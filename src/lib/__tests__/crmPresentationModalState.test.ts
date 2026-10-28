@@ -1,8 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildItems, confirmDiscard, droppedSelections, hiddenSelections, isDirty, type ModalSnapshot,
+  buildItems, confirmDiscard, droppedSelections, editPayloadItems, editorItemFromMatch, editSnapshot, emptyEditItems,
+  hiddenSelections, isDirty, isEditDirty, removeItemConfirm, type ModalSnapshot,
 } from "../../app/crm/components/presentationModalState";
+import type { EditorItem, EditorUnit } from "../crm/presentations/editorItems";
 import type { DevelopmentMatch, MatchedUnit } from "../crm/matching";
 import { normalizeRef } from "../unitRef";
 
@@ -87,4 +89,70 @@ test("hiddenSelections: selected but not in the current results, with remembered
     { id: "d3", name: "Unknown project" },
   ]);
   assert.deepEqual(hiddenSelections(["d1"], results, names), []);
+});
+
+const eunit = (id: string, ref: string | null, status = "available"): EditorUnit => ({
+  id, ref, label: null, type: null, beds: null, areaBuilt: null, price: 100, currency: "EUR", status,
+});
+const eitem = (developmentId: string, units: EditorUnit[], checkedUnitIds: string[], over: Partial<EditorItem> = {}): EditorItem => ({
+  developmentId, publicName: `P ${developmentId}`, mainImage: null, district: null, area: null, town: null, priceFrom: null,
+  currency: "EUR", aliasName: "", advisorComment: "", sortIndex: 0, isNew: false, units, checkedUnitIds, ...over,
+});
+
+test("editorItemFromMatch: all available units listed, the exact matches (or the override) checked", () => {
+  const m = match("d1", "Arbeo", [unit("a", "A1")], [unit("a", "A1"), unit("c", "C3")]);
+  const it = editorItemFromMatch(m, undefined, "Sea view");
+  assert.equal(it.isNew, true);
+  assert.equal(it.advisorComment, "Sea view");
+  assert.deepEqual(it.units.map((u) => u.id), ["a", "c"]);
+  assert.deepEqual(it.checkedUnitIds, ["a"]);
+  assert.deepEqual(editorItemFromMatch(m, new Set(["c"]), "").checkedUnitIds, ["c"]);
+});
+
+test("editPayloadItems: explicit refs for checked units, manual units by id, no units → whole project, sortIndex by position", () => {
+  const items = [
+    eitem("d1", [eunit("a", "A1"), eunit("b", "B2"), eunit("m", null)], ["a", "m"], { aliasName: "  Nice ", advisorComment: "" }),
+    eitem("d2", [], []),
+    eitem("d3", [eunit("s", "S1", "sold")], []),
+  ];
+  assert.deepEqual(editPayloadItems(items), [
+    { developmentId: "d1", aliasName: "  Nice ", advisorComment: null, unitRefs: [normalizeRef("A1", "P d1")], unitIds: ["m"], sortIndex: 0 },
+    { developmentId: "d2", aliasName: null, advisorComment: null, unitRefs: null, unitIds: null, sortIndex: 1 },
+    { developmentId: "d3", aliasName: null, advisorComment: null, unitRefs: null, unitIds: null, sortIndex: 2 },
+  ]);
+});
+
+test("emptyEditItems: available units but none checked", () => {
+  const items = [eitem("d1", [eunit("a", "A1")], []), eitem("d2", [eunit("s", "S", "sold")], []), eitem("d3", [eunit("a", "A1")], ["a"])];
+  assert.deepEqual(emptyEditItems(items).map((i) => i.developmentId), ["d1"]);
+});
+
+test("isEditDirty: compares against the loaded selection", () => {
+  const items = [eitem("d1", [eunit("a", "A1"), eunit("b", "B1")], ["a", "b"]), eitem("d2", [], [])];
+  const general = { greetingName: "Anna", personalNote: "", locale: "en", advisorId: "u1", expiresAt: "2026-11-30" };
+  const initial = editSnapshot(items, general, [], new Map(), new Map());
+  const same = (its: EditorItem[], g = general, picks: string[] = []) => isEditDirty(editSnapshot(its, g, picks, new Map(), new Map()), initial);
+  assert.equal(same(items), false);
+  assert.equal(same([{ ...items[0], checkedUnitIds: ["b", "a"] }, items[1]]), false, "unit order does not matter");
+  assert.equal(same([items[0], { ...items[1], aliasName: "  " }]), false, "a blank alias is no alias");
+  assert.equal(same([items[1], items[0]]), true, "reordered");
+  assert.equal(same([items[0]]), true, "removed");
+  assert.equal(same([{ ...items[0], checkedUnitIds: ["a"] }, items[1]]), true, "units narrowed");
+  assert.equal(same([{ ...items[0], aliasName: "Villa A" }, items[1]]), true);
+  assert.equal(same([items[0], { ...items[1], advisorComment: "Pool" }]), true);
+  assert.equal(same(items, { ...general, expiresAt: "2026-12-31" }), true);
+  assert.equal(same(items, { ...general, locale: "de" }), true);
+  assert.equal(same(items, general, ["d9"]), true, "a project ticked to add");
+});
+
+test("removeItemConfirm: asks only for favorited projects, with the client-facing name", () => {
+  const fav = new Set(["d1"]);
+  let msg = "";
+  const ask = (m: string) => { msg = m; return false; };
+  assert.equal(removeItemConfirm(eitem("d1", [], [], { aliasName: "Villa Rosa" }), fav, ask), false);
+  assert.equal(msg, "The client favorited Villa Rosa. Remove it anyway?");
+  assert.equal(removeItemConfirm(eitem("d1", [], []), fav, () => true), true);
+  msg = "";
+  assert.equal(removeItemConfirm(eitem("d2", [], []), fav, ask), true);
+  assert.equal(msg, "", "not favorited: no question");
 });

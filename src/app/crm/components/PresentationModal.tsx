@@ -8,21 +8,29 @@ import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import type { LocationOptions } from "@/lib/crm/presentations/locations";
 import type { SentInfo } from "@/lib/crm/presentations/sentHistory";
+import type { EditorItem } from "@/lib/crm/presentations/editorItems";
 import { initialFilters } from "@/lib/crm/presentations/seedFilters";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
 import {
-  createPresentationAction, locationsAction, matchAction, saveFiltersAction, sendPresentationEmailAction,
+  createPresentationAction, loadPresentationForEditAction, locationsAction, matchAction, saveFiltersAction,
+  savePresentationEditAction, sendPresentationEmailAction,
 } from "../leads/presentationActions";
 import {
-  buildItems, confirmDiscard, droppedSelections, hiddenSelections, isDirty, mapRecord, overridesRecord, type ModalSnapshot,
+  buildItems, confirmDiscard, droppedSelections, editorItemFromMatch, editPayloadItems, editSnapshot, emptyEditItems,
+  hiddenSelections, isDirty, isEditDirty, mapRecord, overridesRecord, removeItemConfirm, type EditSnapshot, type ModalSnapshot,
 } from "./presentationModalState";
 import { PresentationFilters } from "./presentation/PresentationFilters";
 import { PresentationResults } from "./presentation/PresentationResults";
 import { PresentationCreated, type CreatedPresentation } from "./presentation/PresentationCreated";
+import { PresentationSelection } from "./presentation/PresentationSelection";
+import { PresentationSaved, type SavedPresentation } from "./presentation/PresentationSaved";
 
-// "New presentation" modal on the lead cockpit: the old CRM's Property
+// Presentation modal on the lead cockpit. "New": the old CRM's Property
 // Matching panel (src/app/admin/(panel)/crm/[id]/PropertyMatching.tsx) with the
 // same matching, auto-select and snapshot rules, in the new CRM's styling.
+// "Edit": the old edit page (.../presentations/[presentationId]/edit/
+// PresentationEditor.tsx) — the current items first, the same matching panel
+// below to add projects (no auto-select there).
 
 // MapLibre touches window: client-only, like the old panel.
 const MatchingMap = dynamic(() => import("@/app/admin/(panel)/crm/[id]/MatchingMap"), { ssr: false });
@@ -35,8 +43,9 @@ export type ModalLead = {
   phone: string | null; email: string | null; lastMatchFilters: unknown;
 };
 export type ModalUser = { id: string; name: string };
-// Task 9 adds { kind: "edit"; presentationId: string }.
-export type PresentationModalMode = { kind: "new"; seed?: { filters: MatchFilters; preselect: string[] } };
+/** Starting point for "New from favorites": filters plus pre-ticked projects (names for when they are not in the results). */
+export type PresentationSeed = { filters: MatchFilters; preselect: string[]; preselectNames?: Record<string, string> };
+export type PresentationModalMode = { kind: "new"; seed?: PresentationSeed } | { kind: "edit"; presentationId: string };
 
 // Just the name: the public page already builds "{time-of-day greeting}, {name}".
 const suggestedGreeting = (_locale: Locale, firstName: string) => firstName;
@@ -55,10 +64,14 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   // request that could not be prevented) reopens the dialog instead.
   const closeApproved = useRef(false);
   const initialLocale: Locale = isPublicLocale(lead.languagePreference ?? "") ? (lead.languagePreference as Locale) : "en";
-  const preselect = mode.seed?.preselect ?? [];
+  const isEdit = mode.kind === "edit";
+  const editId = mode.kind === "edit" ? mode.presentationId : null;
+  const seed = mode.kind === "new" ? mode.seed : undefined;
+  const preselect = seed?.preselect ?? [];
 
   // The last saved search wins over the lead profile; a seed wins over both.
-  const [filters, setFilters] = useState<MatchFilters>(() => mode.seed?.filters ?? initialFilters(lead));
+  // Edit replaces this with the selection's own criteria once it has loaded.
+  const [filters, setFilters] = useState<MatchFilters>(() => seed?.filters ?? initialFilters(lead));
   const [locations, setLocations] = useState<LocationOptions | null>(null);
   const [locationsError, setLocationsError] = useState<string | null>(null);
   const [results, setResults] = useState<DevelopmentMatch[]>([]);
@@ -87,12 +100,49 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   const [created, setCreated] = useState<CreatedPresentation | null>(null);
   const [showComposeEmail, setShowComposeEmail] = useState(false);
 
+  // ---- Edit mode: the loaded selection ----
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadTry, setLoadTry] = useState(0);
+  const [ready, setReady] = useState(!isEdit);
+  const [items, setItems] = useState<EditorItem[]>([]);
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
+  const [expiresAt, setExpiresAt] = useState("");
+  const [itemsExpanded, setItemsExpanded] = useState<Set<string>>(new Set());
+  const [saved, setSaved] = useState<SavedPresentation | null>(null);
+  const initialEdit = useRef<EditSnapshot | null>(null);
+
   const initialSnapshot = useRef<ModalSnapshot>({
     picked: preselect, unpicked: [], unitOverrides: {}, comments: {},
     greetingName: suggestedGreeting(initialLocale, lead.firstName), personalNote: "", locale: initialLocale, advisorId: currentUser?.id ?? "",
   });
 
   useEffect(() => { dlg.current?.showModal(); }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    let live = true;
+    setLoadError(null);
+    loadPresentationForEditAction(editId)
+      .then((r) => {
+        if (!live) return;
+        if ("error" in r) { setLoadError(r.error); return; }
+        const p = r.presentation;
+        const loc: Locale = isPublicLocale(p.locale) ? p.locale : "en";
+        const general = { greetingName: p.greetingName, personalNote: p.personalNote, locale: loc, advisorId: p.advisorId, expiresAt: p.expiresAt };
+        setItems(r.items);
+        setFavoritedIds(new Set(r.favoritedIds));
+        setGreetingName(general.greetingName); setGreetingTouched(true);
+        setLocale(loc); setPersonalNote(general.personalNote); setAdvisorId(general.advisorId); setExpiresAt(general.expiresAt);
+        // Same basis the selection was generated / last saved with; the lead's
+        // own search only fills what older selections never stored.
+        setFilters({ ...initialFilters(lead), ...(p.criteria ?? {}) });
+        initialEdit.current = editSnapshot(r.items, general, [], new Map(), new Map());
+        setReady(true);
+      })
+      .catch(() => { if (live) setLoadError("Could not load the selection — check your connection."); });
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, loadTry]);
 
   useEffect(() => {
     let live = true;
@@ -104,8 +154,12 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
 
   // Matching: debounced, newest response wins; filters auto-save on the lead.
   const seq = useRef(0);
-  // Names of every project seen in results, for selections that later drop out.
-  const knownNames = useRef(new Map<string, string>());
+  // Names of every project seen in results, for selections that later drop out
+  // (seeded with the favorites' names, which may never show up in results).
+  const knownNames = useRef(new Map<string, string>(Object.entries(seed?.preselectNames ?? {})));
+  // Edit: the last match seen per project, so a ticked project can still be
+  // added after the filters moved on.
+  const knownMatches = useRef(new Map<string, DevelopmentMatch>());
   const runMatch = (f: MatchFilters) => {
     const my = ++seq.current;
     setLoading(true);
@@ -113,7 +167,7 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
       .then((r) => {
         if (my !== seq.current) return;
         if (Array.isArray(r)) {
-          r.forEach((m) => knownNames.current.set(m.development.id, m.development.publicName));
+          r.forEach((m) => { knownNames.current.set(m.development.id, m.development.publicName); knownMatches.current.set(m.development.id, m); });
           setResults(r); setMatchError(null);
         } else { setResults([]); setMatchError(r.error); }
       })
@@ -121,15 +175,18 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
       .finally(() => { if (my === seq.current) setLoading(false); });
   };
   useEffect(() => {
+    if (!ready) return;
     setManuallyUnchecked(new Set());
     setLoading(true);
     const t = setTimeout(() => {
       runMatch(filters);
-      saveFiltersAction(lead.id, filters).catch(() => {}); // best-effort, silent
+      // Editing an old selection must not overwrite the lead's last search;
+      // its filters are saved on the selection itself (criteria) instead.
+      if (!isEdit) saveFiltersAction(lead.id, filters).catch(() => {}); // best-effort, silent
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, ready]);
 
   // 100 % matches with at least one exactly matching unit tick themselves;
   // ones the auto-check ticked earlier untick when they drop below 100 %.
@@ -139,7 +196,8 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     [results],
   );
   useEffect(() => {
-    if (!results.length) return;
+    // Edit adds projects by hand only, as the old edit page did.
+    if (!results.length || isEdit) return;
     const auto = new Set<string>();
     hundredIds.forEach((id) => {
       if (manuallyUnchecked.has(id)) return;
@@ -187,6 +245,10 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
 
   const selectedIds = useMemo(() => Array.from(selectedDevs), [selectedDevs]);
   const selectedCount = selectedIds.length;
+  // Edit: projects already in the selection are not offered again.
+  const itemIds = useMemo(() => new Set(items.map((i) => i.developmentId)), [items]);
+  const shownResults = useMemo(() => (isEdit ? results.filter((m) => !itemIds.has(m.development.id)) : results), [isEdit, results, itemIds]);
+  const pendingCount = isEdit ? selectedIds.filter((id) => !itemIds.has(id)).length : 0;
   const mapMarkers = useMemo<MatchingMapMarker[]>(() => results
     .filter((m) => selectedDevs.has(m.development.id) && m.development.lat != null && m.development.lng != null)
     .map((m) => {
@@ -229,14 +291,19 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   }, [hasPins]);
   const mapKey = `w${Math.round(mapWidth / 40)}`;
 
-  const dirty = isDirty({
-    picked: selectedIds.filter((id) => !autoSelected.has(id)),
-    unpicked: Array.from(manuallyUnchecked).filter((id) => hundredIds.has(id)),
-    unitOverrides: overridesRecord(unitOverrides), comments: mapRecord(comments),
-    greetingName, personalNote, locale, advisorId,
-  }, initialSnapshot.current);
+  const dirty = isEdit
+    ? !!initialEdit.current && isEditDirty(
+      editSnapshot(items, { greetingName, personalNote, locale, advisorId, expiresAt }, selectedIds, unitOverrides, comments),
+      initialEdit.current,
+    )
+    : isDirty({
+      picked: selectedIds.filter((id) => !autoSelected.has(id)),
+      unpicked: Array.from(manuallyUnchecked).filter((id) => hundredIds.has(id)),
+      unitOverrides: overridesRecord(unitOverrides), comments: mapRecord(comments),
+      greetingName, personalNote, locale, advisorId,
+    }, initialSnapshot.current);
 
-  const hidden = hiddenSelections(selectedIds, results, knownNames.current);
+  const hidden = hiddenSelections(selectedIds, shownResults, knownNames.current);
 
   function closeNow() {
     closeApproved.current = true;
@@ -245,11 +312,11 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   function requestClose() {
     if (generating) return;
     if (showComposeEmail) { setShowComposeEmail(false); return; }
-    // After create the selection is saved; nothing left to lose.
-    if (created || confirmDiscard(dirty, (m) => window.confirm(m))) closeNow();
+    // After create / save the selection is stored; nothing left to lose.
+    if (created || saved || confirmDiscard(dirty, (m) => window.confirm(m))) closeNow();
   }
   function handleClosed() {
-    if (closeApproved.current || created) { onClose(); return; }
+    if (closeApproved.current || created || saved) { onClose(); return; }
     try { dlg.current?.showModal(); } catch { onClose(); }
   }
 
@@ -275,7 +342,80 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     }
   }
 
-  const status = loading ? "Matching…" : matchError ? null : `${results.length} project${results.length === 1 ? "" : "s"}`;
+  // ---- Edit: the selection's items ----
+  const patchItem = (id: string, patch: Partial<EditorItem>) =>
+    setItems((prev) => prev.map((it) => (it.developmentId === id ? { ...it, ...patch } : it)));
+  function moveItem(index: number, dir: -1 | 1) {
+    setItems((prev) => {
+      const j = index + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = prev.slice();
+      const t = next[index]; next[index] = next[j]; next[j] = t;
+      return next;
+    });
+  }
+  function toggleItemUnit(id: string, unitId: string) {
+    setItems((prev) => prev.map((it) => {
+      if (it.developmentId !== id) return it;
+      const on = it.checkedUnitIds.includes(unitId);
+      return { ...it, checkedUnitIds: on ? it.checkedUnitIds.filter((u) => u !== unitId) : it.checkedUnitIds.concat(unitId) };
+    }));
+  }
+  function removeItem(it: EditorItem) {
+    if (!removeItemConfirm(it, favoritedIds, (m) => window.confirm(m))) return;
+    setItems((prev) => prev.filter((x) => x.developmentId !== it.developmentId));
+  }
+  /** Projects ticked in "Add projects", as selection items. */
+  function pendingItems(): EditorItem[] {
+    const out: EditorItem[] = [];
+    selectedIds.forEach((id) => {
+      const m = knownMatches.current.get(id);
+      if (m && !itemIds.has(id)) out.push(editorItemFromMatch(m, unitOverrides.get(id), comments.get(id) ?? ""));
+    });
+    return out;
+  }
+  const dropFrom = <V,>(m: Map<string, V>, ids: string[]) => { const n = new Map(m); ids.forEach((id) => n.delete(id)); return n; };
+  /** Moves the ticked projects up into "In this selection", where alias and units can be set. */
+  function addPicked() {
+    const add = pendingItems();
+    if (!add.length) return;
+    const ids = add.map((a) => a.developmentId);
+    setItems((prev) => prev.concat(add));
+    setSelectedDevs(new Set());
+    setUnitOverrides((p) => dropFrom(p, ids));
+    setComments((p) => dropFrom(p, ids));
+  }
+
+  async function saveEdit(force = false) {
+    if (!editId || generating || !ready) return;
+    if (pendingCount > 0 && loading) return;
+    setGenError("");
+    // Still-ticked projects count too: nothing ticked is silently lost.
+    const all = items.concat(pendingItems());
+    if (!all.length) { setGenError("At least one project is required."); return; }
+    const empty = emptyEditItems(all);
+    if (empty.length && !force) { setDropWarning(empty.map((e) => e.publicName)); return; }
+    setDropWarning(null);
+    const emptyIds = new Set(empty.map((e) => e.developmentId));
+    const kept = all.filter((it) => !emptyIds.has(it.developmentId));
+    if (!kept.length) { setGenError("Nothing left to save — every project has no unit selected."); return; }
+    setGenerating(true);
+    try {
+      // criteria: the add panel's filters, re-snapshotted like the old edit page.
+      const r = await savePresentationEditAction(editId, {
+        greetingName, locale, personalNote, advisorId, expiresAt, items: editPayloadItems(kept), criteria: filters,
+      });
+      if ("error" in r) { setGenError(r.error); return; }
+      setSaved({ url: r.url, whatsappUrl: r.whatsappUrl, summary: r.summary });
+      router.refresh();
+    } catch {
+      setGenError("Could not save — check your connection and try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  const status = loading ? "Matching…" : matchError ? null : `${shownResults.length} project${shownResults.length === 1 ? "" : "s"}`;
 
   return (
     <dialog
@@ -292,16 +432,59 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
         <div className="crm-pres-body">
           <PresentationCreated created={created} hasEmail={!!lead.email} onEmail={() => setShowComposeEmail(true)} onClose={closeNow} />
         </div>
+      ) : saved ? (
+        <div className="crm-pres-body">
+          <PresentationSaved saved={saved} onClose={closeNow} />
+        </div>
+      ) : isEdit && !ready ? (
+        <div className="crm-pres-body">
+          <div className="crm-pres-head">
+            <h2 id="crm-pres-h">Edit presentation</h2>
+          </div>
+          <div className="crm-pres-scroll">
+            {loadError ? (
+              <div className="crm-pres-empty" role="alert">
+                <p className="crm-dialog-error">{loadError}</p>
+                <button type="button" className="crm-btn" onClick={() => setLoadTry((n) => n + 1)}>Try again</button>
+              </div>
+            ) : (
+              <p className="crm-pres-empty crm-muted">Loading the selection…</p>
+            )}
+          </div>
+          <div className="crm-pres-foot">
+            <div className="crm-pres-footrow">
+              <span className="crm-pres-count" />
+              <button type="button" className="crm-btn" onClick={requestClose}>Close</button>
+            </div>
+          </div>
+        </div>
       ) : (
         <div className="crm-pres-body">
           <div className="crm-pres-head">
-            <h2 id="crm-pres-h">New presentation</h2>
+            <h2 id="crm-pres-h">{isEdit ? "Edit presentation" : "New presentation"}</h2>
+            {seed && (
+              <p className="crm-muted">
+                Started from the client&apos;s favorites: {seed.preselect.length} project{seed.preselect.length === 1 ? "" : "s"} pre-ticked, filters set around them.
+              </p>
+            )}
           </div>
           <div className="crm-pres-scroll">
+            {isEdit && (
+              <section className="crm-pres-section" aria-labelledby="crm-pres-sel-h">
+                <h3 id="crm-pres-sel-h" className="crm-pres-sectionh">In this selection <span className="crm-muted">({items.length})</span></h3>
+                <PresentationSelection
+                  items={items} favorited={favoritedIds} expanded={itemsExpanded}
+                  onToggleExpand={(id) => setItemsExpanded((p) => toggleIn(p, id))} onMove={moveItem}
+                  onAlias={(id, v) => patchItem(id, { aliasName: v })} onComment={(id, v) => patchItem(id, { advisorComment: v })}
+                  onToggleUnit={toggleItemUnit} onRemove={removeItem}
+                />
+              </section>
+            )}
+            {isEdit && <h3 className="crm-pres-sectionh">Add projects</h3>}
             <PresentationFilters filters={filters} setFilters={setFilters} locations={locations} locationsError={locationsError} status={status} />
             <div className={`crm-pres-grid${mapMarkers.length ? " has-map" : ""}`}>
               <PresentationResults
-                results={results} loading={loading} error={matchError} selected={selectedDevs} expanded={expanded} showAll={showAllUnits}
+                results={shownResults} loading={loading} error={matchError} selected={selectedDevs} expanded={expanded} showAll={showAllUnits}
                 unitOverrides={unitOverrides} comments={comments} sent={sent}
                 onToggleDev={toggleDev} onToggleExpand={(id) => setExpanded((p) => toggleIn(p, id))}
                 onToggleShowAll={(id) => setShowAllUnits((p) => toggleIn(p, id))} onToggleUnit={toggleUnit}
@@ -327,8 +510,16 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
                 ))}
               </div>
             )}
-            {selectedCount > 0 && (
-              <fieldset className="crm-pres-details">
+            {isEdit && pendingCount > 0 && (
+              <div className="crm-pres-addrow">
+                <button type="button" className="crm-btn" onClick={addPicked}>
+                  Add {pendingCount} project{pendingCount === 1 ? "" : "s"} to the selection
+                </button>
+                <span className="crm-muted">Ticked projects are also added when you save.</span>
+              </div>
+            )}
+            {(isEdit || selectedCount > 0) && (
+              <fieldset className={`crm-pres-details${isEdit ? " is-edit" : ""}`}>
                 <legend>Presentation details</legend>
                 <label className="crm-pres-field">Greeting name
                   <input value={greetingName} onChange={(e) => { setGreetingName(e.target.value); setGreetingTouched(true); }} />
@@ -344,6 +535,11 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
                     {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                   </select>
                 </label>
+                {isEdit && (
+                  <label className="crm-pres-field">Expires
+                    <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+                  </label>
+                )}
                 <label className="crm-pres-field wide">Personal note (optional)
                   <textarea value={personalNote} onChange={(e) => setPersonalNote(e.target.value)} rows={2}
                     placeholder="A short message shown as a signed note on the client's page…" />
@@ -355,11 +551,13 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
             {dropWarning && (
               <div className="crm-pres-drop" role="alert">
                 <p>
-                  {dropWarning.length} project{dropWarning.length === 1 ? "" : "s"} {dropWarning.length === 1 ? "has" : "have"} no unit matching your filter exactly — {dropWarning.length === 1 ? "it" : "they"} will be left out of this presentation:
+                  {dropWarning.length} project{dropWarning.length === 1 ? "" : "s"} {dropWarning.length === 1 ? "has" : "have"} no unit {isEdit ? "selected" : "matching your filter exactly"} — {dropWarning.length === 1 ? "it" : "they"} will be {isEdit ? "removed from" : "left out of"} this presentation:
                 </p>
                 <ul>{dropWarning.map((n) => <li key={n}>{n}</li>)}</ul>
                 <div className="crm-pres-dropbtns">
-                  <button type="button" className="crm-btn" onClick={() => void generate(true)} disabled={generating || loading}>Generate anyway (excluding these)</button>
+                  {isEdit
+                    ? <button type="button" className="crm-btn" onClick={() => void saveEdit(true)} disabled={generating}>Save anyway (removing these)</button>
+                    : <button type="button" className="crm-btn" onClick={() => void generate(true)} disabled={generating || loading}>Generate anyway (excluding these)</button>}
                   <button type="button" className="crm-linkbtn" onClick={() => setDropWarning(null)}>Cancel — let me adjust</button>
                 </div>
               </div>
@@ -367,15 +565,24 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
             {genError && <p className="crm-dialog-error" role="alert">{genError}</p>}
             <div className="crm-pres-footrow">
               <span className="crm-pres-count">
-                {selectedCount > 0
-                  ? `${selectedCount} project${selectedCount === 1 ? "" : "s"} / ${unitCount} unit${unitCount === 1 ? "" : "s"} selected`
-                  : <span className="crm-muted">Tick projects to build the selection.</span>}
+                {isEdit
+                  ? `${items.length} project${items.length === 1 ? "" : "s"} in the selection${pendingCount ? ` · ${pendingCount} to add` : ""}`
+                  : selectedCount > 0
+                    ? `${selectedCount} project${selectedCount === 1 ? "" : "s"} / ${unitCount} unit${unitCount === 1 ? "" : "s"} selected`
+                    : <span className="crm-muted">Tick projects to build the selection.</span>}
               </span>
               <button type="button" className="crm-btn" onClick={requestClose} disabled={generating}>Cancel</button>
-              <button type="button" className="crm-btn primary" onClick={() => void generate()} disabled={generating || loading || selectedCount === 0}
-                title={loading ? "Wait for the matching to finish" : undefined}>
-                {generating ? "Generating…" : "Generate Client Presentation"}
-              </button>
+              {isEdit ? (
+                <button type="button" className="crm-btn primary" onClick={() => void saveEdit()} disabled={generating || (pendingCount > 0 && loading)}
+                  title={pendingCount > 0 && loading ? "Wait for the matching to finish" : undefined}>
+                  {generating ? "Saving…" : "Save changes"}
+                </button>
+              ) : (
+                <button type="button" className="crm-btn primary" onClick={() => void generate()} disabled={generating || loading || selectedCount === 0}
+                  title={loading ? "Wait for the matching to finish" : undefined}>
+                  {generating ? "Generating…" : "Generate Client Presentation"}
+                </button>
+              )}
             </div>
           </div>
         </div>

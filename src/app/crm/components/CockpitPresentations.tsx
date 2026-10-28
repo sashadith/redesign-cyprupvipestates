@@ -1,9 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { deletePresentationAction, extendPresentationAction, revokePresentationAction } from "../leads/presentationActions";
-import type { SentInfo } from "@/lib/crm/presentations/sentHistory";
-import { PresentationModal, type ModalLead, type ModalUser } from "./PresentationModal";
+import {
+  deletePresentationAction, extendPresentationAction, favoritesSeedAction, revokePresentationAction,
+} from "../leads/presentationActions";
+import { sentHistory, type SentInfo } from "@/lib/crm/presentations/sentHistory";
+import { PresentationModal, type ModalLead, type ModalUser, type PresentationModalMode } from "./PresentationModal";
 import { useToast } from "./Toast";
 
 // A lead's client presentations (personal selections): status, engagement and
@@ -21,7 +23,6 @@ export type PresentationRowView = {
 /** SentInfo with the date as an ISO string, as it crosses the server/client boundary. */
 export type SentInfoView = Omit<SentInfo, "lastSentAt"> & { lastSentAt: string };
 
-type ModalState = { kind: "new"; fromFavoritesOf?: string } | { kind: "edit"; presentationId: string };
 
 const STATUS_LABEL = { active: "Active", expired: "Expired", revoked: "Revoked" } as const;
 
@@ -42,13 +43,35 @@ export function CockpitPresentations({ rows, canEdit, isOwner, lead, sent: sentV
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
-  const [modal, setModal] = useState<ModalState | null>(null);
+  const [modal, setModal] = useState<PresentationModalMode | null>(null);
+  const [seeding, setSeeding] = useState<string | null>(null);
   const [extending, setExtending] = useState<string | null>(null);
   const sent = useMemo(() => {
     const out: Record<string, SentInfo> = {};
     Object.keys(sentView).forEach((k) => { out[k] = { ...sentView[k], lastSentAt: new Date(sentView[k].lastSentAt) }; });
     return out;
   }, [sentView]);
+
+  // Editing one selection: its own projects are not "already sent" warnings.
+  // Same history as the server's, minus this selection.
+  const editSent = useMemo(() => {
+    if (modal?.kind !== "edit") return null;
+    return sentHistory(rows.map((r) => ({ id: r.id, createdAt: new Date(r.createdAt), items: r.items })), modal.presentationId);
+  }, [modal, rows]);
+
+  async function fromFavorites(id: string) {
+    if (seeding) return;
+    setSeeding(id);
+    try {
+      const r = await favoritesSeedAction(id);
+      if ("error" in r) toast.show(r.error, "error");
+      else setModal({ kind: "new", seed: r });
+    } catch {
+      toast.show("Could not load the favorites — check your connection and try again.", "error");
+    } finally {
+      setSeeding(null);
+    }
+  }
 
   async function run(id: string, fn: () => Promise<{ ok: true } | { error: string }>, done?: string) {
     if (busy) return;
@@ -131,8 +154,9 @@ export function CockpitPresentations({ rows, canEdit, isOwner, lead, sent: sentV
                   )}
                   {canEdit && live && <button type="button" className="crm-btn" onClick={() => setModal({ kind: "edit", presentationId: r.id })}>Edit</button>}
                   {canEdit && (
-                    <button type="button" className="crm-btn" disabled={r.favoritedCount === 0} title={r.favoritedCount === 0 ? "The client has not favorited anything yet" : undefined}
-                      onClick={() => setModal({ kind: "new", fromFavoritesOf: r.id })}>New from favorites</button>
+                    <button type="button" className="crm-btn" disabled={r.favoritedCount === 0 || seeding !== null}
+                      title={r.favoritedCount === 0 ? "The client has not favorited anything yet" : undefined}
+                      onClick={() => void fromFavorites(r.id)}>{seeding === r.id ? "Loading…" : "New from favorites"}</button>
                   )}
                   {isOwner && (
                     <button type="button" className="crm-linkbtn" disabled={busy === r.id}
@@ -144,9 +168,8 @@ export function CockpitPresentations({ rows, canEdit, isOwner, lead, sent: sentV
           })}
         </ul>
       )}
-      {/* Edit and "New from favorites" open their modal in Task 9. */}
-      {modal?.kind === "new" && !modal.fromFavoritesOf && (
-        <PresentationModal mode={{ kind: "new" }} lead={lead} sent={sent} users={users} currentUser={currentUser} onClose={() => setModal(null)} />
+      {modal && (
+        <PresentationModal mode={modal} lead={lead} sent={editSent ?? sent} users={users} currentUser={currentUser} onClose={() => setModal(null)} />
       )}
       {toast.node}
     </section>
