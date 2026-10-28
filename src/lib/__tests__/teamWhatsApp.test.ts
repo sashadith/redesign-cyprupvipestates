@@ -14,6 +14,7 @@ const fakeClient = (sent: { chatId: string; text: string }[], fail = false) => (
   },
   getSession: async () => ({ status: "ready", lastError: null }),
   startSession: async () => {},
+  listGroups: async () => [],
 });
 
 const partner = buildInboundLeadTelegramMessage({

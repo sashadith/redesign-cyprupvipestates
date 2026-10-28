@@ -102,7 +102,7 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
       />
 
       <RegistrationProfile
-        dev={{ id: dev.id, registrationChannel: dev.registrationChannel, registrationEmailTo: dev.registrationEmailTo, registrationEmailCc: dev.registrationEmailCc, registrationWhatsApp: dev.registrationWhatsApp }}
+        dev={{ id: dev.id, registrationChannel: dev.registrationChannel, registrationEmailTo: dev.registrationEmailTo, registrationEmailCc: dev.registrationEmailCc, registrationWhatsApp: dev.registrationWhatsApp, registrationWhatsAppGroupId: dev.registrationWhatsAppGroupId, registrationWhatsAppGroupName: dev.registrationWhatsAppGroupName }}
       />
 
       {/* Developments */}

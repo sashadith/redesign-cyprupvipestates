@@ -2,9 +2,24 @@ import { ToolError } from "@/lib/mcp/toolWrapper";
 import { readOpenWaConfig } from "./config";
 import type { RawMessage } from "./shapeMessages";
 
+export type WaGroup = { id: string; name: string; participants: number | null };
+
+// Only well-formed rows; the gateway's other fields are dropped.
+export function shapeGroups(body: unknown): WaGroup[] {
+  const rows = Array.isArray(body) ? body : Array.isArray((body as { data?: unknown } | null)?.data) ? (body as { data: unknown[] }).data : [];
+  return rows.flatMap((r) => {
+    const g = r as { id?: unknown; name?: unknown; participantsCount?: unknown };
+    if (typeof g.id !== "string" || !g.id.endsWith("@g.us")) return [];
+    const name = typeof g.name === "string" && g.name.trim() ? g.name.trim() : g.id;
+    return [{ id: g.id, name, participants: typeof g.participantsCount === "number" ? g.participantsCount : null }];
+  });
+}
+
 export type OpenWaClient = {
   fetchThread(chatId: string, limit: number): Promise<RawMessage[]>;
   sendText(chatId: string, text: string): Promise<void>;
+  /** Groups the session is a member of (id "…@g.us", name, member count). */
+  listGroups(): Promise<WaGroup[]>;
   /** The configured session's status as the gateway reports it. */
   getSession(): Promise<{ status: string; lastError: string | null }>;
   /** POST /start — relaunches the browser with the saved credentials (no QR). */
@@ -41,6 +56,9 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
     },
     async sendText(chatId, text) {
       await call(`${base}/messages/send-text`, { method: "POST", body: JSON.stringify({ chatId, text }) });
+    },
+    async listGroups() {
+      return shapeGroups(await call(`${base}/groups?limit=1000`, undefined, 30_000));
     },
     async getSession() {
       const body = (await call(base)) as { status?: unknown; lastError?: unknown } | null;

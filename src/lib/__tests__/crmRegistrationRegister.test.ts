@@ -159,3 +159,20 @@ test("a name that carries contact data or is empty is refused", async () => {
     assert.equal(calls.claims.length, 0);
   }
 });
+
+test("WhatsApp group: sent to the group chat id, shown and recorded by its name", async () => {
+  const group: RegDeveloper = { id: "DG", name: "Pafilia", contactPerson: null, registrationChannel: "WHATSAPP", registrationEmailTo: [], registrationEmailCc: [], registrationWhatsApp: ["+35799111222"], registrationWhatsAppGroupId: "120363427859674423@g.us", registrationWhatsAppGroupName: "Cyprus VIP Estates - Pafilia" };
+  const { deps, calls } = fakeDeps({ loadDevelopers: async () => [group] });
+  const r = await registerLead(deps, { leadId: "L", picks: [pick("DG")], budgetMin: null, budgetMax: null, actor: A });
+  assert.ok(r.ok && r.outcomes[0].result === "sent");
+  assert.deepEqual(calls.whatsapp.map(([n]) => n), ["+35799111222", "120363427859674423@g.us"]);
+  assert.deepEqual(calls.sent[0].to, ["+35799111222", 'WhatsApp group "Cyprus VIP Estates - Pafilia"']);
+});
+
+test("WhatsApp group failure names the group, not its id", async () => {
+  const group: RegDeveloper = { id: "DG", name: "Pafilia", contactPerson: null, registrationChannel: "WHATSAPP", registrationEmailTo: [], registrationEmailCc: [], registrationWhatsApp: [], registrationWhatsAppGroupId: "120363427859674423@g.us", registrationWhatsAppGroupName: "Cyprus VIP Estates - Pafilia" };
+  const { deps, calls } = fakeDeps({ loadDevelopers: async () => [group], sendWhatsApp: async () => { throw new Error("gateway down"); } });
+  const r = await registerLead(deps, { leadId: "L", picks: [pick("DG")], budgetMin: null, budgetMax: null, actor: A });
+  assert.ok(r.ok && r.outcomes[0].result === "failed");
+  assert.match(calls.failed[0][1], /^WhatsApp group "Cyprus VIP Estates - Pafilia": gateway down/);
+});

@@ -6,7 +6,7 @@ import { readOpenWaConfig } from "@/lib/openwa/config";
 import { chatIdFor } from "@/lib/openwa/phoneMatch";
 import { nicosiaDayStart } from "@/lib/openwa/sendGuards";
 import { countWhatsAppSentToday } from "@/lib/openwa/sentToday";
-import { buildRegistrationMessage, formatBudget, isRegistrable, maskPhone, parseBudgetInput, type RegChannel } from "./core";
+import { buildRegistrationMessage, formatBudget, isGroupChatId, isRegistrable, maskPhone, parseBudgetInput, type RegChannel } from "./core";
 
 // Developer client registration (spec 2026-10-27, §7). One click registers the
 // lead with several developers: one message per developer, sent one by one, a
@@ -19,13 +19,16 @@ export type RegisterPick = { developerAccountId: string; developmentIds: string[
 export type RegDeveloper = {
   id: string; name: string; contactPerson: string | null; registrationChannel: RegChannel;
   registrationEmailTo: string[]; registrationEmailCc: string[]; registrationWhatsApp: string[];
+  registrationWhatsAppGroupId?: string | null; registrationWhatsAppGroupName?: string | null;
 };
 export type RegLead = { id: string; firstName: string; lastName: string | null; phone: string | null };
 export type RegDevelopment = { id: string; publicName: string; developerAccountId: string };
 export type RegisterOutcome = { developerAccountId: string; developerName: string; result: "sent" | "failed" | "already"; error?: string };
 export type PlannedMessage = {
   developerAccountId: string; developerName: string; channel: "EMAIL" | "WHATSAPP";
-  targets: string[]; cc: string[]; subject: string; text: string; developmentIds: string[];
+  // targets are what the transport gets (address, number or group chat id);
+  // labels are how each one is shown to people (a group by its name).
+  targets: string[]; labels: string[]; cc: string[]; subject: string; text: string; developmentIds: string[];
 };
 export type RegisterResult = { ok: true; outcomes: RegisterOutcome[] } | { ok: false; error: string };
 
@@ -35,7 +38,7 @@ export type RegisterDeps = {
   loadDevelopments(ids: string[]): Promise<RegDevelopment[]>;
   claimRecord(i: { leadId: string; developerAccountId: string; developmentIds: string[]; channel: "EMAIL" | "WHATSAPP"; sentById: string }): Promise<{ id: string } | "already">;
   sendEmail(m: { to: string[]; cc: string[]; subject: string; text: string }): Promise<{ messageId: string }>;
-  sendWhatsApp(number: string, text: string): Promise<void>;
+  sendWhatsApp(target: string, text: string): Promise<void>;
   countWhatsAppToday(): Promise<number>;
   dailyCap: number;
   recordSent(i: {
@@ -95,9 +98,13 @@ export function planMessages(
       budget: budgetText, contactPerson: dev.contactPerson, staffName,
     });
     const email = dev.registrationChannel === "EMAIL";
+    const group = !email && dev.registrationWhatsAppGroupId
+      ? [{ target: dev.registrationWhatsAppGroupId, label: `WhatsApp group "${dev.registrationWhatsAppGroupName ?? dev.registrationWhatsAppGroupId}"` }]
+      : [];
+    const targets = email ? dev.registrationEmailTo : [...dev.registrationWhatsApp, ...group.map((g) => g.target)];
     plans.push({
       developerAccountId: dev.id, developerName: dev.name, channel: email ? "EMAIL" : "WHATSAPP",
-      targets: email ? dev.registrationEmailTo : dev.registrationWhatsApp,
+      targets, labels: email ? targets : [...dev.registrationWhatsApp, ...group.map((g) => g.label)],
       cc: email ? dev.registrationEmailCc : [],
       subject: msg.subject, text: msg.text, developmentIds,
     });
@@ -181,14 +188,15 @@ async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, 
   } catch (e) {
     return fail(`could not check the daily WhatsApp limit: ${errText(e)}`);
   }
-  for (const number of plan.targets) {
-    if (already + sentSoFar.whatsapp >= deps.dailyCap) { failures.push(`${number}: ${CAP_REACHED}`); continue; }
+  for (let i = 0; i < plan.targets.length; i++) {
+    const label = plan.labels[i] ?? plan.targets[i];
+    if (already + sentSoFar.whatsapp >= deps.dailyCap) { failures.push(`${label}: ${CAP_REACHED}`); continue; }
     try {
-      await deps.sendWhatsApp(number, plan.text);
-      reached.push(number);
+      await deps.sendWhatsApp(plan.targets[i], plan.text);
+      reached.push(label);
       sentSoFar.whatsapp++;
     } catch (e) {
-      failures.push(`${number}: ${sendErrorText(e)}`);
+      failures.push(`${label}: ${sendErrorText(e)}`);
     }
   }
   if (reached.length === 0) {
@@ -234,7 +242,7 @@ export function realRegisterDeps(): RegisterDeps {
     loadLead: (id) => prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, firstName: true, lastName: true, phone: true } }),
     loadDevelopers: (ids) => prisma.developerAccount.findMany({
       where: { id: { in: ids } },
-      select: { id: true, name: true, contactPerson: true, registrationChannel: true, registrationEmailTo: true, registrationEmailCc: true, registrationWhatsApp: true },
+      select: { id: true, name: true, contactPerson: true, registrationChannel: true, registrationEmailTo: true, registrationEmailCc: true, registrationWhatsApp: true, registrationWhatsAppGroupId: true, registrationWhatsAppGroupName: true },
     }),
     loadDevelopments: (ids) => prisma.development.findMany({ where: { id: { in: ids } }, select: { id: true, publicName: true, developerAccountId: true } }),
     async claimRecord(i) {
@@ -260,8 +268,8 @@ export function realRegisterDeps(): RegisterDeps {
       }
     },
     sendEmail: (m) => withTimeout(sendOfficeEmail(m), "Email"),
-    sendWhatsApp: (number, text) => {
-      const chatId = chatIdFor(number);
+    sendWhatsApp: (target, text) => {
+      const chatId = isGroupChatId(target) ? target : chatIdFor(target);
       if (!chatId) return Promise.reject(new Error("unusable number"));
       return withTimeout(createOpenWaClient().sendText(chatId, text), "WhatsApp");
     },

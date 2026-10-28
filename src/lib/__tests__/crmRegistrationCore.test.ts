@@ -44,13 +44,13 @@ test("message matches §7.2 and omits empty lines", () => {
 });
 test("normalizeProfile", () => {
   const ok = normalizeProfile({ channel: "EMAIL", emailTo: "Sales@Marinakisproperty.com", emailCc: "mvenizelou@marinakisproperty.com, sales@marinakisproperty.com", whatsApp: "" }, "office@cyprusvipestates.com");
-  assert.deepEqual(ok, { ok: true, value: { channel: "EMAIL", emailTo: ["sales@marinakisproperty.com"], emailCc: ["mvenizelou@marinakisproperty.com"], whatsApp: [] } });
+  assert.deepEqual(ok, { ok: true, value: { channel: "EMAIL", emailTo: ["sales@marinakisproperty.com"], emailCc: ["mvenizelou@marinakisproperty.com"], whatsApp: [], whatsAppGroupId: null, whatsAppGroupName: null } });
   assert.equal(normalizeProfile({ channel: "EMAIL", emailTo: "", emailCc: "", whatsApp: "" }, "office@x.com").ok, false);
   assert.equal(normalizeProfile({ channel: "EMAIL", emailTo: "not-an-email", emailCc: "", whatsApp: "" }, "office@x.com").ok, false);
   assert.equal(normalizeProfile({ channel: "EMAIL", emailTo: "a@b.com", emailCc: "office@x.com", whatsApp: "" }, "office@x.com").ok, false);
   assert.equal(normalizeProfile({ channel: "BOGUS", emailTo: "a@b.com", emailCc: "", whatsApp: "" }, "office@x.com").ok, false);
   assert.deepEqual(normalizeProfile({ channel: "WHATSAPP", emailTo: "", emailCc: "", whatsApp: "+357 99 278285\n00357 99 111222" }, "o@x.com"),
-    { ok: true, value: { channel: "WHATSAPP", emailTo: [], emailCc: [], whatsApp: ["+35799278285", "+35799111222"] } });
+    { ok: true, value: { channel: "WHATSAPP", emailTo: [], emailCc: [], whatsApp: ["+35799278285", "+35799111222"], whatsAppGroupId: null, whatsAppGroupName: null } });
   assert.equal(normalizeProfile({ channel: "WHATSAPP", emailTo: "", emailCc: "", whatsApp: "99278285" }, "o@x.com").ok, false);
 });
 test("isRegistrable", () => {
@@ -74,4 +74,21 @@ test("transitions follow §12.7", () => {
 
 test("office@ is refused in To as well as CC", () => {
   assert.equal(normalizeProfile({ channel: "EMAIL", emailTo: "Office@X.com", emailCc: "", whatsApp: "" }, "office@x.com").ok, false);
+});
+
+test("normalizeProfile: a WhatsApp group alone is enough; it needs a real group id and a name", () => {
+  const g = { channel: "WHATSAPP", emailTo: "", emailCc: "", whatsApp: "" };
+  const ok = normalizeProfile({ ...g, whatsAppGroupId: "120363427859674423@g.us", whatsAppGroupName: " Cyprus VIP Estates - Pafilia " }, "office@x.com");
+  assert.ok(ok.ok);
+  assert.equal(ok.ok && ok.value.whatsAppGroupName, "Cyprus VIP Estates - Pafilia");
+  assert.equal(normalizeProfile(g, "office@x.com").ok, false);
+  assert.equal(normalizeProfile({ ...g, whatsAppGroupId: "35799111222@c.us", whatsAppGroupName: "x" }, "office@x.com").ok, false);
+  assert.equal(normalizeProfile({ ...g, whatsAppGroupId: "120363427859674423@g.us", whatsAppGroupName: "" }, "office@x.com").ok, false);
+  const cleared = normalizeProfile({ ...g, whatsApp: "+35799111222", whatsAppGroupId: "", whatsAppGroupName: "stale" }, "office@x.com");
+  assert.ok(cleared.ok && cleared.value.whatsAppGroupId === null && cleared.value.whatsAppGroupName === null);
+});
+
+test("isRegistrable: WhatsApp with only a group", () => {
+  assert.equal(isRegistrable({ registrationChannel: "WHATSAPP", registrationEmailTo: [], registrationWhatsApp: [], registrationWhatsAppGroupId: "1203634@g.us" }), true);
+  assert.equal(isRegistrable({ registrationChannel: "WHATSAPP", registrationEmailTo: [], registrationWhatsApp: [], registrationWhatsAppGroupId: null }), false);
 });
