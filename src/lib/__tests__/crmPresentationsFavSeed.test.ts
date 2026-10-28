@@ -33,19 +33,18 @@ test("location follows the override, then district, then town (as the district l
   assert.deepEqual(seeds.map((s) => [s.district, s.area]), [["Limassol", "Germasogeia"], ["Larnaca", null], ["Nicosia", null]]);
 });
 
-test("type is the most common filter type among available units", () => {
+test("types are every distinct filter type among available units", () => {
   const [s] = favoriteSeeds([row({
     units: [
-      { status: "available", price: 1, beds: null, type: "Penthouse" },
-      { status: "available", price: 1, beds: null, type: "Flat" },
       { status: "available", price: 1, beds: null, type: "Apartment" },
-      { status: "sold", price: 1, beds: null, type: "Villa" },
+      { status: "available", price: 1, beds: null, type: "Flat" },
+      { status: "available", price: 1, beds: null, type: "Penthouse" },
       { status: "sold", price: 1, beds: null, type: "Villa" },
     ],
   })]);
-  assert.equal(s.type, "Apartment");
-  assert.equal(favoriteSeeds([row({ units: [{ status: "available", price: 1, beds: null, type: "Plot" }] })])[0].type, null);
-  assert.equal(favoriteSeeds([row()])[0].type, null);
+  assert.deepEqual(s.types, ["Apartment", "Penthouse"]);
+  assert.deepEqual(favoriteSeeds([row({ units: [{ status: "available", price: 1, beds: null, type: "Plot" }] })])[0].types, []);
+  assert.deepEqual(favoriteSeeds([row()])[0].types, []);
 });
 
 test("favoritesSeedFromRows: filters, preselect ids and names", () => {

@@ -20,7 +20,7 @@ test("lastMatchFilters wins over the profile; non-objects are ignored", () => {
 
 test("filtersFromFavorites widens the price band", () => {
   const f = filtersFromFavorites([
-    { district: "Paphos", area: "Kato Paphos", prices: [200000, 300000], beds: [2, 3], type: "Apartment" },
+    { district: "Paphos", area: "Kato Paphos", prices: [200000, 300000], beds: [2, 3], types: ["Apartment"] },
   ]);
   assert.equal(f.budgetMin, 170000); assert.equal(f.budgetMax, 345000);
   assert.deepEqual(f.bedrooms, [2, 3]); assert.equal(f.onlyAvailable, true); assert.equal(f.includeReady, false);
@@ -28,9 +28,9 @@ test("filtersFromFavorites widens the price band", () => {
 
 test("no prices gives null budget; beds 5+ collapse; duplicates removed", () => {
   const f = filtersFromFavorites([
-    { district: "Limassol", area: null, prices: [], beds: [6, 5, null], type: "Villa" },
-    { district: "Limassol", area: "", prices: [], beds: [2], type: "Villa" },
-    { district: null, area: "Germasogeia", prices: [], beds: [], type: null },
+    { district: "Limassol", area: null, prices: [], beds: [6, 5, null], types: ["Villa"] },
+    { district: "Limassol", area: "", prices: [], beds: [2], types: ["Villa"] },
+    { district: null, area: "Germasogeia", prices: [], beds: [], types: [] },
   ]);
   assert.equal(f.budgetMin, null); assert.equal(f.budgetMax, null);
   assert.deepEqual(f.bedrooms, [5, 2]);

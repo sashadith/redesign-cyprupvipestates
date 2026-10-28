@@ -19,19 +19,14 @@ export type FavoritesSeed = { filters: MatchFilters; preselect: string[]; presel
 // normalizeType's values ("apartment", "villa", …) as the filter's chip labels.
 const typeLabel = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
-/** The one filter type a project stands for: the most common among its available units. */
-function mainType(units: FavoriteDevRow["units"]): string | null {
-  const counts = new Map<string, number>();
-  let best: string | null = null;
-  let bestCount = 0;
+/** Every distinct type among a project's available units, as filter chip labels. */
+function allTypes(units: FavoriteDevRow["units"]): string[] {
+  const out: string[] = [];
   for (let i = 0; i < units.length; i++) {
     const t = normalizeType(units[i].type);
-    if (!t) continue;
-    const n = (counts.get(t) ?? 0) + 1;
-    counts.set(t, n);
-    if (n > bestCount) { best = t; bestCount = n; }
+    if (t && out.indexOf(typeLabel(t)) < 0) out.push(typeLabel(t));
   }
-  return best ? typeLabel(best) : null;
+  return out;
 }
 
 /** Same location precedence as listPresentationLocationOptions: override, then the row; district falls back to town. */
@@ -44,7 +39,7 @@ export function favoriteSeeds(rows: FavoriteDevRow[]): FavoriteSeed[] {
       area: r.override?.area || r.area || null,
       prices: available.map((u) => u.price).filter((p): p is number => typeof p === "number" && p > 0),
       beds: available.map((u) => parseBeds(u.beds)).filter((b) => b != null),
-      type: mainType(available),
+      types: allTypes(available),
     };
   });
 }

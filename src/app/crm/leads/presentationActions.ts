@@ -143,7 +143,7 @@ export async function favoritesSeedAction(id: string): Promise<FavoritesSeed | {
 export async function savePresentationEditAction(id: string, body: unknown) {
   const { user, owner, error } = await guardedPresentation(id, "edit");
   if (error || !owner) return { error: error ?? NOT_FOUND };
-  const cleaned = cleanPresentationInput(body, { defaultAdvisorId: user.id });
+  const cleaned = cleanPresentationInput(body, { defaultAdvisorId: null });
   if (!cleaned.ok) return { error: cleaned.error };
   const result = await savePresentationEdit({ id: user.id, name: user.name }, id, cleaned.input, requestOrigin());
   if ("error" in result) return { error: NOT_FOUND };
@@ -164,6 +164,9 @@ export async function extendPresentationAction(id: string, days: 7 | 14 | 30): P
   const { user, owner, error } = await guardedPresentation(id, "edit");
   if (error || !owner) return { error: error ?? NOT_FOUND };
   if (days !== 7 && days !== 14 && days !== 30) return { error: "Extension must be 7, 14 or 30 days." };
+  const cur = await prisma.clientPresentation.findUnique({ where: { id }, select: { status: true } });
+  if (!cur) return { error: NOT_FOUND };
+  if (cur.status === "revoked") return { error: "This selection was revoked and can't be extended." };
   const r = await extendPresentation({ id: user.id, name: user.name }, id, days);
   if (!r) return { error: NOT_FOUND };
   revalidatePath(`/crm/leads/${owner.leadId}`);

@@ -16,7 +16,7 @@ export function initialFilters(lead: LeadSeed): MatchFilters {
   };
 }
 
-export type FavoriteSeed = { district: string | null; area: string | null; prices: number[]; beds: (number | null)[]; type: string | null };
+export type FavoriteSeed = { district: string | null; area: string | null; prices: number[]; beds: (number | null)[]; types: string[] };
 
 const distinct = <T,>(xs: T[]) => xs.filter((x, i) => xs.indexOf(x) === i);
 
@@ -29,7 +29,7 @@ export function filtersFromFavorites(favs: FavoriteSeed[]): MatchFilters {
     bedrooms: distinct(favs.flatMap((f) => f.beds).filter((b): b is number => b != null).map((b) => (b >= 5 ? 5 : b))),
     districts: distinct(favs.map((f) => f.district).filter((x): x is string => !!x)),
     areas: distinct(favs.map((f) => f.area).filter((x): x is string => !!x)),
-    propertyTypes: distinct(favs.map((f) => f.type).filter((x): x is string => !!x)),
+    propertyTypes: distinct(favs.flatMap((f) => f.types).filter((x) => !!x)),
     includeReady: false, onlyAvailable: true,
   };
 }
