@@ -6,13 +6,14 @@ import { readOpenWaConfig } from "@/lib/openwa/config";
 import { chatIdFor } from "@/lib/openwa/phoneMatch";
 import { nicosiaDayStart } from "@/lib/openwa/sendGuards";
 import { countWhatsAppSentToday } from "@/lib/openwa/sentToday";
-import { buildRegistrationMessage, formatBudget, isGroupChatId, isRegistrable, maskPhone, parseBudgetInput, type RegChannel } from "./core";
+import { buildRegistrationMessage, checkEditedText, formatBudget, isGroupChatId, isRegistrable, maskPhone, parseBudgetInput, type RegChannel } from "./core";
 
 // Developer client registration (spec 2026-10-27, §7). One click registers the
 // lead with several developers: one message per developer, sent one by one, a
 // failure for one never stops the rest. The message is built here, server-side,
-// from the lead record — the client never sends text, only picks and budget
-// numbers, so the masked phone is the only phone that can ever leave.
+// from the lead record. The operator may reword it in the preview; an edited
+// text is re-checked here (checkEditedText) so the client's full phone or email
+// still cannot leave.
 
 export type Actor = { userId: string; userName: string };
 export type RegisterPick = { developerAccountId: string; developmentIds: string[] };
@@ -21,7 +22,7 @@ export type RegDeveloper = {
   registrationEmailTo: string[]; registrationEmailCc: string[]; registrationWhatsApp: string[];
   registrationWhatsAppGroupId?: string | null; registrationWhatsAppGroupName?: string | null;
 };
-export type RegLead = { id: string; firstName: string; lastName: string | null; phone: string | null };
+export type RegLead = { id: string; firstName: string; lastName: string | null; phone: string | null; email: string | null };
 export type RegDevelopment = { id: string; publicName: string; developerAccountId: string };
 export type RegisterOutcome = { developerAccountId: string; developerName: string; result: "sent" | "failed" | "already"; error?: string };
 export type PlannedMessage = {
@@ -43,7 +44,7 @@ export type RegisterDeps = {
   dailyCap: number;
   recordSent(i: {
     registrationId: string; leadId: string; actor: Actor; subject: string | null; text: string; messageId: string | null;
-    channel: "email" | "whatsapp"; to: string[]; cc: string[]; partialError: string | null;
+    channel: "email" | "whatsapp"; to: string[]; cc: string[]; partialError: string | null; edited: boolean;
   }): Promise<void>;
   recordFailed(registrationId: string, error: string): Promise<void>;
   // Fallback when recordSent keeps failing after a successful send: SENT, sentAt now, note in sendError.
@@ -92,15 +93,18 @@ export function planMessages(
     if (!dev) return { ok: false, error: "A picked developer no longer exists." };
     if (!isRegistrable(dev)) return { ok: false, error: `${dev.name} has no registration channel set.` };
     const developmentIds = Array.from(ids);
-    const msg = buildRegistrationMessage({
-      clientName, maskedPhone: phone.masked,
-      projects: developmentIds.map((id) => devtById.get(id)!.publicName),
-      budget: budgetText, contactPerson: dev.contactPerson, staffName,
-    });
     const email = dev.registrationChannel === "EMAIL";
     const group = !email && dev.registrationWhatsAppGroupId
       ? [{ target: dev.registrationWhatsAppGroupId, label: `WhatsApp group "${dev.registrationWhatsAppGroupName ?? dev.registrationWhatsAppGroupId}"` }]
       : [];
+    // Plural when several people read the same message: more than one address
+    // on the email, or a group chat. WhatsApp numbers each get a private chat.
+    const plural = email ? dev.registrationEmailTo.length + dev.registrationEmailCc.length > 1 : group.length > 0;
+    const msg = buildRegistrationMessage({
+      clientName, maskedPhone: phone.masked,
+      projects: developmentIds.map((id) => devtById.get(id)!.publicName),
+      budget: budgetText, contactPerson: dev.contactPerson, staffName, plural,
+    });
     const targets = email ? dev.registrationEmailTo : [...dev.registrationWhatsApp, ...group.map((g) => g.target)];
     plans.push({
       developerAccountId: dev.id, developerName: dev.name, channel: email ? "EMAIL" : "WHATSAPP",
@@ -152,7 +156,7 @@ async function recordSuccess(deps: RegisterDeps, i: Parameters<RegisterDeps["rec
   return note;
 }
 
-async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, actor: Actor, sentSoFar: { whatsapp: number }): Promise<RegisterOutcome> {
+async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, actor: Actor, sentSoFar: { whatsapp: number }, edited: boolean): Promise<RegisterOutcome> {
   const base = { developerAccountId: plan.developerAccountId, developerName: plan.developerName };
   let registrationId: string;
   try {
@@ -177,7 +181,7 @@ async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, 
     } catch (e) {
       return fail(sendErrorText(e));
     }
-    return sent(await recordSuccess(deps, { registrationId, leadId: lead.id, actor, subject: plan.subject, text: plan.text, messageId, channel: "email", to: plan.targets, cc: plan.cc, partialError: null }));
+    return sent(await recordSuccess(deps, { registrationId, leadId: lead.id, actor, subject: plan.subject, text: plan.text, messageId, channel: "email", to: plan.targets, cc: plan.cc, partialError: null, edited }));
   }
 
   const reached: string[] = [];
@@ -203,21 +207,31 @@ async function sendOne(deps: RegisterDeps, plan: PlannedMessage, lead: RegLead, 
     return fail(failures.every((f) => f.endsWith(CAP_REACHED)) ? CAP_REACHED : failures.join("; ") || "nothing sent");
   }
   const partialError = failures.length ? failures.join("; ") : null;
-  const warning = await recordSuccess(deps, { registrationId, leadId: lead.id, actor, subject: null, text: plan.text, messageId: null, channel: "whatsapp", to: reached, cc: [], partialError });
+  const warning = await recordSuccess(deps, { registrationId, leadId: lead.id, actor, subject: null, text: plan.text, messageId: null, channel: "whatsapp", to: reached, cc: [], partialError, edited });
   return sent(warning ?? partialError ?? undefined);
 }
 
 export async function registerLead(
   deps: RegisterDeps,
-  input: { leadId: string; picks: RegisterPick[]; budgetMin: unknown; budgetMax: unknown; actor: Actor },
+  // texts: the operator's edited message per developer id; absent = the generated one.
+  input: { leadId: string; picks: RegisterPick[]; budgetMin: unknown; budgetMax: unknown; actor: Actor; texts?: Record<string, unknown> },
 ): Promise<RegisterResult> {
   try {
     const prepared = await prepareRegistration(deps, { ...input, staffName: input.actor.userName });
     if (!prepared.ok) return prepared;
+    // Every edited text is checked before anything is sent.
+    const edited = new Set<string>();
+    for (const plan of prepared.plans) {
+      const raw = input.texts?.[plan.developerAccountId];
+      if (raw === undefined) continue;
+      const c = checkEditedText(raw, prepared.lead);
+      if (!c.ok) return { ok: false, error: `${plan.developerName}: ${c.error}` };
+      if (c.text !== plan.text) { plan.text = c.text; edited.add(plan.developerAccountId); }
+    }
     const outcomes: RegisterOutcome[] = [];
     const sentSoFar = { whatsapp: 0 };
     // sendOne never throws; one developer's trouble never hides another's result.
-    for (const plan of prepared.plans) outcomes.push(await sendOne(deps, plan, prepared.lead, input.actor, sentSoFar));
+    for (const plan of prepared.plans) outcomes.push(await sendOne(deps, plan, prepared.lead, input.actor, sentSoFar, edited.has(plan.developerAccountId)));
     return { ok: true, outcomes };
   } catch (e) {
     console.error("registration: registerLead failed", e);
@@ -239,7 +253,7 @@ const CLEARED = {
 
 export function realRegisterDeps(): RegisterDeps {
   return {
-    loadLead: (id) => prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, firstName: true, lastName: true, phone: true } }),
+    loadLead: (id) => prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, firstName: true, lastName: true, phone: true, email: true } }),
     loadDevelopers: (ids) => prisma.developerAccount.findMany({
       where: { id: { in: ids } },
       select: { id: true, name: true, contactPerson: true, registrationChannel: true, registrationEmailTo: true, registrationEmailCc: true, registrationWhatsApp: true, registrationWhatsAppGroupId: true, registrationWhatsAppGroupName: true },
@@ -282,7 +296,7 @@ export function realRegisterDeps(): RegisterDeps {
             leadId: i.leadId, type: "SYSTEM", channel: "SYSTEM", direction: null,
             subject: i.subject, body: i.text, messageId: i.messageId,
             createdByUserId: i.actor.userId, createdByName: i.actor.userName,
-            metadata: { kind: "developer_registration", registrationId: i.registrationId, channel: i.channel, to: i.to, cc: i.cc },
+            metadata: { kind: "developer_registration", registrationId: i.registrationId, channel: i.channel, to: i.to, cc: i.cc, ...(i.edited ? { edited: true } : {}) },
           },
           select: { id: true },
         });

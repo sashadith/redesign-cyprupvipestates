@@ -63,22 +63,48 @@ export function buildRegistrationMessage(i: {
   budget: string | null;
   contactPerson: string | null;
   staffName: string;
+  // Several people read it (more than one address, or a group chat).
+  plural?: boolean;
 }): { subject: string; text: string } {
   const lines = [
-    `Dear ${i.contactPerson || "Sales Team"},`,
+    `Dear ${i.plural ? "all" : i.contactPerson || "Sales Team"},`,
     "",
     "We would like to register the following client with you:",
     "",
     `Full name: ${i.clientName}`,
     `Phone: ${i.maskedPhone}`,
   ];
-  if (i.projects.length) lines.push(`Preferred project: ${i.projects.join(", ")}`);
+  if (i.projects.length) lines.push(`Preferred project${i.projects.length > 1 ? "s" : ""}: ${i.projects.join(", ")}`);
   if (i.budget) lines.push(`Budget: ${i.budget}`);
   lines.push("", "Please confirm the registration.", "", "Kind regards,", i.staffName, "Cyprus VIP Estates");
   return {
     subject: `Client registration – ${i.clientName} – Cyprus VIP Estates`,
     text: lines.join("\n"),
   };
+}
+
+export const MESSAGE_MAX = 4000;
+
+// A text the operator edited in the preview. Staff may reword anything, but the
+// anti-goal stands: the client's full phone number or email never leaves.
+export function checkEditedText(
+  raw: unknown,
+  lead: { phone: string | null; email: string | null },
+): { ok: true; text: string } | { ok: false; error: string } {
+  if (typeof raw !== "string") return { ok: false, error: "The message text is missing." };
+  const text = raw.replace(/\r\n?/g, "\n").trim();
+  if (!text) return { ok: false, error: "The message text is empty." };
+  if (text.length > MESSAGE_MAX) return { ok: false, error: `The message is too long (${MESSAGE_MAX} characters max).` };
+  const email = (lead.email ?? "").trim().toLowerCase();
+  if (email && text.toLowerCase().includes(email)) return { ok: false, error: "The message contains the client's email address — remove it." };
+  const p = parseInternational(lead.phone);
+  if (p.ok) {
+    const runs = text.match(/\d[\d\s\-().\/+]{4,}\d/g) ?? [];
+    if (runs.some((r) => r.replace(/\D/g, "").includes(p.national))) {
+      return { ok: false, error: "The message contains the client's full phone number — keep it masked." };
+    }
+  }
+  return { ok: true, text };
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;

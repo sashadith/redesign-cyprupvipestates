@@ -49,6 +49,18 @@ function cleanPicks(raw: unknown): RegisterPick[] | null {
   return out;
 }
 
+function cleanTextMap(raw: unknown, picks: RegisterPick[]): Record<string, string> | null {
+  if (raw === undefined || raw === null) return {};
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  const picked = new Set(picks.map((p) => p.developerAccountId));
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!picked.has(k) || typeof v !== "string") return null;
+    out[k] = v;
+  }
+  return out;
+}
+
 export async function registrationOptionsAction(leadId: string): Promise<RegistrationOptions | { error: string }> {
   const { lead } = await editableLead(leadId);
   if (!lead) return { error: NOT_FOUND };
@@ -80,12 +92,15 @@ export async function previewRegistrationAction(leadId: string, picks: unknown, 
   return r.ok ? { ok: true, plans: r.plans } : r;
 }
 
-export async function registerLeadAction(leadId: string, picks: unknown, budgetMin: unknown, budgetMax: unknown): Promise<RegisterResult> {
+// texts: edited message per developer id (only for picked developers; checked in registerLead).
+export async function registerLeadAction(leadId: string, picks: unknown, budgetMin: unknown, budgetMax: unknown, texts?: unknown): Promise<RegisterResult> {
   const { user, lead } = await editableLead(leadId);
   if (!lead) return { ok: false, error: NOT_FOUND };
   const clean = cleanPicks(picks);
   if (!clean) return { ok: false, error: "Pick at least one developer or project." };
-  const r = await registerLead(realRegisterDeps(), { leadId: lead.id, picks: clean, budgetMin, budgetMax, actor: { userId: user.id, userName: user.name } });
+  const cleanTexts = cleanTextMap(texts, clean);
+  if (!cleanTexts) return { ok: false, error: "The edited message could not be read — reopen the dialog." };
+  const r = await registerLead(realRegisterDeps(), { leadId: lead.id, picks: clean, budgetMin, budgetMax, actor: { userId: user.id, userName: user.name }, texts: cleanTexts });
   revalidatePath(`/crm/leads/${lead.id}`);
   return r;
 }
