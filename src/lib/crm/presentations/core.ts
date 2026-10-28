@@ -34,6 +34,18 @@ export type PresentationInput = {
 
 const DAY_MS = 86_400_000;
 
+// Prisma "record to update/delete does not exist". Anything else (DB outage,
+// etc.) must propagate so callers fail loudly as they did before.
+export function isRecordNotFound(e: unknown): boolean {
+  return !!e && typeof e === "object" && (e as { code?: unknown }).code === "P2025";
+}
+
+function trimmedOrNull(v: string | null | undefined, max: number): string | null {
+  return (v ?? "").trim().slice(0, max) || null;
+}
+const cleanAlias = (v: string | null | undefined) => trimmedOrNull(v, 120);
+const cleanComment = (v: string | null | undefined) => trimmedOrNull(v, 300);
+
 export function cleanPresentationInput(
   body: unknown,
   opts: { defaultAdvisorId: string | null },
@@ -49,8 +61,8 @@ export function cleanPresentationInput(
     // see src/lib/unitRef.ts.
     unitIds: it?.unitIds && it.unitIds.length ? it.unitIds : null,
     sortIndex: it?.sortIndex ?? i,
-    advisorComment: String(it?.advisorComment ?? "").trim().slice(0, 300) || null,
-    aliasName: String(it?.aliasName ?? "").trim().slice(0, 120) || null,
+    advisorComment: cleanComment(it?.advisorComment == null ? null : String(it.advisorComment)),
+    aliasName: cleanAlias(it?.aliasName == null ? null : String(it.aliasName)),
   }));
 
   const expiresAt = b.expiresAt ? new Date(String(b.expiresAt)) : null;
@@ -81,8 +93,8 @@ export function editSummary(
   for (const it of incoming) {
     const ex = existingByDevId.get(it.developmentId);
     if (!ex) { added++; continue; }
-    const aliasName = (it.aliasName ?? "").trim().slice(0, 120) || null;
-    const advisorComment = (it.advisorComment ?? "").trim().slice(0, 300) || null;
+    const aliasName = cleanAlias(it.aliasName);
+    const advisorComment = cleanComment(it.advisorComment);
     if ((ex.aliasName || null) !== aliasName) aliasChanged++;
     if ((ex.advisorComment || null) !== advisorComment) commentChanged++;
   }
@@ -156,8 +168,8 @@ export async function createPresentation(
           unitRefs: it.unitRefs && it.unitRefs.length ? it.unitRefs : undefined,
           unitIds: it.unitIds && it.unitIds.length ? it.unitIds : undefined,
           sortIndex: it.sortIndex ?? i,
-          aliasName: (it.aliasName ?? "").trim().slice(0, 120) || null,
-          advisorComment: (it.advisorComment ?? "").trim().slice(0, 300) || null,
+          aliasName: cleanAlias(it.aliasName),
+          advisorComment: cleanComment(it.advisorComment),
         })),
       },
     },
@@ -201,8 +213,8 @@ export async function savePresentationEdit(
     ...(toRemove.length ? [prisma.clientPresentationItem.deleteMany({ where: { id: { in: toRemove.map((r) => r.id) } } })] : []),
     ...items.map((it, i) => {
       const ex = existingByDevId.get(it.developmentId);
-      const aliasName = (it.aliasName ?? "").trim().slice(0, 120) || null;
-      const advisorComment = (it.advisorComment ?? "").trim().slice(0, 300) || null;
+      const aliasName = cleanAlias(it.aliasName);
+      const advisorComment = cleanComment(it.advisorComment);
       const unitRefs = it.unitRefs && it.unitRefs.length ? it.unitRefs : null;
       const unitIds = it.unitIds && it.unitIds.length ? it.unitIds : null;
       const sortIndex = it.sortIndex ?? i;
@@ -240,7 +252,7 @@ export async function savePresentationEdit(
 }
 
 export async function revokePresentation(actor: Actor, id: string): Promise<{ leadId: string } | null> {
-  const p = await prisma.clientPresentation.update({ where: { id }, data: { status: "revoked" }, select: { leadId: true } }).catch(() => null);
+  const p = await prisma.clientPresentation.update({ where: { id }, data: { status: "revoked" }, select: { leadId: true } }).catch((e) => { if (isRecordNotFound(e)) return null; throw e; });
   if (!p) return null;
   await logEvent(actor, p.leadId, "PRESENTATION_REVOKED", "Presentation revoked");
   revalidateLead(p.leadId);
@@ -260,7 +272,7 @@ export async function extendPresentation(actor: Actor, id: string, days: number)
 
 // Hard delete — items/views cascade via the schema's onDelete: Cascade.
 export async function deletePresentation(actor: Actor, id: string): Promise<{ leadId: string } | null> {
-  const p = await prisma.clientPresentation.delete({ where: { id }, select: { leadId: true } }).catch(() => null);
+  const p = await prisma.clientPresentation.delete({ where: { id }, select: { leadId: true } }).catch((e) => { if (isRecordNotFound(e)) return null; throw e; });
   if (!p) return null;
   await logEvent(actor, p.leadId, "PRESENTATION_DELETED", "Presentation deleted");
   revalidateLead(p.leadId);

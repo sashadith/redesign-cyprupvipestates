@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanPresentationInput, editSummary } from "../crm/presentations/core";
+import { cleanPresentationInput, editSummary, isRecordNotFound } from "../crm/presentations/core";
 
 test("cleanPresentationInput normalises like the old routes", () => {
   const r = cleanPresentationInput({ items: [{ developmentId: "d1", advisorComment: " x ".padEnd(400, "y") }], greetingName: "  ", locale: "xx", personalNote: "" }, { defaultAdvisorId: "u1" });
@@ -16,4 +16,11 @@ test("editSummary counts like the PUT route", () => {
     [{ developmentId: "a", advisorComment: "new", aliasName: "A" }, { developmentId: "c" }]);
   assert.deepEqual(s, { toRemoveDevIds: ["b"], added: 1, removed: 1, summary: "1 added, 1 removed, 1 alias changed, 1 comment changed" });
   assert.equal(editSummary([{ developmentId: "a", aliasName: null, advisorComment: null }], [{ developmentId: "a" }]).summary, "details updated");
+});
+
+test("isRecordNotFound only matches Prisma P2025", () => {
+  assert.equal(isRecordNotFound({ code: "P2025" }), true);
+  assert.equal(isRecordNotFound({ code: "P1001" }), false);
+  assert.equal(isRecordNotFound(new Error("db down")), false);
+  assert.equal(isRecordNotFound(null), false);
 });
