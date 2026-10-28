@@ -113,3 +113,12 @@ export function mapRecord(o: ReadonlyMap<string, string>): Record<string, string
   o.forEach((v, k) => { out[k] = v; });
   return out;
 }
+
+/** Selected projects that the current results don't show (e.g. a hand pick the
+ *  filters no longer match). They are still sent, so the modal lists them. */
+export function hiddenSelections(
+  selectedDevIds: string[], results: DevelopmentMatch[], knownNames: ReadonlyMap<string, string>,
+): { id: string; name: string }[] {
+  const shown = new Set(results.map((r) => r.development.id));
+  return selectedDevIds.filter((id) => !shown.has(id)).map((id) => ({ id, name: knownNames.get(id) ?? "Unknown project" }));
+}

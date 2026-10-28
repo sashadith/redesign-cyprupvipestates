@@ -14,7 +14,7 @@ import {
   createPresentationAction, locationsAction, matchAction, saveFiltersAction, sendPresentationEmailAction,
 } from "../leads/presentationActions";
 import {
-  buildItems, confirmDiscard, droppedSelections, isDirty, mapRecord, overridesRecord, type ModalSnapshot,
+  buildItems, confirmDiscard, droppedSelections, hiddenSelections, isDirty, mapRecord, overridesRecord, type ModalSnapshot,
 } from "./presentationModalState";
 import { PresentationFilters } from "./presentation/PresentationFilters";
 import { PresentationResults } from "./presentation/PresentationResults";
@@ -51,6 +51,9 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   const router = useRouter();
   const dlg = useRef<HTMLDialogElement>(null);
   const downOnBackdrop = useRef(false);
+  // Set right before an approved close; any other close (e.g. a browser close
+  // request that could not be prevented) reopens the dialog instead.
+  const closeApproved = useRef(false);
   const initialLocale: Locale = isPublicLocale(lead.languagePreference ?? "") ? (lead.languagePreference as Locale) : "en";
   const preselect = mode.seed?.preselect ?? [];
 
@@ -101,13 +104,18 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
 
   // Matching: debounced, newest response wins; filters auto-save on the lead.
   const seq = useRef(0);
+  // Names of every project seen in results, for selections that later drop out.
+  const knownNames = useRef(new Map<string, string>());
   const runMatch = (f: MatchFilters) => {
     const my = ++seq.current;
     setLoading(true);
     matchAction(lead.id, f)
       .then((r) => {
         if (my !== seq.current) return;
-        if (Array.isArray(r)) { setResults(r); setMatchError(null); } else { setResults([]); setMatchError(r.error); }
+        if (Array.isArray(r)) {
+          r.forEach((m) => knownNames.current.set(m.development.id, m.development.publicName));
+          setResults(r); setMatchError(null);
+        } else { setResults([]); setMatchError(r.error); }
       })
       .catch(() => { if (my === seq.current) { setResults([]); setMatchError("Could not load matches — check your connection."); } })
       .finally(() => { if (my === seq.current) setLoading(false); });
@@ -200,6 +208,27 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     return total;
   }, [results, selectedDevs, unitOverrides]);
 
+  // MapLibre sizes its canvas once and fits the pins at mount; inside the
+  // dialog the column can still change width afterwards. Mount the map only
+  // once its box has a real width, and remount it (refit) when the width
+  // changes noticeably.
+  const mapBox = useRef<HTMLDivElement | null>(null);
+  const [mapWidth, setMapWidth] = useState(0);
+  const hasPins = mapMarkers.length > 0;
+  useEffect(() => {
+    const el = mapBox.current;
+    if (!hasPins || !el) { setMapWidth(0); return; }
+    if (typeof ResizeObserver === "undefined") { setMapWidth(el.clientWidth); return; }
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const ro = new ResizeObserver(() => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => setMapWidth(el.clientWidth), 120);
+    });
+    ro.observe(el);
+    return () => { ro.disconnect(); if (t) clearTimeout(t); };
+  }, [hasPins]);
+  const mapKey = `w${Math.round(mapWidth / 40)}`;
+
   const dirty = isDirty({
     picked: selectedIds.filter((id) => !autoSelected.has(id)),
     unpicked: Array.from(manuallyUnchecked).filter((id) => hundredIds.has(id)),
@@ -207,15 +236,25 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     greetingName, personalNote, locale, advisorId,
   }, initialSnapshot.current);
 
+  const hidden = hiddenSelections(selectedIds, results, knownNames.current);
+
+  function closeNow() {
+    closeApproved.current = true;
+    dlg.current?.close();
+  }
   function requestClose() {
     if (generating) return;
     if (showComposeEmail) { setShowComposeEmail(false); return; }
     // After create the selection is saved; nothing left to lose.
-    if (created || confirmDiscard(dirty, (m) => window.confirm(m))) dlg.current?.close();
+    if (created || confirmDiscard(dirty, (m) => window.confirm(m))) closeNow();
+  }
+  function handleClosed() {
+    if (closeApproved.current || created) { onClose(); return; }
+    try { dlg.current?.showModal(); } catch { onClose(); }
   }
 
   async function generate(force = false) {
-    if (generating) return;
+    if (generating || loading) return;
     setGenError("");
     const dropped = droppedSelections(selectedIds, unitOverrides, results);
     if (dropped.length && !force) { setDropWarning(dropped); return; }
@@ -241,14 +280,17 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   return (
     <dialog
       ref={dlg} className="crm-dialog crm-pres-dialog" aria-labelledby="crm-pres-h"
-      onClose={onClose}
+      onClose={handleClosed}
+      // Esc is handled on keydown so the native cancel never fires: Chromium
+      // stops honouring preventDefault on a second cancel without activation.
+      onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); requestClose(); } }}
       onCancel={(e) => { e.preventDefault(); requestClose(); }}
       onMouseDown={(e) => { downOnBackdrop.current = e.target === e.currentTarget; }}
       onClick={(e) => { if (e.target === e.currentTarget && downOnBackdrop.current) requestClose(); downOnBackdrop.current = false; }}
     >
       {created ? (
         <div className="crm-pres-body">
-          <PresentationCreated created={created} hasEmail={!!lead.email} onEmail={() => setShowComposeEmail(true)} onClose={() => dlg.current?.close()} />
+          <PresentationCreated created={created} hasEmail={!!lead.email} onEmail={() => setShowComposeEmail(true)} onClose={closeNow} />
         </div>
       ) : (
         <div className="crm-pres-body">
@@ -266,14 +308,25 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
                 onComment={(id, text) => setComments((p) => new Map(p).set(id, text))} onRetry={() => runMatch(filters)}
               />
               {mapMarkers.length > 0 && (
-                <div className="crm-pres-map">
-                  <MatchingMap markers={mapMarkers} />
+                <div className="crm-pres-map" ref={mapBox}>
+                  {mapWidth > 0 && <MatchingMap key={mapKey} markers={mapMarkers} />}
                   {selectedWithoutPin > 0 && (
                     <p className="crm-muted">{selectedWithoutPin} selected project{selectedWithoutPin === 1 ? " has" : "s have"} no map pin yet and {selectedWithoutPin === 1 ? "is" : "are"} not shown.</p>
                   )}
                 </div>
               )}
             </div>
+            {hidden.length > 0 && (
+              <div className="crm-pres-hidden">
+                <span>Also selected (not in current results):</span>
+                {hidden.map((h) => (
+                  <span key={h.id} className="crm-pres-hiddenitem">
+                    {h.name}
+                    <button type="button" aria-label={`Untick ${h.name}`} title="Untick" onClick={() => toggleDev(h.id)}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
             {selectedCount > 0 && (
               <fieldset className="crm-pres-details">
                 <legend>Presentation details</legend>
@@ -306,7 +359,7 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
                 </p>
                 <ul>{dropWarning.map((n) => <li key={n}>{n}</li>)}</ul>
                 <div className="crm-pres-dropbtns">
-                  <button type="button" className="crm-btn" onClick={() => void generate(true)} disabled={generating}>Generate anyway (excluding these)</button>
+                  <button type="button" className="crm-btn" onClick={() => void generate(true)} disabled={generating || loading}>Generate anyway (excluding these)</button>
                   <button type="button" className="crm-linkbtn" onClick={() => setDropWarning(null)}>Cancel — let me adjust</button>
                 </div>
               </div>
@@ -319,7 +372,8 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
                   : <span className="crm-muted">Tick projects to build the selection.</span>}
               </span>
               <button type="button" className="crm-btn" onClick={requestClose} disabled={generating}>Cancel</button>
-              <button type="button" className="crm-btn primary" onClick={() => void generate()} disabled={generating || selectedCount === 0}>
+              <button type="button" className="crm-btn primary" onClick={() => void generate()} disabled={generating || loading || selectedCount === 0}
+                title={loading ? "Wait for the matching to finish" : undefined}>
                 {generating ? "Generating…" : "Generate Client Presentation"}
               </button>
             </div>

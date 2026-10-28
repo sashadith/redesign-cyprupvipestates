@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildItems, confirmDiscard, droppedSelections, isDirty, type ModalSnapshot,
+  buildItems, confirmDiscard, droppedSelections, hiddenSelections, isDirty, type ModalSnapshot,
 } from "../../app/crm/components/presentationModalState";
 import type { DevelopmentMatch, MatchedUnit } from "../crm/matching";
 import { normalizeRef } from "../unitRef";
@@ -77,4 +77,14 @@ test("buildItems: no unit data → null/null; empty selections are dropped and r
     ["d1", 0, null, null],
     ["d4", 1, [normalizeRef("Z1", "Kept")], null],
   ]);
+});
+
+test("hiddenSelections: selected but not in the current results, with remembered names", () => {
+  const results = [match("d1", "Shown", [], [])];
+  const names = new Map([["d2", "Peyia Hills"]]);
+  assert.deepEqual(hiddenSelections(["d1", "d2", "d3"], results, names), [
+    { id: "d2", name: "Peyia Hills" },
+    { id: "d3", name: "Unknown project" },
+  ]);
+  assert.deepEqual(hiddenSelections(["d1"], results, names), []);
 });
