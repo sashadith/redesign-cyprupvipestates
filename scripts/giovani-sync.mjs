@@ -7,11 +7,12 @@
  * Source: Giovani's anonymous Drive root (12fmNiiJbqZkIm3W_es76ByaPHVD7VHcl), one folder per
  * project (Protaras / Paralimni / Ayia Napa, one in Livadia, Larnaca) with brochure,
  * description, plans, a Maps-pin docx and a technical spec — but NO price list. Prices
- * arrive by email; the operator asked Giovani (2026-10-27) for a standing price-list link.
- * Until that link exists this is a manual developer: the price list is transcribed into
- * the data file's projects[].units and this script is re-run (first-Monday round,
- * [[monthly-manual-sync-round]]). Once the link exists, point a reader at it that
- * produces the same units[] shape — nothing below has to change.
+ * arrive by email as the GENERAL AVAILABILITY workbook. Operator decision 2026-10-28: that
+ * workbook is the source (the giovani.cy property feed has no status and lists sold units),
+ * synced manually once a month (first-Monday round, [[monthly-manual-sync-round]]):
+ *   python3 scripts/giovani-pricelist.py <workbook.xlsx> scripts/data/giovani/2026-10-27.json scripts/data/giovani/<list date>.json
+ * then this script on the output. If Giovani sends a standing link to the workbook, the
+ * same reader runs more often — nothing below has to change.
  *
  * What it writes:
  *  - DeveloperAccount slug "giovani" (no driveFolderUrl, so no Drive cron touches it; the
@@ -46,11 +47,13 @@ function unitRow(p, u, i) {
   if (u.total != null) attrs.push({ name: "Total area incl. verandas", value: m2(u.total) });
   if (u.roof != null) attrs.push({ name: "Roof garden", value: m2(u.roof) });
   if (u.basement != null) attrs.push({ name: "Basement", value: m2(u.basement) });
+  if (u.otherCovered != null) attrs.push({ name: "Other covered areas", value: m2(u.otherCovered) });
   if (u.storeys) attrs.push({ name: "Storeys", value: String(u.storeys) });
-  if (u.pool) attrs.push({ name: "Private pool", value: u.pool });
-  if (u.parking) attrs.push({ name: "Parking spaces", value: String(u.parking) });
+  if (u.pool) attrs.push({ name: "Pool", value: u.pool }); // "Private" | "Communal"
+  if (u.parking) attrs.push({ name: "Parking", value: String(u.parking) });
   if (u.houseType) attrs.push({ name: "House type", value: u.houseType });
   if (u.block) attrs.push({ name: "Block", value: u.block });
+  if (u.completion) attrs.push({ name: "Completion", value: u.completion });
   return {
     ref: u.ref,
     label: u.label ?? null,
@@ -68,7 +71,7 @@ function unitRow(p, u, i) {
     storage: u.storage ? "yes" : null,
     guestWc: u.wc ? "yes" : null,
     attrs,
-    amenities: u.pool ? ["Private pool"] : [],
+    amenities: u.pool === "Private" ? ["Private pool"] : u.pool === "Communal" ? ["Communal pool"] : [],
     source: "manual",
     sortIndex: i,
   };
