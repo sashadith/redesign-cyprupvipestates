@@ -2,7 +2,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireCrmUser } from "@/lib/crm/session";
+import { getCrmUser } from "@/lib/crm/session";
 import { presentationGuard } from "@/lib/crm/presentations/guard";
 import {
   cleanPresentationInput, createPresentation, savePresentationEdit, revokePresentation,
@@ -26,13 +26,15 @@ export type EditPayload = {
 };
 
 const NOT_FOUND = "Lead not found.";
+const NOT_SIGNED_IN = "Not signed in.";
 
 function validId(v: unknown): v is string {
   return typeof v === "string" && v.length > 0 && v.length <= 64;
 }
 
 async function guardedLead(leadId: unknown, op: "edit" | "delete" = "edit") {
-  const user = await requireCrmUser();
+  const user = await getCrmUser();
+  if (!user) return { user: null, lead: null, error: NOT_SIGNED_IN };
   const lead = validId(leadId)
     ? await prisma.lead.findFirst({
         where: { id: leadId, deletedAt: null },
@@ -43,8 +45,11 @@ async function guardedLead(leadId: unknown, op: "edit" | "delete" = "edit") {
 }
 
 async function guardedPresentation(id: unknown, op: "edit" | "delete") {
-  const user = await requireCrmUser();
-  const owner = validId(id) ? await presentationLeadId(id) : null;
+  const user = await getCrmUser();
+  if (!user) return { user: null, owner: null, error: NOT_SIGNED_IN };
+  const found = validId(id) ? await presentationLeadId(id) : null;
+  // A soft-deleted lead's selections are as gone as the lead itself.
+  const owner = found && !found.leadDeleted ? found : null;
   const lead = owner ? { assignedToId: owner.assignedToId } : null;
   return { user, owner, error: presentationGuard(user, lead, op) };
 }
@@ -73,8 +78,8 @@ export async function saveFiltersAction(leadId: string, filters: MatchFilters): 
   return { ok: true };
 }
 
-export async function locationsAction(): Promise<LocationOptions> {
-  await requireCrmUser();
+export async function locationsAction(): Promise<LocationOptions | { error: string }> {
+  if (!(await getCrmUser())) return { error: NOT_SIGNED_IN };
   return listPresentationLocationOptions();
 }
 
@@ -153,7 +158,15 @@ export async function sendPresentationEmailAction(
   opts: { subject: string; body: string; leadReacted?: boolean; presentationToken?: string },
 ): Promise<{ ok: string } | { error: string }> {
   const { user, lead, error } = await guardedLead(leadId);
-  if (error || !lead) return { error: error ?? NOT_FOUND };
+  if (error || !lead || !user) return { error: error ?? NOT_FOUND };
+  // sendLeadEmail does not check the token belongs to this lead.
+  if (opts?.presentationToken !== undefined) {
+    const t = opts.presentationToken;
+    const own = typeof t === "string" && t.length > 0 && t.length <= 64
+      ? await prisma.clientPresentation.findFirst({ where: { token: t, leadId: lead.id }, select: { id: true } })
+      : null;
+    if (!own) return { error: "Selection not found." };
+  }
   const result = await sendLeadEmail(
     { userId: user.id, userName: user.name },
     lead.id,

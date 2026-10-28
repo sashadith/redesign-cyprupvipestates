@@ -130,12 +130,12 @@ function revalidateLead(leadId: string) {
   revalidatePath(`/crm/leads/${leadId}`);
 }
 
-export async function presentationLeadId(id: string): Promise<{ leadId: string; assignedToId: string | null } | null> {
+export async function presentationLeadId(id: string): Promise<{ leadId: string; assignedToId: string | null; leadDeleted: boolean } | null> {
   const p = await prisma.clientPresentation.findUnique({
     where: { id },
-    select: { leadId: true, lead: { select: { assignedToId: true } } },
+    select: { leadId: true, lead: { select: { assignedToId: true, deletedAt: true } } },
   });
-  return p ? { leadId: p.leadId, assignedToId: p.lead?.assignedToId ?? null } : null;
+  return p ? { leadId: p.leadId, assignedToId: p.lead?.assignedToId ?? null, leadDeleted: !!p.lead?.deletedAt } : null;
 }
 
 export async function createPresentation(

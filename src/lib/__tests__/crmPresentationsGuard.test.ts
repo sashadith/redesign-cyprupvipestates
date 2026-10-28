@@ -25,3 +25,8 @@ test("owner may delete", () => {
 test("inactive user gets not found", () => {
   assert.equal(presentationGuard(user({ isActive: false, isOwner: true }), { assignedToId: "u1" }, "edit"), "Lead not found.");
 });
+
+// Soft-deleted leads are mapped to a null lead by the actions before the guard.
+test("soft-deleted lead (passed as null) gets not found even for the owner", () => {
+  assert.equal(presentationGuard(user({ isOwner: true }), null, "delete"), "Lead not found.");
+});
