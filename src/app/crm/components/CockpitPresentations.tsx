@@ -1,7 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { deletePresentationAction, extendPresentationAction, revokePresentationAction } from "../leads/presentationActions";
+import type { SentInfo } from "@/lib/crm/presentations/sentHistory";
+import { PresentationModal, type ModalLead, type ModalUser } from "./PresentationModal";
 import { useToast } from "./Toast";
 
 // A lead's client presentations (personal selections): status, engagement and
@@ -15,6 +17,9 @@ export type PresentationRowView = {
   viewCount: number; uniqueDays: number; favoritedCount: number;
   items: { developmentId: string; name: string; isFavorited: boolean; views: number; durationSec: number }[];
 };
+
+/** SentInfo with the date as an ISO string, as it crosses the server/client boundary. */
+export type SentInfoView = Omit<SentInfo, "lastSentAt"> & { lastSentAt: string };
 
 type ModalState = { kind: "new"; fromFavoritesOf?: string } | { kind: "edit"; presentationId: string };
 
@@ -30,14 +35,20 @@ function mss(sec: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function CockpitPresentations({ rows, canEdit, isOwner }: {
+export function CockpitPresentations({ rows, canEdit, isOwner, lead, sent: sentView, users, currentUser }: {
   leadId: string; rows: PresentationRowView[]; canEdit: boolean; isOwner: boolean;
+  lead: ModalLead; sent: Record<string, SentInfoView>; users: ModalUser[]; currentUser: ModalUser | null;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [extending, setExtending] = useState<string | null>(null);
+  const sent = useMemo(() => {
+    const out: Record<string, SentInfo> = {};
+    Object.keys(sentView).forEach((k) => { out[k] = { ...sentView[k], lastSentAt: new Date(sentView[k].lastSentAt) }; });
+    return out;
+  }, [sentView]);
 
   async function run(id: string, fn: () => Promise<{ ok: true } | { error: string }>, done?: string) {
     if (busy) return;
@@ -133,7 +144,10 @@ export function CockpitPresentations({ rows, canEdit, isOwner }: {
           })}
         </ul>
       )}
-      {modal && null /* PresentationModal — Task 8 */}
+      {/* Edit and "New from favorites" open their modal in Task 9. */}
+      {modal?.kind === "new" && !modal.fromFavoritesOf && (
+        <PresentationModal mode={{ kind: "new" }} lead={lead} sent={sent} users={users} currentUser={currentUser} onClose={() => setModal(null)} />
+      )}
       {toast.node}
     </section>
   );
