@@ -907,6 +907,7 @@ model Lead {
   interactions         LeadInteraction[]
   emailDrafts          LeadEmailDraft[]
   developerRegistrations DeveloperRegistration[]
+  registrationFollowUps  RegistrationFollowUp[]
   // Lead Cockpit correction batch (2026-07-23) — auto-follow-up cadence.
   // Counts automatic nextFollowUpAt writes (presentation sent/viewed, or a
   // manual Call/Note/Email/WhatsApp log), shared across ALL trigger types,
@@ -1457,6 +1458,7 @@ model DeveloperAccount {
   analyses      DeveloperFeedAnalysis[]
   developments  Development[]
   registrations DeveloperRegistration[]
+  registrationFollowUps RegistrationFollowUp[]
 
   @@map("developer_accounts")
 }
@@ -1509,6 +1511,27 @@ model DeveloperRegistration {
   @@unique([leadId, developerAccountId])
   @@index([status, sentAt])
   @@map("developer_registrations")
+}
+
+// A developer whose projects went to the client in a personal selection but who
+// has no registration yet (2026-10-28). Rows exist only once someone skipped the
+// pair or a reminder went out; "due" itself is computed (registration/due.ts).
+model RegistrationFollowUp {
+  id                 String    @id @default(uuid())
+  leadId             String
+  developerAccountId String
+  skippedAt          DateTime?
+  skippedById        String?
+  skipReason         String?
+  lastRemindedAt     DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  lead             Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  developerAccount DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, developerAccountId])
+  @@map("registration_follow_ups")
 }
 
 // Single row (id "office"): IMAP cursor of the office@ mailbox.

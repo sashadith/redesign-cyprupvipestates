@@ -18,7 +18,7 @@ type Calls = { emails: any[]; whatsapp: [string, string][]; sent: any[]; failed:
 function fakeDeps(over: Partial<RegisterDeps> = {}, phone: string | null = "+35799278285"): { deps: RegisterDeps; calls: Calls } {
   const calls: Calls = { emails: [], whatsapp: [], sent: [], failed: [], claims: [], unrecorded: [] };
   const deps: RegisterDeps = {
-    loadLead: async () => ({ id: "L", firstName: "Anna", lastName: "Muster", phone }),
+    loadLead: async () => ({ id: "L", firstName: "Anna", lastName: "Muster", phone, email: "anna.muster@gmail.com" }),
     loadDevelopers: async (ids) => DEVS.filter((d) => ids.includes(d.id)),
     loadDevelopments: async (ids) => DEVTS.filter((d) => ids.includes(d.id)),
     claimRecord: async (i) => { calls.claims.push(i); return { id: `R-${i.developerAccountId}` }; },
@@ -44,7 +44,7 @@ test("one email per developer, all its projects in one message, masked phone onl
   const m = calls.emails[0];
   assert.deepEqual(m.to, ["sales@marinakisproperty.com"]);
   assert.deepEqual(m.cc, ["mvenizelou@marinakisproperty.com"]);
-  assert.match(m.text, /Preferred project: Vista, Blue/);
+  assert.match(m.text, /Preferred projects: Vista, Blue/);
   assert.match(m.text, /Phone: \+357XXXX8285/);
   assert.match(m.text, /Budget: up to €500,000/);
   assert.doesNotMatch(m.text, /99278285/);
@@ -153,7 +153,7 @@ test("a claim error for one developer does not hide the others' results", async 
 
 test("a name that carries contact data or is empty is refused", async () => {
   for (const [first, last] of [["Anna", "+357 99278285"], ["anna@x.com", null], ["", null]] as [string, string | null][]) {
-    const { deps, calls } = fakeDeps({ loadLead: async () => ({ id: "L", firstName: first, lastName: last, phone: "+35799278285" }) });
+    const { deps, calls } = fakeDeps({ loadLead: async () => ({ id: "L", firstName: first, lastName: last, phone: "+35799278285", email: null }) });
     const r = await registerLead(deps, { leadId: "L", picks: [pick("D1")], budgetMin: null, budgetMax: null, actor: A });
     assert.equal(r.ok, false, `${first} ${last}`);
     assert.equal(calls.claims.length, 0);
@@ -175,4 +175,37 @@ test("WhatsApp group failure names the group, not its id", async () => {
   const r = await registerLead(deps, { leadId: "L", picks: [pick("DG")], budgetMin: null, budgetMax: null, actor: A });
   assert.ok(r.ok && r.outcomes[0].result === "failed");
   assert.match(calls.failed[0][1], /^WhatsApp group "Cyprus VIP Estates - Pafilia": gateway down/);
+});
+
+test("salutation: plural for several email addresses or a group, singular for one address and private chats", async () => {
+  const { deps, calls } = fakeDeps();
+  await registerLead(deps, { leadId: "L", picks: [pick("D1"), pick("DWA")], budgetMin: null, budgetMax: null, actor: A });
+  assert.match(calls.emails[0].text, /^Dear all,/);
+  assert.match(calls.whatsapp[0][1], /^Dear Ben,/);
+  const solo: RegDeveloper = { ...DEVS[0], contactPerson: "Maria", registrationEmailCc: [] };
+  const s = fakeDeps({ loadDevelopers: async () => [solo] });
+  await registerLead(s.deps, { leadId: "L", picks: [pick("D1")], budgetMin: null, budgetMax: null, actor: A });
+  assert.match(s.calls.emails[0].text, /^Dear Maria,/);
+  const group: RegDeveloper = { ...DEVS[1], registrationWhatsApp: [], registrationWhatsAppGroupId: "120363427859674423@g.us", registrationWhatsAppGroupName: "G" };
+  const g = fakeDeps({ loadDevelopers: async () => [group] });
+  await registerLead(g.deps, { leadId: "L", picks: [pick("DWA")], budgetMin: null, budgetMax: null, actor: A });
+  assert.match(g.calls.whatsapp[0][1], /^Dear all,/);
+});
+
+test("an edited text is sent and recorded as edited; an unchanged one is not marked", async () => {
+  const { deps, calls } = fakeDeps();
+  const r = await registerLead(deps, { leadId: "L", picks: [pick("D1"), pick("DWA")], budgetMin: null, budgetMax: null, actor: A, texts: { D1: "Hi Maria,\r\nplease register Anna Muster (+357XXXX8285).\n" } });
+  assert.ok(r.ok);
+  assert.equal(calls.emails[0].text, "Hi Maria,\nplease register Anna Muster (+357XXXX8285).");
+  assert.equal(calls.sent.find((x) => x.channel === "email").edited, true);
+  assert.equal(calls.sent.find((x) => x.channel === "whatsapp").edited, false);
+});
+
+test("an edited text carrying the full phone or email stops the whole send", async () => {
+  for (const bad of ["call her on +357 99 278 285", "phone 0035799278285", "mail anna.muster@GMAIL.com", "   "]) {
+    const { deps, calls } = fakeDeps();
+    const r = await registerLead(deps, { leadId: "L", picks: [pick("DWA"), pick("D1")], budgetMin: null, budgetMax: null, actor: A, texts: { D1: bad } });
+    assert.ok(!r.ok && r.error.startsWith("Marinakis: "), bad);
+    assert.equal(calls.claims.length + calls.emails.length + calls.whatsapp.length, 0, bad);
+  }
 });

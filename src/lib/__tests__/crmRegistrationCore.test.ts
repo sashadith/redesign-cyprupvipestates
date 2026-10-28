@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  maskPhone, formatBudget, parseBudgetInput, buildRegistrationMessage, normalizeProfile,
+  maskPhone, formatBudget, parseBudgetInput, buildRegistrationMessage, checkEditedText, normalizeProfile,
   isRegistrable, canMark, undoTarget, canResend, REMINDER_AFTER_MS,
 } from "@/lib/crm/registration/core";
 
@@ -35,12 +35,25 @@ test("message matches §7.2 and omits empty lines", () => {
   assert.equal(m.subject, "Client registration – Anna Muster – Cyprus VIP Estates");
   assert.equal(m.text, [
     "Dear Sales Team,", "", "We would like to register the following client with you:", "",
-    "Full name: Anna Muster", "Phone: +357XXXX8285", "Preferred project: Vista, Blue", "Budget: up to €500,000", "",
+    "Full name: Anna Muster", "Phone: +357XXXX8285", "Preferred projects: Vista, Blue", "Budget: up to €500,000", "",
     "Please confirm the registration.", "", "Kind regards,", "Sascha Dith", "Cyprus VIP Estates",
   ].join("\n"));
   const bare = buildRegistrationMessage({ clientName: "A B", maskedPhone: "+44XXXX3456", projects: [], budget: null, contactPerson: "Maria", staffName: "X" });
   assert.match(bare.text, /^Dear Maria,/);
   assert.doesNotMatch(bare.text, /Preferred project|Budget/);
+  const one = buildRegistrationMessage({ clientName: "A B", maskedPhone: "+44XXXX3456", projects: ["Vista"], budget: null, contactPerson: "Maria", staffName: "X", plural: true });
+  assert.match(one.text, /^Dear all,/);
+  assert.match(one.text, /\nPreferred project: Vista\n/);
+});
+test("checkEditedText keeps the masked phone and budgets, refuses the full phone and email", () => {
+  const lead = { phone: "+357 99 278285", email: "Anna@web.de" };
+  assert.deepEqual(checkEditedText("  Dear all,\r\nPhone: +357XXXX8285, budget €450,000 – €500,000  ", lead), { ok: true, text: "Dear all,\nPhone: +357XXXX8285, budget €450,000 – €500,000" });
+  assert.equal(checkEditedText("ring 99-278-285", lead).ok, false);
+  assert.equal(checkEditedText("mail anna@web.de", lead).ok, false);
+  assert.equal(checkEditedText("", lead).ok, false);
+  assert.equal(checkEditedText("x".repeat(4001), lead).ok, false);
+  assert.equal(checkEditedText(42, lead).ok, false);
+  assert.equal(checkEditedText("fine", { phone: null, email: null }).ok, true);
 });
 test("normalizeProfile", () => {
   const ok = normalizeProfile({ channel: "EMAIL", emailTo: "Sales@Marinakisproperty.com", emailCc: "mvenizelou@marinakisproperty.com, sales@marinakisproperty.com", whatsApp: "" }, "office@cyprusvipestates.com");

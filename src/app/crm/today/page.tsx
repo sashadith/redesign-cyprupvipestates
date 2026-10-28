@@ -8,6 +8,7 @@ import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
 import { sortByTemperature, toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
 import { TemperatureDot } from "../components/TemperatureDot";
 import { CRM_TZ, buildToday, isAssignmentTo, todayGreeting, type TodayLead } from "@/lib/crm/today";
+import { loadRegistrationDue } from "@/lib/crm/registration/due";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,8 @@ export default async function TodayPage() {
     temperature: toPublicTemperature(temps.get(r.id)),
   }));
   const built = buildToday(leads, now);
+  // Registrations due: the owner sees every lead, staff their own.
+  const regDue = (await loadRegistrationDue(null, now)).filter((l) => l.due.length > 0 && (user.isOwner || l.ownerId === user.id));
   // Hot leads first only in the two lists with no time order (Newly assigned, Going quiet); Overdue, Due today and Viewings keep their time order.
   const hotFirst = (rs: TodayLead[]) => sortByTemperature(rs, (l) => l.temperature);
   const t = { ...built, fresh: hotFirst(built.fresh), stale: hotFirst(built.stale) };
@@ -73,8 +76,9 @@ export default async function TodayPage() {
     { key: "fresh", title: "Newly assigned to you", empty: "Nothing newly assigned in the last 48 hours", rows: t.fresh, when: (l) => `assigned ${dateTime.format(l.assignedAt!)}` },
     { key: "stale", title: "Going quiet", empty: "No leads quiet for 7+ days", rows: t.stale, when: (l) => (l.lastContactAt ? `last contact ${dateOnly.format(l.lastContactAt)}` : `no contact since ${dateOnly.format(l.createdAt)}`) },
   ];
-  const total = t.overdue.length + t.dueToday.length + t.viewings.length + t.fresh.length;
+  const total = regDue.length + t.overdue.length + t.dueToday.length + t.viewings.length + t.fresh.length;
   const summary = [
+    ...(regDue.length ? [`${regDue.length} to register`] : []),
     `${t.overdue.length} overdue`, `${t.dueToday.length} due today`, `${t.viewings.length} viewing${t.viewings.length === 1 ? "" : "s"}`, `${t.fresh.length} new`, `${t.stale.length} quiet`,
   ].join(" · ");
 
@@ -88,6 +92,28 @@ export default async function TodayPage() {
       </div>
       {leads.length >= LEAD_CAP && <p className="crm-notice" role="status">This list may be incomplete — showing {LEAD_CAP} leads.</p>}
       <div className="crm-today">
+        <section className="crm-panel crm-today-sec crm-today-due" aria-labelledby="today-regdue">
+          <h2 id="today-regdue">Register with developers <span className="cnt">{regDue.length}</span></h2>
+          {regDue.length === 0 ? (
+            <p className="crm-today-empty">Every client is registered with the developers from their selections</p>
+          ) : (
+            <ul>
+              {regDue.map((l) => {
+                const names = l.due.map((p) => p.developerName);
+                const since = new Date(Math.min(...l.due.map((p) => p.since.getTime())));
+                return (
+                  <li key={l.leadId}>
+                    <Link href={`/crm/leads/${l.leadId}?register=due`}>
+                      <span className="who"><b>{l.leadName}</b><span className="proj">{names.slice(0, 4).join(", ")}{names.length > 4 ? ` +${names.length - 4} more` : ""}</span></span>
+                      <span className="st">{user.isOwner && l.ownerName ? l.ownerName : `${names.length} developer${names.length === 1 ? "" : "s"}`}</span>
+                      <span className="when">selection {dateOnly.format(since)}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
         {sections.map((s) => (
           <section key={s.key} className="crm-panel crm-today-sec" aria-labelledby={`today-${s.key}`}>
             <h2 id={`today-${s.key}`}>{s.title} <span className="cnt">{s.rows.length}</span></h2>

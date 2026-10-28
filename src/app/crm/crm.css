@@ -829,6 +829,26 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-reg-plan dt { color: var(--muted); }
 .crm-reg-plan dd { margin: 0; overflow-wrap: anywhere; }
 .crm-reg-plan pre { margin: 0; padding: 8px 10px; border-radius: calc(8px * var(--ds-radius-scale)); background: var(--srcbg); white-space: pre-wrap; overflow-wrap: anywhere; font: 500 calc(12.5px * var(--ds-crm-scale)) / 1.5 var(--mono); color: var(--ink); }
+.crm-reg-text { width: 100%; box-sizing: border-box; margin: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: calc(8px * var(--ds-radius-scale)); background: var(--srcbg); resize: vertical; overflow-wrap: anywhere; font: 500 calc(12.5px * var(--ds-crm-scale)) / 1.5 var(--mono); color: var(--ink); }
+.crm-reg-text:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-reg-edited { margin: 0; font-size: calc(12px * var(--ds-crm-scale)); }
+.crm-reg-edited b { color: var(--danger); font-weight: 600; }
+.crm-ck-due { border: 1px solid var(--accent); border-radius: calc(10px * var(--ds-radius-scale)); background: var(--panel); padding: 10px 12px; margin-bottom: 10px; display: grid; gap: 8px; }
+.crm-ck-duehead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.crm-ck-duehead b { font-size: calc(13.5px * var(--ds-crm-scale)); }
+.crm-ck-duehead p { margin: 2px 0 0; color: var(--danger); font-size: calc(12.5px * var(--ds-crm-scale)); font-weight: 600; }
+.crm-ck-due ul, .crm-ck-dueskipped ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.crm-ck-due li + li { border-top: 1px solid var(--line); padding-top: 6px; }
+.crm-ck-duerow { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.crm-ck-duerow .who { display: grid; min-width: 0; }
+.crm-ck-duerow .proj { color: var(--muted); font-size: calc(12px * var(--ds-crm-scale)); overflow-wrap: anywhere; }
+.crm-ck-duebtns { display: flex; align-items: center; gap: 6px; font-size: calc(12px * var(--ds-crm-scale)); }
+.crm-ck-dueskip { display: flex; gap: 6px; margin-top: 6px; }
+.crm-ck-dueskip input { flex: 1; min-width: 0; }
+.crm-ck-dueskipped { margin-bottom: 10px; font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-ck-dueskipped summary { cursor: pointer; color: var(--muted); }
+.crm-ck-dueskipped li { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 4px; }
+.crm-today-due { border-color: var(--accent); }
 .crm-reg-results { list-style: none; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: calc(10px * var(--ds-radius-scale)); display: grid; gap: 4px; font-size: calc(13px * var(--ds-crm-scale)); }
 .crm-reg-results li.r-sent { color: var(--good); }
 .crm-reg-results li.r-already { color: var(--muted); }

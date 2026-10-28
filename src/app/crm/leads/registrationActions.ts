@@ -9,6 +9,7 @@ import {
   type PlannedMessage, type RegisterPick, type RegisterResult,
 } from "@/lib/crm/registration/register";
 import { markRegistration, realMarkDeps, type MarkAction } from "@/lib/crm/registration/mark";
+import { cleanSkipReason } from "@/lib/crm/registration/due";
 
 // Developer client registration from the lead cockpit (spec 2026-10-27 §7.1,
 // §8, §9). Middleware does not protect server actions: every export checks the
@@ -49,6 +50,18 @@ function cleanPicks(raw: unknown): RegisterPick[] | null {
   return out;
 }
 
+function cleanTextMap(raw: unknown, picks: RegisterPick[]): Record<string, string> | null {
+  if (raw === undefined || raw === null) return {};
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  const picked = new Set(picks.map((p) => p.developerAccountId));
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!picked.has(k) || typeof v !== "string") return null;
+    out[k] = v;
+  }
+  return out;
+}
+
 export async function registrationOptionsAction(leadId: string): Promise<RegistrationOptions | { error: string }> {
   const { lead } = await editableLead(leadId);
   if (!lead) return { error: NOT_FOUND };
@@ -80,12 +93,15 @@ export async function previewRegistrationAction(leadId: string, picks: unknown, 
   return r.ok ? { ok: true, plans: r.plans } : r;
 }
 
-export async function registerLeadAction(leadId: string, picks: unknown, budgetMin: unknown, budgetMax: unknown): Promise<RegisterResult> {
+// texts: edited message per developer id (only for picked developers; checked in registerLead).
+export async function registerLeadAction(leadId: string, picks: unknown, budgetMin: unknown, budgetMax: unknown, texts?: unknown): Promise<RegisterResult> {
   const { user, lead } = await editableLead(leadId);
   if (!lead) return { ok: false, error: NOT_FOUND };
   const clean = cleanPicks(picks);
   if (!clean) return { ok: false, error: "Pick at least one developer or project." };
-  const r = await registerLead(realRegisterDeps(), { leadId: lead.id, picks: clean, budgetMin, budgetMax, actor: { userId: user.id, userName: user.name } });
+  const cleanTexts = cleanTextMap(texts, clean);
+  if (!cleanTexts) return { ok: false, error: "The edited message could not be read — reopen the dialog." };
+  const r = await registerLead(realRegisterDeps(), { leadId: lead.id, picks: clean, budgetMin, budgetMax, actor: { userId: user.id, userName: user.name }, texts: cleanTexts });
   revalidatePath(`/crm/leads/${lead.id}`);
   return r;
 }
@@ -123,4 +139,58 @@ export async function markRegistrationAction(registrationId: string, action: str
   });
   revalidatePath(`/crm/leads/${lead.id}`);
   return r.ok ? { ok: true } : r;
+}
+
+// "Developers from personal selections": skip a developer on purpose (with a
+// reason, kept on the timeline) or take the skip back.
+export async function skipRegistrationDueAction(leadId: string, developerAccountId: string, reason: unknown): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { user, lead } = await editableLead(leadId);
+  if (!lead) return { ok: false, error: NOT_FOUND };
+  if (typeof developerAccountId !== "string" || !developerAccountId || developerAccountId.length > 64) return { ok: false, error: "Developer not found." };
+  const r = cleanSkipReason(reason);
+  if (!r.ok) return r;
+  const dev = await prisma.developerAccount.findUnique({ where: { id: developerAccountId }, select: { id: true, name: true } });
+  if (!dev) return { ok: false, error: "Developer not found." };
+  const now = new Date();
+  await prisma.$transaction([
+    prisma.registrationFollowUp.upsert({
+      where: { leadId_developerAccountId: { leadId: lead.id, developerAccountId: dev.id } },
+      create: { leadId: lead.id, developerAccountId: dev.id, skippedAt: now, skippedById: user.id, skipReason: r.reason },
+      update: { skippedAt: now, skippedById: user.id, skipReason: r.reason },
+    }),
+    prisma.leadInteraction.create({
+      data: {
+        leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", direction: null,
+        body: `Registration with ${dev.name} skipped: ${r.reason}`,
+        createdByUserId: user.id, createdByName: user.name,
+        metadata: { kind: "developer_registration_skip", developerAccountId: dev.id, reason: r.reason },
+      },
+    }),
+  ]);
+  revalidatePath(`/crm/leads/${lead.id}`);
+  return { ok: true };
+}
+
+export async function unskipRegistrationDueAction(leadId: string, developerAccountId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { user, lead } = await editableLead(leadId);
+  if (!lead) return { ok: false, error: NOT_FOUND };
+  if (typeof developerAccountId !== "string" || !developerAccountId || developerAccountId.length > 64) return { ok: false, error: "Developer not found." };
+  const fu = await prisma.registrationFollowUp.findUnique({
+    where: { leadId_developerAccountId: { leadId: lead.id, developerAccountId } },
+    select: { id: true, skippedAt: true, developerAccount: { select: { name: true } } },
+  });
+  if (!fu?.skippedAt) return { ok: true };
+  await prisma.$transaction([
+    prisma.registrationFollowUp.update({ where: { id: fu.id }, data: { skippedAt: null, skippedById: null, skipReason: null } }),
+    prisma.leadInteraction.create({
+      data: {
+        leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", direction: null,
+        body: `Registration with ${fu.developerAccount.name} no longer skipped`,
+        createdByUserId: user.id, createdByName: user.name,
+        metadata: { kind: "developer_registration_unskip", developerAccountId },
+      },
+    }),
+  ]);
+  revalidatePath(`/crm/leads/${lead.id}`);
+  return { ok: true };
 }

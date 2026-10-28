@@ -6,8 +6,8 @@ import {
 import { useToast } from "./Toast";
 
 // "Register" dialog on the lead cockpit (spec 2026-10-27 §7.1). The preview is
-// built server-side by the same function that sends, so what is shown here is
-// exactly what leaves the building; the client only ever sees the masked phone.
+// built server-side by the same function that sends; the operator may reword
+// each message before sending, and the server re-checks an edited text.
 
 type PreviewResult = Awaited<ReturnType<typeof previewRegistrationAction>>;
 type Plans = Extract<PreviewResult, { ok: true }>["plans"];
@@ -16,13 +16,15 @@ type Outcomes = Extract<SendResult, { ok: true }>["outcomes"];
 
 const matches = (q: string, s: string) => !q || s.toLowerCase().includes(q.toLowerCase());
 
-export function RegisterDialog({ leadId, options, onClose, onSent }: {
+export function RegisterDialog({ leadId, options, onClose, onSent, initial }: {
   leadId: string; options: RegistrationOptions; onClose: () => void; onSent: () => void;
+  // Pre-ticked picks, e.g. the developers from the client's personal selections.
+  initial?: { developerIds: string[]; projectIds: string[] };
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const toast = useToast();
-  const [devPicks, setDevPicks] = useState<string[]>([]);
-  const [projPicks, setProjPicks] = useState<string[]>([]);
+  const [devPicks, setDevPicks] = useState<string[]>(() => initial?.developerIds ?? []);
+  const [projPicks, setProjPicks] = useState<string[]>(() => initial?.projectIds ?? []);
   const [devQ, setDevQ] = useState("");
   const [projQ, setProjQ] = useState("");
   const [bMin, setBMin] = useState(options.budget.min != null ? String(options.budget.min) : "");
@@ -33,6 +35,8 @@ export function RegisterDialog({ leadId, options, onClose, onSent }: {
   const [sending, setSending] = useState(false);
   const [outcomes, setOutcomes] = useState<Outcomes | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  // Edited texts per developer; base is the generated text the edit started from.
+  const [edits, setEdits] = useState<Record<string, { text: string; base: string }>>({});
   const seq = useRef(0);
 
   useEffect(() => { dlg.current?.showModal(); }, []);
@@ -118,11 +122,13 @@ export function RegisterDialog({ leadId, options, onClose, onSent }: {
     setSending(true);
     setSendError(null);
     try {
-      const r = await registerLeadAction(leadId, picks, bMin, bMax);
+      const texts = Object.fromEntries(plans.filter((p) => edits[p.developerAccountId]).map((p) => [p.developerAccountId, edits[p.developerAccountId].text]));
+      const r = await registerLeadAction(leadId, picks, bMin, bMax, texts);
       if (!r.ok) { setSendError(r.error); return; }
       setOutcomes(r.outcomes);
       setDevPicks([]);
       setProjPicks([]);
+      setEdits({});
       onSent();
       if (r.outcomes.every((o) => o.result === "sent")) {
         toast.show(`${r.outcomes.length} registration${r.outcomes.length === 1 ? "" : "s"} sent.`);
@@ -210,7 +216,25 @@ export function RegisterDialog({ leadId, options, onClose, onSent }: {
                   {p.cc.length > 0 && <div><dt>CC</dt><dd>{p.cc.join(", ")}</dd></div>}
                   {p.channel === "EMAIL" && <div><dt>Subject</dt><dd>{p.subject}</dd></div>}
                 </dl>
-                <pre>{p.text}</pre>
+                {(() => {
+                  const e = edits[p.developerAccountId];
+                  const value = e?.text ?? p.text;
+                  return (
+                    <>
+                      <textarea
+                        className="crm-reg-text" aria-label={`Message to ${p.developerName}`} value={value} maxLength={4000}
+                        rows={value.split("\n").length + 1} disabled={sending} spellCheck
+                        onChange={(ev) => { const text = ev.target.value; setSendError(null); setEdits((m) => ({ ...m, [p.developerAccountId]: { text, base: m[p.developerAccountId]?.base ?? p.text } })); }}
+                      />
+                      {e && (
+                        <p className="crm-reg-edited">
+                          {e.base !== p.text ? <b>Projects or budget changed after you edited this text — check it. </b> : <span className="crm-muted">Edited. </span>}
+                          <button type="button" className="crm-linkbtn" disabled={sending} onClick={() => setEdits((m) => { const { [p.developerAccountId]: _drop, ...rest } = m; return rest; })}>Reset to generated text</button>
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </article>
             ))}
           </div>

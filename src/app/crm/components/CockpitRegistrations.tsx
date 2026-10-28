@@ -3,7 +3,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { canMark, canResend, undoTarget, type RegStatus } from "@/lib/crm/registration/core";
 import {
-  markRegistrationAction, registrationOptionsAction, resendRegistrationAction, type RegistrationOptions,
+  markRegistrationAction, registrationOptionsAction, resendRegistrationAction, skipRegistrationDueAction, unskipRegistrationDueAction,
+  type RegistrationOptions,
 } from "../leads/registrationActions";
 import { RegisterDialog } from "./RegisterDialog";
 import { useToast } from "./Toast";
@@ -16,6 +17,10 @@ export type RegistrationRow = {
   sentAt: string | null; preliminaryAt: string | null; preliminarySource: string | null;
   fixedAt: string | null; sendError: string | null;
 };
+
+// A developer from the client's personal selections with no registration yet.
+export type DueRow = { developerAccountId: string; developerName: string; registrable: boolean; developmentIds: string[]; projects: string[]; since: string };
+export type SkippedDueRow = DueRow & { skippedAt: string; skippedByName: string | null; skipReason: string | null };
 
 const STATUS_LABEL: Record<RegStatus, string> = { SENT: "Sent", PRELIMINARY: "Preliminary", FIXED: "Fixed", REJECTED: "Rejected", FAILED: "Failed" };
 
@@ -36,13 +41,20 @@ function dateLine(r: RegistrationRow): string {
 
 type Mark = "PRELIMINARY" | "FIXED" | "REJECTED" | "UNDO";
 
-export function CockpitRegistrations({ leadId, canEdit, isOwner, rows }: { leadId: string; canEdit: boolean; isOwner: boolean; rows: RegistrationRow[] }) {
+export function CockpitRegistrations({ leadId, canEdit, isOwner, rows, due, isAdmin, autoRegister }: {
+  leadId: string; canEdit: boolean; isOwner: boolean; rows: RegistrationRow[];
+  due: { open: DueRow[]; skipped: SkippedDueRow[] }; isAdmin: boolean; autoRegister: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
   const [options, setOptions] = useState<RegistrationOptions | null>(null);
   const [optionsError, setOptionsError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [initial, setInitial] = useState<{ developerIds: string[]; projectIds: string[] } | undefined>(undefined);
+  const [skipping, setSkipping] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const [autoDone, setAutoDone] = useState(false);
 
   const loadOptions = useCallback(async () => {
     try {
@@ -90,11 +102,51 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows }: { leadI
     }
   }
 
+  const openRegister = (picks?: DueRow[]) => {
+    setInitial(picks ? { developerIds: picks.map((p) => p.developerAccountId), projectIds: picks.flatMap((p) => p.developmentIds) } : undefined);
+    setOpen(true);
+  };
+
+  async function skip(devId: string) {
+    if (busy) return;
+    setBusy(devId);
+    try {
+      const r = await skipRegistrationDueAction(leadId, devId, reason);
+      if (r.ok) { setSkipping(null); setReason(""); router.refresh(); }
+      else toast.show(r.error, "error");
+    } catch {
+      toast.show("Could not save — check your connection and try again.", "error");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function unskip(devId: string) {
+    if (busy) return;
+    setBusy(devId);
+    try {
+      const r = await unskipRegistrationDueAction(leadId, devId);
+      if (r.ok) router.refresh();
+      else toast.show(r.error, "error");
+    } catch {
+      toast.show("Could not save — check your connection and try again.", "error");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   // Why "Register" is unavailable, if it is.
   let blocked: string | null = null;
   if (optionsError) blocked = optionsError;
   else if (options && !options.phone.ok) blocked = options.phone.reason;
   else if (options && !options.developers.some((d) => d.registrable)) blocked = "No developer has a registration channel set yet (admin › developer page).";
+  const dueReady = due.open.filter((d) => d.registrable);
+
+  // From Today ("?register=due"): open the dialog once with every registrable due developer.
+  useEffect(() => {
+    if (autoRegister && !autoDone && options && !blocked && dueReady.length) { setAutoDone(true); openRegister(dueReady); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRegister, autoDone, options, blocked]);
 
   return (
     <section className="crm-panel crm-ck-regs" aria-labelledby="crm-ck-regs-h">
@@ -103,11 +155,67 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows }: { leadI
         {canEdit && (
           <button
             type="button" className="crm-btn" disabled={!options || !!blocked}
-            title={blocked ?? undefined} onClick={() => setOpen(true)}
+            title={blocked ?? undefined} onClick={() => openRegister()}
           >Register</button>
         )}
       </div>
       {canEdit && blocked && <p className="crm-ck-regblocked">{blocked}</p>}
+      {due.open.length > 0 && (
+        <div className="crm-ck-due" role="region" aria-label="Developers from personal selections">
+          <div className="crm-ck-duehead">
+            <div>
+              <b>Developers from personal selections</b>
+              <p>Please register the client asap.</p>
+            </div>
+            {canEdit && dueReady.length > 1 && (
+              <button type="button" className="crm-btn primary" disabled={!options || !!blocked} title={blocked ?? undefined} onClick={() => openRegister(dueReady)}>Register all ({dueReady.length})</button>
+            )}
+          </div>
+          <ul>
+            {due.open.map((d) => (
+              <li key={d.developerAccountId}>
+                <div className="crm-ck-duerow">
+                  <span className="who"><b>{d.developerName}</b><span className="proj">{d.projects.join(", ")} · since {ddmmyy(d.since)}</span></span>
+                  {canEdit && (
+                    <span className="crm-ck-duebtns">
+                      {d.registrable ? (
+                        <button type="button" className="crm-btn primary" disabled={!options || !!blocked} title={blocked ?? undefined} onClick={() => openRegister([d])}>Register</button>
+                      ) : (
+                        <em className="crm-muted">
+                          no registration channel set{isAdmin && <> · <a href={`/admin/developments/developers/${d.developerAccountId}`}>set it</a></>}
+                        </em>
+                      )}
+                      <button type="button" className="crm-linkbtn" disabled={busy === d.developerAccountId} onClick={() => { setSkipping(skipping === d.developerAccountId ? null : d.developerAccountId); setReason(""); }}>Skip</button>
+                    </span>
+                  )}
+                </div>
+                {skipping === d.developerAccountId && (
+                  <form className="crm-ck-dueskip" onSubmit={(e) => { e.preventDefault(); void skip(d.developerAccountId); }}>
+                    <input
+                      autoFocus maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)}
+                      placeholder="Why not? e.g. client already registered by another agent" aria-label={`Reason for skipping ${d.developerName}`}
+                    />
+                    <button type="submit" className="crm-btn" disabled={busy === d.developerAccountId || !reason.trim()}>Skip</button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {due.skipped.length > 0 && (
+        <details className="crm-ck-dueskipped">
+          <summary>Skipped ({due.skipped.length})</summary>
+          <ul>
+            {due.skipped.map((d) => (
+              <li key={d.developerAccountId}>
+                <span><b>{d.developerName}</b> — {d.skipReason}{d.skippedByName ? ` (${d.skippedByName}, ${ddmmyy(d.skippedAt)})` : ""}</span>
+                {canEdit && <button type="button" className="crm-linkbtn" disabled={busy === d.developerAccountId} onClick={() => void unskip(d.developerAccountId)}>Undo</button>}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {rows.length === 0 ? (
         <p className="crm-muted crm-ck-regempty">Not registered with any developer yet.</p>
       ) : (
@@ -147,7 +255,7 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows }: { leadI
       )}
       {canEdit && options && open && (
         <RegisterDialog
-          leadId={leadId} options={options}
+          leadId={leadId} options={options} initial={initial}
           onClose={() => setOpen(false)}
           onSent={() => { router.refresh(); void loadOptions(); }}
         />
