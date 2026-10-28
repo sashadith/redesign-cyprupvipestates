@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { REMINDER_AFTER_MS, type RegStatus } from "./core";
+import { REMINDER_AFTER_MS, devLabel, type RegStatus } from "./core";
 
 // Reminder for a registration the developer has not confirmed (spec 2026-10-27
 // §7.7, §12.5): 2 days after sending, still SENT → one email to the owner(s)
@@ -53,8 +53,8 @@ export function reminderMail(r: ReminderRow, siteUrl: string): { subject: string
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function reminderTelegram(rows: ReminderRow[], siteUrl: string): string {
-  const lines = rows.map((r) => `• <a href="${siteUrl}/crm/leads/${r.lead.id}">${esc(r.lead.name)}</a> – ${esc(r.developerName)} (sent ${r.sentAt ? reminderDate(r.sentAt) : "?"})`);
-  return `<b>⏳ Registration not confirmed after 2 days</b>\n${lines.join("\n")}`;
+  const lines = rows.map((r) => `👤 <b><a href="${siteUrl}/crm/leads/${r.lead.id}">${esc(r.lead.name)}</a></b> · ${esc(devLabel(r.developerName))} · <i>sent ${r.sentAt ? reminderDate(r.sentAt) : "?"}</i>`);
+  return [`⏳ <b>Registration not confirmed after 2 days</b>`, `<i>Follow up with the developer, then mark it preliminary</i>`, "", ...lines].join("\n");
 }
 
 export type ReminderDeps = {
