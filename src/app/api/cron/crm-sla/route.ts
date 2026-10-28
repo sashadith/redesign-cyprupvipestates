@@ -4,6 +4,8 @@
 //   UNASSIGNED  — one office Telegram listing the leads, link to /crm/inbox
 //   UNCONTACTED — one email per lead to its owner
 //   ESCALATE    — one office Telegram naming owner + lead + lead link
+// Also: developer registrations unconfirmed after 2 days (registration/reminders.ts),
+// one email to owner(s) + assigned staff, one office Telegram per run.
 // Idempotent: every sent notice writes a SYSTEM "SLA reminder: <rule>" row with
 // metadata.sla, written only after the send succeeded, so a failed or
 // unconfigured channel is retried on the next run and a sent one never repeats.
@@ -27,6 +29,7 @@ import {
   SLA_OUTBOUND_TYPES, dueSlaNotices, latestAssignedAt, sendSlaNotices, slaNoticesFromRows,
   slaStartFromEnv, slaThresholdsFromEnv, type SlaLead, type SlaRule, type SlaSendResult,
 } from "@/lib/crm/sla";
+import { loadUnconfirmedRegistrations, sendRegistrationReminders } from "@/lib/crm/registration/reminders";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +39,8 @@ const LEAD_CAP = 500;
 type SlaResult =
   | { skipped: string }
   | ({ ok: true } & SlaSendResult);
+type RegistrationResult = { reminded: number; errors: string[] };
+type CronResult = { sla: SlaResult; registrations: RegistrationResult };
 
 async function markSent(leads: SlaLead[], rule: SlaRule) {
   await prisma.leadInteraction.createMany({
@@ -43,7 +48,7 @@ async function markSent(leads: SlaLead[], rule: SlaRule) {
   });
 }
 
-async function runSla(): Promise<SlaResult> {
+async function runSlaNotices(): Promise<SlaResult> {
   const start = slaStartFromEnv(process.env);
   if (!start) return { skipped: "CRM_SLA_START not set" };
   const now = new Date();
@@ -95,9 +100,39 @@ async function runSla(): Promise<SlaResult> {
   return { ok: true, ...result };
 }
 
-const summarize = (r: SlaResult) =>
+// Developer registrations without a preliminary confirmation after 2 days
+// (spec 2026-10-27 §7.7). Independent of CRM_SLA_START.
+async function runRegistrationReminders(): Promise<RegistrationResult> {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
+  const r = await sendRegistrationReminders({
+    load: () => loadUnconfirmedRegistrations(new Date()),
+    owners: () => prisma.user.findMany({ where: { isOwner: true }, select: { id: true, email: true, isActive: true } }),
+    sendEmail: (m) => sendEmail(m),
+    sendTelegram: async (t) => { await sendTelegramMessage(t); },
+    markReminded: async (id, at) => { await prisma.developerRegistration.update({ where: { id }, data: { reminderSentAt: at } }); },
+    now: () => new Date(),
+    siteUrl: base,
+  });
+  if (r.errors.length) console.error("[crm-sla] registration reminders", r.errors);
+  return r;
+}
+
+async function runAll(): Promise<CronResult> {
+  // Guarded: a reminder failure must never stop the SLA notices below.
+  const registrations = await runRegistrationReminders().catch((e): RegistrationResult => {
+    console.error("[crm-sla] registration reminders failed", e);
+    return { reminded: 0, errors: [e instanceof Error ? e.message : String(e)] };
+  });
+  const sla = await runSlaNotices();
+  return { sla, registrations };
+}
+
+const summarizeSla = (r: SlaResult) =>
   !("ok" in r) ? `skipped: ${r.skipped}`
     : `sent U${r.sent.UNASSIGNED}/C${r.sent.UNCONTACTED}/E${r.sent.ESCALATE}${r.skipped.length ? `, ${r.skipped.length} skipped` : ""}${r.errors.length ? `, ${r.errors.length} error(s)` : ""}`;
+const summarize = (r: CronResult) =>
+  `${summarizeSla(r.sla)}; registrations reminded ${r.registrations.reminded}${r.registrations.errors.length ? `, ${r.registrations.errors.length} error(s)` : ""}`;
+const okFrom = (r: CronResult) => (!("ok" in r.sla) || r.sla.errors.length === 0) && r.registrations.errors.length === 0;
 
 export async function GET(req: NextRequest) {
   const key = req.nextUrl.searchParams.get("key");
@@ -105,7 +140,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
-    const result = await withCronLog("crm-sla", runSla, summarize, (r) => !("ok" in r) || r.errors.length === 0);
+    const result = await withCronLog("crm-sla", runAll, summarize, okFrom);
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });

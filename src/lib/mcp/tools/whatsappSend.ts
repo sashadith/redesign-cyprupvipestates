@@ -9,6 +9,7 @@ import { createOpenWaClient } from "@/lib/openwa/client";
 import { readOpenWaConfig } from "@/lib/openwa/config";
 import { shapeThread, type RawMessage } from "@/lib/openwa/shapeMessages";
 import { decideSend, nicosiaDayStart } from "@/lib/openwa/sendGuards";
+import { countWhatsAppSentToday } from "@/lib/openwa/sentToday";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { assertCanEdit, type LeadScope, loadScope } from "../leadScope";
@@ -66,14 +67,8 @@ export function realSendDeps(access: LeadScope): SendDeps {
       assertCanEdit(access.user, lead);
       return { id: lead.id, phone: lead.phone };
     },
-    countSentToday: (since) =>
-      prisma.leadInteraction.count({
-        where: {
-          type: "WHATSAPP_OUT",
-          occurredAt: { gte: since },
-          metadata: { path: ["via"], equals: "mcp-whatsapp" },
-        },
-      }),
+    // Shared with developer registrations — one cap for the company number.
+    countSentToday: countWhatsAppSentToday,
     fetchThread: (chatId, limit) => client.fetchThread(chatId, limit),
     sendText: (chatId, text) => client.sendText(chatId, text),
     logInteraction: logLeadInteraction,

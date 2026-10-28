@@ -1,6 +1,15 @@
 import { prisma } from "@/lib/prisma";
 
-export type LeadMatch = { leadId: string; ambiguous: boolean };
+// interactionId/registrationThread are set on a header hit. registrationThread
+// marks a reply to one of our developer-registration emails (2026-10-28): that
+// is a developer writing, not the lead, and must never be filed as EMAIL_IN.
+export type LeadMatch = { leadId: string; ambiguous: boolean; interactionId?: string; registrationThread?: boolean };
+
+// Both our registration email and a stored developer reply carry a Message-ID;
+// a follow-up in either thread is the developer writing.
+const REGISTRATION_KINDS = new Set(["developer_registration", "developer_registration_reply"]);
+export const isRegistrationRow = (r: { type: string; metadata: unknown }) =>
+  r.type === "SYSTEM" && !!r.metadata && typeof r.metadata === "object" && REGISTRATION_KINDS.has(String((r.metadata as { kind?: unknown }).kind));
 
 // Gmail-aware canonicalization — gmail.com and googlemail.com are the same
 // mailbox, and Gmail ignores dots in the local part (e.g. "sascha.dith" and
@@ -41,8 +50,8 @@ export async function matchLeadForInboundEmail(opts: {
 }): Promise<LeadMatch | null> {
   const candidateIds = [opts.inReplyTo, ...opts.references].filter((id): id is string => !!id);
   for (const messageId of candidateIds) {
-    const hit = await prisma.leadInteraction.findFirst({ where: { messageId }, select: { leadId: true } });
-    if (hit) return { leadId: hit.leadId, ambiguous: false };
+    const hit = await prisma.leadInteraction.findFirst({ where: { messageId }, select: { id: true, leadId: true, type: true, metadata: true } });
+    if (hit) return { leadId: hit.leadId, ambiguous: false, interactionId: hit.id, ...(isRegistrationRow(hit) ? { registrationThread: true } : {}) };
   }
 
   const canonicalSender = canonicalizeEmail(opts.fromAddress);

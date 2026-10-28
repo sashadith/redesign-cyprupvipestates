@@ -906,6 +906,7 @@ model Lead {
   nextFollowUpAt       DateTime?
   interactions         LeadInteraction[]
   emailDrafts          LeadEmailDraft[]
+  developerRegistrations DeveloperRegistration[]
   // Lead Cockpit correction batch (2026-07-23) — auto-follow-up cadence.
   // Counts automatic nextFollowUpAt writes (presentation sent/viewed, or a
   // manual Call/Note/Email/WhatsApp log), shared across ALL trigger types,
@@ -1441,10 +1442,79 @@ model DeveloperAccount {
   // holds it, rather than crashing or overwriting.
   developerTranslationGroupId String? @unique
 
-  analyses     DeveloperFeedAnalysis[]
-  developments Development[]
+  // Developer client registration (2026-10-27) — dedicated registration targets,
+  // separate from email/phone above. Spec:
+  // docs/superpowers/specs/2026-10-27-developer-registration-design.md §6.1.
+  registrationChannel  RegistrationChannel @default(NONE)
+  registrationEmailTo  String[]            @default([])
+  registrationEmailCc  String[]            @default([])
+  registrationWhatsApp String[]            @default([]) // E.164
+
+  analyses      DeveloperFeedAnalysis[]
+  developments  Development[]
+  registrations DeveloperRegistration[]
 
   @@map("developer_accounts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Developer client registration (2026-10-27). Spec §6.2:
+// docs/superpowers/specs/2026-10-27-developer-registration-design.md
+// One row per (lead, developer). sentById / preliminaryById / fixedById are
+// plain strings on purpose: deleting a user must never be blocked.
+// ─────────────────────────────────────────────────────────────────────────
+
+enum RegistrationChannel {
+  NONE
+  EMAIL
+  WHATSAPP
+}
+
+enum DeveloperRegistrationStatus {
+  SENT
+  PRELIMINARY
+  FIXED
+  REJECTED
+  FAILED
+}
+
+model DeveloperRegistration {
+  id                    String                      @id @default(uuid())
+  leadId                String
+  developerAccountId    String
+  developmentIds        String[]                    @default([])
+  channel               RegistrationChannel
+  status                DeveloperRegistrationStatus
+  sentAt                DateTime?
+  sentById              String?
+  sendError             String?
+  outboundInteractionId String?
+  preliminaryAt         DateTime?
+  preliminarySource     String? // "manual" | "auto"
+  preliminaryById       String?
+  fixedAt               DateTime?
+  fixedById             String?
+  rejectedAt            DateTime?
+  reminderSentAt        DateTime?
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+
+  lead             Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  developerAccount DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, developerAccountId])
+  @@index([status, sentAt])
+  @@map("developer_registrations")
+}
+
+// Single row (id "office"): IMAP cursor of the office@ mailbox.
+model OfficeMailboxState {
+  id          String   @id
+  lastUid     BigInt?
+  uidValidity BigInt?
+  updatedAt   DateTime @updatedAt
+
+  @@map("office_mailbox_state")
 }
 
 model DeveloperFeedAnalysis {

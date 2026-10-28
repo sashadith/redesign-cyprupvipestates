@@ -771,3 +771,59 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .ds-swatch { display: inline-grid; grid-template-columns: repeat(4, 12px); gap: 2px; flex: none; }
 .ds-swatch i { width: 12px; height: 18px; border-radius: calc(2px * var(--ds-radius-scale)); border: 1px solid var(--line-strong); box-sizing: border-box; }
 @media (max-width: 720px) { .crm-me-menu { position: fixed; top: 60px; right: 12px; } }
+
+/* ── Developer registrations (cockpit block + Register dialog, 2026-10-27) ── */
+.crm-ck-regs h2 { margin: 0; }
+.crm-ck-regs .crm-ck-sechead { align-items: center; margin-bottom: 10px; }
+.crm-ck-regs .crm-ck-sechead .crm-btn { padding: 6px 12px; }
+.crm-ck-regblocked { margin: 0 0 10px; color: var(--warn); font-size: calc(12.5px * var(--ds-crm-scale)); font-weight: 600; }
+.crm-ck-regempty { margin: 0; font-size: calc(13px * var(--ds-crm-scale)); }
+.crm-ck-reglist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.crm-ck-reglist li { border: 1px solid var(--line); border-radius: calc(12px * var(--ds-radius-scale)); padding: 10px 12px; display: grid; gap: 5px; background: var(--bg); }
+.crm-ck-reghead { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.crm-ck-reghead b { overflow-wrap: anywhere; font-size: calc(13.5px * var(--ds-crm-scale)); }
+.crm-ck-regch { font-family: var(--mono); font-size: calc(10.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--muted); border: 1px solid var(--line-strong); border-radius: calc(5px * var(--ds-radius-scale)); padding: 0 4px; margin-left: 2px; }
+.crm-ck-regdates { margin: 0; color: var(--muted); font-size: calc(12px * var(--ds-crm-scale)); font-variant-numeric: tabular-nums; }
+.crm-ck-regerr { margin: 0; color: var(--danger); font-size: calc(12px * var(--ds-crm-scale)); overflow-wrap: anywhere; }
+.crm-ck-regbtns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.crm-ck-regbtns .crm-btn { padding: 4px 10px; font-size: calc(12px * var(--ds-crm-scale)); }
+.crm-pill.r-PRELIMINARY { color: var(--accent-ink); border-color: currentColor; }
+.crm-pill.r-FIXED { color: var(--good); border-color: currentColor; }
+.crm-pill.r-REJECTED { color: var(--warn); border-color: currentColor; }
+.crm-pill.r-FAILED { color: var(--danger); border-color: currentColor; background: var(--danger-bg); }
+
+.crm-dialog.crm-reg-dialog { width: min(980px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
+.crm-reg-body { display: flex; flex-direction: column; gap: 10px; padding: 22px; font-family: var(--body); }
+.crm-reg-cols { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 820px) { .crm-reg-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); } }
+.crm-reg-pick { display: grid; gap: 12px; align-content: start; }
+.crm-reg-pick fieldset { border: 1px solid var(--line); border-radius: calc(12px * var(--ds-radius-scale)); margin: 0; padding: 8px 10px 10px; display: grid; gap: 6px; min-width: 0; }
+.crm-reg-pick legend { font-size: calc(11.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; padding: 0 4px; }
+.crm-reg-dialog input[type="search"], .crm-reg-budget input { border: 1px solid var(--field-line); border-radius: calc(10px * var(--ds-radius-scale)); padding: 7px 10px; font: 500 calc(13px * var(--ds-crm-scale)) var(--body); color: var(--ink); background: var(--field-bg); width: 100%; box-sizing: border-box; }
+.crm-reg-list { list-style: none; margin: 0; padding: 0; max-height: 190px; overflow: auto; display: grid; gap: 1px; align-content: start; }
+.crm-reg-list ul { list-style: none; margin: 0 0 4px; padding: 0 0 0 10px; display: grid; gap: 1px; }
+.crm-reg-list label { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: calc(8px * var(--ds-radius-scale)); font: 500 calc(13px * var(--ds-crm-scale)) var(--body); color: var(--ink); cursor: pointer; text-transform: none; letter-spacing: 0; margin: 0; }
+.crm-reg-list label:hover { background: var(--sugbg); }
+.crm-reg-list label span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.crm-reg-list em { font-style: normal; font-size: calc(11.5px * var(--ds-crm-scale)); color: var(--muted); white-space: nowrap; }
+.crm-reg-list li.off label { cursor: default; color: var(--muted); }
+.crm-reg-list li.off label:hover { background: none; }
+.crm-reg-list > li.off:not(:has(label)) { padding: 4px 6px; color: var(--muted); font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-reg-grp { display: block; padding: 6px 6px 2px; font-size: calc(11.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--muted); }
+.crm-reg-grp em { font-weight: 500; }
+.crm-reg-budget { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.crm-reg-budget label { display: grid; gap: 4px; margin: 0; }
+.crm-reg-preview { border: 1px solid var(--line); border-radius: calc(12px * var(--ds-radius-scale)); background: var(--bg); padding: 10px 12px; display: grid; gap: 10px; align-content: start; max-height: 560px; overflow: auto; min-width: 0; }
+.crm-reg-preview h3 { margin: 0; font-size: calc(11.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+.crm-reg-preview h3 .crm-muted { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.crm-reg-plan { background: var(--panel); border: 1px solid var(--line); border-radius: calc(10px * var(--ds-radius-scale)); padding: 10px 12px; display: grid; gap: 6px; }
+.crm-reg-plan dl { margin: 0; display: grid; gap: 2px; font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-reg-plan dl > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; }
+.crm-reg-plan dt { color: var(--muted); }
+.crm-reg-plan dd { margin: 0; overflow-wrap: anywhere; }
+.crm-reg-plan pre { margin: 0; padding: 8px 10px; border-radius: calc(8px * var(--ds-radius-scale)); background: var(--srcbg); white-space: pre-wrap; overflow-wrap: anywhere; font: 500 calc(12.5px * var(--ds-crm-scale)) / 1.5 var(--mono); color: var(--ink); }
+.crm-reg-results { list-style: none; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: calc(10px * var(--ds-radius-scale)); display: grid; gap: 4px; font-size: calc(13px * var(--ds-crm-scale)); }
+.crm-reg-results li.r-sent { color: var(--good); }
+.crm-reg-results li.r-already { color: var(--muted); }
+.crm-reg-results li.r-failed { color: var(--danger); overflow-wrap: anywhere; }
+.crm-reg-dialog .crm-dialog-actions { margin-top: 4px; }

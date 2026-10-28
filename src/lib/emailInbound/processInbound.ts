@@ -1,7 +1,7 @@
 import { simpleParser } from "mailparser";
 import { prisma } from "@/lib/prisma";
 import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfiguredError } from "./imapClient";
-import { matchLeadForInboundEmail, canonicalizeEmail } from "./matchLead";
+import { matchLeadForInboundEmail, canonicalizeEmail, type LeadMatch } from "./matchLead";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
 import { replyAllRecipients } from "./replyRecipients";
 import { stripHtmlToText } from "@/lib/emailSignature";
@@ -32,6 +32,14 @@ async function notifyInboundReply(leadId: string, subject: string | null, body: 
   } catch (e) {
     console.error("email-inbound: Telegram notify failed:", e);
   }
+}
+
+// What the per-user poll does with one message: file it on the lead's timeline,
+// or skip it (cursor still advances). A reply in a developer-registration
+// thread is skipped here — the office-mailbox poll owns those (officeInbound.ts).
+export function inboundDisposition(match: LeadMatch | null, isOwnAddress: boolean): "skip" | "file" {
+  if (isOwnAddress || !match || match.registrationThread) return "skip";
+  return "file";
 }
 
 export type PollResult = { fetched: number; matched: number; ambiguous: number; skipped: number; reset: boolean; stoppedEarlyOnError?: string };
@@ -95,8 +103,8 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
 
         const match = await matchLeadForInboundEmail({ inReplyTo: parsed.inReplyTo ?? null, references, fromAddress });
 
-        if (!match) {
-          // Not assignable to any lead — silently skipped, per spec. Still advance past it.
+        if (!match || inboundDisposition(match, false) === "skip") {
+          // Not assignable to any lead (or a developer's registration reply) — silently skipped. Still advance past it.
           await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
           skipped++;
           continue;

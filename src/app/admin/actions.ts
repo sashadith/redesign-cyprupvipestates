@@ -28,6 +28,7 @@ import { trashLead, restoreLead } from "@/lib/crm/trashLead";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
+import { normalizeProfile } from "@/lib/crm/registration/core";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
@@ -2136,6 +2137,29 @@ export async function saveDeveloperContact(id: string, _prev: any, formData: For
       website: s("website"), contactInfo: s("contactInfo"),
       contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
       developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
+    },
+  });
+  revalidatePath(`/admin/developments/developers/${id}`);
+  return { ok: true };
+}
+
+// Developer client registration profile (spec 2026-10-27 §6.1): dedicated
+// registration targets, separate from the company's main contact above.
+export async function saveDeveloperRegistrationProfile(id: string, _prev: unknown, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
+  await requireSession();
+  const g = (k: string) => String(formData.get(k) ?? "");
+  const r = normalizeProfile(
+    { channel: g("channel"), emailTo: g("emailTo"), emailCc: g("emailCc"), whatsApp: g("whatsApp") },
+    process.env.EMAIL_USER ?? "office@cyprusvipestates.com",
+  );
+  if (!r.ok) return { error: r.error };
+  await prisma.developerAccount.update({
+    where: { id },
+    data: {
+      registrationChannel: r.value.channel,
+      registrationEmailTo: r.value.emailTo,
+      registrationEmailCc: r.value.emailCc,
+      registrationWhatsApp: r.value.whatsApp,
     },
   });
   revalidatePath(`/admin/developments/developers/${id}`);

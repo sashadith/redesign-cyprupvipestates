@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { pollInboundEmailForUser, ImapNotConfiguredError } from "@/lib/emailInbound/processInbound";
+import { pollOfficeMailbox, type OfficePollResult } from "@/lib/emailInbound/officeInbound";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 import { checkCronFreshness } from "@/lib/metaLeadgen/watchdog";
 
@@ -29,6 +30,18 @@ async function pollAllConfiguredMailboxes(): Promise<UserSummary[]> {
       console.error(`email-inbound: poll failed for user ${userId}:`, e);
       results.push({ userId, ok: false, error: e instanceof Error ? e.message : String(e) });
     }
+  }
+  // Developer registration replies land in the office mailbox (env credentials,
+  // not a UserEmailSettings row). Unconfigured = nothing to do, not an error.
+  try {
+    const r = await pollOfficeMailbox();
+    if (!("skipped" in r && r.skipped === "not configured")) {
+      const o = r as OfficePollResult;
+      results.push({ userId: "office", ok: !o.stoppedEarlyOnError, fetched: o.fetched, matched: o.handled, skipped: o.skipped, reset: o.reset, ...(o.stoppedEarlyOnError ? { error: o.stoppedEarlyOnError } : {}) });
+    }
+  } catch (e) {
+    console.error("email-inbound: office poll failed:", e);
+    results.push({ userId: "office", ok: false, error: e instanceof Error ? e.message : String(e) });
   }
   return results;
 }
