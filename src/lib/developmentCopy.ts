@@ -332,7 +332,7 @@ const PL: DevelopmentStrings = {
   tagLocality: "Miejscowość",
   tagArea: "Obszar",
   soldOut: "Wyprzedane",
-  stage: { "off-plan": "W przygotowaniu", "under construction": "W budowie", completed: "Ukończone", available: "Dostępne", "key-ready": "Gotowe do odbioru", sold: "Sprzedane" },
+  stage: { "off-plan": "Off-plan", "under construction": "W budowie", completed: "Ukończone", available: "Dostępne", "key-ready": "Gotowe do odbioru", sold: "Sprzedane" },
   unitStatus: { available: "Dostępne", sold: "Sprzedane", reserved: "Zarezerwowane" },
   viewCards: "Karty",
   viewTable: "Tabela",

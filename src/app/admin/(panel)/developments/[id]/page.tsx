@@ -279,8 +279,10 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             <label className={label}>Construction stage</label>
             <select name="stage" defaultValue={ov?.stage ?? ""} className={field}>
               <option value="">—</option>
-              {resolvedStage && !["Available", "Under Construction", "Key-Ready", "Sold"].includes(resolvedStage) && <option value={resolvedStage}>{resolvedStage}</option>}
+              {resolvedStage && !["Available", "Off Plan", "Under Construction", "Key-Ready", "Sold"].includes(resolvedStage) && <option value={resolvedStage}>{resolvedStage}</option>}
               <option value="Available">Available</option>
+              {/* "Off Plan" with a space: the spelling most stored rows already use; resolveStageLabel localizes every variant. */}
+              <option value="Off Plan">Off-Plan</option>
               <option value="Under Construction">Under Construction</option>
               <option value="Key-Ready">Key-Ready</option>
               <option value="Sold">Sold</option>
