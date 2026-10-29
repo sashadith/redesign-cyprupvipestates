@@ -71,3 +71,19 @@ test("listGroups: groups endpoint, keeps only group ids, falls back to the id as
     { id: "120363400000000000@g.us", name: "120363400000000000@g.us", participants: null },
   ]);
 });
+
+test("a rate-limited read waits and retries once; a rate-limited send is never repeated", async () => {
+  const statuses = [429, 200];
+  const calls: string[] = [];
+  const f = (async (url: string | URL | Request, init?: RequestInit) => {
+    calls.push(`${init?.method ?? "GET"} ${String(url)}`);
+    const status = statuses.shift() ?? 429;
+    return new Response(JSON.stringify(status === 200 ? { contactId: "1@lid", phone: "491705583988" } : {}), { status, headers: { "retry-after": "0" } });
+  }) as unknown as typeof fetch;
+  const client = createOpenWaClient({ fetch: f, env });
+  assert.equal(await client.resolvePhone("1@lid"), "491705583988");
+  assert.equal(calls.length, 2, "one retry");
+  calls.length = 0;
+  await assert.rejects(client.sendText("1@c.us", "hi"), /HTTP 429/);
+  assert.equal(calls.length, 1, "a send is never retried");
+});
