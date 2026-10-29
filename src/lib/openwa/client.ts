@@ -43,6 +43,14 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
     let res: Response;
     try {
       res = await doFetch(url, { ...init, headers, signal: AbortSignal.timeout(timeoutMs) });
+      // The gateway rate-limits per key (10/s, 100/min, 1000/h by default) and every CRM path shares
+      // one key. A GET that hit the limit waits the advertised time (capped) and tries once more;
+      // a send is never repeated — a retried POST could deliver a message twice.
+      if (res.status === 429 && (init?.method ?? "GET") === "GET") {
+        const wait = Math.min(10, Number(res.headers.get("retry-after") ?? res.headers.get("retry-after-short") ?? 2) || 2);
+        await new Promise((r) => setTimeout(r, wait * 1000));
+        res = await doFetch(url, { ...init, headers, signal: AbortSignal.timeout(timeoutMs) });
+      }
     } catch {
       throw new ToolError("internal", "WhatsApp gateway unreachable.");
     }

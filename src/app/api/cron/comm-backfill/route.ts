@@ -6,6 +6,7 @@ import { loadLeadPhoneMatcher } from "@/lib/openwa/matchLead";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
+const PAUSE_MS = 3000;
 
 // One-off backfill after the @lid outage (2026-10-29): WhatsApp messages since ~early October never
 // reached the timeline, and mail sent from the mailbox never did. History only — no Telegram, no
@@ -37,6 +38,9 @@ export async function GET(req: NextRequest) {
   let logged = 0, linked = 0;
   const failed: { leadId: string; error: string }[] = [];
   for (const l of leads) {
+    // The gateway's rate limit is shared with live traffic (webhook lookups, sends, the cockpit's
+    // Sync); a backfill running flat out locked the operator's Sync out with 429 on 2026-10-29.
+    if (l !== leads[0]) await new Promise((r) => setTimeout(r, PAUSE_MS));
     const r = await syncLeadWhatsApp(l.phone, { dryRun, matcher });
     if (r.ok) { logged += r.logged; linked += r.linked; }
     else if (r.error !== "No usable phone number.") failed.push({ leadId: l.id, error: r.error });
