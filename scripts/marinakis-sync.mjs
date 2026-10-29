@@ -168,7 +168,11 @@ try {
     for (const x of problems) console.log("  " + x);
     process.exitCode = 2;
   }
-  if (APPLY && !problems.length) await prisma.developerAccount.update({ where: { id: acct.id }, data: { manualSyncedAt: new Date() } });
+  // manualSyncedAt means "a price list was read on this date". Nothing was: these
+  // projects have no units yet. Stamping it would put a fresh sync date on the
+  // monthly-manual-sync round for an account that has never had a list.
+  const hasUnits = data.projects.some((p) => (p.units ?? []).length);
+  if (APPLY && hasUnits && !problems.length) await prisma.developerAccount.update({ where: { id: acct.id }, data: { manualSyncedAt: new Date() } });
 } finally {
   await prisma.$disconnect();
 }
