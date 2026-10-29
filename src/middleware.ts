@@ -192,6 +192,26 @@ export const DE_LANDING_MERGES: Record<string, string> = {
   "top-100-immobilien-auf-zypern": "/de/immobilien-auf-zypern",
   "haeuser-in-zypern": "/de/haeuser-auf-zypern",
   "neubau-haeuser-zypern": "/de/haeuser-auf-zypern",
+
+  // DACH plan rows P06, P11, P12 and P30 (2026-10-29): the remaining eight
+  // duplicates of the rewritten landings, each folded into the page of the same
+  // query after reading it in full (unique facts moved, unsourced yield/cost
+  // claims dropped). The two nested ones (strandhaus-auf-zypern,
+  // haeuser-in-limassol-kaufen) carry both the nested path and the bare leaf,
+  // as the note above requires, so a flat hit does not chain through the
+  // nestedPageRedirects.json 308 first. The four "nahe internationalen Schulen"
+  // pages are NOT here: the plan's audit says keep/observe (one holds position
+  // 7.8 for a school query), so folding them into familienvillen-zypern waits.
+  "strandvillen-zypern-kaufen": "/de/strandvillen-zypern",
+  "strandnahe-immobilien-zypern": "/de/strandvillen-zypern",
+  "haeuser-auf-zypern/strandhaus-auf-zypern": "/de/strandvillen-zypern",
+  "strandhaus-auf-zypern": "/de/strandvillen-zypern",
+  "villen-paphos-investoren-kaufen": "/de/haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos",
+  "haeuser-zum-verkauf-limassol": "/de/villen-limassol-kaufen",
+  "villen-in-limassol-fuer-investoren": "/de/villen-limassol-kaufen",
+  "haeuser-auf-zypern/haeuser-in-limassol-kaufen": "/de/villen-limassol-kaufen",
+  "haeuser-in-limassol-kaufen": "/de/villen-limassol-kaufen",
+  "villen-paphos-mit-privatem-pool": "/de/haeuser-auf-zypern/haus-mit-pool-auf-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above

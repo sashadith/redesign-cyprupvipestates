@@ -20,6 +20,20 @@ test("the P01/P02 duplicates redirect to the hub of their own query", () => {
   assert.equal(mergedTargetFor("/de/haeuser-in-zypern-fuer-investoren"), null);
 });
 
+test("the P06/P11/P12/P30 duplicates redirect single-hop to their flagship, nested and flat", () => {
+  for (const from of ["strandvillen-zypern-kaufen", "strandnahe-immobilien-zypern", "haeuser-auf-zypern/strandhaus-auf-zypern", "strandhaus-auf-zypern"]) {
+    assert.equal(mergedTargetFor(`/de/${from}`), "/de/strandvillen-zypern", from);
+  }
+  assert.equal(mergedTargetFor("/de/villen-paphos-investoren-kaufen"), "/de/haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos");
+  for (const from of ["haeuser-zum-verkauf-limassol", "villen-in-limassol-fuer-investoren", "haeuser-auf-zypern/haeuser-in-limassol-kaufen", "haeuser-in-limassol-kaufen"]) {
+    assert.equal(mergedTargetFor(`/de/${from}`), "/de/villen-limassol-kaufen", from);
+  }
+  assert.equal(mergedTargetFor("/de/villen-paphos-mit-privatem-pool"), "/de/haeuser-auf-zypern/haus-mit-pool-auf-zypern");
+  for (const keep of ["strandvillen-zypern", "villen-limassol-kaufen", "haeuser-auf-zypern/haus-mit-pool-auf-zypern", "haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos"]) {
+    assert.equal(mergedTargetFor(`/de/${keep}`), null, keep);
+  }
+});
+
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
     mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
