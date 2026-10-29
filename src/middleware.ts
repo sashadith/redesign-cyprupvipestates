@@ -237,6 +237,14 @@ export const EN_LANDING_MERGES: Record<string, string> = {
   "west-coast-properties-cyprus": "/west-coast-properties-paphos",
 };
 
+// Renamed English blog articles (unprefixed /blog/<slug>), old path -> new path. The article keeps
+// its row; only the slug changed, so the old URL has to answer a single-hop 301 to the new one.
+// 2026-10-29: the Category 6.2 guide lost "golden-visa" from its slug along with the nickname in
+// its title and text (Cyprus has no golden visa; 6.2 is permanent residence).
+export const EN_BLOG_RENAMES: Record<string, string> = {
+  "blog/cyprus-permanent-residency-golden-visa-guide": "/blog/cyprus-permanent-residency-category-6-2-guide",
+};
+
 // Paphos investment cluster, PL leg (2026-09-09) — same investigation and
 // same reasoning as the DE entry above: inwestycje-w-nieruchomosci-pafos
 // never filtered on propertyType despite its "investment" framing (198
@@ -364,7 +372,7 @@ export const RU_LANDING_MERGES: Record<string, string> = {
 /**
  * Where the plain-map redirects below already send `pathname` (single-hop 301), or null.
  * Order matters and is the order the checks always ran in: DE landing merges, retired DE blog
- * articles, PL, RU, then EN (the unprefixed one-segment pages). Exported so the missing-page
+ * articles, PL, RU, then EN (the unprefixed one-segment pages), then renamed EN blog articles. Exported so the missing-page
  * resolver (src/lib/missingPageResolve.ts) never picks one of these retired slugs as its
  * target, which would turn its redirect into a two-hop chain.
  */
@@ -378,6 +386,8 @@ export function mergedTargetFor(pathname: string): string | null {
   if (ru && RU_LANDING_MERGES[ru[1]]) return RU_LANDING_MERGES[ru[1]];
   const en = pathname.match(/^\/([^/]+)$/);
   if (en && EN_LANDING_MERGES[en[1]]) return EN_LANDING_MERGES[en[1]];
+  const enBlog = pathname.match(/^\/(blog\/[^/]+)$/);
+  if (enBlog && EN_BLOG_RENAMES[enBlog[1]]) return EN_BLOG_RENAMES[enBlog[1]];
   return null;
 }
 
