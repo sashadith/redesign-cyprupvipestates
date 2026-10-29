@@ -235,6 +235,27 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
     );
   };
 
+  /* Gold shortcut to the new CRM (/crm, its own app), drawn right under the CRM
+     module. Gold is the brand accent; text uses the darker #7A5A30 because the
+     champagne #C29A5E is too light for text on white. */
+  const crm2Item = (variant: "rail" | "drawer") => (
+    <Link
+      key="crm2"
+      href="/crm"
+      onClick={() => setOpen(false)}
+      title="CRM 2.0"
+      className={`${
+        variant === "rail"
+          ? "flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[11px] leading-tight"
+          : "mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm"
+      } border border-[#C29A5E]/60 bg-[#C29A5E]/10 font-medium text-[#7A5A30] transition-colors hover:bg-[#C29A5E]/20 hover:text-[#6E512B]`}
+    >
+      <NavIcon k="crm" />
+      <span className="text-center">CRM 2.0</span>
+    </Link>
+  );
+  const railItems = (m: NavModule) => (m.key === "crm" ? [railItem(m), crm2Item("rail")] : railItem(m));
+
   /* Collapsed: the icon alone, with the label in the tooltip and any count as a
      dot in the corner — a number would not fit and its absence must still be
      visible. */
@@ -341,7 +362,7 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoSrc} alt="Cyprus VIP Estates" className="w-[58px] h-[58px] object-contain" />
         </Link>
-        <nav className="flex-1 overflow-y-auto p-2 space-y-1">{modules.map(railItem)}</nav>
+        <nav className="flex-1 overflow-y-auto p-2 space-y-1">{modules.map(railItems)}</nav>
         {userFooter}
       </aside>
 
@@ -421,6 +442,7 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
                           {m.pages.map(pageItem)}
                         </div>
                       ))}
+                    {m.key === "crm" && crm2Item("drawer")}
                   </div>
                 );
               })}
