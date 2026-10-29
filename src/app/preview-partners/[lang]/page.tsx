@@ -203,7 +203,7 @@ export default async function PartnersPage({ params }: Props) {
             <hr className="shimmer hero__stripe" />
             <p className="hero__desc">{t.heroLead}</p>
             <div className="hero__cta">
-              <a className="btn btn--glass" href={registerUrl}>
+              <a className="btn pnr__cta-gold" href={registerUrl}>
                 <span>{t.heroCta}</span>
               </a>
             </div>
