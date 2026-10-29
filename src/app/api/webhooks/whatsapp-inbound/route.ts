@@ -63,7 +63,8 @@ function extract(body: any): WaMessage | null {
     chatId: str(p.chatId),
     body: typeof p.body === "string" ? p.body : str(p.text),
     type: str(p.type),
-    fromMe: p.fromMe === true,
+    // message.sent is ours by definition, whatever the payload's own flag says.
+    fromMe: p.fromMe === true || body?.event === "message.sent",
     timestamp: typeof p.timestamp === "number" ? p.timestamp : null,
     isGroup: p.isGroup === true,
     senderPhone: str(p.senderPhone),
@@ -82,9 +83,11 @@ export async function POST(req: NextRequest) {
     // Registered for message.received AND message.sent (the operator's own messages, phone included).
     const client = createOpenWaClient();
     const result = await trackWhatsAppMessage(msg, { live: true, via: "openwa-webhook" }, realTrackDeps((jid) => client.resolvePhone(jid)));
-    // Always 200 on a parsed payload: a gateway that retries on non-2xx would
-    // hammer this endpoint over a message we deliberately skipped (our own
-    // send, a group, an unknown number).
+    // 200 on a parsed payload: a gateway that retries on non-2xx would
+    // hammer this endpoint over a message we deliberately skipped (a group,
+    // an unknown number). One exception — a privacy id the gateway could not map yet: 503 so it retries (a mapping often lands seconds
+    // later); after its retries the cockpit's Sync still recovers the message.
+    if (result.status === "skipped" && result.reason === "unresolved") return NextResponse.json(result, { status: 503 });
     return NextResponse.json(result);
   } catch (e) {
     // 500 here IS wanted — a database failure should be retried by the gateway,

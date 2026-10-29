@@ -72,7 +72,7 @@ const CADENCE_GAP_MS = 12 * 3_600_000;
  */
 export async function fileSentMessages(client: ImapFlow, uids: number[], opts: SentFileOpts): Promise<SentFileResult> {
   if (uids.length === 0) return { scanned: 0, filed: 0 };
-  const candidates: { uid: number; leadId: string; ambiguous: boolean; messageId: string }[] = [];
+  const candidates: SentCandidate[] = [];
   for await (const m of client.fetch(uids, { uid: true, envelope: true }, { uid: true })) {
     const env = m.envelope;
     const messageId = env?.messageId;
@@ -83,47 +83,59 @@ export async function fileSentMessages(client: ImapFlow, uids: number[], opts: S
 
   let filed = 0;
   for (const c of candidates) {
-    if (await prisma.leadInteraction.findFirst({ where: { messageId: c.messageId }, select: { id: true } })) continue;
-    const msg = await client.fetchOne(String(c.uid), { source: true, internalDate: true }, { uid: true });
-    if (!msg || !msg.source) continue;
-    const parsed = await simpleParser(msg.source);
-    let rawText = parsed.text ?? "";
-    if (!rawText && parsed.html) rawText = stripHtmlToText(stripHtmlBlockquotes(parsed.html));
-    const body = stripSignatureBlock(stripQuotedReply(rawText)).slice(0, MAX_BODY_LENGTH);
-    const attachmentCount = parsed.attachments?.length ?? 0;
-    const occurredAt = parsed.date ?? (msg.internalDate ? new Date(msg.internalDate) : new Date());
-
-    const contactBefore = opts.live
-      ? !!(await prisma.leadInteraction.findFirst({
-          where: { leadId: c.leadId, type: { in: ["CALL", "WHATSAPP_OUT", "EMAIL_OUT"] }, occurredAt: { gte: new Date(occurredAt.getTime() - CADENCE_GAP_MS) } },
-          select: { id: true },
-        }))
-      : true;
-
     try {
-      await prisma.leadInteraction.create({
-        data: {
-          leadId: c.leadId,
-          type: "EMAIL_OUT",
-          direction: "OUTBOUND",
-          channel: "EMAIL",
-          subject: parsed.subject ?? null,
-          body: attachmentCount > 0 ? `${body}\n\n[${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}]` : body,
-          occurredAt,
-          // Stored like a CRM send's, so the client's reply threads back to this lead (matchLead.ts).
-          messageId: c.messageId,
-          metadata: { via: opts.live ? "imap-sent" : "imap-sync", sentFromMailbox: true, attachmentCount, ...(c.ambiguous ? { ambiguousRecipientMatch: true } : {}) },
-        },
-      });
+      if (await fileOneSent(client, c, opts)) filed++;
     } catch (e) {
-      // P2002: a parallel run filed the same Message-ID a moment ago. Nothing to do.
-      if ((e as { code?: string })?.code === "P2002") continue;
-      throw e;
+      // One unreadable mail must not fail every poll for the two days it stays in the window.
+      console.error(`sent-mail: UID ${c.uid} not filed:`, e instanceof Error ? e.message : e);
     }
-    filed++;
-    if (!contactBefore) await applyFollowUpCadence(c.leadId, "manual_contact", { leadReacted: false });
   }
   return { scanned: uids.length, filed };
+}
+
+type SentCandidate = { uid: number; leadId: string; ambiguous: boolean; messageId: string };
+
+async function fileOneSent(client: ImapFlow, c: SentCandidate, opts: SentFileOpts): Promise<boolean> {
+  if (await prisma.leadInteraction.findFirst({ where: { messageId: c.messageId }, select: { id: true } })) return false;
+  const msg = await client.fetchOne(String(c.uid), { source: true, internalDate: true }, { uid: true });
+  if (!msg || !msg.source) return false;
+  const parsed = await simpleParser(msg.source);
+  let rawText = parsed.text ?? "";
+  if (!rawText && parsed.html) rawText = stripHtmlToText(stripHtmlBlockquotes(parsed.html));
+  const body = stripSignatureBlock(stripQuotedReply(rawText)).slice(0, MAX_BODY_LENGTH);
+  const attachmentCount = parsed.attachments?.length ?? 0;
+  const validDate = (d: Date | null | undefined) => (d && !Number.isNaN(d.getTime()) ? d : null);
+  const occurredAt = validDate(parsed.date) ?? validDate(msg.internalDate ? new Date(msg.internalDate) : null) ?? new Date();
+
+  const contactBefore = opts.live
+    ? !!(await prisma.leadInteraction.findFirst({
+        where: { leadId: c.leadId, type: { in: ["CALL", "WHATSAPP_OUT", "EMAIL_OUT"] }, occurredAt: { gte: new Date(occurredAt.getTime() - CADENCE_GAP_MS) } },
+        select: { id: true },
+      }))
+    : true;
+
+  try {
+    await prisma.leadInteraction.create({
+      data: {
+        leadId: c.leadId,
+        type: "EMAIL_OUT",
+        direction: "OUTBOUND",
+        channel: "EMAIL",
+        subject: parsed.subject ?? null,
+        body: attachmentCount > 0 ? `${body}\n\n[${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}]` : body,
+        occurredAt,
+        // Stored like a CRM send's, so the client's reply threads back to this lead (matchLead.ts).
+        messageId: c.messageId,
+        metadata: { via: opts.live ? "imap-sent" : "imap-sync", sentFromMailbox: true, attachmentCount, ...(c.ambiguous ? { ambiguousRecipientMatch: true } : {}) },
+      },
+    });
+  } catch (e) {
+    // P2002: a parallel run filed the same Message-ID a moment ago. Nothing to do.
+    if ((e as { code?: string })?.code === "P2002") return false;
+    throw e;
+  }
+  if (!contactBefore) await applyFollowUpCadence(c.leadId, "manual_contact", { leadReacted: false });
+  return true;
 }
 
 /** UIDs of the open mailbox matching an IMAP search (empty when nothing matches). */

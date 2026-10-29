@@ -52,11 +52,15 @@ export type TrackDeps = {
   matchLead(msisdn: string): Promise<WhatsAppLeadMatch | null>;
   /** This lead's WhatsApp rows in one direction, without a WhatsApp id, within ±LINK_WINDOW of `at`. */
   unlinkedRows(leadId: string, direction: "INBOUND" | "OUTBOUND", at: Date): Promise<{ id: string; body: string | null }[]>;
-  linkMessageId(interactionId: string, messageId: string): Promise<void>;
-  create(row: NewWaRow): Promise<void>;
-  /** Whether this lead already has a real contact in this direction since `since` (cadence throttle). */
-  contactSince(leadId: string, direction: "INBOUND" | "OUTBOUND", since: Date): Promise<boolean>;
-  applyCadence(leadId: string, leadReacted: boolean): Promise<void>;
+  /** False when the id is already on another row (a parallel webhook/sync got there first). */
+  linkMessageId(interactionId: string, messageId: string): Promise<boolean>;
+  /**
+   * Inserts the row. With `cadenceSince`, also answers — atomically with the insert, per lead — whether
+   * it is the first real contact in its direction since then (the cadence throttle). `created: false`
+   * = the WhatsApp id is already on file (parallel delivery).
+   */
+  create(row: NewWaRow, cadenceSince: Date | null): Promise<{ created: boolean; firstContact: boolean }>;
+  applyCadence(leadId: string): Promise<void>;
 };
 
 export type NewWaRow = {
@@ -131,40 +135,54 @@ export async function trackWhatsAppMessage(msg: WaMessage, opts: TrackOpts, deps
     const wanted = norm(text);
     const twin = (await deps.unlinkedRows(match.leadId, direction, occurredAt)).find((r) => norm(r.body) === wanted);
     if (twin) {
-      await deps.linkMessageId(twin.id, msg.id);
+      if (!(await deps.linkMessageId(twin.id, msg.id))) return { status: "skipped", reason: "duplicate" };
       return { status: "linked", leadId: match.leadId, direction };
     }
   }
 
-  const contactBefore = opts.live
-    ? await deps.contactSince(match.leadId, direction, new Date(occurredAt.getTime() - CADENCE_GAP_MS))
-    : true;
-
-  await deps.create({
-    leadId: match.leadId,
-    type: direction === "INBOUND" ? "WHATSAPP_IN" : "WHATSAPP_OUT",
-    direction,
-    body: text,
-    occurredAt,
-    messageId: msg.id,
-    metadata: {
-      via: opts.via,
-      ...(direction === "OUTBOUND" ? { sentFromPhone: true } : { leadReacted: true }),
-      ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}),
+  // Only the operator's own live messages move the cadence (and promote NEW → CONTACTED). A customer
+  // writing first is not us contacting them; the old inbound path never touched the cadence either.
+  const moves = opts.live && direction === "OUTBOUND";
+  const { created, firstContact } = await deps.create(
+    {
+      leadId: match.leadId,
+      type: direction === "INBOUND" ? "WHATSAPP_IN" : "WHATSAPP_OUT",
+      direction,
+      body: text,
+      occurredAt,
+      messageId: msg.id,
+      metadata: {
+        via: opts.via,
+        ...(direction === "OUTBOUND" ? { sentFromPhone: true } : { leadReacted: true }),
+        ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}),
+      },
     },
-  });
-
-  if (!contactBefore) await deps.applyCadence(match.leadId, direction === "INBOUND");
+    moves ? new Date(occurredAt.getTime() - CADENCE_GAP_MS) : null,
+  );
+  if (!created) return { status: "skipped", reason: "duplicate" };
+  if (moves && firstContact) await deps.applyCadence(match.leadId);
   return { status: "logged", leadId: match.leadId, direction };
 }
 
-export function realTrackDeps(resolvePhone: (jid: string) => Promise<string | null>): TrackDeps {
+/** The part of a WhatsApp id that names the message ("true_<chat>_<KEY>"); the chat part varies by id dialect. */
+export function messageKey(id: string): string {
+  const i = id.lastIndexOf("_");
+  return i >= 0 ? id.slice(i + 1) : id;
+}
+
+const isUniqueClash = (e: unknown) => (e as { code?: string } | null)?.code === "P2002";
+
+export function realTrackDeps(resolvePhone: (jid: string) => Promise<string | null>, matchLead: TrackDeps["matchLead"] = matchLeadForInboundWhatsApp): TrackDeps {
   return {
     resolvePhone,
     async messageIdExists(id) {
-      return !!(await prisma.leadInteraction.findFirst({ where: { messageId: id }, select: { id: true } }));
+      // By the message key, not the full id: the same message can be named via its lid chat or its
+      // phone chat ("true_<lid>@lid_KEY" / "true_<phone>@c.us_KEY"), and either must count as seen.
+      const key = messageKey(id);
+      if (key.length < 12) return !!(await prisma.leadInteraction.findFirst({ where: { messageId: id }, select: { id: true } }));
+      return !!(await prisma.leadInteraction.findFirst({ where: { channel: "WHATSAPP", messageId: { endsWith: `_${key}` } }, select: { id: true } }));
     },
-    matchLead: matchLeadForInboundWhatsApp,
+    matchLead,
     async unlinkedRows(leadId, direction, at) {
       return prisma.leadInteraction.findMany({
         where: {
@@ -175,17 +193,35 @@ export function realTrackDeps(resolvePhone: (jid: string) => Promise<string | nu
       });
     },
     async linkMessageId(interactionId, messageId) {
-      await prisma.leadInteraction.update({ where: { id: interactionId }, data: { messageId } });
+      try {
+        await prisma.leadInteraction.update({ where: { id: interactionId }, data: { messageId } });
+        return true;
+      } catch (e) {
+        if (isUniqueClash(e)) return false;
+        throw e;
+      }
     },
-    async create(row) {
-      await prisma.leadInteraction.create({ data: { ...row, channel: "WHATSAPP", metadata: row.metadata as object } });
+    async create(row, cadenceSince) {
+      try {
+        return await prisma.$transaction(async (tx) => {
+          // Serialises this lead's tracked messages: three photos sent as one album arrive as three
+          // webhooks in the same millisecond, and only the first may count as "first contact".
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${row.leadId}))`;
+          const before = cadenceSince
+            ? await tx.leadInteraction.findFirst({ where: { leadId: row.leadId, type: { in: OUTBOUND_CONTACT }, occurredAt: { gte: cadenceSince } }, select: { id: true } })
+            : null;
+          await tx.leadInteraction.create({ data: { ...row, channel: "WHATSAPP", metadata: row.metadata as object } });
+          return { created: true, firstContact: !!cadenceSince && !before };
+        });
+      } catch (e) {
+        if (isUniqueClash(e)) return { created: false, firstContact: false };
+        throw e;
+      }
     },
-    async contactSince(leadId, direction, since) {
-      const types: LeadInteractionType[] = direction === "INBOUND" ? ["WHATSAPP_IN", "EMAIL_IN"] : ["CALL", "WHATSAPP_OUT", "EMAIL_OUT"];
-      return !!(await prisma.leadInteraction.findFirst({ where: { leadId, type: { in: types }, occurredAt: { gte: since } }, select: { id: true } }));
-    },
-    async applyCadence(leadId, leadReacted) {
-      await applyFollowUpCadence(leadId, "manual_contact", { leadReacted });
+    async applyCadence(leadId) {
+      await applyFollowUpCadence(leadId, "manual_contact", { leadReacted: false });
     },
   };
 }
+
+const OUTBOUND_CONTACT: LeadInteractionType[] = ["CALL", "WHATSAPP_OUT", "EMAIL_OUT"];

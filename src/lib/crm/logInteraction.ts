@@ -64,6 +64,12 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
     ...(input.aiGenerated ? { aiGenerated: true } : {}),
     ...(input.via ? { via: input.via } : {}),
   };
+  // Sent on the business phone first, logged by hand after: the WhatsApp webhook already filed that
+  // message (with its WhatsApp id, 2026-10-29). A second row would double the timeline AND the cadence.
+  if (input.type === "WHATSAPP_OUT" || input.type === "WHATSAPP_IN") {
+    const twin = await trackedWhatsAppTwin(leadId, input.type, content, when);
+    if (twin) return { interactionId: twin };
+  }
   if (shape.activityRow) {
     // Only NOTE writes an activity row, and `ok` above required a non-empty
     // `content` for NOTE (it doesn't start with "EMAIL_"), so this is never
@@ -92,3 +98,20 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
   if (shape.cadence) await applyFollowUpCadence(leadId, "manual_contact", { leadReacted });
   return { interactionId: row.id };
 }
+
+const TWIN_WINDOW_MS = 30 * 60_000;
+const squash = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
+
+async function trackedWhatsAppTwin(leadId: string, type: "WHATSAPP_OUT" | "WHATSAPP_IN", body: string | null, when: Date): Promise<string | null> {
+  const wanted = squash(body);
+  if (!wanted) return null;
+  const rows = await prisma.leadInteraction.findMany({
+    where: {
+      leadId, type, messageId: { not: null },
+      occurredAt: { gte: new Date(when.getTime() - TWIN_WINDOW_MS), lte: new Date(when.getTime() + TWIN_WINDOW_MS) },
+    },
+    select: { id: true, body: true },
+  });
+  return rows.find((r) => squash(r.body) === wanted)?.id ?? null;
+}
+

@@ -4,6 +4,7 @@ import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } fro
 import { pollInboundEmailForUser, ImapNotConfiguredError } from "@/lib/emailInbound/processInbound";
 import { pollOfficeMailbox, type OfficePollResult } from "@/lib/emailInbound/officeInbound";
 import { pollSentForUser } from "@/lib/crm/commSync";
+import { MailboxNotFoundError } from "@/lib/emailInbound/imapClient";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 import { checkCronFreshness } from "@/lib/metaLeadgen/watchdog";
 
@@ -38,6 +39,12 @@ async function pollAllConfiguredMailboxes(): Promise<UserSummary[]> {
       results.push({ userId: `${userId}:sent`, ok: true, fetched: sent.scanned, matched: sent.filed });
     } catch (e) {
       if (e instanceof ImapNotConfiguredError) continue;
+      // No recognisable Sent folder: nothing to read, not an outage — a failed entry here would keep
+      // the whole job red and mute the streak alert for a real inbox failure.
+      if (e instanceof MailboxNotFoundError) {
+        results.push({ userId: `${userId}:sent`, ok: true, skipped: 0, error: "no sent folder" });
+        continue;
+      }
       console.error(`email-inbound: sent-folder poll failed for user ${userId}:`, e);
       results.push({ userId: `${userId}:sent`, ok: false, error: e instanceof Error ? e.message : String(e) });
     }

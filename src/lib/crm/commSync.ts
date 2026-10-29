@@ -2,6 +2,7 @@ import { simpleParser } from "mailparser";
 import { prisma } from "@/lib/prisma";
 import { createOpenWaClient } from "@/lib/openwa/client";
 import { chatIdFor } from "@/lib/openwa/phoneMatch";
+import { loadLeadPhoneMatcher } from "@/lib/openwa/matchLead";
 import { realTrackDeps, trackWhatsAppMessage, type TrackDeps, type WaMessage } from "@/lib/openwa/trackMessage";
 import { findSentMailbox, getImapCredentials, withReadOnlyMailbox } from "@/lib/emailInbound/imapClient";
 import { fileInboundEmail } from "@/lib/emailInbound/processInbound";
@@ -17,22 +18,26 @@ const THREAD_LIMIT = 200;
 const SYNC_DAYS = 120;
 const LIVE_SENT_DAYS = 2;
 const DAY_MS = 86_400_000;
+const FRESH_MS = 15 * 60_000;
 
 export type WaSyncResult = { ok: true; logged: number; linked: number } | { ok: false; error: string };
 export type MailSyncResult = { ok: true; inbound: number; outbound: number; mailboxes: number } | { ok: false; error: string };
 
 /** A dry-run wrapper: counts what would be written, writes nothing. */
 export function dryRunDeps(deps: TrackDeps): TrackDeps {
-  return { ...deps, linkMessageId: async () => {}, create: async () => {}, applyCadence: async () => {} };
+  return { ...deps, linkMessageId: async () => true, create: async () => ({ created: true, firstContact: false }), applyCadence: async () => {} };
 }
 
-export async function syncLeadWhatsApp(phone: string | null, opts: { dryRun?: boolean } = {}): Promise<WaSyncResult> {
+export async function syncLeadWhatsApp(
+  phone: string | null,
+  opts: { dryRun?: boolean; matcher?: Awaited<ReturnType<typeof loadLeadPhoneMatcher>> } = {},
+): Promise<WaSyncResult> {
   const chatId = chatIdFor(phone);
   if (!chatId) return { ok: false, error: "No usable phone number." };
   try {
     const client = createOpenWaClient();
     const raw = (await client.fetchThread(chatId, THREAD_LIMIT)) as unknown as WaMessage[];
-    const base = realTrackDeps((jid) => client.resolvePhone(jid));
+    const base = realTrackDeps((jid) => client.resolvePhone(jid), opts.matcher ?? (await loadLeadPhoneMatcher()));
     const deps = opts.dryRun ? dryRunDeps(base) : base;
     let logged = 0, linked = 0;
     for (const m of raw.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))) {
@@ -69,7 +74,12 @@ export async function syncLeadEmail(email: string | null): Promise<MailSyncResul
         for (const uid of await searchUids(client, { from: address, since })) {
           const msg = await client.fetchOne(String(uid), { source: true, internalDate: true }, { uid: true });
           if (!msg || !msg.source) continue;
-          const r = await fileInboundEmail(await simpleParser(msg.source), msg.internalDate ? new Date(msg.internalDate) : null, { ownFromAddress: box.fromAddress, notify: false });
+          const parsed = await simpleParser(msg.source);
+          const at = msg.internalDate ? new Date(msg.internalDate) : null;
+          // Without a Message-ID a repeat Sync could not tell it was filed already; and mail from the last
+          // minutes belongs to the live poll, which also sends its Telegram alert.
+          if (!parsed.messageId || (at && Date.now() - at.getTime() < FRESH_MS)) continue;
+          const r = await fileInboundEmail(parsed, at, { ownFromAddress: box.fromAddress, notify: false });
           if (r.status === "filed") n++;
         }
         return n;
