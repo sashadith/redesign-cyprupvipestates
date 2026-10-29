@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import nestedPageRedirects from "../nestedPageRedirects.json";
 import assert from "node:assert/strict";
-import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, mergedTargetFor, nestedCanonicalFor } from "../../middleware";
+import { DE_LANDING_MERGES, EN_BLOG_RENAMES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, mergedTargetFor, nestedCanonicalFor } from "../../middleware";
 
 test("mergedTargetFor answers exactly what each locale's merge map says", () => {
   for (const [k, v] of Object.entries(DE_LANDING_MERGES)) assert.equal(mergedTargetFor(`/de/${k}`), v, `de ${k}`);
@@ -18,6 +18,17 @@ test("retired DE blog articles and non-merged paths", () => {
   assert.equal(mergedTargetFor("/de/blog/ratgeber-fuer-deutsche-rentner"), null);
   assert.equal(mergedTargetFor("/blog/anything"), null);
   assert.equal(mergedTargetFor("/"), null);
+});
+
+test("renamed EN blog articles redirect single-hop to their new slug", () => {
+  for (const [k, v] of Object.entries(EN_BLOG_RENAMES)) {
+    assert.equal(mergedTargetFor(`/${k}`), v, k);
+    assert.equal(mergedTargetFor(v), null, `target must not redirect again: ${v}`);
+  }
+  assert.equal(
+    mergedTargetFor("/blog/cyprus-permanent-residency-golden-visa-guide"),
+    "/blog/cyprus-permanent-residency-category-6-2-guide",
+  );
 });
 
 test("nestedCanonicalFor sends a flat leaf to its nested canonical path and leaves everything else alone", () => {
