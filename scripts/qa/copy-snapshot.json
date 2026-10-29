@@ -3271,7 +3271,7 @@
   "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.available": "Dostępne",
   "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.completed": "Ukończone",
   "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.key-ready": "Gotowe do odbioru",
-  "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.off-plan": "W przygotowaniu",
+  "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.off-plan": "Off-plan",
   "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.sold": "Sprzedane",
   "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::stage.under construction": "W budowie",
   "src/lib/developmentCopy.ts::DEVELOPMENT_STRINGS::pl::tagArea": "Obszar",
