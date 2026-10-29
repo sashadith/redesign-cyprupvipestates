@@ -178,6 +178,20 @@ export const DE_LANDING_MERGES: Record<string, string> = {
   // link to the retiring page (from strandimmobilien-paphos) was
   // repointed directly to the new target first.
   "investment-immobilien-paphos": "/de/villen-paphos-investoren-kaufen",
+
+  // DACH plan rows P01 and P02 (2026-10-29): the two hub pages were rewritten
+  // as the head-query pages ("zypern immobilien", "zypern haus kaufen") and
+  // the duplicates folded into them. Unlike the Häuser cluster reversal of
+  // 2026-09-11 above (which pointed houses at the villa flagship, a different
+  // query), these four go to the page of the SAME query: immobilien-zypern-
+  // kaufen and top-100-immobilien-auf-zypern -> immobilien-auf-zypern;
+  // haeuser-in-zypern and neubau-haeuser-zypern -> haeuser-auf-zypern. All four
+  // carried only pinned refs to ARCHIVED legacy projects (93 / 20 / 21 of them)
+  // and unsourced yield claims; their unique facts were folded in first.
+  "immobilien-zypern-kaufen": "/de/immobilien-auf-zypern",
+  "top-100-immobilien-auf-zypern": "/de/immobilien-auf-zypern",
+  "haeuser-in-zypern": "/de/haeuser-auf-zypern",
+  "neubau-haeuser-zypern": "/de/haeuser-auf-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
