@@ -66,18 +66,22 @@
 }
 @media (prefers-reduced-motion: reduce) { .btn.pnr__cta-gold { animation: none; } }
 
-/* Portal links: login under the hero button, self sign-up above the form. */
+/* Final CTA: four short selling points, the gold button, the login line. On the light
+   section the login link uses the bronze accent; champagne is too pale on paper. */
+.pnr__cta-final { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-5); } /* position + gap below the gold line come from .formsec__form */
+.pnr__cta-points { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); font-family: var(--font-body), sans-serif; font-size: var(--text-body); color: var(--text); }
+.pnr__cta-points li { display: flex; align-items: baseline; gap: var(--s-3); }
+.pnr__cta-points li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--champagne); transform: translateY(-2px); }
+.pnr__cta-final .pnr__portal-login { margin-top: 0; }
+.is-light .pnr__portal-login a, .is-light .pnr__portal-login a:hover { color: var(--accent); }
+
+/* Portal login link under the hero button. */
 .pnr__portal-login {
   margin-top: var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-body); color: var(--text-soft);
 }
 /* Login link on the dark hero: champagne, no underline (underline only on hover/focus). */
 .pnr__portal-login a { color: var(--champagne); text-decoration: none; }
 .pnr__portal-login a:hover, .pnr__portal-login a:focus-visible { color: var(--champagne); text-decoration: underline; text-underline-offset: 3px; }
-.pnr__portal-self {
-  margin-top: var(--s-4); font-family: var(--font-body), sans-serif; color: var(--text-soft);
-}
-.pnr__portal-self a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--accent); }
-.pnr__portal-self a:hover { color: var(--accent); }
 
 .pnr__hero-note {
   margin-top: var(--s-5); max-width: 56ch; font-family: var(--font-body), sans-serif;

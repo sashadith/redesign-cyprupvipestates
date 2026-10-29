@@ -10,7 +10,6 @@ import Benefits from "../../preview-home/sections/Benefits";
 import LightHeroFlag from "../../preview-insights/LightHeroFlag";
 import HreflangLinks from "../../components/HreflangLinks/HreflangLinks";
 import PartnersMotion from "./PartnersMotion";
-import PartnersForm from "./PartnersForm";
 import PartnersFaq from "./PartnersFaq";
 import { partnersCopy } from "./copy";
 import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
@@ -54,7 +53,8 @@ import { partnerPortalUrl } from "@/lib/partner/host";
      - "How it works" (new — see copy.ts): the one section with no direct
        existing analog, an editorial numbered sequence rather than a third
        card grid, for real compositional variation between sections.
-     - Form: same as before — a dedicated PartnersForm.tsx (not the shared
+     - Final section: a pitch with one sign-up button into the partner portal
+       (the call-back form was removed 2026-10-29). It used to be a dedicated PartnersForm.tsx (not the shared
        preview-home Form.tsx) because the live FormPartners.tsx posts to
        /api/email with a required `country` field and a PARTNER-sourced CRM
        lead, while Form.tsx posts to /api/leads and has no country field.
@@ -131,8 +131,8 @@ export default async function PartnersPage({ params }: Props) {
   }
   const t = partnersCopy(lang);
   const { languages } = staticAlternates(lang, "partners");
-  // The portal's own sign-up (agreement, email check, office approval); the form below stays
-  // for visitors who prefer a call back. ?lang= opens the portal in this page's language.
+  // The portal's own sign-up (agreement, email check, office approval). ?lang= opens the
+  // portal in this page's language.
   const registerUrl = partnerPortalUrl("/register", lang, process.env);
   const loginUrl = partnerPortalUrl("/login", lang, process.env);
 
@@ -302,7 +302,9 @@ export default async function PartnersPage({ params }: Props) {
           items={t.faq}
         />
 
-        {/* -------------------------------------------------- FORM / FINAL CTA */}
+        {/* ------------------------------------------------------- FINAL CTA */}
+        {/* Sign-up happens in the partner portal, so the closing section is a pitch and
+            one button, not a form. Layout reuses the shared .formsec grid for the portrait. */}
         <section className="section is-light formsec" id="register">
           <div className="wrap">
             <div className="formsec__grid">
@@ -313,11 +315,20 @@ export default async function PartnersPage({ params }: Props) {
                   </h2>
                   <p className="formsec__subtitle">{t.ctaDescription}</p>
                   <hr className="shimmer formsec__stripe" />
-                  <p className="pnr__portal-self">
-                    {t.portalSelfPrompt}<a href={registerUrl}>{t.portalSelfLink}</a>
+                </div>
+                <div className="formsec__form pnr__cta-final">
+                  <ul className="pnr__cta-points">
+                    {t.ctaPoints.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
+                  <a className="btn pnr__cta-gold" href={registerUrl}>
+                    <span>{t.ctaButton}</span>
+                  </a>
+                  <p className="pnr__portal-login">
+                    {t.portalLoginPrompt}<a href={loginUrl}>{t.portalLoginLink}</a>
                   </p>
                 </div>
-                <PartnersForm lang={lang} />
               </div>
 
               <aside className="formsec__aside">

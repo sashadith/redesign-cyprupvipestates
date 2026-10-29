@@ -1,9 +1,9 @@
 /* UI copy for the Partners page, per language. Rewritten 2026-10-29 around the
-   actual partner program (src/lib/partner/i18n FAQ + agreement): 30–50 % of our
-   commission (Handover 30 / Fix 50), 6-month client protection from the last real
-   contact, payout within 7 days of the developer's payment with a credit note,
-   sign-up in the partner portal. The form at the end is a call-back request.
-   Keep these facts in step with the portal when the program changes. */
+   actual partner program (src/lib/partner/i18n FAQ + agreement + tiers.ts): up to 60 %
+   of our commission (start Handover 30 / Fix 50; Gold 35/55 from 3 and Platinum 40/60
+   from 6 closed deals in 12 months), 6-month client protection from the last real
+   contact, payout within 7 days of the developer's payment with a credit note, sign-up
+   in the partner portal. Keep these facts in step with the portal when the program changes. */
 
 import type { Locale } from "@/lib/locale";
 
@@ -31,8 +31,6 @@ export type PartnersCopy = {
   heroNote: string;
   portalLoginPrompt: string;
   portalLoginLink: string;
-  portalSelfPrompt: string;
-  portalSelfLink: string;
 
   statsEyebrow: string;
   statsTitleStart: string;
@@ -66,45 +64,25 @@ export type PartnersCopy = {
   ctaTitleAccent: string;
   ctaDescription: string;
   ctaButton: string;
+  ctaPoints: string[];
 
   formTitleStart: string;
   formTitleAccent: string;
   formTitleEnd: string;
-  formLabelName: string;
-  formLabelSurname: string;
-  formLabelPhone: string;
-  formLabelEmail: string;
-  formLabelCountry: string;
-  formSubmit: string;
-  formConsentPre: string;
-  formConsentLink: string;
-  formConsentPost: string;
-  formPolicyHref: string;
-  formSuccess: string;
-  formError: string;
-  vName: string;
-  vSurname: string;
-  vPhone: string;
-  vEmail: string;
-  vEmailInvalid: string;
-  vCountry: string;
-  vConsent: string;
 };
 
 const EN: PartnersCopy = {
     metaTitle: "Real Estate Referral Partner Program – Cyprus VIP Estates",
-    metaDescription: "Earn 30–50% of our commission on every Cyprus property sale you refer. 6-month client protection, payout within 7 days of the developer's payment, full tracking in the partner portal.",
+    metaDescription: "Earn up to 60% of our commission on every Cyprus property sale you refer. 6-month client protection, payout within 7 days of the developer's payment, full tracking in the partner portal.",
     heroEyebrow: "Become a partner of Cyprus VIP Estates",
     heroTitleStart: "Join our ",
     heroTitleAccent: "partner program",
     heroTitleEnd: " and earn with us",
-    heroLead: "Receive 30 to 50% of our commission on every property purchase you bring to us.",
+    heroLead: "Earn up to 60% of our commission on every property purchase you bring to us.",
     heroCta: "Become a partner",
-    heroNote: "30% if we take over your client completely (Handover), 50% if you stay involved in the purchase (Fix).",
+    heroNote: "You start with 30% if we take over your client (Handover) or 50% if you stay involved (Fix). With more closed deals, your shares rise to up to 40% and 60%.",
     portalLoginPrompt: "Already a partner? ",
     portalLoginLink: "Log in to the partner portal",
-    portalSelfPrompt: "Prefer to sign up yourself? ",
-    portalSelfLink: "Register in the partner portal.",
     statsEyebrow: "Track record",
     statsTitleStart: "A team built on ",
     statsTitleAccent: "results",
@@ -148,11 +126,11 @@ const EN: PartnersCopy = {
     faq: [
       {
         question: "How do I become a partner of Cyprus VIP Estates?",
-        answer: "Register in the partner portal and accept the partner agreement. We review every application personally and then activate your access. If you would rather talk first, leave your details in the form at the end of this page and we will call you back.",
+        answer: "Register in the partner portal and accept the partner agreement. We review every application personally and then activate your access. Questions before you register? Write to office@cyprusvipestates.com or call +357 99 278 285.",
       },
       {
         question: "How much commission do I earn?",
-        answer: "You receive 30 to 50% of our commission: 30% if we take over the client completely (Handover), 50% if you stay involved in the purchase (Fix). The portal shows your rate for each project, and the calculator shows your payout for any price.",
+        answer: "You start with 30% of our commission if we take over the client completely (Handover) and 50% if you stay involved in the purchase (Fix). With 3 closed deals in 12 months you reach Gold (35% / 55%), with 6 Platinum (40% / 60%). The portal shows your rate for each project, and the calculator shows your payout for any price.",
       },
       {
         question: "I'm an agent or adviser outside Cyprus. Can I still take part?",
@@ -177,30 +155,12 @@ const EN: PartnersCopy = {
     ],
     ctaTitleStart: "Become our ",
     ctaTitleAccent: "partner",
-    ctaDescription: "Leave your details and we will call you back, usually the same day.",
-    ctaButton: "Become a partner",
-    formTitleStart: "Prefer to ",
-    formTitleAccent: "talk",
-    formTitleEnd: " first?",
-    formLabelName: "Your name",
-    formLabelSurname: "Surname",
-    formLabelPhone: "Phone",
-    formLabelEmail: "Email",
-    formLabelCountry: "Country",
-    formSubmit: "Request a call back",
-    formConsentPre: "I have read and accept the ",
-    formConsentLink: "privacy policy",
-    formConsentPost: ".",
-    formPolicyHref: "/privacy-policy",
-    formSuccess: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
-    formError: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
-    vName: "Name is required",
-    vSurname: "Surname is required",
-    vPhone: "Phone is required",
-    vEmail: "Email is required",
-    vEmailInvalid: "Invalid email address",
-    vCountry: "Country is required",
-    vConsent: "Consent is required",
+    ctaDescription: "You know the people who want to buy in Cyprus. We know the market, the developers and every step to the keys. Together we make the purchase simple for your clients and worthwhile for you.",
+    ctaPoints: ["Up to 60% of our commission", "6 months client protection", "Payout within 7 days of the developer's payment", "Everything in one partner portal"],
+    ctaButton: "Become a partner of Cyprus VIP Estates",
+    formTitleStart: "Start ",
+    formTitleAccent: "earning",
+    formTitleEnd: " with us today",
 };
 
 // he (Phase 4): decision J: Partners stays English for he — no translation task,
@@ -209,18 +169,16 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
   en: EN,
   de: {
     metaTitle: "Immobilien-Partnerprogramm mit Provision – Cyprus VIP Estates",
-    metaDescription: "Erhalte 30–50 % unserer Provision für jede vermittelte Immobilie auf Zypern. 6 Monate Kundenschutz, Auszahlung innerhalb von 7 Tagen nach Zahlung des Bauträgers, alles im Partnerportal.",
+    metaDescription: "Erhalte bis zu 60 % unserer Provision für jede vermittelte Immobilie auf Zypern. 6 Monate Kundenschutz, Auszahlung innerhalb von 7 Tagen nach Zahlung des Bauträgers, alles im Partnerportal.",
     heroEyebrow: "Werde Partner von Cyprus VIP Estates",
     heroTitleStart: "Werde jetzt Teil unseres ",
     heroTitleAccent: "Partnerprogramms",
     heroTitleEnd: " und verdiene mit uns",
-    heroLead: "Erhalte 30 bis 50 % unserer Provision für jeden Immobilienkauf, den Du uns vermittelst.",
+    heroLead: "Erhalte bis zu 60 % unserer Provision für jeden Immobilienkauf, den Du uns vermittelst.",
     heroCta: "Jetzt Partner werden",
-    heroNote: "30 %, wenn wir Deinen Kunden komplett übernehmen (Handover), 50 %, wenn Du beim Kauf weiter dabei bist (Fix).",
+    heroNote: "Du startest mit 30 %, wenn wir Deinen Kunden übernehmen (Handover), oder mit 50 %, wenn Du dabei bleibst (Fix). Mit mehr abgeschlossenen Deals steigen Deine Anteile auf bis zu 40 % und 60 %.",
     portalLoginPrompt: "Schon Partner? ",
     portalLoginLink: "Zum Partnerportal anmelden",
-    portalSelfPrompt: "Lieber direkt selbst registrieren? ",
-    portalSelfLink: "Registriere Dich im Partnerportal.",
     statsEyebrow: "Erfolgsbilanz",
     statsTitleStart: "Ein Team mit ",
     statsTitleAccent: "Ergebnissen",
@@ -264,11 +222,11 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     faq: [
       {
         question: "Wie werde ich Partner von Cyprus VIP Estates?",
-        answer: "Registriere Dich im Partnerportal und akzeptiere die Partnervereinbarung. Wir prüfen jede Bewerbung persönlich und schalten Deinen Zugang dann frei. Wenn Du lieber zuerst sprechen möchtest, hinterlasse Deine Daten im Formular am Ende dieser Seite, wir rufen Dich zurück.",
+        answer: "Registriere Dich im Partnerportal und akzeptiere die Partnervereinbarung. Wir prüfen jede Bewerbung persönlich und schalten Deinen Zugang dann frei. Fragen vorab? Schreib uns an office@cyprusvipestates.com oder ruf an: +357 99 278 285.",
       },
       {
         question: "Wie viel Provision erhalte ich?",
-        answer: "Du erhältst 30 bis 50 % unserer Provision: 30 %, wenn wir den Kunden komplett übernehmen (Handover), 50 %, wenn Du beim Kauf weiter dabei bist (Fix). Im Portal siehst Du Deinen Satz je Projekt, der Rechner zeigt Deine Auszahlung für jeden Preis.",
+        answer: "Du startest mit 30 % unserer Provision, wenn wir den Kunden komplett übernehmen (Handover), und mit 50 %, wenn Du beim Kauf weiter dabei bist (Fix). Mit 3 abgeschlossenen Deals in 12 Monaten erreichst Du Gold (35 % / 55 %), mit 6 Platinum (40 % / 60 %). Im Portal siehst Du Deinen Satz je Projekt, der Rechner zeigt Deine Auszahlung für jeden Preis.",
       },
       {
         question: "Ich bin Makler oder Berater außerhalb Zyperns. Kann ich trotzdem mitmachen?",
@@ -293,45 +251,25 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     ],
     ctaTitleStart: "Werde unser ",
     ctaTitleAccent: "Partner",
-    ctaDescription: "Hinterlasse Deine Daten, wir rufen Dich zurück, meist noch am selben Tag.",
-    ctaButton: "Jetzt Partner werden",
-    formTitleStart: "Lieber zuerst ",
-    formTitleAccent: "sprechen",
-    formTitleEnd: "?",
-    formLabelName: "Vorname",
-    formLabelSurname: "Nachname",
-    formLabelPhone: "Telefon",
-    formLabelEmail: "E-Mail-Adresse",
-    formLabelCountry: "Land",
-    formSubmit: "Rückruf anfordern",
-    formConsentPre: "Ich habe die ",
-    formConsentLink: "Datenschutzerklärung",
-    formConsentPost: " gelesen und akzeptiere sie.",
-    formPolicyHref: "/de/datenschutzrichtlinie",
-    formSuccess: "Vielen Dank, Deine Anfrage ist bei uns angekommen. Wir melden uns, meist noch am selben Tag.",
-    formError: "Deine Anfrage konnte nicht gesendet werden. Bitte versuche es erneut oder schreib uns an office@cyprusvipestates.com bzw. ruf an: +357 99 278 285.",
-    vName: "Name ist erforderlich",
-    vSurname: "Nachname ist erforderlich",
-    vPhone: "Telefon ist erforderlich",
-    vEmail: "E-Mail ist erforderlich",
-    vEmailInvalid: "Ungültige E-Mail-Adresse",
-    vCountry: "Land ist erforderlich",
-    vConsent: "Zustimmung erforderlich",
+    ctaDescription: "Du kennst die Menschen, die auf Zypern kaufen möchten. Wir kennen den Markt, die Bauträger und jeden Schritt bis zur Schlüsselübergabe. Zusammen machen wir den Kauf für Deine Kunden einfach und für Dich lohnend.",
+    ctaPoints: ["Bis zu 60 % unserer Provision", "6 Monate Kundenschutz", "Auszahlung 7 Tage nach Zahlung des Bauträgers", "Alles in einem Partnerportal"],
+    ctaButton: "Werde jetzt Partner von Cyprus VIP Estates",
+    formTitleStart: "Starte ",
+    formTitleAccent: "noch heute",
+    formTitleEnd: " mit uns",
   },
   pl: {
     metaTitle: "Program Partnerski z Prowizją za Nieruchomości – Cyprus VIP Estates",
-    metaDescription: "Otrzymuj 30–50% naszej prowizji za każdą poleconą nieruchomość na Cyprze. 6 miesięcy ochrony klienta, wypłata w ciągu 7 dni od płatności dewelopera, wszystko w portalu partnera.",
+    metaDescription: "Otrzymuj do 60% naszej prowizji za każdą poleconą nieruchomość na Cyprze. 6 miesięcy ochrony klienta, wypłata w ciągu 7 dni od płatności dewelopera, wszystko w portalu partnera.",
     heroEyebrow: "Zostań partnerem Cyprus VIP Estates",
     heroTitleStart: "Dołącz do naszego ",
     heroTitleAccent: "programu partnerskiego",
     heroTitleEnd: " i zarabiaj z nami",
-    heroLead: "Otrzymuj od 30 do 50% naszej prowizji za każdy zakup nieruchomości, który nam polecisz.",
+    heroLead: "Otrzymuj do 60% naszej prowizji za każdy zakup nieruchomości, który nam polecisz.",
     heroCta: "Zostań partnerem",
-    heroNote: "30%, jeśli w pełni przejmujemy Twojego klienta (Handover), 50%, jeśli nadal uczestniczysz w zakupie (Fix).",
+    heroNote: "Zaczynasz od 30%, jeśli przejmujemy Twojego klienta (Handover), lub od 50%, jeśli nadal uczestniczysz (Fix). Z kolejnymi zamkniętymi transakcjami Twoje udziały rosną do 40% i 60%.",
     portalLoginPrompt: "Jesteś już partnerem? ",
     portalLoginLink: "Zaloguj się do portalu partnera",
-    portalSelfPrompt: "Wolisz zarejestrować się sam? ",
-    portalSelfLink: "Zarejestruj się w portalu partnera.",
     statsEyebrow: "Nasze doświadczenie",
     statsTitleStart: "Zespół, który daje ",
     statsTitleAccent: "rezultaty",
@@ -375,11 +313,11 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     faq: [
       {
         question: "Jak zostać partnerem Cyprus VIP Estates?",
-        answer: "Zarejestruj się w portalu partnera i zaakceptuj umowę partnerską. Każde zgłoszenie sprawdzamy osobiście, a potem aktywujemy Twój dostęp. Jeśli wolisz najpierw porozmawiać, zostaw dane w formularzu na końcu tej strony, a oddzwonimy.",
+        answer: "Zarejestruj się w portalu partnera i zaakceptuj umowę partnerską. Każde zgłoszenie sprawdzamy osobiście, a potem aktywujemy Twój dostęp. Masz pytania? Napisz na office@cyprusvipestates.com lub zadzwoń: +357 99 278 285.",
       },
       {
         question: "Ile wynosi moja prowizja?",
-        answer: "Otrzymujesz od 30 do 50% naszej prowizji: 30%, jeśli w pełni przejmujemy klienta (Handover), 50%, jeśli nadal uczestniczysz w zakupie (Fix). W portalu widzisz swoją stawkę dla każdego projektu, a kalkulator pokazuje wypłatę dla dowolnej ceny.",
+        answer: "Zaczynasz od 30% naszej prowizji, jeśli w pełni przejmujemy klienta (Handover), i od 50%, jeśli nadal uczestniczysz w zakupie (Fix). Przy 3 zamkniętych transakcjach w ciągu 12 miesięcy osiągasz poziom Gold (35% / 55%), przy 6 poziom Platinum (40% / 60%). W portalu widzisz swoją stawkę dla każdego projektu, a kalkulator pokazuje wypłatę dla dowolnej ceny.",
       },
       {
         question: "Jestem agentem lub doradcą spoza Cypru. Czy mogę dołączyć?",
@@ -404,45 +342,25 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     ],
     ctaTitleStart: "Zostań naszym ",
     ctaTitleAccent: "partnerem",
-    ctaDescription: "Zostaw swoje dane, a oddzwonimy, zwykle jeszcze tego samego dnia.",
-    ctaButton: "Zostań partnerem",
-    formTitleStart: "Wolisz najpierw ",
-    formTitleAccent: "porozmawiać",
-    formTitleEnd: "?",
-    formLabelName: "Imię",
-    formLabelSurname: "Nazwisko",
-    formLabelPhone: "Telefon",
-    formLabelEmail: "E-mail",
-    formLabelCountry: "Kraj",
-    formSubmit: "Poproś o kontakt",
-    formConsentPre: "Przeczytałem(-am) i akceptuję ",
-    formConsentLink: "politykę prywatności",
-    formConsentPost: ".",
-    formPolicyHref: "/pl/polityka-prywatnosci",
-    formSuccess: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.",
-    formError: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.",
-    vName: "Imię jest wymagane",
-    vSurname: "Nazwisko jest wymagane",
-    vPhone: "Telefon jest wymagany",
-    vEmail: "Email jest wymagany",
-    vEmailInvalid: "Nieprawidłowy format email",
-    vCountry: "Kraj jest wymagany",
-    vConsent: "Zgoda jest wymagana",
+    ctaDescription: "Znasz osoby, które chcą kupić na Cyprze. My znamy rynek, deweloperów i każdy krok aż do przekazania kluczy. Razem sprawiamy, że zakup jest prosty dla Twoich klientów i opłacalny dla Ciebie.",
+    ctaPoints: ["Do 60% naszej prowizji", "6 miesięcy ochrony klienta", "Wypłata 7 dni po płatności dewelopera", "Wszystko w jednym portalu partnera"],
+    ctaButton: "Zostań partnerem Cyprus VIP Estates",
+    formTitleStart: "Zacznij ",
+    formTitleAccent: "zarabiać",
+    formTitleEnd: " z nami już dziś",
   },
   ru: {
     metaTitle: "Партнёрская программа с комиссией за недвижимость – Cyprus VIP Estates",
-    metaDescription: "Получайте 30–50% нашей комиссии за каждую рекомендованную недвижимость на Кипре. Защита клиента 6 месяцев, выплата в течение 7 дней после оплаты застройщика, всё в партнёрском портале.",
+    metaDescription: "Получайте до 60% нашей комиссии за каждую рекомендованную недвижимость на Кипре. Защита клиента 6 месяцев, выплата в течение 7 дней после оплаты застройщика, всё в партнёрском портале.",
     heroEyebrow: "Стань партнёром Cyprus VIP Estates",
     heroTitleStart: "Стань частью нашей ",
     heroTitleAccent: "партнёрской программы",
     heroTitleEnd: " и зарабатывай с нами",
-    heroLead: "Получайте от 30 до 50% нашей комиссии за каждую покупку недвижимости, которую вы нам приводите.",
+    heroLead: "Получайте до 60% нашей комиссии за каждую покупку недвижимости, которую вы нам приводите.",
     heroCta: "Стать партнёром",
-    heroNote: "30%, если мы полностью берём клиента на себя (Handover), 50%, если вы продолжаете участвовать в покупке (Fix).",
+    heroNote: "Вы начинаете с 30%, если мы берём клиента на себя (Handover), или с 50%, если вы продолжаете участвовать (Fix). С ростом числа закрытых сделок ваши доли растут до 40% и 60%.",
     portalLoginPrompt: "Уже партнёр? ",
     portalLoginLink: "Войти в партнёрский портал",
-    portalSelfPrompt: "Хотите зарегистрироваться сами? ",
-    portalSelfLink: "Зарегистрируйтесь в партнёрском портале.",
     statsEyebrow: "Наши результаты",
     statsTitleStart: "Команда, которая даёт ",
     statsTitleAccent: "результат",
@@ -486,11 +404,11 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     faq: [
       {
         question: "Как стать партнёром Cyprus VIP Estates?",
-        answer: "Зарегистрируйтесь в партнёрском портале и примите партнёрское соглашение. Мы лично проверяем каждую заявку и затем открываем доступ. Если сначала хотите поговорить, оставьте данные в форме в конце этой страницы, и мы перезвоним.",
+        answer: "Зарегистрируйтесь в партнёрском портале и примите партнёрское соглашение. Мы лично проверяем каждую заявку и затем открываем доступ. Есть вопросы? Пишите на office@cyprusvipestates.com или звоните: +357 99 278 285.",
       },
       {
         question: "Какую комиссию я получаю?",
-        answer: "Вы получаете от 30 до 50% нашей комиссии: 30%, если мы полностью берём клиента на себя (Handover), 50%, если вы продолжаете участвовать в покупке (Fix). В портале видна ваша ставка по каждому проекту, а калькулятор показывает выплату для любой цены.",
+        answer: "Вы начинаете с 30% нашей комиссии, если мы полностью берём клиента на себя (Handover), и с 50%, если вы продолжаете участвовать в покупке (Fix). При 3 закрытых сделках за 12 месяцев вы получаете уровень Gold (35% / 55%), при 6 — Platinum (40% / 60%). В портале видна ваша ставка по каждому проекту, а калькулятор показывает выплату для любой цены.",
       },
       {
         question: "Я агент или консультант не на Кипре. Могу ли я участвовать?",
@@ -515,30 +433,12 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     ],
     ctaTitleStart: "Стань нашим ",
     ctaTitleAccent: "партнёром",
-    ctaDescription: "Оставьте свои данные, и мы перезвоним, обычно в тот же день.",
-    ctaButton: "Стать партнёром",
-    formTitleStart: "Хотите сначала ",
-    formTitleAccent: "поговорить",
-    formTitleEnd: "?",
-    formLabelName: "Ваше имя",
-    formLabelSurname: "Фамилия",
-    formLabelPhone: "Телефон",
-    formLabelEmail: "Ваш email",
-    formLabelCountry: "Страна",
-    formSubmit: "Заказать звонок",
-    formConsentPre: "Я прочитал(а) и принимаю ",
-    formConsentLink: "политику конфиденциальности",
-    formConsentPost: ".",
-    formPolicyHref: "/ru/politika-privatnosti",
-    formSuccess: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.",
-    formError: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
-    vName: "Имя обязательно",
-    vSurname: "Фамилия обязательна",
-    vPhone: "Телефон обязателен",
-    vEmail: "Email обязателен",
-    vEmailInvalid: "Неверный формат email",
-    vCountry: "Страна обязательна",
-    vConsent: "Требуется согласие",
+    ctaDescription: "Вы знаете людей, которые хотят купить на Кипре. Мы знаем рынок, застройщиков и каждый шаг до передачи ключей. Вместе мы делаем покупку простой для ваших клиентов и выгодной для вас.",
+    ctaPoints: ["До 60% нашей комиссии", "Защита клиента 6 месяцев", "Выплата через 7 дней после оплаты застройщика", "Всё в одном партнёрском портале"],
+    ctaButton: "Станьте партнёром Cyprus VIP Estates",
+    formTitleStart: "Начните ",
+    formTitleAccent: "зарабатывать",
+    formTitleEnd: " с нами уже сегодня",
   },
   he: EN, // decision J: Partners page stays English for he
 };
