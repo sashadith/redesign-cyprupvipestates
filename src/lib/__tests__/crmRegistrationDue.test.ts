@@ -57,11 +57,21 @@ test("reminder: first after 2 h during the day, then once a day from 09:00 Nicos
   assert.equal(reminderDue({ since: h(30), lastRemindedAt: h(1) }, NOW), false, "already reminded today");
 });
 
-test("Telegram groups per client and shortens long developer lists", () => {
+test("Telegram: one block per client, linked name, owner + age, developers without sync suffix", () => {
   const pairs = computeDue(base, NOW).due;
-  const many = Array.from({ length: 7 }, (_, i) => ({ ...pairs[0], developerName: `Dev ${i}` }));
+  const many = Array.from({ length: 10 }, (_, i) => ({ ...pairs[0], developerName: `Dev ${i} (XML)` }));
   const t = dueTelegram([{ leadId: "A1", leadName: "Anke <Varga>", ownerName: "Sascha Dith", pairs: many }], NOW, "https://x");
-  assert.match(t, /You still didn't register <a href="https:\/\/x\/crm\/leads\/A1">Anke &lt;Varga&gt;<\/a> \(Sascha Dith\) at Dev 0, Dev 1, Dev 2, Dev 3, Dev 4 \+2 more — selection sent 5 h ago/);
+  assert.match(t, /^⚠️ <b>Register with developers<\/b>\n<i>1 client waiting · oldest selection 5 h ago<\/i>\n\n/);
+  assert.match(t, /👤 <b><a href="https:\/\/x\/crm\/leads\/A1">Anke &lt;Varga&gt;<\/a><\/b> · <i>Sascha Dith · sent 5 h ago<\/i>\n🏗 Dev 0, Dev 1, Dev 2, Dev 3, Dev 4, Dev 5, Dev 6, Dev 7 <i>\+2 more<\/i>/);
+  assert.doesNotMatch(t, /\(XML\)/);
+  assert.match(t, /<a href="https:\/\/x\/crm\/today">Open Today in the CRM<\/a>$/);
+});
+
+test("devLabel strips only sync-source suffixes", async () => {
+  const { devLabel } = await import("@/lib/crm/registration/core");
+  assert.equal(devLabel("Korantina Homes (SharePoint)"), "Korantina Homes");
+  assert.equal(devLabel("AGG (CC)"), "AGG");
+  assert.equal(devLabel("Leptos (Paphos)"), "Leptos (Paphos)");
 });
 
 test("sendDueReminders marks only what it sent and nothing when Telegram is off", async () => {

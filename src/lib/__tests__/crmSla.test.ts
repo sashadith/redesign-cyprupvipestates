@@ -123,7 +123,8 @@ test("ESCALATE Telegram names owner, lead and the lead link, escaped", () => {
   assert.match(text, /A&amp;B/);
   assert.match(text, /https:\/\/x\.test\/crm\/leads\/abc/);
   assert.match(text, /5 h/);
-  assert.match(text.split("\n")[0], /not contacted<\/b> — reassign in the inbox or the lead page if needed$/);
+  assert.match(text.split("\n")[0], /not contacted<\/b>$/);
+  assert.match(text, /<i>Reassign in the inbox or on the lead page if needed<\/i>/);
 });
 
 test("UNCONTACTED email subject carries the lead and the whole hours since assignment", () => {
@@ -137,7 +138,7 @@ test("an owner id pointing at no user counts as unassigned", () => {
 });
 
 test("ESCALATE line marks a deactivated owner", () => {
-  assert.match(escalateTelegram([owned("a", 300, { ownerActive: false })], NOW, "https://x.test"), /<b>Anna \(inactive\)<\/b>/);
+  assert.match(escalateTelegram([owned("a", 300, { ownerActive: false })], NOW, "https://x.test"), /<i>Anna \(inactive\)/);
   assert.doesNotMatch(escalateTelegram([owned("a", 300)], NOW, "https://x.test"), /inactive/);
 });
 

@@ -111,21 +111,25 @@ export function unassignedTelegram(leads: SlaLead[], base: string): string {
   const shown = leads.slice(0, SLA_TELEGRAM_LIST_MAX);
   const lines = [
     `⏰ <b>${leads.length} new lead${leads.length === 1 ? "" : "s"} still unassigned</b>`,
-    ...shown.map((l) => `• ${esc(cut(l.name || "(no name)"))}`),
+    "",
+    ...shown.map((l) => `• <a href="${slaLeadUrl(base, l.id)}">${esc(cut(l.name || "(no name)"))}</a>`),
   ];
-  if (leads.length > shown.length) lines.push(`and ${leads.length - shown.length} more`);
-  lines.push(esc(`${base}/crm/inbox`));
+  if (leads.length > shown.length) lines.push(`<i>and ${leads.length - shown.length} more</i>`);
+  lines.push("", `<a href="${base}/crm/inbox">Assign in the inbox</a>`);
   return lines.join("\n");
 }
 
 // The caller passes at most SLA_TELEGRAM_LIST_MAX leads (the rest wait for the next run).
 export function escalateTelegram(leads: SlaLead[], now: Date, base: string): string {
-  const lines = [`🚨 <b>${leads.length} assigned lead${leads.length === 1 ? "" : "s"} not contacted</b> — reassign in the inbox or the lead page if needed`];
+  const lines = [
+    `🚨 <b>${leads.length} assigned lead${leads.length === 1 ? "" : "s"} not contacted</b>`,
+    `<i>Reassign in the inbox or on the lead page if needed</i>`,
+  ];
   for (const l of leads) {
     const owner = esc(cut(l.ownerName || "(unknown)")) + (l.ownerActive === false ? " (inactive)" : "");
     const name = esc(cut(l.name || "(no name)"));
-    const h = l.assignedAt ? `, assigned ${hoursSince(l.assignedAt, now)} h ago` : "";
-    lines.push(`• <b>${owner}</b> — ${name}${h}\n${esc(slaLeadUrl(base, l.id))}`);
+    const h = l.assignedAt ? ` · assigned ${hoursSince(l.assignedAt, now)} h ago` : "";
+    lines.push("", `👤 <b><a href="${slaLeadUrl(base, l.id)}">${name}</a></b>`, `<i>${owner}${h}</i>`);
   }
   return lines.join("\n");
 }

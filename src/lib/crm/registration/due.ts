@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { nicosiaDayStart } from "@/lib/openwa/sendGuards";
-import { isRegistrable, type RegChannel, type RegStatus } from "./core";
+import { devLabel, isRegistrable, type RegChannel, type RegStatus } from "./core";
 
 // "Registrations due" (2026-10-28): every developer whose projects went to the
 // client in a personal selection must be registered by our team — also when a
@@ -101,7 +101,7 @@ export function cleanSkipReason(raw: unknown): { ok: true; reason: string } | { 
 
 export type DueLeadGroup = { leadId: string; leadName: string; ownerName: string | null; pairs: DuePair[] };
 export const DUE_TELEGRAM_LEADS_MAX = 10;
-const DEVS_PER_LINE = 5;
+const DEVS_PER_LINE = 8;
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function ago(d: Date, now: Date): string {
@@ -111,16 +111,22 @@ function ago(d: Date, now: Date): string {
 
 export function dueTelegram(groups: DueLeadGroup[], now: Date, siteUrl: string): string {
   const shown = groups.slice(0, DUE_TELEGRAM_LEADS_MAX);
-  const lines = [`⚠️ <b>Client${groups.length === 1 ? "" : "s"} not registered with developers yet</b>`];
+  const sinceOf = (g: DueLeadGroup) => Math.min(...g.pairs.map((p) => p.since.getTime()));
+  const oldest = Math.min(...groups.map(sinceOf));
+  const n = groups.length;
+  const out = [
+    `⚠️ <b>Register with developers</b>`,
+    `<i>${n} client${n === 1 ? "" : "s"} waiting · oldest selection ${ago(new Date(oldest), now)}</i>`,
+  ];
   for (const g of shown) {
-    const names = g.pairs.map((p) => p.developerName);
-    const devs = names.slice(0, DEVS_PER_LINE).map(esc).join(", ") + (names.length > DEVS_PER_LINE ? ` +${names.length - DEVS_PER_LINE} more` : "");
-    const since = new Date(Math.min(...g.pairs.map((p) => p.since.getTime())));
-    const owner = g.ownerName ? ` (${esc(g.ownerName)})` : "";
-    lines.push(`• You still didn't register <a href="${siteUrl}/crm/leads/${g.leadId}">${esc(g.leadName)}</a>${owner} at ${devs} — selection sent ${ago(since, now)}`);
+    const names = g.pairs.map((p) => devLabel(p.developerName));
+    const devs = names.slice(0, DEVS_PER_LINE).map(esc).join(", ") + (names.length > DEVS_PER_LINE ? ` <i>+${names.length - DEVS_PER_LINE} more</i>` : "");
+    const meta = [g.ownerName ? esc(g.ownerName) : null, `sent ${ago(new Date(sinceOf(g)), now)}`].filter(Boolean).join(" · ");
+    out.push("", `👤 <b><a href="${siteUrl}/crm/leads/${g.leadId}">${esc(g.leadName)}</a></b> · <i>${meta}</i>`, `🏗 ${devs}`);
   }
-  if (groups.length > shown.length) lines.push(`and ${groups.length - shown.length} more client${groups.length - shown.length === 1 ? "" : "s"}`);
-  return lines.join("\n");
+  if (n > shown.length) out.push("", `<i>and ${n - shown.length} more client${n - shown.length === 1 ? "" : "s"}</i>`);
+  out.push("", `<a href="${siteUrl}/crm/today">Open Today in the CRM</a>`);
+  return out.join("\n");
 }
 
 // ---- loading ----

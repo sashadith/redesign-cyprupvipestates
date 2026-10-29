@@ -184,3 +184,6 @@ export function undoTarget(current: RegStatus, hasPreliminary: boolean): RegStat
 export function canResend(s: RegStatus): boolean {
   return s === "FAILED" || s === "REJECTED";
 }
+
+// Account names carry the sync source ("Aristo (XML)", "AGG (CC)"); the team only needs the developer.
+export const devLabel = (name: string) => name.replace(/\s*\((?:xml|api|drive|sharepoint|cc|dropbox|feed|manual|csv|pdf)\)\s*$/i, "") || name;
