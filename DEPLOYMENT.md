@@ -19,6 +19,7 @@ of the 2026-07 staging→production merge.
 | Database | **Same shared Postgres DB as production** (read-mostly use in practice, but nothing enforces that — see below) | `cyprusvipestates` on `localhost:5432` |
 | Crons | **None** — production's crons own the shared DB; staging's own `drive-sync`/`feed-sync` entries were disabled (commented out, not deleted) 2026-07-16 once production took over both jobs | All production-facing crons active — see "Cron topology" below for the full schedule |
 | `public/uploads` | Symlink → `/var/www/shared-uploads` | Symlink → `/var/www/shared-uploads` |
+| Developer contract PDFs | `CONTRACTS_DIR` or `/var/www/shared-contracts` (same dir — the default is a fixed path, not under the release) | `CONTRACTS_DIR` or `/var/www/shared-contracts`, created by the first upload; **not web-served** (outside `public/`), only via `/api/admin/developer-contracts/[id]`; removed contracts land in `trash/` beside it; NOT in `cvp-uploads-backup.sh` yet |
 
 Both apps point `public/uploads` at the same physical directory
 (`/var/www/shared-uploads`, introduced during the Phase 3 retry — see
@@ -409,7 +410,7 @@ hardcoded in the crontab):
 | `0 4 * * *` | `feed-sync` | production, `?key=$CRON_SECRET` |
 | `30 3 * * *` | `cvp-db-backup.sh` | DB dump, not app-specific |
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |
-| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` |
+| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` — since 2026-10-29 the same call first sends the developer-contract renewal reminders (14 days / 1 day before the end, own CronRunLog job `contract-reminders`, src/lib/developerContractReminders.ts) |
 | `30 5 * * *` | `gsc-sync` (Google Search Console daily sync — see src/lib/gsc/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op ("skipped: not configured") until `GSC_SERVICE_ACCOUNT_KEY_PATH`/`GSC_SITE_PROPERTY` are set, see .env.example |
 | `15 5 * * *` | `mcp-cleanup` (MCP connector: expired OAuth codes/tokens, expired email drafts, stuck-send alert — see docs/CRM-MCP-CONNECTOR.md) | production, `?key=$CRON_SECRET` — to be installed with the Phase 1 deploy |
 | `0 1 * * *` | `cybarco-sync` (website + price-list PDFs → 15 Developments; see src/lib/cybarcoSync.ts) | production, `?key=$CRON_SECRET` — 01:00 keeps a clear hour before psi-sync at 02:00; a first run mirrors several hundred images |

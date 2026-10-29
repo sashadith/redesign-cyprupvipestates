@@ -7,6 +7,7 @@ import { seoRules } from "./rules/seo";
 import { seoAdvisorRules } from "./rules/seoAdvisor";
 import { pagePowerRules } from "./rules/pagePower";
 import { socialRules } from "./rules/social";
+import { contractRules } from "./rules/contracts";
 import { filterSnoozed } from "./snooze";
 
 export type { ActionItem, Severity, Category } from "./types";
@@ -52,10 +53,10 @@ function sortItems(items: ActionItem[]): ActionItem[] {
 // functions again, but from the weekly advisor cron only — never inside a
 // request that also renders this panel — so nothing is recomputed per load.
 export async function getActionCenterItems(): Promise<ActionItem[]> {
-  const [developers, crm, system, seo, seoAdvisor, pagePower, social] = await Promise.all([
-    developerRules(), crmRules(), systemRules(), seoRules(), seoAdvisorRules(), pagePowerRules(), socialRules(),
+  const [developers, crm, system, seo, seoAdvisor, pagePower, social, contracts] = await Promise.all([
+    developerRules(), crmRules(), systemRules(), seoRules(), seoAdvisorRules(), pagePowerRules(), socialRules(), contractRules(),
   ]);
-  const all = await filterSnoozed([...developers, ...crm, ...system, ...seo, ...seoAdvisor, ...pagePower, ...social]);
+  const all = await filterSnoozed([...developers, ...crm, ...system, ...seo, ...seoAdvisor, ...pagePower, ...social, ...contracts]);
   return sortItems(all);
 }
 

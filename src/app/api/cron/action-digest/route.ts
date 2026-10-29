@@ -18,6 +18,8 @@ import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
 import { flagHyperactiveSessions } from "@/lib/analyticsBotDetect";
 import { formatInZone, cyprusWallTimeToUtc, CYPRUS_TZ } from "@/lib/booking/timezone";
 import { classifyForDigest, chunkLines, REMINDER_THROTTLE_DAYS } from "@/lib/actionCenter/digestNotify";
+import { CONTRACT_ITEM_PREFIX } from "@/lib/actionCenter/rules/contracts";
+import { sendDueContractReminders } from "@/lib/developerContractReminders";
 import { loadSocialDigestLines } from "@/lib/social/load";
 
 // Piggybacks on this existing daily cron, same pattern as feed-sync's
@@ -222,7 +224,9 @@ async function socialLines(): Promise<string[]> {
 }
 
 async function runDigest() {
-  const items = (await getActionCenterItems()).filter((i) => (i.severity === "URGENT" || i.severity === "ACTION") && i.category !== "SOCIAL");
+  // Contract items (rules/contracts.ts) are left out too: sendDueContractReminders()
+  // already sends each of them as its own Telegram message and email.
+  const items = (await getActionCenterItems()).filter((i) => (i.severity === "URGENT" || i.severity === "ACTION") && i.category !== "SOCIAL" && !i.id.startsWith(CONTRACT_ITEM_PREFIX));
   const { fresh, recurring, quiet } = await classifyForDigest(items);
   const advisorLines = await maybeAppendAdvisorSummary();
   const appointmentLines = await todaysAppointmentLines();
@@ -306,9 +310,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
+    // Contract-renewal reminders (2026-10-29) ride on this daily run with their
+    // own CronRunLog job. First and caught, so neither can cost the other: a
+    // failing digest must not swallow a contract that ends tomorrow.
+    const contractReminders = await withCronLog("contract-reminders", () => sendDueContractReminders(),
+      (r) => `${r.sent} of ${r.due} sent${r.failed.length ? `, failed: ${r.failed.join(", ")}` : ""}`, (r) => r.failed.length === 0)
+      .catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
     const result = await withCronLog("action-digest", runDigest, (r) => (r.sent ? `sent, ${r.count} item(s)` : "nothing to send"));
     const botCleanup = await runBotCleanup();
-    return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, botCleanup });
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, botCleanup, contractReminders });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

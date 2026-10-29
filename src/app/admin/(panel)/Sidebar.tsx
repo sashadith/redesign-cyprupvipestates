@@ -4,13 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { NavIcon, PageIcon } from "./NavIcons";
+import { STATUS_LABEL, type ContractStatusKind } from "@/lib/developerContract";
 
 export type NavPage = { href: string; label: string; count?: number; countVariant?: "alert" | "neutral" };
 // A module is one application section. Single-page modules (Dashboard, Analytics)
 // link straight to their page; multi-page modules open a secondary sidebar.
 export type NavModule = { key: string; label: string; pages: NavPage[] };
 
-export type DeveloperNavItem = { id: string; name: string; count: number; hasFeed: boolean };
+export type DeveloperNavItem = { id: string; name: string; count: number; hasFeed: boolean; contract: ContractStatusKind };
+
+// Contract state per developer (2026-10-29, developerContract.ts): a hollow
+// ring = no contract yet, green = running (also auto-renewing), amber = ends
+// within 14 days, red = ended. The title says which.
+const CONTRACT_DOT: Record<ContractStatusKind, string> = {
+  none: "border border-[#D1D5DB]",
+  active: "bg-[#22C55E]",
+  autoRenew: "bg-[#22C55E]",
+  expiring: "bg-[#F59E0B]",
+  expired: "bg-[#EF4444]",
+};
+function ContractDot({ kind }: { kind: ContractStatusKind }) {
+  return <span title={STATUS_LABEL[kind]} aria-label={STATUS_LABEL[kind]} className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${CONTRACT_DOT[kind]}`} />;
+}
 
 export type DevTotals = { developers: number; developments: number; units: number };
 
@@ -83,6 +98,7 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
             <span className="flex items-center gap-1.5 truncate">
               <span className="truncate">{d.name}</span>
               {d.hasFeed && <FeedIcon />}
+              <ContractDot kind={d.contract} />
             </span>
             {d.count > 0 && <span className="shrink-0 text-[11px] text-[#9CA3AF]">{d.count}</span>}
           </Link>

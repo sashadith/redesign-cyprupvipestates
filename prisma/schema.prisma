@@ -1361,6 +1361,7 @@ model AiGenerationQueue {
 
 model DeveloperAccount {
   commissionRates CommissionRate[]
+  contracts       DeveloperContract[]
   id                String    @id @default(uuid())
   name              String
   slug              String    @unique
@@ -2198,6 +2199,36 @@ model CommissionRate {
 
   @@index([developerAccountId])
   @@map("commission_rates")
+}
+
+// Signed contract with a developer (2026-10-29). Several rows per account: a
+// renewal or addendum is a new row, the old ones stay as history. The current
+// contract is the one signed last (src/lib/developerContract.ts). The PDF sits
+// outside public/ in CONTRACTS_DIR and is served only to managers by
+// /api/admin/developer-contracts/[id]. Without autoRenew the daily
+// action-digest run sends a Telegram + email reminder 14 days and 1 day before
+// the end; the two *SentAt stamps make each one go out once and are cleared
+// when the dates change.
+model DeveloperContract {
+  id                 String           @id @default(uuid())
+  developerAccountId String
+  developerAccount   DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  signedAt           DateTime         @db.Date
+  termMonths         Int
+  autoRenew          Boolean          @default(false)
+  commissionPercent  Decimal?         @db.Decimal(5, 2)
+  note               String?
+  fileName           String // original upload name, shown and used for the download
+  fileKey            String // stored file name inside CONTRACTS_DIR
+  fileSize           Int
+  reminder14SentAt   DateTime?
+  reminder1SentAt    DateTime?
+  createdById        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([developerAccountId])
+  @@map("developer_contracts")
 }
 
 model Partner {
