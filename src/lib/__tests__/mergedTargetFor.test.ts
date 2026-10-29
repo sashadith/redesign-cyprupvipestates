@@ -10,6 +10,16 @@ test("mergedTargetFor answers exactly what each locale's merge map says", () => 
   for (const [k, v] of Object.entries(EN_LANDING_MERGES)) assert.equal(mergedTargetFor(`/${k}`), v, `en ${k}`);
 });
 
+test("the P01/P02 duplicates redirect to the hub of their own query", () => {
+  assert.equal(mergedTargetFor("/de/immobilien-zypern-kaufen"), "/de/immobilien-auf-zypern");
+  assert.equal(mergedTargetFor("/de/top-100-immobilien-auf-zypern"), "/de/immobilien-auf-zypern");
+  assert.equal(mergedTargetFor("/de/haeuser-in-zypern"), "/de/haeuser-auf-zypern");
+  assert.equal(mergedTargetFor("/de/neubau-haeuser-zypern"), "/de/haeuser-auf-zypern");
+  assert.equal(mergedTargetFor("/de/immobilien-auf-zypern"), null);
+  assert.equal(mergedTargetFor("/de/haeuser-auf-zypern"), null);
+  assert.equal(mergedTargetFor("/de/haeuser-in-zypern-fuer-investoren"), null);
+});
+
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
     mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
