@@ -8,7 +8,7 @@
   "email": "sales@marinakisproperty.com",
   "contactPerson": "Mariam Venizelou, Senior Business Development (ext. 307), mvenizelou@marinakisproperty.com",
   "contactInfo": "Marinakis Developers Ltd, Archiepiskopou Makariou III Ave 59, Mouyias Tower, 2nd floor, 6017 Larnaca.",
-  "notes": "CLIENT REGISTRATION: email the client's details to sales@marinakisproperty.com and copy mvenizelou@marinakisproperty.com. Confirmed by the developer 2026-10-29.\nNO PRICE OR AVAILABILITY LIST YET. What we have is an indicative price list (type rows and 'from' prices, v35 dated 13/10/2026), which the developer says will be replaced by a real list in the near future. Until then the projects carry a project-level priceFrom and a type table in the promo block, and no units.\nAGENT HUB: marinakisproperty.com runs a gated partner area at /agent-login with registration at /agent-registration ('access is granted after your application is approved'). An approved agent account is the likeliest route to a live availability list — worth requesting, together with a standing link so the list stops arriving as emailed PDFs.\nPALMA FIORE: the website lists Palma Fiore (Livadia, 56 apartments, from EUR 192,000, page modified 2025-06) as an available property, but it does NOT appear in price list v35. Ask before importing it.\nEDEN VALLEY: the permit drawing names the client as T.H.E.S. Developments Ltd. Clarify who the vendor is.",
+  "notes": "CLIENT REGISTRATION: email the client's details to sales@marinakisproperty.com and copy mvenizelou@marinakisproperty.com. Confirmed by the developer 2026-10-29.\nNO PRICE OR AVAILABILITY LIST YET. What we have is an indicative price list (type rows and 'from' prices, v35 dated 13/10/2026), which the developer says will be replaced by a real list in the near future. Until then the projects carry a project-level priceFrom and a type table in the promo block, and no units.\nAGENT HUB: marinakisproperty.com runs a gated partner area at /agent-login with registration at /agent-registration ('access is granted after your application is approved'). An approved agent account is the likeliest route to a live availability list — worth requesting, together with a standing link so the list stops arriving as emailed PDFs.\nPALMA FIORE: on their website as available (Livadia, 56 apartments, from EUR 192,000) but absent from price list v35. Operator 2026-10-29: LEAVE IT. Not imported, not to be asked about.\nEDEN VALLEY: the permit drawing names the client as T.H.E.S. Developments Ltd, not Marinakis. Operator 2026-10-29: do not pursue.\nPRICE CONFLICTS: where a brochure and the price list disagree, THE PRICE LIST WINS (operator 2026-10-29, ruling on Olivea Suites 168,000 vs 170,000).\nCOMPLETION DATES AND CONSTRUCTION STAGES: none are published and the operator accepts that — leave them null rather than estimating.",
   "developerCloudUrl": "https://marinakisproperty.com/agent-login/"
  },
  "projects": [
@@ -73,10 +73,10 @@
    "evidence": {
     "unitCount": "marinakisproperty.com/available-properties/marigate_larnaca/: \"an exclusive collection of nine sky residences\" (page modified 2026-09-21). The developer's plan set has 14 sheets — ground floor, twelve upper floors, roof — and the 3rd-floor sheet shows ONE apartment with a private lift lobby.",
     "area": "The price list says \"Larnaca Marina Area\" and the feature list \"Within new Larnaca Marina's area\"; filed under the existing area label \"New Marina\" (Plus 87 uses it). Nearest existing pin is actually a \"Downtown\" one 0.70 km away — the label follows the developer's own positioning, flagged.",
-    "stage": "No evidence either way. The price list says AVAILABLE, which is a sales state, not a construction state. Left null."
+    "stage": "No evidence either way. The price list says AVAILABLE, which is a sales state, not a construction state. Left null.",
+    "completionAndStage": "Operator 2026-10-29: accepted as unknown. The material gives no completion date and no construction stage, and neither is to be chased or guessed. completion stays null."
    },
    "openQuestions": [
-    "Construction stage and completion quarter — nothing in the price list or on the website.",
     "Are all nine residences identical 3-bed / 220 m² homes, or do the lower and upper floors differ? The plan sheets differ in footprint (the upper floors step back).",
     "Is the jacuzzi pool standard on every residence or only on some floors?"
    ],
@@ -141,12 +141,12 @@
    },
    "evidence": {
     "blocks": "Render file names carry unit refs SSA202 and SSB-103, and the two plan sheets are titled SS1 and SS2 — so more than one block. The exact block/unit count is NOT documented anywhere we have.",
-    "penthouses": "The feature list says \"Private roof garden (for penthouses)\", so penthouses exist although the price list shows only an apartment type row."
+    "penthouses": "The feature list says \"Private roof garden (for penthouses)\", so penthouses exist although the price list shows only an apartment type row.",
+    "completionAndStage": "Operator 2026-10-29: accepted as unknown. The material gives no completion date and no construction stage, and neither is to be chased or guessed. completion stays null."
    },
    "openQuestions": [
     "How many blocks and how many apartments in total? Nothing in the material states it.",
-    "Penthouse price and size — the price list shows only the 2-bed apartment type.",
-    "Construction stage and completion quarter."
+    "Penthouse price and size — the price list shows only the 2-bed apartment type."
    ],
    "units": []
   },
@@ -203,12 +203,12 @@
    },
    "evidence": {
     "series": "marinakisproperty.com/property-showcase lists Pearl House 1 to 12 as completed projects, all in Larnaca Centre or the Marina area — this is the thirteenth.",
-    "area": "Pin 34.9286364/33.6152383 (Praxitelous 14) is 0.67 km from an existing \"Agioi Anargyroi\" project and 1.29 km from the nearest \"Downtown\" one, i.e. the inland part of the city. Area label is my call, flagged."
+    "area": "Pin 34.9286364/33.6152383 (Praxitelous 14) is 0.67 km from an existing \"Agioi Anargyroi\" project and 1.29 km from the nearest \"Downtown\" one, i.e. the inland part of the city. Area label is my call, flagged.",
+    "completionAndStage": "Operator 2026-10-29: accepted as unknown. The material gives no completion date and no construction stage, and neither is to be chased or guessed. completion stays null."
    },
    "openQuestions": [
     "Total apartment count and the mix of apartments vs penthouses.",
-    "Apartment (non-penthouse) price and size — the price list shows only the penthouse type row.",
-    "Construction stage and completion quarter."
+    "Apartment (non-penthouse) price and size — the price list shows only the penthouse type row."
    ],
    "units": []
   },
@@ -284,15 +284,15 @@
    "evidence": {
     "stage": "The plan PDF is a town-planning permit drawing (ΠΟΛΕΟΔΟΜΙΚΗ ΑΔΕΙΑ), job 044/2025, drawn 27/11/2025 — permit stage, construction not evidenced. Set to \"Off Plan\".",
     "houseCount": "The permit sheet is titled ΚΑΤΟΙΚΙΑ 32 — house no. 32 of the scheme — so the scheme has at least 32 houses. Not stated anywhere as a total.",
-    "types": "Render folders carry primary bedroom types A, B, C and D, so four house types exist; the price list publishes only two (3-bed and 4-bed)."
+    "types": "Render folders carry primary bedroom types A, B, C and D, so four house types exist; the price list publishes only two (3-bed and 4-bed).",
+    "completionAndStage": "Operator 2026-10-29: accepted as unknown. The material gives no completion date and no construction stage, and neither is to be chased or guessed. completion stays null."
    },
    "openQuestions": [
-    "IMPORTANT: the permit drawing names the client as T.H.E.S. DEVELOPMENTS LTD, not Marinakis. Who is the vendor on the contract, and does our commission agreement cover this project?",
+    "CLOSED 2026-10-29 (operator): the permit drawing names the client as T.H.E.S. Developments Ltd. Operator decided not to pursue it — do not re-raise. The evidence stays recorded above.",
     "Total number of houses (the permit sheet implies at least 32).",
     "Which of the four render types (A/B/C/D) map onto the 3-bed and 4-bed price rows?",
     "The ground-floor permit drawing shows a box marked LIFT. Do the houses have a private lift, as standard or as an option? Left out of the texts.",
-    "Plot sizes per house — only one permit sheet is available (plot about 34.1 m wide).",
-    "Completion quarter."
+    "Plot sizes per house — only one permit sheet is available (plot about 34.1 m wide)."
    ],
    "units": []
   },
@@ -362,12 +362,12 @@
    },
    "evidence": {
     "masterplan": "Olivea Park brochure (QuickPitch.pdf): \"15 detached residences and 12 apartment buildings\" around a landscaped social and wellness heart; villas = \"detached homes with gardens, pools and roof-garden living\"; location given as 34.958148, 33.630903, which matches the price list's map pin.",
-    "stage": "The price list marks it UPCOMING and the only promo material is a map link plus the park brochure. Stage left null on purpose."
+    "stage": "The price list marks it UPCOMING and the only promo material is a map link plus the park brochure. Stage left null on purpose.",
+    "completionAndStage": "Operator 2026-10-29: accepted as unknown. The material gives no completion date and no construction stage, and neither is to be chased or guessed. completion stays null."
    },
    "openQuestions": [
     "Is a private pool included in the published starting price, or an option? The brochure says the villas have pools; the price list says nothing.",
     "Plot sizes, and how the 15 plots are allocated.",
-    "Expected sales launch and completion.",
     "Does the common service charge for the clubhouse/spa apply to the villas too, and at what rate?"
    ],
    "units": []
@@ -486,13 +486,13 @@
    "evidence": {
     "masterplan": "Same brochure: \"One- to three-bedroom apartments across 12 residential blocks\"; the clubhouse is \"the shared social, wellness and work layer of the development\".",
     "priceConflict": "The Olivea Park brochure says \"Starting from €168.000 + VAT\" for the suites; the price list v35 (13/10/2026) says €170,000 + VAT. We use the price list, as the newer and dated document.",
-    "interiors": "Interior renders are all of one apartment, BLOCK B 401, in two finish options."
+    "interiors": "Interior renders are all of one apartment, BLOCK B 401, in two finish options.",
+    "completionAndStage": "Operator 2026-10-29: accepted as unknown. The material gives no completion date and no construction stage, and neither is to be chased or guessed. completion stays null."
    },
    "openQuestions": [
-    "Brochure says €168,000, price list v35 says €170,000 — which is current?",
+    "CLOSED 2026-10-29 (operator): brochure EUR 168,000 vs price list v35 EUR 170,000 — the LIST is authoritative. priceFrom and the type table already carry 170,000; keep it that way on every refresh.",
     "Total number of apartments across the 12 blocks.",
     "Are the two render interior options a buyer choice, and is either included in the price?",
-    "Expected sales launch and completion.",
     "Estimated common service charge — the facility list is long and the figure matters at this price point."
    ],
    "units": []
