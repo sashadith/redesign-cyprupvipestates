@@ -12,8 +12,12 @@ test("mergedTargetFor answers exactly what each locale's merge map says", () => 
 
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
+    mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
+    "/de/blog/wie-nach-zypern-auswandern",
+  );
+  assert.equal(
     mergedTargetFor("/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern"),
-    "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+    "/de/blog/steuern-zypern-vs-deutschland-oesterreich-schweiz",
   );
   assert.equal(mergedTargetFor("/de/blog/ratgeber-fuer-deutsche-rentner"), null);
   assert.equal(mergedTargetFor("/blog/anything"), null);
