@@ -230,7 +230,7 @@ export type ProjectsSectionBlock = {
   _key: string;
   _type: "projectsSectionBlock";
   title: string;
-  filterCity?: "Paphos" | "Limassol" | "Larnaca";
+  filterCity?: "Paphos" | "Limassol" | "Larnaca" | "Famagusta";
   filterPropertyType?:
     | "Apartment"
     | "Villa"
@@ -281,7 +281,7 @@ export type LandingProjectsBlock = {
   _key: string;
   _type: "landingProjectsBlock";
   title: string;
-  filterCity?: "Paphos" | "Limassol" | "Larnaca";
+  filterCity?: "Paphos" | "Limassol" | "Larnaca" | "Famagusta";
   filterPropertyType?:
     | "Apartment"
     | "Villa"
