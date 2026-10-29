@@ -9,7 +9,8 @@ import { LOCALES, type Locale } from "@/lib/locale";
 /** The partner portal is never offered in Hebrew (not a verified locale for it). */
 export type PartnerLocale = Exclude<Locale, "he">;
 export const PARTNER_LOCALES: readonly PartnerLocale[] = LOCALES.filter((l): l is PartnerLocale => l !== "he");
-export const PARTNER_LANG_COOKIE = "cve_partner_lang";
+import { PARTNER_LANG_COOKIE } from "@/lib/partner/host";
+export { PARTNER_LANG_COOKIE };
 
 const DICTS: Record<PartnerLocale, PartnerDict> = { en, de, pl, ru };
 

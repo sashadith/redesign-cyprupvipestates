@@ -45,6 +45,16 @@
    for those classes already exists in tokens.css — nothing new needed here
    except sizing the still image the same as the video/poster fill. */
 .pnr__hero-media img { width: 100%; height: 100%; object-fit: cover; }
+/* Portal links: login under the hero button, self sign-up above the form. */
+.pnr__portal-login {
+  margin-top: var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-caption); color: var(--text-soft);
+}
+.pnr__portal-self {
+  margin-top: var(--s-4); font-family: var(--font-body), sans-serif; color: var(--text-soft);
+}
+.pnr__portal-login a, .pnr__portal-self a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--accent); }
+.pnr__portal-login a:hover, .pnr__portal-self a:hover { color: var(--accent); }
+
 .pnr__hero-note {
   margin-top: var(--s-5); max-width: 56ch; font-family: var(--font-body), sans-serif;
   font-size: var(--text-caption); line-height: 1.6; color: var(--text-faint);

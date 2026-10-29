@@ -35,6 +35,10 @@ export type PartnersCopy = {
   heroLead: string;
   heroCta: string;
   heroNote: string;
+  portalLoginPrompt: string;
+  portalLoginLink: string;
+  portalSelfPrompt: string;
+  portalSelfLink: string;
 
   statsEyebrow: string;
   statsTitleStart: string;
@@ -103,6 +107,10 @@ const EN: PartnersCopy = {
     heroLead: "Earn up to 40% of our marketing success fee.",
     heroCta: "Become a partner",
     heroNote: "For real estate purchases, our partners receive a referral fee of 30–40%. For referring property owners, we pay a 10% referral fee.",
+    portalLoginPrompt: "Already a partner? ",
+    portalLoginLink: "Log in to the partner portal",
+    portalSelfPrompt: "Prefer to sign up yourself? ",
+    portalSelfLink: "It takes three minutes in the partner portal.",
     statsEyebrow: "Track record",
     statsTitleStart: "A team built on ",
     statsTitleAccent: "results",
@@ -207,6 +215,10 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     heroLead: "Verdiene bis zu 40 % unserer Marketing-Erfolgsgebühr.",
     heroCta: "Jetzt Partner werden",
     heroNote: "Für Immobilienkäufe erhalten unsere Partner eine Vermittlungsgebühr von 30 % bis 40 %. Für die Empfehlung von Eigentümern bestehender Immobilien zahlen wir 10 % Vermittlungshonorar.",
+    portalLoginPrompt: "Schon Partner? ",
+    portalLoginLink: "Zum Partnerportal anmelden",
+    portalSelfPrompt: "Lieber direkt selbst registrieren? ",
+    portalSelfLink: "Im Partnerportal geht es in drei Minuten.",
     statsEyebrow: "Erfolgsbilanz",
     statsTitleStart: "Ein Team mit ",
     statsTitleAccent: "Ergebnissen",
@@ -306,6 +318,10 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     heroLead: "Zarób do 40% naszego wynagrodzenia marketingowego.",
     heroCta: "Zostań partnerem",
     heroNote: "Za sprzedaż nieruchomości partnerzy otrzymują wynagrodzenie za polecenie 30–40%. Za polecenie właścicieli nieruchomości wypłacamy 10% honorarium.",
+    portalLoginPrompt: "Jesteś już partnerem? ",
+    portalLoginLink: "Zaloguj się do portalu partnera",
+    portalSelfPrompt: "Wolisz zarejestrować się sam? ",
+    portalSelfLink: "W portalu partnera zajmie to trzy minuty.",
     statsEyebrow: "Nasze doświadczenie",
     statsTitleStart: "Zespół, który daje ",
     statsTitleAccent: "rezultaty",
@@ -405,6 +421,10 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     heroLead: "Зарабатывай до 40% нашего маркетингового вознаграждения.",
     heroCta: "Стать партнёром",
     heroNote: "За продажу недвижимости партнёры получают вознаграждение от 30 до 40%. За рекомендации владельцев — 10% вознаграждение.",
+    portalLoginPrompt: "Уже партнёр? ",
+    portalLoginLink: "Войти в партнёрский портал",
+    portalSelfPrompt: "Хотите зарегистрироваться сами? ",
+    portalSelfLink: "В партнёрском портале это займёт три минуты.",
     statsEyebrow: "Наши результаты",
     statsTitleStart: "Команда, которая даёт ",
     statsTitleAccent: "результат",

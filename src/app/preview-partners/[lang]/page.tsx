@@ -15,6 +15,7 @@ import PartnersFaq from "./PartnersFaq";
 import { partnersCopy } from "./copy";
 import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
 import { bcp47For } from "@/lib/locale";
+import { partnerPortalUrl } from "@/lib/partner/host";
 
 /* Cyprus VIP Estates — Partners, redesigned. This is now the LIVE /partners
    page (see ./layout.tsx for the indexability fix + why this lives outside
@@ -130,6 +131,10 @@ export default async function PartnersPage({ params }: Props) {
   }
   const t = partnersCopy(lang);
   const { languages } = staticAlternates(lang, "partners");
+  // The portal's own sign-up (agreement, email check, office approval); the form below stays
+  // for visitors who prefer a call back. ?lang= opens the portal in this page's language.
+  const registerUrl = partnerPortalUrl("/register", lang, process.env);
+  const loginUrl = partnerPortalUrl("/login", lang, process.env);
 
   // I1 fix: build the switcher straight from localesForStaticRoute
   // ("partners") — the same source that gates the route itself (decision J
@@ -198,10 +203,13 @@ export default async function PartnersPage({ params }: Props) {
             <hr className="shimmer hero__stripe" />
             <p className="hero__desc">{t.heroLead}</p>
             <div className="hero__cta">
-              <a className="btn btn--glass" href="#register">
+              <a className="btn btn--glass" href={registerUrl}>
                 <span>{t.heroCta}</span>
               </a>
             </div>
+            <p className="pnr__portal-login">
+              {t.portalLoginPrompt}<a href={loginUrl}>{t.portalLoginLink}</a>
+            </p>
             <p className="pnr__hero-note">{t.heroNote}</p>
           </div>
         </section>
@@ -305,6 +313,9 @@ export default async function PartnersPage({ params }: Props) {
                   </h2>
                   <p className="formsec__subtitle">{t.ctaDescription}</p>
                   <hr className="shimmer formsec__stripe" />
+                  <p className="pnr__portal-self">
+                    {t.portalSelfPrompt}<a href={registerUrl}>{t.portalSelfLink}</a>
+                  </p>
                 </div>
                 <PartnersForm lang={lang} />
               </div>
