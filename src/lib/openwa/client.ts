@@ -24,6 +24,8 @@ export type OpenWaClient = {
   getSession(): Promise<{ status: string; lastError: string | null }>;
   /** POST /start — relaunches the browser with the saved credentials (no QR). */
   startSession(): Promise<void>;
+  /** A privacy id ("…@lid") → phone digits, best effort; null when the gateway can't map it. */
+  resolvePhone(contactId: string): Promise<string | null>;
 };
 
 // The only module that knows the OpenWA API key. Runs against 127.0.0.1 on the
@@ -70,6 +72,10 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
     async startSession() {
       // Start waits for the browser to come up; the readiness deadline is ~90 s.
       await call(`${base}/start`, { method: "POST" }, 45_000);
+    },
+    async resolvePhone(contactId) {
+      const body = (await call(`${base}/contacts/${encodeURIComponent(contactId)}/phone`)) as { phone?: unknown } | null;
+      return typeof body?.phone === "string" && /^\d{8,15}$/.test(body.phone) ? body.phone : null;
     },
   };
 }

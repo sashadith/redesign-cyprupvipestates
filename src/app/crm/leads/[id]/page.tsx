@@ -13,6 +13,7 @@ import { CockpitStage } from "../../components/CockpitStage";
 import { CockpitDeals } from "../../components/CockpitDeals";
 import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
+import { CockpitSyncButton } from "../../components/CockpitSyncButton";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
 import { CockpitRegistrations, type DueRow, type RegistrationRow } from "../../components/CockpitRegistrations";
@@ -167,7 +168,8 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
             <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
             <CockpitSummary leadId={lead.id} initialLocale={summaryLocale} />
             <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
-            <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP} />
+            <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP}
+              action={canEdit && (lead.phone || lead.email) ? <CockpitSyncButton leadId={lead.id} /> : null} />
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />

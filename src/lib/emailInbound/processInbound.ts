@@ -1,4 +1,4 @@
-import { simpleParser } from "mailparser";
+import { simpleParser, type ParsedMail } from "mailparser";
 import { prisma } from "@/lib/prisma";
 import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfiguredError } from "./imapClient";
 import { matchLeadForInboundEmail, canonicalizeEmail, type LeadMatch } from "./matchLead";
@@ -42,6 +42,69 @@ export function inboundDisposition(match: LeadMatch | null, isOwnAddress: boolea
   return "file";
 }
 
+export type FileResult = { status: "filed"; leadId: string; ambiguous: boolean } | { status: "duplicate" | "skipped" };
+
+/**
+ * Files one parsed inbound email on its lead's timeline (EMAIL_IN), or says why not. Shared by the
+ * per-user poll (notify: Telegram) and the cockpit's Sync (history only, no Telegram).
+ */
+export async function fileInboundEmail(
+  parsed: ParsedMail,
+  internalDate: Date | null,
+  ctx: { ownFromAddress: string | null; notify: boolean },
+): Promise<FileResult> {
+  const inboundMessageId = parsed.messageId || null;
+
+  // Idempotency: same Message-ID (ours to receive, not to send) can
+  // never create a second timeline entry.
+  if (inboundMessageId) {
+    const already = await prisma.leadInteraction.findFirst({ where: { messageId: inboundMessageId }, select: { id: true } });
+    if (already) return { status: "duplicate" };
+  }
+
+  const references = Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [];
+  const fromAddress = parsed.from?.value?.[0]?.address ?? "";
+
+  // A message the operator sent to themselves — a draft preview, a test
+  // send, a BCC of their own outgoing mail — is never a lead reply, no
+  // matter what Lead rows happen to share that address. Skip it before
+  // it ever reaches sender-address matching (matchLead.ts's fallback
+  // path), which is exactly what would otherwise file it onto a Lead
+  // whose email happens to equal the operator's own fromAddress.
+  const ownCanonicalAddress = canonicalizeEmail(ctx.ownFromAddress);
+  if (ownCanonicalAddress && canonicalizeEmail(fromAddress) === ownCanonicalAddress) return { status: "skipped" };
+
+  const match = await matchLeadForInboundEmail({ inReplyTo: parsed.inReplyTo ?? null, references, fromAddress });
+  // Not assignable to any lead (or a developer's registration reply) — silently skipped.
+  if (!match || inboundDisposition(match, false) === "skip") return { status: "skipped" };
+
+  let rawText = parsed.text ?? "";
+  if (!rawText && parsed.html) rawText = stripHtmlToText(stripHtmlBlockquotes(parsed.html));
+  const body = stripSignatureBlock(stripQuotedReply(rawText)).slice(0, MAX_BODY_LENGTH);
+  const attachmentCount = parsed.attachments?.length ?? 0;
+  const bodyWithAttachmentNote = attachmentCount > 0 ? `${body}\n\n[${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}]` : body;
+  // Everyone else on the message (e.g. a partner in CC), for "reply all"
+  // through crm_draft_email — never the operator, never the lead.
+  const leadEmail = (await prisma.lead.findUnique({ where: { id: match.leadId }, select: { email: true } }))?.email ?? null;
+  const replyCc = replyAllRecipients(parsed, [ctx.ownFromAddress, leadEmail], canonicalizeEmail);
+
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: match.leadId,
+      type: "EMAIL_IN",
+      direction: "INBOUND",
+      channel: "EMAIL",
+      subject: parsed.subject ?? null,
+      body: bodyWithAttachmentNote,
+      occurredAt: parsed.date ?? internalDate ?? new Date(),
+      messageId: inboundMessageId,
+      metadata: { attachmentCount, ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}), ...(replyCc.length ? { cc: replyCc } : {}), ...(ctx.notify ? {} : { via: "imap-sync" }) },
+    },
+  });
+  if (ctx.notify) await notifyInboundReply(match.leadId, parsed.subject ?? null, body);
+  return { status: "filed", leadId: match.leadId, ambiguous: match.ambiguous };
+}
+
 export type PollResult = { fetched: number; matched: number; ambiguous: number; skipped: number; reset: boolean; stoppedEarlyOnError?: string };
 
 /**
@@ -56,7 +119,6 @@ export type PollResult = { fetched: number; matched: number; ambiguous: number; 
 export async function pollInboundEmailForUser(userId: string): Promise<PollResult> {
   const creds = await getImapCredentials(userId); // throws ImapNotConfiguredError — let the caller decide that's a no-op, not a failure
   const settings = await prisma.userEmailSettings.findUniqueOrThrow({ where: { userId }, select: { imapLastUid: true, imapUidValidity: true, fromAddress: true } });
-  const ownCanonicalAddress = canonicalizeEmail(settings.fromAddress);
 
   return withReadOnlyInbox(creds, async (client, mailbox) => {
     const result = await fetchNewMessages(client, mailbox, settings.imapLastUid, settings.imapUidValidity);
@@ -73,71 +135,13 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
     for (const msg of result.messages.sort((a, b) => a.uid - b.uid)) {
       try {
         const parsed = await simpleParser(msg.source);
-        const inboundMessageId = parsed.messageId || null;
-
-        // Idempotency: same Message-ID (ours to receive, not to send) can
-        // never create a second timeline entry.
-        if (inboundMessageId) {
-          const already = await prisma.leadInteraction.findFirst({ where: { messageId: inboundMessageId }, select: { id: true } });
-          if (already) {
-            await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
-            skipped++;
-            continue;
-          }
-        }
-
-        const references = Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [];
-        const fromAddress = parsed.from?.value?.[0]?.address ?? "";
-
-        // A message the operator sent to themselves — a draft preview, a test
-        // send, a BCC of their own outgoing mail — is never a lead reply, no
-        // matter what Lead rows happen to share that address. Skip it before
-        // it ever reaches sender-address matching (matchLead.ts's fallback
-        // path), which is exactly what would otherwise file it onto a Lead
-        // whose email happens to equal the operator's own fromAddress.
-        if (ownCanonicalAddress && canonicalizeEmail(fromAddress) === ownCanonicalAddress) {
-          await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
-          skipped++;
-          continue;
-        }
-
-        const match = await matchLeadForInboundEmail({ inReplyTo: parsed.inReplyTo ?? null, references, fromAddress });
-
-        if (!match || inboundDisposition(match, false) === "skip") {
-          // Not assignable to any lead (or a developer's registration reply) — silently skipped. Still advance past it.
-          await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
-          skipped++;
-          continue;
-        }
-
-        let rawText = parsed.text ?? "";
-        if (!rawText && parsed.html) rawText = stripHtmlToText(stripHtmlBlockquotes(parsed.html));
-        const body = stripSignatureBlock(stripQuotedReply(rawText)).slice(0, MAX_BODY_LENGTH);
-        const attachmentCount = parsed.attachments?.length ?? 0;
-        const bodyWithAttachmentNote = attachmentCount > 0 ? `${body}\n\n[${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}]` : body;
-        // Everyone else on the message (e.g. a partner in CC), for "reply all"
-        // through crm_draft_email — never the operator, never the lead.
-        const leadEmail = (await prisma.lead.findUnique({ where: { id: match.leadId }, select: { email: true } }))?.email ?? null;
-        const replyCc = replyAllRecipients(parsed, [settings.fromAddress, leadEmail], canonicalizeEmail);
-
-        await prisma.leadInteraction.create({
-          data: {
-            leadId: match.leadId,
-            type: "EMAIL_IN",
-            direction: "INBOUND",
-            channel: "EMAIL",
-            subject: parsed.subject ?? null,
-            body: bodyWithAttachmentNote,
-            occurredAt: parsed.date ?? msg.internalDate ?? new Date(),
-            messageId: inboundMessageId,
-            metadata: { attachmentCount, ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}), ...(replyCc.length ? { cc: replyCc } : {}) },
-          },
-        });
-
+        const filed = await fileInboundEmail(parsed, msg.internalDate, { ownFromAddress: settings.fromAddress, notify: true });
+        // Advance past every message, filed or not: unmatched mail is never re-checked.
         await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
-        matched++;
-        if (match.ambiguous) ambiguous++;
-        await notifyInboundReply(match.leadId, parsed.subject ?? null, body);
+        if (filed.status === "filed") {
+          matched++;
+          if (filed.ambiguous) ambiguous++;
+        } else skipped++;
       } catch (e) {
         // A single malformed/unparseable message must not silently swallow
         // or reprocess forever — stop this run here (cursor stays at the

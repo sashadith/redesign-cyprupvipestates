@@ -1,6 +1,7 @@
-// Inbound WhatsApp messages from the OpenWA gateway.
+// WhatsApp messages from the OpenWA gateway: customer messages (message.received) and, since
+// 2026-10-29, the operator's own (message.sent) — see lib/openwa/trackMessage.ts.
 //
-// Registered against the gateway session for the "message" event. Before this
+// First registered against the gateway session for the "message" event. Before this
 // existed no webhook was registered at all and WHATSAPP_IN was, in the words
 // of crm/interactionHelpers.ts, "not written anywhere yet" — so every customer
 // reply was invisible to the CRM unless someone typed it in. 59 leads messaged,
@@ -13,7 +14,8 @@
 // could plant messages on any lead.
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { processInboundWhatsApp, type InboundMessage } from "@/lib/openwa/inboundMessage";
+import { realTrackDeps, trackWhatsAppMessage, type WaMessage } from "@/lib/openwa/trackMessage";
+import { createOpenWaClient } from "@/lib/openwa/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -50,15 +52,21 @@ function secretOk(req: NextRequest): boolean {
 }
 
 /** The gateway's payload shape varies by version; read defensively. */
-function extract(body: any): InboundMessage | null {
+function extract(body: any): WaMessage | null {
   const p = body?.payload ?? body?.data ?? body;
   if (!p || typeof p !== "object") return null;
+  const str = (v: unknown) => (typeof v === "string" ? v : null);
   return {
     id: typeof p.id === "string" ? p.id : (typeof p.id?._serialized === "string" ? p.id._serialized : null),
-    from: typeof p.from === "string" ? p.from : null,
-    body: typeof p.body === "string" ? p.body : (typeof p.text === "string" ? p.text : null),
+    from: str(p.from),
+    to: str(p.to),
+    chatId: str(p.chatId),
+    body: typeof p.body === "string" ? p.body : str(p.text),
+    type: str(p.type),
     fromMe: p.fromMe === true,
     timestamp: typeof p.timestamp === "number" ? p.timestamp : null,
+    isGroup: p.isGroup === true,
+    senderPhone: str(p.senderPhone),
   };
 }
 
@@ -71,7 +79,9 @@ export async function POST(req: NextRequest) {
   try {
     const msg = extract(await req.json().catch(() => null));
     if (!msg) return NextResponse.json({ status: "skipped", reason: "unparseable" });
-    const result = await processInboundWhatsApp(msg);
+    // Registered for message.received AND message.sent (the operator's own messages, phone included).
+    const client = createOpenWaClient();
+    const result = await trackWhatsAppMessage(msg, { live: true, via: "openwa-webhook" }, realTrackDeps((jid) => client.resolvePhone(jid)));
     // Always 200 on a parsed payload: a gateway that retries on non-2xx would
     // hammer this endpoint over a message we deliberately skipped (our own
     // send, a group, an unknown number).

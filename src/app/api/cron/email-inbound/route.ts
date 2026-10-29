@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { pollInboundEmailForUser, ImapNotConfiguredError } from "@/lib/emailInbound/processInbound";
 import { pollOfficeMailbox, type OfficePollResult } from "@/lib/emailInbound/officeInbound";
+import { pollSentForUser } from "@/lib/crm/commSync";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 import { checkCronFreshness } from "@/lib/metaLeadgen/watchdog";
 
@@ -14,11 +15,11 @@ type UserSummary = { userId: string; ok: boolean; fetched?: number; matched?: nu
 async function pollAllConfiguredMailboxes(): Promise<UserSummary[]> {
   const rows = await prisma.userEmailSettings.findMany({
     where: { imapHost: { not: null }, imapUser: { not: null }, imapPasswordEnc: { not: null } },
-    select: { userId: true },
+    select: { userId: true, fromAddress: true },
   });
 
   const results: UserSummary[] = [];
-  for (const { userId } of rows) {
+  for (const { userId, fromAddress } of rows) {
     try {
       const r = await pollInboundEmailForUser(userId);
       results.push({ userId, ok: !r.stoppedEarlyOnError, ...r });
@@ -29,6 +30,16 @@ async function pollAllConfiguredMailboxes(): Promise<UserSummary[]> {
       if (e instanceof ImapNotConfiguredError) continue; // not an error — just nothing to do for this user
       console.error(`email-inbound: poll failed for user ${userId}:`, e);
       results.push({ userId, ok: false, error: e instanceof Error ? e.message : String(e) });
+    }
+    // Mail the operator sent from their own mail program (2026-10-29, see crm/commSync.ts). Its own
+    // entry: a Sent-folder hiccup must not hide whether the inbox poll worked, and vice versa.
+    try {
+      const sent = await pollSentForUser(userId, fromAddress);
+      results.push({ userId: `${userId}:sent`, ok: true, fetched: sent.scanned, matched: sent.filed });
+    } catch (e) {
+      if (e instanceof ImapNotConfiguredError) continue;
+      console.error(`email-inbound: sent-folder poll failed for user ${userId}:`, e);
+      results.push({ userId: `${userId}:sent`, ok: false, error: e instanceof Error ? e.message : String(e) });
     }
   }
   // Developer registration replies land in the office mailbox (env credentials,
