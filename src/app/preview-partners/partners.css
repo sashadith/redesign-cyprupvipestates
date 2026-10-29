@@ -78,7 +78,7 @@
 
 .pnr__hero-note {
   margin-top: var(--s-5); max-width: 56ch; font-family: var(--font-body), sans-serif;
-  font-size: var(--text-caption); line-height: 1.6; color: var(--text-faint);
+  font-size: var(--text-body); line-height: 1.6; color: var(--text-soft);
 }
 
 /* ------------------------------------------------------------- SECTION --- */
