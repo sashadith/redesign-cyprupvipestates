@@ -12,6 +12,10 @@ import DriveFolderPreviewButton from "./DriveFolderPreviewButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
 import MonthlySyncControl from "./MonthlySyncControl";
 import CommissionRates from "./CommissionRates";
+import DeveloperContracts from "./DeveloperContracts";
+import { currentContract, dateToIso, nicosiaToday } from "@/lib/developerContract";
+import { getCrmUser } from "@/lib/crm/session";
+import { canAssignLeads } from "@/lib/crm/access";
 import { currentRound, doneForRound, nextRound } from "@/lib/monthlyManualSync";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
@@ -49,6 +53,11 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
   const archivedDevelopments = dev.developments.filter((d) => d.publishStatus === "archived");
   const rateRows = await prisma.commissionRate.findMany({ where: { developerAccountId: dev.id }, select: { id: true, developmentId: true, ratePercent: true } });
   const defaultRateRow = rateRows.find((r) => r.developmentId === null) ?? null;
+  const [contractRows, viewer] = await Promise.all([
+    prisma.developerContract.findMany({ where: { developerAccountId: dev.id }, orderBy: [{ signedAt: "desc" }, { createdAt: "desc" }] }),
+    getCrmUser(),
+  ]);
+  const currentContractRow = currentContract(contractRows);
   const ownRate = new Map(rateRows.filter((r) => r.developmentId).map((r) => [r.developmentId as string, r]));
   const availableUnits = await prisma.developmentUnit.count({
     where: { status: "available", development: { developerAccountId: dev.id, publishStatus: { not: "archived" } } },
@@ -205,6 +214,19 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
           const r = ownRate.get(d.id);
           return { id: d.id, name: d.override?.alias || d.publicName, status: d.publishStatus, rateId: r?.id ?? null, ownRate: r ? r.ratePercent.toNumber() : null };
         })}
+      />
+
+      <DeveloperContracts
+        developerAccountId={dev.id}
+        contracts={contractRows.map((c) => ({
+          id: c.id, signedAt: dateToIso(c.signedAt), termMonths: c.termMonths, autoRenew: c.autoRenew,
+          commissionPercent: c.commissionPercent?.toNumber() ?? null, note: c.note, fileName: c.fileName, fileSize: c.fileSize,
+          createdAt: c.createdAt.toISOString(), reminder14SentAt: c.reminder14SentAt?.toISOString() ?? null, reminder1SentAt: c.reminder1SentAt?.toISOString() ?? null,
+        }))}
+        currentId={currentContractRow?.id ?? null}
+        today={nicosiaToday()}
+        canEdit={!!viewer && canAssignLeads(viewer)}
+        developerRate={defaultRateRow ? defaultRateRow.ratePercent.toNumber() : null}
       />
 
       {/* Drive / Dropbox availability sync. Which one a developer uses is read

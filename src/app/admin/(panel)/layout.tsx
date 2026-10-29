@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { logout } from "../actions";
+import { contractStatus, currentContract, dateToIso, nicosiaToday } from "@/lib/developerContract";
 import Sidebar, { type NavModule } from "./Sidebar";
 import AdminPerfProbe from "./AdminPerfProbe";
 import ActivityTracker from "./ActivityTracker";
@@ -113,8 +114,14 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       _count: { select: { developments: true } },
       analyses: { select: { sourceType: true } },
       developments: { select: { dev: true }, distinct: ["dev"] },
+      contracts: { select: { signedAt: true, termMonths: true, autoRenew: true, createdAt: true } },
     },
   });
+  const today = nicosiaToday();
+  const contractKind = (d: (typeof developers)[number]) => {
+    const c = currentContract(d.contracts);
+    return contractStatus(c && { signedAt: dateToIso(c.signedAt), termMonths: c.termMonths, autoRenew: c.autoRenew }, today).kind;
+  };
   // "With feed" = a live (URL/API) analysis OR feed-synced developments (dev key ≠ "manual").
   const hasFeed = (d: (typeof developers)[number]) =>
     d.analyses.some((x) => x.sourceType === "URL" || x.sourceType === "API") ||
@@ -136,7 +143,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   for (const d of availableDevs) {
     availableByDeveloper.set(d.developerAccountId, (availableByDeveloper.get(d.developerAccountId) ?? 0) + 1);
   }
-  const developersNav = developers.map((d) => ({ id: d.id, name: d.name, count: availableByDeveloper.get(d.id) ?? 0, hasFeed: hasFeed(d) }));
+  const developersNav = developers.map((d) => ({ id: d.id, name: d.name, count: availableByDeveloper.get(d.id) ?? 0, hasFeed: hasFeed(d), contract: contractKind(d) }));
   const devTotals = {
     developers: developers.filter((d) => (availableByDeveloper.get(d.id) ?? 0) > 0).length,
     developments: availableDevs.length,
