@@ -36,6 +36,7 @@ SHEETS = {  # sheet title (stripped) -> project slug in the data file
     "ANGELICO": "angelico-lifestyle-apartments",
     "APANEMA": "apanema-villas",
     "AVENUE": "avenue-first",
+    "CALIO": "calio",  # hidden sheet, Larnaca; units-only draft since 2026-10-29
     "CELESTIAL PERNERA": "celestial-pernera-villas",
     "DELEAR": "delear-villas",
     "ELEVATE": "elevate-premium-apartments",

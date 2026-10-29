@@ -20,8 +20,8 @@
    "completion": null,
    "energy": "A",
    "district": "Famagusta",
-   "town": null,
-   "area": "Protaras",
+   "town": "Paralimni",
+   "area": "Kapparis",
    "latitude": 35.061163,
    "longitude": 34.00128,
    "amenities": [
@@ -278,8 +278,8 @@
    "completion": null,
    "energy": null,
    "district": "Famagusta",
-   "town": null,
-   "area": "Protaras",
+   "town": "Paralimni",
+   "area": "Kapparis",
    "latitude": 35.0555741,
    "longitude": 33.9910574,
    "amenities": [
@@ -1958,8 +1958,8 @@
    "completion": null,
    "energy": "A",
    "district": "Famagusta",
-   "town": null,
-   "area": "Protaras",
+   "town": "Paralimni",
+   "area": "Kapparis",
    "latitude": 35.056961,
    "longitude": 34.005803,
    "amenities": [
@@ -5872,6 +5872,32 @@
     "No interior renders in Drive (the brochure has interior pages); gallery has exterior/aerial renders + latest progress (27.04.2026) only. Brochure aerial render p8 not extracted.",
     "Renders (4) and (12) are near-identical street views (different light); both kept.",
     "No completion date stated."
+   ],
+   "units": []
+  },
+  {
+   "slug": "calio",
+   "name": "Calio",
+   "driveFolder": null,
+   "driveFolderId": null,
+   "category": "Residential",
+   "stage": null,
+   "completion": "Q3 2026",
+   "energy": null,
+   "district": "Larnaca",
+   "town": "Larnaca",
+   "area": null,
+   "latitude": null,
+   "longitude": null,
+   "amenities": [],
+   "descriptions": {},
+   "evidence": {
+    "source": "GENERAL AVAILABILITY workbook 07.10.26, hidden sheet CALIO: LOCATION 'LARNACA', 25 apartments in blocks A and B, ground to third floor, COMPLETION 'SEP 2026', POOL 'NO'. Not in Giovani's Drive, not on giovani.cy. Imported as a units-only draft on operator decision 2026-10-29."
+   },
+   "documented": {},
+   "openQuestions": [
+    "No brochure, images, plans, description or map pin: ask Giovani (exact location in Larnaca, stage, material).",
+    "5 units NOT FOR SALE in the 07.10.26 list (A001, A104, A204, A205, A303), left out like elsewhere."
    ],
    "units": []
   }
