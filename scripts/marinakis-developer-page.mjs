@@ -21,9 +21,18 @@
  *     developers index and stays out of the index, sitemap and hreflang until someone
  *     clears it. Without that, these rows would put a public page live the moment they
  *     are written — with an empty project grid, because the developments are drafts.
- *     Pass --live to create it already visible. An EXISTING page keeps whatever state it
- *     is in: re-running this to update the copy never silently takes a live page down,
- *     and never silently republishes one somebody deactivated.
+ *     Pass --live to create it visible, or to bring an already-created page online: that
+ *     flag is the explicit instruction, and it reactivates the WHOLE translation group
+ *     through the same reactivateDeveloperGroup() the admin button calls, because a page
+ *     live in DE and offline in EN would leave hreflang pointing into a redirect.
+ *     WITHOUT --live an existing page keeps whatever state it is in, so re-running this
+ *     to fix a typo in the copy can neither take a live page down nor republish one
+ *     somebody deactivated on purpose.
+ *
+ *     What this does NOT do, and the admin's own Reactivate button does: revalidate the
+ *     Next cache and ping IndexNow. The nightly IndexNow sweep covers the second. If the
+ *     page still answers with the offline redirect afterwards, it is that cache — click
+ *     Reactivate in the admin, which is the path that clears it.
  *
  * The grid stays empty until the developments are published — they are created as drafts
  * by marinakis-sync.mjs. The page itself is live from the moment these rows exist, so
@@ -35,6 +44,7 @@ import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../src/lib/prisma.ts";
 import { htmlToPortableText } from "../src/lib/portableText/htmlToPt.mjs";
+import { reactivateDeveloperGroup } from "../src/lib/developerLifecycle.ts";
 
 const file = process.argv[2];
 const APPLY = process.argv.includes("--apply");
@@ -69,6 +79,18 @@ try {
     // page between live and offline as a side effect of a copy change.
     if (row) await prisma.developer.update({ where: { id: row.id }, data: fields });
     else await prisma.developer.create({ data: { sanityId: `local-${randomUUID()}`, deactivatedAt: LIVE ? null : new Date(), ...fields } });
+  }
+
+  // --live on rows that already exist: reactivate the whole group, the same DB write the
+  // admin's Reactivate button makes. Done after the content writes so a page never goes
+  // live carrying the previous copy.
+  if (APPLY && LIVE) {
+    const stale = await prisma.developer.findMany({ where: { slug: data.slug, deactivatedAt: { not: null } }, select: { id: true, language: true } });
+    if (stale.length) {
+      const r = await reactivateDeveloperGroup(prisma, stale[0].id);
+      console.log(`\n  LIVE: reactivated ${r.rows.map((x) => x.language).sort().join("/")} — /developers/${data.slug} is public`);
+      console.log("  (the admin's own button also revalidates the Next cache and pings IndexNow; if the page still redirects, click Reactivate there)");
+    }
   }
 
   const acct = await prisma.developerAccount.findUnique({ where: { slug: data.accountSlug }, select: { id: true, name: true, developerTranslationGroupId: true } });
