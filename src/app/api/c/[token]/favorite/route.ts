@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { getCrmUser } from "@/lib/crm/session";
 
 // No admin/user auth here by design — the token itself IS the auth for a
 // client-side presentation page with no account system. Rate-limited per IP
@@ -19,6 +20,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (ipLimiter(clientIp(req), 20, 60_000)) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
   const body = await req.json().catch(() => null);
+  // A CRM user's heart is never saved or reported as the client's (same rule as the view route).
+  if (await getCrmUser().catch(() => null)) return NextResponse.json({ ignored: "staff" });
   const developmentId = String(body?.developmentId ?? "");
   const favorited = !!body?.favorited;
   if (!developmentId) return NextResponse.json({ error: "developmentId required" }, { status: 400 });

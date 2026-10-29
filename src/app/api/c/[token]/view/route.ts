@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, dailyVisitorHash } from "@/lib/visitorHash";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { getCrmUser } from "@/lib/crm/session";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { submittedName } from "@/lib/partner/matchGlue";
 import { brandDisplayName, officeAlertPrefix, presentationOpenedRow } from "@/lib/partner/presentationBranding";
@@ -25,6 +26,10 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (ipLimiter(clientIp(req), 30, 60_000)) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
   const body = await req.json().catch(() => ({}) as any);
+
+  // Someone signed in to the CRM is the team, not the client: no view row, no "New for you" clearing, no
+  // Telegram, no partner outbox. The page already skips the POST for them; this guards stale tabs/caches.
+  if (await getCrmUser().catch(() => null)) return NextResponse.json({ ignored: "staff" });
 
   const presentation = await prisma.clientPresentation.findUnique({
     where: { token: params.token },

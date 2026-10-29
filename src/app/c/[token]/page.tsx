@@ -7,6 +7,7 @@
 // outside [lang] so it needs its own, like preview-home/preview-projects do).
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getCrmUser } from "@/lib/crm/session";
 import { getDbProjectsByIds } from "@/lib/developmentRender";
 import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCard";
 import { normalizeRef } from "@/lib/unitRef";
@@ -177,8 +178,10 @@ export default async function ClientPresentationPage({
     return <PartnerNotAvailable locale={locale} />;
   }
   // The portal's "Open" link adds ?preview=1 (soft marker, see presentationBranding): the partner's own look
-  // is not recorded as the client's view, and hearts stay local-only. Always true for a staff presentation.
-  const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) };
+  // is not recorded as the client's view, and hearts stay local-only. A visitor signed in to the CRM is the
+  // team, never the client: same local-only mode for any presentation (the API routes refuse them too).
+  const staffVisit = !!(await getCrmUser().catch(() => null));
+  const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams), staff: staffVisit };
   const trackViews = tracksClientViews(previewCtx) && savesClientFavorites(previewCtx);
   const branding = presentationBranding({
     token: params.token,
@@ -323,6 +326,9 @@ export default async function ClientPresentationPage({
   return (
     <>
       {trackViews && <ViewTracker token={params.token} />}
+      {staffVisit && (
+        <div className="cp-staff-note" role="status">Team view: this visit isn&apos;t counted or reported, and hearts aren&apos;t saved.</div>
+      )}
       <main className="cp-page" data-theme="dark">
         <HeroGreeting
           eyebrowTag={c.eyebrowTag}
@@ -341,7 +347,8 @@ export default async function ClientPresentationPage({
           token={params.token}
           items={items}
           locale={locale}
-          {...(branding.mode === "partner" ? { partnerMode: true, trackViews } : {})}
+          trackViews={trackViews}
+          {...(branding.mode === "partner" ? { partnerMode: true } : {})}
         />
         {branding.mode === "partner" ? (
           <PartnerClosing brand={branding} locale={locale} />
