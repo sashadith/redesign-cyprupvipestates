@@ -151,8 +151,10 @@ test("partner preview: ?preview=1 skips view tracking for partner presentations 
   assert.equal(tracksClientViews({ partnerId: "p1", preview: false }), true);
   assert.equal(tracksClientViews({ partnerId: null, preview: true }), true, "staff presentation: always tracked, as before");
   assert.equal(tracksClientViews({ partnerId: null, preview: false }), true);
+  assert.equal(tracksClientViews({ partnerId: null, preview: false, staff: true }), false, "a CRM user's visit is never tracked");
+  assert.equal(tracksClientViews({ partnerId: "p1", preview: false, staff: true }), false);
   const page = src("app/c/[token]/page.tsx");
-  assert.ok(page.includes("const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams) };"));
+  assert.ok(page.includes("const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams), staff: staffVisit };"));
   assert.ok(page.includes("const trackViews = tracksClientViews(previewCtx) && savesClientFavorites(previewCtx);"));
   assert.ok(page.includes("{trackViews && <ViewTracker token={params.token} />}"));
   const body = src("app/c/[token]/PresentationBody.tsx");
@@ -173,6 +175,7 @@ test("partner preview: hearts are local-only (no POST to /favorite); staff prese
   assert.equal(savesClientFavorites({ partnerId: "p1", preview: false }), true);
   assert.equal(savesClientFavorites({ partnerId: null, preview: true }), true, "staff presentation unchanged");
   assert.equal(savesClientFavorites({ partnerId: null, preview: false }), true);
+  assert.equal(savesClientFavorites({ partnerId: null, preview: false, staff: true }), false, "a CRM user's heart stays local");
   const body = src("app/c/[token]/PresentationBody.tsx");
   const toggleAt = body.indexOf("const toggleFavorite");
   const toggle = body.slice(toggleAt, body.indexOf("}, [token, trackViews]);", toggleAt));
@@ -212,8 +215,10 @@ test("staff (cve) presentation path is unchanged: metadata, tracker, body props"
   assert.ok(cve.includes("const description = COPY[locale].metaDescription;"));
   assert.ok(cve.includes("images: [{ url: PRESENTATION_OG_IMAGE, width: 1000, height: 1000 }],"));
   assert.ok(cve.includes("robots: { index: false, follow: false },"));
-  // Body gets the partner-only props by spread, so a staff presentation's client props are the same as before.
-  assert.ok(page.includes('{...(branding.mode === "partner" ? { partnerMode: true, trackViews } : {})}'));
+  // partnerMode stays partner-only; trackViews now reaches every presentation (false only for a CRM visitor
+  // or a partner preview), so a client's own visit to a staff presentation still tracks as before.
+  assert.ok(page.includes('{...(branding.mode === "partner" ? { partnerMode: true } : {})}'));
+  assert.equal(tracksClientViews({ partnerId: null, preview: false, staff: false }), true);
   // Partner-only gates key off partnerId (null for staff presentations).
   assert.ok(page.includes("if (presentation.partnerId && !partnerPresentationAvailable(partnerRow))"));
   assert.equal(tracksClientViews({ partnerId: null, preview: true }), true);
@@ -411,4 +416,18 @@ test("onboarding: 'First presentation sent' is optional (like Telegram), counts 
   // Required steps still block: with an open bank step the card stays incomplete regardless of the presentation.
   assert.equal(onboardingSteps(onboardingFactsFrom({ ...base, bankComplete: false, hasPresentation: true })).complete, false);
   assert.equal(onboardingHref("presentation"), "/presentations");
+});
+
+test("a visitor signed in to the CRM is refused by both tracking routes before anything is written", () => {
+  for (const file of ["app/api/c/[token]/view/route.ts", "app/api/c/[token]/favorite/route.ts"]) {
+    const r = src(file);
+    const guard = r.indexOf('if (await getCrmUser().catch(() => null)) return NextResponse.json({ ignored: "staff" });');
+    assert.ok(guard > 0, `${file}: staff guard present`);
+    for (const write of ["prisma.presentationView.create", "prisma.clientPresentationItem.update", "sendTelegramMessage("]) {
+      const at = r.indexOf(write, r.indexOf("export async function POST"));
+      if (at > 0) assert.ok(guard < at, `${file}: guard before ${write}`);
+    }
+  }
+  const page = src("app/c/[token]/page.tsx");
+  assert.ok(page.includes("trackViews={trackViews}"), "the body gets trackViews for staff presentations too");
 });

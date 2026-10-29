@@ -112,9 +112,11 @@ export function isPreviewRequest(searchParams: Record<string, string | string[] 
 
 /**
  * Whether /c/[token] records views (page-level ViewTracker and the overlay's view POST). Only a partner
- * presentation honours the preview marker; a staff presentation (no partnerId) always tracks, as before.
+ * presentation honours the preview marker; a staff presentation (no partnerId) tracks unless the visitor is
+ * signed in to the CRM (`staff`, 2026-10-29: the team opening a selection is not the client looking at it).
  */
-export function tracksClientViews(p: { partnerId: string | null; preview: boolean }): boolean {
+export function tracksClientViews(p: { partnerId: string | null; preview: boolean; staff?: boolean }): boolean {
+  if (p.staff) return false;
   return !p.partnerId || !p.preview;
 }
 
@@ -122,7 +124,7 @@ export function tracksClientViews(p: { partnerId: string | null; preview: boolea
  * Whether a heart click is saved (POST /api/c/[token]/favorite). Same rule as views: in a partner preview
  * the hearts are local-only; a staff presentation always saves, as before.
  */
-export function savesClientFavorites(p: { partnerId: string | null; preview: boolean }): boolean {
+export function savesClientFavorites(p: { partnerId: string | null; preview: boolean; staff?: boolean }): boolean {
   return tracksClientViews(p);
 }
 
