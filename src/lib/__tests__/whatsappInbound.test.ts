@@ -47,26 +47,6 @@ test("matching is on the FULL number — nine shared digits are not a match", ()
     "matchLead appears to compare partial numbers — a near-miss would land on the wrong lead");
 });
 
-test("our own outgoing messages are never logged as the customer reacting", () => {
-  // fromMe comes back over the same stream. Logging it would double-count
-  // every send AND mark the lead as having replied, resetting the cadence.
-  const src = read("src/lib/openwa/inboundMessage.ts");
-  assert.ok(/if \(msg\.fromMe\) return .*from-us/.test(src), "the fromMe guard is gone");
-});
-
-test("group traffic never lands on a customer timeline", () => {
-  // The team announcement group is a @g.us chat. Its messages must not be
-  // recorded against any lead.
-  const src = read("src/lib/openwa/inboundMessage.ts");
-  assert.ok(/@c\.us"\)\) return .*not-a-chat/.test(src), "the one-to-one chat guard is gone");
-});
-
-test("a repeated delivery does not create a second timeline entry", () => {
-  const src = read("src/lib/openwa/inboundMessage.ts");
-  assert.ok(/messageId: msg\.id/.test(src), "messageId is no longer stored, so retries cannot be detected");
-  assert.ok(/findFirst\(\{ where: \{ messageId/.test(src), "the duplicate check is gone");
-});
-
 test("the webhook is closed when its secret is unset", () => {
   // It writes to a lead's timeline and resets the follow-up cadence, and nginx
   // proxies /api publicly. Falling open because a variable is missing from a

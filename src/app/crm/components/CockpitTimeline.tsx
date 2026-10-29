@@ -18,10 +18,13 @@ const ICON: Record<TimelineItem["kind"], ReactNode> = {
   system: <><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></>,
 };
 
-export function CockpitTimeline({ items, now, truncated }: { items: TimelineItem[]; now: Date; truncated: boolean }) {
+export function CockpitTimeline({ items, now, truncated, action }: { items: TimelineItem[]; now: Date; truncated: boolean; action?: ReactNode }) {
   return (
     <section className="crm-panel crm-ck-timeline" aria-labelledby="crm-ck-tl-h">
-      <h2 id="crm-ck-tl-h">Timeline</h2>
+      <div className="crm-ck-sechead">
+        <h2 id="crm-ck-tl-h">Timeline</h2>
+        {action}
+      </div>
       {items.length === 0 ? (
         <p className="crm-muted">Nothing logged yet.</p>
       ) : (

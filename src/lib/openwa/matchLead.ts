@@ -24,23 +24,31 @@ export type WhatsAppLeadMatch = { leadId: string; ambiguous: boolean };
  * timeline saying it was ambiguous rather than silently picking one.
  */
 export async function matchLeadForInboundWhatsApp(fromMsisdn: string): Promise<WhatsAppLeadMatch | null> {
-  const wanted = toMsisdn(fromMsisdn);
-  if (!wanted) return null;
+  return (await loadLeadPhoneMatcher())(fromMsisdn);
+}
 
+/**
+ * The same match against one snapshot of the leads, for callers that match many messages in a row
+ * (Sync, backfill): one query instead of one full lead scan per message.
+ */
+export async function loadLeadPhoneMatcher(): Promise<(fromMsisdn: string) => Promise<WhatsAppLeadMatch | null>> {
   // Phones are stored as humans typed them ("+971 56 342 8755"), so the
   // comparison has to happen on normalised values rather than in SQL.
   const leads = await prisma.lead.findMany({
     where: { deletedAt: null, phone: { not: null } },
     select: { id: true, phone: true, createdAt: true, interactions: { select: { occurredAt: true }, orderBy: { occurredAt: "desc" }, take: 1 } },
   });
+  return async (fromMsisdn) => {
+    const wanted = toMsisdn(fromMsisdn);
+    if (!wanted) return null;
+    const hits = leads.filter((l) => toMsisdn(l.phone) === wanted);
+    if (hits.length === 0) return null;
+    if (hits.length === 1) return { leadId: hits[0].id, ambiguous: false };
 
-  const hits = leads.filter((l) => toMsisdn(l.phone) === wanted);
-  if (hits.length === 0) return null;
-  if (hits.length === 1) return { leadId: hits[0].id, ambiguous: false };
-
-  // Same tie-break as the email path: most recent interaction, else most
-  // recently created.
-  const rank = (l: (typeof hits)[number]) => (l.interactions[0]?.occurredAt ?? l.createdAt).getTime();
-  const best = hits.reduce((a, b) => (rank(b) > rank(a) ? b : a));
-  return { leadId: best.id, ambiguous: true };
+    // Same tie-break as the email path: most recent interaction, else most
+    // recently created.
+    const rank = (l: (typeof hits)[number]) => (l.interactions[0]?.occurredAt ?? l.createdAt).getTime();
+    const best = hits.reduce((a, b) => (rank(b) > rank(a) ? b : a));
+    return { leadId: best.id, ambiguous: true };
+  };
 }
