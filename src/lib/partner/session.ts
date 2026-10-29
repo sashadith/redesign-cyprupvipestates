@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { hashToken, newToken } from "./tokens";
 import { partnerSessionMs, partnerSessionWasRemembered } from "@/lib/loginPersistence";
+import { needsAgreementAcceptance } from "./agreementGate";
 
 /**
  * Session cookie name. Production (HTTPS) uses the __Host- prefix, which the browser only accepts
@@ -94,6 +95,7 @@ export async function requirePartner(opts: { active?: boolean } = {}): Promise<P
   const me = await getPartner();
   if (!me) redirect("/login");
   if (opts.active && me.partner.status !== "ACTIVE") redirect("/home");
+  if (await needsAgreementAcceptance(me.partner)) redirect("/agreement");
   return me;
 }
 

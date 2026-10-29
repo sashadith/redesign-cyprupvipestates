@@ -97,7 +97,10 @@ export const en = {
   agreement: {
     title: "Partner agreement",
     version: "Version {version}",
-    draftNotice: "Draft — to be replaced by the final agreement",
+    updateTitle: "Please accept the updated partner agreement",
+    updateIntro: "The partner agreement has been finalised as version {version}. Please read it and accept it to continue using the partner portal.",
+    acceptLabel: "I have read and accept the partner agreement, version {version}.",
+    acceptButton: "Accept and continue",
   },
   home: {
     title: "Your partner account",
