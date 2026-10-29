@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
@@ -17,6 +16,10 @@ import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitAssign } from "../../components/CockpitAssign";
 import { CockpitSummary } from "../../components/CockpitSummary";
 import { CockpitRegistrations, type DueRow, type RegistrationRow } from "../../components/CockpitRegistrations";
+import { CockpitPresentations, type PresentationRowView, type SentInfoView } from "../../components/CockpitPresentations";
+import type { ModalLead } from "../../components/PresentationModal";
+import { buildPresentationRows, loadLeadPresentations } from "@/lib/crm/presentations/rows";
+import { sentHistory } from "@/lib/crm/presentations/sentHistory";
 import { loadRegistrationDue } from "@/lib/crm/registration/due";
 import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { CockpitPartner, type CockpitPartnerView } from "../../components/CockpitPartner";
@@ -41,7 +44,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
-      message: true, notes: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true,
+      message: true, notes: true, lastMatchFilters: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true,
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -80,6 +83,27 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   const summaryLocale = isSummaryLocale(me?.crmSummaryLocale) ? me.crmSummaryLocale : DEFAULT_SUMMARY_LOCALE;
 
   const now = new Date();
+  const presentationRows = buildPresentationRows(await loadLeadPresentations(lead.id), now);
+  const presentations: PresentationRowView[] = presentationRows.map((p) => ({
+    id: p.id, token: p.token, effectiveStatus: p.effectiveStatus,
+    createdAt: p.createdAt.toISOString(), expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+    advisorName: p.advisorName, partnerName: p.partnerName,
+    viewCount: p.viewCount, uniqueDays: p.uniqueDays, favoritedCount: p.favoritedCount,
+    items: p.items.map((i) => ({ developmentId: i.developmentId, name: i.name, isFavorited: i.isFavorited, views: i.views, durationSec: i.durationSec })),
+  }));
+  // "Already sent" per project for the picker; dates as ISO across the client boundary.
+  const sentRaw = sentHistory(presentationRows);
+  const sent: Record<string, SentInfoView> = {};
+  Object.keys(sentRaw).forEach((k) => { sent[k] = { ...sentRaw[k], lastSentAt: sentRaw[k].lastSentAt.toISOString() }; });
+  const modalLead: ModalLead = {
+    id: lead.id, firstName: lead.firstName, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax,
+    propertyTypeInterest: lead.propertyTypeInterest, languagePreference: lead.languagePreference,
+    phone: lead.phone, email: lead.email, lastMatchFilters: lead.lastMatchFilters ?? null,
+  };
+  // Advisor picker of the presentation modal (only needed when the user may edit).
+  const advisors = canEdit
+    ? (staff.length ? staff.map((u) => ({ id: u.id, name: u.name })) : await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }))
+    : [];
   const partnerView = await loadPartnerView(lead, canEdit, canAssign, now);
   const name = `${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead";
   const attributionRows: [string, string | null][] = [
@@ -148,10 +172,11 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />
             <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
+            <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
+              lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
             {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
-            {seesAllLeads(user) && <Link className="crm-ck-old" href={`/admin/crm/${lead.id}`}>Presentations, matching, email →</Link>}
           </aside>
         </div>
       </div>

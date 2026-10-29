@@ -8,6 +8,13 @@ import { sendTelegramMessage } from "@/lib/telegram";
 // (reusing the same in-memory limiter shape as the public lead endpoints).
 const ipLimiter = makeRateLimiter();
 
+// Same origin logic as the view route: the link must point at the host the request came in on.
+function requestOrigin(req: NextRequest): string {
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const host = req.headers.get("host");
+  return host ? `${proto}://${host}` : "https://cyprusvipestates.com";
+}
+
 export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
   if (ipLimiter(clientIp(req), 20, 60_000)) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
@@ -54,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       },
     }).catch(() => {});
     try {
-      await sendTelegramMessage(`❤️ ${escapeHtml(presentation.greetingName)} favorited ${escapeHtml(publicName)}`);
+      await sendTelegramMessage(`❤️ ${escapeHtml(presentation.greetingName)} favorited ${escapeHtml(publicName)} — <a href="${requestOrigin(req)}/crm/leads/${presentation.leadId}">CRM</a>`);
     } catch (e) { console.error("Favorite Telegram alert failed:", e); }
   }
 
