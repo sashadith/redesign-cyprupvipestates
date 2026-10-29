@@ -188,7 +188,14 @@ export const DE_LANDING_MERGES: Record<string, string> = {
 // PUBLISHED — that's intentional, so the redirect can go out ahead of the
 // unpublish with no 404 gap.
 export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
-  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+  // 2026-10-29: was redirected to immobilien-zypern-mit-garantierten-mieteinnahmen, which answers a different
+  // question. The queries of this article (Mieteinnahmen aus Deutschland in Zypern versteuern) belong to the
+  // DE/AT/CH tax comparison, whose "Miete und Verkaufsgewinn" section carries the worked example.
+  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/steuern-zypern-vs-deutschland-oesterreich-schweiz",
+
+  // G01 (DACH plan, 2026-10-29): the second "auswandern" guide (707 words, headline "... 2025") merged into
+  // wie-nach-zypern-auswandern, the base that carries the content.
+  "blog/auswandern-nach-zypern-aus-deutschland": "/de/blog/wie-nach-zypern-auswandern",
 
   // German-retiree cannibalization pair (2026-09-30 content inventory):
   // wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen and
@@ -616,6 +623,10 @@ export default async function middleware(request: NextRequest) {
     // remains the fallback for excluded (title-sweep) paths.
     localePrefix: "as-needed",
     localeDetection: false,
+    // next-intl's default adds an HTTP `Link: <...>; rel="alternate"; hreflang=...` header built from the SAME
+    // path in every locale (e.g. /pl/luxusvillen-in-zypern, which does not exist), contradicting the per-page
+    // hreflang the pages render themselves from their translation groups. The HTML tags are the single source.
+    alternateLinks: false,
   });
 
   // Homepage (/, /de, /pl, /ru) -> home-static/[lang]: the same page, but under a layout with no
