@@ -129,7 +129,8 @@ try {
     if (rows.length) problems.push(`${p.name}: units[] is not empty — this script has no unit writer yet, port giovani-sync.mjs's`);
     const counts = { priceFrom: p.priceFrom, priceTo: null, unitsTotal: 0, unitsAvailable: 0, syncedAt: new Date() };
 
-    console.log(`\n${p.name} (${feedKey}) — ${existing ? `exists, ${existing.publishStatus}` : "would be CREATED as draft"}; no price list, project-level from €${p.priceFrom.toLocaleString("en")} + VAT, ${p.types.length} type row(s)`);
+    const what = existing ? `exists, ${existing.publishStatus}` : APPLY ? "CREATED as draft" : "would be CREATED as draft";
+    console.log(`\n${p.name} (${feedKey}) — ${what}; no price list, project-level from €${p.priceFrom.toLocaleString("en")} + VAT, ${p.types.length} type row(s)`);
     if (existing && !published) for (const [k, v] of Object.entries(facts)) if (JSON.stringify(existing[k] ?? null) !== JSON.stringify(v ?? null)) console.log(`  ${k}: ${JSON.stringify(existing[k])} → ${JSON.stringify(v)}`);
     if (published) console.log("  published — project facts frozen, prices only");
 

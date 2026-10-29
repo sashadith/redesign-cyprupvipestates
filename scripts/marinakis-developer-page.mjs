@@ -17,6 +17,13 @@
  *     500s. The values in the data file are deliberate placeholders for the operator to
  *     replace; they are NOT an attempt at the SEO work itself.
  *  3. HE is not written. Hebrew is only ever added on an explicit request.
+ *  4. A NEW page is created OFFLINE (deactivatedAt set): /developers/<slug> 308s to the
+ *     developers index and stays out of the index, sitemap and hreflang until someone
+ *     clears it. Without that, these rows would put a public page live the moment they
+ *     are written — with an empty project grid, because the developments are drafts.
+ *     Pass --live to create it already visible. An EXISTING page keeps whatever state it
+ *     is in: re-running this to update the copy never silently takes a live page down,
+ *     and never silently republishes one somebody deactivated.
  *
  * The grid stays empty until the developments are published — they are created as drafts
  * by marinakis-sync.mjs. The page itself is live from the moment these rows exist, so
@@ -31,7 +38,8 @@ import { htmlToPortableText } from "../src/lib/portableText/htmlToPt.mjs";
 
 const file = process.argv[2];
 const APPLY = process.argv.includes("--apply");
-if (!file) { console.error("usage: marinakis-developer-page.mjs <data.json> [--apply]"); process.exit(1); }
+const LIVE = process.argv.includes("--live");
+if (!file) { console.error("usage: marinakis-developer-page.mjs <data.json> [--apply] [--live]"); process.exit(1); }
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
 const LANGS = ["en", "de", "pl", "ru"];
 
@@ -49,15 +57,18 @@ try {
     const blocks = htmlToPortableText(l.html);
     const h2 = blocks.filter((b) => b.style === "h2").length;
     const row = existing.find((r) => r.language === lang);
-    console.log(`  ${lang}: ${row ? "update" : "create"} — ${blocks.length} blocks, ${h2} headings, excerpt ${l.excerpt.length} chars`);
+    const state = row ? (row.deactivatedAt ? "offline, unchanged" : "live, unchanged") : LIVE ? "LIVE" : "offline";
+    console.log(`  ${lang}: ${row ? "update" : "create"} (${state}) — ${blocks.length} blocks, ${h2} headings, excerpt ${l.excerpt.length} chars`);
     if (!APPLY) continue;
     const fields = {
       translationGroupId: groupId, language: lang, slug: data.slug,
       title: data.title, titleFull: l.titleFull, excerpt: l.excerpt,
       logo: data.logo, description: blocks, seo: l.seo,
     };
+    // deactivatedAt is deliberately absent from `fields`: an update must never move a
+    // page between live and offline as a side effect of a copy change.
     if (row) await prisma.developer.update({ where: { id: row.id }, data: fields });
-    else await prisma.developer.create({ data: { sanityId: `local-${randomUUID()}`, ...fields } });
+    else await prisma.developer.create({ data: { sanityId: `local-${randomUUID()}`, deactivatedAt: LIVE ? null : new Date(), ...fields } });
   }
 
   const acct = await prisma.developerAccount.findUnique({ where: { slug: data.accountSlug }, select: { id: true, name: true, developerTranslationGroupId: true } });
