@@ -106,7 +106,7 @@ const EN: PartnersCopy = {
     heroTitleEnd: " and earn with us",
     heroLead: "Earn up to 40% of our marketing success fee.",
     heroCta: "Become a partner",
-    heroNote: "For real estate purchases, our partners receive a referral fee of 30–40%. For referring property owners, we pay a 10% referral fee.",
+    heroNote: "For real estate purchases, our partners receive a referral fee of 30–40%.",
     portalLoginPrompt: "Already a partner? ",
     portalLoginLink: "Log in to the partner portal",
     portalSelfPrompt: "Prefer to sign up yourself? ",
@@ -146,7 +146,7 @@ const EN: PartnersCopy = {
     steps: [
       { title: "Register", description: "Fill out the form below with your details. We review and verify every application personally — no automated approvals." },
       { title: "Refer or list", description: "Submit client referrals or access our exclusive property database through your partner portal — every lead is tracked automatically in our CRM." },
-      { title: "Get paid", description: "Receive your fee within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement (10% for owner referrals)." },
+      { title: "Get paid", description: "Receive your fee within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement." },
     ],
     faqEyebrow: "Questions",
     faqTitleStart: "Frequently asked ",
@@ -158,7 +158,7 @@ const EN: PartnersCopy = {
       },
       {
         question: "How much commission can I earn as a partner?",
-        answer: "For real estate purchases, partners receive a referral fee of 30–40% of our marketing success fee. For referring property owners, we pay a 10% referral fee.",
+        answer: "For real estate purchases, partners receive a referral fee of 30–40% of our marketing success fee.",
       },
       {
         question: "I'm a real estate agent or consultant based outside Cyprus — can I still get a referral fee?",
@@ -214,7 +214,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     heroTitleEnd: " und verdiene mit uns",
     heroLead: "Verdiene bis zu 40 % unserer Marketing-Erfolgsgebühr.",
     heroCta: "Jetzt Partner werden",
-    heroNote: "Für Immobilienkäufe erhalten unsere Partner eine Vermittlungsgebühr von 30 % bis 40 %. Für die Empfehlung von Eigentümern bestehender Immobilien zahlen wir 10 % Vermittlungshonorar.",
+    heroNote: "Für Immobilienkäufe erhalten unsere Partner eine Vermittlungsgebühr von 30 % bis 40 %.",
     portalLoginPrompt: "Schon Partner? ",
     portalLoginLink: "Zum Partnerportal anmelden",
     portalSelfPrompt: "Lieber direkt selbst registrieren? ",
@@ -254,7 +254,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     steps: [
       { title: "Registrieren", description: "Fülle das Formular unten mit Deinen Daten aus. Wir prüfen jede Bewerbung persönlich — keine automatische Freigabe." },
       { title: "Empfehlen oder vermitteln", description: "Reiche Kundenempfehlungen ein oder greife über Dein Partnerportal auf unsere exklusive Immobiliendatenbank zu — jede Anfrage wird automatisch in unserem CRM erfasst." },
-      { title: "Ausgezahlt werden", description: "Erhalte Deine Vergütung innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags (10 % bei Eigentümerempfehlungen)." },
+      { title: "Ausgezahlt werden", description: "Erhalte Deine Vergütung innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags." },
     ],
     faqEyebrow: "Fragen",
     faqTitleStart: "Häufig gestellte ",
@@ -266,7 +266,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
       },
       {
         question: "Wie viel Provision kann ich als Partner verdienen?",
-        answer: "Für Immobilienkäufe erhalten Partner eine Vermittlungsgebühr von 30–40 % unserer Marketing-Erfolgsgebühr. Für die Empfehlung von Eigentümern zahlen wir 10 % Vermittlungshonorar.",
+        answer: "Für Immobilienkäufe erhalten Partner eine Vermittlungsgebühr von 30–40 % unserer Marketing-Erfolgsgebühr.",
       },
       {
         question: "Ich bin Immobilienmakler oder Berater außerhalb Zyperns — kann ich trotzdem eine Vermittlungsgebühr erhalten?",
@@ -317,7 +317,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     heroTitleEnd: " i zarabiaj z nami",
     heroLead: "Zarób do 40% naszego wynagrodzenia marketingowego.",
     heroCta: "Zostań partnerem",
-    heroNote: "Za sprzedaż nieruchomości partnerzy otrzymują wynagrodzenie za polecenie 30–40%. Za polecenie właścicieli nieruchomości wypłacamy 10% honorarium.",
+    heroNote: "Za sprzedaż nieruchomości partnerzy otrzymują wynagrodzenie za polecenie 30–40%.",
     portalLoginPrompt: "Jesteś już partnerem? ",
     portalLoginLink: "Zaloguj się do portalu partnera",
     portalSelfPrompt: "Wolisz zarejestrować się sam? ",
@@ -357,7 +357,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     steps: [
       { title: "Zarejestruj się", description: "Wypełnij poniższy formularz swoimi danymi. Każde zgłoszenie weryfikujemy osobiście — bez automatycznych zatwierdzeń." },
       { title: "Poleć lub sprzedawaj", description: "Zgłaszaj polecenia klientów lub korzystaj z naszej ekskluzywnej bazy nieruchomości przez portal partnerski — każde zgłoszenie jest automatycznie rejestrowane w naszym CRM." },
-      { title: "Otrzymaj wypłatę", description: "Otrzymaj wynagrodzenie w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej (10% za polecenia właścicieli)." },
+      { title: "Otrzymaj wypłatę", description: "Otrzymaj wynagrodzenie w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej." },
     ],
     faqEyebrow: "Pytania",
     faqTitleStart: "Najczęściej zadawane ",
@@ -369,7 +369,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
       },
       {
         question: "Ile prowizji mogę zarobić jako partner?",
-        answer: "Za sprzedaż nieruchomości partnerzy otrzymują wynagrodzenie za polecenie w wysokości 30–40% naszego wynagrodzenia marketingowego. Za polecenie właścicieli nieruchomości wypłacamy 10% honorarium.",
+        answer: "Za sprzedaż nieruchomości partnerzy otrzymują wynagrodzenie za polecenie w wysokości 30–40% naszego wynagrodzenia marketingowego.",
       },
       {
         question: "Jestem agentem nieruchomości lub doradcą spoza Cypru — czy mimo to mogę otrzymać wynagrodzenie za polecenie?",
@@ -420,7 +420,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     heroTitleEnd: " и зарабатывай с нами",
     heroLead: "Зарабатывай до 40% нашего маркетингового вознаграждения.",
     heroCta: "Стать партнёром",
-    heroNote: "За продажу недвижимости партнёры получают вознаграждение от 30 до 40%. За рекомендации владельцев — 10% вознаграждение.",
+    heroNote: "За продажу недвижимости партнёры получают вознаграждение от 30 до 40%.",
     portalLoginPrompt: "Уже партнёр? ",
     portalLoginLink: "Войти в партнёрский портал",
     portalSelfPrompt: "Хотите зарегистрироваться сами? ",
@@ -460,7 +460,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     steps: [
       { title: "Регистрация", description: "Заполните форму ниже своими данными. Мы лично проверяем каждую заявку — без автоматических одобрений." },
       { title: "Рекомендуйте или продавайте", description: "Отправляйте рекомендации клиентов или получайте доступ к нашей эксклюзивной базе недвижимости через партнёрский кабинет — каждая заявка автоматически фиксируется в CRM." },
-      { title: "Получайте оплату", description: "Получите вознаграждение в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования (10% за рекомендации владельцев)." },
+      { title: "Получайте оплату", description: "Получите вознаграждение в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования." },
     ],
     faqEyebrow: "Вопросы",
     faqTitleStart: "Часто задаваемые ",
@@ -472,7 +472,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
       },
       {
         question: "Сколько можно заработать в качестве партнёра?",
-        answer: "За продажу недвижимости партнёры получают вознаграждение от 30 до 40% нашего маркетингового вознаграждения. За рекомендации владельцев недвижимости мы платим 10% вознаграждение.",
+        answer: "За продажу недвижимости партнёры получают вознаграждение от 30 до 40% нашего маркетингового вознаграждения.",
       },
       {
         question: "Я риелтор или консультант вне Кипра — могу ли я получить вознаграждение за рекомендацию?",
