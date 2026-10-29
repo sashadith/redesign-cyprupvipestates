@@ -20,8 +20,8 @@
    "completion": null,
    "energy": "A",
    "district": "Famagusta",
-   "town": null,
-   "area": "Protaras",
+   "town": "Paralimni",
+   "area": "Kapparis",
    "latitude": 35.061163,
    "longitude": 34.00128,
    "amenities": [
@@ -278,8 +278,8 @@
    "completion": null,
    "energy": null,
    "district": "Famagusta",
-   "town": null,
-   "area": "Protaras",
+   "town": "Paralimni",
+   "area": "Kapparis",
    "latitude": 35.0555741,
    "longitude": 33.9910574,
    "amenities": [
@@ -1958,8 +1958,8 @@
    "completion": null,
    "energy": "A",
    "district": "Famagusta",
-   "town": null,
-   "area": "Protaras",
+   "town": "Paralimni",
+   "area": "Kapparis",
    "latitude": 35.056961,
    "longitude": 34.005803,
    "amenities": [
