@@ -162,7 +162,14 @@
 /* ---------------------------------------------------------------- sidebar */
 .ck__side { display: grid; gap: 16px; min-width: 0; }
 .ck__feed { display: grid; gap: 2px; }
-.ck__act { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--ck-line-soft); }
+/* Second time this bit: a grid item's automatic minimum is max-content, so one
+   long subject line ("Lead fields updated by Claude: nextFollowUpAt") made the
+   row 317px wide inside a 272px feed and the text ran out past the card instead
+   of ellipsising. Measured on a 390px viewport. Both the row and the name need
+   it — the row because it is a grid item, the name because it is a flex item
+   that has to be allowed to shrink before the timestamp gets pushed out. */
+.ck__act { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--ck-line-soft); min-width: 0; }
+.ck__actHead, .ck__actWho { min-width: 0; }
 .ck__act:last-child { border-bottom: 0; }
 .ck__actIcon { flex: none; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; background: rgba(34, 28, 21, 0.05); color: var(--ck-ink-soft); }
 .ck__actBody { min-width: 0; }
