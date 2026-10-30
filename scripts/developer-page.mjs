@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-/* Marinakis Developers — the public developer landing page (2026-10-29).
+/* The public developer landing page, for any manually onboarded developer.
  *
- *   node --import tsx --env-file=.env.local scripts/marinakis-developer-page.mjs scripts/data/marinakis/developer-page-2026-10-29.json          # dry run
- *   node --import tsx --env-file=.env.local scripts/marinakis-developer-page.mjs scripts/data/marinakis/developer-page-2026-10-29.json --apply  # write
+ * Generalised from the Marinakis-only copy on 2026-10-29 when DTA Group became the second
+ * developer to need one; the script was already developer-agnostic, only its name and one
+ * error message were not. Which developer it writes comes entirely from the data file.
+ *
+ *   node --import tsx --env-file=.env.local scripts/developer-page.mjs scripts/data/<dev>/developer-page-<date>.json          # dry run
+ *   node --import tsx --env-file=.env.local scripts/developer-page.mjs scripts/data/<dev>/developer-page-<date>.json --apply  # write
  *
  * Writes one Developer row per language (en/de/pl/ru) sharing a translationGroupId, and
  * points the DeveloperAccount at that group so the page lists this developer's published
@@ -35,8 +39,8 @@
  *     Reactivate in the admin, which is the path that clears it.
  *
  * The grid stays empty until the developments are published — they are created as drafts
- * by marinakis-sync.mjs. The page itself is live from the moment these rows exist, so
- * publish it when the operator is ready for it, not before.
+ * by that developer's sync script. The page itself is live from the moment these rows
+ * exist, so publish it when the operator is ready for it.
  *
  * Re-running is safe: rows are matched by (language, slug) and updated in place, and an
  * existing translationGroupId is kept so the account link never has to move. */
@@ -49,7 +53,7 @@ import { reactivateDeveloperGroup } from "../src/lib/developerLifecycle.ts";
 const file = process.argv[2];
 const APPLY = process.argv.includes("--apply");
 const LIVE = process.argv.includes("--live");
-if (!file) { console.error("usage: marinakis-developer-page.mjs <data.json> [--apply] [--live]"); process.exit(1); }
+if (!file) { console.error("usage: developer-page.mjs <data.json> [--apply] [--live]"); process.exit(1); }
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
 const LANGS = ["en", "de", "pl", "ru"];
 
@@ -95,7 +99,7 @@ try {
 
   const acct = await prisma.developerAccount.findUnique({ where: { slug: data.accountSlug }, select: { id: true, name: true, developerTranslationGroupId: true } });
   if (!acct) {
-    console.log(`\naccount ${data.accountSlug} does not exist yet — run marinakis-sync.mjs --apply first, then this script again to link it.`);
+    console.log(`\naccount ${data.accountSlug} does not exist yet — run that developer's sync script with --apply first, then this script again to link it.`);
   } else if (acct.developerTranslationGroupId === groupId) {
     console.log(`\naccount ${data.accountSlug} already points at this page`);
   } else {
