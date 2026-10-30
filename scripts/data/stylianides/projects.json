@@ -1,0 +1,728 @@
+{
+ "_comment": "Stylianides Group onboarding 2026-10-30. Facts from each project Dropbox folder (price list, unbranded brochure, description/location docx) and the 10 Oct 2026 newsletter. NO links here: each project share link is a bearer credential and lives only in Development.driveFolderId. Units come from the price-list connector (src/lib/stylianidesSync.ts), not from this file. No texts: descriptions/SEO are written by a person.",
+ "account": {
+  "slug": "stylianides",
+  "name": "Stylianides Group",
+  "website": "https://www.stylianidesgroup.com",
+  "phone": "+357 25 325130",
+  "email": "info@stylianidesgroup.com",
+  "contactInfo": "CCS Stylianides Group (developers, contractors, architects), 20 Christaki Kranou, Freedom Tower, Potamos Germasogeias 4041, Limassol. T +357 25 325130, 7000 3004 · M +357 99 460015"
+ },
+ "projects": [
+  {
+   "slug": "mirror-residence",
+   "folderKey": "mirror",
+   "name": "Mirror Residence",
+   "category": "Residential",
+   "stage": "Off Plan",
+   "completion": "Q4 2028",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Germasogeia",
+   "latitude": 34.715059,
+   "longitude": 33.086659,
+   "amenities": [
+    "Communal swimming pool",
+    "Children's pool",
+    "Gym",
+    "Children's playground",
+    "Changing rooms",
+    "Sundeck and lounge area",
+    "Landscaped gardens",
+    "Gated community",
+    "CCTV",
+    "Covered parking",
+    "Storage room",
+    "Smart home system",
+    "Underfloor heating",
+    "Air conditioning provision",
+    "Solar water heating",
+    "Video entry system",
+    "Security door",
+    "Entrance lobby",
+    "Architectural LED lighting in common areas",
+    "Custom-designed kitchens and wardrobes",
+    "Granite worktops",
+    "Travertine or porcelain flooring",
+    "Branded sanitary ware (Roca)",
+    "Branded mixers and taps (Grohe)",
+    "Decorative ceilings with hidden lighting",
+    "Double-glazed windows",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing",
+    "Thermal insulation (extruded polystyrene)"
+   ],
+   "extraFacts": [
+    {
+     "label": "Buildings",
+     "value": "2 identical buildings (A and B), ground floor + 5 floors, basement and roof"
+    },
+    {
+     "label": "Total units",
+     "value": "36 (18 per building)"
+    },
+    {
+     "label": "Plot area",
+     "value": "1,748 m²"
+    },
+    {
+     "label": "Parking",
+     "value": "47 car spaces"
+    },
+    {
+     "label": "Pool",
+     "value": "Overflow outdoor swimming pool and children's pool"
+    },
+    {
+     "label": "Distance to beach",
+     "value": "2.5 km"
+    },
+    {
+     "label": "Distance to highway",
+     "value": "less than 1 km"
+    }
+   ],
+   "unitKinds": "1–2+ bedroom apartments, 4-bedroom penthouses",
+   "evidence": {
+    "name": "Brochure UB p.3 and price list header 'MIRROR_RESIDENCE'; newsletter 'MIRROR RESIDENCE'. Location docx says 'Mirrors Residence' (only outlier).",
+    "stage": "newsletter.pdf (10 Oct 2026) p.2: 'Status: Off Plan'.",
+    "completion": "newsletter.pdf (10 Oct 2026) p.2: 'Delivery: 24 months' from Oct 2026 = Oct 2028 = Q4 2028.",
+    "area": "Newsletter 'Germasogia - Limassol'; brochure p.3-4 'Yermasogia/Yermasoyia'. Pin lies NW of Germasogeia village core, south of the A1.",
+    "latitude/longitude": "LOCATION -MIRRORS/Google Location Mirrors Residence.docx -> maps.app.goo.gl/ndPumR1jXj7bnGuo7 -> /maps/search/34.715059,+33.086659 (dropped coordinate, no place entry).",
+    "amenities": "Price list 27-10-2026 'SPECIFICATIONS & AMENITIES'; brochure UB p.9 (facilities), p.10-11 (smart home, specs incl. double glazing); arch plans p.2 (gym, kids play room, changing rooms).",
+    "extraFacts": "Units: count of price-list rows. Plot/parking: MIRRORS ARCH PLANS.pdf p.1-2 ('1748τ.μ ΟΙΚΟΠΕΔΟ 01', 'ΔΗΜΟΣΙΟ ΠΡΑΣΙΝΟ 838τ.μ', '47 ΑΥΤΟΚΙΝΗΤΑ'). Floors: elevation sheets p.9-11 (ground + 1st-5th floor + roof). Distances: brochure UB p.4.",
+    "unitKinds": "Price list: 1, 2, 2+ bedroom rows and 4-bedroom A/B501-502 on penthouse floor.",
+    "extraFacts:Total units": "(18 per building; price list 27-10-2026)",
+    "extraFacts:Plot area": "(plus 838 m² public green area shown on site plan)",
+    "extraFacts:Parking": "(site plan)",
+    "extraFacts:Distance to beach": "(brochure)",
+    "extraFacts:Distance to highway": "(brochure)"
+   },
+   "openQuestions": [
+    "Newsletter from-price €330,000 + VAT, but price list (27-10-2026) cheapest available unit is A101 at €300,000 (A201 €305,000). Which is current?",
+    "Brochure text and newsletter say '1, 2 and 3-bedroom apartments'; the price list has no 3-bedroom unit, only '2+' (2 bed + extra room?). Brochure p.3 graphic says '1 & 2 Bedroom Apartments'. Confirm what '2+' means and whether 3-bed exists.",
+    "No energy class stated in any document.",
+    "Lift not stated in price list or brochure for a 6-level building; confirm.",
+    "Status: 6 SOLD, 4 RESERVED, 26 priced (price list 27-10-2026)."
+   ]
+  },
+  {
+   "slug": "harmony-villas",
+   "folderKey": "harmony",
+   "name": "Harmony Villas",
+   "category": "Residential",
+   "stage": "Under Construction",
+   "completion": "Q2 2028",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Souni",
+   "latitude": 34.738213,
+   "longitude": 32.889556,
+   "amenities": [
+    "Private swimming pool (included on villas 1, 11, 13, 14; optional on the others)",
+    "Photovoltaic system (3 kVA)",
+    "Underfloor heating",
+    "Solar water heating",
+    "Landscaped gardens with automatic irrigation",
+    "Covered parking",
+    "Double-glazed windows and patio doors",
+    "Fly screens on windows",
+    "Security door",
+    "Video entry system",
+    "Designer kitchens and wardrobes",
+    "Granite worktops",
+    "Marble stairs",
+    "Decorative ceilings with hidden lighting",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing"
+   ],
+   "extraFacts": [
+    {
+     "label": "Total units",
+     "value": "14 villas"
+    },
+    {
+     "label": "Villa types",
+     "value": "single-storey (villas 4-7, 14) and two-storey villas"
+    },
+    {
+     "label": "Plot sizes",
+     "value": "225–457 m² per villa"
+    },
+    {
+     "label": "Covered areas",
+     "value": "72–214 m² per villa"
+    },
+    {
+     "label": "Permits",
+     "value": "All permits received"
+    },
+    {
+     "label": "Distance to Limassol city centre",
+     "value": "20-minute drive"
+    }
+   ],
+   "unitKinds": "2–3 bedroom villas (several with provision for an extra bedroom)",
+   "evidence": {
+    "name": "Price list header 'HARMONY VILLAS', brochure cover 'HARMONY VILLAS', newsletter 'HARMONY VILLAS'. Price list filename 'SOUNI VILLAS' is only a file label.",
+    "stage": "Price list 24-09-2026: 'ALL PERMITS RECEIVED (UNDER-CONSTRUCTION 15-18 MONTHS DELIVERY)'; newsletter.pdf (10 Oct 2026) p.2 'Construction underway'.",
+    "completion": "newsletter.pdf (10 Oct 2026) p.2 'Delivery: 18 months' from Oct 2026 = Apr 2028 = Q2 2028; price list completion column '18 months' on every available villa.",
+    "area": "Newsletter 'Souni - Limassol'; docx 'HARMONY VILLAS SOUNI'. Pin 34.738,32.890 is at Souni-Zanakia village, ~14 km WNW of Limassol. Not in our area vocabulary.",
+    "latitude/longitude": "LOCATION - HARMONY SOUNI/...GOOGLE LOCATION.docx -> maps.app.goo.gl/Y8A9kjngZy4zJKJ66 -> /maps/search/34.738213,+32.889556 (dropped coordinate).",
+    "amenities": "Price list 'included in the above prices' list; brochure UB p.7 (adds fly screens); pool included/optional: price list POOL column + brochure p.8-20.",
+    "extraFacts": "Price list rows (14); plot/covered sizes from price list; floors from brochure p.8-20 (ground-only vs ground+upper plans).",
+    "unitKinds": "Price list bedroom column: 2 (villas 5-7), 3 (4, 8, 9, 12-14), 3+ (1-3, 10, 11).",
+    "extraFacts:Total units": "(price list 24-09-2026)",
+    "extraFacts:Permits": "(price list 24-09-2026)",
+    "extraFacts:Distance to Limassol city centre": "(brochure p.4)"
+   },
+   "openQuestions": [
+    "Area 'Souni' is not in our existing vocabulary; decide whether to add Souni (Souni-Zanakia) as a new Limassol area.",
+    "Bedroom counts conflict: newsletter and brochure p.2 say 2 & 3-bedroom; brochure p.3 says '14 VILLAS. 3+ BEDROOMS'; description docx says 3-bedroom only; price list has 2, 3 and 3+.",
+    "Drive time conflict: description docx says 10 minutes to Limassol centre, brochure p.4 says 20 minutes.",
+    "Villa 1 price list shows 214 m² with pool 'incl.' at €680,000 vs villas 2-3 €650,000 without; confirm pool price on optional villas.",
+    "No energy class stated. Status: 4 SOLD, 1 RESERVED, 9 priced."
+   ]
+  },
+  {
+   "slug": "la-residenza",
+   "folderKey": "la-residenza",
+   "name": "La Residenza",
+   "category": "Residential",
+   "stage": "Key-Ready",
+   "completion": null,
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Agios Athanasios",
+   "latitude": 34.7152859,
+   "longitude": 33.063304,
+   "amenities": [
+    "Lift",
+    "Underfloor heating",
+    "Air conditioning provision",
+    "Gated community",
+    "CCTV",
+    "Private parking",
+    "Storage room",
+    "Landscaped gardens",
+    "Roof terrace with barbecue area and private jacuzzi (penthouses)",
+    "Security door",
+    "Video entry system",
+    "Solar water heating",
+    "Architectural LED lighting in common areas",
+    "Custom-designed kitchens and wardrobes",
+    "Granite worktops",
+    "Travertine or porcelain flooring",
+    "Branded sanitary ware (Roca)",
+    "Branded mixers and taps (Grohe)",
+    "Decorative ceilings with hidden lighting",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing",
+    "Thermal insulation (extruded polystyrene)"
+   ],
+   "extraFacts": [
+    {
+     "label": "Building",
+     "value": "1 building: ground floor (entrance, parking) + 3 residential floors + roof"
+    },
+    {
+     "label": "Total units",
+     "value": "8 apartments"
+    },
+    {
+     "label": "Neighbourhood",
+     "value": "Sfalangiotissa area"
+    },
+    {
+     "label": "Distance to seafront",
+     "value": "3 km"
+    },
+    {
+     "label": "Distance to Limassol Marina",
+     "value": "5 km"
+    }
+   ],
+   "unitKinds": "1–2+ bedroom apartments, 4+ bedroom penthouses",
+   "evidence": {
+    "name": "Brochure logo 'La RESIDENZA', price list 'LA RESIDENZA', newsletter 'LA RESIDENZA - PENTHOUSE'. Brochure p.18 OCR 'b-RESIDENZA' is a logo artefact.",
+    "stage": "newsletter.pdf (10 Oct 2026) p.2 'Status: COMPLETED'.",
+    "completion": "Completed; no completion date in any document.",
+    "area": "Newsletter 'Ayios Athanasios ... Sfalangiotisa area, minutes from ... Foleys School'; brochure p.5 'Located in the elegant area of Agios Athanasios'. Pin is just north of the A1 at Agios Athanasios.",
+    "latitude/longitude": "LOCATION - LA REZ/Google Location La Residenza.docx -> goo.gl/maps/venEQahPRj3rGbvD9 -> place 'LA RESIDENZA' !3d34.7152859!4d33.063304.",
+    "amenities": "Price list Sept 2026 'SPECIFICATIONS & AMENITIES'; brochure p.15 technical specs (lift 'Schindler or similar', electric underfloor heating with zone control, A/C provision); brochure p.9 (penthouse roof terrace with barbecue and private jacuzzi). No pool or gym in any document.",
+    "extraFacts": "Floors: arch plans (ground, 1st-3rd, roof floor plans); units: price list rows; distances: brochure p.6.",
+    "unitKinds": "Price list: 101/103/201/203 '2+', 102/202 '1', 301/302 '4+'.",
+    "extraFacts:Total units": "(price list Sept 2026)",
+    "extraFacts:Distance to seafront": "(brochure p.6)",
+    "extraFacts:Distance to Limassol Marina": "(brochure p.6)"
+   },
+   "openQuestions": [
+    "Different scope than folder suggests: newsletter advertises only 'LA RESIDENZA - PENTHOUSE' (4-bedroom, €795,000); price list has 8 apartments of which 6 are SOLD. Only 301 (€970,000) and 302 (€795,000) are available. Decide whether to publish as a project page or only as the two penthouses.",
+    "Brochure p.9 says 'three bedroom penthouses' with roof terrace/jacuzzi; price list and newsletter say 4 (4+) bedrooms.",
+    "Completion year not stated; ask developer for the certificate/completion date and title deed status.",
+    "No energy class stated (arch plans only mention a '+5% renewable energy' building-factor bonus)."
+   ]
+  },
+  {
+   "slug": "palm-residence-v",
+   "folderKey": "palm-v",
+   "name": "Palm Residence V",
+   "category": "Residential",
+   "stage": "Under Construction",
+   "completion": "Q1 2027",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Agios Athanasios",
+   "latitude": 34.7005372,
+   "longitude": 33.0714973,
+   "amenities": [
+    "Lift",
+    "Underfloor heating",
+    "Air conditioning provision",
+    "Smart home system",
+    "Gated community",
+    "CCTV",
+    "Covered parking",
+    "Storage room",
+    "Security door",
+    "Video entry system",
+    "Solar water heating",
+    "Entrance lobby",
+    "Architectural LED lighting in common areas",
+    "Custom-designed Italian kitchens and wardrobes",
+    "Granite worktops",
+    "Porcelain flooring",
+    "Branded sanitary ware (Roca)",
+    "Branded mixers and taps (Grohe)",
+    "Decorative ceilings with hidden lighting",
+    "Double-glazed windows and patio doors",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing",
+    "Thermal insulation (extruded polystyrene)"
+   ],
+   "extraFacts": [
+    {
+     "label": "Total units",
+     "value": "6 apartments (2 per floor, floors 1–3)"
+    },
+    {
+     "label": "Neighbourhood",
+     "value": "Columbia area"
+    },
+    {
+     "label": "Distance to beach",
+     "value": "approx. 1,000 m"
+    },
+    {
+     "label": "Distance to hypermarket",
+     "value": "approx. 300 m"
+    },
+    {
+     "label": "Distance to school",
+     "value": "approx. 180 m"
+    }
+   ],
+   "unitKinds": "2–3 bedroom apartments, 4-bedroom penthouse",
+   "evidence": {
+    "name": "Price list header 'PALM RESIDENCE V', description docx 'PALM RESIDENCE V', newsletter 'PALM RESIDENCE V -PENTHOUSE'. Brochure uses short form 'Palm V'; price list filename 'THE PALMS RESIDENCE V'.",
+    "stage": "newsletter.pdf (10 Oct 2026) p.3 'Status: UNDER-CONSTRUCTION'.",
+    "completion": "newsletter.pdf (10 Oct 2026) p.3 'Delivery: 4 months' from Oct 2026 = Feb 2027 = Q1 2027.",
+    "area": "Newsletter/brochure/docx 'Columbia Area' near Sklavenitis. Columbia area is the Kolonakiou/Linopetra part of Agios Athanasios; pin is south of Spyrou Kyprianou Ave.",
+    "latitude/longitude": "LOCATION - PALM V/...GOOGLE LOCATION.docx (same link in description docx) -> maps.app.goo.gl/F9cxMSkZT87dPYv4A -> /maps?q=34.7005372,33.0714973 (dropped coordinate).",
+    "amenities": "Price list 31-08-2026 'SPECIFICATIONS & AMENITIES'; description docx (Italian kitchens, double-glazed patio doors); brochure p.8-9 (smart home); arch plans PALM RESIDENCE V (LIFT on all floor plans).",
+    "extraFacts": "Price list rows; distances brochure p.5.",
+    "unitKinds": "Price list: 101/201 '2+1', 102/202 '3', 301 '2+2', 302 '3+1' (= 4-bedroom penthouse in newsletter).",
+    "extraFacts:Distance to beach": "(brochure p.5)",
+    "extraFacts:Distance to hypermarket": "(brochure p.5)",
+    "extraFacts:Distance to school": "(brochure p.5)"
+   },
+   "openQuestions": [
+    "Only 1 of 6 units is available (302 penthouse, €795,000); 3 SOLD, 2 RESERVED. Newsletter only advertises the penthouse.",
+    "Description docx: 'Construction to start this month with completion in 15 months' (undated) vs newsletter 'Delivery: 4 months'. Confirm completion date.",
+    "Sanitary ware: price list says Roca, description docx says Laufen.",
+    "Penthouse 302 areas differ: price list uncovered terrace 95 m², brochure p.13 roof terrace 66 m².",
+    "Area: confirm the pin lies in Agios Athanasios and not Germasogeia / Limassol municipality (boundary area)."
+   ]
+  },
+  {
+   "slug": "melrose-villas",
+   "folderKey": "melrose",
+   "name": "Melrose Villas",
+   "category": "Residential",
+   "stage": "Under Construction",
+   "completion": "Q2 2028",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Agios Tychonas",
+   "latitude": 34.7104523,
+   "longitude": 33.1183593,
+   "amenities": [
+    "Private swimming pool",
+    "Underfloor heating",
+    "VRV air conditioning",
+    "Lift (villas 1 and 2)",
+    "Gym",
+    "Outdoor gym",
+    "Yoga area",
+    "Children's playground",
+    "Landscaped gardens with automatic irrigation",
+    "Covered parking",
+    "Double-glazed windows and patio doors",
+    "Fly screens on windows",
+    "Security door",
+    "Video entry system",
+    "Solar water heating",
+    "Designer kitchens and wardrobes",
+    "Granite worktops",
+    "Marble stairs",
+    "Decorative ceilings with hidden lighting",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing"
+   ],
+   "extraFacts": [
+    {
+     "label": "Total units",
+     "value": "8 villas (1, 2, 3a, 3b, 4a-4d)"
+    },
+    {
+     "label": "Total plot area",
+     "value": "11,387 m²"
+    },
+    {
+     "label": "Villa plots",
+     "value": "600–1,000 m² per villa"
+    },
+    {
+     "label": "Total covered area",
+     "value": "261–602 m² per villa"
+    },
+    {
+     "label": "Pool",
+     "value": "Private pool on every villa"
+    },
+    {
+     "label": "Distance to beach",
+     "value": "500 m"
+    }
+   ],
+   "unitKinds": "4–7 bedroom villas (4/6 and 5/7 bedroom layouts)",
+   "evidence": {
+    "name": "Price list 'MELROSE VILLAS', brochure 'MELROSE VILLAS', newsletter 'MELROSE VILLAS', location docx 'Melrose Villas'.",
+    "stage": "Price list 28-10-2026 'STATUS: UNDER CONSTRUCTION'; newsletter.pdf (10 Oct 2026) p.3 'UNDER-CONSTRUCTION'.",
+    "completion": "Price list 28-10-2026 completion column: 18 MONTHS for villas 1, 3a, 4a, 4c (from end Oct 2026 = Apr 2028 = Q2 2028), 6 MONTHS for 4d. Newsletter p.3 says 'Delivery 8 months' (= Jun 2027, Q2 2027). Used the newer price list for project-wide completion.",
+    "area": "Newsletter 'Ayios Tychonas'; brochure p.11 'situated in Ayios Tychonas'. Pin is ~500 m inland from the coast near the Germasogeia/Agios Tychonas boundary.",
+    "latitude/longitude": "LOCATION - MELROSE/Google Location Melrose Villas.docx -> goo.gl/maps/YeRmR1nimCvYfMbk8 -> place 'MELROSE VILLAS' !3d34.7104523!4d33.1183593.",
+    "amenities": "Price list 'included in the above prices' (Air Conditioning, central floor heating etc.); VRV per newsletter p.3 and brochure p.15; brochure p.15 'INCLUDED: Overflow Swimming Pool, Indoor Gym, Kids Playground, Outdoor Gym, Yoga Area'; lift and gym on villas 1&2 plans (brochure p.18-19); private pool per price list SWIMMING POOL column.",
+    "extraFacts": "Brochure p.5 '11,387 sqm plot'; price list plot/cover columns; brochure p.11 beach 500 m.",
+    "unitKinds": "Price list bedrooms: '5 / 7' (villas 1, 2), '4 / 6' (3a, 3b, 4b, 4d), '4' (4a, 4c).",
+    "extraFacts:Total plot area": "(brochure p.5)",
+    "extraFacts:Total covered area": "(price list)",
+    "extraFacts:Pool": "(price list)",
+    "extraFacts:Distance to beach": "(brochure p.11)"
+   },
+   "openQuestions": [
+    "Completion conflict: newsletter (10 Oct) 'Delivery 8 months' vs price list (28 Oct) '18 MONTHS' for most villas and '6 MONTHS' for 4d. Confirm per-villa delivery.",
+    "Covered areas conflict: brochure p.18-22 total covered 604 / 464 / 454 / 428.5 m² vs price list 602 / 395 / 366 / 261 m² (4a and 4c listed without basement in price list).",
+    "Bedrooms: newsletter says 4, 5 & 6 bedroom; price list and brochure include 5/7-bedroom villas 1 & 2. Clarify what '4 / 6' means (4 + 2 optional basement rooms?).",
+    "Brochure p.15 lists indoor gym, outdoor gym, kids playground, yoga area as 'included' without saying whether communal or per-villa; general plan also shows '50 uncover parking place'. Confirm if there are shared facilities.",
+    "Brochure p.4 contains the stray line 'Updated to Luxury Offices' — likely template leftover. No energy class stated. Status: 1 RESERVED, 2 SOLD, 5 priced."
+   ]
+  },
+  {
+   "slug": "trianon-luxury-homes",
+   "folderKey": "trianon",
+   "name": "Trianon Luxury Homes",
+   "category": "Residential",
+   "stage": "Under Construction",
+   "completion": "Q2 2028",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Agios Athanasios",
+   "latitude": 34.728987,
+   "longitude": 33.065328,
+   "amenities": [
+    "Private swimming pool",
+    "VRV air conditioning",
+    "Underfloor heating",
+    "Heat pump",
+    "Photovoltaic system (3 kVA)",
+    "Solar water heating",
+    "Lift",
+    "Basement gym room",
+    "Covered parking",
+    "Landscaped gardens with automatic irrigation",
+    "Electric shutters",
+    "Double-glazed windows and patio doors",
+    "Security door",
+    "Video entry system",
+    "Designer kitchens and wardrobes",
+    "Granite worktops",
+    "Marble stairs",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing"
+   ],
+   "extraFacts": [
+    {
+     "label": "Total units (whole development)",
+     "value": "36 villas"
+    },
+    {
+     "label": "Units in current price list",
+     "value": "16 villas on plots 6–10 (villas 6A–10C)"
+    },
+    {
+     "label": "Villa plots",
+     "value": "410–1,167 m²"
+    },
+    {
+     "label": "Total covered area",
+     "value": "288–806 m² per villa"
+    },
+    {
+     "label": "Pool",
+     "value": "Private overflow swimming pool per villa"
+    },
+    {
+     "label": "Neighbourhood",
+     "value": "Sfalangiotissa"
+    },
+    {
+     "label": "Distance to Foley's School",
+     "value": "approx. 100 m"
+    },
+    {
+     "label": "Distance to beach",
+     "value": "approx. 5 km"
+    }
+   ],
+   "unitKinds": "3–6 bedroom villas",
+   "evidence": {
+    "name": "Newsletter 'TRIANON LUXURY HOMES', all folder names and location docx 'TRIANON LUXURY HOMES'; brochure cover and description docx use 'Trianon Heights'; price list 'TRIANON - VILLAS'. Chose the newsletter/folder name.",
+    "stage": "newsletter.pdf (10 Oct 2026) p.3 'Status: UNDER-CONSTRUCTION'.",
+    "completion": "newsletter.pdf (10 Oct 2026) p.3 'Delivery: 15 - 18 months' from Oct 2026 = Jan-Apr 2028; used the later end, Q2 2028.",
+    "area": "Newsletter 'Sfalangiotissa - Limassol'; brochure p.7 map places it north of Agios Athanasios, 100 m from Foley's School. Sfalangiotissa is the Agios Athanasios hillside (newsletter also files La Residenza under 'Ayios Athanasios Sfalangiotisa').",
+    "latitude/longitude": "LOCATION - TRIANON.../GOOGLE LOCATION - TRIANON LUXURY HOMES.docx -> maps.app.goo.gl/AsRSZTSxkcpgtHqy7 -> /maps/search/34.728987,+33.065328 (dropped coordinate).",
+    "amenities": "Price list 'SPECIFICATIONS ... included'; brochure p.10 (adds 3KVA photovoltaic); lift, basement gym, covered parking on villa plans brochure p.18-59 and master plan.",
+    "extraFacts": "Brochure p.8 '36 ... private villas'; price list rows 6A-10C (16); distances brochure p.7.",
+    "unitKinds": "Price list bedrooms 3+ (7A-10C), 4+ (6A-6C), 5+ (6E), 6+ (6D).",
+    "extraFacts:Total units (whole development)": "(brochure p.8)",
+    "extraFacts:Villa plots": "(price list)",
+    "extraFacts:Total covered area": "(price list)",
+    "extraFacts:Distance to Foley's School": "(brochure p.7)",
+    "extraFacts:Distance to beach": "(brochure p.7)"
+   },
+   "openQuestions": [
+    "Name: brochure and description say 'Trianon Heights', newsletter/folders say 'Trianon Luxury Homes'. Confirm the public name.",
+    "Price list covers only villas 6A-10C (16 villas, plots 6-10); brochure shows 36 villas on plots 1-14. Are plots 1-5 and 11-14 sold/completed, or a separate phase? Use 16 or 36 as unit count?",
+    "Bedrooms: description docx says 4, 5 or 6 bedrooms; newsletter and price list include 3-bedroom villas.",
+    "Photovoltaic system is in the brochure but not in the price list included items.",
+    "Area: pin is north of the A1 near Foley's School; confirm it is Agios Athanasios and not Germasogeia. No energy class stated. Status: 3 SOLD, 1 RESERVED, 12 priced."
+   ]
+  },
+  {
+   "slug": "residence-28",
+   "folderKey": "residence-28",
+   "name": "Residence 28",
+   "category": "Residential",
+   "stage": "Key-Ready",
+   "completion": null,
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Agios Athanasios",
+   "latitude": 34.7030075,
+   "longitude": 33.0590982,
+   "amenities": [
+    "Communal swimming pool",
+    "Children's pool",
+    "Private roof-top pool (penthouses)",
+    "Lift",
+    "Smart home system",
+    "Underfloor heating",
+    "Air conditioning provision",
+    "Gated community",
+    "CCTV",
+    "Covered parking",
+    "Storage room",
+    "Landscaped gardens",
+    "Events and conference facilities",
+    "Property management services",
+    "Entrance lobby",
+    "Architectural LED lighting in common areas",
+    "Security door",
+    "Video entry system",
+    "Solar water heating",
+    "Fly screens on windows",
+    "Custom-designed kitchens and wardrobes",
+    "Granite worktops",
+    "Travertine or porcelain flooring",
+    "Branded sanitary ware (Roca)",
+    "Branded mixers and taps (Grohe)",
+    "Decorative ceilings with hidden lighting",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing",
+    "Thermal insulation (extruded polystyrene)"
+   ],
+   "extraFacts": [
+    {
+     "label": "Buildings",
+     "value": "2 buildings (A and B), ground floor + 4 floors + roof"
+    },
+    {
+     "label": "Total units",
+     "value": "28 apartments (14 per building)"
+    },
+    {
+     "label": "Neighbourhood",
+     "value": "Jumbo area"
+    },
+    {
+     "label": "Pool",
+     "value": "Overflow outdoor swimming pool and children's pool"
+    },
+    {
+     "label": "Distance to Jumbo hyperstore",
+     "value": "approx. 150 m"
+    },
+    {
+     "label": "Distance to beach",
+     "value": "approx. 2 km"
+    }
+   ],
+   "unitKinds": "1–3 bedroom apartments, 3-bedroom penthouses",
+   "evidence": {
+    "name": "Price list, brochure, description docx, newsletter and KMZ all 'Residence 28' (brochure logo 'Residence Twenty Eight').",
+    "stage": "newsletter.pdf (10 Oct 2026) p.4 'Status: Ready / Completed'.",
+    "completion": "Completed; no completion date stated (pictures PDF dated 01-12-2025).",
+    "area": "Description docx 'Ayios Athanasiou \"Jumbo\" Area'; brochure p.4 same; brochure p.5 map. Pin south of the A1 next to Jumbo, Agios Athanasios.",
+    "latitude/longitude": "GOOGLE LOCATION.../RESIDENCE 28 GOOGLE LOCATION.docx -> maps.app.goo.gl/xjbeL3zBFactXZwt9 -> place 'RESIDENCE 28' !3d34.7030075!4d33.0590982; RESIDENCE 28.kmz point 34.702991,33.059072 (agrees within ~3 m).",
+    "amenities": "Price list 22-05-2026 'SPECIFICATIONS & AMENITIES'; brochure p.10 (children's pool, events/conference, property management); brochure p.2 (penthouse private roof-top pool); description docx (fly screens); brochure p.9/11 (smart home); arch plans Building A (LIFT, SWIMMING POOL).",
+    "extraFacts": "Price list rows; floors from arch plans Building A (ground, 1st-4th, roof); distances brochure p.5.",
+    "unitKinds": "Price list: 1, 2, 3 bedroom apartments; penthouses A401/B401/B402 '3+', A402 '3'.",
+    "extraFacts:Distance to Jumbo hyperstore": "(brochure p.5)",
+    "extraFacts:Distance to beach": "(brochure p.5)"
+   },
+   "openQuestions": [
+    "Only 4 penthouses remain (A401 €1,250,000, A402 €950,000, B401 €1,250,000, B402 €1,100,000); all 24 apartments are SOLD. Newsletter advertises 'RESIDENCE 28 - PENTHOUSES' only.",
+    "Penthouse bedrooms: newsletter and brochure p.2 say 3 & 4 bedroom; price list shows 3 and '3+'. Is '3+' the 4-bedroom?",
+    "Penthouse roof feature: newsletter says private roof-top jacuzzi, brochure/description say private roof-top pool.",
+    "Gym: description docx lists 'Residence only Gym Facilities', but price list and brochure amenities do not. Confirm.",
+    "Description docx contains a copy-paste reference to 'The Palm'. Price list is dated 22-05-2026 (oldest of the set) — confirm prices are current. No energy class stated."
+   ]
+  },
+  {
+   "slug": "kings-resort",
+   "folderKey": "kings-resort",
+   "name": "King's Resort",
+   "category": "Residential",
+   "stage": "Under Construction",
+   "completion": "Q4 2028",
+   "energy": null,
+   "district": "Paphos",
+   "town": null,
+   "area": "Tombs of the Kings",
+   "latitude": 34.7754223,
+   "longitude": 32.4099635,
+   "amenities": [
+    "Communal swimming pool",
+    "Children's pool",
+    "Gym",
+    "Sauna",
+    "Yoga area",
+    "Tennis court",
+    "Basketball court",
+    "Children's playground",
+    "Playroom",
+    "Pool bar",
+    "Café",
+    "Reception",
+    "Concierge services",
+    "Property management services",
+    "Conference area",
+    "Gated community",
+    "CCTV",
+    "Private parking",
+    "Landscaped gardens",
+    "Underfloor heating",
+    "Concealed air conditioning units in living areas",
+    "Home cinema (penthouses)",
+    "Private roof garden with jacuzzi (penthouses)",
+    "Entrance lobby",
+    "Architectural LED lighting in common areas",
+    "Security door",
+    "Video entry system",
+    "Solar water heating",
+    "Custom-designed kitchens and wardrobes",
+    "Granite worktops",
+    "Travertine or porcelain flooring",
+    "Branded sanitary ware (Roca)",
+    "Branded mixers and taps (Grohe)",
+    "Pressurized water system",
+    "Pipe-in-pipe plumbing",
+    "Thermal insulation (extruded polystyrene)"
+   ],
+   "extraFacts": [
+    {
+     "label": "Section",
+     "value": "The Towers (Tower A and Tower B) of King's Resort"
+    },
+    {
+     "label": "Buildings",
+     "value": "Tower A: 7 floors; Tower B: 9 floors (ground + mezzanine + residential floors)"
+    },
+    {
+     "label": "Total units",
+     "value": "74 apartments in the price list (Tower A 32, Tower B 42)"
+    },
+    {
+     "label": "Parking",
+     "value": "Numbered parking space per apartment"
+    },
+    {
+     "label": "Pool",
+     "value": "Overflow outdoor swimming pool and children's pool"
+    },
+    {
+     "label": "Distance to beach",
+     "value": "approx. 500 m"
+    },
+    {
+     "label": "Distance to supermarket",
+     "value": "approx. 250 m"
+    },
+    {
+     "label": "Distance to Kings Avenue Mall",
+     "value": "approx. 1.5 km"
+    }
+   ],
+   "unitKinds": "Studios, 1–2 bedroom apartments, 4-bedroom penthouses",
+   "evidence": {
+    "name": "Brochure UB uses 'King's Resort' throughout (cover 'RESORT / THE TOWERS'); newsletter 'KINGS RESORT' heading and 'King's Resort' in text. Price list says 'THE KING RESIDENCE' (filename) and 'KINGS TOWER BUILDING A/B'; location docx 'KINGS TOWERS RESORT'.",
+    "stage": "newsletter.pdf (10 Oct 2026) p.4 'Status: UNDER-CONSTRUCTION'.",
+    "completion": "newsletter.pdf (10 Oct 2026) p.4 'Delivery: 24 MONTHS' from Oct 2026 = Oct 2028 = Q4 2028.",
+    "area": "Newsletter 'Tomb of the Kings - Pafos'. Pin is ~0.5 km east of the Tombs of the Kings site, Kato Paphos.",
+    "latitude/longitude": "LOCATION - KINGS TOWERS/KINGS RESORT GOOGLE LOCATION.docx -> maps.app.goo.gl/QEH2M7r5AxGaWzgT9 -> /maps/place//@34.7754223,32.4099635,138m satellite view. Only a viewport centre (no place marker / !3d!4d).",
+    "amenities": "Price list 'SPECIFICATIONS & AMENITIES' (both pages); brochure UB p.6 (basketball court, playgrounds, café), p.14 (penthouse roof garden, jacuzzi, home cinema), p.17-18 (playroom, yoga area, conference area, sauna).",
+    "extraFacts": "Price list rows A101-A602, B101-B802; floors from brochure p.19-25 and arch plans (Tower B up to 9th floor + roof); distances brochure p.4.",
+    "unitKinds": "Price list bedroom column: STUDIO, 1, 2, 4+ (A601-602, B801-802).",
+    "extraFacts:Parking": "(price list)",
+    "extraFacts:Distance to beach": "(brochure p.4)",
+    "extraFacts:Distance to supermarket": "(brochure p.4)",
+    "extraFacts:Distance to Kings Avenue Mall": "(brochure p.4)"
+   },
+   "openQuestions": [
+    "Scope: brochure says King's Resort has two sections, 'the Residences' and 'the Towers'; the folder and price list cover only the Towers. Is 'the Residences' a separate (existing?) project? Name the page 'King's Resort' or 'King's Resort – The Towers'?",
+    "No 3-bedroom units in the price list, but brochure p.13 shows '3 Bedroom Apartments' and newsletter says 'one to four-bedroom apartments'. B701 is listed as 1-bedroom with a 79 m² 2-bedroom layout — likely a typo.",
+    "Price list file dated 16-07-26 but its footer says 'PRICE LIST NOVEMBER 2025'. Tower A: 26 SOLD, 3 RESERVED, 3 priced; Tower B: all 42 priced. Confirm currency.",
+    "Map link resolves only to a satellite viewport, not a placed pin; confirm exact plot location.",
+    "No energy class stated."
+   ]
+  }
+ ]
+}

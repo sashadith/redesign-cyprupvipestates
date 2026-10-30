@@ -249,7 +249,11 @@ export async function collectMedia(
 // Dropbox-API-Arg HEADER (JSON-encoded), not a JSON request body — confirmed
 // against Kuutio's real price-list file before writing this.
 export async function downloadSharedFile(shareUrl: string, path: string, accessToken: string): Promise<Buffer> {
-  const arg = JSON.stringify({ url: shareUrl, path });
+  // An HTTP header carries bytes, not text: a path with any non-ASCII character
+  // ("THE PALMS RESIDENCE Ⅴ-- PRICE LIST.pdf", 2026-10-30) made fetch throw
+  // "Cannot convert argument to a ByteString" before the request was sent.
+  // Dropbox's documented answer is JSON's own \uXXXX escapes in the header.
+  const arg = JSON.stringify({ url: shareUrl, path }).replace(/[\u007f-￿]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
   const r = await fetchWithRetry("https://content.dropboxapi.com/2/sharing/get_shared_link_file", {
     method: "POST",
     headers: { Authorization: "Bearer " + accessToken, "Dropbox-API-Arg": arg },
