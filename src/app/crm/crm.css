@@ -44,6 +44,7 @@
   /* semantic (portal values); the only hex literals left in this file, re-tuned under .ds-dark */
   --good: #3F6B3A; --warn: #8A5A12; --danger: #A3361F;
   --danger-deep: #8A2D19; --danger-bg: #F8ECE7; --cold: #A79F92;
+  --now: #6E5200; --now-bg: #FBF0C4; --now-line: #E0C25A; /* pipeline "Act now" (yellow) */
   --srcbg: color-mix(in srgb, var(--ds-text) 6%, transparent); --partnerbg: color-mix(in srgb, var(--ds-accent) 14%, transparent); --partnerfg: var(--ds-accent-hover); --sugbg: color-mix(in srgb, var(--ds-accent) 9%, transparent);
   /* type. The heading chain keeps the exact fallback order --font-display (Fraunces) used to expand to:
      Fraunces has no Cyrillic, so Cyrillic headings fall to Georgia first, as before. */
@@ -67,6 +68,7 @@
   color-scheme: dark;
   --good: #8DC385; --warn: #E2AA55; --danger: #F08C74;
   --danger-deep: #F5A591; --danger-bg: color-mix(in srgb, var(--danger) 14%, var(--panel));
+  --now: #F2D06B; --now-bg: color-mix(in srgb, var(--now) 15%, var(--panel)); --now-line: color-mix(in srgb, var(--now) 55%, var(--panel));
   --partnerfg: var(--ds-accent-text);
 }
 .crm-app.ds-dark .s-NEW { --sc: #B8B3A9; } .crm-app.ds-dark .s-CONTACTED { --sc: #94B3D0; } .crm-app.ds-dark .s-COMMUNICATING { --sc: #7FBDB8; }
@@ -160,6 +162,15 @@
 .crm-card .src.partner { background: var(--partnerbg); color: var(--partnerfg); }
 .crm-card .age { font-family: var(--mono); font-size: calc(11px * var(--ds-crm-scale)); color: var(--muted); font-variant-numeric: tabular-nums; }
 .crm-card .age.warn { color: var(--warn); font-weight: 600; }
+/* Urgency marks (2026-10-30): yellow = act now (due today), red = overdue since Xd. */
+.crm-card.u-now { border-color: var(--now-line); background: color-mix(in srgb, var(--now-bg) 55%, var(--panel)); }
+.crm-card.u-overdue { border-color: color-mix(in srgb, var(--danger) 55%, var(--panel)); background: color-mix(in srgb, var(--danger-bg) 70%, var(--panel)); }
+.crm-card .urg { font-size: calc(10.5px * var(--ds-crm-scale)); font-weight: 700; letter-spacing: 0.02em; border-radius: 999px; padding: 2px 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.crm-card .urg.now { background: var(--now-bg); color: var(--now); box-shadow: inset 0 0 0 1px var(--now-line); }
+.crm-card .urg.overdue { background: var(--danger); color: var(--panel); }
+.crm-urgcount { font-weight: 700; }
+.crm-urgcount.overdue { color: var(--danger); }
+.crm-urgcount.now { color: var(--now); }
 .crm-card .av { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: calc(9.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--onaccent); background: var(--accent); }
 .crm-card .av.none { background: var(--colbg); color: var(--muted); font-size: calc(12px * var(--ds-crm-scale)); }
 /* Money: Fraunces in bronze ink (small sizes need #7A5A30 for AA). */

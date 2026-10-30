@@ -52,7 +52,7 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
       onBlur={(e) => { if (menu && e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node)) setMenu(false); }}
     >
       <a
-        className={`crm-card s-${card.status}${drag?.popId === card.id ? " pop" : ""}`}
+        className={`crm-card s-${card.status}${card.urgency ? ` u-${card.urgency.level}` : ""}${drag?.popId === card.id ? " pop" : ""}`}
         href={`/crm/leads/${card.id}`}
         data-id={card.id}
         draggable={!!drag}
@@ -69,7 +69,8 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
         {card.project && <div className="c-proj">{card.project}</div>}
         <div className="c-meta">
           <span className={`src${card.isPartner ? " partner" : ""}`}>{card.sourceLabel}</span>
-          <span className={`age${card.stale ? " warn" : ""}`}>{card.ageLabel}</span>
+          {card.urgency && <span className={`urg ${card.urgency.level}`} title={card.urgency.reason}>{card.urgency.label}</span>}
+          <span className={`age${card.stale && !card.urgency ? " warn" : ""}`}>{card.ageLabel}</span>
           {card.ownerInitials
             ? <span className="av" title={card.ownerName ?? undefined}>{card.ownerInitials}</span>
             : <span className="av none" title="Unassigned">—</span>}
