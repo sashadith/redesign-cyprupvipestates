@@ -1,36 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
-import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "../../preview-home/anim/gsap";
+import { gsap, ScrollTrigger, prefersReducedMotion } from "../../preview-home/anim/gsap";
 
 /* Scroll/motion orchestrator for the Partners page — same conventions as
-   Home's own hero timeline plus FaqMotion/CaseStudiesMotion's scroll-reveal
+   FaqMotion/CaseStudiesMotion's scroll-reveal
    pattern: no-ops under prefers-reduced-motion, once:true scroll reveals,
-   transform/opacity only (no CLS). The hero plays immediately on load (not
-   scrollTrigger-gated, matching Hero.tsx's own choreography exactly); every
+   transform/opacity only (no CLS). The hero is CSS-only (see below); every
    section below it reveals on scroll, staggered card-by-card. */
 export default function PartnersMotion() {
   useEffect(() => {
     if (prefersReducedMotion()) return;
 
-    const splits: Array<{ revert: () => void }> = [];
-
     const ctx = gsap.context(() => {
       const toArr = (sel: string) => gsap.utils.toArray<HTMLElement>(sel);
 
-      /* ---------- HERO (on load) — same choreography as Home's Hero ---------- */
-      const headline = document.querySelector<HTMLElement>(".hero__headline");
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.from(".hero__brand", { y: 18, autoAlpha: 0, duration: 0.6 }, 0);
-      if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
-        splits.push(split);
-        tl.from(split.lines, { y: 32, autoAlpha: 0, duration: 0.9 }, 0.1);
-      }
-      tl.from(".hero__stripe", { scaleX: 0, transformOrigin: "left center", duration: 0.7 }, 0.5)
-        .from(".hero__desc", { y: 22, autoAlpha: 0, duration: 0.7 }, 0.56)
-        .from(".hero__cta", { y: 18, autoAlpha: 0, duration: 0.6 }, 0.68)
-        .from([".pnr__portal-login", ".pnr__hero-note"], { y: 14, autoAlpha: 0, duration: 0.6 }, 0.78);
+      /* HERO: no GSAP here. The hero intro is the CSS keyframes in preview-home/tokens.css
+         (heroRise/heroStripeIn, `backwards` fill); a GSAP .from() on the same elements read their
+         CSS start state (opacity 0) as the end state and left stripe, lead and button invisible.
+         The two partner-only lines below the button get the same keyframes in partners.css. */
 
       /* ---------- STATS (count-up numbers reveal together with their card) --- */
       toArr(".bstat").forEach((el, i) => {
@@ -95,9 +83,6 @@ export default function PartnersMotion() {
 
     return () => {
       window.clearTimeout(refresh);
-      splits.forEach((s) => {
-        try { s.revert(); } catch { /* already reverted */ }
-      });
       ctx.revert();
     };
   }, []);
