@@ -52,16 +52,23 @@ export type PartnerSendResult = { ok: true } | { ok: false; status: number; desc
 
 /** Inline keyboard (bot menu, notifications v2): rows of callback or URL buttons. */
 export type InlineKeyboard = ({ text: string; callback_data: string } | { text: string; url: string })[][];
+/** The persistent menu under the message field (reply keyboard): rows of plain button texts. */
+export type ReplyKeyboard = { reply: string[][] };
+
+const markup = (k: InlineKeyboard | ReplyKeyboard) =>
+  "reply" in k
+    ? { keyboard: k.reply.map((row) => row.map((text) => ({ text }))), resize_keyboard: true, is_persistent: true }
+    : { inline_keyboard: k };
 
 /** sendMessage with parse_mode HTML and no link previews. `failure` classifies an error (classifyTelegramFailure). */
-export async function sendPartnerTelegram(chatId: string, html: string, keyboard?: InlineKeyboard): Promise<PartnerSendResult> {
+export async function sendPartnerTelegram(chatId: string, html: string, keyboard?: InlineKeyboard | ReplyKeyboard): Promise<PartnerSendResult> {
   const r = await call("sendMessage", {
     chat_id: chatId,
     text: html,
     parse_mode: "HTML",
     disable_web_page_preview: true,
     link_preview_options: { is_disabled: true },
-    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
+    ...(keyboard ? { reply_markup: markup(keyboard) } : {}),
   });
   if (r.ok) return { ok: true };
   return { ok: false, status: r.status, description: r.description, failure: classifyTelegramFailure(r.status, r.description) };

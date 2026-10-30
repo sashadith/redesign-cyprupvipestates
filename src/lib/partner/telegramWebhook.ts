@@ -15,8 +15,9 @@ import { getMyClient, listMyClients, myCommissions, myOverview, projectRates, re
 import { STATUS_LIST_MAX, buildBotReply, normalizeLinkCode, parseBotCommand, type BotReplyData, type BotReplyKind } from "./telegram";
 import { answerPartnerCallback, editPartnerTelegram, sendPartnerTelegram } from "./telegramApi";
 import {
-  CLIENTS_PER_PAGE, CLIENT_PAGES_MAX, channelScreen, clientScreen, clientsScreen, commissionScreen, languageScreen, mainMenu, notifyScreen,
-  overviewScreen, parseMenuAction, projectsScreen, quietScreen, settingsScreen, type MenuAction, type MenuScreen, type SettingsData,
+  CLIENTS_PER_PAGE, CLIENT_PAGES_MAX, channelScreen, clientScreen, clientsScreen, commissionScreen, keyboardAction, keyboardMessage, languageScreen,
+  linkScreen, mainMenu, notifyScreen, overviewScreen, parseMenuAction, projectsScreen, quietScreen, settingsScreen, type KeyboardAction, type MenuAction,
+  type MenuScreen, type SettingsData,
 } from "./telegramMenu";
 import { myTierStatus } from "./tierStore";
 import { hashToken } from "./tokens";
@@ -134,17 +135,37 @@ export async function handlePartnerBotMessage(chatId: string, text: string, now:
       return reply(chatId, locale, "status", await statusData(linked.id));
     case "commission":
       return reply(chatId, locale, "commission", await commissionData(linked.id, locale));
-    default:
-      return reply(chatId, locale, "help");
+    default: {
+      // A press on the persistent menu arrives as its label text.
+      const ka = cmd === "unknown" ? keyboardAction(text) : null;
+      return ka ? handleKeyboard(chatId, ka, now) : reply(chatId, locale, "help");
+    }
   }
 }
 
 // ── Menu (notifications v2) ─────────────────────────────────────────────────
 
+/** Installs (or refreshes) the persistent menu under the message field. */
 async function sendMenu(chatId: string, locale: PartnerLocale): Promise<void> {
-  const m = mainMenu(locale, portalUrl());
+  const m = keyboardMessage(locale);
   const r = await sendPartnerTelegram(chatId, m.html, m.keyboard);
   if (!r.ok) console.error("[partner-telegram] menu failed", r.status, r.description);
+}
+
+const KEYBOARD_SCREEN: Record<Exclude<KeyboardAction, "submit" | "portal">, MenuAction> = {
+  overview: { a: "overview" }, clients: { a: "clients", page: 1 }, commission: { a: "commission" }, projects: { a: "projects" }, settings: { a: "settings" },
+};
+
+/** A persistent-menu press: the screen goes out as a new message (its own buttons then edit that message). */
+async function handleKeyboard(chatId: string, action: KeyboardAction, now: Date): Promise<void> {
+  const p = await loadMenuPartner(chatId);
+  if (!p || p.status !== "ACTIVE") return reply(chatId, "en", "notLinked");
+  const locale = pickPartnerLocale({ partnerLanguage: String(p.language) });
+  const screen = action === "submit" || action === "portal"
+    ? linkScreen(locale, action, portalUrl())
+    : await screenFor(p, locale, KEYBOARD_SCREEN[action], now);
+  const r = await sendPartnerTelegram(chatId, screen.html, screen.keyboard);
+  if (!r.ok) console.error("[partner-telegram] menu screen failed", r.status, r.description);
 }
 
 const MENU_PARTNER_SELECT = {
@@ -297,4 +318,6 @@ export async function handlePartnerBotCallback(cb: { id: string; chatId: string;
     const r = await sendPartnerTelegram(cb.chatId, screen.html, screen.keyboard);
     if (!r.ok) console.error("[partner-telegram] menu screen failed", r.status, r.description);
   }
+  // A new language relabels the persistent menu.
+  if (action.a === "setLang") await sendMenu(cb.chatId, locale);
 }
