@@ -1,0 +1,169 @@
+/* Project Cockpit — a read-only overview of one development.
+
+   The reference the brief gave is a light CRM dashboard: a soft gradient
+   ground, large rounded white cards, black pill buttons, big numbers. The
+   palette is ours, not the reference's: that board is lavender-and-blue, and
+   dropping lavender into this product would read as a second brand. Here the
+   ground is the site's own paper tone warmed with a champagne radial, the
+   accent is champagne, and the pills are the deep sea green — the same
+   relationship (quiet ground, one dark control colour, one warm accent),
+   rendered in the colours this site already owns.
+
+   Everything below is scoped under .ck, so nothing leaks into the rest of the
+   admin, which is Tailwind-utility styled and stays that way. */
+
+.ck {
+  --ck-card: #FFFFFF;
+  --ck-line: rgba(34, 28, 21, 0.10);
+  --ck-line-soft: rgba(34, 28, 21, 0.06);
+  --ck-ink: var(--ink-warm, #221C15);
+  --ck-ink-soft: rgba(34, 28, 21, 0.56);
+  --ck-ink-faint: rgba(34, 28, 21, 0.40);
+  --ck-accent: var(--champagne, #C29A5E);
+  --ck-deep: var(--sea-deep, #081512);
+  --ck-radius: 20px;
+
+  position: relative;
+  min-height: 100%;
+  padding: 20px 20px 56px;
+  font-family: var(--font-body), system-ui, sans-serif;
+  color: var(--ck-ink);
+  background:
+    radial-gradient(60% 40% at 88% 0%, rgba(194, 154, 94, 0.13), transparent 70%),
+    linear-gradient(180deg, #FAF7F1 0%, #FFFFFF 46%);
+}
+@media (min-width: 900px) { .ck { padding: 28px 28px 72px; } }
+
+/* ---------------------------------------------------------------- card */
+.ck__card {
+  background: var(--ck-card);
+  border: 1px solid var(--ck-line);
+  border-radius: var(--ck-radius);
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(34, 28, 21, 0.04), 0 12px 28px -22px rgba(34, 28, 21, 0.45);
+}
+@media (min-width: 900px) { .ck__card { padding: 22px; } }
+
+/* The small label above every card's content. Letterspaced caps at this size
+   is the one place the reference's own hierarchy is worth copying exactly:
+   it lets the big number below it carry the whole card. */
+.ck__eyebrow {
+  display: flex; align-items: center; gap: 7px;
+  margin: 0 0 14px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ck-ink-faint);
+}
+.ck__eyebrow svg { width: 13px; height: 13px; flex: none; opacity: 0.8; }
+
+.ck__h { font-family: var(--font-display), Georgia, serif; font-weight: 400; letter-spacing: -0.01em; }
+
+/* ---------------------------------------------------------------- header */
+.ck__head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+.ck__title { margin: 0; font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.3rem); line-height: 1.1; }
+.ck__sub { margin: 6px 0 0; font-size: 0.92rem; color: var(--ck-ink-soft); }
+.ck__headActions { display: flex; gap: 8px; margin-inline-start: auto; }
+
+.ck__pill {
+  display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 18px;
+  border-radius: 999px; font-size: 0.86rem; font-weight: 600; text-decoration: none;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.ck__pill--dark { background: var(--ck-deep); color: #F3EFE6; }
+.ck__pill--dark:hover { background: #10211D; }
+.ck__pill--ghost { background: #FFFFFF; color: var(--ck-ink); border-color: var(--ck-line); }
+.ck__pill--ghost:hover { border-color: var(--ck-accent); }
+
+/* State chips. Filled = availability (the one state that drives decisions);
+   outlined = a plain fact. */
+.ck__chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px;
+  border-radius: 999px; font-size: 0.76rem; font-weight: 600; letter-spacing: 0.01em;
+}
+.ck__chip--ok { background: rgba(194, 154, 94, 0.16); color: #6B4F28; }
+.ck__chip--out { background: rgba(34, 28, 21, 0.07); color: var(--ck-ink-soft); }
+.ck__chip--line { border: 1px solid var(--ck-line); color: var(--ck-ink-soft); }
+
+/* ---------------------------------------------------------------- grid */
+.ck__grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 1180px) { .ck__grid { grid-template-columns: minmax(0, 1fr) 330px; align-items: start; } }
+.ck__main { display: grid; grid-template-columns: 1fr; gap: 16px; min-width: 0; }
+@media (min-width: 760px) { .ck__row2 { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 16px; } }
+
+/* ---------------------------------------------------------------- gauge */
+.ck__gaugeWrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.ck__gaugeSvg { width: 100%; max-width: 300px; height: auto; display: block; }
+.ck__gaugeCentre { margin-top: -54px; text-align: center; }
+.ck__gaugeNum { font-family: var(--font-display), Georgia, serif; font-size: clamp(1.7rem, 1.3rem + 1.7vw, 2.4rem); line-height: 1; }
+.ck__gaugeLabel { margin-top: 6px; font-size: 0.76rem; color: var(--ck-ink-faint); }
+.ck__gaugeEnds { display: flex; justify-content: space-between; width: 100%; max-width: 300px; margin-top: 10px; font-size: 0.78rem; color: var(--ck-ink-soft); }
+.ck__gaugeEnds b { display: block; font-weight: 600; color: var(--ck-ink); }
+.ck__note { margin: 12px 0 0; font-size: 0.76rem; line-height: 1.45; color: var(--ck-ink-faint); }
+
+/* --------------------------------------------------------- availability */
+.ck__bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: rgba(34, 28, 21, 0.07); }
+.ck__barSeg { height: 100%; }
+.ck__barSeg--avail { background: var(--ck-accent); }
+.ck__barSeg--res { background: rgba(194, 154, 94, 0.42); }
+.ck__barSeg--sold { background: rgba(34, 28, 21, 0.26); }
+.ck__legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+.ck__legendItem { display: flex; flex-direction: column; gap: 2px; font-size: 0.78rem; color: var(--ck-ink-soft); }
+.ck__legendNum { font-family: var(--font-display), Georgia, serif; font-size: 1.5rem; line-height: 1; color: var(--ck-ink); }
+.ck__legendDot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; vertical-align: 1px; }
+
+/* ---------------------------------------------------------------- gallery */
+.ck__shot { position: relative; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: rgba(34, 28, 21, 0.05); }
+.ck__shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ck__shotEmpty { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.82rem; color: var(--ck-ink-faint); }
+.ck__counter {
+  position: absolute; inset-block-end: 10px; inset-inline-end: 10px;
+  padding: 3px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 600;
+  background: rgba(8, 21, 18, 0.72); color: #F3EFE6; backdrop-filter: blur(4px);
+}
+.ck__thumbs { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 2px; }
+.ck__thumb {
+  flex: none; width: 70px; height: 70px; padding: 0; border-radius: 10px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--ck-line); background: #FFFFFF;
+}
+.ck__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ck__thumb[aria-current="true"] { border-color: var(--ck-accent); box-shadow: 0 0 0 2px rgba(194, 154, 94, 0.28); }
+.ck__thumbPdf { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.68rem; color: var(--ck-ink-faint); }
+
+/* ---------------------------------------------------------------- pipeline */
+.ck__cols { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 680px) { .ck__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1400px) { .ck__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ck__col { background: #FBF9F5; border: 1px solid var(--ck-line-soft); border-radius: 14px; padding: 12px; }
+.ck__colHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ck-ink-faint); }
+.ck__colCount { font-size: 0.78rem; color: var(--ck-ink-soft); }
+.ck__empty { font-size: 0.8rem; color: var(--ck-ink-faint); padding: 6px 2px; }
+
+.ck__lead {
+  display: block; text-decoration: none; color: inherit;
+  background: #FFFFFF; border: 1px solid var(--ck-line); border-radius: 12px;
+  padding: 11px 12px; margin-bottom: 8px;
+}
+.ck__lead:last-child { margin-bottom: 0; }
+.ck__lead:hover { border-color: var(--ck-accent); }
+.ck__leadTop { display: flex; align-items: center; gap: 7px; }
+.ck__leadName { font-weight: 600; font-size: 0.9rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ck__flag { font-size: 1rem; line-height: 1; flex: none; }
+.ck__flame { margin-inline-start: auto; font-size: 0.86rem; flex: none; }
+.ck__leadMeta { margin-top: 5px; font-size: 0.78rem; color: var(--ck-ink-soft); }
+.ck__leadMeta span + span::before { content: " · "; color: var(--ck-ink-faint); }
+
+/* ---------------------------------------------------------------- sidebar */
+.ck__side { display: grid; gap: 16px; min-width: 0; }
+.ck__feed { display: grid; gap: 2px; }
+.ck__act { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--ck-line-soft); }
+.ck__act:last-child { border-bottom: 0; }
+.ck__actIcon { flex: none; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; background: rgba(34, 28, 21, 0.05); color: var(--ck-ink-soft); }
+.ck__actBody { min-width: 0; }
+.ck__actHead { display: flex; align-items: baseline; gap: 6px; font-size: 0.8rem; }
+.ck__actWho { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ck__actWhen { margin-inline-start: auto; flex: none; font-size: 0.72rem; color: var(--ck-ink-faint); }
+.ck__actLine { margin: 2px 0 0; font-size: 0.78rem; color: var(--ck-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A dot that says which way a message went, without a word for it. */
+.ck__dir { flex: none; width: 6px; height: 6px; border-radius: 50%; }
+.ck__dir--in { background: var(--ck-accent); }
+.ck__dir--out { background: rgba(34, 28, 21, 0.28); }

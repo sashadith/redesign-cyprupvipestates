@@ -134,7 +134,7 @@ export function normalizeType(raw: string | null | undefined): string | null {
 }
 
 /** [min*0.9, max*1.1] — null bound = unbounded on that side. */
-function widen(min: number | null, max: number | null, pct: number): { lo: number | null; hi: number | null } {
+export function widen(min: number | null, max: number | null, pct: number): { lo: number | null; hi: number | null } {
   return { lo: min != null ? min * (1 - pct) : null, hi: max != null ? max * (1 + pct) : null };
 }
 function inRange(price: number, lo: number | null, hi: number | null): boolean {

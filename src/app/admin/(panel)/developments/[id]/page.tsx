@@ -222,6 +222,10 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             navigation pair is its own group behind a divider: it leaves the
             admin for another app, the others stay inside the tool. */}
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] pt-3">
+          {/* Cockpit first in the row: it is the read-only overview this page's
+              editing controls are usually opened FROM, so it belongs ahead of
+              them rather than among the sync/navigation actions. */}
+          <Link href={`/admin/developments/${d.id}/cockpit`} className="inline-flex h-9 items-center rounded-md bg-[var(--sea-deep)] px-4 text-sm font-medium text-[#F3EFE6] hover:bg-[#10211D]">Cockpit</Link>
           {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
           {driveViewHref && (
             <a href={driveViewHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center rounded-md border border-[#C7A87A] px-4 text-sm text-[#826238] hover:border-[var(--bronze)] hover:bg-[#FDF3E3]">View in Drive ↗</a>

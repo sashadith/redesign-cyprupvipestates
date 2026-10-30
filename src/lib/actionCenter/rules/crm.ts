@@ -48,7 +48,7 @@ const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName}
 // this closes a real pre-existing gap: a lead that reached VIEWING_SCHEDULED
 // or OFFER previously fell out of this rule entirely and could go stale
 // without ever triggering a follow-up nudge again.
-const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
+export const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
 // Statuses this rule tracks for stale-follow-up nagging. KEEP_CONTACT is
 // deliberately NOT here (2026-08-11) — it's the one status that means "I'm
 // choosing not to be nagged about this right now", so noFollowUp() must
