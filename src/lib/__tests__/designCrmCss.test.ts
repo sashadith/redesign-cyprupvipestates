@@ -76,8 +76,11 @@ const LIGHT_EXTRA: Record<string, string> = {
   "--danger-deep": "#8A2D19", // danger button hover
   "--danger-bg": "#F8ECE7", // error toast surface
   "--cold": "#A79F92", // cold lead temperature dot
+  "--now": "#6E5200", // pipeline "Act now" badge text (2026-10-30)
+  "--now-bg": "#FBF0C4", // pipeline "Act now" badge / card tint
+  "--now-line": "#E0C25A", // pipeline "Act now" outline
 };
-const SEMANTIC_PROPS = new Set(["--good", "--warn", "--danger", "--danger-deep", "--danger-bg", "--cold", "--sc"]);
+const SEMANTIC_PROPS = new Set(["--good", "--warn", "--danger", "--danger-deep", "--danger-bg", "--cold", "--now", "--now-bg", "--now-line", "--sc"]);
 
 const DARK_CARDS = ["#102826", "#23272A"]; // WEBSITE.card, Anthracite gold card
 
@@ -161,7 +164,7 @@ test("(e) dark semantic and stage colours reach 4.5:1 on dark cards", () => {
   const checked = new Set<string>();
   for (const r of dark) {
     for (const d of decls(r.body)) {
-      if (!SEMANTIC_PROPS.has(d.prop) || d.prop === "--danger-deep" || d.prop === "--danger-bg" || d.prop === "--cold") continue;
+      if (!SEMANTIC_PROPS.has(d.prop) || d.prop === "--danger-deep" || d.prop === "--danger-bg" || d.prop === "--cold" || d.prop === "--now-bg" || d.prop === "--now-line") continue;
       assert.match(d.value, /^#[0-9A-F]{6}$/, `${r.selector} ${d.prop}`);
       for (const card of DARK_CARDS) {
         const ratio = contrastRatio(d.value, card);
@@ -217,4 +220,9 @@ test("DsStyle renders the vars unescaped inside :root and drops markup character
   const evil = renderToStaticMarkup(React.createElement(DsStyle, { scope: "portal", vars: "--ds-page:#000}</style><script>x</script>{" }));
   assert.doesNotMatch(evil, /<\/style><script|<script/);
   assert.equal((evil.match(/[{}]/g) ?? []).length, 2);
+});
+
+test("(g) the pipeline 'Act now' badge text reads on its own tint (light)", () => {
+  const ratio = contrastRatio(LIGHT_EXTRA["--now"], LIGHT_EXTRA["--now-bg"]);
+  assert.ok(ratio >= 4.5, `--now on --now-bg: ${ratio.toFixed(2)}`);
 });

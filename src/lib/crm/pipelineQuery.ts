@@ -13,7 +13,7 @@ export const SIDE_CAP = 400;
 
 const BOARD_SELECT = {
   id: true, firstName: true, lastName: true, status: true, source: true, languagePreference: true, createdAt: true, assignedToId: true,
-  timeline: true, budgetMin: true, budgetMax: true,
+  timeline: true, budgetMin: true, budgetMax: true, nextFollowUpAt: true, viewingScheduledAt: true,
   assignedTo: { select: { id: true, name: true } },
   projectInterest: { select: { title: true } },
   interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" as const }, take: 1, select: { occurredAt: true } },
@@ -32,6 +32,7 @@ async function toInputs(user: CrmUser, rows: BoardRow[], now: Date): Promise<Boa
     deals: r.deals,
     canEdit: canEditLead(user, { assignedToId: r.assignedToId }),
     temperature: toPublicTemperature(temps.get(r.id)),
+    nextFollowUpAt: r.nextFollowUpAt, viewingScheduledAt: r.viewingScheduledAt,
   }));
 }
 
@@ -52,7 +53,8 @@ export async function loadBoardLeads(user: CrmUser, filter: BoardFilter, now: Da
 
 // Keep contact and Lost. Not loaded for the stale filter: stale is about the funnel.
 export async function loadSideLeads(user: CrmUser, filter: BoardFilter, now: Date): Promise<{ leads: BoardLeadInput[]; total: number }> {
-  if (filter === "stale") return { leads: [], total: 0 };
+  // Keep contact and Lost are never marked: not loaded for the stale and "needs action" views.
+  if (filter === "stale" || filter === "due") return { leads: [], total: 0 };
   const where = sideWhere(user, filter);
   const [rows, total] = await Promise.all([
     prisma.lead.findMany({ where, orderBy: { updatedAt: "desc" }, take: SIDE_CAP, select: BOARD_SELECT }),
