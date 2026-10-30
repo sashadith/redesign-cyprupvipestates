@@ -5,7 +5,7 @@
 import { PARTNER_LOCALES, dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { escapeHtml } from "./mail";
 import { NOTIFY_SWITCHES, QUIET_PRESETS, parseQuietPreset, quietKey, quietLabel, type NotifySwitch, type NotifySwitches } from "./notifyPrefs";
-import type { InlineKeyboard } from "./telegramApi";
+import type { InlineKeyboard, ReplyKeyboard } from "./telegramApi";
 
 const esc = escapeHtml;
 
@@ -115,7 +115,7 @@ export function overviewScreen(l: PartnerLocale, d: OverviewData): MenuScreen {
     lines.push("", esc(fmt(t.tier, { tier: d.tier.name })));
     if (d.tier.next) lines.push(esc(fmt(t.tierNext, { tier: d.tier.next.name, n: d.tier.next.remaining })));
   }
-  return { html: lines.join("\n"), keyboard: [[btn(t.clients, "c:1"), btn(t.commission, "k")], backTo(l)] };
+  return { html: lines.join("\n"), keyboard: [[btn(t.clients, "c:1"), btn(t.commission, "k")]] };
 }
 
 export type ClientsData = { items: { id: string; name: string; stageKey: string }[]; page: number; pages: number; more: boolean };
@@ -125,7 +125,7 @@ const clip = (s: string, n: number) => (Array.from(s).length > n ? `${Array.from
 
 export function clientsScreen(l: PartnerLocale, d: ClientsData): MenuScreen {
   const t = M(l);
-  if (!d.items.length) return { html: `<b>${esc(t.clientsTitle)}</b>\n${esc(t.clientsEmpty)}`, keyboard: [backTo(l)] };
+  if (!d.items.length) return { html: `<b>${esc(t.clientsTitle)}</b>\n${esc(t.clientsEmpty)}`, keyboard: [] };
   const nav = [
     ...(d.page > 1 ? [btn(t.prev, `c:${d.page - 1}`)] : []),
     ...(d.page < d.pages ? [btn(t.next, `c:${d.page + 1}`)] : []),
@@ -137,7 +137,6 @@ export function clientsScreen(l: PartnerLocale, d: ClientsData): MenuScreen {
     keyboard: [
       ...d.items.map((c) => [btn(`${clip(c.name.trim() || "—", 28)} · ${clip(stageOf(l, c.stageKey), 22)}`, `cl:${c.id}`)]),
       ...(nav.length ? [nav] : []),
-      backTo(l),
     ],
   };
 }
@@ -159,18 +158,18 @@ export function commissionScreen(l: PartnerLocale, d: { totals: { stage: string;
   if (!d.totals.length) lines.push(esc(b.commissionEmpty));
   for (const r of d.totals) lines.push(`${esc(lookup(l, `commission.${r.stage}`) ?? r.stage)}: ${esc(r.amount)}`);
   if (d.lastPayout) lines.push("", esc(d.lastPayout));
-  return { html: lines.join("\n"), keyboard: [backTo(l)] };
+  return { html: lines.join("\n"), keyboard: [] };
 }
 
 export function projectsScreen(l: PartnerLocale, d: { items: { name: string; town: string | null; detail: string; url: string }[] }): MenuScreen {
   const t = M(l);
-  if (!d.items.length) return { html: `<b>${esc(t.projectsTitle)}</b>\n${esc(t.projectsEmpty)}`, keyboard: [backTo(l)] };
+  if (!d.items.length) return { html: `<b>${esc(t.projectsTitle)}</b>\n${esc(t.projectsEmpty)}`, keyboard: [] };
   const lines = [`<b>${esc(t.projectsTitle)}</b>`];
   for (const p of d.items) {
     lines.push("", `• <a href="${esc(p.url)}">${esc([p.name, p.town].filter(Boolean).join(", "))}</a>`);
     if (p.detail) lines.push(`  ${esc(p.detail)}`);
   }
-  return { html: lines.join("\n"), keyboard: [backTo(l)] };
+  return { html: lines.join("\n"), keyboard: [] };
 }
 
 /** A language's own name, capitalised ("Deutsch", "Polski", "Русский"). */
@@ -199,7 +198,7 @@ export function settingsScreen(l: PartnerLocale, d: SettingsData, saved = false)
   ];
   return {
     html: lines.join("\n"),
-    keyboard: [[btn(t.language, "sl"), btn(t.quiet, "sq")], [btn(t.notifications, "sn"), btn(t.channel, "sc")], backTo(l)],
+    keyboard: [[btn(t.language, "sl"), btn(t.quiet, "sq")], [btn(t.notifications, "sn"), btn(t.channel, "sc")]],
   };
 }
 
@@ -259,4 +258,52 @@ export function botCommandLists(): Record<string, { command: string; description
     ];
   };
   return { "": list("en"), de: list("de"), pl: list("pl"), ru: list("ru") };
+}
+
+// ── Persistent menu (reply keyboard, 2026-10-30) ────────────────────────────
+// Like the Xellex bot: plain buttons under the message field, two per row, Settings full width. A press
+// arrives as an ordinary text message carrying the button's label.
+
+export type KeyboardAction = "overview" | "clients" | "commission" | "projects" | "submit" | "portal" | "settings";
+
+const KEYBOARD_LABELS: { action: KeyboardAction; key: "kbOverview" | "kbClients" | "kbCommission" | "kbProjects" | "kbSubmit" | "kbPortal" | "kbSettings" }[] = [
+  { action: "overview", key: "kbOverview" }, { action: "clients", key: "kbClients" },
+  { action: "commission", key: "kbCommission" }, { action: "projects", key: "kbProjects" },
+  { action: "submit", key: "kbSubmit" }, { action: "portal", key: "kbPortal" },
+  { action: "settings", key: "kbSettings" },
+];
+
+export function replyKeyboard(l: PartnerLocale): ReplyKeyboard {
+  const t = M(l);
+  const label = (i: number) => t[KEYBOARD_LABELS[i].key];
+  return { reply: [[label(0), label(1)], [label(2), label(3)], [label(4), label(5)], [label(6)]] };
+}
+
+/** A keyboard press → its action. Labels of every partner language match (the keyboard may predate a language change). */
+export function keyboardAction(text: string): KeyboardAction | null {
+  const t = text.trim();
+  if (!t || t.length > 64) return null;
+  for (const l of PARTNER_LOCALES) {
+    const m = M(l);
+    const hit = KEYBOARD_LABELS.find((x) => m[x.key] === t);
+    if (hit) return hit.action;
+  }
+  return null;
+}
+
+/** The message that (re)installs the keyboard: /menu, /start, after linking, after a language change. */
+export function keyboardMessage(l: PartnerLocale): { html: string; keyboard: ReplyKeyboard } {
+  const t = M(l);
+  return { html: `<b>${esc(t.title)}</b>\n${esc(t.keyboardIntro)}`, keyboard: replyKeyboard(l) };
+}
+
+/** Submit / portal presses: one line and a link button (a reply-keyboard button cannot open a URL itself). */
+export function linkScreen(l: PartnerLocale, kind: "submit" | "portal", portal: string): MenuScreen {
+  const t = M(l);
+  const ok = portal.startsWith("https://");
+  const url = kind === "submit" ? join(portal, "/submit") : portal;
+  return {
+    html: esc(kind === "submit" ? t.submitIntro : t.portalIntro),
+    keyboard: ok ? [[urlBtn(kind === "submit" ? t.submit : t.portal, url)]] : [],
+  };
 }

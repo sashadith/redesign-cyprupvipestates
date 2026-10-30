@@ -2,13 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  CLIENTS_PER_PAGE, botCommandLists, channelScreen, clientScreen, clientsScreen, languageScreen, mainMenu, notifyScreen, overviewScreen,
-  parseMenuAction, projectsScreen, quietScreen, settingsScreen, type MenuScreen,
+  CLIENTS_PER_PAGE, botCommandLists, channelScreen, clientScreen, clientsScreen, keyboardAction, keyboardMessage, languageScreen, linkScreen, mainMenu,
+  notifyScreen, overviewScreen, parseMenuAction, projectsScreen, quietScreen, replyKeyboard, settingsScreen, type MenuScreen,
 } from "@/lib/partner/telegramMenu";
 import { inQuietHours, parseQuietPreset, quietEndsAt, quietWindow, quietLabel } from "@/lib/partner/notifyPrefs";
 import { extractCallback } from "@/lib/partner/telegramBot";
 import { parseBotCommand } from "@/lib/partner/telegram";
-import { PARTNER_LOCALES } from "@/lib/partner/i18n";
+import { PARTNER_LOCALES, dict } from "@/lib/partner/i18n";
 
 const PORTAL = "https://partner.cyprusvipestates.com";
 const UUID = "6e3475a1-9444-48c5-a253-1b386af669ac";
@@ -53,7 +53,7 @@ test("button presses: private chats only, sane ids", () => {
 
 // ── Screens ─────────────────────────────────────────────────────────────────
 
-test("screens: escaped values, portal links only over https, a way back everywhere", () => {
+test("screens: escaped values, portal links only over https, sub-screens lead back", () => {
   for (const l of PARTNER_LOCALES) {
     assert.ok(mainMenu(l, PORTAL).keyboard.flat().some((b) => "url" in b && b.url === `${PORTAL}/submit`));
     assert.ok(!mainMenu(l, "").keyboard.flat().some((b) => "url" in b), "no relative links without PARTNER_HOST");
@@ -67,9 +67,11 @@ test("screens: escaped values, portal links only over https, a way back everywhe
     assert.ok(cl.html.includes("Anna &lt;script&gt;") && cl.html.includes("2 Dec 2026"));
     const pr = projectsScreen(l, { items: [{ name: "Sea & Sun", town: "Paphos", detail: "Your rate: 1.5%", url: "https://cyprusvipestates.com/projects/sea" }] });
     assert.ok(pr.html.includes("Sea &amp; Sun") && pr.html.includes('href="https://cyprusvipestates.com/projects/sea"'));
-    for (const s of [ov, cl, pr, languageScreen(l, l), quietScreen(l, [22, 8]), channelScreen(l, "TELEGRAM")]) {
-      assert.ok(datas(s).some((d) => d === "m" || d === "s" || d.startsWith("c:")), "back button");
+    // Top-level screens need no back button (the persistent menu is always there); sub-screens go back to their parent.
+    for (const s of [cl, languageScreen(l, l), quietScreen(l, [22, 8]), channelScreen(l, "TELEGRAM")]) {
+      assert.ok(datas(s).some((d) => d === "s" || d.startsWith("c:")), "back button");
     }
+    assert.ok(!datas(pr).includes("m") && !datas(ov).includes("m"));
   }
 });
 
@@ -138,4 +140,39 @@ test("wiring: callbacks routed and rate-limited; settings only for the chat's ow
   assert.ok(send.includes("refKey: `${row.refKey}#tg`"));
   const api = src("src/lib/partner/telegramApi.ts");
   assert.ok(api.includes('allowed_updates: ["message", "callback_query"]'));
+});
+
+test("persistent menu (Xellex style): plain labels, two per row, Settings full width, presses recognised in every language", () => {
+  for (const l of PARTNER_LOCALES) {
+    const kb = replyKeyboard(l).reply;
+    assert.deepEqual(kb.map((r) => r.length), [2, 2, 2, 1]);
+    for (const label of kb.flat()) {
+      // Plain words only: letters (any script) and spaces — no emoji, digits or punctuation.
+      assert.ok(label.length > 0 && Array.from(label).every((ch) => ch === " " || ch.toLowerCase() !== ch.toUpperCase()), `${l}: plain label "${label}"`);
+      assert.ok(keyboardAction(label), `${l}: "${label}" is recognised`);
+    }
+    assert.equal(keyboardAction(kb[3][0]), "settings");
+    assert.equal(keyboardAction(` ${kb[0][0]} `), "overview");
+    assert.ok(keyboardMessage(l).html.includes(dict(l).telegram.menu.title));
+    const sub = linkScreen(l, "submit", PORTAL);
+    assert.ok(sub.keyboard.flat().some((b) => "url" in b && b.url === `${PORTAL}/submit`));
+    assert.deepEqual(linkScreen(l, "portal", "").keyboard, [], "no link without PARTNER_HOST");
+  }
+  assert.equal(keyboardAction("hello"), null);
+  assert.equal(keyboardAction("/menu"), null);
+  // Labels must not collide across actions in any language (one label = one action).
+  const seen = new Map<string, string>();
+  for (const l of PARTNER_LOCALES) for (const label of replyKeyboard(l).reply.flat()) {
+    const a = keyboardAction(label)!;
+    assert.ok(!seen.has(label) || seen.get(label) === a, `"${label}" means two things`);
+    seen.set(label, a);
+  }
+});
+
+test("wiring: keyboard presses routed, keyboard re-sent after a language change, reply keyboard is persistent", () => {
+  const hook = src("src/lib/partner/telegramWebhook.ts");
+  assert.ok(hook.includes('const ka = cmd === "unknown" ? keyboardAction(text) : null;'));
+  assert.ok(hook.includes('if (action.a === "setLang") await sendMenu(cb.chatId, locale);'));
+  const api = src("src/lib/partner/telegramApi.ts");
+  assert.ok(api.includes("resize_keyboard: true, is_persistent: true"));
 });
