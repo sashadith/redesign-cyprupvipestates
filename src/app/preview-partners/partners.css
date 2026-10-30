@@ -45,9 +45,47 @@
    for those classes already exists in tokens.css — nothing new needed here
    except sizing the still image the same as the video/poster fill. */
 .pnr__hero-media img { width: 100%; height: 100%; object-fit: cover; }
+/* Hero sign-up button: larger than Home's glass button and filled gold, with a slow
+   breathing glow so it reads as THE action on this page. Dark sea ink on champagne
+   keeps the label readable; the glow pauses for reduced-motion visitors. */
+.btn.pnr__cta-gold {
+  font-size: var(--text-base, 1.05rem); font-weight: 600; letter-spacing: 0.04em;
+  padding: 20px 40px; color: var(--sea-deep);
+  background: linear-gradient(135deg, #E2C08A 0%, #C29A5E 48%, #A47A42 100%);
+  border-color: rgba(255, 230, 180, 0.55);
+  box-shadow: 0 0 0 1px rgba(194, 154, 94, 0.35), 0 8px 34px -6px rgba(216, 178, 104, 0.65);
+  animation: pnrGoldGlow 2.8s ease-in-out infinite;
+}
+.btn.pnr__cta-gold:hover {
+  background: linear-gradient(135deg, #EBCB96 0%, #CDA668 48%, #AE8449 100%);
+  box-shadow: 0 0 0 1px rgba(226, 192, 138, 0.6), 0 10px 56px -4px rgba(216, 178, 104, 0.9);
+}
+@keyframes pnrGoldGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(194, 154, 94, 0.35), 0 8px 34px -6px rgba(216, 178, 104, 0.55); }
+  50% { box-shadow: 0 0 0 1px rgba(226, 192, 138, 0.6), 0 10px 60px -2px rgba(216, 178, 104, 0.95); }
+}
+@media (prefers-reduced-motion: reduce) { .btn.pnr__cta-gold { animation: none; } }
+
+/* Final CTA: four short selling points, the gold button, the login line. On the light
+   section the login link uses the bronze accent; champagne is too pale on paper. */
+.pnr__cta-final { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-5); } /* position + gap below the gold line come from .formsec__form */
+.pnr__cta-points { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); font-family: var(--font-body), sans-serif; font-size: var(--text-body); color: var(--text); }
+.pnr__cta-points li { display: flex; align-items: baseline; gap: var(--s-3); }
+.pnr__cta-points li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--champagne); transform: translateY(-2px); }
+.pnr__cta-final .pnr__portal-login { margin-top: 0; }
+.is-light .pnr__portal-login a, .is-light .pnr__portal-login a:hover { color: var(--accent); }
+
+/* Portal login link under the hero button. */
+.pnr__portal-login {
+  margin-top: var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-body); color: var(--text-soft);
+}
+/* Login link on the dark hero: champagne, no underline (underline only on hover/focus). */
+.pnr__portal-login a { color: var(--champagne); text-decoration: none; }
+.pnr__portal-login a:hover, .pnr__portal-login a:focus-visible { color: var(--champagne); text-decoration: underline; text-underline-offset: 3px; }
+
 .pnr__hero-note {
   margin-top: var(--s-5); max-width: 56ch; font-family: var(--font-body), sans-serif;
-  font-size: var(--text-caption); line-height: 1.6; color: var(--text-faint);
+  font-size: var(--text-body); line-height: 1.6; color: var(--text-soft);
 }
 
 /* ------------------------------------------------------------- SECTION --- */

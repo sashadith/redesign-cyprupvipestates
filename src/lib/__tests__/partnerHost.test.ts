@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isPartnerHost, routingHost } from "@/lib/partner/host";
+import { isPartnerHost, partnerLangFromQuery, partnerPortalUrl, PARTNER_QUERY_LOCALES, routingHost } from "@/lib/partner/host";
+import { PARTNER_LOCALES } from "@/lib/partner/i18n";
 
 const prod = { PARTNER_HOST: "partner.cyprusvipestates.com", NODE_ENV: "production" };
 const dev = { PARTNER_HOST: "partner.cyprusvipestates.com", NODE_ENV: "development" };
@@ -38,4 +39,23 @@ test("routingHost: X-Forwarded-Host wins (server-action redirect renders arrive 
   assert.equal(routingHost("partner.cyprusvipestates.com", null), "partner.cyprusvipestates.com");
   assert.equal(routingHost("cyprusvipestates.com", ""), "cyprusvipestates.com");
   assert.equal(routingHost(null, null), null);
+});
+
+test("partner lang query: middleware's locale list matches the portal's", () => {
+  assert.deepEqual([...PARTNER_QUERY_LOCALES].sort(), [...PARTNER_LOCALES].sort());
+});
+
+test("partner lang query: known locale, case-insensitive; Hebrew, junk and absent give null", () => {
+  assert.equal(partnerLangFromQuery(new URLSearchParams("lang=de")), "de");
+  assert.equal(partnerLangFromQuery(new URLSearchParams("lang=RU")), "ru");
+  assert.equal(partnerLangFromQuery(new URLSearchParams("lang=he")), null);
+  assert.equal(partnerLangFromQuery(new URLSearchParams("lang=xx")), null);
+  assert.equal(partnerLangFromQuery(new URLSearchParams("")), null);
+});
+
+test("partner portal url: prod host, local fallback, Hebrew page links without lang", () => {
+  assert.equal(partnerPortalUrl("/register", "de", prod), "https://partner.cyprusvipestates.com/register?lang=de");
+  assert.equal(partnerPortalUrl("/login", "pl", { NODE_ENV: "development", PORT: "3124" }), "http://partner.localhost:3124/login?lang=pl");
+  assert.equal(partnerPortalUrl("/register", "he", prod), "https://partner.cyprusvipestates.com/register");
+  assert.equal(partnerPortalUrl("/register", "en", { NODE_ENV: "production" }), "https://partner.cyprusvipestates.com/register?lang=en");
 });

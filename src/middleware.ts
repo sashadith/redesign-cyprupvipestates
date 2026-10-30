@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { partnerRewritePath, routingHost } from "@/lib/partner/host";
+import { PARTNER_LANG_COOKIE, partnerLangFromQuery, partnerRewritePath, routingHost } from "@/lib/partner/host";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
@@ -459,7 +459,14 @@ export default async function middleware(request: NextRequest) {
   if (partnerTarget) {
     const url = request.nextUrl.clone();
     url.pathname = partnerTarget === "block" ? "/_gated-locale-404" : partnerTarget;
-    return NextResponse.rewrite(url);
+    // A link from the main site carries ?lang= so the portal opens in the page's language,
+    // not the browser's. Set on the request too, so this very render already uses it.
+    const lang = partnerTarget === "block" ? null : partnerLangFromQuery(request.nextUrl.searchParams);
+    if (!lang) return NextResponse.rewrite(url);
+    request.cookies.set(PARTNER_LANG_COOKIE, lang);
+    const res = NextResponse.rewrite(url, { request: { headers: request.headers } });
+    res.cookies.set(PARTNER_LANG_COOKIE, lang, { maxAge: 60 * 60 * 24 * 365, sameSite: "lax", path: "/", httpOnly: false, secure: process.env.NODE_ENV === "production" });
+    return res;
   }
 
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before

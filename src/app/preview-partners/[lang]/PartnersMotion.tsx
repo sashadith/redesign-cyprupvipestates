@@ -30,7 +30,7 @@ export default function PartnersMotion() {
       tl.from(".hero__stripe", { scaleX: 0, transformOrigin: "left center", duration: 0.7 }, 0.5)
         .from(".hero__desc", { y: 22, autoAlpha: 0, duration: 0.7 }, 0.56)
         .from(".hero__cta", { y: 18, autoAlpha: 0, duration: 0.6 }, 0.68)
-        .from(".pnr__hero-note", { y: 14, autoAlpha: 0, duration: 0.6 }, 0.78);
+        .from([".pnr__portal-login", ".pnr__hero-note"], { y: 14, autoAlpha: 0, duration: 0.6 }, 0.78);
 
       /* ---------- STATS (count-up numbers reveal together with their card) --- */
       toArr(".bstat").forEach((el, i) => {
