@@ -34,6 +34,13 @@ test("the P06/P11/P12/P30 duplicates redirect single-hop to their flagship, nest
   }
 });
 
+test("the four school-proximity pages redirect single-hop to the family-villa flagship", () => {
+  for (const city of ["zypern", "limassol", "paphos", "larnaka"]) {
+    assert.equal(mergedTargetFor(`/de/immobilien-nahe-internationalen-schulen-${city}`), "/de/familienvillen-zypern", city);
+  }
+  assert.equal(mergedTargetFor("/de/familienvillen-zypern"), null);
+});
+
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
     mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
