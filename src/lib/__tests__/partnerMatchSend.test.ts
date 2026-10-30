@@ -277,8 +277,8 @@ test("sender wiring: MATCH validates its payload and links our own localized pro
   const s = src("src/lib/partner/notifySend.ts");
   assert.ok(s.includes('if (!projectName || !changeType || !isOwnProjectUrl(p.url)) return { skip: "invalid payload" };'));
   assert.ok(s.includes("const url = localizedProjectUrl(p.url, locale);"));
-  assert.ok(s.includes('row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP" && !(row.kind === "CLAIM_OUTCOME" && !accepted)'), "no lead lookups for presentation-opened rows");
-  assert.ok(s.includes('if (!claim && row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP") return { skip: "claim missing" };'));
+  assert.ok(s.includes('!PARTNER_ONLY_KINDS.includes(row.kind) && !(row.kind === "CLAIM_OUTCOME" && !accepted)'), "no lead lookups for presentation-opened rows");
+  assert.ok(s.includes('if (!claim && !PARTNER_ONLY_KINDS.includes(row.kind)) return { skip: "claim missing" };'));
 });
 
 test("cron route: same auth as partner-digest, START gate, lock, crontab line", () => {

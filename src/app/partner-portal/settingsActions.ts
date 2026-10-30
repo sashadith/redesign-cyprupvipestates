@@ -10,6 +10,7 @@ import { partnerLimits as L } from "@/lib/partner/limits";
 import { ONBOARDING_DISMISS_COOKIE, ONBOARDING_DISMISS_MAX_AGE } from "@/lib/partner/onboarding";
 import { requirePartner } from "@/lib/partner/session";
 import { parseNotifyChannel } from "@/lib/partner/telegramBot";
+import { NOTIFY_SWITCHES, parseQuietPreset } from "@/lib/partner/notifyPrefs";
 import type { NotifyChannelValue, SettingsState } from "./formState";
 
 const checked = (fd: FormData, k: string) => fd.get(k) === "on";
@@ -26,14 +27,26 @@ export async function savePartnerSettingsAction(_prev: SettingsState, fd: FormDa
     const linked = await prisma.partner.findUnique({ where: { id: me.partner.id }, select: { telegramChatId: true } });
     notifyChannel = choice !== "EMAIL" && !linked?.telegramChatId ? "EMAIL" : choice;
   }
+  // Telegram quiet hours (v2): only offered with the Telegram fields; one of the presets or "off".
+  const rawQuiet = fd.get("quiet");
+  let quiet: [number, number] | null | undefined;
+  if (rawQuiet !== null) {
+    quiet = parseQuietPreset(rawQuiet);
+    if (quiet === undefined) return { error: "err.invalid" };
+  }
   const saved = await prisma.partner.update({
     where: { id: me.partner.id },
     data: {
       emailNotifications: checked(fd, "emailNotifications"),
       digestOptIn: checked(fd, "digestOptIn"),
+      ...Object.fromEntries(NOTIFY_SWITCHES.map((k) => [k, checked(fd, k)])),
+      ...(quiet !== undefined ? { quietFrom: quiet?.[0] ?? null, quietTo: quiet?.[1] ?? null } : {}),
       ...(notifyChannel ? { notifyChannel } : {}),
     },
-    select: { emailNotifications: true, digestOptIn: true, notifyChannel: true },
+    select: {
+      emailNotifications: true, digestOptIn: true, notifyChannel: true, notifyClients: true, notifyNewProjects: true, notifyProjectUpdates: true,
+      notifyReminders: true, quietFrom: true, quietTo: true,
+    },
   });
   return { ok: true, ...saved };
 }

@@ -4,7 +4,7 @@ import { cyprusDateParts } from "./creditNote";
 import { publicProjectUrl } from "./clientDto";
 import { PARTNER_LOCALES, dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { CLASSIC_EMAIL_THEME, type EmailTheme } from "@/lib/design/theme";
-import { greet, partnerBaseUrl, renderPartnerEmail, type BuiltEmail } from "./mail";
+import { escapeHtml, greet, partnerBaseUrl, renderPartnerEmail, type BuiltEmail } from "./mail";
 
 export const DIGEST_MAX_UPDATES = 10;
 export const DIGEST_MAX_PROJECTS = 5;
@@ -99,6 +99,63 @@ export function buildDigestEmail(
     notes: [`${t.optOut}\n${p.profileUrl}`],
     signature: d.mail.signature,
   }, theme);
+}
+
+/** Telegram's hard cap is 4096; the summary stays well under it (TELEGRAM_MAX_CHARS is for single notifications). */
+export const DIGEST_TELEGRAM_MAX = 3500;
+
+/**
+ * The weekly summary as one Telegram HTML message (notifications v2, item 11): the same three sections as
+ * the e-mail, every value escaped, project names linked. Lines are dropped from the end of the longest
+ * section until it fits DIGEST_TELEGRAM_MAX; markup is never cut.
+ */
+export function buildDigestTelegram(locale: PartnerLocale, p: { content: DigestContent; portalUrl: string }): string {
+  const d = dict(locale);
+  const t = d.digest;
+  const esc = escapeHtml;
+  const pct = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n);
+  const euro = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  const date = (at: Date) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Asia/Nicosia" }).format(at);
+  const { updates, totals, newProjects } = p.content;
+  const updateLines = updates.map((u) => {
+    const label = fmt(lookup(locale, u.key) ?? lookup(locale, "stages.onHold")!, u.vars ?? {});
+    return `• ${esc(u.clientName.trim() || "—")}: ${esc(label)} (${esc(date(u.at))})`;
+  });
+  const totalLines = totals.expected + totals.earned + totals.developerPaid + totals.paidOut > 0
+    ? [
+        `• ${esc(d.commission.EXPECTED)}: ${esc(euro(totals.expected))}`,
+        `• ${esc(d.commission.EARNED)}: ${esc(euro(totals.earned))}`,
+        `• ${esc(d.commission.DEVELOPER_PAID)}: ${esc(euro(totals.developerPaid))}`,
+        `• ${esc(d.commission.PAID_OUT)}: ${esc(euro(totals.paidOut))}`,
+      ]
+    : [];
+  const projectLines = newProjects.map((pr) => {
+    const rate = pr.handoverRate == null ? t.onRequest : fmt(t.rate, { rate: pct(pr.handoverRate) });
+    return `• <a href="${esc(pr.url)}">${esc([pr.name, pr.town].filter(Boolean).join(", "))}</a> — ${esc(rate)}`;
+  });
+  const render = () => {
+    const parts = [`<b>${esc(d.telegram.notify.digestTitle)}</b>`];
+    if (updateLines.length) parts.push(`<b>${esc(t.updatesTitle)}</b>\n${updateLines.join("\n")}`);
+    if (totalLines.length) parts.push(`<b>${esc(t.totalsTitle)}</b>\n${totalLines.join("\n")}`);
+    if (projectLines.length) parts.push(`<b>${esc(t.projectsTitle)}</b>\n${projectLines.join("\n")}`);
+    parts.push(`<a href="${esc(p.portalUrl)}">${esc(d.telegram.notify.open)}</a>`);
+    return parts.join("\n\n");
+  };
+  let out = render();
+  while (out.length > DIGEST_TELEGRAM_MAX && (updateLines.length > 1 || projectLines.length > 1)) {
+    if (updateLines.length >= projectLines.length) updateLines.pop();
+    else projectLines.pop();
+    out = render();
+  }
+  return out;
+}
+
+/** Channels for the weekly summary: it follows notifyChannel like every other notification. */
+export function digestChannels(input: { notifyChannel: string; chatLinked: boolean; botConfigured: boolean; hasEmail: boolean }): { email: boolean; telegram: boolean } {
+  const reachable = input.chatLinked && input.botConfigured;
+  const telegram = input.notifyChannel !== "EMAIL" && reachable;
+  const email = input.hasEmail && (input.notifyChannel !== "TELEGRAM" || !reachable);
+  return { email, telegram };
 }
 
 /** Portal profile page (the opt-out link target). */

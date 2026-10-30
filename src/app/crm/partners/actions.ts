@@ -69,7 +69,8 @@ export async function approvePartnerAction(id: string): Promise<Result> {
   revalidatePath("/crm/partners");
 
   try {
-    const mail = buildApprovedEmail(asLocale(partner.language), partner.firstName, `${partnerBaseUrl()}/login`, await emailThemeForPartner(id));
+    const base = partnerBaseUrl();
+    const mail = buildApprovedEmail(asLocale(partner.language), partner.firstName, `${base}/login`, await emailThemeForPartner(id), `${base}/submit`);
     await sendEmail({ to: pu.email, subject: mail.subject, text: mail.text, html: mail.html });
     return { ok: true, notice: "Approved — email sent" };
   } catch (e) {

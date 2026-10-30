@@ -12,7 +12,11 @@ export type SubmitOk = { ok: true; name: string; alreadyYours?: boolean };
 export type SubmitState = SubmitOk | FormErr | null;
 
 /** Profile email settings: the saved values come back so the form shows what is stored. */
-export type SettingsOk = { ok: true; emailNotifications: boolean; digestOptIn: boolean; notifyChannel: NotifyChannelValue };
+export type SettingsOk = {
+  ok: true; emailNotifications: boolean; digestOptIn: boolean; notifyChannel: NotifyChannelValue;
+  notifyClients: boolean; notifyNewProjects: boolean; notifyProjectUpdates: boolean; notifyReminders: boolean;
+  quietFrom: number | null; quietTo: number | null;
+};
 export type SettingsState = SettingsOk | FormErr | null;
 
 export type NotifyChannelValue = "EMAIL" | "TELEGRAM" | "BOTH";

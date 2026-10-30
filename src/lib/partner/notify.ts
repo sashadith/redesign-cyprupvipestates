@@ -21,7 +21,8 @@ export function clientLink(base: string, claimId: string): string {
   return `${base}/clients/${encodeURIComponent(claimId)}`;
 }
 
-export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: string }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+/** `extra`: lines under the intro (notifications v2: the viewing date, the expected commission). */
+export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: string; extra?: string[] }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   const vars = { client: client(p.clientName), stage: lookup(locale, p.stageKey) ?? lookup(locale, "stages.onHold")! };
   return renderPartnerEmail({
@@ -30,7 +31,7 @@ export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: s
     intro: fmt(t.stage.intro, vars),
     button: t.stage.button,
     link: p.link,
-    notes: [],
+    notes: p.extra ?? [],
     signature: t.signature,
   }, theme);
 }
@@ -176,7 +177,120 @@ export function buildTierUpEmail(
   }, theme);
 }
 
-export const NOTIFICATION_KINDS = ["STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP"] as const;
+// ── Notifications v2 (2026-10-30): planned by partner-alerts (alertsSend.ts) ──
+
+const money = (locale: PartnerLocale, n: number | null) => (n != null ? formatPayoutAmount(locale, n) : null);
+
+/** New projects (PROJECT_NEWS): name, area, price from, the partner's rate, link; button = the portal's projects page. */
+export function buildProjectNewsEmail(
+  locale: PartnerLocale,
+  p: { partnerFirstName: string; projects: { name: string; area: string | null; priceFrom: number | null; url: string; rate: number | null }[]; link: string },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
+): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.projectNews;
+  const lines = p.projects.map((pr) => {
+    const facts = [
+      money(locale, pr.priceFrom) ? fmt(d.telegram.notify.priceFrom, { price: money(locale, pr.priceFrom)! }) : null,
+      pr.rate != null ? fmt(d.telegram.notify.projectRate, { rate: formatShare(locale, pr.rate) }) : null,
+    ].filter(Boolean).join(" · ");
+    return `• ${[pr.name, pr.area].filter(Boolean).join(", ")}${facts ? ` — ${facts}` : ""}\n  ${pr.url}`;
+  });
+  return renderPartnerEmail({
+    subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: t.intro, quote: lines.join("\n"),
+    button: t.button, link: p.link, notes: [], signature: d.mail.signature,
+  }, theme);
+}
+
+/** Change labels of one watched project, e.g. "price reduced · only 2 left". */
+export function watchChangeLabels(locale: PartnerLocale, changes: { type: string; n?: number }[]): string {
+  const d = dict(locale).telegram;
+  return changes
+    .map((c) => (c.type === "low_stock" && c.n != null ? fmt(d.notify.unitsLeft, { n: c.n }) : (d.changeTypes as Record<string, string>)[c.type] ?? ""))
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Updates on projects from the partner's presentations (WATCH). */
+export function buildWatchEmail(
+  locale: PartnerLocale,
+  p: { partnerFirstName: string; projects: { name: string; url: string; priceFrom: number | null; changes: { type: string; n?: number }[] }[]; link: string },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
+): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.watch;
+  const lines = p.projects.map((pr) => {
+    const price = money(locale, pr.priceFrom) ? fmt(d.telegram.notify.priceFrom, { price: money(locale, pr.priceFrom)! }) : null;
+    const facts = [watchChangeLabels(locale, pr.changes), price].filter(Boolean).join(" · ");
+    return `• ${pr.name}${facts ? ` — ${facts}` : ""}\n  ${pr.url}`;
+  });
+  return renderPartnerEmail({
+    subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: t.intro, quote: lines.join("\n"),
+    button: t.button, link: p.link, notes: [], signature: d.mail.signature,
+  }, theme);
+}
+
+/** A date for partner copy (Cyprus calendar day, partner's locale). */
+export function partnerDate(locale: PartnerLocale, at: Date): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Asia/Nicosia" }).format(at);
+}
+
+/** Client protection ends soon (PROTECTION_ENDING). */
+export function buildProtectionEndingEmail(locale: PartnerLocale, p: Common & { until: Date }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.protectionEnding;
+  const vars = { client: client(p.clientName), date: partnerDate(locale, p.until) };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
+    button: t.button, link: p.link, notes: [t.note], signature: d.mail.signature,
+  }, theme);
+}
+
+/** No news about a client for 14 days (CLIENT_QUIET). */
+export function buildClientQuietEmail(locale: PartnerLocale, p: Common, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.clientQuiet;
+  const vars = { client: client(p.clientName) };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
+    button: t.button, link: p.link, notes: [t.note], signature: d.mail.signature,
+  }, theme);
+}
+
+/** Bank details missing for a deal (BANK_MISSING); `developerPaid` picks the second, more urgent wording. Link = the bank page. */
+export function buildBankMissingEmail(locale: PartnerLocale, p: Common & { developerPaid: boolean }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.bankMissing;
+  const vars = { client: client(p.clientName) };
+  return renderPartnerEmail({
+    subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(p.developerPaid ? t.introDevPaid : t.intro, vars),
+    button: t.button, link: p.link, notes: [], signature: d.mail.signature,
+  }, theme);
+}
+
+/** One closed deal to the next tier (TIER_NEAR). */
+export function buildTierNearEmail(
+  locale: PartnerLocale,
+  p: { partnerFirstName: string; tierName: string; handoverShare: number; fixShare: number; portalUrl: string },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
+): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.tierNear;
+  const vars = { tier: p.tierName.trim() || "—", handover: formatShare(locale, p.handoverShare), fix: formatShare(locale, p.fixShare) };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
+    button: t.button, link: p.portalUrl, notes: [], signature: d.mail.signature,
+  }, theme);
+}
+
+/** Portal paths of the v2 notifications. */
+export const projectsLink = (base: string) => `${base}/projects`;
+export const bankLink = (base: string) => `${base}/profile#bank`;
+
+export const NOTIFICATION_KINDS = [
+  "STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP",
+  "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR",
+] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 /** Compile-time exhaustiveness: a new kind that is not handled fails the build instead of falling through. */
@@ -245,7 +359,8 @@ export function dueWhere(now: Date): Prisma.PartnerNotificationWhereInput {
   for (let n = 1; n < MAX_ATTEMPTS; n++) {
     OR.push({ attempts: n, failedAt: { lte: new Date(now.getTime() - BACKOFF_BASE_MS * 2 ** (n - 1)) } });
   }
-  return { sentAt: null, OR };
+  // notBefore: held for the partner's Telegram quiet hours (notifications v2).
+  return { sentAt: null, AND: [{ OR }, { OR: [{ notBefore: null }, { notBefore: { lte: now } }] }] };
 }
 
 /** A row still marked "sending" this long after it was claimed belongs to a run that died mid-send. */
@@ -307,6 +422,9 @@ export function optOutGate(kind: NotificationKind, emailNotifications: boolean):
   return !emailNotifications && OPTIONAL_KINDS.includes(kind) ? OPTED_OUT_ERROR : null;
 }
 
+/** Kinds about the partner, not about one of their clients: no claim is read or needed. */
+export const PARTNER_ONLY_KINDS: readonly NotificationKind[] = ["PRESENTATION_OPENED", "TIER_UP", "PROJECT_NEWS", "WATCH", "TIER_NEAR"];
+
 /** Only an ACTIVE partner is told anything; the skip reason otherwise. */
 export function partnerStatusGate(status: string | null | undefined): string | null {
   if (!status) return "partner missing";
@@ -328,10 +446,12 @@ export function notificationGate(input: {
 }): string | null {
   const { kind, claim } = input;
   // The partner's own presentation was opened (the row is written for presentation.partnerId): only the
-  // partner gate applies, the claim's state is irrelevant to a page the client already holds.
-  if (kind === "PRESENTATION_OPENED" || kind === "TIER_UP") return null;
-  // The money was paid: always told, whatever the claim's state now — but only about the partner's own claim.
-  if (kind === "PAYOUT") return claim?.ownedByPartner ? null : "claim missing";
+  // partner gate applies, the claim's state is irrelevant to a page the client already holds. The same holds
+  // for the partner-wide v2 rows (new projects, presentation projects, tier progress).
+  if (PARTNER_ONLY_KINDS.includes(kind)) return null;
+  // The money was paid (or is waiting for bank details): always told, whatever the claim's state now — but
+  // only about the partner's own claim.
+  if (kind === "PAYOUT" || kind === "BANK_MISSING") return claim?.ownedByPartner ? null : "claim missing";
   if (!claim || !claim.ownedByPartner) return kind === "CLAIM_OUTCOME" ? "claim missing" : "claim inactive";
   if (kind === "CLAIM_OUTCOME" && !input.accepted) return null;
   if (claim.effective === "NOT_PROCEEDING") return "lead trashed";

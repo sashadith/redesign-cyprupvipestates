@@ -60,6 +60,23 @@ export function extractPrivateText(update: unknown): { chatId: string; text: str
   return { chatId, text: m.text };
 }
 
+/**
+ * A button press (callback_query) from a private chat: the chat, the menu message to edit and the button
+ * data. Anything else (inline mode, groups, game buttons, malformed ids) → null.
+ */
+export function extractCallback(update: unknown): { id: string; chatId: string; messageId: number; data: string } | null {
+  if (!isObj(update) || !isObj(update.callback_query)) return null;
+  const q = update.callback_query;
+  if (typeof q.id !== "string" || !q.id || q.id.length > 100) return null;
+  if (typeof q.data !== "string" || !q.data || q.data.length > 64) return null;
+  if (!isObj(q.message) || !isObj(q.message.chat) || q.message.chat.type !== "private") return null;
+  const id = q.message.chat.id;
+  const chatId = typeof id === "number" && Number.isSafeInteger(id) ? String(id) : typeof id === "string" && /^-?\d{1,20}$/.test(id) ? id : null;
+  const messageId = q.message.message_id;
+  if (!chatId || typeof messageId !== "number" || !Number.isSafeInteger(messageId) || messageId <= 0) return null;
+  return { id: q.id, chatId, messageId, data: q.data };
+}
+
 // ── Delivery ────────────────────────────────────────────────────────────────
 
 /** A Bot API failure that means this chat can no longer be messaged (blocked, deactivated, never started). */

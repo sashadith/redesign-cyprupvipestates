@@ -103,7 +103,8 @@ export function buildResetEmail(locale: PartnerLocale, link: string, name?: stri
   }, theme);
 }
 
-export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLink: string, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+/** `submitLink` (notifications v2): the portal's submit page, named as the next step together with the Telegram tip. */
+export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLink: string, theme: EmailTheme = CLASSIC_EMAIL_THEME, submitLink?: string): BuiltEmail {
   const t = dict(locale).mail;
   return renderPartnerEmail({
     subject: t.approved.subject,
@@ -111,7 +112,7 @@ export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLin
     intro: t.approved.intro,
     button: t.approved.button,
     link: loginLink,
-    notes: [],
+    notes: submitLink ? [fmt(t.approved.nextStep, { url: submitLink }), t.approved.telegram] : [],
     signature: t.signature,
   }, theme);
 }

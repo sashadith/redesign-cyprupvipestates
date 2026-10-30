@@ -2284,6 +2284,16 @@ model Partner {
   digestLogs           PartnerDigestLog[]
   // Phase 3e: Telegram notifications + white-label branding for partner presentations.
   notifyChannel        PartnerNotifyChannel @default(EMAIL)
+  // 2026-10-30 (notifications v2): per-type switches (portal profile + Telegram bot menu), all channels.
+  // notifyClients = stage/message/match/presentation-opened; notifyNewProjects = PROJECT_NEWS;
+  // notifyProjectUpdates = WATCH; notifyReminders = PROTECTION_ENDING + CLIENT_QUIET.
+  notifyClients        Boolean        @default(true)
+  notifyNewProjects    Boolean        @default(true)
+  notifyProjectUpdates Boolean        @default(true)
+  notifyReminders      Boolean        @default(true)
+  // Telegram quiet hours, whole hours in Cyprus time (Asia/Nicosia); both null = off. from > to wraps midnight.
+  quietFrom            Int?
+  quietTo              Int?
   telegramChatId       String?        @unique
   telegramLinkedAt     DateTime?
   brandName            String?
@@ -2449,6 +2459,13 @@ enum PartnerNotificationKind {
   MATCH
   PRESENTATION_OPENED
   TIER_UP
+  // 2026-10-30 (notifications v2): planned by the partner-alerts cron, delivered by partner-notify.
+  PROJECT_NEWS
+  WATCH
+  PROTECTION_ENDING
+  CLIENT_QUIET
+  BANK_MISSING
+  TIER_NEAR
 }
 
 enum PartnerNotifyChannel {
@@ -2534,6 +2551,8 @@ model PartnerNotification {
   createdAt DateTime                @default(now())
   sentAt    DateTime?
   failedAt  DateTime?
+  // 2026-10-30: not sent before this instant (Telegram quiet hours of the partner).
+  notBefore DateTime?
   error     String?
   @@index([sentAt, createdAt])
   @@map("partner_notifications")

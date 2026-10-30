@@ -10,8 +10,9 @@
 //
 // Set PARTNER_DIGEST_START (ISO, e.g. 2026-10-26T00:00:00Z): without it the job does nothing, and
 // nothing is sent before it. PARTNER_HOST must be set in production.
-// Crontab (05:00 UTC ≈ 07:00/08:00 Cyprus, Mondays):
-//   0 5 * * 1 curl -s "http://127.0.0.1:3000/api/cron/partner-digest?key=$CRON_SECRET" >/dev/null
+// Crontab (hourly 05:00–12:00 UTC on Mondays; the first run sends, later runs only retry rows that failed or
+// waited for a partner's Telegram quiet hours — a sent week is never sent again):
+//   0 5-12 * * 1 curl -s "http://127.0.0.1:3000/api/cron/partner-digest?key=$CRON_SECRET" >/dev/null
 import { NextRequest, NextResponse } from "next/server";
 import { withCronLog } from "@/lib/cronLog";
 import { digestStartFromEnv, sendWeeklyDigests, withDigestLock, type DigestResult } from "@/lib/partner/digestSend";
