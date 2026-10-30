@@ -63,41 +63,13 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("error", markError);
 
-    // The video is pure decoration under the poster, and it is 6+ MB. Lighthouse 2026-10-19:
-    // starting it 600 ms after `load` put it just BEFORE the first paint, so the lab counted
-    // the whole transfer as work the first paint depended on (FCP 2.4 -> 3.8 s, LCP 4.9 -> 9.6 s).
-    // So: phones and Save-Data visitors keep the poster only; everyone else gets the video 4 s
-    // after load, or at the first interaction if that comes sooner.
-    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    const phone = window.matchMedia("(max-width: 768px)").matches;
-    if (phone || conn?.saveData) return;
-    let started = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
-    const cleanup = () => {
-      events.forEach((ev) => window.removeEventListener(ev, start));
-      window.removeEventListener("load", onWindowLoad);
-      if (timer) clearTimeout(timer);
-    };
-    async function start() {
-      if (started) return;
-      started = true;
-      cleanup();
-      try {
-        await el!.play();
-      } catch {
-        // autoplay может быть заблокирован — тогда постер останется (это ок)
-      }
-    }
-    function onWindowLoad() {
-      timer = setTimeout(start, 4000);
-    }
-    events.forEach((ev) => window.addEventListener(ev, start, { once: true, passive: true }));
-    if (document.readyState === "complete") onWindowLoad();
-    else window.addEventListener("load", onWindowLoad, { once: true });
+    // Operator decision 2026-10-30: the hero video plays at once on every device, phones included (it
+    // was poster-only on phones and delayed 4 s on desktop since 2026-10-19 for PageSpeed — the accepted
+    // cost is a lower lab score). `autoPlay` starts it at parse time; this call only covers browsers that
+    // ignored the attribute. Blocked autoplay (e.g. iOS Low Power Mode) keeps the poster.
+    el.play().catch(() => {});
 
     return () => {
-      cleanup();
       el.removeEventListener("loadeddata", onLoadedData);
       el.removeEventListener("playing", onPlaying);
       el.removeEventListener("timeupdate", onTimeUpdate);
@@ -133,18 +105,10 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
           muted
           loop
           playsInline
-          // Was "auto": the browser started eagerly downloading the ENTIRE
-          // hero video (10.5MB, confirmed via a live PSI run 2026-07-20) at
-          // high priority from parse time, competing for bandwidth with the
-          // poster image (this page's actual LCP element, already `priority`
-          // via next/image below) and every other above-the-fold asset —
-          // under Lighthouse's throttled mobile network simulation this
-          // showed up as the dominant contributor to a ~10-20s LCP. "none"
-          // means the browser doesn't fetch until the `el.play()` call in
-          // the effect below actually runs, at normal (not elevated) request
-          // priority — no visual change: the poster overlay already covers
-          // the video until `isVideoReady` flips, exactly as before.
-          preload="none"
+          autoPlay
+          // "auto" (2026-10-30): the video is wanted at once on every device. Until 2026-10-30 this was
+          // "none" so the 6+ MB file did not compete with the poster (the LCP element) for bandwidth.
+          preload="auto"
           // No `poster` attribute: the next/image overlay above already is the poster. The attribute made the
           // browser fetch the raw 1920 px JPEG a second time (146 KB, High priority) in the CSS window (2026-10-19).
         >
