@@ -212,6 +212,12 @@ export const DE_LANDING_MERGES: Record<string, string> = {
   "haeuser-auf-zypern/haeuser-in-limassol-kaufen": "/de/villen-limassol-kaufen",
   "haeuser-in-limassol-kaufen": "/de/villen-limassol-kaufen",
   "villen-paphos-mit-privatem-pool": "/de/haeuser-auf-zypern/haus-mit-pool-auf-zypern",
+  // The four school-proximity pages: the family-villa flagship now carries the
+  // school-distance tables and per-school project lists for all four cities.
+  "immobilien-nahe-internationalen-schulen-zypern": "/de/familienvillen-zypern",
+  "immobilien-nahe-internationalen-schulen-limassol": "/de/familienvillen-zypern",
+  "immobilien-nahe-internationalen-schulen-paphos": "/de/familienvillen-zypern",
+  "immobilien-nahe-internationalen-schulen-larnaka": "/de/familienvillen-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
