@@ -99,7 +99,10 @@ export const de: PartnerDict = {
   agreement: {
     title: "Partnervereinbarung",
     version: "Version {version}",
-    draftNotice: "Entwurf — wird durch die endgültige Vereinbarung ersetzt",
+    updateTitle: "Bitte bestätigen Sie die aktualisierte Partnervereinbarung",
+    updateIntro: "Die Partnervereinbarung liegt jetzt in der endgültigen Version {version} vor. Bitte lesen und akzeptieren Sie sie, um das Partnerportal weiter zu nutzen.",
+    acceptLabel: "Ich habe die Partnervereinbarung in der Version {version} gelesen und akzeptiere sie.",
+    acceptButton: "Akzeptieren und weiter",
   },
   home: {
     title: "Ihr Partnerkonto",

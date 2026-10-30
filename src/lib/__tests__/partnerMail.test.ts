@@ -114,7 +114,7 @@ test("partnerClientIp: x-real-ip first, else LAST forwarded hop, else null", () 
 });
 
 test("agreement: version and a text for every locale, no Hebrew", () => {
-  assert.equal(PARTNER_AGREEMENT_VERSION, "2026-10-draft");
+  assert.equal(PARTNER_AGREEMENT_VERSION, "2026-11");
   const n = agreementText("en").sections.length;
   for (const l of PARTNER_LOCALES) {
     const a = agreementText(l);
