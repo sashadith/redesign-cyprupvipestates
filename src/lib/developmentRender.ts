@@ -7,6 +7,7 @@ import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
 import { resolveDevelopmentPrice, resolveDevelopmentLocation, resolveRelativeCompletion } from "@/lib/developmentCard";
 import { developmentCopy } from "@/lib/developmentCopy";
+import { parseExtraLinks } from "@/lib/developmentExtraLinks";
 import { localizedHref, isLocale } from "@/lib/locale";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
@@ -109,6 +110,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     promoBlocks: (({ en: ov?.promoBlocksEN, de: ov?.promoBlocksDE, pl: ov?.promoBlocksPL, ru: ov?.promoBlocksRU, he: ov?.promoBlocksHE } as Record<string, unknown>)[lang] || ov?.promoBlocksEN || []) as any[],
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,
+    extraLinks: parseExtraLinks(ov?.extraLinks),
     vatApplies: ov?.vatApplies ?? null,
     center: (ov?.latitude ?? d.latitude) != null && (ov?.longitude ?? d.longitude) != null
       ? { lat: (ov?.latitude ?? d.latitude)!, lng: (ov?.longitude ?? d.longitude)! }

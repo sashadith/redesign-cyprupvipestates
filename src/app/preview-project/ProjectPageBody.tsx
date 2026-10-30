@@ -22,6 +22,7 @@ import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 import { computeAvailability, listedUnits, resolveAvailabilityStatusLabel, resolveStageLabel } from "@/lib/developmentAvailability";
 import { renderInsightsBlock } from "@/app/preview-insights/insightsBlocks";
+import { parseExtraLinks } from "@/lib/developmentExtraLinks";
 import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
@@ -168,6 +169,9 @@ export default async function ProjectPageBody({
      with them (src/lib/promoDistances.ts, 2026-10-04); git history has it if the
      duplication ever becomes a problem again. */
   const promoBlocks = Array.isArray(p.promoBlocks) ? p.promoBlocks : [];
+  // Already parsed by developmentRender; the guard is for the live-feed
+  // adapters and the preview page, which never set it.
+  const extraLinks = parseExtraLinks(p.extraLinks);
   // Trust strip figure — the shared site figure (src/lib/siteStats.ts), i.e.
   // exactly what /projects lists in this locale, so it matches the homepage and
   // About bands. Was a raw count of published developments until 2026-10-06:
@@ -352,6 +356,31 @@ export default async function ProjectPageBody({
                   </p>
                 ))}
               </>
+            )}
+            {/* Admin-attached links (project video, 360° tour, walkthrough,
+                project camera) — under the description, where a reader who has
+                just read what the project is wants to see it. Outside the
+                `p.description &&` block above on purpose: the buttons are
+                independent of whether anyone has written copy yet.
+
+                rel="nofollow": these point at the developer's own site, which
+                the operator allowed (2026-10-30), but our link equity does not
+                follow them there. */}
+            {extraLinks.length > 0 && (
+              <div className="pp-extras">
+                {extraLinks.map((l) => (
+                  <a
+                    key={l.kind}
+                    className="pp-extra"
+                    href={l.url}
+                    target="_blank"
+                    rel="nofollow noopener noreferrer"
+                  >
+                    {t.extraLinks[l.kind]}
+                    <span className="pp-sr">{` (${t.extraLinkNewTab})`}</span>
+                  </a>
+                ))}
+              </div>
             )}
           </div>
         </section>

@@ -2,6 +2,7 @@ import { parseStringPromise } from "xml2js";
 import type { UnitVM } from "./UnitsView";
 import { sizeKey, sizeOf } from "./imageSize";
 import { toTitleCaseName } from "@/lib/textCase";
+import type { ExtraLink } from "@/lib/developmentExtraLinks";
 
 /* Developer-agnostic feed adapters → one canonical ProjectVM the preview page
    renders. Each adapter maps a raw feed (Island Blue XML, Qubehub API, …) to the
@@ -18,6 +19,10 @@ export type ProjectVM = {
   amenities?: string[]; // project-level features/benefits (feed) — else unit features
   extraFacts?: { label: string; value: string }[]; // extra development specs for the facts panel
   heroVideo?: string; // looping hero video (admin-uploaded in prod)
+  // Admin-attached buttons under the description (project video, 360° tour,
+  // virtual walkthrough, project camera). DB pipeline only — no feed carries
+  // these, so the live-feed adapters leave it undefined and nothing renders.
+  extraLinks?: ExtraLink[];
   vatApplies?: boolean | null; // admin override only — null/undefined = unknown, don't show "+VAT"
   center: { lat: number; lng: number } | null; units: UnitVM[];
   // Auto-computed (haversine), DB pipeline only — see src/lib/developmentDistances.ts.

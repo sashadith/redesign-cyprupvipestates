@@ -8,6 +8,7 @@
 // Only strings genuinely unique to this page's own chrome live here.
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { bidiIsolate, isLocale, type Locale as Lang } from "@/lib/locale";
+import type { ExtraLinkKind } from "@/lib/developmentExtraLinks";
 export type { Lang };
 export const asDevLang = (l: string): Lang => (isLocale(l) ? l : "en");
 
@@ -24,6 +25,14 @@ export type DevelopmentStrings = {
   heroType: string; // caption under the type value
   heroAvailable: string; // caption under the available-count value
   vatSuffix: string; // "+VAT" / "+MwSt." / "+VAT" / "+НДС"
+
+  // Captions for the admin-attached extra links (project video, 360° tour,
+  // virtual walkthrough, project camera). Keyed by kind, so one stored link
+  // reads correctly in every language — the admin never types a caption. A
+  // kind added to EXTRA_LINK_KINDS without a label here is a type error.
+  extraLinks: Record<ExtraLinkKind, string>;
+  /** Screen-reader suffix: these buttons open the developer's own site in a new tab. */
+  extraLinkNewTab: string;
 
   // ---- section headings ----
   aboutHeading: string;
@@ -146,6 +155,8 @@ const ruCount = (n: number, one: string, few: string, many: string) => {
 };
 
 const EN: DevelopmentStrings = {
+  extraLinks: { video: "Project video", tour360: "360° tour", walkthrough: "Virtual walkthrough", camera: "Project camera" },
+  extraLinkNewTab: "opens in a new tab",
   galleryLabel: (n) => `View ${n} ${n === 1 ? "photo" : "photos"}`,
   openGallery: "Open gallery",
   heroFrom: "from",
@@ -221,6 +232,8 @@ const EN: DevelopmentStrings = {
 };
 
 const DE: DevelopmentStrings = {
+  extraLinks: { video: "Projektvideo", tour360: "360°-Tour", walkthrough: "Virtueller Rundgang", camera: "Projektkamera" },
+  extraLinkNewTab: "öffnet in einem neuen Tab",
   galleryLabel: (n) => `${n} ${n === 1 ? "Foto" : "Fotos"} ansehen`,
   openGallery: "Galerie öffnen",
   heroFrom: "ab",
@@ -296,6 +309,8 @@ const DE: DevelopmentStrings = {
 };
 
 const PL: DevelopmentStrings = {
+  extraLinks: { video: "Film o inwestycji", tour360: "Wirtualny spacer 360°", walkthrough: "Wirtualne zwiedzanie", camera: "Kamera na inwestycji" },
+  extraLinkNewTab: "otwiera się w nowej karcie",
   galleryLabel: (n) => `Zobacz ${n} ${plCount(n, "zdjęcie", "zdjęcia", "zdjęć")}`,
   openGallery: "Otwórz galerię",
   heroFrom: "od",
@@ -371,6 +386,8 @@ const PL: DevelopmentStrings = {
 };
 
 const RU: DevelopmentStrings = {
+  extraLinks: { video: "Видео о проекте", tour360: "360°-тур", walkthrough: "Виртуальная прогулка", camera: "Камера на объекте" },
+  extraLinkNewTab: "открывается в новой вкладке",
   // "фото" is indeclinable — same word regardless of count.
   galleryLabel: (n) => `Смотреть ${n} фото`,
   openGallery: "Открыть галерею",
@@ -453,6 +470,8 @@ const RU: DevelopmentStrings = {
 // מוכן למגורים (key-ready), מתקנים ושירותים (amenities). The project name in
 // enquiryHeadline is Latin inside an RTL sentence, so it is FSI-isolated.
 const HE: DevelopmentStrings = {
+  extraLinks: { video: "סרטון הפרויקט", tour360: "סיור 360°", walkthrough: "סיור וירטואלי", camera: "מצלמה בפרויקט" },
+  extraLinkNewTab: "נפתח בלשונית חדשה",
   galleryLabel: (n) => (n === 1 ? "לצפייה בתמונה" : `לצפייה ב-${n} תמונות`),
   openGallery: "פתיחת הגלריה",
   heroFrom: "מחיר התחלתי",

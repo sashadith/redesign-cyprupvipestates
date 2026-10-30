@@ -1783,6 +1783,16 @@ model DevelopmentOverride {
   mainImage     String? // admin-selected hero (mirrored URL)
   gallery       Json? // admin-managed ordered gallery (reorder/delete/upload); wins over feed gallery
   heroVideo     String? // uploaded loop (mirrored URL)
+  // Buttons under the description on the project page: a project video, a 360°
+  // tour, a virtual walkthrough, a project camera. Shape
+  // [{ kind: "video" | "tour360" | "walkthrough" | "camera", url }] — the admin
+  // picks a KIND and the caption is resolved per language at render time
+  // (developmentCopy.extraLinks), so one stored link reads correctly in all
+  // five. Parsed through parseExtraLinks (src/lib/developmentExtraLinks.ts),
+  // which drops anything unrecognised rather than letting one bad entry cost
+  // the page its other buttons. Here rather than on Development because
+  // feedSync.ts rewrites that row nightly — the same reason `stage` moved.
+  extraLinks    Json?
   descriptionEN String?
   descriptionDE String?
   descriptionPL String?
