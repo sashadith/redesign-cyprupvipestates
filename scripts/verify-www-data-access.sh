@@ -22,7 +22,14 @@ TARGET="${1:?usage: verify-www-data-access.sh <path-to-built-tree>}"
 WWW_USER="www-data"
 fail=0
 
-SAMPLE="$(find "$TARGET/.next/static/css" -maxdepth 1 -type f -name '*.css' 2>/dev/null | head -1)"
+# -print -quit, not `| head -1`: under the `set -euo pipefail` above, head
+# closing the pipe after the first line sends find SIGPIPE, pipefail turns that
+# into 141 and set -e kills this gate — after a successful 13-minute build and
+# with the migration already applied, leaving the release built but never
+# swapped and no output line to say why (2026-10-30: measured at 6 failures in
+# 300 runs against a 59-file css dir, and it is what killed release
+# cve-20261030054024). find stopping itself needs no pipe at all.
+SAMPLE="$(find "$TARGET/.next/static/css" -maxdepth 1 -type f -name '*.css' -print -quit 2>/dev/null)"
 if [ -z "$SAMPLE" ]; then
   echo "✗ no .css file found under $TARGET/.next/static/css to test against"
   exit 1
