@@ -68,6 +68,10 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // 2026-10-18 — WhatsApp gateway session watch, `*/5`. Its own ok=false row is
   // the session being down; a missing row is the watch itself not running.
   { job: "whatsapp-health", label: "whatsapp-health", expectedMs: 5 * MIN },
+  // 2026-10-30 — Stylianides Group's Dropbox price lists, `45 2 * * *`. Daily
+  // like kuutio-sync: an unchanged list writes its own ok row, so a missing row
+  // means the crontab entry itself is gone.
+  { job: "stylianides-sync", label: "stylianides-sync", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings
