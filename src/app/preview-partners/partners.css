@@ -87,6 +87,14 @@
   margin-top: var(--s-5); max-width: 56ch; font-family: var(--font-body), sans-serif;
   font-size: var(--text-body); line-height: 1.6; color: var(--text-soft);
 }
+/* The two partner-only hero lines join Home's CSS hero intro (heroRise in preview-home/tokens.css),
+   after the button. */
+.hero .pnr__portal-login, .hero .pnr__hero-note {
+  --hero-rise: 14px; animation: heroRise 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.9s backwards;
+}
+@media (prefers-reduced-motion: reduce) { .hero .pnr__portal-login, .hero .pnr__hero-note { animation: none; } }
+/* The partner hero carries more lines than Home's, so it sits lower: less bottom padding. */
+.pnr .hero__inner { padding-bottom: clamp(32px, 4vw, 56px); }
 
 /* ------------------------------------------------------------- SECTION --- */
 /* Shared eyebrow + H2 + stripe header, used above every content section

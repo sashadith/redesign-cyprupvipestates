@@ -197,7 +197,7 @@ export default async function PartnersPage({ params }: Props) {
             <h1 className="hero__title">
               <span className="hero__brand">{t.heroEyebrow}</span>
               <span className="hero__headline">
-                {t.heroTitleStart}<span className="it">{t.heroTitleAccent}</span>{t.heroTitleEnd}
+                {t.heroTitleStart}<span className="it">{t.heroTitleAccent}</span><br />{t.heroTitleEnd.trim()}
               </span>
             </h1>
             <hr className="shimmer hero__stripe" />
