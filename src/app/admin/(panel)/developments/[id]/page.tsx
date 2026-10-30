@@ -7,6 +7,8 @@ import PdfImport from "./PdfImport";
 import AmenitiesField from "./AmenitiesField";
 import DescriptionField from "./DescriptionField";
 import PromoBlocksField from "./PromoBlocksField";
+import ExtraLinksField from "./ExtraLinksField";
+import { parseExtraLinks } from "@/lib/developmentExtraLinks";
 import SaveOverridesButton from "./SaveOverridesButton";
 import BackLink from "../BackLink";
 import UnitsEditor from "./UnitsEditor";
@@ -348,6 +350,11 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             <div><label className={label}>Completion</label><input name="completion" defaultValue={ov?.completion ?? ""} placeholder={d.completion ?? ""} className={field} /></div>
             <div><label className={label}>Energy</label><input name="energy" defaultValue={ov?.energy ?? ""} placeholder={d.energy ?? ""} className={field} /></div>
             <div><label className={label}>Hero video URL</label><input name="heroVideo" dir="ltr" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
+          </div>
+
+          <div>
+            <label className={label}>Extra links</label>
+            <ExtraLinksField initial={parseExtraLinks(ov?.extraLinks)} />
           </div>
 
           <div>

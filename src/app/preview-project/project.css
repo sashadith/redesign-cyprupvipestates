@@ -69,6 +69,22 @@
 .pp-desc + .pp-desc { margin-top: 1.5em; }
 .pp-hint { font-size: 0.82rem; color: var(--text-faint); margin: .8em 0 0; font-style: italic; }
 
+/* Extra links under the description: project video, 360° tour, virtual
+   walkthrough, project camera. Same pill idiom as .pp-hero__galbtn, sized for
+   body copy and wrapping on its own line at phone width. The hover border
+   picks up --accent exactly as the gallery button does, so the two read as the
+   same kind of control. */
+.pp-extras { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1.8em; }
+.pp-extra { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.86rem; color: var(--ivory); text-decoration: none;
+  border: 1px solid var(--hairline-strong); background: rgba(255,255,255,0.04);
+  transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
+.pp-extra:hover { border-color: var(--accent); background: rgba(255,255,255,0.07); }
+/* Visually hidden, still read aloud — the caption alone does not tell a
+   screen-reader user the link leaves the page. */
+.pp-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+
 /* preview / alias note — small fixed chip so it never disrupts the hero/nav */
 .pp-note { position: fixed; inset-inline-start: 12px; bottom: 12px; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
   max-width: min(92vw, 560px); padding: 10px 16px; font-size: 0.76rem; color: var(--text-soft); border-radius: 14px;
