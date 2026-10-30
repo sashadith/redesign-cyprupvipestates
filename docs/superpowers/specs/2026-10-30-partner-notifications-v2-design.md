@@ -27,11 +27,20 @@ the moments a partner would act on.
 
 1. **Link → BOTH.** `link()` in `src/lib/partner/telegramWebhook.ts` sets `notifyChannel = BOTH` when it is
    `EMAIL`; an explicit TELEGRAM/BOTH choice stays. Unlink keeps today's reset to EMAIL.
-2. **Two switches** on `Partner`, both default `true`:
-   - `marketAlerts` — new projects (1) and updates on projects from the partner's presentations (2, 3).
-   - `reminders` — protection ending (4) and quiet client (5).
-   Everything else (client stages, money, tier) stays always on. Both switches gate every channel.
-   Profile page gets two checkboxes next to the existing ones, saved by `settingsActions.ts`.
+2. **Per-type switches** on `Partner` (all default `true`, all channels; operator decision 2026-10-30, replacing
+   the first draft's two switches): `notifyClients` (stage, message, match, presentation opened),
+   `notifyNewProjects` (1), `notifyProjectUpdates` (2, 3), `notifyReminders` (4, 5); plus the existing
+   `digestOptIn`. Decisions, payouts, bank details and tier messages are always on. Rules in `notifyPrefs.ts`;
+   portal profile and bot menu edit the same fields.
+2b. **Telegram quiet hours** (operator: Telegram only): `quietFrom`/`quietTo`, whole hours Cyprus time, presets
+   22–8, 21–8, 23–7, 20–9, 22–7 or off. The sender holds a Telegram-only row (`notBefore`); a row that also
+   goes by e-mail sends the e-mail now and parks a Telegram-only copy (`<refKey>#tg`, payload `tgOf`). The
+   weekly summary waits for a later Monday run (crontab hourly 05–12 UTC on Mondays).
+2c. **Bot menu**: `/menu` (and `/start` when linked, and right after linking) opens an inline-keyboard menu —
+   overview, my clients (paged, tap for stage + protection end), commission, new projects (30 days), submit /
+   portal links, settings (language en/de/pl/ru, quiet hours, the switches above, channel Telegram-only vs
+   both). Buttons edit the menu message in place; the partner is always the chat's linked partner. The webhook
+   now also receives `callback_query` and registering it sets the "/" command list per language.
 3. **Delivery** reuses the existing outbox: new `PartnerNotificationKind` values, rows written by planners,
    delivered by the existing `partner-notify` cron through `prepareRow`/`deliverRow` (e-mail and Telegram
    builders per kind, routeNotification, retries, breaker, opt-out gates).
@@ -78,11 +87,14 @@ Telegram message.
 ## Schema change (needs the migrate flag on deploy)
 
 - `PartnerNotificationKind` += PROJECT_NEWS, WATCH, PROTECTION_ENDING, CLIENT_QUIET, BANK_MISSING, TIER_NEAR.
-- `Partner` += `marketAlerts Boolean @default(true)`, `reminders Boolean @default(true)`.
+- `Partner` += `notifyClients`, `notifyNewProjects`, `notifyProjectUpdates`, `notifyReminders` (Boolean, default true), `quietFrom`/`quietTo` (Int?).
+- `PartnerNotification` += `notBefore DateTime?`.
 
 ## Ops after deploy (operator / me on request)
 
 - Deploy with `CVP_RUN_MIGRATE=1`.
+- Re-register the partner bot webhook in the CRM owner panel (adds `callback_query` + the command list).
+- Change the partner-digest crontab to `0 5-12 * * 1`.
 - Set `PARTNER_ALERTS_START` in `/var/www/shared/.env`, add crontab line
   `30 5 * * * curl -s "http://127.0.0.1:3000/api/cron/partner-alerts?key=$CRON_SECRET" >/dev/null`.
 

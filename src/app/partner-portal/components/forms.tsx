@@ -10,6 +10,7 @@ import {
 } from "../actions";
 import { saveBankDetailsAction } from "../bankActions";
 import { savePartnerSettingsAction } from "../settingsActions";
+import { NOTIFY_SWITCHES, QUIET_PRESETS, quietKey, quietLabel, quietWindow } from "@/lib/partner/notifyPrefs";
 import { createTelegramCodeAction, disconnectTelegramAction } from "../telegramActions";
 import { isErr, isOk, type FormState, type NotifyChannelValue, type SettingsState, type SubmitState, type TelegramCodeState } from "../formState";
 import { vatIdRequired, vatIdSoftExempt } from "@/lib/partner/vat";
@@ -360,7 +361,10 @@ export function PasswordForm({ t }: { t: PartnerDict }) {
 
 // ─── Email settings (phase 3d) ───────────────────────────────────────────────
 
-type SettingsValues = { emailNotifications: boolean; digestOptIn: boolean; marketAlerts: boolean; reminders: boolean };
+type SettingsValues = {
+  emailNotifications: boolean; digestOptIn: boolean; notifyClients: boolean; notifyNewProjects: boolean; notifyProjectUpdates: boolean;
+  notifyReminders: boolean; quietFrom: number | null; quietTo: number | null;
+};
 /** Present only while the partner bot is configured; Telegram/Both are selectable only with a linked chat. */
 type ChannelValues = { channel: NotifyChannelValue; linked: boolean };
 const CHANNELS: NotifyChannelValue[] = ["EMAIL", "TELEGRAM", "BOTH"];
@@ -371,13 +375,17 @@ export function SettingsForm({ t, values, telegram }: { t: PartnerDict; values: 
   const [state, action] = useFormState<SettingsState, FormData>(savePartnerSettingsAction, null);
   // After a save the stored values win (the key remounts the inputs with them).
   const shown = state && "ok" in state
-    ? { emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn, marketAlerts: state.marketAlerts, reminders: state.reminders, channel: state.notifyChannel }
+    ? {
+        emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn, notifyClients: state.notifyClients,
+        notifyNewProjects: state.notifyNewProjects, notifyProjectUpdates: state.notifyProjectUpdates, notifyReminders: state.notifyReminders,
+        quietFrom: state.quietFrom, quietTo: state.quietTo, channel: state.notifyChannel,
+      }
     : { ...values, channel: telegram?.channel ?? "EMAIL" };
   // An unlinked chat cannot be a channel: show Email (the sender falls back to it anyway).
   const channel = telegram && !telegram.linked ? "EMAIL" : shown.channel;
   const err = state && "error" in state ? state : null;
   return (
-    <form action={action} className="pp-form" key={`${shown.emailNotifications}-${shown.digestOptIn}-${shown.marketAlerts}-${shown.reminders}-${channel}`}>
+    <form action={action} className="pp-form" key={JSON.stringify(shown) + channel}>
       {err && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, err.error), err.vars ?? {})}</p>}
       <label className="pp-check">
         <input type="checkbox" name="emailNotifications" defaultChecked={shown.emailNotifications} aria-describedby="set-notif-hint" />
@@ -389,16 +397,14 @@ export function SettingsForm({ t, values, telegram }: { t: PartnerDict; values: 
         <span>{S.digestOptIn}</span>
         <small id="set-digest-hint" className="pp-hint pp-check-hint">{S.digestOptInHint}</small>
       </label>
-      <label className="pp-check">
-        <input type="checkbox" name="marketAlerts" defaultChecked={shown.marketAlerts} aria-describedby="set-market-hint" />
-        <span>{S.marketAlerts}</span>
-        <small id="set-market-hint" className="pp-hint pp-check-hint">{S.marketAlertsHint}</small>
-      </label>
-      <label className="pp-check">
-        <input type="checkbox" name="reminders" defaultChecked={shown.reminders} aria-describedby="set-reminders-hint" />
-        <span>{S.reminders}</span>
-        <small id="set-reminders-hint" className="pp-hint pp-check-hint">{S.remindersHint}</small>
-      </label>
+      {NOTIFY_SWITCHES.map((k) => (
+        <label className="pp-check" key={k}>
+          <input type="checkbox" name={k} defaultChecked={shown[k]} aria-describedby={`set-${k}-hint`} />
+          <span>{S[k]}</span>
+          <small id={`set-${k}-hint`} className="pp-hint pp-check-hint">{S[`${k}Hint`]}</small>
+        </label>
+      ))}
+      <small className="pp-hint">{S.alwaysOn}</small>
       {telegram && (
         <fieldset className="pp-fieldset" aria-describedby={telegram.linked ? undefined : "set-channel-hint"}>
           <legend>{C.card.channelTitle}</legend>
@@ -412,6 +418,18 @@ export function SettingsForm({ t, values, telegram }: { t: PartnerDict; values: 
           </div>
           {!telegram.linked && <small id="set-channel-hint" className="pp-hint">{C.card.channelHint}</small>}
         </fieldset>
+      )}
+      {telegram?.linked && (
+        <label className="pp-field">
+          <span>{S.quiet}</span>
+          <select name="quiet" defaultValue={quietKey(quietWindow(shown.quietFrom, shown.quietTo))} aria-describedby="set-quiet-hint">
+            {[null, ...QUIET_PRESETS].map((w) => {
+              const pair = w ? ([w[0], w[1]] as [number, number]) : null;
+              return <option key={quietKey(pair)} value={quietKey(pair)}>{quietLabel(pair, S.quietOff)}</option>;
+            })}
+          </select>
+          <small id="set-quiet-hint" className="pp-hint">{S.quietHint}</small>
+        </label>
       )}
       <div className="pp-actions">
         <Submit wide={false}>{t.profile.save}</Submit>

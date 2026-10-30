@@ -5,7 +5,8 @@
  */
 import { requireCrmUser } from "@/lib/crm/session";
 import { writeAudit } from "@/lib/crm/audit";
-import { PARTNER_WEBHOOK_URL, getPartnerWebhookInfo, partnerBotConfigured, setPartnerWebhook, type PartnerWebhookInfo } from "@/lib/partner/telegramApi";
+import { PARTNER_WEBHOOK_URL, getPartnerWebhookInfo, partnerBotConfigured, setPartnerCommands, setPartnerWebhook, type PartnerWebhookInfo } from "@/lib/partner/telegramApi";
+import { botCommandLists } from "@/lib/partner/telegramMenu";
 
 const DENIED = "Only the owner can manage the partner Telegram bot.";
 const NOT_CONFIGURED = "The partner bot is not configured (PARTNER_TELEGRAM_BOT_TOKEN, _BOT_USERNAME, _WEBHOOK_SECRET).";
@@ -27,8 +28,12 @@ export async function registerPartnerTelegramWebhookAction(): Promise<{ ok: true
   if (!actor) return { error: DENIED };
   if (!partnerBotConfigured()) return { error: NOT_CONFIGURED };
   const r = await setPartnerWebhook();
+  // The "/" command list per language (menu, status, commission, help, stop); a failure is reported, not fatal.
+  const commandsOk = r.ok ? await setPartnerCommands(botCommandLists()) : false;
   await writeAudit(actor, "partner_telegram_webhook_set", "partner_bot", "partner-telegram", {
     url: PARTNER_WEBHOOK_URL, ok: r.ok, ...(r.ok ? {} : { description: r.description }),
   });
-  return r.ok ? { ok: true, notice: "Webhook registered" } : { error: `Telegram: ${r.description}` };
+  return r.ok
+    ? { ok: true, notice: commandsOk ? "Webhook and commands registered" : "Webhook registered (command list could not be set)" }
+    : { error: `Telegram: ${r.description}` };
 }

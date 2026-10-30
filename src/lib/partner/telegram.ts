@@ -11,7 +11,7 @@ import { hashToken } from "./tokens";
 
 // ── Commands ────────────────────────────────────────────────────────────────
 
-export const BOT_COMMANDS = ["start", "status", "commission", "help", "stop"] as const;
+export const BOT_COMMANDS = ["start", "menu", "status", "commission", "help", "stop"] as const;
 export type BotCommand = (typeof BOT_COMMANDS)[number] | "unknown";
 
 const MAX_COMMAND_CHARS = 200;
@@ -138,7 +138,7 @@ export function buildBotReply(locale: PartnerLocale, reply: { kind: BotReplyKind
       // Unknown chat: we do not know the partner's language — always English.
       return esc(fmt(dict("en").telegram.bot.notLinked, { url: portal }));
     case "help": {
-      const lines = [`<b>${esc(t.helpTitle)}</b>`, esc(t.helpStatus), esc(t.helpCommission), esc(t.helpStop), "", esc(t.helpSubmit)];
+      const lines = [`<b>${esc(t.helpTitle)}</b>`, esc(dict(locale).telegram.menu.helpMenu), esc(t.helpStatus), esc(t.helpCommission), esc(t.helpStop), "", esc(t.helpSubmit)];
       if (portal) lines.push(link(join(portal, "/submit"), t.openSubmit));
       return lines.join("\n");
     }

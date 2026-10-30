@@ -211,7 +211,7 @@ test("API client: partner env only, 10 s abort, token/URL never logged or return
   assert.ok(a.includes("TIMEOUT_MS = 10_000"));
   assert.ok(a.includes('parse_mode: "HTML"'));
   assert.ok(a.includes("disable_web_page_preview: true"));
-  assert.ok(a.includes('url: PARTNER_WEBHOOK_URL') && a.includes('allowed_updates: ["message"]') && a.includes("drop_pending_updates: true"));
+  assert.ok(a.includes('url: PARTNER_WEBHOOK_URL') && a.includes('allowed_updates: ["message", "callback_query"]') && a.includes("drop_pending_updates: true"));
   assert.ok(a.includes('"https://cyprusvipestates.com/api/webhooks/partner-telegram"'));
   assert.ok(!a.includes("console."), "no logging in the client");
   assert.ok(!/process\.env\.TELEGRAM_/.test(a), "never the office bot env");

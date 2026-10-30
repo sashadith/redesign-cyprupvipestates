@@ -6,6 +6,7 @@ import { effectiveStateOf, leadClaimFacts } from "./claimFacts";
 import { cyDate, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
 import { lastClientActivity } from "./alertsSend";
 import { loadTiers } from "./tierStore";
+import { quietEndsAt, quietWindow, switchGate } from "./notifyPrefs";
 import { activeSince, isCommitted } from "./claimState";
 import { visibleName } from "./clientDto";
 import { creditNoteWhere } from "./commissions";
@@ -20,7 +21,7 @@ import {
   INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail,
   buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
   buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
-  isUnchangedStage, partnerDate, projectsLink, switchGate, watchChangeLabels,
+  isUnchangedStage, partnerDate, projectsLink, watchChangeLabels,
   stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
   planStageNotifications, presentationsLink, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
@@ -98,6 +99,8 @@ type Delivery = {
   telegram: { chatId: string; html: string } | null;
   /** E-mail allowed for this row but not routed (the partner chose Telegram only): used when Telegram fails permanently (blocked, 4xx, not configured). */
   fallbackEmail: { to: string; mail: BuiltEmail } | null;
+  /** Set while the partner's Telegram quiet hours run: the Telegram part waits until then (e-mail is never held). */
+  quietUntil: Date | null;
 };
 type Outcome = { skip: string } | Delivery;
 
@@ -115,15 +118,21 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     where: { id: row.partnerId },
     select: {
       status: true, firstName: true, language: true, emailNotifications: true, notifyChannel: true, telegramChatId: true,
-      marketAlerts: true, reminders: true, bankDetailsEnc: true, tierKey: true,
+      notifyClients: true, notifyNewProjects: true, notifyProjectUpdates: true, notifyReminders: true, quietFrom: true, quietTo: true,
+      bankDetailsEnc: true, tierKey: true,
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
     },
   });
   const partnerSkip = partnerStatusGate(partner?.status);
   if (partnerSkip || !partner) return { skip: partnerSkip ?? "partner missing" };
-  // v2 profile switches (all channels): new projects / presentation projects, reminders.
+  // v2 per-type switches (all channels).
   const switchedOff = switchGate(row.kind, partner);
   if (switchedOff) return { skip: switchedOff };
+  // A Telegram-only copy held over the quiet hours (its e-mail went out with the original row): `ref` is the
+  // original refKey, which the per-kind parsers below read.
+  const tgOf = obj(row.payload).tgOf;
+  const tgOnly = typeof tgOf === "string" && tgOf.length > 0;
+  const ref = tgOnly ? (tgOf as string) : row.refKey;
   const to = partner.users[0]?.email?.trim() || null;
   const chatId = partner.telegramChatId?.trim() || null;
   // Channel(s) per Decision 2. The profile switch (3d) suppresses STAGE/MESSAGE e-mail only, never Telegram.
@@ -132,9 +141,10 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     kind: row.kind, notifyChannel: partner.notifyChannel, chatLinked: !!chatId, botConfigured: partnerBotConfigured(),
     emailNotifications: partner.emailNotifications,
   });
-  const emailAllowed = !!to && !optOutGate(row.kind, partner.emailNotifications);
-  const sendEmailToo = route.email && !!to;
+  const emailAllowed = !tgOnly && !!to && !optOutGate(row.kind, partner.emailNotifications);
+  const sendEmailToo = !tgOnly && route.email && !!to;
   const sendTelegram = route.telegram && !!chatId;
+  if (tgOnly && !sendTelegram) return { skip: "telegram unavailable" };
   if (!sendEmailToo && !sendTelegram) {
     // Switched off in the profile: the row is closed as sent with error "opted out" (never mailed later).
     const optedOut = optOutGate(row.kind, partner.emailNotifications);
@@ -171,6 +181,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     email: sendEmailToo && to ? { to, mail } : null,
     telegram: sendTelegram && chatId ? { chatId, html: buildTelegramNotification(locale, tg) } : null,
     fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
+    quietUntil: sendTelegram ? quietEndsAt(now, quietWindow(partner.quietFrom, partner.quietTo)) : null,
   });
   if (!claim && !PARTNER_ONLY_KINDS.includes(row.kind)) return { skip: "claim missing" };
   // Every kind but the partner-only ones has a claim from here on (checked just above); those cases never read it.
@@ -192,12 +203,12 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
         select: { payload: true },
       });
-      if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
+      if (!tgOnly && lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
       const extra = await stageExtras(locale, toStatus, own.leadId, now);
       return deliver(buildStageEmail(locale, { ...common, stageKey, extra }, theme), { ...tgCommon, kind: "STAGE", stageKey, extra });
     }
     case "MESSAGE": {
-      const messageId = messageIdFromRefKey(row.refKey);
+      const messageId = messageIdFromRefKey(ref);
       const msg = messageId
         ? await prisma.partnerMessage.findUnique({
             where: { id: messageId },
@@ -223,7 +234,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
             },
           })
         : null;
-      if (!note || note.deal.leadId !== own.leadId || payoutDealIdFromRefKey(row.refKey) !== note.dealId) return { skip: "credit note missing" };
+      if (!note || note.deal.leadId !== own.leadId || payoutDealIdFromRefKey(ref) !== note.dealId) return { skip: "credit note missing" };
       const dev = note.deal.development;
       const amount = formatPayoutAmount(locale, note.totalAmount);
       return deliver(
@@ -528,6 +539,32 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
         .catch((e) => result.errors.push(`${row.refKey}: could not record skip: ${truncateError(e)}`));
       result.skipped[o.skip] = (result.skipped[o.skip] ?? 0) + 1;
       continue;
+    }
+    // Telegram quiet hours (v2): Telegram waits until they end; e-mail is never held.
+    if (o.telegram && o.quietUntil) {
+      const quietUntil = o.quietUntil;
+      if (!o.email) {
+        // Telegram only: the row itself waits (released unsent, no attempt charged).
+        await prisma.partnerNotification
+          .update({ where: { id: row.id }, data: { sentAt: null, error: null, notBefore: quietUntil } })
+          .catch((e) => result.errors.push(`${row.refKey}: could not hold for quiet hours: ${truncateError(e)}`));
+        result.skipped["quiet hours"] = (result.skipped["quiet hours"] ?? 0) + 1;
+        continue;
+      }
+      // E-mail now; a Telegram-only copy waits (refKey unique: a rerun never doubles it).
+      try {
+        await prisma.partnerNotification.createMany({
+          data: [{
+            kind: row.kind, refKey: `${row.refKey}#tg`, partnerId: row.partnerId, leadId: row.leadId, claimId: row.claimId,
+            payload: { ...obj(row.payload), tgOf: row.refKey } as object, notBefore: quietUntil,
+          }],
+          skipDuplicates: true,
+        });
+        o = { ...o, telegram: null, fallbackEmail: null };
+      } catch (e) {
+        // Could not park the Telegram part: send it now rather than lose it.
+        result.errors.push(`${row.refKey}: could not hold Telegram for quiet hours: ${truncateError(e)}`);
+      }
     }
     const out = await deliverRow(o, row.refKey, result.errors);
     if (out.state === "closed") {

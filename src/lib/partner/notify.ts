@@ -359,7 +359,8 @@ export function dueWhere(now: Date): Prisma.PartnerNotificationWhereInput {
   for (let n = 1; n < MAX_ATTEMPTS; n++) {
     OR.push({ attempts: n, failedAt: { lte: new Date(now.getTime() - BACKOFF_BASE_MS * 2 ** (n - 1)) } });
   }
-  return { sentAt: null, OR };
+  // notBefore: held for the partner's Telegram quiet hours (notifications v2).
+  return { sentAt: null, AND: [{ OR }, { OR: [{ notBefore: null }, { notBefore: { lte: now } }] }] };
 }
 
 /** A row still marked "sending" this long after it was claimed belongs to a run that died mid-send. */
@@ -423,18 +424,6 @@ export function optOutGate(kind: NotificationKind, emailNotifications: boolean):
 
 /** Kinds about the partner, not about one of their clients: no claim is read or needed. */
 export const PARTNER_ONLY_KINDS: readonly NotificationKind[] = ["PRESENTATION_OPENED", "TIER_UP", "PROJECT_NEWS", "WATCH", "TIER_NEAR"];
-
-export const SWITCHED_OFF_ERROR = "switched off";
-/** Kinds behind the v2 profile switches (all channels): marketAlerts and reminders. */
-export const MARKET_KINDS: readonly NotificationKind[] = ["PROJECT_NEWS", "WATCH"];
-export const REMINDER_KINDS: readonly NotificationKind[] = ["PROTECTION_ENDING", "CLIENT_QUIET"];
-
-/** "switched off" when the partner turned the kind's switch off in the profile, else null. */
-export function switchGate(kind: NotificationKind, p: { marketAlerts: boolean; reminders: boolean }): string | null {
-  if (MARKET_KINDS.includes(kind) && !p.marketAlerts) return SWITCHED_OFF_ERROR;
-  if (REMINDER_KINDS.includes(kind) && !p.reminders) return SWITCHED_OFF_ERROR;
-  return null;
-}
 
 /** Only an ACTIVE partner is told anything; the skip reason otherwise. */
 export function partnerStatusGate(status: string | null | undefined): string | null {

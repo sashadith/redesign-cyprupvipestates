@@ -7,8 +7,9 @@ import {
 } from "@/lib/partner/alerts";
 import {
   PARTNER_ONLY_KINDS, buildBankMissingEmail, buildClientQuietEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail, buildTierNearEmail,
-  buildWatchEmail, notificationGate, switchGate, watchChangeLabels,
+  buildWatchEmail, notificationGate, watchChangeLabels,
 } from "@/lib/partner/notify";
+import { switchGate } from "@/lib/partner/notifyPrefs";
 import { TELEGRAM_MAX_CHARS, buildTelegramNotification } from "@/lib/partner/telegram";
 import { buildDigestTelegram, digestChannels, DIGEST_TELEGRAM_MAX } from "@/lib/partner/digest";
 import { buildApprovedEmail } from "@/lib/partner/mail";
@@ -119,12 +120,15 @@ test("PARTNER_ALERTS_START gate", () => {
 
 // ── Gates ───────────────────────────────────────────────────────────────────
 
-test("switches: market alerts and reminders gate only their own kinds", () => {
-  const off = { marketAlerts: false, reminders: false };
-  for (const k of ["PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET"] as const) assert.equal(switchGate(k, off), "switched off");
-  for (const k of ["STAGE", "BANK_MISSING", "TIER_NEAR", "PAYOUT"] as const) assert.equal(switchGate(k, off), null);
-  assert.equal(switchGate("WATCH", { marketAlerts: true, reminders: false }), null);
-  assert.equal(switchGate("CLIENT_QUIET", { marketAlerts: false, reminders: true }), null);
+test("switches: each group gates only its own kinds; decisions, money and tier always go out", () => {
+  const all = (v: boolean) => ({ notifyClients: v, notifyNewProjects: v, notifyProjectUpdates: v, notifyReminders: v });
+  for (const k of ["STAGE", "MESSAGE", "MATCH", "PRESENTATION_OPENED", "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET"] as const) {
+    assert.equal(switchGate(k, all(false)), "switched off", k);
+    assert.equal(switchGate(k, all(true)), null, k);
+  }
+  for (const k of ["CLAIM_OUTCOME", "PAYOUT", "BANK_MISSING", "TIER_NEAR", "TIER_UP"] as const) assert.equal(switchGate(k, all(false)), null, k);
+  assert.equal(switchGate("WATCH", { ...all(true), notifyProjectUpdates: false }), "switched off");
+  assert.equal(switchGate("PROJECT_NEWS", { ...all(true), notifyProjectUpdates: false }), null);
 });
 
 test("claim gate: partner-wide kinds need no claim; bank rows need the partner's own claim; reminders need an ACTIVE claim", () => {
@@ -147,7 +151,12 @@ test("every v2 text exists in every partner language", () => {
     const d = dict(l);
     for (const k of notifyKeys) assert.ok(d.telegram.notify[k]?.trim(), `${l} telegram.notify.${k}`);
     assert.ok(d.telegram.changeTypes.low_stock?.trim(), `${l} low_stock`);
-    for (const k of ["marketAlerts", "marketAlertsHint", "reminders", "remindersHint"] as const) assert.ok(d.profileSettings[k]?.trim(), `${l} ${k}`);
+    for (const k of ["notifyClients", "notifyNewProjects", "notifyProjectUpdates", "notifyReminders"] as const) {
+      assert.ok(d.profileSettings[k]?.trim() && d.profileSettings[`${k}Hint`]?.trim(), `${l} ${k}`);
+    }
+    for (const k of ["quiet", "quietHint", "quietOff", "alwaysOn"] as const) assert.ok(d.profileSettings[k]?.trim(), `${l} ${k}`);
+    for (const [k, v] of Object.entries(d.telegram.menu)) assert.ok(String(v).trim(), `${l} telegram.menu.${k}`);
+    assert.deepEqual(Object.keys(d.telegram.menu).sort(), Object.keys(dict("en").telegram.menu).sort(), `${l} menu keys`);
     for (const k of ["projectNews", "watch", "protectionEnding", "clientQuiet", "bankMissing", "tierNear"] as const) assert.ok(d.mail[k].subject.trim(), `${l} mail.${k}`);
     assert.ok(d.mail.approved.nextStep.includes("{url}"), `${l} approved.nextStep`);
   }
@@ -214,7 +223,7 @@ test("wiring: linking the bot switches EMAIL to BOTH; settings save both switche
   const hook = src("src/lib/partner/telegramWebhook.ts");
   assert.ok(hook.includes('...(partner.notifyChannel === "EMAIL" ? { notifyChannel: "BOTH" as const } : {})'));
   const settings = src("src/app/partner-portal/settingsActions.ts");
-  assert.ok(settings.includes('marketAlerts: checked(fd, "marketAlerts")') && settings.includes('reminders: checked(fd, "reminders")'));
+  assert.ok(settings.includes("...Object.fromEntries(NOTIFY_SWITCHES.map((k) => [k, checked(fd, k)])),") && settings.includes("parseQuietPreset(rawQuiet)"));
   const route = src("src/app/api/cron/partner-alerts/route.ts");
   assert.ok(route.includes("process.env.CRON_SECRET") && route.includes("PARTNER_ALERTS_START") && route.includes("withAlertsLock"));
   const send = src("src/lib/partner/notifySend.ts");

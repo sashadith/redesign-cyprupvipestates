@@ -50,27 +50,60 @@ async function call(method: string, body: Record<string, unknown>): Promise<ApiR
 
 export type PartnerSendResult = { ok: true } | { ok: false; status: number; description: string; failure: TelegramFailureClass };
 
+/** Inline keyboard (bot menu, notifications v2): rows of callback or URL buttons. */
+export type InlineKeyboard = ({ text: string; callback_data: string } | { text: string; url: string })[][];
+
 /** sendMessage with parse_mode HTML and no link previews. `failure` classifies an error (classifyTelegramFailure). */
-export async function sendPartnerTelegram(chatId: string, html: string): Promise<PartnerSendResult> {
+export async function sendPartnerTelegram(chatId: string, html: string, keyboard?: InlineKeyboard): Promise<PartnerSendResult> {
   const r = await call("sendMessage", {
     chat_id: chatId,
     text: html,
     parse_mode: "HTML",
     disable_web_page_preview: true,
     link_preview_options: { is_disabled: true },
+    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
   if (r.ok) return { ok: true };
   return { ok: false, status: r.status, description: r.description, failure: classifyTelegramFailure(r.status, r.description) };
 }
 
-/** Registers the webhook on the main host with the secret header; only `message` updates; drops the backlog. */
+/** Replaces a menu message in place (a button press); "message is not modified" counts as success. */
+export async function editPartnerTelegram(chatId: string, messageId: number, html: string, keyboard: InlineKeyboard): Promise<boolean> {
+  const r = await call("editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text: html,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    link_preview_options: { is_disabled: true },
+    reply_markup: { inline_keyboard: keyboard },
+  });
+  return r.ok || /not modified/i.test(r.description);
+}
+
+/** Stops the button's loading spinner; `text` shows as a short toast. */
+export async function answerPartnerCallback(callbackQueryId: string, text?: string): Promise<void> {
+  await call("answerCallbackQuery", { callback_query_id: callbackQueryId, ...(text ? { text } : {}) });
+}
+
+/** The bot's command list ("/" menu) per language; `commands` maps a language code (or "" for the default) to its list. */
+export async function setPartnerCommands(commands: Record<string, { command: string; description: string }[]>): Promise<boolean> {
+  let ok = true;
+  for (const [lang, list] of Object.entries(commands)) {
+    const r = await call("setMyCommands", { commands: list, ...(lang ? { language_code: lang } : {}) });
+    ok = ok && r.ok;
+  }
+  return ok;
+}
+
+/** Registers the webhook on the main host with the secret header; message and button (callback_query) updates; drops the backlog. */
 export async function setPartnerWebhook(): Promise<{ ok: true } | { ok: false; description: string }> {
   const cfg = partnerBotConfig();
   if (!cfg) return { ok: false, description: PARTNER_BOT_NOT_CONFIGURED };
   const r = await call("setWebhook", {
     url: PARTNER_WEBHOOK_URL,
     secret_token: cfg.secret,
-    allowed_updates: ["message"],
+    allowed_updates: ["message", "callback_query"],
     drop_pending_updates: true,
   });
   return r.ok ? { ok: true } : { ok: false, description: r.description };

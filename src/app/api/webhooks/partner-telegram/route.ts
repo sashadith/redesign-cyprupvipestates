@@ -2,13 +2,13 @@
 // with a secret token; Telegram sends it back in X-Telegram-Bot-Api-Secret-Token on every update.
 //  - bot env missing → 404; wrong/missing secret header → 401 (constant-time compare);
 //  - after auth always 200 (Telegram would otherwise retry the update), errors logged without message text;
-//  - only text messages from private chats; 64 KB body cap; 30 messages per chat per 10 minutes.
+//  - only text messages and menu button presses from private chats; 64 KB body cap; 30 updates per chat per 10 minutes.
 // This is the PARTNER bot; the office bot (src/lib/telegram.ts) is never used here.
 import { NextRequest, NextResponse } from "next/server";
 import { makeChatLimiter } from "@/lib/partner/telegram";
 import { partnerBotConfig } from "@/lib/partner/telegramApi";
-import { MAX_UPDATE_BYTES, extractPrivateText, secretMatches } from "@/lib/partner/telegramBot";
-import { handlePartnerBotMessage } from "@/lib/partner/telegramWebhook";
+import { MAX_UPDATE_BYTES, extractCallback, extractPrivateText, secretMatches } from "@/lib/partner/telegramBot";
+import { handlePartnerBotCallback, handlePartnerBotMessage } from "@/lib/partner/telegramWebhook";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +49,12 @@ export async function POST(req: NextRequest) {
     try {
       update = JSON.parse(raw);
     } catch {
+      return ok();
+    }
+    // Menu buttons (notifications v2): same chat rate limit as messages.
+    const cb = extractCallback(update);
+    if (cb) {
+      if (chatLimiter.hit(cb.chatId)) await handlePartnerBotCallback(cb);
       return ok();
     }
     const msg = extractPrivateText(update);

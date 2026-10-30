@@ -13,11 +13,13 @@ import { emailThemeForPartner } from "@/lib/design/store";
 import { partnerBaseUrl } from "./mail";
 import { TRANSPORT_BREAKER, truncateError } from "./notify";
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
+import { inQuietHours, quietWindow } from "./notifyPrefs";
 import { myCommissions, myRecentMilestones, projectRates, recentlyPublishedProjects, type PublishedProjects } from "./scope";
 
 export { digestStartFromEnv };
 
 const WINDOW_MS = 7 * 86_400_000;
+const DIGEST_QUIET = "quiet hours";
 
 export type DigestResult = {
   weekKey: string;
@@ -54,6 +56,7 @@ const isUniqueViolation = (e: unknown) => !!e && typeof e === "object" && (e as 
 type Candidate = {
   id: string; status: string; digestOptIn: boolean; createdAt: Date; firstName: string; language: string;
   handoverShare: unknown; fixShare: unknown; trustMode: boolean; notifyChannel: string; telegramChatId: string | null;
+  quietFrom: number | null; quietTo: number | null;
   users: { email: string }[];
   digestLogs: { id: string; weekKey: string; sentAt: Date | null; error: string | null }[];
 };
@@ -88,7 +91,7 @@ export async function sendWeeklyDigests(now: Date, start: Date, limit = 200): Pr
     take: limit,
     select: {
       id: true, status: true, digestOptIn: true, createdAt: true, firstName: true, language: true,
-      handoverShare: true, fixShare: true, trustMode: true, notifyChannel: true, telegramChatId: true,
+      handoverShare: true, fixShare: true, trustMode: true, notifyChannel: true, telegramChatId: true, quietFrom: true, quietTo: true,
       users: { where: { emailVerifiedAt: { not: null } }, orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
       digestLogs: { where: { weekKey }, take: 1, select: { id: true, weekKey: true, sentAt: true, error: true } },
     },
@@ -159,6 +162,15 @@ export async function sendWeeklyDigests(now: Date, start: Date, limit = 200): Pr
       channels = digestChannels({ notifyChannel: p.notifyChannel, chatLinked: !!p.telegramChatId, botConfigured: partnerBotConfigured(), hasEmail: !!to });
       if (!channels.email && !channels.telegram) {
         await close(logId, p.id, DIGEST_NO_RECIPIENT);
+        continue;
+      }
+      // Telegram quiet hours: the whole summary waits for a later run this week (crontab runs hourly on
+      // Monday mornings); "quiet hours" is not terminal, so digestLogAction retries it.
+      if (channels.telegram && inQuietHours(now, quietWindow(p.quietFrom, p.quietTo))) {
+        skip(DIGEST_QUIET);
+        await prisma.partnerDigestLog
+          .update({ where: { id: logId }, data: { error: DIGEST_QUIET } })
+          .catch((e) => result.errors.push(`${p.id}: could not record quiet hours: ${truncateError(e)}`));
         continue;
       }
       const locale = pickPartnerLocale({ partnerLanguage: p.language });

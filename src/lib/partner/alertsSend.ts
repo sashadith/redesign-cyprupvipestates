@@ -123,12 +123,16 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
     where: { status: "ACTIVE", createdAt: { lt: now } },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     take: PARTNER_CAP,
-    select: { id: true, handoverShare: true, fixShare: true, marketAlerts: true, reminders: true, tierKey: true, bankDetailsEnc: true },
+    select: {
+      id: true, handoverShare: true, fixShare: true, notifyNewProjects: true, notifyProjectUpdates: true, notifyReminders: true, tierKey: true,
+      bankDetailsEnc: true,
+    },
   });
   result.partners = partners.length;
   if (!partners.length) return result;
-  const market = partners.filter((p) => p.marketAlerts);
-  const reminded = partners.filter((p) => p.reminders);
+  const newsTo = partners.filter((p) => p.notifyNewProjects);
+  const watchTo = partners.filter((p) => p.notifyProjectUpdates);
+  const reminded = partners.filter((p) => p.notifyReminders);
   const planned: PlannedAlert[] = [];
   const step = async (name: string, fn: () => Promise<PlannedAlert[]>) => {
     try {
@@ -142,7 +146,7 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
 
   // 1 — projects published in the last 24 h, with each partner's own rate.
   await step("news", async () => {
-    if (!market.length) return [];
+    if (!newsTo.length) return [];
     const devs = await prisma.development.findMany({
       where: { publishStatus: "published", slug: { not: null }, publishedAt: { gte: new Date(now.getTime() - DAY), lte: now } },
       orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
@@ -169,7 +173,7 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
       }] : [];
     });
     return planProjectNews({
-      partners: market.map((p) => ({
+      partners: newsTo.map((p) => ({
         id: p.id,
         rates: new Map(projectRates(rows, rates, { handoverShare: Number(p.handoverShare), fixShare: Number(p.fixShare), trustMode: false })
           .map((r) => [r.id, r.handoverRate])),
@@ -181,11 +185,11 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
 
   // 2+3 — changes on developments in the partner's own active presentations.
   await step("watch", async () => {
-    if (!market.length) return [];
+    if (!watchTo.length) return [];
     const items = await prisma.clientPresentationItem.findMany({
       where: {
         presentation: {
-          partnerId: { in: market.map((p) => p.id) }, status: "active",
+          partnerId: { in: watchTo.map((p) => p.id) }, status: "active",
           OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
           lead: { deletedAt: null },
         },

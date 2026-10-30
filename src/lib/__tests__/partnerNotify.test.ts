@@ -269,7 +269,9 @@ test("dueWhere mirrors isDue: one branch per attempt count with its own backoff 
   const now = new Date("2026-10-20T12:00:00Z");
   const w = dueWhere(now);
   assert.equal(w.sentAt, null);
-  const or = w.OR as { attempts: unknown; failedAt?: { lte: Date } | null }[];
+  const [attemptsClause, holdClause] = w.AND as { OR: unknown[] }[];
+  const or = attemptsClause.OR as { attempts: unknown; failedAt?: { lte: Date } | null }[];
+  assert.deepEqual(holdClause.OR, [{ notBefore: null }, { notBefore: { lte: now } }], "quiet-hour holds are not due before notBefore");
   assert.deepEqual(or[0], { attempts: 0 });
   assert.deepEqual(or[1], { attempts: { gt: 0, lt: MAX_ATTEMPTS }, failedAt: null });
   const branches = or.slice(2);
