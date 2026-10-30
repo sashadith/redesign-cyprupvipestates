@@ -112,7 +112,7 @@ try {
   const a = data.account;
   const acctBefore = await prisma.developerAccount.findUnique({ where: { slug: a.slug } });
   console.log(`${APPLY ? "APPLY" : "DRY RUN"} — ${file}`);
-  console.log(`account ${a.slug}: ${acctBefore ? "exists" : "would be CREATED"}`);
+  console.log(`account ${a.slug}: ${acctBefore ? "exists" : APPLY ? "CREATED" : "would be CREATED"}`);
   const acctFields = { name: a.name, website: a.website, phone: a.phone, email: a.email, contactPerson: a.contactPerson, contactInfo: a.contactInfo, notes: a.notes, developerCloudUrl: a.developerCloudUrl, manualSyncReminderDays: a.manualSyncReminderDays };
   const acct = APPLY
     ? await prisma.developerAccount.upsert({ where: { slug: a.slug }, update: acctFields, create: { slug: a.slug, ...acctFields, driveSyncInterval: "off" } })
