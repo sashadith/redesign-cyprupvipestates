@@ -2,11 +2,14 @@
 // Pure builders and the planner: notify.ts. Cron entry: src/app/api/cron/partner-notify/route.ts.
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/sendEmail";
-import { effectiveStateOf } from "./claimFacts";
-import { activeSince } from "./claimState";
+import { effectiveStateOf, leadClaimFacts } from "./claimFacts";
+import { cyDate, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
+import { lastClientActivity } from "./alertsSend";
+import { loadTiers } from "./tierStore";
+import { activeSince, isCommitted } from "./claimState";
 import { visibleName } from "./clientDto";
 import { creditNoteWhere } from "./commissions";
-import { pickPartnerLocale } from "./i18n";
+import { dict, fmt, pickPartnerLocale, type PartnerLocale } from "./i18n";
 import { emailThemeForPartner } from "@/lib/design/store";
 import type { EmailTheme } from "@/lib/design/theme";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
@@ -14,8 +17,10 @@ import { buildTelegramNotification, routeNotification, type TelegramNotification
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
-  INTERRUPTED_ERROR, SENDING_MARK, TransportStreak, beforeStart, buildClaimOutcomeEmail, buildMatchEmail, buildMessageEmail, buildPayoutEmail,
-  buildPresentationOpenedEmail, buildStageEmail, buildTierUpEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, isUnchangedStage,
+  INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail,
+  buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
+  buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
+  isUnchangedStage, partnerDate, projectsLink, switchGate, watchChangeLabels,
   stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
   planStageNotifications, presentationsLink, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
@@ -108,11 +113,15 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     where: { id: row.partnerId },
     select: {
       status: true, firstName: true, language: true, emailNotifications: true, notifyChannel: true, telegramChatId: true,
+      marketAlerts: true, reminders: true, bankDetailsEnc: true, tierKey: true,
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
     },
   });
   const partnerSkip = partnerStatusGate(partner?.status);
   if (partnerSkip || !partner) return { skip: partnerSkip ?? "partner missing" };
+  // v2 profile switches (all channels): new projects / presentation projects, reminders.
+  const switchedOff = switchGate(row.kind, partner);
+  if (switchedOff) return { skip: switchedOff };
   const to = partner.users[0]?.email?.trim() || null;
   const chatId = partner.telegramChatId?.trim() || null;
   // Channel(s) per Decision 2. The profile switch (3d) suppresses STAGE/MESSAGE e-mail only, never Telegram.
@@ -138,7 +147,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     : null;
   const accepted = obj(row.payload).accepted === true;
   // A rejection, a payout and a presentation-opened row never need the lead; everything else is gated on the claim's effective state.
-  const needsState = !!claim && row.kind !== "PAYOUT" && row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP" && !(row.kind === "CLAIM_OUTCOME" && !accepted);
+  const needsState = !!claim && row.kind !== "PAYOUT" && row.kind !== "BANK_MISSING" && !PARTNER_ONLY_KINDS.includes(row.kind) && !(row.kind === "CLAIM_OUTCOME" && !accepted);
   const skip = notificationGate({
     kind: row.kind,
     accepted,
@@ -161,8 +170,8 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     telegram: sendTelegram && chatId ? { chatId, html: buildTelegramNotification(locale, tg) } : null,
     fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
   });
-  if (!claim && row.kind !== "PRESENTATION_OPENED" && row.kind !== "TIER_UP") return { skip: "claim missing" };
-  // Every kind but PRESENTATION_OPENED and TIER_UP has a claim from here on (checked just above); those cases never read it.
+  if (!claim && !PARTNER_ONLY_KINDS.includes(row.kind)) return { skip: "claim missing" };
+  // Every kind but the partner-only ones has a claim from here on (checked just above); those cases never read it.
   const own = claim as NonNullable<typeof claim>;
   const common = { partnerFirstName: partner.firstName, clientName: claim ? visibleName(claim) : "", link: claim ? clientLink(base, claim.id) : base };
   const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
@@ -182,7 +191,8 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         select: { payload: true },
       });
       if (lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
-      return deliver(buildStageEmail(locale, { ...common, stageKey }, theme), { ...tgCommon, kind: "STAGE", stageKey });
+      const extra = await stageExtras(locale, toStatus, own.leadId, now);
+      return deliver(buildStageEmail(locale, { ...common, stageKey, extra }, theme), { ...tgCommon, kind: "STAGE", stageKey, extra });
     }
     case "MESSAGE": {
       const messageId = messageIdFromRefKey(row.refKey);
@@ -264,9 +274,127 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         { kind: "TIER_UP", tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, url: link, portalUrl: base },
       );
     }
+    case "PROJECT_NEWS": {
+      const items = readNewsPayload(row.payload, isOwnProjectUrl);
+      if (!items.length) return { skip: "invalid payload" };
+      const projects = items.map((pr) => ({ ...pr, url: localizedProjectUrl(pr.url, locale) }));
+      const link = projectsLink(base);
+      return deliver(
+        buildProjectNewsEmail(locale, { partnerFirstName: partner.firstName, projects, link }, theme),
+        {
+          kind: "PROJECT_NEWS", url: link, portalUrl: base,
+          projects: projects.map((pr) => ({
+            name: pr.name, area: pr.area, url: pr.url,
+            detail: [
+              pr.priceFrom != null ? fmtLine(locale, "priceFrom", { price: formatPayoutAmount(locale, pr.priceFrom) }) : "",
+              pr.rate != null ? fmtLine(locale, "projectRate", { rate: formatShare(locale, pr.rate) }) : "",
+            ].filter(Boolean).join(" · "),
+          })),
+        },
+      );
+    }
+    case "WATCH": {
+      const items = readWatchPayload(row.payload, isOwnProjectUrl);
+      if (!items.length) return { skip: "invalid payload" };
+      const projects = items.map((pr) => ({ ...pr, url: localizedProjectUrl(pr.url, locale) }));
+      const link = presentationsLink(base);
+      return deliver(
+        buildWatchEmail(locale, { partnerFirstName: partner.firstName, projects, link }, theme),
+        {
+          kind: "WATCH", url: link, portalUrl: base,
+          projects: projects.map((pr) => ({
+            name: pr.name, url: pr.url,
+            detail: [
+              watchChangeLabels(locale, pr.changes),
+              pr.priceFrom != null ? fmtLine(locale, "priceFrom", { price: formatPayoutAmount(locale, pr.priceFrom) }) : "",
+            ].filter(Boolean).join(" · "),
+          })),
+        },
+      );
+    }
+    case "PROTECTION_ENDING": {
+      // Gated above: the claim is still effectively ACTIVE. Re-check that it is uncommitted and that the end
+      // date is still the one this row was planned for (a new real contact moved it → a new row is planned).
+      const planned = payloadDate(row.payload, "protectedUntil");
+      if (!planned) return { skip: "invalid payload" };
+      const facts = await leadClaimFacts(prisma, own.leadId);
+      if (isCommitted(facts)) return { skip: "committed" };
+      const until = protectionEnd(activeSince(own), facts.lastRealContactAt);
+      if (cyDate(until) !== cyDate(planned) || until.getTime() <= now.getTime()) return { skip: "superseded" };
+      const date = partnerDate(locale, until);
+      return deliver(
+        buildProtectionEndingEmail(locale, { ...common, until }, theme),
+        { ...tgCommon, kind: "PROTECTION_ENDING", date },
+      );
+    }
+    case "CLIENT_QUIET": {
+      const since = payloadDate(row.payload, "since");
+      if (!since) return { skip: "invalid payload" };
+      const lead = await prisma.lead.findUnique({ where: { id: own.leadId }, select: { status: true } });
+      if (!lead || ["KEEP_CONTACT", "LOST", "CLOSED", "RESERVED"].includes(lead.status)) return { skip: "not quiet" };
+      const last = await lastClientActivity(own.leadId, activeSince(own));
+      if (last.getTime() > since.getTime()) return { skip: "superseded" };
+      return deliver(buildClientQuietEmail(locale, common, theme), { ...tgCommon, kind: "CLIENT_QUIET" });
+    }
+    case "BANK_MISSING": {
+      if (partner.bankDetailsEnc) return { skip: "bank details present" };
+      const p = obj(row.payload);
+      const dealId = typeof p.dealId === "string" ? p.dealId : "";
+      const deal = dealId ? await prisma.deal.findUnique({ where: { id: dealId }, select: { leadId: true, commissionStatus: true } }) : null;
+      if (!deal || deal.leadId !== own.leadId || deal.commissionStatus === "CANCELLED" || deal.commissionStatus === "PAID_OUT") return { skip: "deal not open" };
+      const developerPaid = p.stage === "devpaid";
+      const link = bankLink(base);
+      return deliver(
+        buildBankMissingEmail(locale, { ...common, link, developerPaid }, theme),
+        { ...tgCommon, kind: "BANK_MISSING", url: link, developerPaid },
+      );
+    }
+    case "TIER_NEAR": {
+      const p = obj(row.payload);
+      const tierKey = typeof p.tierKey === "string" ? p.tierKey : "";
+      const tierName = typeof p.tierName === "string" ? p.tierName.trim() : "";
+      const handoverShare = typeof p.handoverShare === "number" ? p.handoverShare : null;
+      const fixShare = typeof p.fixShare === "number" ? p.fixShare : null;
+      if (!tierKey || !tierName || handoverShare == null || fixShare == null) return { skip: "invalid payload" };
+      // Reached (or passed) meanwhile: nothing to announce.
+      const tiers = await loadTiers();
+      const sortOf = (k: string | null) => tiers.find((t) => t.key === k)?.sort ?? -1;
+      if (partner.tierKey && sortOf(partner.tierKey) >= sortOf(tierKey)) return { skip: "tier reached" };
+      const link = commissionsLink(base);
+      return deliver(
+        buildTierNearEmail(locale, { partnerFirstName: partner.firstName, tierName, handoverShare, fixShare, portalUrl: link }, theme),
+        { kind: "TIER_NEAR", tierName, handoverShare, fixShare, url: link, portalUrl: base },
+      );
+    }
     default:
       return unhandledKind(row.kind);
   }
+}
+
+/** A telegram.notify line in the partner's language with {vars} filled (plain text; escaped by the builders). */
+function fmtLine(locale: PartnerLocale, key: "priceFrom" | "projectRate" | "viewingOn" | "expectedCommission", vars: Record<string, string>): string {
+  return fmt(dict(locale).telegram.notify[key], vars);
+}
+
+/**
+ * STAGE extras (v2): the viewing date when the client moved to VIEWING_SCHEDULED and the date is still
+ * ahead; the partner's expected commission (live deals) when the client RESERVED.
+ */
+async function stageExtras(locale: PartnerLocale, toStatus: unknown, leadId: string, now: Date): Promise<string[]> {
+  if (toStatus === "VIEWING_SCHEDULED") {
+    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { viewingScheduledAt: true } });
+    const at = lead?.viewingScheduledAt;
+    return at && at.getTime() > now.getTime() ? [fmtLine(locale, "viewingOn", { date: partnerDate(locale, at) })] : [];
+  }
+  if (toStatus === "RESERVED") {
+    const r = await prisma.deal.aggregate({
+      where: { leadId, commissionStatus: { not: "CANCELLED" }, partnerCommission: { gt: 0 } },
+      _sum: { partnerCommission: true },
+    });
+    const sum = r._sum.partnerCommission ?? 0;
+    return sum > 0 ? [fmtLine(locale, "expectedCommission", { amount: formatPayoutAmount(locale, sum) })] : [];
+  }
+  return [];
 }
 
 /**

@@ -31,9 +31,11 @@ export async function savePartnerSettingsAction(_prev: SettingsState, fd: FormDa
     data: {
       emailNotifications: checked(fd, "emailNotifications"),
       digestOptIn: checked(fd, "digestOptIn"),
+      marketAlerts: checked(fd, "marketAlerts"),
+      reminders: checked(fd, "reminders"),
       ...(notifyChannel ? { notifyChannel } : {}),
     },
-    select: { emailNotifications: true, digestOptIn: true, notifyChannel: true },
+    select: { emailNotifications: true, digestOptIn: true, marketAlerts: true, reminders: true, notifyChannel: true },
   });
   return { ok: true, ...saved };
 }

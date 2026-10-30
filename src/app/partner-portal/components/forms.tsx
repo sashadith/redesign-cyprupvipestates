@@ -360,7 +360,7 @@ export function PasswordForm({ t }: { t: PartnerDict }) {
 
 // ─── Email settings (phase 3d) ───────────────────────────────────────────────
 
-type SettingsValues = { emailNotifications: boolean; digestOptIn: boolean };
+type SettingsValues = { emailNotifications: boolean; digestOptIn: boolean; marketAlerts: boolean; reminders: boolean };
 /** Present only while the partner bot is configured; Telegram/Both are selectable only with a linked chat. */
 type ChannelValues = { channel: NotifyChannelValue; linked: boolean };
 const CHANNELS: NotifyChannelValue[] = ["EMAIL", "TELEGRAM", "BOTH"];
@@ -371,13 +371,13 @@ export function SettingsForm({ t, values, telegram }: { t: PartnerDict; values: 
   const [state, action] = useFormState<SettingsState, FormData>(savePartnerSettingsAction, null);
   // After a save the stored values win (the key remounts the inputs with them).
   const shown = state && "ok" in state
-    ? { emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn, channel: state.notifyChannel }
+    ? { emailNotifications: state.emailNotifications, digestOptIn: state.digestOptIn, marketAlerts: state.marketAlerts, reminders: state.reminders, channel: state.notifyChannel }
     : { ...values, channel: telegram?.channel ?? "EMAIL" };
   // An unlinked chat cannot be a channel: show Email (the sender falls back to it anyway).
   const channel = telegram && !telegram.linked ? "EMAIL" : shown.channel;
   const err = state && "error" in state ? state : null;
   return (
-    <form action={action} className="pp-form" key={`${shown.emailNotifications}-${shown.digestOptIn}-${channel}`}>
+    <form action={action} className="pp-form" key={`${shown.emailNotifications}-${shown.digestOptIn}-${shown.marketAlerts}-${shown.reminders}-${channel}`}>
       {err && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, err.error), err.vars ?? {})}</p>}
       <label className="pp-check">
         <input type="checkbox" name="emailNotifications" defaultChecked={shown.emailNotifications} aria-describedby="set-notif-hint" />
@@ -388,6 +388,16 @@ export function SettingsForm({ t, values, telegram }: { t: PartnerDict; values: 
         <input type="checkbox" name="digestOptIn" defaultChecked={shown.digestOptIn} aria-describedby="set-digest-hint" />
         <span>{S.digestOptIn}</span>
         <small id="set-digest-hint" className="pp-hint pp-check-hint">{S.digestOptInHint}</small>
+      </label>
+      <label className="pp-check">
+        <input type="checkbox" name="marketAlerts" defaultChecked={shown.marketAlerts} aria-describedby="set-market-hint" />
+        <span>{S.marketAlerts}</span>
+        <small id="set-market-hint" className="pp-hint pp-check-hint">{S.marketAlertsHint}</small>
+      </label>
+      <label className="pp-check">
+        <input type="checkbox" name="reminders" defaultChecked={shown.reminders} aria-describedby="set-reminders-hint" />
+        <span>{S.reminders}</span>
+        <small id="set-reminders-hint" className="pp-hint pp-check-hint">{S.remindersHint}</small>
       </label>
       {telegram && (
         <fieldset className="pp-fieldset" aria-describedby={telegram.linked ? undefined : "set-channel-hint"}>

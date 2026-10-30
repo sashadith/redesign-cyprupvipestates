@@ -20,7 +20,7 @@ export default async function PartnerProfile() {
   const { t, locale } = await portalContext();
   const p = await prisma.partner.findUnique({
     where: { id: me.partner.id },
-    select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true,
+    select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true, marketAlerts: true, reminders: true,
       notifyChannel: true, telegramChatId: true, telegramLinkedAt: true,
       brandName: true, brandPhone: true, brandEmail: true, brandWebsite: true, brandLogoType: true, brandLogoUpdatedAt: true, designThemeId: true },
   });
@@ -118,7 +118,7 @@ export default async function PartnerProfile() {
           <h2 className="pp-h3" id="settings-title">{t.profileSettings.title}</h2>
           <SettingsForm
             t={t}
-            values={{ emailNotifications: p.emailNotifications, digestOptIn: p.digestOptIn }}
+            values={{ emailNotifications: p.emailNotifications, digestOptIn: p.digestOptIn, marketAlerts: p.marketAlerts, reminders: p.reminders }}
             telegram={botAvailable || linked ? { channel: p.notifyChannel, linked } : undefined}
           />
         </section>

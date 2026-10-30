@@ -50,7 +50,7 @@ the moments a partner would act on.
 | 5 | `CLIENT_QUIET` | effectively ACTIVE, not committed claim, lead not KEEP_CONTACT/LOST/CLOSED, no status change, real contact or partner message for 14 days | `quiet:<claimId>:<last-activity date>` | reminders |
 | 6 | `STAGE` (richer) | existing stage row to VIEWING_SCHEDULED: add `lead.viewingScheduledAt` when in the future → "Viewing on {date}" | unchanged | — |
 | 7 | `STAGE` (richer) | existing stage row to RESERVED: add the partner's commission of the live deal → "Your expected commission: {amount}" | unchanged | — |
-| 8 | `BANK_MISSING` | partner without bank details and a live deal of theirs (not CANCELLED/PAID_OUT): once at deal creation, once when the developer has paid | `bank:<dealId>:created` / `bank:<dealId>:devpaid` | always |
+| 8 | `BANK_MISSING` | partner without bank details and a live deal of theirs (not CANCELLED/PAID_OUT): once at deal creation, once when the developer has paid (a deal first seen already paid gets only the second) | `bank:<dealId>:created` / `bank:<dealId>:devpaid` | always |
 | 9 | approval e-mail (richer) | existing approval mail gains a "Submit a client" button and a line on connecting Telegram | — | — |
 | 10 | `TIER_NEAR` | closed deals in 12 months = next tier's `minClosedDeals − 1` | `tiernear:<partnerId>:<tierKey>` | always |
 | 11 | weekly digest on Telegram | the Monday digest follows `notifyChannel`: EMAIL → mail, TELEGRAM → short Telegram summary, BOTH → both. `digestOptIn` stays the master switch | existing `PartnerDigestLog` | digestOptIn |
@@ -66,7 +66,7 @@ Telegram message.
 ## Message content
 
 - 1: "New on Cyprus VIP Estates" + per project: name, area/district, price from, the partner's
-  Handover/Fix share, public project link. Never the developer.
+  Handover rate as on the portal's projects page, public project link. Never the developer.
 - 2+3: "Updates on projects from your presentations" + per project the change label (existing
   `telegram.changeTypes`, plus a new `low_stock` label "only {n} left"), price from, link.
 - 4: "{client}: your client protection ends on {date}. Any real contact from us extends it — tell us if the

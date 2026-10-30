@@ -190,6 +190,14 @@ export type TelegramNotificationInput = {
   tierName?: string | null;
   handoverShare?: number | null;
   fixShare?: number | null;
+  /** STAGE (v2): extra lines under the headline (viewing date, expected commission), plain text. */
+  extra?: string[];
+  /** PROJECT_NEWS / WATCH: the projects, prices and rates pre-formatted. */
+  projects?: { name: string; area?: string | null; detail: string; url: string }[];
+  /** PROTECTION_ENDING: the end date, pre-formatted. */
+  date?: string | null;
+  /** BANK_MISSING: the developer has paid already (the second, more urgent wording). */
+  developerPaid?: boolean;
   /** Target of the main link (client page, project page, presentations page). */
   url: string;
   portalUrl: string;
@@ -207,7 +215,8 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
   switch (input.kind) {
     case "STAGE": {
       const stage = lookup(locale, input.stageKey ?? "") ?? lookup(locale, "stages.onHold")!;
-      out = `<b>${line(t.stage, { client, stage: esc(stage) })}</b>\n\n${open}`;
+      const extra = (input.extra ?? []).filter((x) => x.trim()).map((x) => text(x, 120));
+      out = `<b>${line(t.stage, { client, stage: esc(stage) })}</b>${extra.length ? `\n${extra.join("\n")}` : ""}\n\n${open}`;
       break;
     }
     case "MESSAGE": {
@@ -247,6 +256,31 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
       out = `${lines.join("\n")}\n\n${open}`;
       break;
     }
+    case "PROJECT_NEWS":
+    case "WATCH": {
+      const head = `<b>${esc(input.kind === "WATCH" ? t.watch : t.projectNews)}</b>`;
+      const items = (input.projects ?? []).map((pr) => {
+        const title = link(pr.url, [pr.name, pr.area].filter((x) => (x ?? "").trim()).join(", "));
+        return pr.detail.trim() ? `• ${title}\n  ${text(pr.detail, 160)}` : `• ${title}`;
+      });
+      const tail = `\n\n${link(input.url, input.kind === "WATCH" ? t.open : t.openProjects)}`;
+      // Drop projects from the end until it fits (a long URL list must never cut markup).
+      while (items.length > 1 && [head, ...items].join("\n\n").length + tail.length > TELEGRAM_MAX_CHARS) items.pop();
+      out = `${[head, ...items].join("\n\n")}${tail}`;
+      break;
+    }
+    case "PROTECTION_ENDING":
+      out = `<b>${line(t.protectionEnding, { client, date: text(input.date, 40) })}</b>\n${esc(t.protectionNote)}\n\n${open}`;
+      break;
+    case "CLIENT_QUIET":
+      out = `<b>${line(t.clientQuiet, { client })}</b>\n${esc(t.clientQuietNote)}\n\n${open}`;
+      break;
+    case "BANK_MISSING":
+      out = `<b>${line(input.developerPaid ? t.bankMissingDevPaid : t.bankMissing, { client })}</b>\n\n${link(input.url, t.addBank)}`;
+      break;
+    case "TIER_NEAR":
+      out = `<b>${line(t.tierNear, { tier: text(input.tierName, 40) })}</b>\n\n${open}`;
+      break;
     default:
       return unhandledKind(input.kind);
   }

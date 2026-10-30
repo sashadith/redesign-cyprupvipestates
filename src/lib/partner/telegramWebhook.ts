@@ -43,7 +43,7 @@ async function link(chatId: string, rawCode: string | undefined, now: Date): Pro
     const partner = await tx.partner.findUnique({
       where: { id: row.partnerId },
       select: {
-        id: true, status: true, language: true, company: true, firstName: true, lastName: true,
+        id: true, status: true, language: true, company: true, firstName: true, lastName: true, notifyChannel: true,
         users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
       },
     });
@@ -53,7 +53,11 @@ async function link(chatId: string, rawCode: string | undefined, now: Date): Pro
       where: { telegramChatId: chatId, id: { not: partner.id } },
       data: { telegramChatId: null, telegramLinkedAt: null, notifyChannel: "EMAIL" },
     });
-    await tx.partner.update({ where: { id: partner.id }, data: { telegramChatId: chatId, telegramLinkedAt: now } });
+    // Linking switches Telegram on (notifications v2): EMAIL becomes BOTH; an explicit TELEGRAM/BOTH stays.
+    await tx.partner.update({
+      where: { id: partner.id },
+      data: { telegramChatId: chatId, telegramLinkedAt: now, ...(partner.notifyChannel === "EMAIL" ? { notifyChannel: "BOTH" as const } : {}) },
+    });
     // Any other code of this partner is spent now as well.
     await tx.partnerTelegramCode.updateMany({ where: { partnerId: partner.id, usedAt: null }, data: { expiresAt: now } });
     await writePartnerAudit(partner, { email: partner.users[0]?.email ?? "" }, "partner_telegram_linked", {}, tx);

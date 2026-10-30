@@ -2284,6 +2284,9 @@ model Partner {
   digestLogs           PartnerDigestLog[]
   // Phase 3e: Telegram notifications + white-label branding for partner presentations.
   notifyChannel        PartnerNotifyChannel @default(EMAIL)
+  // 2026-10-30 (notifications v2): profile switches. marketAlerts = new projects + presentation-project updates; reminders = protection ending + quiet client.
+  marketAlerts         Boolean        @default(true)
+  reminders            Boolean        @default(true)
   telegramChatId       String?        @unique
   telegramLinkedAt     DateTime?
   brandName            String?
@@ -2449,6 +2452,13 @@ enum PartnerNotificationKind {
   MATCH
   PRESENTATION_OPENED
   TIER_UP
+  // 2026-10-30 (notifications v2): planned by the partner-alerts cron, delivered by partner-notify.
+  PROJECT_NEWS
+  WATCH
+  PROTECTION_ENDING
+  CLIENT_QUIET
+  BANK_MISSING
+  TIER_NEAR
 }
 
 enum PartnerNotifyChannel {
