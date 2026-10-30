@@ -328,52 +328,6 @@ export default async function CockpitPage({ params }: { params: { id: string } }
             <Gallery shots={shots} />
           </section>
 
-          {/* -------------------------------------------- pipeline */}
-          <section className="ck__card">
-            <p className="ck__eyebrow">Interested leads</p>
-            <div className="ck__cols">
-              {COLUMNS.map((c) => {
-                const inCol = presented.filter((l) => l.status === c.key);
-                return (
-                  <div className="ck__col" key={c.key}>
-                    <div className="ck__colHead"><span>{c.label}</span><span className="ck__colCount">{inCol.length}</span></div>
-                    {inCol.length ? inCol.map((l) => <LeadCardLink key={l.id} l={l} />) : <p className="ck__empty">None</p>}
-                  </div>
-                );
-              })}
-            </div>
-
-            {early.length ? (
-              <details style={{ marginTop: 14 }}>
-                <summary className="ck__colHead" style={{ cursor: "pointer" }}>
-                  <span>Earlier stages</span><span className="ck__colCount">{early.length}</span>
-                </summary>
-                <div style={{ marginTop: 10 }}>{early.map((l) => <LeadCardLink key={l.id} l={l} />)}</div>
-              </details>
-            ) : null}
-
-            {!presented.length ? (
-              <p className="ck__empty" style={{ marginTop: 10 }}>No client has been shown this project yet.</p>
-            ) : null}
-          </section>
-
-          {/* ---------------------------------------- saved searches */}
-          <section className="ck__card">
-            <p className="ck__eyebrow">Matches a saved search</p>
-            <p className="ck__note" style={{ margin: "0 0 12px" }}>
-              Leads whose last saved search covers this project. They have not been shown it.
-            </p>
-            {searchLeads.length ? (
-              <div className="ck__cols">
-                {searchLeads.slice(0, 12).map((l) => <LeadCardLink key={l.id} l={l} />)}
-              </div>
-            ) : (
-              <p className="ck__empty">No saved search covers this project.</p>
-            )}
-            {searchLeads.length > 12 ? (
-              <p className="ck__note">{searchLeads.length - 12} more not shown.</p>
-            ) : null}
-          </section>
         </div>
 
         {/* ------------------------------------------------ sidebar */}
@@ -402,6 +356,53 @@ export default async function CockpitPage({ params }: { params: { id: string } }
           </section>
         </aside>
       </div>
+
+        {/* -------------------------------------------- pipeline */}
+        <section className="ck__card">
+          <p className="ck__eyebrow">Interested leads</p>
+          <div className="ck__cols">
+            {COLUMNS.map((c) => {
+              const inCol = presented.filter((l) => l.status === c.key);
+              return (
+                <div className="ck__col" key={c.key}>
+                  <div className="ck__colHead"><span>{c.label}</span><span className="ck__colCount">{inCol.length}</span></div>
+                  {inCol.length ? inCol.map((l) => <LeadCardLink key={l.id} l={l} />) : <p className="ck__empty">None</p>}
+                </div>
+              );
+            })}
+          </div>
+
+          {early.length ? (
+            <details style={{ marginTop: 14 }}>
+              <summary className="ck__colHead" style={{ cursor: "pointer" }}>
+                <span>Earlier stages</span><span className="ck__colCount">{early.length}</span>
+              </summary>
+              <div style={{ marginTop: 10 }}>{early.map((l) => <LeadCardLink key={l.id} l={l} />)}</div>
+            </details>
+          ) : null}
+
+          {!presented.length ? (
+            <p className="ck__empty" style={{ marginTop: 10 }}>No client has been shown this project yet.</p>
+          ) : null}
+        </section>
+
+        {/* ---------------------------------------- saved searches */}
+        <section className="ck__card">
+          <p className="ck__eyebrow">Matches a saved search</p>
+          <p className="ck__note" style={{ margin: "0 0 12px" }}>
+            Leads whose last saved search covers this project. They have not been shown it.
+          </p>
+          {searchLeads.length ? (
+            <div className="ck__cols">
+              {searchLeads.slice(0, 12).map((l) => <LeadCardLink key={l.id} l={l} />)}
+            </div>
+          ) : (
+            <p className="ck__empty">No saved search covers this project.</p>
+          )}
+          {searchLeads.length > 12 ? (
+            <p className="ck__note">{searchLeads.length - 12} more not shown.</p>
+          ) : null}
+        </section>
     </div>
   );
 }
