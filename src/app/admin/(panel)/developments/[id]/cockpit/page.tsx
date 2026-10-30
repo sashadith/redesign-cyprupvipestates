@@ -65,7 +65,16 @@ const firstLine = (s: string | null | undefined, fallback: string): string => {
 export default async function CockpitPage({ params }: { params: { id: string } }) {
   const d = await prisma.development.findUnique({
     where: { id: params.id },
-    include: { override: true, units: true },
+    // The override is SELECTED, not included: this page reads six of its
+    // columns and `include` would fetch every one. That is not only wider than
+    // needed — it couples a read-only overview to every column the override
+    // table happens to grow, and a database a migration behind the code then
+    // fails the whole page over a column nobody here reads. Caught exactly
+    // that way on the testbed, whose restored backup predated extraLinks.
+    include: {
+      units: true,
+      override: { select: { alias: true, district: true, area: true, town: true, mainImage: true, gallery: true } },
+    },
   });
   if (!d) notFound();
 
