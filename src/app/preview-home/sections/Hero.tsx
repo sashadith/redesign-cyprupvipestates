@@ -27,6 +27,8 @@ const Hero: FC<Props> = ({ heroBlock, lang = "en", consultCta }) => {
 
   const projectsLabel = (type === "link" ? linkLabel : buttonLabel) || t.viewAllProjects;
   const projectsHref = type === "link" ? linkDestination : undefined;
+  // Partners page per locale: English without prefix (nginx strips /en), the others under /<lang>/partners.
+  const partnersHref = lang === "en" ? "/partners" : `/${lang}/partners`;
 
   return (
     <section className="hero">
@@ -56,6 +58,11 @@ const Hero: FC<Props> = ({ heroBlock, lang = "en", consultCta }) => {
           {consultCta ?? (
             <a className="btn btn--glass" href="#">
               <span>{t.getConsultation}</span>
+            </a>
+          )}
+          {t.becomePartner && (
+            <a className="btn btn--glass" href={partnersHref}>
+              <span>{t.becomePartner}</span>
             </a>
           )}
         </div>
