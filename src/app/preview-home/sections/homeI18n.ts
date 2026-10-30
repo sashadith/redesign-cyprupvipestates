@@ -26,7 +26,7 @@ const EN: HomeStrings = {
   viewAllProjects: "View All Projects",
   becomePartner: "Become a Partner",
   citiesLead:
-    "From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea. Whether you are drawn to the cosmopolitan energy of Limassol, the historic charm of Paphos, or the relaxed coastal pace of Larnaca — Cyprus rewards every lifestyle with world-class infrastructure, a stable legal framework, and over 340 days of sunshine each year.",
+    "From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea. Whether you are drawn to the cosmopolitan energy of Limassol, the historic charm of Paphos, or the relaxed coastal pace of Larnaca — Cyprus rewards every lifestyle with world-class infrastructure, a stable legal framework, and over 320 days of sunshine a year.",
   newLead2: "Latest ", newAccent: "Developments",
   showAllProjects: "Show all projects",
   priceFrom: "from", priceOnRequest: "Price on request", onRequest: "On request", sold: "Sold",
@@ -44,7 +44,7 @@ export const HOME_STRINGS: Record<Locale, HomeStrings> = {
     getConsultation: "לקבלת ייעוץ",
     viewAllProjects: "לצפייה בכל הפרויקטים",
     citiesLead:
-      "מהמרינות ההומות ועד לסמטאות העיר העתיקה, בכל מקום בקפריסין יש דרך אחרת לחיות מול הים. בלימסול תמצאו אנרגיה קוסמופוליטית ובפאפוס קסם היסטורי, ובשתיהן תשתיות ברמה עולמית, מסגרת משפטית יציבה ויותר מ-340 ימי שמש בשנה.",
+      "מהמרינות ההומות ועד לסמטאות העיר העתיקה, בכל מקום בקפריסין יש דרך אחרת לחיות מול הים. בלימסול תמצאו אנרגיה קוסמופוליטית ובפאפוס קסם היסטורי, ובשתיהן תשתיות ברמה עולמית, מסגרת משפטית יציבה ויותר מ-320 ימי שמש בשנה.",
     newLead2: "פרויקטים ", newAccent: "חדשים",
     showAllProjects: "לכל הפרויקטים",
     priceFrom: "החל מ-", priceOnRequest: "מחיר לפי פנייה", onRequest: "לפי פנייה", sold: "נמכר",
@@ -60,7 +60,7 @@ export const HOME_STRINGS: Record<Locale, HomeStrings> = {
     viewAllProjects: "Alle Projekte ansehen",
     becomePartner: "Partner werden",
     citiesLead:
-      "Von lebhaften Yachthäfen bis zu ruhigen Altstädten – jede zypriotische Stadt bietet eine eigene Art, am Meer zu leben. Ob die kosmopolitische Energie von Limassol, der historische Charme von Paphos oder das entspannte Küstentempo von Larnaca – Zypern belohnt jeden Lebensstil mit erstklassiger Infrastruktur, einem stabilen Rechtsrahmen und über 340 Sonnentagen im Jahr.",
+      "Von lebhaften Yachthäfen bis zu ruhigen Altstädten – jede zypriotische Stadt bietet eine eigene Art, am Meer zu leben. Ob die kosmopolitische Energie von Limassol, der historische Charme von Paphos oder das entspannte Küstentempo von Larnaca – Zypern belohnt jeden Lebensstil mit erstklassiger Infrastruktur, einem stabilen Rechtsrahmen und über 320 Sonnentagen im Jahr.",
     newLead2: "Neueste ", newAccent: "Projekte",
     showAllProjects: "Alle Projekte anzeigen",
     priceFrom: "ab", priceOnRequest: "Preis auf Anfrage", onRequest: "Auf Anfrage", sold: "Verkauft",
@@ -76,7 +76,7 @@ export const HOME_STRINGS: Record<Locale, HomeStrings> = {
     viewAllProjects: "Zobacz wszystkie projekty",
     becomePartner: "Zostań partnerem",
     citiesLead:
-      "Od tętniących życiem marin po ciche stare miasta – każde cypryjskie miasto oferuje inny sposób na życie nad morzem. Niezależnie od tego, czy pociąga Cię kosmopolityczna energia Limassol, historyczny urok Pafos, czy spokojne nadmorskie tempo Larnaki – Cypr nagradza każdy styl życia światowej klasy infrastrukturą, stabilnym systemem prawnym i ponad 340 słonecznymi dniami w roku.",
+      "Od tętniących życiem marin po ciche stare miasta – każde cypryjskie miasto oferuje inny sposób na życie nad morzem. Niezależnie od tego, czy pociąga Cię kosmopolityczna energia Limassol, historyczny urok Pafos, czy spokojne nadmorskie tempo Larnaki – Cypr nagradza każdy styl życia światowej klasy infrastrukturą, stabilnym systemem prawnym i ponad 320 słonecznymi dniami w roku.",
     newLead2: "Najnowsze ", newAccent: "inwestycje",
     showAllProjects: "Pokaż wszystkie projekty",
     priceFrom: "od", priceOnRequest: "Cena na życzenie", onRequest: "Na życzenie", sold: "Sprzedane",
@@ -92,7 +92,7 @@ export const HOME_STRINGS: Record<Locale, HomeStrings> = {
     viewAllProjects: "Все проекты",
     becomePartner: "Стать партнёром",
     citiesLead:
-      "От оживлённых марин до тихих старых городов — каждый город Кипра предлагает свой способ жить у моря. Космополитичная энергия Лимассола, историческое очарование Пафоса или спокойный прибрежный ритм Ларнаки — Кипр вознаграждает любой образ жизни первоклассной инфраструктурой, стабильной правовой системой и более чем 340 солнечными днями в году.",
+      "От оживлённых марин до тихих старых городов — каждый город Кипра предлагает свой способ жить у моря. Космополитичная энергия Лимассола, историческое очарование Пафоса или спокойный прибрежный ритм Ларнаки — Кипр вознаграждает любой образ жизни первоклассной инфраструктурой, стабильной правовой системой и более чем 320 солнечными днями в году.",
     newLead2: "Новейшие ", newAccent: "проекты",
     showAllProjects: "Показать все проекты",
     priceFrom: "от", priceOnRequest: "Цена по запросу", onRequest: "По запросу", sold: "Продано",
