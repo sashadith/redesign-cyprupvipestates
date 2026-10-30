@@ -31,6 +31,8 @@ import { parseTierUpPayload } from "./tierFlow";
 export { notifyStartFromEnv };
 
 const LOOKBACK_MS = 7 * 86_400_000;
+/** Kinds the daily partner-alerts run writes in bulk: sent after everything else in a run. */
+const BATCH_KINDS = ["PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR"] as const;
 const INTERACTION_CAP = 1000;
 const CLAIM_SCAN_CAP = 5000;
 /** Skip-counter keys for rows closed because Telegram failed permanently and no e-mail was allowed. */
@@ -473,15 +475,18 @@ export async function sendPendingNotifications(now: Date, start: Date, limit = 5
     data: { sentAt: null, attempts: { increment: 1 }, failedAt: now, error: INTERRUPTED_ERROR },
   });
   if (recovered.count) result.errors.push(`recovered ${recovered.count} row(s) interrupted while sending`);
-  const [rows, dead] = await Promise.all([
-    prisma.partnerNotification.findMany({
-      where: dueWhere(now),
-      orderBy: { createdAt: "asc" },
-      take: limit,
-      select: { id: true, kind: true, refKey: true, partnerId: true, claimId: true, leadId: true, payload: true, createdAt: true },
-    }),
+  // Client- and money-related rows first; the daily v2 batch (one row per partner) only fills what is left
+  // of the run, so a big morning batch never holds back a stage change or a payout.
+  const select = { id: true, kind: true, refKey: true, partnerId: true, claimId: true, leadId: true, payload: true, createdAt: true } as const;
+  const [urgent, dead] = await Promise.all([
+    prisma.partnerNotification.findMany({ where: { ...dueWhere(now), kind: { notIn: [...BATCH_KINDS] } }, orderBy: { createdAt: "asc" }, take: limit, select }),
     prisma.partnerNotification.count({ where: deadWhere() }),
   ]);
+  const rows = urgent.length < limit
+    ? urgent.concat(await prisma.partnerNotification.findMany({
+        where: { ...dueWhere(now), kind: { in: [...BATCH_KINDS] } }, orderBy: { createdAt: "asc" }, take: limit - urgent.length, select,
+      }))
+    : urgent;
   result.dead = dead;
   if (rows.length === 0) return result;
   const base = partnerBaseUrl(); // throws in production without PARTNER_HOST — never mail a localhost link

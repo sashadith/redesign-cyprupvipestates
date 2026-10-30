@@ -203,11 +203,16 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
     }
     const devIds = Array.from(new Set(items.map((i) => i.developmentId)));
     if (!devIds.length) return [];
+    // 25 h, not 24: the snapshot diff needs YESTERDAY's nightly snapshot (04:50 UTC) as its base — with a
+    // 24 h window at 05:30 it would pick today's 04:50 one and miss every price/availability change of the
+    // nightly syncs. Dated events (new units, back on market) stay on the last 24 h so none is told twice.
     const [changes, devs] = await Promise.all([
-      inventoryChanges({ days: 1, now, developmentIds: devIds, types: [...WATCH_TYPES], limit: CHANGE_CAP }),
+      inventoryChanges({ days: 25 / 24, now, developmentIds: devIds, types: [...WATCH_TYPES], limit: CHANGE_CAP }),
       prisma.development.findMany({ where: { id: { in: devIds } }, select: { id: true, priceFrom: true } }),
     ]);
-    const events: WatchEvent[] = changes.events.map((e) => ({ ...e, url: absoluteProjectUrl(e.publicUrl) }));
+    const events: WatchEvent[] = changes.events
+      .filter((e) => !e.at || e.at.getTime() >= now.getTime() - DAY)
+      .map((e) => ({ ...e, url: absoluteProjectUrl(e.publicUrl) }));
     return planWatch({ watched, events, priceFrom: new Map(devs.map((d) => [d.id, d.priceFrom])), today });
   });
 
@@ -266,10 +271,15 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
     return planTierNear({
       partners: partners.map((p) => {
         const prog = tierProgress(p.tierKey, counts.get(p.id) ?? 0, tiers);
+        // The tier accept keeps the higher of the partner's own and the tier's share (tierAcceptData): announce
+        // those, and nothing when the next tier would not raise either share (individually agreed shares).
+        const own = { handover: Number(p.handoverShare), fix: Number(p.fixShare) };
+        const next = prog.next && prog.remaining === 1 ? prog.next : null;
+        const raises = !!next && (next.handoverShare > own.handover || next.fixShare > own.fix);
         return {
           id: p.id,
-          next: prog.next && prog.remaining === 1
-            ? { key: prog.next.key, name: prog.next.name, handoverShare: prog.next.handoverShare, fixShare: prog.next.fixShare }
+          next: next && raises
+            ? { key: next.key, name: next.name, handoverShare: Math.max(own.handover, next.handoverShare), fixShare: Math.max(own.fix, next.fixShare) }
             : null,
         };
       }),
