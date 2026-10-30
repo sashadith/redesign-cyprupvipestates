@@ -89,6 +89,14 @@
 .ck__main { display: grid; grid-template-columns: 1fr; gap: 16px; min-width: 0; }
 @media (min-width: 760px) { .ck__row2 { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 16px; } }
 
+/* A grid item's automatic minimum size is its CONTENT's max-content width, not
+   zero, so one 3580px-wide mirrored photo stretched its card — and through it
+   the whole page — to 3654px and pushed the sidebar off screen. Measured on the
+   testbed, not guessed. min-width: 0 on the items themselves is the fix;
+   min-width on the container does nothing for this, which is the easy mistake. */
+.ck__grid > *, .ck__main > *, .ck__row2 > *, .ck__side > * { min-width: 0; }
+.ck__card { min-width: 0; }
+
 /* ---------------------------------------------------------------- gauge */
 .ck__gaugeWrap { position: relative; display: flex; flex-direction: column; align-items: center; }
 .ck__gaugeSvg { width: 100%; max-width: 300px; height: auto; display: block; }
@@ -111,8 +119,8 @@
 .ck__legendDot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-end: 6px; vertical-align: 1px; }
 
 /* ---------------------------------------------------------------- gallery */
-.ck__shot { position: relative; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: rgba(34, 28, 21, 0.05); }
-.ck__shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ck__shot { display: block; width: 100%; max-width: 100%; position: relative; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: rgba(34, 28, 21, 0.05); }
+.ck__shot img { width: 100%; height: 100%; max-width: 100%; object-fit: cover; display: block; }
 .ck__shotEmpty { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.82rem; color: var(--ck-ink-faint); }
 .ck__counter {
   position: absolute; inset-block-end: 10px; inset-inline-end: 10px;
