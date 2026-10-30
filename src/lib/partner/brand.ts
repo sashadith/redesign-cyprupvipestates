@@ -1,7 +1,7 @@
 // Partner branding for partner-sent presentations (partner portal phase 3e, Decision 7). Pure.
 import { normalizePartnerPhone, PARTNER_EMAIL_RE } from "./registration";
 
-export const BRAND_LOGO_MAX_BYTES = 300 * 1024;
+export const BRAND_LOGO_MAX_BYTES = 1024 * 1024;
 export const BRAND_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 export type BrandLogoType = (typeof BRAND_LOGO_TYPES)[number];
 

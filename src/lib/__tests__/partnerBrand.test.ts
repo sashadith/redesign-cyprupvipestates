@@ -51,6 +51,6 @@ test("sniffImageType: magic bytes", () => {
   assert.equal(sniffImageType(new Uint8Array()), null);
 });
 
-test("logo size limit is 300 KB", () => {
-  assert.equal(BRAND_LOGO_MAX_BYTES, 307_200);
+test("logo size limit is 1 MB", () => {
+  assert.equal(BRAND_LOGO_MAX_BYTES, 1_048_576);
 });
