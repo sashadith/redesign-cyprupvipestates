@@ -32,7 +32,9 @@ const APPLY = process.argv.includes("--apply");
 if (!dataFile || !file) { console.error("usage: stylianides-media.mjs <projects.json> <manifest.json> [--apply]"); process.exit(1); }
 const base = path.dirname(path.resolve(file));
 const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
-const slugOf = Object.fromEntries(JSON.parse(fs.readFileSync(dataFile, "utf8")).projects.map((p) => [p.folderKey, p.slug]));
+// Same rule as stylianides-setup.mjs: price-list projects are dev "stylianides", the
+// office buildings sold whole are dev "manual".
+const feedKeyOf = Object.fromEntries(JSON.parse(fs.readFileSync(dataFile, "utf8")).projects.map((p) => [p.folderKey, p.manual ? `manual:stylianides-${p.slug}` : `stylianides:${p.slug}`]));
 
 async function store(rel, devKey, cache) {
   if (cache.has(rel)) return cache.get(rel);
@@ -50,9 +52,9 @@ async function store(rel, devKey, cache) {
 
 try {
   for (const [folderKey, m] of Object.entries(manifest)) {
-    const slug = slugOf[folderKey];
-    if (!slug) { console.log(`${folderKey}: not in the data file — skipped`); continue; }
-    const feedKey = `stylianides:${slug}`;
+    const feedKey = feedKeyOf[folderKey];
+    if (!feedKey) { console.log(`${folderKey}: not in the data file — skipped`); continue; }
+    const slug = feedKey.replace(/^.*?:(stylianides-)?/, "");
     const dev = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, publishStatus: true, gallery: true, plans: true, units: { select: { id: true, ref: true, feedRef: true } } } });
     if (!dev) { console.log(`${slug}: no development ${feedKey} — run stylianides-setup first`); continue; }
     if (dev.publishStatus === "published") { console.log(`${slug}: published — media frozen, skipped`); continue; }

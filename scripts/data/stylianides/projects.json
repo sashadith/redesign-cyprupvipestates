@@ -257,11 +257,11 @@
     "unitKinds": "Price list: 101/103/201/203 '2+', 102/202 '1', 301/302 '4+'.",
     "extraFacts:Total units": "(price list Sept 2026)",
     "extraFacts:Distance to seafront": "(brochure p.6)",
-    "extraFacts:Distance to Limassol Marina": "(brochure p.6)"
+    "extraFacts:Distance to Limassol Marina": "(brochure p.6)",
+    "operator 2026-10-30": "conflicts resolved by the price list: penthouses 301/302 are 4+ bedrooms, 140 m² internal"
    },
    "openQuestions": [
     "Different scope than folder suggests: newsletter advertises only 'LA RESIDENZA - PENTHOUSE' (4-bedroom, €795,000); price list has 8 apartments of which 6 are SOLD. Only 301 (€970,000) and 302 (€795,000) are available. Decide whether to publish as a project page or only as the two penthouses.",
-    "Brochure p.9 says 'three bedroom penthouses' with roof terrace/jacuzzi; price list and newsletter say 4 (4+) bedrooms.",
     "Completion year not stated; ask developer for the certificate/completion date and title deed status.",
     "No energy class stated (arch plans only mention a '+5% renewable energy' building-factor bonus)."
    ]
@@ -451,7 +451,6 @@
     "VRV air conditioning",
     "Underfloor heating",
     "Heat pump",
-    "Photovoltaic system (3 kVA)",
     "Solar water heating",
     "Lift",
     "Basement gym room",
@@ -469,12 +468,8 @@
    ],
    "extraFacts": [
     {
-     "label": "Total units (whole development)",
-     "value": "36 villas"
-    },
-    {
-     "label": "Units in current price list",
-     "value": "16 villas on plots 6–10 (villas 6A–10C)"
+     "label": "Total units",
+     "value": "16 villas (6A–10C)"
     },
     {
      "label": "Villa plots",
@@ -515,13 +510,11 @@
     "extraFacts:Villa plots": "(price list)",
     "extraFacts:Total covered area": "(price list)",
     "extraFacts:Distance to Foley's School": "(brochure p.7)",
-    "extraFacts:Distance to beach": "(brochure p.7)"
+    "extraFacts:Distance to beach": "(brochure p.7)",
+    "operator 2026-10-30": "conflicts resolved by the price list: 16 villas 6A–10C, 3–6 bedrooms, no photovoltaic (not in the price list inclusions)"
    },
    "openQuestions": [
     "Name: brochure and description say 'Trianon Heights', newsletter/folders say 'Trianon Luxury Homes'. Confirm the public name.",
-    "Price list covers only villas 6A-10C (16 villas, plots 6-10); brochure shows 36 villas on plots 1-14. Are plots 1-5 and 11-14 sold/completed, or a separate phase? Use 16 or 36 as unit count?",
-    "Bedrooms: description docx says 4, 5 or 6 bedrooms; newsletter and price list include 3-bedroom villas.",
-    "Photovoltaic system is in the brochure but not in the price list included items.",
     "Area: pin is north of the A1 near Foley's School; confirm it is Agios Athanasios and not Germasogeia. No energy class stated. Status: 3 SOLD, 1 RESERVED, 12 priced."
    ]
   },
@@ -627,8 +620,8 @@
    "district": "Paphos",
    "town": null,
    "area": "Tombs of the Kings",
-   "latitude": 34.7754223,
-   "longitude": 32.4099635,
+   "latitude": 34.775595,
+   "longitude": 32.410336,
    "amenities": [
     "Communal swimming pool",
     "Children's pool",
@@ -707,7 +700,7 @@
     "stage": "newsletter.pdf (10 Oct 2026) p.4 'Status: UNDER-CONSTRUCTION'.",
     "completion": "newsletter.pdf (10 Oct 2026) p.4 'Delivery: 24 MONTHS' from Oct 2026 = Oct 2028 = Q4 2028.",
     "area": "Newsletter 'Tomb of the Kings - Pafos'. Pin is ~0.5 km east of the Tombs of the Kings site, Kato Paphos.",
-    "latitude/longitude": "LOCATION - KINGS TOWERS/KINGS RESORT GOOGLE LOCATION.docx -> maps.app.goo.gl/QEH2M7r5AxGaWzgT9 -> /maps/place//@34.7754223,32.4099635,138m satellite view. Only a viewport centre (no place marker / !3d!4d).",
+    "latitude/longitude": "operator-supplied Maps link https://maps.app.goo.gl/h9n1QsX4T43smz2t9 (2026-10-30) → 34.775595, 32.410336; the folder docx link only gave a camera view",
     "amenities": "Price list 'SPECIFICATIONS & AMENITIES' (both pages); brochure UB p.6 (basketball court, playgrounds, café), p.14 (penthouse roof garden, jacuzzi, home cinema), p.17-18 (playroom, yoga area, conference area, sauna).",
     "extraFacts": "Price list rows A101-A602, B101-B802; floors from brochure p.19-25 and arch plans (Tower B up to 9th floor + roof); distances brochure p.4.",
     "unitKinds": "Price list bedroom column: STUDIO, 1, 2, 4+ (A601-602, B801-802).",
@@ -720,8 +713,199 @@
     "Scope: brochure says King's Resort has two sections, 'the Residences' and 'the Towers'; the folder and price list cover only the Towers. Is 'the Residences' a separate (existing?) project? Name the page 'King's Resort' or 'King's Resort – The Towers'?",
     "No 3-bedroom units in the price list, but brochure p.13 shows '3 Bedroom Apartments' and newsletter says 'one to four-bedroom apartments'. B701 is listed as 1-bedroom with a 79 m² 2-bedroom layout — likely a typo.",
     "Price list file dated 16-07-26 but its footer says 'PRICE LIST NOVEMBER 2025'. Tower A: 26 SOLD, 3 RESERVED, 3 priced; Tower B: all 42 priced. Confirm currency.",
-    "Map link resolves only to a satellite viewport, not a placed pin; confirm exact plot location.",
     "No energy class stated."
+   ]
+  },
+  {
+   "slug": "riverside-business-park",
+   "folderKey": "riverside",
+   "manual": true,
+   "name": "Riverside Business Park",
+   "category": "Commercial real estate",
+   "stage": "Off Plan",
+   "completion": "Q4 2028",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Polemidia",
+   "latitude": 34.703231,
+   "longitude": 33.003876,
+   "amenities": [
+    "2 high-speed lifts",
+    "VRV air conditioning",
+    "Raised access floors",
+    "False ceilings",
+    "Photovoltaic system for common areas",
+    "Electric vehicle charging stations",
+    "Magnetic card access",
+    "CCTV",
+    "Centralised fire alarm system",
+    "Basement parking",
+    "Landscaped roof terrace",
+    "Smart lobby lighting (KNX)",
+    "Marble lobby and reception",
+    "Kitchen provisions in offices"
+   ],
+   "extraFacts": [
+    {
+     "label": "Use",
+     "value": "Office building, sold as a whole"
+    },
+    {
+     "label": "Plot area",
+     "value": "3,327 m²"
+    },
+    {
+     "label": "Total build area",
+     "value": "4,901 m²"
+    },
+    {
+     "label": "Floors",
+     "value": "Basement parking/storage, ground floor lobby and parking, 3 office floors, roof terrace"
+    },
+    {
+     "label": "Office floors",
+     "value": "615 m² internal per floor, configurable as one office or two suites"
+    },
+    {
+     "label": "Parking",
+     "value": "100+ spaces"
+    },
+    {
+     "label": "Location",
+     "value": "Troodos Road, Pano Polemidia"
+    }
+   ],
+   "unitKinds": "Whole office building",
+   "evidence": {
+    "price": "newsletter 10-10-2026 and mini-brochure: €13,000,000 + VAT",
+    "areas": "RIVERSIDE BUSINESS CENTRE ANALYSIS OCT 26.pdf (dated 10/10/2026)",
+    "completion": "newsletter: off plan, delivery 24 months → Q4 2028",
+    "latitude/longitude": "RIVERSIDE LOCATION.docx goo.gl link → maps search 34.703231, 33.003876",
+    "amenities": "Riverside Business Park Mini-Brochure.pdf"
+   },
+   "openQuestions": [
+    "Delivery: newsletter says 24 months, the mini-brochure (16-10-2026) 30 months — Q4 2028 taken from the newsletter.",
+    "Projected yield differs between documents (newsletter 7.15 %, analysis 8.35 %, mini-brochure 8.83 %) — not published.",
+    "Analysis lists the roof terrace as office space (200 m² internal + 610 m² terrace) — confirm what is lettable."
+   ],
+   "units": [
+    {
+     "ref": "Building",
+     "label": "Entire building",
+     "type": "Office",
+     "status": "available",
+     "price": 13000000,
+     "areaBuilt": "4901",
+     "areaInternal": "3645",
+     "areaPlot": "3327",
+     "attrs": [
+      {
+       "name": "Office floors",
+       "value": "3 (2 suites each, 101–302)"
+      },
+      {
+       "name": "Roof terrace",
+       "value": "610 m² + 200 m² internal"
+      },
+      {
+       "name": "Parking",
+       "value": "100+ spaces"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "globalstars-tower",
+   "folderKey": "globalstars",
+   "manual": true,
+   "name": "Globalstars Tower",
+   "category": "Commercial real estate",
+   "stage": "Off Plan",
+   "completion": "Q4 2028",
+   "energy": null,
+   "district": "Limassol",
+   "town": null,
+   "area": "Potamos Germasogeias",
+   "latitude": 34.6965565,
+   "longitude": 33.0884516,
+   "amenities": [
+    "Raised access floors",
+    "False ceilings",
+    "Air conditioning",
+    "Entrance lobby",
+    "Basement parking",
+    "Lifts",
+    "Roof terrace lounge (penthouse office)",
+    "Retail shop with mezzanine on the ground floor"
+   ],
+   "extraFacts": [
+    {
+     "label": "Use",
+     "value": "Office tower, sold as a whole"
+    },
+    {
+     "label": "Plot area",
+     "value": "1,532 m²"
+    },
+    {
+     "label": "Total build area",
+     "value": "4,177 m²"
+    },
+    {
+     "label": "Floors",
+     "value": "Retail shop with mezzanine, auxiliary 1st floor, offices on floors 2–6, penthouse office on floor 7"
+    },
+    {
+     "label": "Office floors",
+     "value": "293 m² internal per office floor"
+    },
+    {
+     "label": "Parking",
+     "value": "43 spaces (26 basement, 17 ground floor)"
+    },
+    {
+     "label": "Location",
+     "value": "Christaki Kranou, former Estella Hotel site"
+    }
+   ],
+   "unitKinds": "Whole office building",
+   "evidence": {
+    "price": "newsletter 10-10-2026: €28,000,000 + VAT",
+    "areas": "GLOBALSTARS CENTRE RENTAL YIELD ANALYSIS (May 2026) + newsletter (plot 1,532 m², build 4,177 m²)",
+    "completion": "newsletter: off plan, delivery 24 months → Q4 2028",
+    "latitude/longitude": "GLOBALSTARS TOWER LOCATION.docx → place marker !3d34.6965565!4d33.0884516"
+   },
+   "openQuestions": [
+    "Projected yield: newsletter 5.74 %, analysis 5.22 % — not published.",
+    "Brochure and plans are from 2022; confirm the building is still off plan and unchanged."
+   ],
+   "units": [
+    {
+     "ref": "Building",
+     "label": "Entire building",
+     "type": "Office",
+     "status": "available",
+     "price": 28000000,
+     "areaBuilt": "4177",
+     "areaInternal": "1970",
+     "areaPlot": "1532",
+     "attrs": [
+      {
+       "name": "Office floors",
+       "value": "2nd–6th + penthouse office (7th)"
+      },
+      {
+       "name": "Retail",
+       "value": "Ground-floor shop with mezzanine, 210 m²"
+      },
+      {
+       "name": "Parking",
+       "value": "43 spaces"
+      }
+     ]
+    }
    ]
   }
  ]

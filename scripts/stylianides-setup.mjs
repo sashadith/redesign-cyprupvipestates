@@ -17,11 +17,17 @@
  *    as a DRAFT, with the share link in driveFolderId — the column the connector reads.
  *    Facts (stage, completion, location, pin, amenities, extraFacts) are written only
  *    while the project is NOT published (published = frozen content).
- *  - Nothing else: no units (the connector reads them from the price list), no media
+ *  - A project marked "manual" in the data file (2026-10-30: the two office buildings, sold
+ *    whole, with a yield analysis instead of a price list) is a dev:"manual" Development,
+ *    feedKey "manual:stylianides-<slug>", with its units from the data file as source
+ *    "manual". The connector only reads dev:"stylianides" rows, so it never reports them as
+ *    "no price list"; their price is updated here, by hand.
+ *  - Nothing else: no price-list units (the connector reads them), no media
  *    (scripts/stylianides-media.mjs), no descriptions or SEO texts (written by a person). */
 import fs from "node:fs";
 import { prisma } from "../src/lib/prisma.ts";
 import { recomputeDevelopmentDistances } from "../src/lib/developmentDistances.ts";
+import { recomputeDevelopmentDerivedState } from "../src/lib/developmentDerivedState.ts";
 import { isDropboxShareUrl } from "../src/lib/dropbox.ts";
 
 const [file, linksFile] = process.argv.slice(2);
@@ -30,6 +36,7 @@ if (!file || !linksFile) { console.error("usage: stylianides-setup.mjs <projects
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
 const links = JSON.parse(fs.readFileSync(linksFile, "utf8"));
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+const feedKeyOf = (p) => (p.manual ? `manual:stylianides-${p.slug}` : `stylianides:${p.slug}`);
 
 try {
   console.log(`${APPLY ? "APPLY" : "DRY RUN"} — ${file}`);
@@ -44,7 +51,7 @@ try {
   for (const p of data.projects) {
     const link = links[p.folderKey];
     if (!isDropboxShareUrl(link)) { console.log(`\n${p.name}: no Dropbox link for "${p.folderKey}" — skipped`); process.exitCode = 2; continue; }
-    const feedKey = `stylianides:${p.slug}`;
+    const feedKey = feedKeyOf(p);
     const existing = await prisma.development.findUnique({ where: { feedKey } });
     const published = existing?.publishStatus === "published";
     const facts = {
@@ -61,11 +68,25 @@ try {
       ? await prisma.development.update({ where: { id: existing.id }, data: published ? { driveFolderId: link } : facts })
       : await prisma.development.create({
           data: {
-            developerAccountId: acct.id, dev: "stylianides", feedProjectId: p.slug, feedKey,
+            developerAccountId: acct.id, dev: p.manual ? "manual" : "stylianides", feedProjectId: p.manual ? `stylianides-${p.slug}` : p.slug, feedKey,
             developerName: p.name, publicName: p.name, developer: acct.name, publishStatus: "draft",
             ...facts,
           },
         });
+    if (p.manual && p.units?.length) {
+      const existingUnits = await prisma.developmentUnit.findMany({ where: { developmentId: dev.id }, select: { id: true, ref: true } });
+      for (const [i, u] of p.units.entries()) {
+        const data = { ...u, source: "manual", sortIndex: i };
+        const cur = existingUnits.find((e) => e.ref === u.ref);
+        if (cur) await prisma.developmentUnit.update({ where: { id: cur.id }, data });
+        else await prisma.developmentUnit.create({ data: { developmentId: dev.id, ...data } });
+      }
+      const avail = p.units.filter((u) => u.status === "available");
+      const prices = avail.map((u) => u.price).filter(Boolean);
+      await prisma.development.update({ where: { id: dev.id }, data: { unitsTotal: p.units.length, unitsAvailable: avail.length, priceFrom: prices.length ? Math.min(...prices) : null, priceTo: prices.length ? Math.max(...prices) : null, syncedAt: new Date() } });
+      await recomputeDevelopmentDerivedState(dev.id);
+      console.log(`  ${p.units.length} manual unit(s)`);
+    }
     if (dev.latitude != null) await recomputeDevelopmentDistances(dev.id);
     console.log(`  written → /admin/developments/${dev.id}`);
   }
