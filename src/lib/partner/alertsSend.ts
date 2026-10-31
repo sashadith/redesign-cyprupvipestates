@@ -7,13 +7,16 @@ import { inventoryChanges } from "@/lib/crm/inventoryChanges";
 import { REAL_CONTACT_TYPES } from "./claims";
 import { COMMITTED_LEAD_STATUSES, activeSince, effectiveClaimState, type ClaimStateValue } from "./claimState";
 import { publicProjectUrl } from "./clientDto";
-import { absoluteProjectUrl } from "./matchGlue";
+import { MATCH_EXCLUDED_LEAD_STATUSES, absoluteProjectUrl, claimProjectIds, submittedName } from "./matchGlue";
+import { bedPrices, clientFits, newsPlace, shortBlurb, type NewsClient } from "./newsFacts";
+import { PARTNER_LOCALES, type PartnerLocale } from "./i18n";
+import { resolveDevelopmentPrice, resolveDevelopmentType } from "@/lib/developmentCard";
 import { projectRates } from "./scope";
 import { closedDealCounts, loadTiers } from "./tierStore";
 import { tierProgress } from "./tiers";
 import {
-  cyDate, planBankMissing, planProjectNews, planProtectionReminders, planQuietClients, planTierNear, planWatch, protectionEnd,
-  type PlannedAlert, type WatchEvent,
+  NEWS_MAX_PROJECTS, cyDate, planBankMissing, planProjectNews, planProtectionReminders, planQuietClients, planTierNear, planWatch, protectionEnd,
+  type NewsBlurbs, type PlannedAlert, type WatchEvent,
 } from "./alerts";
 
 export { alertsStartFromEnv } from "./alerts";
@@ -110,6 +113,58 @@ async function loadOpenClaims(now: Date, partnerIds: string[]): Promise<OpenClai
 }
 
 /**
+ * Clients a new project can be matched against, per partner: effectively ACTIVE claims whose lead is neither
+ * closed nor lost, with the name the partner submitted, the lead's budget/type/saved search and the districts
+ * of the projects chosen at submission.
+ */
+async function loadNewsClients(now: Date, partnerIds: string[]): Promise<Map<string, NewsClient[]>> {
+  const out = new Map<string, NewsClient[]>();
+  if (!partnerIds.length) return out;
+  const rows = await prisma.partnerClaim.findMany({
+    where: {
+      state: "ACTIVE", partnerId: { in: partnerIds },
+      lead: { deletedAt: null, status: { notIn: [...MATCH_EXCLUDED_LEAD_STATUSES] } },
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: CLAIM_CAP,
+    select: {
+      id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, submission: true,
+      lead: { select: { status: true, deletedAt: true, budgetMin: true, budgetMax: true, propertyTypeInterest: true, lastMatchFilters: true } },
+    },
+  });
+  if (!rows.length) return out;
+  const leadIds = Array.from(new Set(rows.map((r) => r.leadId)));
+  const contacts = await prisma.leadInteraction.groupBy({
+    by: ["leadId"], where: { leadId: { in: leadIds }, type: { in: [...REAL_CONTACT_TYPES] } }, _max: { occurredAt: true },
+  });
+  const contactAt = new Map(contacts.map((c) => [c.leadId, c._max.occurredAt ?? null]));
+  const chosenIds = Array.from(new Set(rows.flatMap((r) => claimProjectIds(r.submission))));
+  const chosen = chosenIds.length
+    ? await prisma.development.findMany({
+        where: { id: { in: chosenIds } },
+        select: { id: true, district: true, override: { select: { district: true } } },
+      })
+    : [];
+  const districtOf = new Map(chosen.map((d) => [d.id, d.override?.district?.trim() || d.district || ""]));
+  for (const r of rows) {
+    const state = effectiveClaimState({
+      state: r.state as ClaimStateValue, activeSince: activeSince(r), lastRealContactAt: contactAt.get(r.leadId) ?? null, now,
+      leadDeleted: !!r.lead.deletedAt, leadStatus: r.lead.status, hasLiveDeal: false,
+    });
+    const name = submittedName(r.submission);
+    if (state !== "ACTIVE" || !name) continue;
+    const projectDistricts = Array.from(new Set(claimProjectIds(r.submission).map((id) => districtOf.get(id) ?? "").filter(Boolean)));
+    const list = out.get(r.partnerId) ?? [];
+    list.push({
+      name, budgetMin: r.lead.budgetMin, budgetMax: r.lead.budgetMax, propertyTypeInterest: r.lead.propertyTypeInterest,
+      lastMatchFilters: r.lead.lastMatchFilters, projectDistricts,
+    });
+    out.set(r.partnerId, list);
+  }
+  return out;
+}
+
+/**
  * One run: plans today's (Cyprus date) v2 rows for every ACTIVE partner and writes them to the outbox.
  * Nothing before `start` (PARTNER_ALERTS_START). Profile switches are applied here (no row for a partner
  * who switched the kind off) and again at send time.
@@ -144,16 +199,20 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
     }
   };
 
-  // 1 — projects published in the last 24 h, with each partner's own rate.
+  // 1 — every project published in the last 24 h, with each partner's own rate, the prices per bedroom
+  // count, a short selling line per locale and the partner's clients it fits (2026-10-31).
   await step("news", async () => {
     if (!newsTo.length) return [];
     const devs = await prisma.development.findMany({
       where: { publishStatus: "published", slug: { not: null }, publishedAt: { gte: new Date(now.getTime() - DAY), lte: now } },
       orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
-      take: 20,
+      take: NEWS_MAX_PROJECTS,
       select: {
-        id: true, publicName: true, slug: true, area: true, town: true, priceFrom: true, publishedAt: true, developerAccountId: true,
-        override: { select: { alias: true, area: true, town: true } },
+        id: true, publicName: true, slug: true, district: true, area: true, town: true, category: true, priceFrom: true, publishedAt: true,
+        developerAccountId: true,
+        description: true,
+        override: { select: { alias: true, district: true, area: true, town: true, descriptionEN: true, descriptionDE: true, descriptionPL: true, descriptionRU: true } },
+        units: { select: { status: true, beds: true, type: true, price: true } },
       },
     });
     if (!devs.length) return [];
@@ -165,18 +224,46 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
       id: d.id, name: d.override?.alias?.trim() || d.publicName, town: d.override?.town?.trim() || d.town || null, slug: d.slug,
       developerAccountId: d.developerAccountId,
     }));
-    const projects = devs.flatMap((d) => {
+    // The first sentence(s) of the project's own description per locale is the selling line; a locale
+    // without its own text is left out (the sender falls back to English).
+    const blurbs = new Map<string, NewsBlurbs>();
+    for (const d of devs) {
+      const o = d.override;
+      const texts: Record<PartnerLocale, string | null | undefined> = {
+        en: o?.descriptionEN || d.description, de: o?.descriptionDE, pl: o?.descriptionPL, ru: o?.descriptionRU,
+      };
+      const b: NewsBlurbs = {};
+      for (const lang of PARTNER_LOCALES) {
+        const line = shortBlurb(texts[lang]);
+        if (line) b[lang] = line;
+      }
+      blurbs.set(d.id, b);
+    }
+    const facts = devs.map((d) => ({
+      id: d.id,
+      district: d.override?.district?.trim() || d.district || null,
+      town: d.override?.town?.trim() || d.town || null,
+      area: d.override?.area?.trim() || d.area || null,
+      units: d.units.filter((u) => u.status !== "unlisted"),
+      priceFrom: d.priceFrom,
+      category: d.category,
+    }));
+    const projects = devs.flatMap((d, i) => {
       const url = publicProjectUrl("en", d.slug);
+      const f = facts[i];
       return url ? [{
-        id: d.id, name: d.override?.alias?.trim() || d.publicName, area: d.override?.area?.trim() || d.area || d.override?.town?.trim() || d.town || null,
-        priceFrom: d.priceFrom, url, publishedAt: d.publishedAt ?? now,
+        id: d.id, name: d.override?.alias?.trim() || d.publicName, area: newsPlace(f.town, f.area, f.district),
+        priceFrom: resolveDevelopmentPrice(d.priceFrom, null, f.units).priceFrom, url, publishedAt: d.publishedAt ?? now,
+        type: resolveDevelopmentType(d.category, f.units) || null, beds: bedPrices(f.units), blurb: blurbs.get(d.id) ?? {},
       }] : [];
     });
+    const clients = await loadNewsClients(now, newsTo.map((p) => p.id));
     return planProjectNews({
       partners: newsTo.map((p) => ({
         id: p.id,
         rates: new Map(projectRates(rows, rates, { handoverShare: Number(p.handoverShare), fixShare: Number(p.fixShare), trustMode: false })
           .map((r) => [r.id, r.handoverRate])),
+        clients: new Map(facts.map((f) => [f.id, (clients.get(p.id) ?? []).filter((c) => clientFits(f, c)).map((c) => c.name)])),
       })),
       projects,
       today,

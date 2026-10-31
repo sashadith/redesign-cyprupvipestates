@@ -135,6 +135,7 @@ export const de: PartnerDict = {
   },
   mail: {
     signature: "Mit freundlichen Grüßen\nCyprus VIP Estates",
+    footer: { tagline: "Gemeinsam stärker 🤝", portal: "Partnerportal", submit: "Kunden einreichen", projects: "Alle Projekte", whatsapp: "WhatsApp an uns", settings: "Benachrichtigungen einstellen" },
     verify: {
       subject: "Bitte bestätigen Sie Ihre E-Mail-Adresse",
       greeting: "Guten Tag {name},",
@@ -162,7 +163,7 @@ export const de: PartnerDict = {
     stage: {
       subject: "Neuigkeiten zu Ihrem Kunden {client}",
       greeting: "Guten Tag {name},",
-      intro: "es gibt Neuigkeiten zu Ihrem Kunden {client}. Der aktuelle Status lautet: {stage}.",
+      intro: "hier ist der neueste Stand zu Ihrem Kunden {client}: {stage}.",
       button: "Kunden ansehen",
     },
     message: {
@@ -175,7 +176,7 @@ export const de: PartnerDict = {
     claimOutcome: {
       greeting: "Guten Tag {name},",
       acceptedSubject: "Ihr Kunde {client} wurde angenommen",
-      acceptedIntro: "wir haben Ihre Meldung geprüft: {client} ist jetzt als Ihr Kunde registriert. Den Fortschritt können Sie im Partnerportal verfolgen.",
+      acceptedIntro: "ein guter Start: {client} ist jetzt als Ihr Kunde registriert. Ab hier kümmern wir uns um den Rest – jeden Schritt sehen Sie im Partnerportal.",
       rejectedSubject: "Ihre Meldung {client} wurde geprüft",
       rejectedIntro: "wir haben Ihre Meldung zu {client} geprüft. Leider können wir diesen Kontakt nicht als Ihren Kunden registrieren.",
       button: "Im Portal ansehen",
@@ -183,7 +184,7 @@ export const de: PartnerDict = {
     payout: {
       subject: "Ihre Provision wurde ausgezahlt",
       greeting: "Guten Tag {name},",
-      intro: "wir haben Ihre Provision für {client} ({project}, {unit}) überwiesen: {amount}.",
+      intro: "wohlverdient! Wir haben Ihre Provision für {client} ({project}, {unit}) überwiesen: {amount}.",
       creditNoteLine: "Ihre Gutschrift {number} steht im Partnerportal für Sie bereit.",
       button: "Provisionen öffnen",
     },
@@ -198,33 +199,33 @@ export const de: PartnerDict = {
     match: {
       subject: "Neuer Treffer für Ihren Kunden {client}",
       greeting: "Guten Tag {name},",
-      intro: "es gibt Neuigkeiten zu einem Projekt, das zum Budget Ihres Kunden {client} passt: {project} ({change}).",
+      intro: "eine Chance für Ihren Kunden {client}: {project} passt ins Budget ({change}).",
       price: "Preis ab {price}",
       button: "Projekt ansehen",
     },
     presentationOpened: {
       subject: "Ihre Präsentation für {client} wurde geöffnet",
       greeting: "Guten Tag {name},",
-      intro: "die Präsentation, die Sie Ihrem Kunden {client} geschickt haben, wurde soeben geöffnet. Aufrufe und Favoriten sehen Sie im Partnerportal.",
+      intro: "die Präsentation, die Sie Ihrem Kunden {client} geschickt haben, wurde soeben geöffnet – ein guter Moment, sich zu melden. Aufrufe und Favoriten sehen Sie im Partnerportal.",
       button: "Präsentationen öffnen",
     },
     tierUp: {
       subject: "Sie sind jetzt {tier}-Partner",
       greeting: "Guten Tag {name},",
-      intro: "herzlichen Glückwunsch! Aufgrund Ihrer abgeschlossenen Geschäfte haben Sie die Stufe {tier} erreicht. Ihre neuen Anteile: {handover} % bei Übergabe und {fix} % bei Fix.",
+      intro: "herzlichen Glückwunsch – Ihre Ergebnisse sprechen für sich! Sie haben die Stufe {tier} erreicht. Ihre neuen Anteile: {handover} % bei Übergabe und {fix} % bei Fix.",
       note: "Die neuen Anteile gelten für Geschäfte, die ab jetzt angelegt werden; bestehende Geschäfte bleiben unverändert.",
       button: "Partnerportal öffnen",
     },
     projectNews: {
-      subject: "Neue Projekte bei Cyprus VIP Estates",
+      subject: "Neue Projekte für Ihre Kunden",
       greeting: "Guten Tag {name},",
-      intro: "diese Projekte sind neu in unserem Angebot:",
+      intro: "frisch auf dem Markt – neue Projekte, die genau das Richtige für Ihre Kunden sein könnten:",
       button: "Ihre Projekte öffnen",
     },
     watch: {
       subject: "Neuigkeiten zu Projekten aus Ihren Präsentationen",
       greeting: "Guten Tag {name},",
-      intro: "es gibt Neuigkeiten zu Projekten, die Sie Ihren Kunden gezeigt haben:",
+      intro: "bei Projekten, die Sie Ihren Kunden gezeigt haben, tut sich etwas:",
       button: "Präsentationen öffnen",
     },
     protectionEnding: {
@@ -251,7 +252,7 @@ export const de: PartnerDict = {
     tierNear: {
       subject: "Noch ein Abschluss bis {tier}",
       greeting: "Guten Tag {name},",
-      intro: "Ihnen fehlt nur noch ein Abschluss bis zur Stufe {tier}: {handover} % bei Übergabe und {fix} % bei Fix.",
+      intro: "Sie sind fast am Ziel: Noch ein Abschluss, und Sie erreichen die Stufe {tier} – {handover} % bei Übergabe und {fix} % bei Fix.",
       button: "Partnerportal öffnen",
     },
   },
@@ -763,7 +764,7 @@ export const de: PartnerDict = {
       tierShares: "Ihre neuen Anteile: {handover} % Übergabe · {fix} % Fix",
       viewingOn: "Besichtigung am {date}",
       expectedCommission: "Ihre voraussichtliche Provision: {amount}",
-      projectNews: "Neue Projekte bei Cyprus VIP Estates:",
+      projectNews: "Frisch auf dem Markt – neue Projekte für Ihre Kunden:",
       projectRate: "Ihr Satz {rate} %",
       watch: "Neuigkeiten zu Projekten aus Ihren Präsentationen:",
       unitsLeft: "nur noch {n} frei",
@@ -779,6 +780,13 @@ export const de: PartnerDict = {
       openProjects: "Alle Projekte",
       open: "Im Portal öffnen",
       viewProject: "Projekt ansehen",
+      studio: "Studio",
+      bedroomOne: "{n} Schlafzimmer",
+      bedroomFew: "{n} Schlafzimmer",
+      bedroomMany: "{n} Schlafzimmer",
+      bedroomOther: "{n} Schlafzimmer",
+      bedsFrom: "{beds} ab {price}",
+      fitsClients: "Passt zu Ihren Kunden: {clients}",
     },
     changeTypes: {
       published: "neues Projekt",

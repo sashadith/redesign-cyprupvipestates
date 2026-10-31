@@ -284,8 +284,49 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
     default:
       return unhandledKind(input.kind);
   }
+  // The tagline closes every notification (2026-10-31) when it still fits.
+  const tag = `\n\n<i>${esc(dict(locale).mail.footer.tagline)}</i>`;
+  if (out.length + tag.length <= TELEGRAM_MAX_CHARS) out += tag;
   // Only reachable with an absurdly long URL: keep the (bounded) headline, drop the links rather than cut markup.
   return out.length <= TELEGRAM_MAX_CHARS ? out : out.split("\n")[0];
+}
+
+/** Room per message of the new-projects post (Telegram's hard limit is 4096). */
+export const TELEGRAM_NEWS_CHUNK = 3800;
+
+/**
+ * New projects (PROJECT_NEWS) as one or more Telegram messages: the headline, then every project as a linked
+ * name over its plain lines (projectNewsLines), split between projects so no message passes TELEGRAM_NEWS_CHUNK;
+ * the last message ends with the link to all projects and the tagline.
+ */
+export function buildTelegramProjectNews(
+  locale: PartnerLocale,
+  projects: { name: string; url: string; lines: string[] }[],
+  allProjectsUrl: string,
+): string[] {
+  const t = dict(locale).telegram.notify;
+  const blocks = projects.map((pr) => [`<b>${link(pr.url, pr.name)}</b>`, ...pr.lines.map((l) => clipEscaped(l, 400))].join("\n"));
+  const head = `<b>${esc(t.projectNews)}</b>`;
+  const tail = `${link(allProjectsUrl, t.openProjects)}\n\n<i>${esc(dict(locale).mail.footer.tagline)}</i>`;
+  const out: string[] = [];
+  let cur = head;
+  for (const b of blocks) {
+    const block = b.length > TELEGRAM_NEWS_CHUNK ? b.split("\n")[0] : b;
+    if (cur && cur.length + 2 + block.length > TELEGRAM_NEWS_CHUNK) {
+      out.push(cur);
+      cur = block;
+    } else {
+      cur = cur ? `${cur}\n\n${block}` : block;
+    }
+  }
+  if (cur.length + 2 + tail.length > TELEGRAM_NEWS_CHUNK) {
+    out.push(cur);
+    cur = tail;
+  } else {
+    cur = `${cur}\n\n${tail}`;
+  }
+  out.push(cur);
+  return out;
 }
 
 // ── Rate limit ──────────────────────────────────────────────────────────────

@@ -135,6 +135,7 @@ export const ru: PartnerDict = {
   },
   mail: {
     signature: "С уважением,\nCyprus VIP Estates",
+    footer: { tagline: "Вместе сильнее 🤝", portal: "Партнёрский портал", submit: "Передать клиента", projects: "Все проекты", whatsapp: "Написать в WhatsApp", settings: "Настройки уведомлений" },
     verify: {
       subject: "Подтвердите, пожалуйста, адрес электронной почты",
       greeting: "Здравствуйте, {name}!",
@@ -162,7 +163,7 @@ export const ru: PartnerDict = {
     stage: {
       subject: "Новости по Вашему клиенту {client}",
       greeting: "Здравствуйте, {name}!",
-      intro: "По Вашему клиенту {client} есть новости. Текущий статус: {stage}.",
+      intro: "Свежие новости по Вашему клиенту {client}: {stage}.",
       button: "Открыть карточку клиента",
     },
     message: {
@@ -175,7 +176,7 @@ export const ru: PartnerDict = {
     claimOutcome: {
       greeting: "Здравствуйте, {name}!",
       acceptedSubject: "Ваш клиент {client} принят",
-      acceptedIntro: "Мы рассмотрели Вашу заявку: клиент {client} закреплён за Вами. Ход работы Вы можете отслеживать в партнёрском портале.",
+      acceptedIntro: "Отличное начало: клиент {client} закреплён за Вами. Дальше мы берём всё на себя — каждый шаг Вы можете отслеживать в партнёрском портале.",
       rejectedSubject: "Ваша заявка {client} рассмотрена",
       rejectedIntro: "Мы рассмотрели Вашу заявку по клиенту {client}. К сожалению, мы не можем закрепить этот контакт за Вами.",
       button: "Открыть в портале",
@@ -183,7 +184,7 @@ export const ru: PartnerDict = {
     payout: {
       subject: "Ваша комиссия выплачена",
       greeting: "Здравствуйте, {name}!",
-      intro: "Мы перевели Вашу комиссию за клиента {client} ({project}, {unit}): {amount}.",
+      intro: "Заслуженно! Мы перевели Вашу комиссию за клиента {client} ({project}, {unit}): {amount}.",
       creditNoteLine: "Кредит-нота {number} доступна в партнёрском портале.",
       button: "Открыть комиссии",
     },
@@ -198,33 +199,33 @@ export const ru: PartnerDict = {
     match: {
       subject: "Новый подходящий вариант для Вашего клиента {client}",
       greeting: "Здравствуйте, {name}!",
-      intro: "Есть новости по проекту, который подходит под бюджет Вашего клиента {client}: {project} ({change}).",
+      intro: "Шанс для Вашего клиента {client}: {project} подходит под бюджет ({change}).",
       price: "Цена от {price}",
       button: "Открыть проект",
     },
     presentationOpened: {
       subject: "Ваша презентация для клиента {client} открыта",
       greeting: "Здравствуйте, {name}!",
-      intro: "Презентацию, которую Вы отправили клиенту {client}, только что открыли. Просмотры и избранное видны в партнёрском портале.",
+      intro: "Презентацию, которую Вы отправили клиенту {client}, только что открыли — хороший момент, чтобы связаться. Просмотры и избранное видны в партнёрском портале.",
       button: "Открыть презентации",
     },
     tierUp: {
       subject: "Теперь Вы партнёр уровня {tier}",
       greeting: "Здравствуйте, {name}!",
-      intro: "Поздравляем! Благодаря Вашим закрытым сделкам Вы достигли уровня {tier}. Ваши новые доли: {handover} % при передаче и {fix} % в режиме Fix.",
+      intro: "Поздравляем — Ваши результаты говорят сами за себя! Вы достигли уровня {tier}. Ваши новые доли: {handover} % при передаче и {fix} % в режиме Fix.",
       note: "Новые доли действуют для сделок, созданных с этого момента; существующие сделки не меняются.",
       button: "Открыть партнёрский портал",
     },
     projectNews: {
-      subject: "Новые проекты в Cyprus VIP Estates",
+      subject: "Новые проекты для Ваших клиентов",
       greeting: "Здравствуйте, {name}!",
-      intro: "Эти проекты появились в нашем предложении:",
+      intro: "Свежее на рынке — новые проекты, которые могут идеально подойти Вашим клиентам:",
       button: "Открыть проекты",
     },
     watch: {
       subject: "Новости о проектах из Ваших презентаций",
       greeting: "Здравствуйте, {name}!",
-      intro: "Есть новости о проектах, которые Вы показывали своим клиентам:",
+      intro: "В проектах, которые Вы показывали своим клиентам, есть движение:",
       button: "Открыть презентации",
     },
     protectionEnding: {
@@ -251,7 +252,7 @@ export const ru: PartnerDict = {
     tierNear: {
       subject: "Ещё одна сделка до уровня {tier}",
       greeting: "Здравствуйте, {name}!",
-      intro: "Вам осталась всего одна закрытая сделка до уровня {tier}: {handover} % при передаче и {fix} % при Fix.",
+      intro: "Вы почти у цели: ещё одна закрытая сделка — и Вы на уровне {tier}: {handover} % при передаче и {fix} % при Fix.",
       button: "Открыть партнёрский портал",
     },
   },
@@ -763,7 +764,7 @@ export const ru: PartnerDict = {
       tierShares: "Ваши новые доли: {handover} % передача · {fix} % Fix",
       viewingOn: "Просмотр {date}",
       expectedCommission: "Ваша ожидаемая комиссия: {amount}",
-      projectNews: "Новые проекты в Cyprus VIP Estates:",
+      projectNews: "Свежее на рынке — новые проекты для Ваших клиентов:",
       projectRate: "Ваша ставка {rate}%",
       watch: "Новости о проектах из Ваших презентаций:",
       unitsLeft: "осталось всего {n}",
@@ -779,6 +780,13 @@ export const ru: PartnerDict = {
       openProjects: "Все проекты",
       open: "Открыть в портале",
       viewProject: "Открыть проект",
+      studio: "Студия",
+      bedroomOne: "{n} спальня",
+      bedroomFew: "{n} спальни",
+      bedroomMany: "{n} спален",
+      bedroomOther: "{n} спальни",
+      bedsFrom: "{beds} от {price}",
+      fitsClients: "Подходит Вашим клиентам: {clients}",
     },
     changeTypes: {
       published: "новый проект",

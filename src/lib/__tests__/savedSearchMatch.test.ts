@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { matchesSavedSearch, type DevFacts } from "@/app/admin/(panel)/developments/[id]/cockpit/savedSearchMatch";
+import { matchesSavedSearch, type DevFacts } from "@/lib/crm/savedSearchMatch";
 
 /* The Project Cockpit's "matches a saved search" column answers a weaker
    question than the matching panel does — "is this project inside the search

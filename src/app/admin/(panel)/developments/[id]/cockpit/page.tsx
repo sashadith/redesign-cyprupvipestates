@@ -13,7 +13,7 @@ import { adminDateTime } from "@/lib/adminTime";
 import BackLink from "../../BackLink";
 import PriceGauge from "./PriceGauge";
 import Gallery from "./Gallery";
-import { matchesSavedSearch, type SavedSearch } from "./savedSearchMatch";
+import { matchesSavedSearch, type SavedSearch } from "@/lib/crm/savedSearchMatch";
 
 export const dynamic = "force-dynamic";
 
@@ -148,7 +148,7 @@ export default async function CockpitPage({ params }: { params: { id: string } }
 
   // ------------------------------------------------- leads: saved searches
   // A second, weaker source, kept in its own column so it is never read as
-  // "this lead was shown the project". See savedSearchMatch.ts.
+  // "this lead was shown the project". See src/lib/crm/savedSearchMatch.ts.
   const candidates = await prisma.lead.findMany({
     where: {
       deletedAt: null,
