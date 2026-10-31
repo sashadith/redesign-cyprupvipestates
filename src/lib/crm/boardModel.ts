@@ -109,7 +109,10 @@ export function cardUrgency(lead: BoardLeadInput, status: LeadStatusValue, now: 
   const followDay = follow ? dayKey(follow) : null;
   const lastTouch = lead.lastContactAt ?? lead.createdAt;
 
-  if (follow && followDay) due.push({ day: followDay, reason: followDay === today ? "Follow-up due today" : `Follow-up was due ${shortDate(follow)}` });
+  // A real contact logged on or after the follow-up day answers that follow-up (2026-10-31): otherwise a lead whose
+  // automatic cadence is capped stays red after the call was made, and the reminders would nag about done work.
+  const followDone = !!followDay && !!lead.lastContactAt && dayKey(lead.lastContactAt) >= followDay;
+  if (follow && followDay && !followDone) due.push({ day: followDay, reason: followDay === today ? "Follow-up due today" : `Follow-up was due ${shortDate(follow)}` });
   const planned = !!followDay && followDay > today; // a follow-up in the future: the lead is handled for now
 
   const viewing = lead.viewingScheduledAt ?? null;
@@ -125,7 +128,7 @@ export function cardUrgency(lead: BoardLeadInput, status: LeadStatusValue, now: 
   if (!planned) {
     if (status === "NEW" && !lead.lastContactAt) {
       due.push({ day: dayKey(lead.createdAt), reason: "New lead, not contacted yet" });
-    } else if (!follow) {
+    } else if (!follow || followDone) {
       const staleDue = new Date(lastTouch.getTime() + STALE_DAYS * DAY_MS);
       due.push({ day: dayKey(staleDue), reason: `No contact for ${Math.floor((now.getTime() - lastTouch.getTime()) / DAY_MS)} days` });
     }

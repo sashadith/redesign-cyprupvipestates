@@ -82,14 +82,22 @@ const u = (over: Partial<BoardLeadInput>) => toCard({ ...contacted, ...over }, n
 
 test("urgency: follow-up due today is yellow, an earlier day is red with the days late", () => {
   assert.deepEqual(u({ nextFollowUpAt: new Date("2026-10-18T06:00:00Z") }), { level: "now", days: 0, label: "Act now", reason: "Follow-up due today" });
-  const late = u({ nextFollowUpAt: new Date("2026-10-15T09:00:00Z") });
+  const early = new Date("2026-10-12T09:00:00Z"); // last contact before the follow-up day
+  const late = u({ nextFollowUpAt: new Date("2026-10-15T09:00:00Z"), lastContactAt: early });
   assert.equal(late?.level, "overdue");
   assert.equal(late?.days, 3);
   assert.equal(late?.label, "Overdue 3d");
   assert.equal(late?.reason, "Follow-up was due 15 Oct");
   // 23:30 Cyprus on the 17th is still the 17th → 1 day late (Cyprus calendar, not UTC).
-  assert.equal(u({ nextFollowUpAt: new Date("2026-10-17T20:30:00Z") })?.days, 1);
+  assert.equal(u({ nextFollowUpAt: new Date("2026-10-17T20:30:00Z"), lastContactAt: early })?.days, 1);
   assert.equal(u({ nextFollowUpAt: new Date("2026-10-20T09:00:00Z") }), null, "planned for later");
+});
+
+test("urgency: a contact logged on or after the follow-up day answers it (2026-10-31)", () => {
+  assert.equal(u({ nextFollowUpAt: new Date("2026-10-15T09:00:00Z"), lastContactAt: new Date("2026-10-17T09:00:00Z") }), null);
+  assert.equal(u({ nextFollowUpAt: new Date("2026-10-18T06:00:00Z"), lastContactAt: new Date("2026-10-18T07:00:00Z") }), null, "called today → done for today");
+  // Answered long ago and nothing since: the 7-day no-contact rule takes over.
+  assert.equal(u({ nextFollowUpAt: new Date("2026-10-05T09:00:00Z"), lastContactAt: new Date("2026-10-06T09:00:00Z") })?.reason, "No contact for 12 days");
 });
 
 test("urgency: new uncontacted lead — act now on arrival day, overdue afterwards", () => {
@@ -131,8 +139,8 @@ test("urgency: the most overdue signal wins; closed, keep-contact and lost are n
 test("needs-action view and header counts", () => {
   const cols = buildBoard([
     { ...contacted, id: "a", nextFollowUpAt: new Date("2026-10-18T06:00:00Z") },
-    { ...contacted, id: "b", nextFollowUpAt: new Date("2026-10-10T06:00:00Z") },
-    { ...contacted, id: "c", nextFollowUpAt: new Date("2026-10-16T06:00:00Z") },
+    { ...contacted, id: "b", nextFollowUpAt: new Date("2026-10-10T06:00:00Z"), lastContactAt: new Date("2026-10-09T09:00:00Z") },
+    { ...contacted, id: "c", nextFollowUpAt: new Date("2026-10-16T06:00:00Z"), lastContactAt: new Date("2026-10-14T09:00:00Z") },
     { ...contacted, id: "d", nextFollowUpAt: new Date("2026-10-25T06:00:00Z") },
   ], now);
   assert.deepEqual(urgencyCounts(cols), { now: 1, overdue: 2 });

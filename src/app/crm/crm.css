@@ -172,6 +172,12 @@
 .crm-urgcount { font-weight: 700; }
 .crm-urgcount.overdue { color: var(--danger); }
 .crm-urgcount.now { color: var(--now); }
+/* Lead reminders (2026-10-31): the bar over every CRM page while the user has overdue / due-today leads. */
+.crm-nagbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 14px; border-radius: calc(12px * var(--ds-radius-scale)); background: var(--danger); color: var(--panel); font-weight: 700; font-size: calc(14px * var(--ds-crm-scale)); }
+.crm-nagbar a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.crm-nagbar.now { background: var(--now-bg); color: var(--now); box-shadow: inset 0 0 0 1px var(--now-line); }
+.crm-hint { color: var(--muted); font-size: calc(13px * var(--ds-crm-scale)); }
+.crm-err { color: var(--danger); font-size: calc(13px * var(--ds-crm-scale)); }
 .crm-card .av { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: calc(9.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--onaccent); background: var(--accent); }
 .crm-card .av.none { background: var(--colbg); color: var(--muted); font-size: calc(12px * var(--ds-crm-scale)); }
 /* Money: Fraunces in bronze ink (small sizes need #7A5A30 for AA). */
