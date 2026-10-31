@@ -37,6 +37,11 @@ export type DevelopmentStrings = {
   extraLinkCtas?: Record<ExtraLinkKind, string>;
   /** Screen-reader suffix: these buttons open the developer's own site in a new tab. */
   extraLinkNewTab: string;
+  /** Video popup (a tile whose link is a video file): screen-reader suffix of
+      the tile and the fullscreen button. Optional per language; English is
+      used where a language has none. */
+  extraLinkPlaysHere?: string;
+  videoFullscreen?: string;
 
   // ---- section headings ----
   aboutHeading: string;
@@ -162,6 +167,8 @@ const EN: DevelopmentStrings = {
   extraLinks: { video: "Project video", tour360: "360° tour", walkthrough: "Virtual walkthrough", camera: "Project camera" },
   extraLinkCtas: { video: "Watch film", tour360: "Look around", walkthrough: "Step inside", camera: "Watch progress" },
   extraLinkNewTab: "opens in a new tab",
+  extraLinkPlaysHere: "plays in a window on this page",
+  videoFullscreen: "Full screen",
   galleryLabel: (n) => `View ${n} ${n === 1 ? "photo" : "photos"}`,
   openGallery: "Open gallery",
   heroFrom: "from",
@@ -240,6 +247,8 @@ const DE: DevelopmentStrings = {
   extraLinks: { video: "Projektvideo", tour360: "360°-Tour", walkthrough: "Virtueller Rundgang", camera: "Projektkamera" },
   extraLinkCtas: { video: "Film ansehen", tour360: "Umsehen", walkthrough: "Eintreten", camera: "Baufortschritt" },
   extraLinkNewTab: "öffnet in einem neuen Tab",
+  extraLinkPlaysHere: "wird in einem Fenster auf dieser Seite abgespielt",
+  videoFullscreen: "Vollbild",
   galleryLabel: (n) => `${n} ${n === 1 ? "Foto" : "Fotos"} ansehen`,
   openGallery: "Galerie öffnen",
   heroFrom: "ab",
@@ -318,6 +327,8 @@ const PL: DevelopmentStrings = {
   extraLinks: { video: "Film o inwestycji", tour360: "Wirtualny spacer 360°", walkthrough: "Wirtualne zwiedzanie", camera: "Kamera na inwestycji" },
   extraLinkCtas: { video: "Obejrzyj film", tour360: "Rozejrzyj się", walkthrough: "Wejdź do środka", camera: "Postęp budowy" },
   extraLinkNewTab: "otwiera się w nowej karcie",
+  extraLinkPlaysHere: "odtwarza się w oknie na tej stronie",
+  videoFullscreen: "Pełny ekran",
   galleryLabel: (n) => `Zobacz ${n} ${plCount(n, "zdjęcie", "zdjęcia", "zdjęć")}`,
   openGallery: "Otwórz galerię",
   heroFrom: "od",
@@ -396,6 +407,8 @@ const RU: DevelopmentStrings = {
   extraLinks: { video: "Видео о проекте", tour360: "360°-тур", walkthrough: "Виртуальная прогулка", camera: "Камера на объекте" },
   extraLinkCtas: { video: "Смотреть фильм", tour360: "Осмотреться", walkthrough: "Войти внутрь", camera: "Ход строительства" },
   extraLinkNewTab: "открывается в новой вкладке",
+  extraLinkPlaysHere: "воспроизводится в окне на этой странице",
+  videoFullscreen: "Во весь экран",
   // "фото" is indeclinable — same word regardless of count.
   galleryLabel: (n) => `Смотреть ${n} фото`,
   openGallery: "Открыть галерею",
