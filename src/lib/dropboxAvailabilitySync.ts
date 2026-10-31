@@ -15,6 +15,7 @@ import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { workbookToText } from "@/lib/sheetToText";
 import { publicDeveloperLabel } from "./developerPublicLabel";
+import { intervalMs, notDueYet } from "./syncInterval";
 
 /* No image or floor-plan cap — see the note in driveAvailabilitySync.ts:
    the operator imports every picture and selects before publishing. */
@@ -396,15 +397,12 @@ export type KuutioWriteResult = {
 // Same vocabulary as the Drive adapter's per-developer interval (daily |
 // 2day | weekly | off, DeveloperAccount.driveSyncInterval — the admin
 // panel's own dropdown writes it for every developer regardless of
-// provider). Deliberately re-stated here rather than imported from
-// driveAvailabilitySync.ts: this module's whole premise is that it shares no
-// code path with the Drive adapter (see the header comment above), and one
-// four-branch map is not worth breaking that for. Until the Dropbox sync
+// provider). Since 2026-10-31 the due test lives in ./syncInterval, a
+// dependency-free module, so this adapter still shares no code path with the
+// Drive adapter (see the header comment above). Until the Dropbox sync
 // joined the crontab (2026-08-26) this setting did nothing at all for
 // Kuutio — the dropdown was in the UI and silently ignored, because
 // syncAllDrives (its only reader) skips Dropbox accounts entirely.
-const intervalMs = (i: string | null | undefined) =>
-  i === "off" ? Infinity : i === "weekly" ? 7 * 864e5 : i === "2day" ? 2 * 864e5 : 864e5;
 
 // Writes DRAFT-only. A folder that matches an existing Development is NEVER
 // touched, full stop — regardless of dev value, not just dev:"manual" (all
@@ -425,7 +423,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
   if (opts.respectInterval && !opts.force) {
     const iv = intervalMs(acct.driveSyncInterval);
     const last = acct.driveSyncedAt ? new Date(acct.driveSyncedAt).getTime() : null;
-    if (iv === Infinity || (last !== null && Date.now() - last < iv)) {
+    if (notDueYet(acct.driveSyncInterval, acct.driveSyncedAt)) {
       const notDue = iv === Infinity
         ? "Interval is off — scheduled run skipped."
         : `Not due yet (${acct.driveSyncInterval ?? "daily"}, last synced ${new Date(last!).toISOString()}).`;
