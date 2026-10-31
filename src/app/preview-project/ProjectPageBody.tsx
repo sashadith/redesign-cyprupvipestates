@@ -10,6 +10,7 @@ import Form from "@/app/preview-home/sections/Form";
 
 import HeroMedia from "@/app/preview-project/HeroMedia";
 import Benefits from "@/app/preview-project/Benefits";
+import ExtraLinkIcon, { ExtraLinkArrow } from "@/app/preview-project/ExtraLinkIcon";
 import { isDistanceClaim } from "@/lib/distanceClaims";
 import areaLibrary from "@/app/preview-project/areas.json";
 import PlanGrid from "@/app/preview-project/PlanGrid";
@@ -380,7 +381,12 @@ export default async function ProjectPageBody({
                     target="_blank"
                     rel="nofollow noopener noreferrer"
                   >
-                    {t.extraLinks[l.kind]}
+                    <span className="pp-extra__ic"><ExtraLinkIcon kind={l.kind} /></span>
+                    <span className="pp-extra__t">{t.extraLinks[l.kind]}</span>
+                    <span className="pp-extra__s">
+                      <span>{t.extraLinkCtas?.[l.kind] ?? ""}</span>
+                      <span className="pp-extra__go"><ExtraLinkArrow /></span>
+                    </span>
                     <span className="pp-sr">{` (${t.extraLinkNewTab})`}</span>
                   </a>
                 ))}

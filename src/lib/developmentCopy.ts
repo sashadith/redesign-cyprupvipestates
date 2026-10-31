@@ -31,6 +31,10 @@ export type DevelopmentStrings = {
   // reads correctly in every language — the admin never types a caption. A
   // kind added to EXTRA_LINK_KINDS without a label here is a type error.
   extraLinks: Record<ExtraLinkKind, string>;
+  /** The small call-to-action line under each media tile's caption ("Watch
+      film"). Optional per language: a tile without one shows only its
+      caption and the arrow. */
+  extraLinkCtas?: Record<ExtraLinkKind, string>;
   /** Screen-reader suffix: these buttons open the developer's own site in a new tab. */
   extraLinkNewTab: string;
 
@@ -156,6 +160,7 @@ const ruCount = (n: number, one: string, few: string, many: string) => {
 
 const EN: DevelopmentStrings = {
   extraLinks: { video: "Project video", tour360: "360° tour", walkthrough: "Virtual walkthrough", camera: "Project camera" },
+  extraLinkCtas: { video: "Watch film", tour360: "Look around", walkthrough: "Step inside", camera: "Watch progress" },
   extraLinkNewTab: "opens in a new tab",
   galleryLabel: (n) => `View ${n} ${n === 1 ? "photo" : "photos"}`,
   openGallery: "Open gallery",
@@ -233,6 +238,7 @@ const EN: DevelopmentStrings = {
 
 const DE: DevelopmentStrings = {
   extraLinks: { video: "Projektvideo", tour360: "360°-Tour", walkthrough: "Virtueller Rundgang", camera: "Projektkamera" },
+  extraLinkCtas: { video: "Film ansehen", tour360: "Umsehen", walkthrough: "Eintreten", camera: "Baufortschritt" },
   extraLinkNewTab: "öffnet in einem neuen Tab",
   galleryLabel: (n) => `${n} ${n === 1 ? "Foto" : "Fotos"} ansehen`,
   openGallery: "Galerie öffnen",
@@ -310,6 +316,7 @@ const DE: DevelopmentStrings = {
 
 const PL: DevelopmentStrings = {
   extraLinks: { video: "Film o inwestycji", tour360: "Wirtualny spacer 360°", walkthrough: "Wirtualne zwiedzanie", camera: "Kamera na inwestycji" },
+  extraLinkCtas: { video: "Obejrzyj film", tour360: "Rozejrzyj się", walkthrough: "Wejdź do środka", camera: "Postęp budowy" },
   extraLinkNewTab: "otwiera się w nowej karcie",
   galleryLabel: (n) => `Zobacz ${n} ${plCount(n, "zdjęcie", "zdjęcia", "zdjęć")}`,
   openGallery: "Otwórz galerię",
@@ -387,6 +394,7 @@ const PL: DevelopmentStrings = {
 
 const RU: DevelopmentStrings = {
   extraLinks: { video: "Видео о проекте", tour360: "360°-тур", walkthrough: "Виртуальная прогулка", camera: "Камера на объекте" },
+  extraLinkCtas: { video: "Смотреть фильм", tour360: "Осмотреться", walkthrough: "Войти внутрь", camera: "Ход строительства" },
   extraLinkNewTab: "открывается в новой вкладке",
   // "фото" is indeclinable — same word regardless of count.
   galleryLabel: (n) => `Смотреть ${n} фото`,
