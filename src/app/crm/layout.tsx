@@ -11,6 +11,7 @@ import { canAssignLeads } from "@/lib/crm/access";
 import { mayUseOldCrm } from "@/lib/crm/oldCrmGate";
 import { prisma } from "@/lib/prisma";
 import { inboxWhere } from "@/lib/crm/inboxWhere";
+import { nagCountsFor } from "@/lib/crm/leadNagSend";
 import { Shell } from "./components/Shell";
 import { DsStyle } from "@/lib/design/DsStyle";
 import { designForStaff } from "@/lib/design/store";
@@ -63,7 +64,13 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         <DsStyle scope="crm" vars={cssVars(design.values, design.global)} />
       </head>
       <body className={`crm-app antialiased ${fontVars}${isDarkSet(design.values) ? " ds-dark" : ""}`}>
-        <Shell user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner }} themes={{ options: design.options, choiceId: design.choiceId }}>{children}</Shell>
+        <Shell
+          user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner }}
+          themes={{ options: design.options, choiceId: design.choiceId }}
+          nag={await nagCountsFor(user, new Date())}
+        >
+          {children}
+        </Shell>
       </body>
     </html>
   );

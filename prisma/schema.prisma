@@ -770,6 +770,12 @@ model User {
   designTheme            DesignTheme? @relation(fields: [designThemeId], references: [id], onDelete: SetNull)
   // Last language picked for "Summarise with Claude" in the lead cockpit (2026-10-27); null = English.
   crmSummaryLocale       Locale?
+  // Lead reminders (2026-10-31): the employee's private chat with the office bot, linked from
+  // /crm/settings/telegram with a single-use code (hash + expiry; the code itself is never stored).
+  telegramChatId         String?   @unique
+  telegramLinkedAt       DateTime?
+  telegramLinkHash       String?   @unique
+  telegramLinkExpiresAt  DateTime?
 
   @@map("users")
 }
