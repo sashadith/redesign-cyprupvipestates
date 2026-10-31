@@ -45,6 +45,32 @@ const MONTH_NAMES = [
   "july", "august", "september", "october", "november", "december",
 ];
 
+/* Our stored delivery format is the quarter ("Q4 2027"). Price lists and feeds
+   keep stating a month ("October 2027"); every writer used to store that as
+   given, so the catalogue mixed both (32 values converted by hand 2026-10-31).
+   Applied on every Development/DevelopmentOverride write (./prisma.ts), so a
+   sync cannot bring the month back. Only an exact "Month YYYY" is converted —
+   a bare year, a range, a relative "24 months from signing", "TBA" all stay
+   exactly as written. */
+export function toQuarterCompletion<T extends string | null | undefined>(raw: T): T {
+  if (typeof raw !== "string") return raw;
+  const m = raw.trim().match(/^([A-Za-z]+)\s+(\d{4})$/);
+  if (!m) return raw;
+  const i = MONTH_NAMES.indexOf(m[1].toLowerCase());
+  return (i < 0 ? raw : `Q${Math.floor(i / 3) + 1} ${m[2]}`) as T;
+}
+
+/** Rewrites `completion` in place in a Prisma write's args — data (one row or
+    createMany's array), upsert's create/update, plain or `{ set }` form. */
+export function normalizeCompletionWrite(args: any): void {
+  const fix = (row: any) => {
+    if (!row || typeof row !== "object") return;
+    if (typeof row.completion === "string") row.completion = toQuarterCompletion(row.completion);
+    else if (row.completion && typeof row.completion.set === "string") row.completion.set = toQuarterCompletion(row.completion.set);
+  };
+  for (const d of [args?.data, args?.create, args?.update]) (Array.isArray(d) ? d : [d]).forEach(fix);
+}
+
 /* Sort key for the "Completion · soonest" mode (sortProjectsStandard in
    sanity.utils.ts). It used to be a bare `new Date(completionDate)`, which
    V8 parses for "October 2028" and "2026" but NOT for "Q2 2028" — and the

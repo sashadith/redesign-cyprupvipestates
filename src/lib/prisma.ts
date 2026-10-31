@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { normalizeCreateRow, normalizeUpdateRow, dominantType } from "./unitType";
+import { normalizeCompletionWrite } from "./completionDate";
 
 // Singleton Prisma client (avoids exhausting connections during dev HMR).
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
@@ -14,6 +15,14 @@ function createClient(): PrismaClient {
   // the one place a feed's "Villas" / "apartment" / "" / "B" is turned into the
   // canonical word — and where an unusable value is kept from overwriting a
   // type that is already right. Raw SQL bypasses it (one-off scripts only).
+  // Delivery dates are stored as quarters (2026-10-31, see ./completionDate.ts):
+  // a feed's "October 2027" becomes "Q4 2027" whoever writes it.
+  client.$use(async (params, next) => {
+    if (params.model !== "Development" && params.model !== "DevelopmentOverride") return next(params);
+    normalizeCompletionWrite(params.args);
+    return next(params);
+  });
+
   client.$use(async (params, next) => {
     if (params.model !== "DevelopmentUnit") return next(params);
     const a = params.args ?? {};
