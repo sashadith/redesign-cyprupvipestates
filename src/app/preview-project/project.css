@@ -70,16 +70,33 @@
 .pp-hint { font-size: 0.82rem; color: var(--text-faint); margin: .8em 0 0; font-style: italic; }
 
 /* Extra links under the description: project video, 360° tour, virtual
-   walkthrough, project camera. Same pill idiom as .pp-hero__galbtn, sized for
-   body copy and wrapping on its own line at phone width. The hover border
-   picks up --accent exactly as the gallery button does, so the two read as the
-   same kind of control. */
-.pp-extras { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1.8em; }
-.pp-extra { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border-radius: 999px;
-  font-family: var(--font-body); font-size: 0.86rem; color: var(--ivory); text-decoration: none;
-  border: 1px solid var(--hairline-strong); background: rgba(255,255,255,0.04);
-  transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
-.pp-extra:hover { border-color: var(--accent); background: rgba(255,255,255,0.07); }
+   walkthrough, project camera — as media tiles (2026-10-31, operator chose
+   "Variante C" over plain pills). Icon in a champagne ring, caption in the
+   display face, a small uppercase call-to-action + arrow pinned to the bottom so
+   tiles of one row line up even when a caption wraps. The 1px top contour is the
+   same accent line the facts panel carries. auto-fill keeps a lone tile at
+   tile width instead of stretching it across the column; two columns on phones. */
+.pp-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 1.8em; }
+.pp-extra { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 14px; min-width: 0;
+  padding: 18px 18px 16px; border-radius: 14px; color: var(--text); text-decoration: none;
+  background: linear-gradient(180deg, var(--surface-raised), transparent); border: 1px solid var(--hairline);
+  transition: border-color var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease); }
+.pp-extra::before { content: ""; position: absolute; inset-inline: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.8; }
+.pp-extra__ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+  transition: background var(--dur-sm) var(--ease); }
+.pp-extra__t { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
+  font-size: 1.12rem; line-height: 1.2; overflow-wrap: anywhere; }
+.pp-extra__s { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+.pp-extra__go { display: inline-flex; flex: none; transition: transform var(--dur-sm) var(--ease); }
+[dir="rtl"] .pp-extra__go { transform: scaleX(-1); }
+.pp-extra:hover { border-color: color-mix(in srgb, var(--accent) 60%, transparent); transform: translateY(-1px); }
+.pp-extra:hover .pp-extra__ic { background: radial-gradient(circle, color-mix(in srgb, var(--accent) 28%, transparent), transparent 70%); }
+.pp-extra:hover .pp-extra__go { transform: translate(2px, -2px); }
+[dir="rtl"] .pp-extra:hover .pp-extra__go { transform: scaleX(-1) translate(2px, -2px); }
+.pp-extra:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 /* Visually hidden, still read aloud — the caption alone does not tell a
    screen-reader user the link leaves the page. */
 .pp-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
