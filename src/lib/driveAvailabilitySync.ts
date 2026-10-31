@@ -16,6 +16,7 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { isDropboxShareUrl } from "./dropbox";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
 import { notDueYet } from "./syncInterval";
+import { nn, unitFields, newUnitDetails } from "./driveUnitFields";
 
 /* No image or floor-plan cap, by the operator's standing instruction (2026-09-10):
    "immer alle bilder bei allen projekten und bauträgern importieren, ich sortiere
@@ -35,10 +36,8 @@ import { notDueYet } from "./syncInterval";
      override description is still empty, so admin edits are never overwritten). */
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-const nn = (v: string | undefined | null) => (v && String(v).trim() ? String(v).trim() : null);
 // See src/lib/unitRef.ts for why this needs to be shared.
 const refKey = normalizeRef;
-const numFrom = (s?: string | null) => { const m = (s || "").match(/[\d.]+/); return m ? parseFloat(m[0]) : null; };
 // The per-call AI re-extraction isn't just ref-unstable — it can also just plain
 // miss a field it captured fine on an earlier run (e.g. the floor breakdown /
 // parking / pool columns). A full re-sync must never let a thin/noisy pass erase
@@ -46,34 +45,6 @@ const numFrom = (s?: string | null) => { const m = (s || "").match(/[\d.]+/); re
 function keepIfEmpty<T>(fresh: T, existing: T): T {
   if (Array.isArray(fresh)) return ((fresh as unknown[]).length ? fresh : existing) as T;
   return (fresh == null || fresh === "" ? existing : fresh) as T;
-}
-
-// Map the price-list's per-unit extraction onto our columns. Sheets vary a lot
-// (one dev gives a single "Internal Area", another splits Ground/Upper floor,
-// another adds parking/storage/pool as their own columns) — whatever doesn't have
-// a dedicated column (parking, storage, pool, per-unit extras, floor breakdown)
-// goes into `attrs`, which the public unit card already renders as a spec list.
-function unitFields(u: ExtractedUnit) {
-  const attrs: { name: string; value: string }[] = [];
-  let areaBuilt = nn(u.areaBuilt);
-  if (!areaBuilt && (u.areaGroundFloor || u.areaUpperFloor)) {
-    const g = numFrom(u.areaGroundFloor), l = numFrom(u.areaUpperFloor);
-    if (g != null || l != null) areaBuilt = `${Math.round((g ?? 0) + (l ?? 0))} m²`;
-    if (u.areaGroundFloor) attrs.push({ name: "Ground floor (internal)", value: u.areaGroundFloor });
-    if (u.areaUpperFloor) attrs.push({ name: "Upper floor (internal)", value: u.areaUpperFloor });
-  }
-  if (u.extras) attrs.push({ name: "Details", value: u.extras });
-  if (u.parking) attrs.push({ name: "Parking", value: u.parking });
-  if (u.storage) attrs.push({ name: "Storage", value: u.storage });
-  if (u.pool) attrs.push({ name: "Private pool", value: u.pool });
-  return {
-    baths: nn(u.bathrooms),
-    areaBuilt,
-    areaPlot: nn(u.areaPlot),
-    areaVeranda: nn(u.areaVeranda),
-    areaVerandaOpen: nn(u.areaVerandaOpen),
-    attrs,
-  };
 }
 
 export type DriveSyncResult = {
@@ -111,7 +82,7 @@ type ProjectHints = {
   feedProjectId?: string | null;
 };
 
-async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content, hints: ProjectHints = {}): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number } }> {
+async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content, hints: ProjectHints = {}): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number }; bare: { id: string; ref: string }[]; developmentId: string; projectAmenities: string[] }> {
   // Project-level fields sourced straight from the price-list TEXT (category, completion,
   // amenities, area, map link) cost nothing extra to refresh — no image download, no PDF
   // conversion, no document analysis — so they should update on a fast units-only sync too,
@@ -230,6 +201,8 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   const projectAmenities = ((dev.amenities as string[] | null) ?? []).filter(Boolean);
 
   const touchedIds = new Set<string>();
+  // Units created by a light run carry no details — see fillNewUnitDetails.
+  const bare: { id: string; ref: string }[] = [];
   const mayCreate = maySyncCreateUnits(existingUnits);
   for (const u of p.units) {
     const ref = String(u.ref || "").trim();
@@ -261,6 +234,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     } else {
       const created = await prisma.developmentUnit.create({ data: { developmentId: dev.id, ...data } });
       touchedIds.add(created.id);
+      if (!richUnits) bare.push({ id: created.id, ref });
       existingByKey.set(k, { id: created.id, ref: created.ref, source: created.source, beds: created.beds, baths: created.baths, areaBuilt: created.areaBuilt, areaPlot: created.areaPlot, areaVeranda: created.areaVeranda, areaVerandaOpen: created.areaVerandaOpen, attrs: created.attrs as any, amenities: created.amenities as any });
     }
   }
@@ -414,7 +388,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     } catch { /* media is best-effort */ }
   }
 
-  return { avail, mediaChanged, ...(pruned ? { pruned } : {}) };
+  return { avail, mediaChanged, ...(pruned ? { pruned } : {}), bare, developmentId: dev.id, projectAmenities };
 }
 
 /* ── Folder-first project discovery (2026-08-24, Olias Homes) ───────────────
@@ -581,6 +555,19 @@ export async function previewDriveFolders(developerAccountId: string): Promise<{
   };
 }
 
+/* Units a light run just created arrive bare (ref/price/status only). Re-reading
+   the same list in detail costs one extra AI call, so it happens only for a
+   project that actually gained units, and only those new rows are written —
+   existing units, prices, statuses and project facts are left exactly as the
+   light run set them. 2026-10-31, after Tenera Villas 1A & 1B (published) lost
+   every unit detail overnight when Olias renamed its villas V1–V4 → 1A/1B. */
+async function fillNewUnitDetails(w: { bare: { id: string; ref: string }[]; projectAmenities: string[] }, fresh: ExtractedPricelistProject | undefined, projectName: string): Promise<number> {
+  if (!fresh?.units?.length) return 0;
+  const updates = newUnitDetails(w.bare, fresh.units, projectName, w.projectAmenities);
+  for (const { id, data } of updates) await prisma.developmentUnit.update({ where: { id }, data });
+  return updates.length;
+}
+
 export async function syncDeveloperDrive(developerAccountId: string, opts: { force?: boolean; content?: boolean; richUnits?: boolean; onlyFeedProjectId?: string } = {}): Promise<DriveSyncResult> {
   if (!driveConfigured()) return { ok: false, message: "Google Drive is not configured (GOOGLE_* env vars)." };
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
@@ -647,6 +634,9 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   let fromMaster = 0;
   const pruned: { project: string; deleted: number; remaining: number }[] = [];
   const folderIssues = [...scan.issues];
+  // Units a light run created, and how many of them got their details (see fillNewUnitDetails).
+  let filledNew = 0;
+  const detailIssues: string[] = [];
   // Everything pass 1 owns. Pass 2 must not touch any of it: the master sheet's
   // stale copy of the same project would treat its own thinner row set as the
   // complete truth and prune away what the project's own catalogue just wrote.
@@ -663,6 +653,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
 
   for (const fp of folderProjects) {
     let extracted: ExtractedPricelistProject[];
+    let sheetText: string | null = null;
     try {
       if (fp.price.mimeType === "application/pdf" && PDF_TABLE_PRICELIST_DEVS.has(acct.slug)) {
         // Per-project PDF price list whose status is TEXT (SOLD / RESERVED),
@@ -681,6 +672,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
         extracted = [result.project];
       } else {
         const text = scopeSheetToProject(await getSpreadsheetText(fp.price, at), fp.project, siblingNames);
+        sheetText = text;
         // knownProject — identity is a FACT here (this file was read out of that
         // project's own folder), so the catalog call and buildCanonicalMatcher's
         // fuzzy word-overlap scoring are skipped entirely. Nothing can be dropped
@@ -706,6 +698,14 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     claimed.add(slug(fp.project));
     claimedNames.push(fp.project);
     const r = await writeProject(developerAccountId, acct.name, p, content, rootFiles, at, richUnits, { folderId: fp.folder.id, feedProjectId: fp.feedProjectId });
+    if (r.bare.length && sheetText) {
+      try {
+        const [fresh] = await extractAvailabilityFromPricelist(sheetText, true, { knownProject: fp.project });
+        filledNew += await fillNewUnitDetails(r, fresh, fp.project);
+      } catch (e: any) {
+        detailIssues.push(`${fp.project} (${String(e?.message ?? e).slice(0, 120)})`);
+      }
+    }
     fromFolders++;
     totalAvail += r.avail;
     if (r.mediaChanged) mediaChanged = true;
@@ -728,6 +728,8 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
 
   if (master && needMaster) {
     let extracted: ExtractedPricelistProject[] = [];
+    let masterText: string | null = null;
+    const gainedUnits: { project: string; w: Awaited<ReturnType<typeof writeProject>> }[] = [];
     if (master.mimeType === "application/pdf") {
       // PDF price list (2026-08-12, Motive Point) — status comes from the document's
       // own text color, never from AI reading; see pdfPricelistExtract.ts's doc
@@ -743,6 +745,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
       } else extracted = result.projects;
     } else {
       const text = await getSpreadsheetText(master, at);
+      masterText = text;
       extracted = await extractAvailabilityFromPricelist(text, richness, {
         onStats: (s) => { extractStats.value = s; },
       });
@@ -807,10 +810,32 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     for (const p of rest) {
       if (!p.project || !p.units?.length) continue;
       const r = await writeProject(developerAccountId, acct.name, p, content, rootFiles, at, richUnits);
+      if (r.bare.length) gainedUnits.push({ project: p.project, w: r });
       fromMaster++;
       totalAvail += r.avail;
       if (r.mediaChanged) mediaChanged = true;
       if (r.pruned) pruned.push({ project: p.project, ...r.pruned });
+    }
+
+    // New units from the master sheet: one detailed re-read of the sheet serves
+    // every project that gained units. The fresh read is matched back to those
+    // projects only (deterministic name matcher), never written anywhere else.
+    if (gainedUnits.length && masterText) {
+      try {
+        const fresh = await extractAvailabilityFromPricelist(masterText, true);
+        const toGained = buildCanonicalMatcher(gainedUnits.map((g) => g.project));
+        const freshBySlug = new Map<string, ExtractedPricelistProject>();
+        for (const f of fresh) {
+          const { name, matched } = toGained(f.project);
+          if (!matched) continue;
+          const k = slug(name);
+          const have = freshBySlug.get(k);
+          if (have) have.units.push(...f.units); else freshBySlug.set(k, { ...f, project: name, units: [...f.units] });
+        }
+        for (const g of gainedUnits) filledNew += await fillNewUnitDetails(g.w, freshBySlug.get(slug(g.project)), g.project);
+      } catch (e: any) {
+        detailIssues.push(`${master.name} (${String(e?.message ?? e).slice(0, 120)})`);
+      }
     }
   }
 
@@ -858,7 +883,9 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
         ? ` ${folderIssues.length} folder${folderIssues.length === 1 ? "" : "s"} contributed nothing: ` +
           folderIssues.slice(0, 5).map((i) => `${i.folder} — ${i.reason}`).join("; ") +
           (folderIssues.length > 5 ? ", …" : "") + "."
-        : ""),
+        : "") +
+      (filledNew ? ` ${filledNew} new unit${filledNew === 1 ? "" : "s"} filled with details from a detailed re-read.` : "") +
+      (detailIssues.length ? ` New units left without details: ${detailIssues.join("; ")}.` : ""),
     projects: total, unitsAvailable: totalAvail, fromFolders, fromMaster,
     ...(pruned.length ? { pruned } : {}),
     ...(folderIssues.length ? { folderIssues } : {}),
