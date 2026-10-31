@@ -122,3 +122,12 @@ test("the form value round-trips, and empty stores as null", () => {
   // empty array that would read as "someone configured this".
   assert.equal(extraLinksFromJson(JSON.stringify([{ kind: "video", url: "nope" }])), null);
 });
+
+test("only a link to a video file plays in the page popup", async () => {
+  const { isPlayableVideoUrl } = await import("../developmentExtraLinks");
+  assert.equal(isPlayableVideoUrl("https://cyprusvipestates.com/uploads/developments/x/9fe23452883d4c77.mp4"), true);
+  assert.equal(isPlayableVideoUrl("https://cdn.example.com/a/film.WEBM?v=2"), true);
+  for (const u of ["https://www.youtube.com/watch?v=S774eoakAmE", "https://dtagroup.com/360/level/", "https://example.com/mp4", "not a url"]) {
+    assert.equal(isPlayableVideoUrl(u), false, u);
+  }
+});

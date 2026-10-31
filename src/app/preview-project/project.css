@@ -76,7 +76,7 @@
    tiles of one row line up even when a caption wraps. The 1px top contour is the
    same accent line the facts panel carries. auto-fill keeps a lone tile at
    tile width instead of stretching it across the column; two columns on phones. */
-.pp-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 1.8em; }
+.pp-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 2.7em; } /* 1.8em → 2.7em, +50% at the operator's ask 2026-10-31 */
 .pp-extra { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 14px; min-width: 0;
   padding: 18px 18px 16px; border-radius: 14px; color: var(--text); text-decoration: none;
   background: linear-gradient(180deg, var(--surface-raised), transparent); border: 1px solid var(--hairline);
@@ -97,6 +97,41 @@
 .pp-extra:hover .pp-extra__go { transform: translate(2px, -2px); }
 [dir="rtl"] .pp-extra:hover .pp-extra__go { transform: scaleX(-1) translate(2px, -2px); }
 .pp-extra:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* A tile that plays here, not in a new tab: its arrow points forward (→)
+   instead of out (↗), and nudges sideways on hover. */
+.pp-extra__go--play svg { transform: rotate(45deg); }
+.pp-extra:hover .pp-extra__go--play { transform: translateX(3px); }
+[dir="rtl"] .pp-extra:hover .pp-extra__go--play { transform: scaleX(-1) translateX(3px); }
+
+/* Video popup (ExtraLinks.tsx). Same backdrop and fade as the image lightbox;
+   the film sits in a framed box with the accent contour on top, a caption
+   bar with fullscreen + close above it. Phones: full-width box, bar kept. */
+.pp-vm { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 40px;
+  background: rgba(4,10,8,0.94); animation: ppFade 0.2s var(--ease); }
+.pp-vm__box { position: relative; width: fit-content; max-width: 100%; border-radius: 14px; overflow: hidden;
+  background: var(--sea-deep); border: 1px solid var(--hairline); box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7); }
+.pp-vm__box::before { content: ""; position: absolute; inset-inline: 0; top: 0; height: 1px; z-index: 1;
+  background: linear-gradient(90deg, transparent, var(--champagne), transparent); }
+.pp-vm__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 12px 20px; }
+.pp-vm__cap { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-size: 1.05rem; color: var(--ivory); }
+.pp-vm__btns { display: flex; gap: 8px; flex: none; }
+.pp-vm__btn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  color: var(--champagne); background: rgba(194,154,94,0.08); border: 1px solid rgba(194,154,94,0.45);
+  transition: background var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease); }
+.pp-vm__btn:hover { background: var(--champagne); color: var(--sea-deep); }
+.pp-vm__btn:focus-visible { outline: 2px solid var(--champagne); outline-offset: 2px; }
+/* The box takes the film's own shape (Riviera's are 1402×1080, not 16:9):
+   the video is as large as both limits allow and the box wraps it, so there
+   are no black bars beside it. */
+.pp-vm__video { display: block; width: auto; height: auto; max-width: min(1100px, calc(100vw - 80px)); max-height: calc(100vh - 160px); min-width: min(560px, calc(100vw - 80px)); background: #000; }
+@media (max-width: 640px) {
+  .pp-vm { padding: 12px; }
+  .pp-vm__box { border-radius: 12px; }
+  .pp-vm__bar { padding: 10px 10px 10px 14px; }
+  .pp-vm__cap { font-size: 0.95rem; }
+  .pp-vm__video { max-width: calc(100vw - 24px); min-width: calc(100vw - 24px); max-height: calc(100vh - 120px); }
+}
 /* Visually hidden, still read aloud — the caption alone does not tell a
    screen-reader user the link leaves the page. */
 .pp-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;

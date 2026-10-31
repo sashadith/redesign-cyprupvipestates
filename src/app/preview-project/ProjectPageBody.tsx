@@ -10,7 +10,8 @@ import Form from "@/app/preview-home/sections/Form";
 
 import HeroMedia from "@/app/preview-project/HeroMedia";
 import Benefits from "@/app/preview-project/Benefits";
-import ExtraLinkIcon, { ExtraLinkArrow } from "@/app/preview-project/ExtraLinkIcon";
+import ExtraLinks from "@/app/preview-project/ExtraLinks";
+import { atSize } from "@/app/preview-project/imageSize";
 import { isDistanceClaim } from "@/lib/distanceClaims";
 import areaLibrary from "@/app/preview-project/areas.json";
 import PlanGrid from "@/app/preview-project/PlanGrid";
@@ -371,27 +372,7 @@ export default async function ProjectPageBody({
                 rel="nofollow": these point at the developer's own site, which
                 the operator allowed (2026-10-30), but our link equity does not
                 follow them there. */}
-            {extraLinks.length > 0 && (
-              <div className="pp-extras">
-                {extraLinks.map((l) => (
-                  <a
-                    key={l.kind}
-                    className="pp-extra"
-                    href={l.url}
-                    target="_blank"
-                    rel="nofollow noopener noreferrer"
-                  >
-                    <span className="pp-extra__ic"><ExtraLinkIcon kind={l.kind} /></span>
-                    <span className="pp-extra__t">{t.extraLinks[l.kind]}</span>
-                    <span className="pp-extra__s">
-                      <span>{t.extraLinkCtas?.[l.kind] ?? ""}</span>
-                      <span className="pp-extra__go"><ExtraLinkArrow /></span>
-                    </span>
-                    <span className="pp-sr">{` (${t.extraLinkNewTab})`}</span>
-                  </a>
-                ))}
-              </div>
-            )}
+            <ExtraLinks links={extraLinks} lang={lang} title={p.publicName} poster={p.gallery[0] ? atSize(p.gallery[0], "large") : undefined} />
           </div>
         </section>
 

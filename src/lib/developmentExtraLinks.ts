@@ -33,6 +33,18 @@ export function isValidExtraLinkUrl(raw: unknown): boolean {
   }
 }
 
+/** A link straight to a video FILE (our own /uploads, 2026-10-31: Riviera
+ *  Resort's two films) plays in a popup on the page instead of opening a tab
+ *  that shows nothing but the browser's bare player. Pages — YouTube, a 360°
+ *  viewer, a camera portal — still open in a new tab. */
+export function isPlayableVideoUrl(raw: string): boolean {
+  try {
+    return /\.(mp4|webm|m4v)$/i.test(new URL(raw).pathname);
+  } catch {
+    return false;
+  }
+}
+
 /** Read whatever sits in the Json column into a list the page can render.
  *
  *  Defensive on purpose: this parses a Json column, so it may hold anything an
