@@ -9,7 +9,7 @@ import { hashToken, newToken } from "@/lib/partner/tokens";
 import { ACTIVE_LEAD_STATUSES } from "./leadStatus";
 import { dayKey } from "./today";
 import {
-  buildNagMessage, maySnooze, nagCounts, nagItems, routeNag, snoozeUntil, withoutLeadRow,
+  NAG_EXCLUDED_SOURCES, buildNagMessage, maySnooze, nagCounts, nagItems, routeNag, snoozeUntil, withoutLeadRow,
   type InlineButton, type NagLead, type NagUser,
 } from "./leadNag";
 import { answerOfficeCallback, editOfficeKeyboard, officeBotConfig, sendOfficeMessage } from "./officeBot";
@@ -23,7 +23,7 @@ const crmBase = () => (process.env.NEXT_PUBLIC_SITE_URL || "https://cyprusvipest
 /** Active-funnel leads (not deleted) with the fields the urgency rule reads. */
 async function loadNagLeads(where: { assignedToId?: string | null | { in: string[] } } | { OR: object[] } = {}): Promise<NagLead[]> {
   const rows = await prisma.lead.findMany({
-    where: { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, ...where },
+    where: { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, source: { notIn: [...NAG_EXCLUDED_SOURCES] }, ...where },
     take: LEAD_CAP,
     orderBy: { updatedAt: "desc" },
     select: {
