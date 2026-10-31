@@ -20,6 +20,8 @@ export const NAG_TEXT_MAX = 3900;
 export const NAG_ALARM_DAYS = 7;
 /** From this many days late the mark doubles. */
 export const NAG_LOUD_DAYS = 3;
+/** Lead sources the reminders leave out: a newsletter signup is not an enquiry (operator, 2026-10-31). */
+export const NAG_EXCLUDED_SOURCES = ["NEWSLETTER"] as const;
 /** Snooze choices of the buttons, in days. */
 export const NAG_SNOOZE_DAYS = [1, 3] as const;
 /** Local time a snoozed follow-up is set to (it then turns yellow on that day and is in the 10:00 list). */
