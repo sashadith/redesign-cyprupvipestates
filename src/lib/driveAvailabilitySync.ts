@@ -15,6 +15,7 @@ import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { isDropboxShareUrl } from "./dropbox";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
+import { notDueYet } from "./syncInterval";
 
 /* No image or floor-plan cap, by the operator's standing instruction (2026-09-10):
    "immer alle bilder bei allen projekten und bauträgern importieren, ich sortiere
@@ -871,8 +872,6 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
 
 // Every developer with a Drive link. Daily cron uses content=false (availability
 // only); content=true does a full rich re-import for all of them.
-const intervalMs = (i: string | null | undefined) =>
-  i === "off" ? Infinity : i === "weekly" ? 7 * 864e5 : i === "2day" ? 2 * 864e5 : 864e5;
 
 // Deliberately standalone rather than importing from ./sharepoint: that module
 // is part of the Korantina connector, which is not in the repository (untracked
@@ -919,9 +918,7 @@ export async function syncAllDrives(force = false, content = false): Promise<{ d
     if (isSharePointFolderUrl(d.driveFolderUrl)) continue;
     // Respect the per-developer interval for the scheduled (non-forced) availability run.
     if (!force && !content) {
-      const iv = intervalMs(d.driveSyncInterval);
-      if (iv === Infinity) continue;
-      if (d.driveSyncedAt && Date.now() - new Date(d.driveSyncedAt).getTime() < iv) continue;
+      if (notDueYet(d.driveSyncInterval, d.driveSyncedAt)) continue;
     }
     try {
       out.push({ developer: d.name, result: await syncDeveloperDrive(d.id, { force, content }) });

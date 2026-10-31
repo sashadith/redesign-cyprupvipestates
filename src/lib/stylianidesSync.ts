@@ -5,6 +5,7 @@ import { findStylianidesPriceList, normalizeStylianidesTable, stylianidesMapping
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { beginSyncWindow } from "./imageMirror";
+import { intervalMs, notDueYet } from "./syncInterval";
 
 /* Stylianides Group — price-list sync (2026-10-30). The pure rules are in
    stylianides.ts; this file is the Dropbox + database half.
@@ -36,8 +37,6 @@ import { beginSyncWindow } from "./imageMirror";
 
 export const STYLIANIDES_DEV = "stylianides";
 
-const intervalMs = (i: string | null | undefined) =>
-  i === "off" ? Infinity : i === "weekly" ? 7 * 864e5 : i === "2day" ? 2 * 864e5 : 864e5;
 const nn = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
 
 type ProjectRow = { id: string; publicName: string; driveFolderId: string | null; publishStatus: string };
@@ -118,7 +117,7 @@ export async function syncStylianides(
   if (opts.respectInterval && !opts.force && !opts.dryRun) {
     const iv = intervalMs(acct.driveSyncInterval);
     const last = acct.driveSyncedAt ? acct.driveSyncedAt.getTime() : null;
-    if (iv === Infinity || (last !== null && Date.now() - last < iv)) {
+    if (notDueYet(acct.driveSyncInterval, acct.driveSyncedAt)) {
       const notDue = iv === Infinity ? "Interval is off — scheduled run skipped." : `Not due yet (${acct.driveSyncInterval ?? "daily"}, last synced ${new Date(last!).toISOString()}).`;
       return { ok: true, message: notDue, notDue, projects: [] };
     }
