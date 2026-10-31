@@ -7,6 +7,7 @@
 import type { NotificationKind } from "./notify";
 import { dayKey } from "@/lib/crm/today";
 import { claimProtection } from "./claims";
+import { PARTNER_LOCALES, type PartnerLocale } from "./i18n";
 
 const DAY = 86_400_000;
 
@@ -33,15 +34,29 @@ export const cyDate = (at: Date): string => dayKey(at);
 
 // ── 1: new projects ─────────────────────────────────────────────────────────
 
-export type NewsProject = { id: string; name: string; area: string | null; priceFrom: number | null; url: string; publishedAt: Date };
-export type NewsPartner = { id: string; rates: Map<string, number | null> };
+/** Safety cap of one PROJECT_NEWS row; the operator wants every new project listed (2026-10-31), so it is far above a normal day. */
+export const NEWS_MAX_PROJECTS = 50;
+/** Short selling line per partner locale (the project page's meta description). */
+export type NewsBlurbs = Partial<Record<PartnerLocale, string>>;
+export type BedPrice = { beds: number; price: number };
 
-/** One PROJECT_NEWS row per partner for the day, newest projects first, at most ALERT_MAX_PROJECTS. */
+export type NewsProject = {
+  id: string; name: string; area: string | null; priceFrom: number | null; url: string; publishedAt: Date;
+  /** Unit types as stored ("Apartment · Penthouse"), localized at send time. */
+  type?: string | null;
+  /** Cheapest available price per bedroom count, ascending by bedrooms. */
+  beds?: BedPrice[];
+  blurb?: NewsBlurbs;
+};
+/** `clients`: development id → the names (as submitted) of this partner's clients the project fits. */
+export type NewsPartner = { id: string; rates: Map<string, number | null>; clients?: Map<string, string[]> };
+
+/** One PROJECT_NEWS row per partner for the day: every project of the last 24 h, newest first (cap NEWS_MAX_PROJECTS). */
 export function planProjectNews(input: { partners: NewsPartner[]; projects: NewsProject[]; today: string }): PlannedAlert[] {
   if (!input.projects.length) return [];
   const projects = [...input.projects]
     .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime() || a.name.localeCompare(b.name, "en"))
-    .slice(0, ALERT_MAX_PROJECTS);
+    .slice(0, NEWS_MAX_PROJECTS);
   return input.partners.map((p) => ({
     kind: "PROJECT_NEWS",
     refKey: `news:${p.id}:${input.today}`,
@@ -51,6 +66,7 @@ export function planProjectNews(input: { partners: NewsPartner[]; projects: News
     payload: {
       projects: projects.map((pr) => ({
         name: pr.name, area: pr.area, priceFrom: pr.priceFrom, url: pr.url, rate: p.rates.get(pr.id) ?? null,
+        type: pr.type ?? null, beds: pr.beds ?? [], blurb: pr.blurb ?? {}, clients: p.clients?.get(pr.id) ?? [],
       })),
     },
   }));
@@ -208,7 +224,10 @@ export function planTierNear(input: { partners: { id: string; next: TierStep | n
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-export type NewsItem = { name: string; area: string | null; priceFrom: number | null; url: string; rate: number | null };
+export type NewsItem = {
+  name: string; area: string | null; priceFrom: number | null; url: string; rate: number | null;
+  type: string | null; beds: BedPrice[]; blurb: NewsBlurbs; clients: string[];
+};
 export type WatchItem = { name: string; url: string; priceFrom: number | null; changes: WatchChange[] };
 
 const WATCH_TYPES: readonly WatchChange["type"][] = ["new_units", "price_from_changed", "unit_price_changed", "back_on_market", "low_stock"];
@@ -217,13 +236,30 @@ const WATCH_TYPES: readonly WatchChange["type"][] = ["new_units", "price_from_ch
 export function readNewsPayload(payload: unknown, urlOk: (u: unknown) => u is string): NewsItem[] {
   const list = obj(payload).projects;
   if (!Array.isArray(list)) return [];
-  return list.slice(0, ALERT_MAX_PROJECTS).flatMap((raw) => {
+  return list.slice(0, NEWS_MAX_PROJECTS).flatMap((raw) => {
     const p = obj(raw);
     const name = str(p.name);
     if (!name || !urlOk(p.url)) return [];
     const price = num(p.priceFrom);
     const rate = num(p.rate);
-    return [{ name, area: str(p.area), priceFrom: price != null && price > 0 ? price : null, url: p.url, rate: rate != null && rate > 0 ? rate : null }];
+    // Rows planned before 2026-10-31 carry none of the fields below: they read as empty, never as an error.
+    const beds = (Array.isArray(p.beds) ? p.beds : []).flatMap((b): BedPrice[] => {
+      const o = obj(b);
+      const n = num(o.beds);
+      const pr = num(o.price);
+      return n != null && n >= 0 && Number.isInteger(n) && pr != null && pr > 0 ? [{ beds: n, price: pr }] : [];
+    });
+    const rawBlurb = obj(p.blurb);
+    const blurb: NewsBlurbs = {};
+    for (const l of PARTNER_LOCALES) {
+      const b = str(rawBlurb[l]);
+      if (b) blurb[l] = b;
+    }
+    const clients = (Array.isArray(p.clients) ? p.clients : []).flatMap((c) => (str(c) ? [str(c)!] : []));
+    return [{
+      name, area: str(p.area), priceFrom: price != null && price > 0 ? price : null, url: p.url, rate: rate != null && rate > 0 ? rate : null,
+      type: str(p.type), beds, blurb, clients,
+    }];
   });
 }
 

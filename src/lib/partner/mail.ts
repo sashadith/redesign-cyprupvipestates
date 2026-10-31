@@ -36,12 +36,50 @@ export type EmailParts = {
   link: string;
   notes: string[];
   signature: string;
+  /** Projects listed under the intro (PROJECT_NEWS): a linked title and plain lines each. */
+  items?: EmailItem[];
+  /** Under the card: tagline, a few portal links (partnerFooter). Absent = no footer. */
+  footer?: EmailFooter;
 };
+
+export type EmailItem = { title: string; href: string; lines: string[] };
+export type EmailFooter = { tagline: string; links: { label: string; href: string }[]; settings: { label: string; href: string } | null };
+
+/** Our WhatsApp, as on the public site's contact block. */
+export const PARTNER_WHATSAPP_URL = "https://wa.me/35799278285";
+
+/**
+ * Footer of every partner mail (2026-10-31): the tagline, links to the portal, submitting a client, all projects
+ * and our WhatsApp, and the notification settings. `brand` = the tagline only (verify / reset, before a login exists).
+ */
+export function partnerFooter(locale: PartnerLocale, mode: "full" | "brand" = "full"): EmailFooter {
+  const f = dict(locale).mail.footer;
+  if (mode === "brand") return { tagline: f.tagline, links: [], settings: null };
+  const base = partnerBaseUrl();
+  return {
+    tagline: f.tagline,
+    links: [
+      { label: f.portal, href: base },
+      { label: f.submit, href: `${base}/submit` },
+      { label: f.projects, href: `${base}/projects` },
+      { label: f.whatsapp, href: PARTNER_WHATSAPP_URL },
+    ],
+    settings: { label: f.settings, href: `${base}/profile#settings` },
+  };
+}
 
 /** The CI partner mail layout (logo, paper card, bronze button). Every value is escaped here. */
 export function renderPartnerEmail(p: EmailParts, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const quote = p.quote ? p.quote.replace(/\r\n?/g, "\n") : null;
-  const text = [p.greeting, p.intro, quote, `${p.button}: ${p.link}`, ...p.notes, p.signature]
+  const items = p.items ?? [];
+  const itemsText = items.map((it) => [it.title, it.href, ...it.lines].join("\n")).join("\n\n");
+  const f = p.footer;
+  const footerText = f
+    ? [`— ${f.tagline}`, ...f.links.map((l) => `${l.label}: ${l.href}`), f.settings ? `${f.settings.label}: ${f.settings.href}` : null]
+        .filter((x): x is string => !!x)
+        .join("\n")
+    : null;
+  const text = [p.greeting, p.intro, quote, itemsText, `${p.button}: ${p.link}`, ...p.notes, p.signature, footerText]
     .filter((x): x is string => !!x)
     .join("\n\n");
   // CI (light): paper #F5F1E8 page, #FBF9F3 card, ink #221C15 text, bronze #8E6B3D button (white label 4.9:1),
@@ -62,12 +100,33 @@ export function renderPartnerEmail(p: EmailParts, theme: EmailTheme = CLASSIC_EM
     (quote
       ? `<div style="margin:0 0 16px;padding:12px 16px;background:${T.page};border-left:3px solid ${T.gold};border-radius:${r4}">${escapeHtml(quote).replace(/\n/g, "<br>")}</div>`
       : "") +
+    items
+      .map(
+        (it) =>
+          `<div style="margin:0 0 20px;padding:0 0 0 14px;border-left:3px solid ${T.gold}">` +
+          `<p style="margin:0 0 4px;font-weight:bold"><a href="${escapeHtml(it.href)}" style="color:${T.accent};text-decoration:none">${escapeHtml(it.title)}</a></p>` +
+          it.lines.map((l) => `<p style="margin:0 0 2px">${escapeHtml(l)}</p>`).join("") +
+          `</div>`,
+      )
+      .join("") +
     `<p style="margin:24px 0 16px"><a href="${escapeHtml(p.link)}" style="display:inline-block;background:${T.accent};color:${T.onAccent.toLowerCase()};text-decoration:none;font-weight:bold;letter-spacing:0.03em;padding:13px 24px;border-radius:${r16}">${escapeHtml(p.button)}</a></p>` +
     `<p style="margin:0 0 20px;font-size:${small};color:${T.muted};word-break:break-all">${escapeHtml(p.link)}</p>` +
     `<div style="height:1px;line-height:1px;font-size:0;background:${T.gold};margin:0 0 20px">&nbsp;</div>` +
     p.notes.map(para).join("") +
     para(p.signature) +
-    `</div></div></body></html>`;
+    `</div>` +
+    (f
+      ? `<div style="text-align:center;padding:24px 8px 0;font-size:${small};color:${T.muted}">` +
+        `<p style="margin:0 0 10px;font-size:${T.base}px;color:${T.text};font-weight:bold">${escapeHtml(f.tagline)}</p>` +
+        (f.links.length
+          ? `<p style="margin:0 0 10px">${f.links
+              .map((l) => `<a href="${escapeHtml(l.href)}" style="color:${T.accent};text-decoration:none">${escapeHtml(l.label)}</a>`)
+              .join(" &nbsp;·&nbsp; ")}</p>`
+          : "") +
+        (f.settings ? `<p style="margin:0"><a href="${escapeHtml(f.settings.href)}" style="color:${T.muted}">${escapeHtml(f.settings.label)}</a></p>` : "") +
+        `</div>`
+      : "") +
+    `</div></body></html>`;
   return { subject: p.subject, text, html };
 }
 
@@ -87,6 +146,7 @@ export function buildVerifyEmail(locale: PartnerLocale, link: string, name?: str
     link,
     notes: [t.verify.validity, t.verify.ignore],
     signature: t.signature,
+    footer: partnerFooter(locale, "brand"),
   }, theme);
 }
 
@@ -100,6 +160,7 @@ export function buildResetEmail(locale: PartnerLocale, link: string, name?: stri
     link,
     notes: [t.reset.validity, t.reset.ignore],
     signature: t.signature,
+    footer: partnerFooter(locale, "brand"),
   }, theme);
 }
 
@@ -114,6 +175,7 @@ export function buildApprovedEmail(locale: PartnerLocale, name: string, loginLin
     link: loginLink,
     notes: submitLink ? [fmt(t.approved.nextStep, { url: submitLink }), t.approved.telegram] : [],
     signature: t.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -142,5 +204,6 @@ export function buildBankChangedEmail(
     link: `${partnerBaseUrl()}/profile`,
     notes: [fmt(t.bankChanged.changedOn, { date: when }), t.bankChanged.warning],
     signature: t.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }

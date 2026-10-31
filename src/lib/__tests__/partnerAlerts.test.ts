@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  ALERT_MAX_PROJECTS, alertsStartFromEnv, cyDate, planBankMissing, planProjectNews, planProtectionReminders, planQuietClients, planTierNear,
+  NEWS_MAX_PROJECTS, alertsStartFromEnv, cyDate, planBankMissing, planProjectNews, planProtectionReminders, planQuietClients, planTierNear,
   planWatch, protectionEnd, readNewsPayload, readWatchPayload, watchChangeOf, type WatchEvent,
 } from "@/lib/partner/alerts";
 import {
@@ -22,22 +22,27 @@ const src = (p: string) => readFileSync(p, "utf8");
 
 // ── Planners ────────────────────────────────────────────────────────────────
 
-test("project news: one row per partner and day, newest first, capped, with the partner's own rate", () => {
+test("project news: one row per partner and day, newest first, every project, with the partner's own rate and fitting clients", () => {
   const projects = Array.from({ length: 7 }, (_, i) => ({
     id: `d${i}`, name: `P${i}`, area: "Paphos", priceFrom: 300_000 + i, url: `https://cyprusvipestates.com/projects/p${i}`,
     publishedAt: new Date(NOW.getTime() - i * 3_600_000),
   }));
   const rows = planProjectNews({
-    partners: [{ id: "a", rates: new Map([["d0", 1.5]]) }, { id: "b", rates: new Map() }],
+    partners: [{ id: "a", rates: new Map([["d0", 1.5]]), clients: new Map([["d0", ["Katerin Test", "Sascha Test"]]]) }, { id: "b", rates: new Map() }],
     projects, today: cyDate(NOW),
   });
   assert.equal(rows.length, 2);
   assert.equal(rows[0].refKey, "news:a:2026-11-02");
-  const list = rows[0].payload.projects as { name: string; rate: number | null }[];
-  assert.equal(list.length, ALERT_MAX_PROJECTS);
+  const list = rows[0].payload.projects as { name: string; rate: number | null; clients: string[] }[];
+  assert.equal(list.length, 7, "all new projects (operator, 2026-10-31), not the old cap of 5");
   assert.equal(list[0].name, "P0");
   assert.equal(list[0].rate, 1.5);
+  assert.deepEqual(list[0].clients, ["Katerin Test", "Sascha Test"]);
+  assert.deepEqual(list[1].clients, []);
   assert.equal((rows[1].payload.projects as { rate: number | null }[])[0].rate, null);
+  assert.deepEqual((rows[1].payload.projects as { clients: string[] }[])[0].clients, [], "another partner's clients never leak");
+  const many = Array.from({ length: NEWS_MAX_PROJECTS + 5 }, (_, i) => ({ ...projects[0], id: `m${i}`, name: `M${i}` }));
+  assert.equal((planProjectNews({ partners: [{ id: "a", rates: new Map() }], projects: many, today: "x" })[0].payload.projects as unknown[]).length, NEWS_MAX_PROJECTS);
   assert.deepEqual(planProjectNews({ partners: [{ id: "a", rates: new Map() }], projects: [], today: "x" }), []);
 });
 
@@ -106,7 +111,14 @@ test("tier near: only with a next tier one deal away; once per tier", () => {
 test("payload readers drop foreign links and unknown change types", () => {
   const ok = "https://cyprusvipestates.com/projects/a";
   assert.deepEqual(readNewsPayload({ projects: [{ name: "A", url: ok, priceFrom: 0, rate: 1.5 }, { name: "B", url: "https://evil.example/x" }] }, isOwnProjectUrl),
-    [{ name: "A", area: null, priceFrom: null, url: ok, rate: 1.5 }]);
+    [{ name: "A", area: null, priceFrom: null, url: ok, rate: 1.5, type: null, beds: [], blurb: {}, clients: [] }]);
+  const rich = readNewsPayload({ projects: [{
+    name: "A", url: ok, type: "Apartment", beds: [{ beds: 1, price: 180000 }, { beds: 2, price: 0 }, { beds: 1.5, price: 9 }, "x"],
+    blurb: { en: "Sea view", de: " ", xx: "no" }, clients: ["Katerin", "", 4],
+  }] }, isOwnProjectUrl)[0];
+  assert.deepEqual(rich.beds, [{ beds: 1, price: 180000 }]);
+  assert.deepEqual(rich.blurb, { en: "Sea view" });
+  assert.deepEqual(rich.clients, ["Katerin"]);
   assert.deepEqual(readWatchPayload({ projects: [{ name: "A", url: ok, changes: [{ type: "low_stock", n: 2 }, { type: "nope" }] }, { name: "C", url: ok, changes: [] }] }, isOwnProjectUrl),
     [{ name: "A", url: ok, priceFrom: null, changes: [{ type: "low_stock", n: 2 }] }]);
   assert.deepEqual(readNewsPayload(null, isOwnProjectUrl), []);
@@ -186,7 +198,7 @@ test("telegram v2 notifications: escaped, linked, within the limit", () => {
 test("e-mail v2 builders: subject, link and the client name", () => {
   const common = { partnerFirstName: "Eva", clientName: "Anna", link: "https://partner.cyprusvipestates.com/clients/c1" };
   const ok = "https://cyprusvipestates.com/projects/sea";
-  assert.ok(buildProjectNewsEmail("en", { partnerFirstName: "Eva", link: "https://p/projects", projects: [{ name: "Sea", area: "Paphos", priceFrom: 300000, url: ok, rate: 1.5 }] }).text.includes(ok));
+  assert.ok(buildProjectNewsEmail("en", { partnerFirstName: "Eva", link: "https://p/projects", projects: [{ name: "Sea", area: "Paphos", priceFrom: 300000, url: ok, rate: 1.5, type: null, beds: [], blurb: {}, clients: [] }] }).text.includes(ok));
   assert.ok(buildWatchEmail("de", { partnerFirstName: "Eva", link: "https://p/presentations", projects: [{ name: "Sea", url: ok, priceFrom: null, changes: [{ type: "low_stock", n: 2 }] }] }).text.includes("nur noch 2 frei"));
   assert.ok(buildProtectionEndingEmail("en", { ...common, until: new Date("2026-12-02T10:00:00Z") }).subject.includes("Anna"));
   assert.ok(buildClientQuietEmail("pl", common).subject.includes("Anna"));
@@ -196,7 +208,8 @@ test("e-mail v2 builders: subject, link and the client name", () => {
   assert.equal(watchChangeLabels("en", [{ type: "price_from_changed" }, { type: "low_stock", n: 1 }]), "price reduced · only 1 left");
   const approved = buildApprovedEmail("en", "Eva", "https://p/login", undefined, "https://p/submit");
   assert.ok(approved.text.includes("https://p/submit") && approved.text.includes("Telegram"));
-  assert.ok(!buildApprovedEmail("en", "Eva", "https://p/login").text.includes("/submit"), "no submit line without the link");
+  // The footer links the submit page in every mail (2026-10-31); the "next step" line needs the link.
+  assert.ok(!buildApprovedEmail("en", "Eva", "https://p/login").text.includes("Next step"), "no next-step line without the link");
 });
 
 test("weekly summary: follows the channel, Telegram text fits and is escaped", () => {

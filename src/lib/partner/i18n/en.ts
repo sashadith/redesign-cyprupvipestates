@@ -133,6 +133,7 @@ export const en = {
   },
   mail: {
     signature: "Kind regards,\nCyprus VIP Estates",
+    footer: { tagline: "Stronger together 🤝", portal: "Partner portal", submit: "Submit a client", projects: "All projects", whatsapp: "WhatsApp us", settings: "Notification settings" },
     verify: {
       subject: "Please confirm your email address",
       greeting: "Dear {name},",
@@ -160,7 +161,7 @@ export const en = {
     stage: {
       subject: "Update on your client {client}",
       greeting: "Dear {name},",
-      intro: "There is an update on your client {client}. The current status is: {stage}.",
+      intro: "Here is the latest on your client {client}: {stage}.",
       button: "View client",
     },
     message: {
@@ -173,7 +174,7 @@ export const en = {
     claimOutcome: {
       greeting: "Dear {name},",
       acceptedSubject: "Your client {client} has been accepted",
-      acceptedIntro: "We have reviewed your submission: {client} is now registered as your client. You can follow the progress in the partner portal.",
+      acceptedIntro: "Great start: {client} is now registered as your client. From here we take care of the rest — you can follow every step in the partner portal.",
       rejectedSubject: "Your submission {client} has been reviewed",
       rejectedIntro: "We have reviewed your submission of {client}. Unfortunately, we cannot register this contact as your client.",
       button: "View in the portal",
@@ -181,7 +182,7 @@ export const en = {
     payout: {
       subject: "Your commission has been paid",
       greeting: "Dear {name},",
-      intro: "We have transferred your commission for {client} ({project}, {unit}): {amount}.",
+      intro: "Well earned! We have transferred your commission for {client} ({project}, {unit}): {amount}.",
       creditNoteLine: "Your credit note {number} is available in the partner portal.",
       button: "Open commissions",
     },
@@ -196,33 +197,33 @@ export const en = {
     match: {
       subject: "New match for your client {client}",
       greeting: "Dear {name},",
-      intro: "There is an update on a project that fits the budget of your client {client}: {project} ({change}).",
+      intro: "A chance for your client {client}: {project} fits the budget ({change}).",
       price: "Price from {price}",
       button: "View project",
     },
     presentationOpened: {
       subject: "Your presentation for {client} has been opened",
       greeting: "Dear {name},",
-      intro: "The presentation you sent to your client {client} has just been opened. Views and favourites are shown in the partner portal.",
+      intro: "The presentation you sent to {client} has just been opened — a good moment to get in touch. Views and favourites are shown in the partner portal.",
       button: "Open presentations",
     },
     tierUp: {
       subject: "You are now a {tier} partner",
       greeting: "Dear {name},",
-      intro: "Congratulations! Based on your closed deals, you have reached the {tier} tier. Your new shares: {handover} % for Handover and {fix} % for Fix.",
+      intro: "Congratulations — your results speak for themselves! You have reached the {tier} tier. Your new shares: {handover} % for Handover and {fix} % for Fix.",
       note: "The new shares apply to deals created from now on; existing deals remain unchanged.",
       button: "Open the partner portal",
     },
     projectNews: {
-      subject: "New projects at Cyprus VIP Estates",
+      subject: "New projects for your clients",
       greeting: "Dear {name},",
-      intro: "These projects are new in our portfolio:",
+      intro: "Fresh on the market — new projects that could be just right for your clients:",
       button: "Open your projects",
     },
     watch: {
       subject: "Updates on projects from your presentations",
       greeting: "Dear {name},",
-      intro: "There is news on projects you have shown to your clients:",
+      intro: "There is movement on projects you have shown to your clients:",
       button: "Open presentations",
     },
     protectionEnding: {
@@ -249,7 +250,7 @@ export const en = {
     tierNear: {
       subject: "One more deal to {tier}",
       greeting: "Dear {name},",
-      intro: "You are one closed deal away from the {tier} tier: {handover} % for Handover and {fix} % for Fix.",
+      intro: "You are almost there: one more closed deal takes you to the {tier} tier — {handover} % for Handover and {fix} % for Fix.",
       button: "Open the partner portal",
     },
   },
@@ -761,7 +762,7 @@ export const en = {
       tierShares: "Your new shares: {handover} % Handover · {fix} % Fix",
       viewingOn: "Viewing on {date}",
       expectedCommission: "Your expected commission: {amount}",
-      projectNews: "New projects at Cyprus VIP Estates:",
+      projectNews: "Fresh on the market — new projects for your clients:",
       projectRate: "your rate {rate}%",
       watch: "Updates on projects from your presentations:",
       unitsLeft: "only {n} left",
@@ -777,6 +778,13 @@ export const en = {
       openProjects: "All projects",
       open: "Open in the portal",
       viewProject: "View project",
+      studio: "Studio",
+      bedroomOne: "{n} bedroom",
+      bedroomFew: "{n} bedrooms",
+      bedroomMany: "{n} bedrooms",
+      bedroomOther: "{n} bedrooms",
+      bedsFrom: "{beds} from {price}",
+      fitsClients: "Fits your clients: {clients}",
     },
     changeTypes: {
       published: "new project",

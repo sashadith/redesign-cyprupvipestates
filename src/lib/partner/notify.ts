@@ -7,8 +7,10 @@ import { isLeadStatus } from "@/lib/crm/leadStatus";
 import type { EffectiveClaimState } from "./claimState";
 import { dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { CLASSIC_EMAIL_THEME, type EmailTheme } from "@/lib/design/theme";
-import { greet, renderPartnerEmail, type BuiltEmail } from "./mail";
+import { greet, partnerFooter, renderPartnerEmail, type BuiltEmail } from "./mail";
 import { partnerStage } from "./milestones";
+import type { NewsItem } from "./alerts";
+import { typeLabelList } from "@/lib/typeLabels";
 
 // ── Builders ────────────────────────────────────────────────────────────────
 
@@ -33,6 +35,7 @@ export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: s
     link: p.link,
     notes: p.extra ?? [],
     signature: t.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -49,6 +52,7 @@ export function buildMessageEmail(locale: PartnerLocale, p: Common & { body: str
     link: p.link,
     notes: [],
     signature: t.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -64,6 +68,7 @@ export function buildClaimOutcomeEmail(locale: PartnerLocale, p: Common & { acce
     link: p.link,
     notes: [],
     signature: dict(locale).mail.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -92,6 +97,7 @@ export function buildPayoutEmail(
     link: p.link,
     notes: [fmt(t.creditNoteLine, { number: p.creditNoteNumber })],
     signature: dict(locale).mail.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -125,6 +131,7 @@ export function buildMatchEmail(
     link: p.url,
     notes,
     signature: d.mail.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -140,6 +147,7 @@ export function buildPresentationOpenedEmail(locale: PartnerLocale, p: Common, t
     link: p.link,
     notes: [],
     signature: dict(locale).mail.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -174,6 +182,7 @@ export function buildTierUpEmail(
     link: p.portalUrl,
     notes: [t.note],
     signature: dict(locale).mail.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -181,24 +190,51 @@ export function buildTierUpEmail(
 
 const money = (locale: PartnerLocale, n: number | null) => (n != null ? formatPayoutAmount(locale, n) : null);
 
-/** New projects (PROJECT_NEWS): name, area, price from, the partner's rate, link; button = the portal's projects page. */
+/** "2 bedrooms" / "2 sypialnie" / "Studio" in the partner's locale. */
+export function bedroomLabel(locale: PartnerLocale, beds: number): string {
+  const t = dict(locale).telegram.notify;
+  if (beds === 0) return t.studio;
+  const form = new Intl.PluralRules(locale).select(beds);
+  const tpl = form === "one" ? t.bedroomOne : form === "few" ? t.bedroomFew : form === "many" ? t.bedroomMany : t.bedroomOther;
+  return fmt(tpl, { n: beds });
+}
+
+/**
+ * The plain lines under one new project's linked name (mail and Telegram alike): type and place, the cheapest
+ * price per bedroom count (else the headline price), the selling line, the partner's rate, the clients it fits.
+ */
+export function projectNewsLines(locale: PartnerLocale, pr: NewsItem): string[] {
+  const t = dict(locale).telegram.notify;
+  const lines: string[] = [];
+  const type = pr.type ? typeLabelList(pr.type, locale) : "";
+  const head = [type, pr.area ?? ""].filter((x) => x.trim()).join(" — ");
+  if (head) lines.push(head);
+  if (pr.beds.length) {
+    for (const b of pr.beds) lines.push(fmt(t.bedsFrom, { beds: bedroomLabel(locale, b.beds), price: formatPayoutAmount(locale, b.price) }));
+  } else if (money(locale, pr.priceFrom)) {
+    lines.push(fmt(t.priceFrom, { price: money(locale, pr.priceFrom)! }));
+  }
+  const blurb = pr.blurb[locale] ?? pr.blurb.en;
+  if (blurb) lines.push(blurb);
+  if (pr.rate != null) lines.push(capitalize(fmt(t.projectRate, { rate: formatShare(locale, pr.rate) })));
+  if (pr.clients.length) lines.push(fmt(t.fitsClients, { clients: pr.clients.join(", ") }));
+  return lines;
+}
+
+const capitalize = (s: string) => (s ? s.charAt(0).toLocaleUpperCase() + s.slice(1) : s);
+
+/** New projects (PROJECT_NEWS): every project with its facts and a linked name; button = the portal's projects page. */
 export function buildProjectNewsEmail(
   locale: PartnerLocale,
-  p: { partnerFirstName: string; projects: { name: string; area: string | null; priceFrom: number | null; url: string; rate: number | null }[]; link: string },
+  p: { partnerFirstName: string; projects: NewsItem[]; link: string },
   theme: EmailTheme = CLASSIC_EMAIL_THEME,
 ): BuiltEmail {
   const d = dict(locale);
   const t = d.mail.projectNews;
-  const lines = p.projects.map((pr) => {
-    const facts = [
-      money(locale, pr.priceFrom) ? fmt(d.telegram.notify.priceFrom, { price: money(locale, pr.priceFrom)! }) : null,
-      pr.rate != null ? fmt(d.telegram.notify.projectRate, { rate: formatShare(locale, pr.rate) }) : null,
-    ].filter(Boolean).join(" · ");
-    return `• ${[pr.name, pr.area].filter(Boolean).join(", ")}${facts ? ` — ${facts}` : ""}\n  ${pr.url}`;
-  });
   return renderPartnerEmail({
-    subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: t.intro, quote: lines.join("\n"),
-    button: t.button, link: p.link, notes: [], signature: d.mail.signature,
+    subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: t.intro,
+    items: p.projects.map((pr) => ({ title: pr.name, href: pr.url, lines: projectNewsLines(locale, pr) })),
+    button: t.button, link: p.link, notes: [], signature: d.mail.signature, footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -226,7 +262,7 @@ export function buildWatchEmail(
   });
   return renderPartnerEmail({
     subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: t.intro, quote: lines.join("\n"),
-    button: t.button, link: p.link, notes: [], signature: d.mail.signature,
+    button: t.button, link: p.link, notes: [], signature: d.mail.signature, footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -242,7 +278,7 @@ export function buildProtectionEndingEmail(locale: PartnerLocale, p: Common & { 
   const vars = { client: client(p.clientName), date: partnerDate(locale, p.until) };
   return renderPartnerEmail({
     subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
-    button: t.button, link: p.link, notes: [t.note], signature: d.mail.signature,
+    button: t.button, link: p.link, notes: [t.note], signature: d.mail.signature, footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -253,7 +289,7 @@ export function buildClientQuietEmail(locale: PartnerLocale, p: Common, theme: E
   const vars = { client: client(p.clientName) };
   return renderPartnerEmail({
     subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
-    button: t.button, link: p.link, notes: [t.note], signature: d.mail.signature,
+    button: t.button, link: p.link, notes: [t.note], signature: d.mail.signature, footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -264,7 +300,7 @@ export function buildBankMissingEmail(locale: PartnerLocale, p: Common & { devel
   const vars = { client: client(p.clientName) };
   return renderPartnerEmail({
     subject: t.subject, greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(p.developerPaid ? t.introDevPaid : t.intro, vars),
-    button: t.button, link: p.link, notes: [], signature: d.mail.signature,
+    button: t.button, link: p.link, notes: [], signature: d.mail.signature, footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -279,7 +315,7 @@ export function buildTierNearEmail(
   const vars = { tier: p.tierName.trim() || "—", handover: formatShare(locale, p.handoverShare), fix: formatShare(locale, p.fixShare) };
   return renderPartnerEmail({
     subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
-    button: t.button, link: p.portalUrl, notes: [], signature: d.mail.signature,
+    button: t.button, link: p.portalUrl, notes: [], signature: d.mail.signature, footer: partnerFooter(locale),
   }, theme);
 }
 

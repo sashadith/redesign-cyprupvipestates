@@ -4,7 +4,7 @@ import { cyprusDateParts } from "./creditNote";
 import { publicProjectUrl } from "./clientDto";
 import { PARTNER_LOCALES, dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { CLASSIC_EMAIL_THEME, type EmailTheme } from "@/lib/design/theme";
-import { escapeHtml, greet, partnerBaseUrl, renderPartnerEmail, type BuiltEmail } from "./mail";
+import { escapeHtml, greet, partnerBaseUrl, partnerFooter, renderPartnerEmail, type BuiltEmail } from "./mail";
 
 export const DIGEST_MAX_UPDATES = 10;
 export const DIGEST_MAX_PROJECTS = 5;
@@ -98,6 +98,7 @@ export function buildDigestEmail(
     link: p.portalUrl,
     notes: [`${t.optOut}\n${p.profileUrl}`],
     signature: d.mail.signature,
+    footer: partnerFooter(locale),
   }, theme);
 }
 
@@ -139,6 +140,7 @@ export function buildDigestTelegram(locale: PartnerLocale, p: { content: DigestC
     if (totalLines.length) parts.push(`<b>${esc(t.totalsTitle)}</b>\n${totalLines.join("\n")}`);
     if (projectLines.length) parts.push(`<b>${esc(t.projectsTitle)}</b>\n${projectLines.join("\n")}`);
     parts.push(`<a href="${esc(p.portalUrl)}">${esc(d.telegram.notify.open)}</a>`);
+    parts.push(`<i>${esc(d.mail.footer.tagline)}</i>`);
     return parts.join("\n\n");
   };
   let out = render();

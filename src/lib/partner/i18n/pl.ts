@@ -135,6 +135,7 @@ export const pl: PartnerDict = {
   },
   mail: {
     signature: "Z poważaniem\nCyprus VIP Estates",
+    footer: { tagline: "Razem silniejsi 🤝", portal: "Portal partnera", submit: "Zgłoś klienta", projects: "Wszystkie projekty", whatsapp: "Napisz na WhatsApp", settings: "Ustawienia powiadomień" },
     verify: {
       subject: "Prosimy o potwierdzenie adresu e-mail",
       greeting: "Szanowni Państwo,",
@@ -162,7 +163,7 @@ export const pl: PartnerDict = {
     stage: {
       subject: "Nowe informacje o Państwa kliencie {client}",
       greeting: "Szanowni Państwo,",
-      intro: "mamy nowe informacje o Państwa kliencie {client}. Aktualny status: {stage}.",
+      intro: "oto najnowsze informacje o Państwa kliencie {client}: {stage}.",
       button: "Zobacz klienta",
     },
     message: {
@@ -175,7 +176,7 @@ export const pl: PartnerDict = {
     claimOutcome: {
       greeting: "Szanowni Państwo,",
       acceptedSubject: "Klient {client} został przyjęty",
-      acceptedIntro: "sprawdziliśmy Państwa zgłoszenie: {client} jest teraz zarejestrowany jako Państwa klient. Postępy mogą Państwo śledzić w portalu partnera.",
+      acceptedIntro: "świetny start: {client} jest teraz zarejestrowany jako Państwa klient. Resztą zajmiemy się my – każdy krok mogą Państwo śledzić w portalu partnera.",
       rejectedSubject: "Zgłoszenie {client} zostało sprawdzone",
       rejectedIntro: "sprawdziliśmy Państwa zgłoszenie dotyczące {client}. Niestety nie możemy zarejestrować tego kontaktu jako Państwa klienta.",
       button: "Zobacz w portalu",
@@ -183,7 +184,7 @@ export const pl: PartnerDict = {
     payout: {
       subject: "Państwa prowizja została wypłacona",
       greeting: "Szanowni Państwo,",
-      intro: "przelaliśmy prowizję za klienta {client} ({project}, {unit}): {amount}.",
+      intro: "zasłużenie! Przelaliśmy prowizję za klienta {client} ({project}, {unit}): {amount}.",
       creditNoteLine: "Nota rozliczeniowa {number} jest dostępna w portalu partnera.",
       button: "Otwórz prowizje",
     },
@@ -198,33 +199,33 @@ export const pl: PartnerDict = {
     match: {
       subject: "Nowe dopasowanie dla Państwa klienta {client}",
       greeting: "Szanowni Państwo,",
-      intro: "mamy nowe informacje o projekcie, który pasuje do budżetu Państwa klienta {client}: {project} ({change}).",
+      intro: "szansa dla Państwa klienta {client}: {project} mieści się w budżecie ({change}).",
       price: "Cena od {price}",
       button: "Zobacz projekt",
     },
     presentationOpened: {
       subject: "Prezentacja dla klienta {client} została otwarta",
       greeting: "Szanowni Państwo,",
-      intro: "prezentacja wysłana przez Państwa klientowi {client} została właśnie otwarta. Wyświetlenia i ulubione są widoczne w portalu partnera.",
+      intro: "prezentacja wysłana przez Państwa klientowi {client} została właśnie otwarta – to dobry moment, aby się odezwać. Wyświetlenia i ulubione są widoczne w portalu partnera.",
       button: "Otwórz prezentacje",
     },
     tierUp: {
       subject: "Są Państwo teraz partnerem {tier}",
       greeting: "Szanowni Państwo,",
-      intro: "gratulujemy! Dzięki zamkniętym transakcjom osiągnęli Państwo poziom {tier}. Państwa nowe udziały: {handover} % przy przekazaniu i {fix} % w trybie Fix.",
+      intro: "gratulujemy – Państwa wyniki mówią same za siebie! Osiągnęli Państwo poziom {tier}. Państwa nowe udziały: {handover} % przy przekazaniu i {fix} % w trybie Fix.",
       note: "Nowe udziały obowiązują dla transakcji utworzonych od teraz; dotychczasowe transakcje pozostają bez zmian.",
       button: "Otwórz portal partnera",
     },
     projectNews: {
-      subject: "Nowe projekty w Cyprus VIP Estates",
+      subject: "Nowe projekty dla Państwa klientów",
       greeting: "Szanowni Państwo,",
-      intro: "te projekty są nowe w naszej ofercie:",
+      intro: "świeżo na rynku – nowe projekty, które mogą idealnie pasować do Państwa klientów:",
       button: "Otwórz projekty",
     },
     watch: {
       subject: "Nowości o projektach z Państwa prezentacji",
       greeting: "Szanowni Państwo,",
-      intro: "są nowości o projektach, które pokazali Państwo swoim klientom:",
+      intro: "w projektach, które pokazali Państwo swoim klientom, coś się dzieje:",
       button: "Otwórz prezentacje",
     },
     protectionEnding: {
@@ -251,7 +252,7 @@ export const pl: PartnerDict = {
     tierNear: {
       subject: "Jeszcze jedna transakcja do poziomu {tier}",
       greeting: "Szanowni Państwo,",
-      intro: "brakuje Państwu tylko jednej zamkniętej transakcji do poziomu {tier}: {handover} % przy przekazaniu i {fix} % w trybie Fix.",
+      intro: "są Państwo blisko celu: jeszcze jedna zamknięta transakcja i osiągną Państwo poziom {tier} – {handover} % przy przekazaniu i {fix} % w trybie Fix.",
       button: "Otwórz portal partnera",
     },
   },
@@ -763,7 +764,7 @@ export const pl: PartnerDict = {
       tierShares: "Państwa nowe udziały: {handover} % przekazanie · {fix} % Fix",
       viewingOn: "Oglądanie {date}",
       expectedCommission: "Państwa przewidywana prowizja: {amount}",
-      projectNews: "Nowe projekty w Cyprus VIP Estates:",
+      projectNews: "Świeżo na rynku – nowe projekty dla Państwa klientów:",
       projectRate: "Państwa stawka {rate}%",
       watch: "Nowości o projektach z Państwa prezentacji:",
       unitsLeft: "zostało tylko {n}",
@@ -779,6 +780,13 @@ export const pl: PartnerDict = {
       openProjects: "Wszystkie projekty",
       open: "Otwórz w portalu",
       viewProject: "Zobacz projekt",
+      studio: "Kawalerka",
+      bedroomOne: "{n} sypialnia",
+      bedroomFew: "{n} sypialnie",
+      bedroomMany: "{n} sypialni",
+      bedroomOther: "{n} sypialni",
+      bedsFrom: "{beds} od {price}",
+      fitsClients: "Pasuje do Państwa klientów: {clients}",
     },
     changeTypes: {
       published: "nowy projekt",
