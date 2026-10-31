@@ -1,0 +1,15 @@
+{
+  "_note": "DTA Group extra-link buttons, 2026-10-30. What DTA actually has, established two independent ways that agree: (1) every /360/<slug>/ URL was downloaded and fingerprinted — the three below are small krpano (Kolor Panotour) pages with their own titles, while /360/mandarin/, /360/athina/, /360/ihome/, /360/only/ and even /360/level-plots/ all answer 200 by falling through to the ordinary WordPress project page (171-182 KB; /360/athina/ and /360/athina-residences/ are byte-identical, which is what exposed the fall-through); (2) DTA's own project pages under /projects/<slug>/ link exactly these three tours and nothing else. No project page links a video or a construction camera.",
+  "_video_caveat": "The iHOME video is DTA's own — YouTube metadata gives title 'DTA Group, iHOME' on the DTA Group channel — but it was published 2018-06-11, eight years ago, and its content was NOT watched, only its metadata read. iHOME is a completed building so an old film still shows the real thing. All seven DTA projects are drafts, so nothing is public until the operator publishes; worth one look before that.",
+  "_not_found": "Mandarin, Athina Residences and ONLY Tower have no tour, no video and no camera that DTA publishes anywhere we can see. They get no buttons rather than a guessed one.",
+  "feedKeyPrefix": "manual:dta-",
+  "projects": {
+    "alti-residences": [{ "kind": "tour360", "url": "https://dtagroup.com/360/alti/" }],
+    "level-residences": [{ "kind": "tour360", "url": "https://dtagroup.com/360/level/" }],
+    "luma-residences": [{ "kind": "tour360", "url": "https://dtagroup.com/360/luma/" }],
+    "ihome": [{ "kind": "video", "url": "https://www.youtube.com/watch?v=S774eoakAmE" }],
+    "mandarin": [],
+    "athina-residences": [],
+    "only-tower": []
+  }
+}
