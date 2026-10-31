@@ -11,6 +11,7 @@ import Form from "@/app/preview-home/sections/Form";
 import HeroMedia from "@/app/preview-project/HeroMedia";
 import Benefits from "@/app/preview-project/Benefits";
 import ExtraLinkIcon, { ExtraLinkArrow } from "@/app/preview-project/ExtraLinkIcon";
+import { isDistanceClaim } from "@/lib/distanceClaims";
 import areaLibrary from "@/app/preview-project/areas.json";
 import PlanGrid from "@/app/preview-project/PlanGrid";
 import PropertyMapBlock from "@/app/preview-project/PropertyMapBlock";
@@ -132,7 +133,9 @@ export default async function ProjectPageBody({
   // twice (hero eyebrow + facts panel). Transliterated per he-glossary.md §1
   // for `he`, unknown parts kept Latin and bidi-isolated.
   const locationLabel = lang === "he" ? hePlaceList(p.location) : p.location;
-  const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter(Boolean);
+  // Distance claims ("300 meters from the beach", "5 min to A6 Highway") are left
+  // to the Distances strip above the map — see src/lib/distanceClaims.ts.
+  const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter((b) => b && !isDistanceClaim(b));
   // Neighbourhood text: prefer the APPROVED area description from the DB in the
   // page's language (English fallback); otherwise the static demo library.
   const slugOfArea = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
@@ -215,7 +218,8 @@ export default async function ProjectPageBody({
     ...(p.extraFacts ?? []).filter(
       (f) =>
         !/^\s*total\s+units\s*$/i.test(f.label) &&
-        !(p.dev === "leptos" && LEPTOS_FEED_DISTANCES.has(f.label.trim().toLowerCase())),
+        !(p.dev === "leptos" && LEPTOS_FEED_DISTANCES.has(f.label.trim().toLowerCase())) &&
+        !isDistanceClaim(`${f.label}: ${f.value}`),
     ),
   ].filter(Boolean) as { label: string; value: string }[];
 

@@ -14,14 +14,14 @@ import { dict, fmt, pickPartnerLocale, type PartnerLocale } from "./i18n";
 import { emailThemeForPartner } from "@/lib/design/store";
 import type { EmailTheme } from "@/lib/design/theme";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
-import { buildTelegramNotification, routeNotification, type TelegramNotificationInput } from "./telegram";
+import { buildTelegramNotification, buildTelegramProjectNews, routeNotification, type TelegramNotificationInput } from "./telegram";
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
   INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail,
   buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
   buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
-  isUnchangedStage, partnerDate, projectsLink, watchChangeLabels,
+  isUnchangedStage, partnerDate, projectNewsLines, projectsLink, watchChangeLabels,
   stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
   planStageNotifications, presentationsLink, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
 } from "./notify";
@@ -96,7 +96,8 @@ export type SendResult = { sent: number; skipped: Record<string, number>; failed
 type Delivery = {
   partnerId: string;
   email: { to: string; mail: BuiltEmail } | null;
-  telegram: { chatId: string; html: string } | null;
+  /** One or more messages, sent in order (only the new-projects post is ever split). */
+  telegram: { chatId: string; messages: string[] } | null;
   /** E-mail allowed for this row but not routed (the partner chose Telegram only): used when Telegram fails permanently (blocked, 4xx, not configured). */
   fallbackEmail: { to: string; mail: BuiltEmail } | null;
   /** Set while the partner's Telegram quiet hours run: the Telegram part waits until then (e-mail is never held). */
@@ -176,10 +177,10 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     theme = await emailThemeForPartner(row.partnerId);
     themes.set(row.partnerId, theme);
   }
-  const deliver = (mail: BuiltEmail, tg: TelegramNotificationInput): Delivery => ({
+  const deliver = (mail: BuiltEmail, tg: TelegramNotificationInput | string[]): Delivery => ({
     partnerId: row.partnerId,
     email: sendEmailToo && to ? { to, mail } : null,
-    telegram: sendTelegram && chatId ? { chatId, html: buildTelegramNotification(locale, tg) } : null,
+    telegram: sendTelegram && chatId ? { chatId, messages: Array.isArray(tg) ? tg : [buildTelegramNotification(locale, tg)] } : null,
     fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
     quietUntil: sendTelegram ? quietEndsAt(now, quietWindow(partner.quietFrom, partner.quietTo)) : null,
   });
@@ -294,16 +295,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
       const link = projectsLink(base);
       return deliver(
         buildProjectNewsEmail(locale, { partnerFirstName: partner.firstName, projects, link }, theme),
-        {
-          kind: "PROJECT_NEWS", url: link, portalUrl: base,
-          projects: projects.map((pr) => ({
-            name: pr.name, area: pr.area, url: pr.url,
-            detail: [
-              pr.priceFrom != null ? fmtLine(locale, "priceFrom", { price: formatPayoutAmount(locale, pr.priceFrom) }) : "",
-              pr.rate != null ? fmtLine(locale, "projectRate", { rate: formatShare(locale, pr.rate) }) : "",
-            ].filter(Boolean).join(" · "),
-          })),
-        },
+        buildTelegramProjectNews(locale, projects.map((pr) => ({ name: pr.name, url: pr.url, lines: projectNewsLines(locale, pr) })), link),
       );
     }
     case "WATCH": {
@@ -418,7 +410,16 @@ async function stageExtras(locale: PartnerLocale, toStatus: unknown, leadId: str
 async function deliverRow(d: Delivery, refKey: string, errors: string[]): Promise<DeliveryOutcome> {
   const results: { email?: ChannelResult; telegram?: ChannelResult } = {};
   if (d.telegram) {
-    const r = await sendPartnerTelegram(d.telegram.chatId, d.telegram.html);
+    // A split post goes out in order; a failure stops the rest. Once a part went out, a later failure is not
+    // retried (the retry would repeat the parts already sent): it is reported as an error and the row is done.
+    const r = await sendPartnerTelegram(d.telegram.chatId, d.telegram.messages[0]);
+    for (let i = 1; r.ok && i < d.telegram.messages.length; i++) {
+      const next = await sendPartnerTelegram(d.telegram.chatId, d.telegram.messages[i]);
+      if (!next.ok) {
+        errors.push(truncateError(`${refKey}: Telegram part ${i + 1}/${d.telegram.messages.length} not sent: ${next.status} ${next.description}`));
+        break;
+      }
+    }
     results.telegram = r.ok ? { ok: true } : telegramFailureResult(truncateError(`${r.status} ${r.description}`), r.failure);
     if (!r.ok && r.failure === "blocked") {
       await prisma.partner
