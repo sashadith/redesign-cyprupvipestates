@@ -168,6 +168,10 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -176,6 +180,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         lang,
         ...(guideId ? { guide: guideId } : {}),
         ...getAttribution(),
+        metaEventId,
       });
 
       if (
@@ -188,7 +193,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
             form_name: guideId ? `guide_${guideId}` : "form_minimal",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          }, { eventID: newMetaEventId("lead") });
+          }, { eventID: metaEventId });
         }
         if (
           typeof window !== "undefined" &&

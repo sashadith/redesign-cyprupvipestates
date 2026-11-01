@@ -92,6 +92,8 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
     setStatus("sending"); setErrMsg(null);
     try {
       const parsed = parsePhoneNumberFromString(phone || "");
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+      const metaEventId = newMetaEventId("lead");
       const res = await axios.post("/api/leads", {
         name: firstName,
         surname: get("surname"),
@@ -110,10 +112,11 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
         projectSlug: projectSlug ?? "",
         lang,
         ...getAttribution(),
+        metaEventId,
       });
       if (res.status === 200 && res.data?.ok) {
         setStatus("ok");
-        if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq("track", "Lead", { form_name: "qualification" }, { eventID: newMetaEventId("lead") });
+        if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq("track", "Lead", { form_name: "qualification" }, { eventID: metaEventId });
       } else { setStatus("err"); setErrMsg(t.error); }
     } catch { setStatus("err"); setErrMsg(t.error); }
   }

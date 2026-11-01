@@ -99,6 +99,10 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -106,6 +110,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
         currentPage,
         lang,
         ...getAttribution(),
+        metaEventId,
       });
 
       // A refused lead also answers 200, with ok: false: never show "thank you" for it.
@@ -115,7 +120,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
             form_name: "form_static",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          }, { eventID: newMetaEventId("lead") });
+          }, { eventID: metaEventId });
         }
         if (
           typeof window !== "undefined" &&

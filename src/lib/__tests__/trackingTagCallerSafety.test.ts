@@ -118,7 +118,7 @@ test("every fbq call checks that the pixel initialised", () => {
   // `fbq\s*\(` did not match it, and the file reported clean for an event the
   // check had never looked at. Found 2026-10-24 while adding eventIDs.
   assert.deepEqual(
-    unguardedCallers(/\bfbq!?\s*\(\s*["']track["']/, "fbq", "FacebookPixel/FacebookPixel.tsx"),
+    unguardedCallers(/\bfbq!?\s*\(\s*["']track(?:Custom)?["']/, "fbq", "FacebookPixel/FacebookPixel.tsx"),
     [],
     "an fbq call has no existence check before it",
   );
@@ -198,7 +198,7 @@ test("the check still catches what it is for, and clears what it should", () => 
     "QualificationForm: guard and call on one line",
   );
   assert.equal(
-    g('const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;\nif (typeof fbq !== "function") return;\nfbq("track", "InitiateCheckout", {});'),
+    g('const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;\nif (typeof fbq !== "function") return;\nfbq("trackCustom", "FormOpen", {});'),
     true,
     "trackBrochureOpen: guarded through a local",
   );

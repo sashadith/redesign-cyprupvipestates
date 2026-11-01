@@ -157,6 +157,10 @@ const FormFull: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -164,6 +168,7 @@ const FormFull: FC<ContactFormProps> = ({
         currentPage,
         lang,
         ...getAttribution(),
+        metaEventId,
       });
 
       if (
@@ -176,7 +181,7 @@ const FormFull: FC<ContactFormProps> = ({
             form_name: "form_full",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          }, { eventID: newMetaEventId("lead") });
+          }, { eventID: metaEventId });
         }
         if (
           typeof window !== "undefined" &&

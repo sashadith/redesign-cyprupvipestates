@@ -245,6 +245,8 @@ const FormRoi: FC<Props> = ({
 
     try {
       const currentPage = window.location.href;
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+      const metaEventId = newMetaEventId("lead");
       const response = await axios.post("/api/roi-calculator", {
         name: values.name,
         surname: values.surname,
@@ -256,6 +258,7 @@ const FormRoi: FC<Props> = ({
         lang,
         currentPage,
         ...getAttribution(),
+        metaEventId,
         strategy,
         scenario,
         inputs: {
@@ -289,7 +292,7 @@ const FormRoi: FC<Props> = ({
             preferred_contact: values.preferredContact,
             roi_strategy: strategy,
             roi_scenario: scenario,
-          }, { eventID: newMetaEventId("lead") });
+          }, { eventID: metaEventId });
         }
         resetForm({});
         setFilled({ name: false, surname: false, phone: false, email: false });

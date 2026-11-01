@@ -20,7 +20,8 @@ export const ButtonModal = ({
 
   const handleClick = () => {
     if (typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "InitiateCheckout", {
+      // Custom FormOpen, not the standard InitiateCheckout — see trackBrochureOpen.ts.
+      window.fbq("trackCustom", "FormOpen", {
         form_name:
           modalType === "roi"
             ? "roi_modal"
@@ -28,7 +29,7 @@ export const ButtonModal = ({
               ? "roi_calculator_modal"
               : "brochure_modal",
         page_location: window.location.href,
-      }, { eventID: newMetaEventId("ic") });
+      }, { eventID: newMetaEventId("fo") });
     }
 
     if (modalType === "roi") {

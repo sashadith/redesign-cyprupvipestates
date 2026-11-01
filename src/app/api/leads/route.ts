@@ -19,6 +19,7 @@ import { LOCALES } from "@/lib/locale";
 import { parseGuideRequest, messageWithGuide, guideNote, guideLink } from "@/lib/guides/request";
 import { getGuideEmail } from "@/lib/guides/email";
 import { formLeadSource } from "@/lib/guides/leadSource";
+import { sendLeadToMeta } from "@/lib/metaCapi";
 
 const ALLOWED_LANGS = new Set<string>(LOCALES);  // locally named ALLOWED_LANGS to avoid shadowing the imported LOCALES constant
 
@@ -145,6 +146,10 @@ export async function POST(request: Request) {
 
     // Timeline entry (audit L1). This route does its own Telegram below, so skip it here.
     await recordInboundLead({ leadId: lead.id, source, email: emailNorm, name: fullName, phone: phoneNorm, page, notifyTelegram: false });
+
+    // Server copy of the browser's Lead (consent-gated, deduplicated by the
+    // form's metaEventId). Not awaited: it never throws and must not hold the reply.
+    void sendLeadToMeta(request, body, { email: emailNorm, phone: phoneNorm, page, contentName: source });
 
     // Top property matches (non-fatal, best-effort) — auto-match against the
     // lead's own data, no admin filters, so this is necessarily a rough first

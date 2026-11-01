@@ -148,6 +148,10 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -155,6 +159,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
         currentPage,
         lang,
         ...getAttribution(),
+        metaEventId,
       });
 
       // A refused lead also answers 200, with ok: false: never show "thank you" for it.
@@ -164,7 +169,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
             form_name: "form_static",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          }, { eventID: newMetaEventId("lead") });
+          }, { eventID: metaEventId });
         }
         if (typeof window !== "undefined" && typeof (window as any).lintrk === "function") {
           (window as any).lintrk("track", { conversion_id: 27871505 });

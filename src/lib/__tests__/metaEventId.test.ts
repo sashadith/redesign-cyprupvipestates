@@ -21,7 +21,7 @@ test("two ids from the same millisecond still differ", () => {
 test("the prefix names the event, so a key is readable in Events Manager", () => {
   assert.ok(newMetaEventId("lead").startsWith("lead-"));
   assert.ok(newMetaEventId("contact").startsWith("contact-"));
-  assert.ok(newMetaEventId("ic").startsWith("ic-"));
+  assert.ok(newMetaEventId("fo").startsWith("fo-"));
   assert.ok(newMetaEventId("vc").startsWith("vc-"));
 });
 
@@ -58,10 +58,10 @@ const SRC = join(process.cwd(), "src");
 const FILES = walk(SRC);
 const rel = (p: string) => p.slice(join(process.cwd(), "").length);
 
-/** Every `fbq("track", "<name>")` call in src/, with the 400 characters after it. */
+/** Every `fbq("track"|"trackCustom", "<name>")` call in src/, with the 600 characters after it. */
 function trackCalls(event: string): { file: string; tail: string }[] {
   const out: { file: string; tail: string }[] = [];
-  const re = new RegExp(`fbq!?\\s*\\(\\s*["']track["']\\s*,\\s*["']${event}["']`, "g");
+  const re = new RegExp(`fbq!?\\s*\\(\\s*["']track(?:Custom)?["']\\s*,\\s*["']${event}["']`, "g");
   for (const f of FILES) {
     const src = readFileSync(f, "utf8");
     let m: RegExpExecArray | null;
@@ -71,7 +71,7 @@ function trackCalls(event: string): { file: string; tail: string }[] {
   return out;
 }
 
-for (const event of ["Lead", "Contact", "InitiateCheckout", "ViewContent"]) {
+for (const event of ["Lead", "Contact", "FormOpen", "ViewContent"]) {
   test(`every ${event} call carries an eventID`, () => {
     const calls = trackCalls(event);
     assert.ok(calls.length > 0, `no ${event} call sites found — the sweep is looking in the wrong place`);
@@ -79,6 +79,12 @@ for (const event of ["Lead", "Contact", "InitiateCheckout", "ViewContent"]) {
     assert.deepEqual(missing, [], `a ${event} call has no eventID: a server-side copy would double-count it`);
   });
 }
+
+test("InitiateCheckout is gone for good", () => {
+  // Replaced by the custom FormOpen on 2026-11-01: the standard event tells
+  // Meta's delivery a purchase began, and it was firing on modal clicks.
+  assert.deepEqual(trackCalls("InitiateCheckout").map((c) => c.file), [], "InitiateCheckout came back");
+});
 
 test("PageView deliberately carries no eventID", () => {
   // The decision, pinned: PageView is the one event that will never be sent
@@ -98,7 +104,7 @@ test("every eventID is a fresh id built at send time", () => {
    * Checked by shape rather than by position, because position needs parsing
    * and this repo has already paid for a positional check that cried wolf: an
    * `eventID` must either call the generator inline, or name a local assigned
-   * from it in the 400 characters directly above. Both put the call at the send
+   * from it in the 2500 characters directly above. Both put the call at the send
    * site; a value arriving from anywhere else (a prop, module scope, a server
    * payload) is reported. */
   const offenders: string[] = [];
@@ -109,7 +115,10 @@ test("every eventID is a fresh id built at send time", () => {
     while ((m = re.exec(src)) !== null) {
       const ref = m[1].replace(/\s*\($/, "");
       if (ref === "newMetaEventId") continue; // inline call
-      const before = src.slice(Math.max(0, m.index - 400), m.index);
+      // 2500, not 400: a Lead id is made at the top of the submit handler,
+      // before the POST that carries it to the Conversions API, and the fbq
+      // call comes after the response — the same handler, a screen further on.
+      const before = src.slice(Math.max(0, m.index - 2500), m.index);
       if (new RegExp(`\\b(const|let)\\s+${ref}\\s*=\\s*newMetaEventId\\s*\\(`).test(before)) continue;
       offenders.push(`${rel(f)} (eventID: ${ref})`);
     }
