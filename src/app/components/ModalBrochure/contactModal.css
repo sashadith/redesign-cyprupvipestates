@@ -568,13 +568,13 @@
 .cvpm-content { width: min(896px, 100%); }
 @media (min-width: 861px) {
   .cvpm { grid-template-columns: minmax(0, 629px) minmax(0, 1fr); }
-  /* Sized by the panel's height (operator, 2026-11-01), its top 50px below the panel's top at rest. The picture
+  /* Sized by the panel's height (operator, 2026-11-01), its top 40px below the panel's top at rest. The picture
      moves (cvpmArtFloat: up to 7px up; cvpmArtTilt: ±2deg about 55% / bottom), so it is placed for the extremes:
      its right edge sits on the panel's right edge, which is where the bottom-right corner (where the arm leaves
      the picture) lands at the full left tilt, and it reaches 13px below the panel, more than the most a bottom
      corner rises (7px float + 0.55 × width × sin 2deg ≈ 6px). So no edge of the picture ever shows at the
      bottom or the bottom right; the overhang is clipped by the panel. */
-  .cvpm__art img { left: auto; right: -1px; bottom: -13px; height: calc(100% - 37px); width: auto; max-width: none; aspect-ratio: auto; }
+  .cvpm__art img { left: auto; right: -1px; bottom: -13px; height: calc(100% - 27px); width: auto; max-width: none; aspect-ratio: auto; }
   [dir="rtl"] .cvpm { grid-template-columns: minmax(0, 1fr) minmax(0, 629px); }
   [dir="rtl"] .cvpm__art img { right: auto; left: -1px; }
 }
