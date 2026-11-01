@@ -36,6 +36,14 @@ export function validEventId(name: CapiEventName, id: unknown): id is string {
   return typeof id === "string" && id.length <= 40 && new RegExp(`^${PREFIX[name]}-[0-9a-z]+-[0-9a-z]+$`).test(id);
 }
 
+/** Made within the last 10 minutes (the id's middle part is Date.now() in base36).
+ *  A browser posts its id seconds after making it; a replayed or hand-minted
+ *  one is the only thing that arrives late. Small clock skew is tolerated. */
+export function freshEventId(id: string, now = Date.now()): boolean {
+  const t = parseInt(id.split("-")[1] ?? "", 36);
+  return Number.isFinite(t) && t <= now + 60_000 && now - t <= 10 * 60_000;
+}
+
 export const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
 
 /** Meta's normalisation: trimmed, lowercase. */
@@ -63,10 +71,13 @@ export function cookieFrom(header: string | null | undefined, name: string): str
   return null;
 }
 
+/** X-Real-IP first: nginx sets it to $remote_addr, while X-Forwarded-For is
+ *  appended to and its first entry is whatever the client chose to send. */
 export function clientIpFrom(headers: Headers): string | null {
+  const real = headers.get("x-real-ip")?.trim();
+  if (real) return real;
   const xff = headers.get("x-forwarded-for");
-  const ip = xff ? xff.split(",")[0].trim() : headers.get("x-real-ip")?.trim();
-  return ip || null;
+  return (xff ? xff.split(",")[0].trim() : "") || null;
 }
 
 export interface CapiConfig { token: string; testEventCode: string | null }
@@ -124,6 +135,7 @@ export function capiRefusal(input: CapiEventInput, cfg: CapiConfig | null): stri
   if (!input.ctx.consent) return "no_consent";
   if (input.ctx.bot) return "bot";
   if (!validEventId(input.eventName, input.eventId)) return "no_event_id";
+  if (!freshEventId(input.eventId)) return "stale_event_id";
   let host: string | null = null;
   try { host = new URL(input.eventSourceUrl).hostname; } catch { return "bad_url"; }
   if (!isTrackingHost(host) && !cfg.testEventCode) return "not_production";
@@ -166,6 +178,11 @@ export async function sendCapiEvent(input: CapiEventInput, cfg: CapiConfig | nul
     if (refusal !== "not_configured" && refusal !== "no_consent") console.log(`META_CAPI_SKIPPED ${input.eventName} reason=${refusal}`);
     return false;
   }
+  if (cfg.testEventCode && isTrackingHost(new URL(input.eventSourceUrl).hostname)) {
+    // Test mode on the live site: Meta files these under Test Events and
+    // counts none of them. Fine for a verification run, wrong if forgotten.
+    console.warn(`META_CAPI_TEST_MODE ${input.eventName} — META_CAPI_TEST_EVENT_CODE is set on production; remove it after testing`);
+  }
   try {
     const res = await fetch(endpoint(), {
       method: "POST",
@@ -185,15 +202,21 @@ export async function sendCapiEvent(input: CapiEventInput, cfg: CapiConfig | nul
   }
 }
 
-/** Lead after a successful save — the shape every lead route shares. */
-export function sendLeadToMeta(req: Request, body: { metaEventId?: unknown }, lead: { email: string; phone: string; page: string; contentName?: string }) {
-  return sendCapiEvent({
-    eventName: "Lead",
-    eventId: String(body.metaEventId ?? ""),
-    eventSourceUrl: lead.page,
-    ctx: capiContextFrom(req),
-    email: lead.email,
-    phone: lead.phone,
-    ...(lead.contentName ? { customData: { content_name: lead.contentName } } : {}),
-  });
+/** Lead after a successful save — the shape every lead route shares. Async, so
+ *  even a synchronous failure while reading the request becomes a resolved
+ *  `false` and can never turn a saved lead into a 500. */
+export async function sendLeadToMeta(req: Request, body: { metaEventId?: unknown }, lead: { email: string; phone: string; page: string; contentName?: string }): Promise<boolean> {
+  try {
+    return await sendCapiEvent({
+      eventName: "Lead",
+      eventId: String(body.metaEventId ?? ""),
+      eventSourceUrl: lead.page,
+      ctx: capiContextFrom(req),
+      email: lead.email,
+      phone: lead.phone,
+      ...(lead.contentName ? { customData: { content_name: lead.contentName } } : {}),
+    });
+  } catch {
+    return false;
+  }
 }

@@ -27,6 +27,7 @@ import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formStandardCopy } from "./FormStandard.copy";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 const NAME_MIN = 2;
 const NAME_MAX = 22;
@@ -300,7 +301,7 @@ const FormStandard: FC<ContactFormProps> = ({
         lang,
         ...(guideId ? { guide: guideId } : {}),
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       if (

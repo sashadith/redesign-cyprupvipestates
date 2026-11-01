@@ -28,6 +28,7 @@ import {
   RoiStrategy,
 } from "@/lib/roi";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 const NAME_MIN = 2;
 const NAME_MAX = 22;
@@ -258,7 +259,7 @@ const FormRoi: FC<Props> = ({
         lang,
         currentPage,
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
         strategy,
         scenario,
         inputs: {

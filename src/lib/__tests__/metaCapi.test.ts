@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 import {
-  buildCapiPayload, capiConfig, capiContextFrom, capiRefusal, cookieFrom, normalizeEmail, normalizePhone,
+  buildCapiPayload, freshEventId, capiConfig, capiContextFrom, capiRefusal, cookieFrom, normalizeEmail, normalizePhone,
   sendCapiEvent, validEventId, type CapiEventInput,
 } from "@/lib/metaCapi";
 
@@ -25,9 +27,10 @@ const req = (cookie: string, ua = CHROME) =>
   });
 
 const CFG = { token: "t", testEventCode: null };
+const LEAD_ID = newMetaEventId("lead");
 const input = (over: Partial<CapiEventInput> = {}): CapiEventInput => ({
   eventName: "Lead",
-  eventId: "lead-mh1abc-x9y8z7w6",
+  eventId: LEAD_ID,
   eventSourceUrl: "https://cyprusvipestates.com/en/projects/x",
   ctx: capiContextFrom(req(CONSENT)),
   email: "  Jane.Doe@Example.COM ",
@@ -57,7 +60,9 @@ test("every refusal, and the one case that may go", () => {
   assert.equal(capiRefusal(input({ ctx: capiContextFrom(req(REFUSED)) }), CFG), "no_consent");
   assert.equal(capiRefusal(input({ ctx: capiContextFrom(req(CONSENT, "HeadlessChrome/131")) }), CFG), "bot");
   assert.equal(capiRefusal(input({ eventId: "" }), CFG), "no_event_id");
-  assert.equal(capiRefusal(input({ eventId: "contact-mh1abc-x9y8z7w6" }), CFG), "no_event_id", "a Contact id on a Lead");
+  assert.equal(capiRefusal(input({ eventId: newMetaEventId("contact") }), CFG), "no_event_id", "a Contact id on a Lead");
+  const old = `lead-${(Date.now() - 11 * 60_000).toString(36)}-abcd1234`;
+  assert.equal(capiRefusal(input({ eventId: old }), CFG), "stale_event_id", "a replayed or hand-minted id");
   assert.equal(capiRefusal(input({ eventSourceUrl: "http://localhost:3000/en" }), CFG), "not_production");
   assert.equal(capiRefusal(input({ eventSourceUrl: "https://design.cyprusvipestates.com/en" }), CFG), "not_production");
   assert.equal(capiRefusal(input({ eventSourceUrl: "http://localhost:3000/en" }), { token: "t", testEventCode: "TEST123" }), null, "a test code opens the testbed");
@@ -75,7 +80,7 @@ test("the payload hashes email and phone and carries nothing raw", () => {
   const body = buildCapiPayload(input(), CFG);
   const ev = body.data[0] as any;
   assert.equal(ev.event_name, "Lead");
-  assert.equal(ev.event_id, "lead-mh1abc-x9y8z7w6");
+  assert.equal(ev.event_id, LEAD_ID);
   assert.equal(ev.action_source, "website");
   assert.equal(ev.event_source_url, "https://cyprusvipestates.com/en/projects/x");
   assert.deepEqual(ev.user_data.em, [h("jane.doe@example.com")]);
@@ -91,7 +96,7 @@ test("the payload hashes email and phone and carries nothing raw", () => {
 });
 
 test("Contact carries no email or phone at all", () => {
-  const ev = buildCapiPayload(input({ eventName: "Contact", eventId: "contact-a-b", email: null, phone: null }), CFG).data[0] as any;
+  const ev = buildCapiPayload(input({ eventName: "Contact", eventId: newMetaEventId("contact"), email: null, phone: null }), CFG).data[0] as any;
   assert.ok(!("em" in ev.user_data) && !("ph" in ev.user_data));
   assert.ok(ev.user_data.fbp && ev.user_data.client_user_agent);
 });
@@ -103,6 +108,21 @@ test("normalisation follows Meta's rules", () => {
   assert.equal(normalizePhone("099 123456"), null, "no country code: the hash would match nobody");
   assert.equal(cookieFrom("a=1; _fbp=x.y; b=2", "_fbp"), "x.y");
   assert.equal(cookieFrom("a_fbp=1", "_fbp"), null);
+});
+
+test("an id is fresh for ten minutes, with a minute of clock skew", () => {
+  const now = Date.now();
+  const at = (t: number) => `lead-${t.toString(36)}-abcd1234`;
+  assert.equal(freshEventId(at(now - 9 * 60_000), now), true);
+  assert.equal(freshEventId(at(now - 11 * 60_000), now), false);
+  assert.equal(freshEventId(at(now + 30_000), now), true);
+  assert.equal(freshEventId(at(now + 5 * 60_000), now), false);
+  assert.equal(freshEventId("lead-zz-", now), false);
+});
+
+test("the client IP is nginx's X-Real-IP, not a forwarded-for the client wrote", () => {
+  const r = new Request("https://cyprusvipestates.com/x", { headers: { "x-real-ip": "198.51.100.1", "x-forwarded-for": "1.2.3.4, 198.51.100.1" } });
+  assert.equal(capiContextFrom(r).ip, "198.51.100.1");
 });
 
 test("ids are only what our generator makes", () => {
@@ -155,7 +175,7 @@ test("every browser Lead posts its id, and reuses it for fbq", () => {
   assert.ok(sites.length >= 8, `only ${sites.length} Lead sites found — the sweep is looking in the wrong place`);
   const bad = sites.filter((f) => {
     const s = readFileSync(f, "utf8");
-    return !/const metaEventId = newMetaEventId\("lead"\)/.test(s) || !/\n\s*metaEventId,\n/.test(s) || !/\{ eventID: metaEventId \}/.test(s);
+    return !/const metaEventId = newMetaEventId\("lead"\)/.test(s) || !/\n\s*metaEventId: leadIdForServer\(metaEventId\),\n/.test(s) || !/\{ eventID: metaEventId \}/.test(s);
   });
   assert.deepEqual(bad.map(rel), [], "a Lead form does not send its event id to the server, or makes a second one for fbq");
 });
@@ -168,6 +188,21 @@ test("every lead route that answers a browser Lead sends the server copy", () =>
     // failed to save would be a conversion nobody can follow up.
     assert.ok(s.indexOf("sendLeadToMeta(request") > s.indexOf("prisma.lead.create("), `${r} sends before the lead is saved`);
   }
+});
+
+test("automated browsers post no Lead id — the webdriver half of the bot rule", () => {
+  const nav = (v: object) => Object.defineProperty(globalThis, "navigator", { value: v, configurable: true });
+  const chrome = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+  process.env.NEXT_PUBLIC_META_PIXEL_ENABLED = "1";
+  nav({ userAgent: chrome, webdriver: false });
+  assert.equal(leadIdForServer("lead-a-b"), "lead-a-b");
+  nav({ userAgent: chrome, webdriver: true });
+  assert.equal(leadIdForServer("lead-a-b"), undefined, "Playwright with a real Chrome UA");
+  nav({ userAgent: "Mozilla/5.0 HeadlessChrome/131.0" });
+  assert.equal(leadIdForServer("lead-a-b"), undefined);
+  nav({ userAgent: chrome });
+  delete process.env.NEXT_PUBLIC_META_PIXEL_ENABLED;
+  assert.equal(leadIdForServer("lead-a-b"), undefined, "switch off");
 });
 
 test("Contact goes through the one helper, never a bare fbq", () => {

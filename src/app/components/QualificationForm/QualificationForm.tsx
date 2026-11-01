@@ -13,6 +13,7 @@ import { consentCopy } from "../consentCopy";
 import { PROPERTY_VALUES, TIMELINE_VALUES, qualifierCopy } from "@/app/components/qualifierFields";
 import { bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 type Lang = Locale;
 
@@ -112,7 +113,7 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
         projectSlug: projectSlug ?? "",
         lang,
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
       });
       if (res.status === 200 && res.data?.ok) {
         setStatus("ok");

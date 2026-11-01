@@ -26,3 +26,19 @@ export function isAutomatedVisitor(nav: { webdriver?: boolean; userAgent?: strin
   if (nav.webdriver === true) return true;
   return isbot(nav.userAgent ?? "");
 }
+
+/**
+ * The Lead event id a form posts for the server copy — or undefined for a
+ * visitor the pixel itself would refuse (switch off, automated browser).
+ *
+ * The server can only judge a user agent, and Playwright or Puppeteer keep a
+ * real Chrome one, so the `navigator.webdriver` half of the bot rule has to be
+ * applied here, in the browser (found in review 2026-11-01). Deliberately NOT
+ * "only when window.fbq exists": an ad blocker removes fbq from a real,
+ * consenting visitor, and recovering exactly those leads is what the server
+ * copy is for. Consent is checked on the server.
+ */
+export function leadIdForServer(id: string): string | undefined {
+  if (typeof navigator === "undefined") return undefined;
+  return metaPixelEnabled() && !isAutomatedVisitor(navigator) ? id : undefined;
+}

@@ -24,6 +24,7 @@ import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formStaticCopy } from "./FormStatic.copy";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 export type FormData = {
   name: string;
@@ -110,7 +111,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
         currentPage,
         lang,
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       // A refused lead also answers 200, with ok: false: never show "thank you" for it.

@@ -14,6 +14,7 @@ import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
 import OptImg from "./OptImg";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 /* Phone number input, axios and libphonenumber (~220 KB raw together, 2026-10-19 bundle analysis) used
    to ship with the first load of every page that carries this form — the homepage included — although
@@ -159,7 +160,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
         currentPage,
         lang,
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       // A refused lead also answers 200, with ok: false: never show "thank you" for it.

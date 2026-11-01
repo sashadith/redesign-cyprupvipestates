@@ -26,6 +26,7 @@ import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { consentCopy } from "../consentCopy";
 import { formMinimalCopy } from "./FormMinimalBlockComponent.copy";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 export type FormData = {
   name: string;
@@ -180,7 +181,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         lang,
         ...(guideId ? { guide: guideId } : {}),
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       if (

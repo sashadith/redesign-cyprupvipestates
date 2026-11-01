@@ -22,6 +22,7 @@ import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formPartnersCopy } from "./FormPartners.copy";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 function tpl(str: string | undefined, vars: Record<string, string | number>) {
   return String(str ?? "").replace(/\{(\w+)\}/g, (_, k) =>
@@ -234,7 +235,7 @@ const FormPartners: FC<ContactFormProps> = ({
         currentPage,
         lang,
         ...getAttribution(),
-        metaEventId,
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       if (response.status === 200 && response.data?.ok === true) {
