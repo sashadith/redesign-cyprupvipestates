@@ -7,6 +7,8 @@ import { logCronRun } from "@/lib/cronLog";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { hashToken, newToken } from "@/lib/partner/tokens";
 import { ACTIVE_LEAD_STATUSES } from "./leadStatus";
+import { EXCLUDE_PARTNER_ENQUIRY } from "./leadBucket";
+import { lastManualStatusChanges } from "./statusTouch";
 import { dayKey } from "./today";
 import {
   NAG_EXCLUDED_SOURCES, buildNagMessage, maySnooze, nagCounts, nagItems, routeNag, snoozeUntil, withoutLeadRow,
@@ -23,7 +25,8 @@ const crmBase = () => (process.env.NEXT_PUBLIC_SITE_URL || "https://cyprusvipest
 /** Active-funnel leads (not deleted) with the fields the urgency rule reads. */
 async function loadNagLeads(where: { assignedToId?: string | null | { in: string[] } } | { OR: object[] } = {}): Promise<NagLead[]> {
   const rows = await prisma.lead.findMany({
-    where: { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, source: { notIn: [...NAG_EXCLUDED_SOURCES] }, ...where },
+    // Partner applications (PARTNER without partnerId) are not buyers: the pipeline leaves them out, so do the bar and the reminders.
+    where: { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, source: { notIn: [...NAG_EXCLUDED_SOURCES] }, ...EXCLUDE_PARTNER_ENQUIRY, ...where },
     take: LEAD_CAP,
     orderBy: { updatedAt: "desc" },
     select: {
@@ -31,7 +34,8 @@ async function loadNagLeads(where: { assignedToId?: string | null | { in: string
       interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
   });
-  return rows.map(({ interactions, ...r }) => ({ ...r, lastContactAt: interactions[0]?.occurredAt ?? null }));
+  const moved = await lastManualStatusChanges(rows.map((r) => r.id));
+  return rows.map(({ interactions, ...r }) => ({ ...r, lastContactAt: interactions[0]?.occurredAt ?? null, lastStatusChangeAt: moved.get(r.id) ?? null }));
 }
 
 const loadUsers = (): Promise<NagUser[]> =>

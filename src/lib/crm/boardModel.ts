@@ -26,6 +26,8 @@ export type BoardLeadInput = {
   // Urgency marks (2026-10-30); absent = unknown (treated as not set).
   nextFollowUpAt?: Date | null;
   viewingScheduledAt?: Date | null;
+  // Latest status change a person made (statusTouch.ts); counts as work on the lead like a contact.
+  lastStatusChangeAt?: Date | null;
 };
 
 /** "now" = due today (yellow), "overdue" = due on an earlier Cyprus day (red, `days` late). */
@@ -101,17 +103,22 @@ function dayDiff(a: string, b: string): number {
 
 const shortDate = (d: Date) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: CRM_TZ }).format(d);
 
+const latest = (a: Date | null, b: Date | null): Date | null => (a && b ? (a > b ? a : b) : a ?? b);
+
 export function cardUrgency(lead: BoardLeadInput, status: LeadStatusValue, now: Date): CardUrgency | null {
   if (!ACTIVE.has(status)) return null;
   const today = dayKey(now);
   const due: { day: string; reason: string }[] = [];
   const follow = lead.nextFollowUpAt ?? null;
   const followDay = follow ? dayKey(follow) : null;
-  const lastTouch = lead.lastContactAt ?? lead.createdAt;
+  // Work on the lead: a real contact, or a status change a person made (2026-11-01: moving a lead to Offer is
+  // dealing with it — it stayed red before).
+  const lastWork = latest(lead.lastContactAt ?? null, lead.lastStatusChangeAt ?? null);
+  const lastTouch = lastWork ?? lead.createdAt;
 
-  // A real contact logged on or after the follow-up day answers that follow-up (2026-10-31): otherwise a lead whose
+  // Work logged on or after the follow-up day answers that follow-up (2026-10-31): otherwise a lead whose
   // automatic cadence is capped stays red after the call was made, and the reminders would nag about done work.
-  const followDone = !!followDay && !!lead.lastContactAt && dayKey(lead.lastContactAt) >= followDay;
+  const followDone = !!followDay && !!lastWork && dayKey(lastWork) >= followDay;
   if (follow && followDay && !followDone) due.push({ day: followDay, reason: followDay === today ? "Follow-up due today" : `Follow-up was due ${shortDate(follow)}` });
   const planned = !!followDay && followDay > today; // a follow-up in the future: the lead is handled for now
 

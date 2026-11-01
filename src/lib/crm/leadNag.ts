@@ -33,7 +33,7 @@ export function nagSlot(now: Date, tz = CRM_TZ): number | null {
   return (NAG_HOURS as readonly number[]).includes(h) ? h : null;
 }
 
-export type NagLead = Pick<BoardLeadInput, "id" | "firstName" | "lastName" | "status" | "lastContactAt" | "createdAt" | "nextFollowUpAt" | "viewingScheduledAt"> & {
+export type NagLead = Pick<BoardLeadInput, "id" | "firstName" | "lastName" | "status" | "lastContactAt" | "createdAt" | "nextFollowUpAt" | "viewingScheduledAt" | "lastStatusChangeAt"> & {
   assignedToId: string | null;
 };
 

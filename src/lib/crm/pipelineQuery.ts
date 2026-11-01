@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { lastManualStatusChanges } from "./statusTouch";
 import { prisma } from "@/lib/prisma";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { canEditLead, type CrmUser } from "./access";
@@ -23,7 +24,7 @@ const BOARD_SELECT = {
 type BoardRow = Prisma.LeadGetPayload<{ select: typeof BOARD_SELECT }>;
 
 async function toInputs(user: CrmUser, rows: BoardRow[], now: Date): Promise<BoardLeadInput[]> {
-  const temps = await temperaturesFor(rows, now);
+  const [temps, moved] = await Promise.all([temperaturesFor(rows, now), lastManualStatusChanges(rows.map((r) => r.id))]);
   return rows.map((r) => ({
     id: r.id, firstName: r.firstName, lastName: r.lastName, status: r.status, source: r.source,
     languagePreference: r.languagePreference, assignedTo: r.assignedTo, createdAt: r.createdAt,
@@ -33,6 +34,7 @@ async function toInputs(user: CrmUser, rows: BoardRow[], now: Date): Promise<Boa
     canEdit: canEditLead(user, { assignedToId: r.assignedToId }),
     temperature: toPublicTemperature(temps.get(r.id)),
     nextFollowUpAt: r.nextFollowUpAt, viewingScheduledAt: r.viewingScheduledAt,
+    lastStatusChangeAt: moved.get(r.id) ?? null,
   }));
 }
 

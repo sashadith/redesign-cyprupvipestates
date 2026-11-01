@@ -8,6 +8,8 @@ export type TodayLead = {
   id: string; name: string; status: string;
   nextFollowUpAt: Date | null; viewingScheduledAt: Date | null;
   lastContactAt: Date | null; createdAt: Date; assignedAt: Date | null;
+  /** Latest status change a person made (statusTouch.ts): work on the lead, like a contact. */
+  lastStatusChangeAt?: Date | null;
   projectLabel: string | null;
   temperature?: { level: "hot" | "warm" | "cold"; reasons: string[] } | null;
 };
@@ -51,7 +53,12 @@ export function buildToday(leads: TodayLead[], now: Date, tz = CRM_TZ): TodaySec
     if (!active) continue; // CLOSED / LOST / KEEP_CONTACT only ever show up as a viewing
 
     let due = false;
-    if (l.nextFollowUpAt) {
+    // Work (a contact or a status change by a person) on or after the follow-up day answers it, as on the
+    // pipeline board (boardModel.cardUrgency, 2026-11-01).
+    const lastWork = l.lastContactAt && l.lastStatusChangeAt
+      ? (l.lastContactAt > l.lastStatusChangeAt ? l.lastContactAt : l.lastStatusChangeAt)
+      : l.lastContactAt ?? l.lastStatusChangeAt ?? null;
+    if (l.nextFollowUpAt && !(lastWork && dayKey(lastWork, tz) >= dayKey(l.nextFollowUpAt, tz))) {
       const k = dayKey(l.nextFollowUpAt, tz);
       if (k < today) { overdue.push(l); due = true; }
       else if (k === today) { dueToday.push(l); due = true; }
@@ -60,7 +67,7 @@ export function buildToday(leads: TodayLead[], now: Date, tz = CRM_TZ): TodaySec
       const age = nowMs - l.assignedAt.getTime();
       if (age >= 0 && age <= FRESH_MS) fresh.push(l);
     }
-    if (!due && nowMs - (l.lastContactAt ?? l.createdAt).getTime() > STALE_MS) stale.push(l);
+    if (!due && nowMs - (lastWork ?? l.createdAt).getTime() > STALE_MS) stale.push(l);
   }
 
   overdue.sort(byDate((l) => l.nextFollowUpAt!));
