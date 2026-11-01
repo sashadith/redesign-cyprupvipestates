@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { STATUS_LABEL, LOST_REASON_LABEL, isLeadStatus, type LostReasonValue } from "@/lib/crm/leadStatus";
 import { SOURCE_LABEL } from "@/lib/crm/boardModel";
 import { ago } from "@/lib/crm/timeline";
@@ -55,7 +56,8 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null }:
   );
 }
 
-export function CockpitContact({ lead }: { lead: CockpitLead }) {
+// followUp renders inside the panel, under the enquiry (operator, 2026-11-01).
+export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp?: ReactNode }) {
   const wa = waDigits(lead.phone);
   const mailto = safeMailto(lead.email);
   const tel = lead.phone ? lead.phone.replace(/[^\d+]/g, "") : "";
@@ -97,18 +99,24 @@ export function CockpitContact({ lead }: { lead: CockpitLead }) {
         {!lead.phone && !lead.email && <div><dt>Contact</dt><dd className="crm-muted">No phone or email on file</dd></div>}
         {shown.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
       </dl>
-      {lead.message && (
-        <figure className="crm-ck-msg">
-          <figcaption>Enquiry</figcaption>
-          <blockquote>{lead.message}</blockquote>
-        </figure>
+      {(lead.message || lead.notes) && (
+        <details className="crm-ck-texts">
+          <summary>{lead.message && lead.notes ? "Enquiry & notes" : lead.message ? "Enquiry" : "Notes"}</summary>
+          {lead.message && (
+            <figure className="crm-ck-msg">
+              <figcaption>Enquiry</figcaption>
+              <blockquote>{lead.message}</blockquote>
+            </figure>
+          )}
+          {lead.notes && (
+            <figure className="crm-ck-msg">
+              <figcaption>Notes</figcaption>
+              <blockquote>{lead.notes}</blockquote>
+            </figure>
+          )}
+        </details>
       )}
-      {lead.notes && (
-        <figure className="crm-ck-msg">
-          <figcaption>Notes</figcaption>
-          <blockquote>{lead.notes}</blockquote>
-        </figure>
-      )}
+      {followUp}
       {lead.attribution.length > 0 && (
         <details className="crm-ck-attr">
           <summary>Attribution</summary>

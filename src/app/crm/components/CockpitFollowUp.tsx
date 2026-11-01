@@ -8,6 +8,7 @@ import { useToast } from "./Toast";
 
 // Next follow-up of the lead (2026-11-01): any date, three shortcuts, or clear.
 // The server re-checks the date (resolveFollowUp) and logs the change.
+// Sits inside the Contact panel, under the enquiry, as one compact block.
 
 const QUICK_LABEL: Record<(typeof FOLLOW_UP_QUICK_DAYS)[number], string> = { 1: "Tomorrow", 3: "+3 days", 7: "+1 week" };
 
@@ -41,29 +42,24 @@ export function CockpitFollowUp({ leadId, at: initial, canEdit }: { leadId: stri
   }
 
   return (
-    <section className="crm-panel crm-ck-follow" aria-labelledby="crm-ck-follow-h">
-      <h2 id="crm-ck-follow-h">Next follow-up</h2>
-      <p className={`crm-ck-follow-now${overdue ? " overdue" : ""}`}>
-        {current ? <>{followUpLabel(current)}{overdue && " · overdue"}</> : <span className="crm-muted">Not set</span>}
-      </p>
+    <div className="crm-ck-follow">
+      <div className="crm-ck-follow-head">
+        <h3>Next follow-up</h3>
+        <span className={`crm-ck-follow-now${overdue ? " overdue" : ""}`}>
+          {current ? <>{followUpLabel(current)}{overdue && " · overdue"}</> : <span className="crm-muted">Not set</span>}
+        </span>
+        {canEdit && current && <button type="button" className="crm-linkbtn" disabled={busy} onClick={() => void save({ clear: true })}>Clear</button>}
+      </div>
       {canEdit && (
-        <>
-          <div className="crm-ck-follow-quick">
-            {FOLLOW_UP_QUICK_DAYS.map((n) => (
-              <button key={n} type="button" className="crm-btn" disabled={busy} onClick={() => void save({ days: n })}>{QUICK_LABEL[n]}</button>
-            ))}
-            {current && <button type="button" className="crm-linkbtn" disabled={busy} onClick={() => void save({ clear: true })}>Clear</button>}
-          </div>
-          <form className="crm-ck-follow-pick" onSubmit={(e) => { e.preventDefault(); if (day) void save({ day }); }}>
-            <label className="crm-ck-field">
-              <span>Pick a date</span>
-              <input type="date" value={day} min={today} max={dayPlus(now, 730)} onChange={(e) => setDay(e.target.value)} disabled={busy} />
-            </label>
-            <button type="submit" className="crm-btn primary" disabled={busy || !day}>Set</button>
-          </form>
-        </>
+        <form className="crm-ck-follow-row" onSubmit={(e) => { e.preventDefault(); if (day) void save({ day }); }}>
+          {FOLLOW_UP_QUICK_DAYS.map((n) => (
+            <button key={n} type="button" className="crm-btn" disabled={busy} onClick={() => void save({ days: n })}>{QUICK_LABEL[n]}</button>
+          ))}
+          <input type="date" aria-label="Pick a date" value={day} min={today} max={dayPlus(now, 730)} onChange={(e) => setDay(e.target.value)} disabled={busy} />
+          <button type="submit" className="crm-btn primary" disabled={busy || !day}>Set</button>
+        </form>
       )}
       {toast.node}
-    </section>
+    </div>
   );
 }

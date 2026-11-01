@@ -173,8 +173,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
               action={canEdit && (lead.phone || lead.email) ? <CockpitSyncButton leadId={lead.id} /> : null} />
           </div>
           <aside className="crm-ck-aside">
-            <CockpitContact lead={view} />
-            <CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} />
+            <CockpitContact lead={view} followUp={<CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} />} />
             <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
             <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
