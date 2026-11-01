@@ -267,125 +267,155 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 
               return (
                 <Form>
-                  {/* Two fields per row, as on the page form (compact layout, 2026-11-01). */}
-                  <div className={styles.fieldRow}>
-                    <div className={styles.inputWrapper}>
+                  <div className={styles.inputWrapper}>
+                    <svg
+                      className={styles.icon}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="#bd8948"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+                    </svg>
 
-                      <label
-                        htmlFor={`${uid}-name`}
-                        className={`${styles.label} ${isNameFilled ? styles.filled : ""}`}
-                      >
-                        {dataForm.inputName}
-                      </label>
+                    <label
+                      htmlFor={`${uid}-name`}
+                      className={`${styles.label} ${isNameFilled ? styles.filled : ""}`}
+                    >
+                      {dataForm.inputName}
+                    </label>
 
-                      <Field name="name">
-                        {({ field }: any) => (
-                          <input
-                            {...field}
-                            id={`${uid}-name`}
-                            type="text"
-                            autoComplete="given-name"
-                            className={styles.inputField}
-                            onBlur={field.onBlur}
-                          />
-                        )}
-                      </Field>
+                    <Field name="name">
+                      {({ field }: any) => (
+                        <input
+                          {...field}
+                          id={`${uid}-name`}
+                          type="text"
+                          autoComplete="given-name"
+                          className={styles.inputField}
+                          onBlur={field.onBlur}
+                        />
+                      )}
+                    </Field>
 
-                      <div className={styles.errorSlot}>
-                        <ErrorMessage name="name">
-                          {(msg) => <div className={styles.error}>{msg}</div>}
-                        </ErrorMessage>
-                      </div>
-                    </div>
-                    <div className={styles.inputWrapper}>
-
-                      <label
-                        htmlFor={`${uid}-surname`}
-                        className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
-                      >
-                        {(dataForm as any).inputSurname ?? formMinimalCopy(lang).surnameLabel}
-                      </label>
-
-                      <Field name="surname">
-                        {({ field }: any) => (
-                          <input
-                            {...field}
-                            id={`${uid}-surname`}
-                            type="text"
-                            autoComplete="family-name"
-                            className={styles.inputField}
-                            onBlur={field.onBlur}
-                          />
-                        )}
-                      </Field>
-
-                      <div className={styles.errorSlot}>
-                        <ErrorMessage name="surname">
-                          {(msg) => <div className={styles.error}>{msg}</div>}
-                        </ErrorMessage>
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.fieldRow}>
-                    <div className={styles.inputWrapper}>
-                      <PhoneInput
-                        id={`${uid}-phone`}
-                        name="phone"
-                        aria-label={dataForm.inputPhone}
-                        placeholder={dataForm.inputPhone}
-                        className={`${styles.inputField} ${styles.phoneInput}`}
-                        value={values.phone}
-                        defaultCountry="CY"
-                        international
-                        withCountryCallingCode
-                        smartCaret={false}
-                        autoComplete="tel"
-                        inputMode="tel"
-                        type="tel"
-                        onChange={(value) => {
-                          setFieldValue("phone", value || "", false);
-                        }}
-                        onBlur={() => {
-                          formikRef.current?.setFieldTouched("phone", true, true);
-                        }}
-                      />
-
-                      <div className={styles.errorSlot}>
-                        <ErrorMessage name="phone">
-                          {(msg) => <div className={styles.error}>{msg}</div>}
-                        </ErrorMessage>
-                      </div>
-                    </div>
-                    <div className={styles.inputWrapper}>
-
-                      <label
-                        htmlFor={`${uid}-email`}
-                        className={`${styles.label} ${isEmailFilled ? styles.filled : ""}`}
-                      >
-                        {dataForm.inputEmail}
-                      </label>
-
-                      <Field name="email">
-                        {({ field }: any) => (
-                          <input
-                            {...field}
-                            id={`${uid}-email`}
-                            type="email"
-                            autoComplete="email"
-                            className={styles.inputField}
-                            onBlur={field.onBlur}
-                          />
-                        )}
-                      </Field>
-
-                      <div className={styles.errorSlot}>
-                        <ErrorMessage name="email">
-                          {(msg) => <div className={styles.error}>{msg}</div>}
-                        </ErrorMessage>
-                      </div>
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="name">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
                     </div>
                   </div>
 
+                  <div className={styles.inputWrapper}>
+                    <svg
+                      className={styles.icon}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="#bd8948"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+                    </svg>
+
+                    <label
+                      htmlFor={`${uid}-surname`}
+                      className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
+                    >
+                      {(dataForm as any).inputSurname ?? formMinimalCopy(lang).surnameLabel}
+                    </label>
+
+                    <Field name="surname">
+                      {({ field }: any) => (
+                        <input
+                          {...field}
+                          id={`${uid}-surname`}
+                          type="text"
+                          autoComplete="family-name"
+                          className={styles.inputField}
+                          onBlur={field.onBlur}
+                        />
+                      )}
+                    </Field>
+
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="surname">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
+                  </div>
+
+                  <div className={styles.inputWrapper}>
+                    <PhoneInput
+                      id={`${uid}-phone`}
+                      name="phone"
+                      aria-label={dataForm.inputPhone}
+                      placeholder={dataForm.inputPhone}
+                      className={`${styles.inputField} ${styles.phoneInput}`}
+                      value={values.phone}
+                      defaultCountry="CY"
+                      international
+                      withCountryCallingCode
+                      smartCaret={false}
+                      autoComplete="tel"
+                      inputMode="tel"
+                      type="tel"
+                      onChange={(value) => {
+                        setFieldValue("phone", value || "", false);
+                      }}
+                      onBlur={() => {
+                        formikRef.current?.setFieldTouched("phone", true, true);
+                      }}
+                    />
+
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="phone">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
+                  </div>
+
+                  <div className={styles.inputWrapper}>
+                    <svg
+                      className={styles.icon}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      fill="#bd8948"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 13.5l-11-7.5v15h22v-15l-11 7.5zm0-2.5l11-7h-22l11 7z" />
+                    </svg>
+
+                    <label
+                      htmlFor={`${uid}-email`}
+                      className={`${styles.label} ${isEmailFilled ? styles.filled : ""}`}
+                    >
+                      {dataForm.inputEmail}
+                    </label>
+
+                    <Field name="email">
+                      {({ field }: any) => (
+                        <input
+                          {...field}
+                          id={`${uid}-email`}
+                          type="email"
+                          autoComplete="email"
+                          className={styles.inputField}
+                          onBlur={field.onBlur}
+                        />
+                      )}
+                    </Field>
+
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="email">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
+                  </div>
+
+                  {/* "Contact me by" as the shared segmented row (operator, 2026-11-01);
+                      the rest of this form keeps its own look. */}
                   <div className={styles.inputWrapper}>
                     <ContactPicker
                       name="preferredContact"
@@ -442,58 +472,55 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     aria-hidden="true"
                   />
 
-                  {/* In flow, right above the consent + button row — matching the homepage contact
+                  <div className={styles.customCheckbox}>
+                    <Field
+                      type="checkbox"
+                      name="agreedToPolicy"
+                      id={`${uid}-agreedToPolicy`}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setFieldValue("agreedToPolicy", e.target.checked);
+                      }}
+                    />
+
+                    <ErrorMessage
+                      name="agreedToPolicy"
+                      component="div"
+                      className={styles.errorCheckbox}
+                    />
+
+                    <label htmlFor={`${uid}-agreedToPolicy`}>
+                      {consentCopy(lang).lead}
+                      <Link className={styles.policyLink} href={consentCopy(lang).termsHref} target="_blank">
+                        {consentCopy(lang).termsLabel}
+                      </Link>
+                      {consentCopy(lang).mid}
+                      <Link className={styles.policyLink} href={consentCopy(lang).privacyHref} target="_blank">
+                        {consentCopy(lang).privacyLabel}
+                      </Link>
+                      {consentCopy(lang).tail}
+                    </label>
+                  </div>
+
+                  {/* In flow, right above the button — matching the homepage contact
                       section: the visitor is looking there when they press Send.
                       Above the whole form it can sit off-screen on a long form
                       (2026-09-28). */}
                   {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
-                  {/* Consent and the button share one row (compact layout, 2026-11-01). */}
-                  <div className={styles.footerRow}>
-                    <div className={styles.customCheckbox}>
-                      <Field
-                        type="checkbox"
-                        name="agreedToPolicy"
-                        id={`${uid}-agreedToPolicy`}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          setFieldValue("agreedToPolicy", e.target.checked);
-                        }}
-                      />
-
-                      <ErrorMessage
-                        name="agreedToPolicy"
-                        component="div"
-                        className={styles.errorCheckbox}
-                      />
-
-                      <label htmlFor={`${uid}-agreedToPolicy`}>
-                        {consentCopy(lang).lead}
-                        <Link className={styles.policyLink} href={consentCopy(lang).termsHref} target="_blank">
-                          {consentCopy(lang).termsLabel}
-                        </Link>
-                        {consentCopy(lang).mid}
-                        <Link className={styles.policyLink} href={consentCopy(lang).privacyHref} target="_blank">
-                          {consentCopy(lang).privacyLabel}
-                        </Link>
-                        {consentCopy(lang).tail}
-                      </label>
-                    </div>
-
-                    <div>
-                      <button
-                        type="submit"
-                        className={styles.sentBtn}
-                        disabled={isSubmitting}
-                        onClick={handleButtonClick}
-                      >
-                        {isSubmitting ? (
-                          <div className={`${styles.loader} form-spinner`}></div>
-                        ) : offerButtonCustomText ? (
-                          offerButtonCustomText
-                        ) : (
-                          dataForm.buttonText
-                        )}
-                      </button>
-                    </div>
+                  <div>
+                    <button
+                      type="submit"
+                      className={styles.sentBtn}
+                      disabled={isSubmitting}
+                      onClick={handleButtonClick}
+                    >
+                      {isSubmitting ? (
+                        <div className={`${styles.loader} form-spinner`}></div>
+                      ) : offerButtonCustomText ? (
+                        offerButtonCustomText
+                      ) : (
+                        dataForm.buttonText
+                      )}
+                    </button>
                   </div>
                 </Form>
               );
