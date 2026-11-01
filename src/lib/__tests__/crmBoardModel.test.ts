@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildBoard, buildSide, toCard, isBoardFilter, onlyUrgent, urgencyCounts, type BoardLeadInput } from "@/lib/crm/boardModel";
+import { buildBoard, buildSide, cardUrgency, toCard, isBoardFilter, onlyUrgent, urgencyCounts, type BoardLeadInput } from "@/lib/crm/boardModel";
 
 const now = new Date("2026-10-18T12:00:00Z");
 const base: BoardLeadInput = {
@@ -147,4 +147,13 @@ test("needs-action view and header counts", () => {
   const due = onlyUrgent(cols).find((c) => c.status === "CONTACTED")!;
   assert.deepEqual(due.cards.map((c) => c.id), ["b", "c", "a"], "longest overdue first, then act now; unmarked left out");
   assert.equal(isBoardFilter("due"), true);
+});
+
+test("urgency: a status change by a person on or after the follow-up day answers it, and counts as a touch (2026-11-01)", () => {
+  const n = new Date("2026-11-01T12:00:00Z");
+  const katerin = { ...base, status: "OFFER", createdAt: new Date("2026-10-22T08:00:00Z"), lastContactAt: null, nextFollowUpAt: new Date("2026-10-24T09:00:00Z") };
+  assert.equal(cardUrgency(katerin, "OFFER", n)?.level, "overdue");
+  assert.equal(cardUrgency({ ...katerin, lastStatusChangeAt: new Date("2026-11-01T12:38:00Z") }, "OFFER", n), null);
+  // A change before the follow-up day does not answer it.
+  assert.equal(cardUrgency({ ...katerin, lastStatusChangeAt: new Date("2026-10-23T09:00:00Z") }, "OFFER", n)?.level, "overdue");
 });

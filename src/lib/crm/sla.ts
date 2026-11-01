@@ -15,6 +15,9 @@ export type SlaLead = {
   // false for a deactivated owner: no email goes to former staff. Missing = active.
   ownerActive?: boolean;
   assignedAt: Date | null; lastOutboundContactAt: Date | null;
+  // The current owner reached the lead themselves at some point, also before the assignment (2026-11-01:
+  // a lead contacted on WhatsApp and assigned to the same person later was reported as "not contacted").
+  ownerContacted?: boolean;
   notified: { rule: SlaRule; at: Date }[];
 };
 export type SlaThresholds = { unassignedMin: number; uncontactedMin: number; escalateMin: number };
@@ -92,6 +95,7 @@ export function dueSlaNotices(leads: SlaLead[], now: Date, start: Date, t: SlaTh
     if (!lead.assignedAt) continue;
     const assignedMs = lead.assignedAt.getTime();
     if (lead.lastOutboundContactAt && lead.lastOutboundContactAt.getTime() >= assignedMs) continue;
+    if (lead.ownerContacted) continue;
     // A notice from an earlier assignment does not count: reassignment re-arms both rules.
     if (assignedMs + t.uncontactedMin * MIN <= nowMs && !sent("UNCONTACTED", assignedMs)) out.push({ rule: "UNCONTACTED", lead });
     if (assignedMs + t.escalateMin * MIN <= nowMs && !sent("ESCALATE", assignedMs)) out.push({ rule: "ESCALATE", lead });

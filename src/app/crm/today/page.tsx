@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { lastManualStatusChanges } from "@/lib/crm/statusTouch";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
@@ -57,11 +58,11 @@ export default async function TodayPage() {
     if (!assignedAt.has(a.leadId) && isAssignmentTo(a, user)) assignedAt.set(a.leadId, a.occurredAt);
   }
 
-  const temps = await temperaturesFor(rows, now);
+  const [temps, moved] = await Promise.all([temperaturesFor(rows, now), lastManualStatusChanges(rows.map((r) => r.id))]);
   const leads: TodayLead[] = rows.map((r) => ({
     id: r.id, name: `${r.firstName} ${r.lastName}`.trim(), status: r.status,
     nextFollowUpAt: r.nextFollowUpAt, viewingScheduledAt: r.viewingScheduledAt,
-    lastContactAt: r.interactions[0]?.occurredAt ?? null, createdAt: r.createdAt,
+    lastContactAt: r.interactions[0]?.occurredAt ?? null, createdAt: r.createdAt, lastStatusChangeAt: moved.get(r.id) ?? null,
     assignedAt: assignedAt.get(r.id) ?? null, projectLabel: r.projectInterest?.title ?? null,
     temperature: toPublicTemperature(temps.get(r.id)),
   }));

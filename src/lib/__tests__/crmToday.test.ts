@@ -24,8 +24,9 @@ test("overdue (before today in Cyprus) and due today are split, each sorted asce
   const t = buildToday([
     lead("today-late", { nextFollowUpAt: new Date("2026-10-18T15:00:00Z") }),
     lead("today-early", { nextFollowUpAt: new Date("2026-10-17T21:30:00Z") }), // 00:30 on the 18th in Cyprus
-    lead("yesterday", { nextFollowUpAt: new Date("2026-10-17T20:30:00Z") }), // 23:30 on the 17th in Cyprus
-    lead("older", { nextFollowUpAt: new Date("2026-10-10T09:00:00Z") }),
+    // Last contact before the follow-up day: a contact on the day itself would answer it (2026-11-01).
+    lead("yesterday", { nextFollowUpAt: new Date("2026-10-17T20:30:00Z"), lastContactAt: new Date("2026-10-15T09:00:00Z") }), // 23:30 on the 17th in Cyprus
+    lead("older", { nextFollowUpAt: new Date("2026-10-10T09:00:00Z"), lastContactAt: new Date("2026-10-08T09:00:00Z") }),
   ], NOW);
   assert.deepEqual(ids(t.overdue), ["older", "yesterday"]);
   assert.deepEqual(ids(t.dueToday), ["today-early", "today-late"]);
@@ -99,4 +100,14 @@ test("isAssignmentTo accepts crm-v2 metadata and legacy name-only rows, rejects 
   assert.equal(isAssignmentTo({ body: "Assigned to Anna Kyriakou", metadata: {} }, user), true);
   assert.equal(isAssignmentTo({ body: "Assigned to Anna Kyriakou", metadata: { assignedToId: "u2" } }, user), false);
   assert.equal(isAssignmentTo({ body: "Assigned to Bob", metadata: null }, user), false);
+});
+
+test("work on or after the follow-up day answers it: a contact or a status change by a person (2026-11-01)", () => {
+  const t = buildToday([
+    lead("moved", { nextFollowUpAt: new Date("2026-10-10T09:00:00Z"), lastContactAt: null, lastStatusChangeAt: new Date("2026-10-18T08:00:00Z") }),
+    lead("called", { nextFollowUpAt: new Date("2026-10-10T09:00:00Z"), lastContactAt: new Date("2026-10-12T09:00:00Z") }),
+    lead("moved-before", { nextFollowUpAt: new Date("2026-10-10T09:00:00Z"), lastContactAt: null, lastStatusChangeAt: new Date("2026-10-09T09:00:00Z") }),
+  ], NOW);
+  assert.deepEqual(ids(t.overdue), ["moved-before"]);
+  assert.deepEqual(ids(t.stale), []);
 });

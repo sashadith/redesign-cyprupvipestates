@@ -34,6 +34,8 @@ import {
 import { loadUnconfirmedRegistrations, sendRegistrationReminders } from "@/lib/crm/registration/reminders";
 import { loadRegistrationDue, markDueReminded, sendDueReminders } from "@/lib/crm/registration/due";
 
+const OUTBOUND_SCAN = 50;
+
 export const dynamic = "force-dynamic";
 
 const LOOKBACK_MS = 7 * 86_400_000;
@@ -66,7 +68,9 @@ async function runSlaNotices(): Promise<SlaResult> {
     select: {
       id: true, firstName: true, lastName: true, status: true, createdAt: true, assignedToId: true,
       assignedTo: { select: { id: true, name: true, email: true, isActive: true } },
-      interactions: { where: { type: { in: [...SLA_OUTBOUND_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
+      // The newest outbound contacts with their author: the latest clears contact since the assignment, any
+      // one by the current owner clears the owner rules (OUTBOUND_SCAN is plenty for a lead in its first days).
+      interactions: { where: { type: { in: [...SLA_OUTBOUND_TYPES] } }, orderBy: { occurredAt: "desc" }, take: OUTBOUND_SCAN, select: { occurredAt: true, createdByUserId: true } },
     },
   });
   if (rows.length === 0) return { ok: true, sent: { UNASSIGNED: 0, UNCONTACTED: 0, ESCALATE: 0 }, skipped: [], errors: [] };
@@ -90,6 +94,7 @@ async function runSlaNotices(): Promise<SlaResult> {
       assignedToId: r.assignedToId, ownerName: owner?.name ?? null, ownerEmail: owner?.email ?? null, ownerActive: owner?.isActive ?? true,
       assignedAt: owner ? latestAssignedAt(sys, owner) : null,
       lastOutboundContactAt: r.interactions[0]?.occurredAt ?? null,
+      ownerContacted: !!r.assignedToId && r.interactions.some((i) => i.createdByUserId === r.assignedToId),
       notified: slaNoticesFromRows(sys),
     };
   });
