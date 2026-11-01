@@ -383,3 +383,7 @@
 .artform form .lf-contact .lf-contact__opt:has(input:checked) { background: var(--bronze, #8E6B3D); color: #fff; }
 .artform form .lf-contact .lf-contact__opt--whatsapp:has(input:checked) { background: #25D366; color: #fff; }
 @media (max-width: 900px) { .artform form .lf-contact { max-width: 100%; } }
+/* More air around the contact row (operator, 2026-11-01): 24px from the email
+   field to the question and from the row to the consent line. Padding above,
+   not margin, so it does not collapse into the 10px of the field before. */
+.artform form [class*="inputWrapper"]:has(> .lf-contact) { padding-top: 14px; margin-bottom: 24px; }
