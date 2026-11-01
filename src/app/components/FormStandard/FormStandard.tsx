@@ -12,6 +12,7 @@ import {
 } from "formik";
 import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
 import { isValidLeadPhone } from "@/lib/leads/contactPhone";
+import { ContactPicker } from "@/app/components/leadForm/ContactPicker";
 import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
@@ -388,16 +389,6 @@ const FormStandard: FC<ContactFormProps> = ({
             <Form>
               <div className={styles.nameSurnameWrapper}>
                 <div className={styles.inputWrapper}>
-                  <svg
-                    className={styles.icon}
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    fill="#bd8948"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
-                  </svg>
 
                   <label
                     htmlFor={`${uid}-name`}
@@ -427,16 +418,6 @@ const FormStandard: FC<ContactFormProps> = ({
                 </div>
 
                 <div className={styles.inputWrapper}>
-                  <svg
-                    className={styles.icon}
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    fill="#bd8948"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
-                  </svg>
 
                   <label
                     htmlFor={`${uid}-surname`}
@@ -466,107 +447,84 @@ const FormStandard: FC<ContactFormProps> = ({
                 </div>
               </div>
 
+              {/* Phone and email share a row like the names (compact layout, 2026-11-01). */}
+              <div className={`${styles.nameSurnameWrapper} ${styles.contactRow}`}>
+                <div className={styles.inputWrapper}>
+                  <PhoneInput
+                    id={`${uid}-phone`}
+                    name="phone"
+                    aria-label={dataForm.inputPhone}
+                    placeholder={dataForm.inputPhone}
+                    className={`${styles.inputField} ${styles.phoneInput}`}
+                    value={values.phone}
+                    defaultCountry="CY"
+                    international
+                    withCountryCallingCode
+                    smartCaret={false}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    type="tel"
+                    onChange={(value) => {
+                      setFieldValue("phone", value || "", false);
+                    }}
+                    onBlur={() => {
+                      formikRef.current?.setFieldTouched("phone", true, true);
+                    }}
+                  />
+
+                  <div className={styles.errorSlot}>
+                    <ErrorMessage name="phone">
+                      {(msg) => <div className={styles.error}>{msg}</div>}
+                    </ErrorMessage>
+                  </div>
+                </div>
+
+                <div className={styles.inputWrapper}>
+
+                  <label
+                    htmlFor={`${uid}-email`}
+                    className={`${styles.label} ${isEmailFilled ? styles.filled : ""}`}
+                  >
+                    {dataForm.inputEmail}
+                  </label>
+
+                  <Field name="email">
+                    {({ field }: any) => (
+                      <input
+                        {...field}
+                        id={`${uid}-email`}
+                        type="email"
+                        autoComplete="email"
+                        className={styles.inputField}
+                        onBlur={field.onBlur}
+                      />
+                    )}
+                  </Field>
+
+                  <div className={styles.errorSlot}>
+                    <ErrorMessage name="email">
+                      {(msg) => <div className={styles.error}>{msg}</div>}
+                    </ErrorMessage>
+                  </div>
+                </div>
+
+              </div>
+
               <div className={styles.inputWrapper}>
-                <PhoneInput
-                  id={`${uid}-phone`}
-                  name="phone"
-                  aria-label={dataForm.inputPhone}
-                  placeholder={dataForm.inputPhone}
-                  className={`${styles.inputField} ${styles.phoneInput}`}
-                  value={values.phone}
-                  defaultCountry="CY"
-                  international
-                  withCountryCallingCode
-                  smartCaret={false}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  type="tel"
-                  onChange={(value) => {
-                    setFieldValue("phone", value || "", false);
-                  }}
-                  onBlur={() => {
-                    formikRef.current?.setFieldTouched("phone", true, true);
-                  }}
+                <ContactPicker
+                  name="preferredContact"
+                  value={values.preferredContact}
+                  legend={formStandardCopy(lang).contactMethodLegend}
+                  labels={{ phone: formStandardCopy(lang).phoneCallLabel, whatsapp: "WhatsApp", email: formStandardCopy(lang).emailLabel }}
+                  onChange={(v) => setFieldValue("preferredContact", v)}
+                  onBlur={() => formikRef.current?.setFieldTouched("preferredContact", true, true)}
                 />
-
-                <div className={styles.errorSlot}>
-                  <ErrorMessage name="phone">
-                    {(msg) => <div className={styles.error}>{msg}</div>}
-                  </ErrorMessage>
-                </div>
-              </div>
-
-              <div className={styles.inputWrapper}>
-                <svg
-                  className={styles.icon}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="#bd8948"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 13.5l-11-7.5v15h22v-15l-11 7.5zm0-2.5l11-7h-22l11 7z" />
-                </svg>
-
-                <label
-                  htmlFor={`${uid}-email`}
-                  className={`${styles.label} ${isEmailFilled ? styles.filled : ""}`}
-                >
-                  {dataForm.inputEmail}
-                </label>
-
-                <Field name="email">
-                  {({ field }: any) => (
-                    <input
-                      {...field}
-                      id={`${uid}-email`}
-                      type="email"
-                      autoComplete="email"
-                      className={styles.inputField}
-                      onBlur={field.onBlur}
-                    />
-                  )}
-                </Field>
-
-                <div className={styles.errorSlot}>
-                  <ErrorMessage name="email">
-                    {(msg) => <div className={styles.error}>{msg}</div>}
-                  </ErrorMessage>
-                </div>
-              </div>
-
-              <fieldset className={`${styles.inputWrapper} min-w-0`}>
-                <legend className={styles.radioGroupLabel}>
-                  {formStandardCopy(lang).contactMethodLegend}
-                </legend>
-
-                <div className={styles.radioGroupWrapper}>
-                  <label className={styles.radioOption}>
-                    <Field type="radio" name="preferredContact" value="phone" />
-                    <span>{formStandardCopy(lang).phoneCallLabel}</span>
-                  </label>
-
-                  <label className={styles.radioOption}>
-                    <Field
-                      type="radio"
-                      name="preferredContact"
-                      value="whatsapp"
-                    />
-                    <span>WhatsApp</span>
-                  </label>
-
-                  <label className={styles.radioOption}>
-                    <Field type="radio" name="preferredContact" value="email" />
-                    <span>{formStandardCopy(lang).emailLabel}</span>
-                  </label>
-                </div>
-
                 <div className={styles.errorSlot}>
                   <ErrorMessage name="preferredContact">
                     {(msg) => <div className={styles.error}>{msg}</div>}
                   </ErrorMessage>
                 </div>
-              </fieldset>
+              </div>
 
               <Field
                 type="text"
@@ -580,71 +538,74 @@ const FormStandard: FC<ContactFormProps> = ({
               {/* Above the submit button, not below it — a visitor who taps
                   CONTACT ME before checking this box needs to see why the
                   submit was rejected, not discover the checkbox afterward. */}
-              <div className={styles.customCheckbox}>
-                <Field
-                  type="checkbox"
-                  name="agreedToPolicy"
-                  id={`${uid}-agreedToPolicy`}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setFieldValue("agreedToPolicy", e.target.checked);
-                  }}
-                />
-
-                <ErrorMessage
-                  name="agreedToPolicy"
-                  component="div"
-                  className={styles.errorCheckbox}
-                />
-
-                {/* The consent line can carry a second link (e.g. terms AND
-                    privacy policy). Everything after the first link is optional,
-                    so a locale that links only one document renders exactly as
-                    it did before these fields existed. */}
-                <label htmlFor={`${uid}-agreedToPolicy`}>
-                  {dataForm.agreementText}{" "}
-                  <Link
-                    className={styles.policyLink}
-                    href={dataForm.agreementLinkDestination}
-                    target="_blank"
-                  >
-                    {dataForm.agreementLinkLabel}
-                  </Link>
-                  {dataForm.agreementLink2Label && dataForm.agreementLink2Destination && (
-                    <>
-                      {dataForm.agreementText2 ? ` ${dataForm.agreementText2} ` : " "}
-                      <Link
-                        className={styles.policyLink}
-                        href={dataForm.agreementLink2Destination}
-                        target="_blank"
-                      >
-                        {dataForm.agreementLink2Label}
-                      </Link>
-                    </>
-                  )}
-                  {dataForm.agreementTextEnd ? ` ${dataForm.agreementTextEnd}` : ""}
-                </label>
-              </div>
-
-              {/* In flow, right above the button — matching the homepage contact
+              {/* In flow, right above the consent + button row — matching the homepage contact
                   section: the visitor is looking there when they press Send.
                   Above the whole form it can sit off-screen on a long form or,
                   in the modal, above the scroll position (2026-09-28). */}
               {message && !hideMessage && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
-              <div>
-                <button
-                  type="submit"
-                  className={styles.sentBtn}
-                  disabled={isSubmitting}
-                  onClick={handleButtonClick}
-                >
-                  {isSubmitting ? (
-                    <div className={`${styles.loader} form-spinner`}></div>
-                  ) : offerButtonCustomText ? (
-                    offerButtonCustomText
-                  ) : (
-                    dataForm.buttonText
-                  )}
-                </button>
+              {/* Consent and the button share one row (compact layout, 2026-11-01). */}
+              <div className={styles.footerRow}>
+                <div className={styles.customCheckbox}>
+                  <Field
+                    type="checkbox"
+                    name="agreedToPolicy"
+                    id={`${uid}-agreedToPolicy`}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setFieldValue("agreedToPolicy", e.target.checked);
+                    }}
+                  />
+
+                  <ErrorMessage
+                    name="agreedToPolicy"
+                    component="div"
+                    className={styles.errorCheckbox}
+                  />
+
+                  {/* The consent line can carry a second link (e.g. terms AND
+                      privacy policy). Everything after the first link is optional,
+                      so a locale that links only one document renders exactly as
+                      it did before these fields existed. */}
+                  <label htmlFor={`${uid}-agreedToPolicy`}>
+                    {dataForm.agreementText}{" "}
+                    <Link
+                      className={styles.policyLink}
+                      href={dataForm.agreementLinkDestination}
+                      target="_blank"
+                    >
+                      {dataForm.agreementLinkLabel}
+                    </Link>
+                    {dataForm.agreementLink2Label && dataForm.agreementLink2Destination && (
+                      <>
+                        {dataForm.agreementText2 ? ` ${dataForm.agreementText2} ` : " "}
+                        <Link
+                          className={styles.policyLink}
+                          href={dataForm.agreementLink2Destination}
+                          target="_blank"
+                        >
+                          {dataForm.agreementLink2Label}
+                        </Link>
+                      </>
+                    )}
+                    {dataForm.agreementTextEnd ? ` ${dataForm.agreementTextEnd}` : ""}
+                  </label>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    className={styles.sentBtn}
+                    disabled={isSubmitting}
+                    onClick={handleButtonClick}
+                  >
+                    {isSubmitting ? (
+                      <div className={`${styles.loader} form-spinner`}></div>
+                    ) : offerButtonCustomText ? (
+                      offerButtonCustomText
+                    ) : (
+                      dataForm.buttonText
+                    )}
+                  </button>
+                </div>
               </div>
             </Form>
           );

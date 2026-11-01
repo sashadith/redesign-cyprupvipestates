@@ -1,0 +1,74 @@
+/* Shared pieces of the compact enquiry layout (operator, 2026-11-01): the
+   "Contact me by" segmented row and the property-type dropdown. Every public
+   lead form uses them. They read the site tokens where a form sits inside the
+   redesign (.is-light sections) and fall back to the same values elsewhere
+   (the older SCSS-module forms, modals). A form can tune them through the
+   --lf-* properties. */
+.lf-contact, .lf-types {
+  --lf-h: var(--lf-field-h, 48px);
+  --lf-radius: var(--lf-field-radius, 12px);
+  --lf-line: var(--hairline-strong, rgba(34, 28, 21, 0.24));
+  --lf-bg: var(--glass-bg, #FBF9F3);
+  --lf-ink: var(--text, #221C15);
+  --lf-soft: var(--text-soft, rgba(34, 28, 21, 0.74));
+  --lf-faint: var(--text-faint, rgba(34, 28, 21, 0.48));
+  --lf-bronze: #8E6B3D;
+  --lf-wa: #25D366;
+}
+
+/* ── Contact me by ─────────────────────────────────────────────────────── */
+.lf-contact { border: 0; padding: 0; margin: 0; min-width: 0; }
+.lf-contact__legend { padding: 0; margin-bottom: 6px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm, 0.875rem); color: var(--lf-soft); }
+.lf-contact__seg {
+  display: flex; gap: 2px; padding: 3px; height: var(--lf-h);
+  border: 1px solid var(--lf-line); border-radius: var(--lf-radius); background: var(--lf-bg);
+}
+.lf-contact__opt {
+  position: relative; flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border-radius: calc(var(--lf-radius) - 3px); cursor: pointer; padding: 0 8px;
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm, 0.875rem); font-weight: 500; color: var(--lf-soft); white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.lf-contact__opt span { overflow: hidden; text-overflow: ellipsis; }
+.lf-contact__opt svg { flex: none; }
+/* The radio stays in the layout for keyboard and screen readers, but invisible. */
+.lf-contact__opt input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.lf-contact__opt:hover { color: var(--lf-ink); background: rgba(142, 107, 61, 0.08); }
+.lf-contact__opt:has(input:focus-visible) { outline: 2px solid var(--lf-bronze); outline-offset: 1px; }
+.lf-contact__opt:has(input:checked) { background: var(--lf-bronze); color: #fff; }
+.lf-contact__opt--whatsapp:has(input:checked) { background: var(--lf-wa); color: #fff; }
+
+/* ── Property type dropdown ────────────────────────────────────────────── */
+.lf-types { position: relative; min-width: 0; }
+.lf-types__btn {
+  width: 100%; height: var(--lf-h); display: flex; align-items: center; text-align: start;
+  padding-inline: 15px 40px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius); background: var(--lf-bg);
+  font-family: var(--font-body), sans-serif; font-size: 1rem; color: var(--lf-ink); cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a8578' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 15px center;
+}
+[dir="rtl"] .lf-types__btn { background-position: left 15px center; }
+.lf-types__btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lf-types__btn:focus-visible, .lf-types.is-open .lf-types__btn { outline: none; border-color: var(--lf-bronze); box-shadow: 0 0 0 3px rgba(142, 107, 61, 0.12); }
+.lf-types__pop {
+  position: absolute; z-index: 20; inset-inline: 0; top: calc(100% + 6px); padding: 6px;
+  background: #FBF9F3; border: 1px solid var(--lf-line); border-radius: var(--lf-radius);
+  box-shadow: 0 18px 40px -18px rgba(34, 28, 21, 0.35);
+}
+.lf-types__opt {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  font-family: var(--font-body), sans-serif; font-size: 0.95rem; color: #221C15;
+}
+.lf-types__opt:hover { background: #EDE7D9; }
+.lf-types__opt input { width: 16px; height: 16px; margin: 0; accent-color: var(--lf-bronze); }
+
+/* Narrow rows (phone popups, article cards): about 100px per segment. Smaller
+   type, icon and spacing keep "Phone call" and "WhatsApp" whole instead of
+   cutting them to "Phone c…". !important because the popup and article skins
+   set their own font size and padding on the segments with higher specificity. */
+.lf-contact__seg { container-type: inline-size; }
+@container (max-width: 380px) {
+  .lf-contact__opt { gap: 5px !important; padding-inline: 3px !important; font-size: 12.5px !important; letter-spacing: -0.01em; }
+  .lf-contact__opt svg { width: 15px; height: 15px; }
+}

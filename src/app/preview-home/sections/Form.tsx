@@ -6,7 +6,9 @@ import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/lead
 import * as Yup from "yup";
 import dynamic from "next/dynamic";
 import { getAttribution } from "@/lib/attribution";
-import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "@/app/components/qualifierFields";
+import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES, anyTypeLabel, optionalTag, qualifierHeading, shortQualifierLabel } from "@/app/components/qualifierFields";
+import { ContactPicker } from "@/app/components/leadForm/ContactPicker";
+import { PropertyTypeSelect } from "@/app/components/leadForm/PropertyTypeSelect";
 import { consentCopy } from "@/app/components/consentCopy";
 import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
@@ -73,8 +75,9 @@ const titleNode = (lang: string) => {
 // switched on where the visitor's intent is concrete enough to answer them
 // (project pages today). Filling them is what lets /api/leads run its
 // development matching — left empty the lead is stored exactly as before.
-const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean; showQualifiers?: boolean }> = ({
-  lang = "en", title, subtitle, showQuestionField = false, showQualifiers = false,
+// className: extra class on the section, for a page that tunes the layout (the FAQ's larger portrait).
+const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean; showQualifiers?: boolean; className?: string }> = ({
+  lang = "en", title, subtitle, showQuestionField = false, showQualifiers = false, className,
 }) => {
   const t = formCopy(lang);
   const q = qualifierCopy(lang);
@@ -106,6 +109,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
      reveals its question field pre-filled and the anchor jump (#enquiry)
      brings it into view. The field is shown, not required (2026-10-03). */
   const [prefilledQuestion, setPrefilledQuestion] = useState(false);
+  const [qualsOpen, setQualsOpen] = useState(false);
   useEffect(() => {
     const onEnquire = (e: Event) => {
       const message = (e as CustomEvent<{ message?: string }>).detail?.message;
@@ -190,7 +194,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
   };
 
   return (
-    <section className="section is-light formsec" ref={sectionRef}>
+    <section className={`section is-light formsec${className ? ` ${className}` : ""}`} ref={sectionRef}>
       <div className="wrap">
         <div className="formsec__grid">
           <div className="formsec__main">
@@ -237,7 +241,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       </div>
                     </div>
 
-                    <div className="formsec__field">
+                    <div className="formsec__field formsec__field--wide">
                       <label className="formsec__label" htmlFor={`${uid}-phone`}>{t.labelPhone}</label>
                       {phoneArmed ? (
                         <PhoneInput
@@ -281,7 +285,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       </div>
                     </div>
 
-                    <div className="formsec__field">
+                    <div className="formsec__field formsec__field--wide">
                       <label className="formsec__label" htmlFor={`${uid}-email`}>{t.labelEmail}</label>
                       <Field name="email">
                         {({ field }: any) => (
@@ -294,55 +298,6 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                         </ErrorMessage>
                       </div>
                     </div>
-
-                    {showQualifiers && (
-                      <>
-                        {/* What, then how much, then when — the order a person
-                            actually thinks in. Multi-select: Formik keeps
-                            propertyTypeInterest as an array when the checkboxes
-                            share one name and carry a value, which is the shape
-                            /api/leads filters. */}
-                        <div className="formsec__field formsec__field--full">
-                          <span className="formsec__label">{q.propertyLabel}</span>
-                          <div className="formsec__radio-options">
-                            {PROPERTY_VALUES.map((v) => (
-                              <label key={v} className="formsec__radio-option">
-                                <Field type="checkbox" name="propertyTypeInterest" value={v} />
-                                <span>{q.properties[v]}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="formsec__field">
-                          <label className="formsec__label" htmlFor={`${uid}-budget`}>{q.budgetLabel}</label>
-                          <Field name="budget">
-                            {({ field }: any) => (
-                              <select {...field} id={`${uid}-budget`} className="formsec__input formsec__select">
-                                <option value="">{q.choose}</option>
-                                {BUDGET_VALUES.map((v) => (
-                                  <option key={v} value={v}>{q.budgets[v]}</option>
-                                ))}
-                              </select>
-                            )}
-                          </Field>
-                        </div>
-
-                        <div className="formsec__field">
-                          <label className="formsec__label" htmlFor={`${uid}-timeline`}>{q.timelineLabel}</label>
-                          <Field name="timeline">
-                            {({ field }: any) => (
-                              <select {...field} id={`${uid}-timeline`} className="formsec__input formsec__select">
-                                <option value="">{q.choose}</option>
-                                {TIMELINE_VALUES.map((v) => (
-                                  <option key={v} value={v}>{q.timelines[v]}</option>
-                                ))}
-                              </select>
-                            )}
-                          </Field>
-                        </div>
-                      </>
-                    )}
 
                     {(showQuestionField || prefilledQuestion) && (
                       <div className="formsec__field formsec__field--full">
@@ -365,63 +320,116 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  <fieldset className="formsec__radio">
-                    <legend className="formsec__radio-legend">{t.legend}</legend>
-                    <div className="formsec__radio-options">
-                      <label className="formsec__radio-option">
-                        <Field type="radio" name="preferredContact" value="phone" />
-                        <span>{t.optPhone}</span>
-                      </label>
-                      <label className="formsec__radio-option">
-                        <Field type="radio" name="preferredContact" value="whatsapp" />
-                        <span>WhatsApp</span>
-                      </label>
-                      <label className="formsec__radio-option">
-                        <Field type="radio" name="preferredContact" value="email" />
-                        <span>{t.optEmail}</span>
-                      </label>
+                    {/* Contact channel, then the optional qualifiers (compact layout, operator 2026-11-01). */}
+                    <div className="formsec__field formsec__field--full">
+                      <ContactPicker
+                        name="preferredContact" value={values.preferredContact} legend={t.legend}
+                        labels={{ phone: t.optPhone, whatsapp: "WhatsApp", email: t.optEmail }}
+                        onChange={(v) => setFieldValue("preferredContact", v)}
+                        onBlur={() => formikRef.current?.setFieldTouched("preferredContact", true, true)}
+                      />
+                      <div className="formsec__errorSlot">
+                        <ErrorMessage name="preferredContact">
+                          {(msg) => <div className="formsec__error">{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
-                  </fieldset>
-                  <div className="formsec__errorSlot">
-                    <ErrorMessage name="preferredContact">
-                      {(msg) => <div className="formsec__error">{msg}</div>}
-                    </ErrorMessage>
+
+                    {showQualifiers && (() => {
+                      /* One heading carries "(optional)" for all three; each label drops it.
+                         Without a heading in this language (Hebrew) the full labels stay. */
+                      const heading = qualifierHeading(lang);
+                      const lab = (l: string) => (heading ? shortQualifierLabel(l) : l);
+                      /* Phones: the heading folds the three fields away (closed at first, operator
+                         2026-11-01); from 560px they are always shown and the toggle is inert. */
+                      return (
+                        <div className={`formsec__quals${qualsOpen ? " is-open" : ""}`}>
+                          {heading && (
+                            <button type="button" className="formsec__quals-head" aria-expanded={qualsOpen} aria-controls={`${uid}-quals`} onClick={() => setQualsOpen((o) => !o)}>
+                              {heading} <span>{optionalTag(q.budgetLabel)}</span>
+                              <svg className="formsec__quals-chev" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </button>
+                          )}
+                          <div className="formsec__quals-row" id={`${uid}-quals`}>
+                            {/* What, then how much, then when: the order a person actually thinks in.
+                                Several types may be picked; /api/leads gets them as an array. */}
+                            <div className="formsec__field">
+                              <span className="formsec__label" id={`${uid}-types-l`}>{lab(q.propertyLabel)}</span>
+                              <PropertyTypeSelect
+                                id={`${uid}-types`} name="propertyTypeInterest" labelledBy={`${uid}-types-l`}
+                                options={PROPERTY_VALUES.map((v) => ({ value: v, label: q.properties[v] }))}
+                                values={values.propertyTypeInterest}
+                                onChange={(next) => setFieldValue("propertyTypeInterest", next)}
+                                placeholder={anyTypeLabel(lang) ?? q.choose}
+                              />
+                            </div>
+                            <div className="formsec__field">
+                              <label className="formsec__label" htmlFor={`${uid}-budget`}>{lab(q.budgetLabel)}</label>
+                              <Field name="budget">
+                                {({ field }: any) => (
+                                  <select {...field} id={`${uid}-budget`} className="formsec__input formsec__select">
+                                    <option value="">{q.choose}</option>
+                                    {BUDGET_VALUES.map((v) => (
+                                      <option key={v} value={v}>{q.budgets[v]}</option>
+                                    ))}
+                                  </select>
+                                )}
+                              </Field>
+                            </div>
+                            <div className="formsec__field">
+                              <label className="formsec__label" htmlFor={`${uid}-timeline`}>{lab(q.timelineLabel)}</label>
+                              <Field name="timeline">
+                                {({ field }: any) => (
+                                  <select {...field} id={`${uid}-timeline`} className="formsec__input formsec__select">
+                                    <option value="">{q.choose}</option>
+                                    {TIMELINE_VALUES.map((v) => (
+                                      <option key={v} value={v}>{q.timelines[v]}</option>
+                                    ))}
+                                  </select>
+                                )}
+                              </Field>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* honeypot */}
                   <Field type="text" name="company" style={{ display: "none" }} tabIndex={-1} autoComplete="new-password" aria-hidden="true" />
 
-                  <div className="formsec__consent">
-                    <Field
-                      type="checkbox"
-                      name="agreedToPolicy"
-                      id={`${uid}-agreedToPolicy`}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFieldValue("agreedToPolicy", e.target.checked)}
-                    />
-                    <label htmlFor={`${uid}-agreedToPolicy`}>
-                      {consentCopy(lang).lead}
-                      <a className="formsec__policy" href={consentCopy(lang).termsHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).termsLabel}</a>
-                      {consentCopy(lang).mid}
-                      <a className="formsec__policy" href={consentCopy(lang).privacyHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).privacyLabel}</a>
-                      {consentCopy(lang).tail}
-                    </label>
-                    <div className="formsec__errorSlot">
-                      <ErrorMessage name="agreedToPolicy">
-                        {(msg) => <div className="formsec__error">{msg}</div>}
-                      </ErrorMessage>
-                    </div>
-                  </div>
-
-
-                  {/* In flow, right above the button: the visitor is looking there when
+                  {/* In flow, right above the consent + Send row: the visitor is looking there when
                       they press Send. The old .formsec__popup was position:fixed and got
                       clipped by a transformed ancestor, landing half off-screen. */}
                   {message && <div className={`form-feedback formsec__feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
-                  <button type="submit" className="btn btn--primary formsec__submit" disabled={isSubmitting}>
-                    {isSubmitting ? <span className="formsec__loader form-spinner" /> : t.send}
-                  </button>
+                  {/* Consent and Send share one row (compact layout, operator 2026-11-01). */}
+                  <div className="formsec__footer">
+                    <div className="formsec__consent">
+                      <Field
+                        type="checkbox"
+                        name="agreedToPolicy"
+                        id={`${uid}-agreedToPolicy`}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFieldValue("agreedToPolicy", e.target.checked)}
+                      />
+                      <label htmlFor={`${uid}-agreedToPolicy`}>
+                        {consentCopy(lang).lead}
+                        <a className="formsec__policy" href={consentCopy(lang).termsHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).termsLabel}</a>
+                        {consentCopy(lang).mid}
+                        <a className="formsec__policy" href={consentCopy(lang).privacyHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).privacyLabel}</a>
+                        {consentCopy(lang).tail}
+                      </label>
+                      <div className="formsec__errorSlot">
+                        <ErrorMessage name="agreedToPolicy">
+                          {(msg) => <div className="formsec__error">{msg}</div>}
+                        </ErrorMessage>
+                      </div>
+                    </div>
+
+                    <button type="submit" className="btn btn--primary formsec__submit" disabled={isSubmitting}>
+                      {isSubmitting ? <span className="formsec__loader form-spinner" /> : t.send}
+                    </button>
+                  </div>
                 </FormikForm>
               )}
             </Formik>

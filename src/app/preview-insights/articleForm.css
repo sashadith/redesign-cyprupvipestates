@@ -372,3 +372,19 @@
 @media (prefers-reduced-motion: reduce) {
   .artform__art img { animation: none; }
 }
+
+/* "Contact me by" is the shared segmented row (components/leadForm, operator
+   2026-11-01); everything else in this card stays as it is. It takes the 80%
+   column edge; 38px tall, 30% under the fields (operator, 2026-11-01). The pill rules above
+   (`.artform form fieldset label`) are taken back for it: (0,3,0) beats (0,1,3). */
+.artform form .lf-contact { max-width: 80%; --lf-field-h: 38px; }
+.artform form .lf-contact .lf-contact__opt { background: transparent; border: 0; border-radius: 9px; padding: 0 6px; font-size: 13.5px; }
+.artform form .lf-contact .lf-contact__opt:hover { background: rgba(142, 107, 61, 0.08); }
+.artform form .lf-contact .lf-contact__opt:has(input:checked) { background: var(--bronze, #8E6B3D); color: #fff; }
+.artform form .lf-contact .lf-contact__opt--whatsapp:has(input:checked) { background: #25D366; color: #fff; }
+@media (max-width: 900px) { .artform form .lf-contact { max-width: 100%; } }
+/* More air around the contact row (operator, 2026-11-01): 24px from the email
+   field to the question, 32px from the row to the consent line (the same as
+   from the consent line down to the button). Padding above,
+   not margin, so it does not collapse into the 10px of the field before. */
+.artform form [class*="inputWrapper"]:has(> .lf-contact) { padding-top: 14px; margin-bottom: 32px; }
