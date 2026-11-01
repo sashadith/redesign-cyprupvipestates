@@ -1388,7 +1388,7 @@ img { max-width: 100%; display: block; }
    last thing in row 2, so `align-self: end` puts the photo's bottom (the gold
    divider) on the form's bottom, which is Send. Replaces the centring and the
    22px lift; the caption is absolute here, so the photo alone sets the height. */
-.formsec__aside { --portrait-w: min(270px, 68%); }
+.formsec__aside { --portrait-w: min(284px, 71%); } /* +5% (operator, 2026-11-01) */
 @media (min-width: 940px) {
   .formsec__aside { align-self: end; transform: none; }
 }
