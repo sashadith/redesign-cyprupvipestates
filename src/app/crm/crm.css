@@ -174,6 +174,8 @@
 .crm-urgcount.now { color: var(--now); }
 /* Lead reminders (2026-10-31): the bar over every CRM page while the user has overdue / due-today leads. */
 .crm-nagbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 14px; border-radius: calc(12px * var(--ds-radius-scale)); background: var(--danger); color: var(--panel); font-weight: 700; font-size: calc(14px * var(--ds-crm-scale)); }
+.crm-nagbar-msg { display: inline-flex; align-items: center; gap: 8px; }
+.crm-nagbar-msg svg { flex: none; }
 .crm-nagbar a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .crm-nagbar.now { background: var(--now-bg); color: var(--now); box-shadow: inset 0 0 0 1px var(--now-line); }
 .crm-hint { color: var(--muted); font-size: calc(13px * var(--ds-crm-scale)); }
