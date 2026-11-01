@@ -115,9 +115,9 @@ export function Shell({ user, themes = { options: [], choiceId: null }, nag: nag
         {nag.overdue + nag.now > 0 && path !== "/crm/settings/telegram" && (
           <div className={`crm-nagbar${nag.overdue ? "" : " now"}`} role="status">
             <span>
-              {nag.overdue > 0 && <>🔴 {nag.overdue} {nag.overdue === 1 ? "lead" : "leads"} overdue</>}
+              {nag.overdue > 0 && <>{nag.overdue} {nag.overdue === 1 ? "lead" : "leads"} overdue</>}
               {nag.overdue > 0 && nag.now > 0 && " · "}
-              {nag.now > 0 && <>🟡 {nag.now} due today</>}
+              {nag.now > 0 && <>{nag.now} due today</>}
             </span>
             <Link href="/crm/pipeline?filter=due">Show them →</Link>
           </div>
