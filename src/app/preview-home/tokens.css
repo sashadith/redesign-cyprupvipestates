@@ -1357,3 +1357,29 @@ img { max-width: 100%; display: block; }
 @media (min-width: 940px) { .formsec__grid { row-gap: 0; } }
 /* Portrait (with its caption) 50px higher in the two-column layout (operator, 2026-10-03). */
 @media (min-width: 940px) { .formsec__aside { transform: translateY(-22px); } }
+
+/* ---------- compact enquiry layout (operator, 2026-11-01) ----------
+   Gold line → first field 24px (was 46px). "Contact me by" is one segmented row
+   (components/leadForm), the three optional qualifiers share one row under a
+   single heading, and consent + Send share the last row. Send is exactly as tall
+   as the picked contact segment: field 48px − 2px border − 2 × 3px padding = 40px,
+   with the segment's corner (12px − 3px). */
+.formsec__form { margin-top: calc(var(--s-5) + 10px + 1px + 24px); }
+.formsec__quals { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--s-2); padding-top: var(--s-3); border-top: 1px solid var(--hairline); }
+.formsec__quals-head { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 600; color: var(--text); }
+.formsec__quals-head span { font-weight: 400; color: var(--text-faint); }
+.formsec__quals-row { display: grid; grid-template-columns: 1fr; gap: var(--s-3) var(--s-4); }
+@media (min-width: 560px) { .formsec__quals-row { grid-template-columns: 1.15fr 1fr 1fr; } }
+.formsec__footer { margin-top: var(--s-5); display: flex; flex-direction: column; align-items: stretch; gap: var(--s-4); }
+@media (min-width: 560px) {
+  .formsec__footer { flex-direction: row; align-items: center; justify-content: space-between; max-width: 90%; }
+}
+.formsec__footer .formsec__consent { margin-top: 0; flex: 1 1 auto; }
+.formsec__footer .formsec__submit { margin-top: 0; flex: none; height: 40px; padding-block: 0; min-width: 150px; border-radius: 9px; }
+.formsec__feedback + .formsec__footer { margin-top: var(--s-4); }
+/* Phones: first and last name side by side; phone, email and the full-width
+   rows span both columns (a select needs the full width for "€500,000 – €1,000,000"). */
+@media (max-width: 559px) {
+  .formsec__fields { grid-template-columns: 1fr 1fr; column-gap: var(--s-3); }
+  .formsec__field--wide, .formsec__fields > .formsec__field--full, .formsec__quals { grid-column: 1 / -1; }
+}

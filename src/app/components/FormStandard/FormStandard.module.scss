@@ -70,7 +70,8 @@
   color: var(--fs-label, rgb(55 65 81 / 70%));
   position: absolute;
   top: 50%;
-  inset-inline-start: 50px;
+  // 18px since the field icons went (compact layout, 2026-11-01).
+  inset-inline-start: 18px;
   transform: translateY(-50%);
   transition: all 0.3s ease;
   z-index: 1;
@@ -87,11 +88,9 @@
 
 .inputField {
   width: 100%;
-  // Left padding is fixed at 50px (not responsive) so typed text and the
-  // placeholder-style label both clear the icon (left:20px, 20px wide) at
-  // every width — the icon didn't move, only the desktop-only right padding
-  // used to imply it did.
-  padding: 20px 28px 20px 50px;
+  // Left padding 18px, the same as the label: the field icons were dropped in
+  // the compact layout (2026-11-01).
+  padding: 20px 28px 20px 18px;
   font-size: 1rem;
   // border: 1px solid #ccc;
   background: var(--fs-field-bg, #F5F5F5);
@@ -100,7 +99,7 @@
   color: var(--fs-field-text, #000);
 
   @media screen and (min-width: 768px) {
-    padding: 20px 45px 20px 50px;
+    padding: 20px 45px 20px 18px;
   }
 }
 
@@ -398,5 +397,28 @@
   }
   87.5% {
     box-shadow: 0ем -2.6ем 0ем 0ем rgba(9, 23, 40, 0.2), 1.8ем -1.8ем 0 0ем rgba(9, 23, 40, 0.2), 2.5ем 0ем 0 0ем rgba(9, 23, 40, 0.2), 1.75ем 1.75ем 0 0ем rgba(9, 23, 40, 0.2), 0ем 2.5ем 0 0ем rgba(9, 23, 40, 0.2), -1.8ем 1.8ем 0 0ем rgba(9, 23, 40, 0.5), -2.6ем 0ем 0 0ем rgba(9, 23, 40, 0.7), -1.8ем -1.8ем 0 0ем #091728;
+  }
+}
+
+// Consent and the submit button on one row (compact layout, operator
+// 2026-11-01); stacked on narrow screens. The button is as tall as the picked
+// segment of the contact row (components/leadForm): 48px − 2 × 1px − 2 × 3px.
+.footerRow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  margin-top: 6px;
+
+  .customCheckbox { margin-bottom: 0; }
+  .sentBtn { margin-bottom: 0; height: 40px; padding: 0 28px; font-size: 1rem; border-radius: 9px; }
+
+  @media screen and (min-width: 600px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    .customCheckbox { flex: 1 1 auto; }
+    .sentBtn { width: auto; min-width: 160px; }
   }
 }

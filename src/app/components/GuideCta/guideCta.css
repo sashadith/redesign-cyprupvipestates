@@ -117,3 +117,13 @@
   /* A phone-height window just fits the form, so a few px of padding decide whether a scrollbar appears. */
   .cvpm.cvpm--guide .cvpm__panel { padding-block: 16px; }
 }
+
+/* Compact layout (2026-11-01), as in the adviser popup (contactModal.css):
+   48px fields, consent + button in one row, the button as tall as the picked
+   segment of the contact row (40px). The error spacing above stays. */
+.cvpm.cvpm--guide .cvpm__form input[type="text"],
+.cvpm.cvpm--guide .cvpm__form input[type="email"],
+.cvpm.cvpm--guide .cvpm__form input[type="tel"],
+.cvpm.cvpm--guide .cvpm__form .PhoneInput { height: 48px; }
+.cvpm.cvpm--guide .cvpm__form [class*="footerRow"] div:has(> input[type="checkbox"]) { margin-bottom: 0; }
+.cvpm.cvpm--guide .cvpm__form [class*="footerRow"] button[type="submit"] { height: 40px; }

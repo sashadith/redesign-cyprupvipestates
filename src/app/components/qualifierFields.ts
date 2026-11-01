@@ -245,3 +245,33 @@ export function budgetValueFor(min: number | null | undefined, max: number | nul
   }
   return "custom";
 }
+
+/* Compact enquiry layout (2026-11-01): the three qualifiers sit in one row under
+   a single heading that carries the "(optional)" once, so each label drops it.
+   The tag is cut from the existing localized label, Hebrew included. The heading
+   and the "Any type" placeholder are new copy in four languages; Hebrew gets
+   null (no new Hebrew text without a native check) and the form then keeps the
+   full labels and the generic "Please choose…". */
+const OPTIONAL_TAG = /\s*\(([^)]*)\)\s*$/;
+export const shortQualifierLabel = (label: string): string => label.replace(OPTIONAL_TAG, "");
+export const optionalTag = (label: string): string => (label.match(OPTIONAL_TAG)?.[0] ?? "").trim();
+
+export function qualifierHeading(lang: string): string | null {
+  switch (lang) {
+    case "de": return "Wonach suchen Sie?";
+    case "pl": return "Czego szukasz?";
+    case "ru": return "Что вы ищете?";
+    case "he": return null;
+    default: return "What are you looking for?";
+  }
+}
+
+export function anyTypeLabel(lang: string): string | null {
+  switch (lang) {
+    case "de": return "Alle Objektarten";
+    case "pl": return "Dowolny rodzaj";
+    case "ru": return "Любой тип";
+    case "he": return null;
+    default: return "Any type";
+  }
+}

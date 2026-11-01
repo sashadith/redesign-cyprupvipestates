@@ -519,3 +519,31 @@
   .cvpm__art img,
   .cvpm__form form > * { animation: none; }
 }
+
+/* ---------------------------------------------------- compact layout (2026-11-01)
+   Same structure as the page form: fields 48px (were 56px), phone + email in
+   one row, "Contact me by" as the shared segmented row (components/leadForm)
+   and consent + button in one row, the button as tall as the picked segment
+   (48 − 2 − 6 = 40px). The segmented row is a <fieldset> of <label>s, so the
+   pill rules above (`.cvpm__form fieldset label`, the centred legend) are
+   taken back for it here: (0,3,0) beats their (0,1,2). */
+.cvpm__form input[type="text"],
+.cvpm__form input[type="email"],
+.cvpm__form input[type="tel"],
+.cvpm__form .PhoneInput { height: 48px; }
+.cvpm__form .lf-contact {
+  --lf-line: var(--cvpm-line);
+  --lf-bg: var(--cvpm-field);
+  --lf-ink: var(--cvpm-ivory);
+  --lf-soft: rgba(239, 233, 219, 0.78);
+}
+.cvpm__form .lf-contact .lf-contact__legend { text-align: start; margin: 0 0 6px; font-size: 13px; color: rgba(239, 233, 219, 0.66); }
+.cvpm__form .lf-contact .lf-contact__opt { background: transparent; border: 0; border-radius: 9px; line-height: normal; font-size: 13.5px; color: var(--lf-soft); padding-inline: 6px; gap: 7px; }
+.cvpm__form .lf-contact .lf-contact__opt:hover { background: rgba(255, 255, 255, 0.06); color: var(--cvpm-ivory); }
+.cvpm__form .lf-contact .lf-contact__opt:has(input:checked) { background: var(--cvpm-bronze); color: #fff; }
+.cvpm__form .lf-contact .lf-contact__opt--whatsapp:has(input:checked) { background: #25D366; color: #fff; }
+.cvpm__form [class*="footerRow"] button[type="submit"] { height: 40px; margin-bottom: 0; border-radius: 9px; padding-inline: 30px; white-space: nowrap; flex: none; }
+.cvpm__form [class*="footerRow"] button[type="submit"] { margin-bottom: 0; }
+/* The shorter form makes a shorter panel; the phone art is scaled with it so
+   the top of the handset stays inside the panel instead of being cut off. */
+.cvpm__art img { width: min(100%, 350px); }
