@@ -7,13 +7,15 @@ import {
   type RegistrationOptions,
 } from "../leads/registrationActions";
 import { RegisterDialog } from "./RegisterDialog";
+import { ManualRegistrationDialog } from "./ManualRegistrationDialog";
 import { useToast } from "./Toast";
 
 // Developer client registrations of one lead (spec 2026-10-27 §8). The server
 // re-checks every permission; the buttons here only mirror what it allows.
 
 export type RegistrationRow = {
-  id: string; developerName: string; channel: "EMAIL" | "WHATSAPP"; status: RegStatus;
+  // channel NONE: recorded by hand ("Add manually"), nothing was sent.
+  id: string; developerName: string; channel: "EMAIL" | "WHATSAPP" | "NONE"; status: RegStatus;
   sentAt: string | null; preliminaryAt: string | null; preliminarySource: string | null;
   fixedAt: string | null; sendError: string | null;
 };
@@ -32,6 +34,11 @@ function ddmmyy(iso: string): string {
 
 function dateLine(r: RegistrationRow): string {
   const parts: string[] = [];
+  if (r.channel === "NONE") {
+    if (r.sentAt) parts.push(`Registered ${ddmmyy(r.sentAt)}, added manually`);
+    if (r.fixedAt) parts.push(`Fixed ${ddmmyy(r.fixedAt)}`);
+    return parts.join(" · ");
+  }
   if (r.sentAt) parts.push(`Sent ${ddmmyy(r.sentAt)}`);
   else if (r.status === "SENT") parts.push("Sending… (if this stays, mark rejected and resend)");
   if (r.preliminaryAt) parts.push(`Preliminary ${ddmmyy(r.preliminaryAt)}${r.preliminarySource ? ` (${r.preliminarySource})` : ""}`);
@@ -51,6 +58,7 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows, due, isAd
   const [options, setOptions] = useState<RegistrationOptions | null>(null);
   const [optionsError, setOptionsError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const [initial, setInitial] = useState<{ developerIds: string[]; projectIds: string[] } | undefined>(undefined);
   const [skipping, setSkipping] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -153,10 +161,14 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows, due, isAd
       <div className="crm-ck-sechead">
         <h2 id="crm-ck-regs-h">Developer registrations</h2>
         {canEdit && (
-          <button
-            type="button" className="crm-btn" disabled={!options || !!blocked}
-            title={blocked ?? undefined} onClick={() => openRegister()}
-          >Register</button>
+          <span className="crm-ck-regactions">
+            {/* Needs no phone or channel: nothing is sent. */}
+            <button type="button" className="crm-btn" disabled={!options} title="Record a registration made outside the CRM" onClick={() => setManualOpen(true)}>Add manually</button>
+            <button
+              type="button" className="crm-btn" disabled={!options || !!blocked}
+              title={blocked ?? undefined} onClick={() => openRegister()}
+            >Register</button>
+          </span>
         )}
       </div>
       {canEdit && blocked && <p className="crm-ck-regblocked">{blocked}</p>}
@@ -235,7 +247,7 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows, due, isAd
                 <div className="crm-ck-reghead">
                   <b>
                     {r.developerName}{" "}
-                    <span className="crm-ck-regch" title={r.channel === "EMAIL" ? "Email" : "WhatsApp"}>{r.channel === "EMAIL" ? "✉" : "WA"}</span>
+                    <span className="crm-ck-regch" title={r.channel === "EMAIL" ? "Email" : r.channel === "WHATSAPP" ? "WhatsApp" : "Added manually"}>{r.channel === "EMAIL" ? "✉" : r.channel === "WHATSAPP" ? "WA" : "manual"}</span>
                   </b>
                   <span className={`crm-pill r-${r.status}`}>{STATUS_LABEL[r.status]}</span>
                 </div>
@@ -258,6 +270,13 @@ export function CockpitRegistrations({ leadId, canEdit, isOwner, rows, due, isAd
           leadId={leadId} options={options} initial={initial}
           onClose={() => setOpen(false)}
           onSent={() => { router.refresh(); void loadOptions(); }}
+        />
+      )}
+      {canEdit && options && manualOpen && (
+        <ManualRegistrationDialog
+          leadId={leadId} options={options} isOwner={isOwner}
+          onClose={() => setManualOpen(false)}
+          onSaved={() => { toast.show("Registration saved."); router.refresh(); void loadOptions(); }}
         />
       )}
       {toast.node}

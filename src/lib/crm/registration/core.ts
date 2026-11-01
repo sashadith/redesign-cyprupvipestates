@@ -187,3 +187,35 @@ export function canResend(s: RegStatus): boolean {
 
 // Account names carry the sync source ("Aristo (XML)", "AGG (CC)"); the team only needs the developer.
 export const devLabel = (name: string) => name.replace(/\s*\((?:xml|api|drive|sharepoint|cc|dropbox|feed|manual|csv|pdf)\)\s*$/i, "") || name;
+
+// ── Recording a registration made outside the CRM (2026-11-01) ───────────────
+// Clients registered before the new CRM, or by phone/own mailbox: the operator
+// records it by hand. Nothing is sent; the row gets channel NONE.
+
+export type ManualStatus = "SENT" | "PRELIMINARY" | "FIXED";
+export const MANUAL_NOTE_MAX = 300;
+const MANUAL_EARLIEST = "2015-01-01";
+
+const NICOSIA_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Nicosia", year: "numeric", month: "2-digit", day: "2-digit" });
+/** "YYYY-MM-DD" of the Cyprus calendar day. */
+export const nicosiaDayKey = (d: Date) => NICOSIA_DAY.format(d);
+
+/** Checks the hand-entered fields. The date is a Cyprus day, stored at 12:00 UTC so it never shifts a day. */
+export function checkManualRegistration(
+  input: { status: unknown; date: unknown; note: unknown },
+  opts: { isOwner: boolean; now: Date },
+): { ok: true; status: ManualStatus; at: Date; note: string | null } | { ok: false; error: string } {
+  const status = input.status;
+  if (status !== "SENT" && status !== "PRELIMINARY" && status !== "FIXED") return { ok: false, error: "Pick a status." };
+  if (status === "FIXED" && !opts.isOwner) return { ok: false, error: "Only the owner can record a fixed registration." };
+  const date = typeof input.date === "string" ? input.date.trim() : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: "Enter the date of the registration." };
+  const at = new Date(`${date}T12:00:00Z`);
+  if (Number.isNaN(at.getTime()) || nicosiaDayKey(at) !== date) return { ok: false, error: "That date does not exist." };
+  if (date > nicosiaDayKey(opts.now)) return { ok: false, error: "The date cannot be in the future." };
+  if (date < MANUAL_EARLIEST) return { ok: false, error: "The date is too far back." };
+  if (input.note != null && typeof input.note !== "string") return { ok: false, error: "The note could not be read." };
+  const note = (input.note ?? "").replace(/\s+/g, " ").trim();
+  if (note.length > MANUAL_NOTE_MAX) return { ok: false, error: `The note is too long (${MANUAL_NOTE_MAX} characters max).` };
+  return { ok: true, status, at, note: note || null };
+}

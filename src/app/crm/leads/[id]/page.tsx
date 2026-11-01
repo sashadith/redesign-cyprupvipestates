@@ -135,7 +135,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     include: { developerAccount: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
   })).map((r) => ({
-    id: r.id, developerName: r.developerAccount.name, channel: r.channel === "WHATSAPP" ? "WHATSAPP" : "EMAIL", status: r.status,
+    id: r.id, developerName: r.developerAccount.name, channel: r.channel, status: r.status,
     sentAt: r.sentAt?.toISOString() ?? null, preliminaryAt: r.preliminaryAt?.toISOString() ?? null, preliminarySource: r.preliminarySource,
     fixedAt: r.fixedAt?.toISOString() ?? null, sendError: r.sendError,
   }));

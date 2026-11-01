@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   maskPhone, formatBudget, parseBudgetInput, buildRegistrationMessage, checkEditedText, normalizeProfile,
-  isRegistrable, canMark, undoTarget, canResend, REMINDER_AFTER_MS,
+  isRegistrable, canMark, undoTarget, canResend, REMINDER_AFTER_MS, checkManualRegistration,
 } from "@/lib/crm/registration/core";
 
 test("maskPhone: operator example and international formats", () => {
@@ -104,4 +104,25 @@ test("normalizeProfile: a WhatsApp group alone is enough; it needs a real group 
 test("isRegistrable: WhatsApp with only a group", () => {
   assert.equal(isRegistrable({ registrationChannel: "WHATSAPP", registrationEmailTo: [], registrationWhatsApp: [], registrationWhatsAppGroupId: "1203634@g.us" }), true);
   assert.equal(isRegistrable({ registrationChannel: "WHATSAPP", registrationEmailTo: [], registrationWhatsApp: [], registrationWhatsAppGroupId: null }), false);
+});
+
+test("checkManualRegistration: valid entries, Cyprus day kept, note trimmed", () => {
+  const now = new Date("2026-11-01T10:00:00Z");
+  const r = checkManualRegistration({ status: "PRELIMINARY", date: "2026-09-15", note: "  by email  from Gmail " }, { isOwner: false, now });
+  assert.ok(r.ok);
+  assert.equal(r.status, "PRELIMINARY");
+  assert.equal(r.at.toISOString(), "2026-09-15T12:00:00.000Z");
+  assert.equal(r.note, "by email from Gmail");
+  const today = checkManualRegistration({ status: "SENT", date: "2026-11-01", note: "" }, { isOwner: false, now });
+  assert.ok(today.ok && today.note === null);
+});
+test("checkManualRegistration refuses bad input; FIXED is owner only", () => {
+  const now = new Date("2026-11-01T10:00:00Z");
+  const bad = (i: Record<string, unknown>, isOwner = true) => checkManualRegistration({ status: "PRELIMINARY", date: "2026-10-01", note: null, ...i }, { isOwner, now });
+  assert.equal(bad({ status: "REJECTED" }).ok, false);
+  assert.equal(bad({ status: "FIXED" }, false).ok, false);
+  assert.equal(bad({ status: "FIXED" }, true).ok, true);
+  for (const date of ["", "01.10.2026", "2026-02-30", "2026-11-02", "2010-05-05", 20261001]) assert.equal(bad({ date }).ok, false, String(date));
+  assert.equal(bad({ note: "x".repeat(301) }).ok, false);
+  assert.equal(bad({ note: 5 }).ok, false);
 });
