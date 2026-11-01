@@ -5,6 +5,8 @@ import { FC, useId, useState } from "react";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import Link from "next/link";
 import { consentCopy } from "../consentCopy";
@@ -85,6 +87,8 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
     if (!firstName || !email || !phone || fd.get("agreedToPolicy") !== "on") {
       setStatus("err"); setErrMsg(t.required); return;
     }
+    if (!isValidLeadPhone(phone)) { setStatus("err"); setErrMsg(phoneInvalidText(lang) ?? t.required); return; }
+    if (!isValidLeadEmail(email)) { setStatus("err"); setErrMsg(emailInvalidText(lang) ?? t.required); return; }
     setStatus("sending"); setErrMsg(null);
     try {
       const parsed = parsePhoneNumberFromString(phone || "");

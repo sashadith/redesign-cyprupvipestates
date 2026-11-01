@@ -10,6 +10,8 @@ import {
   FormikHelpers,
   FormikProps,
 } from "formik";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
 import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
@@ -122,12 +124,14 @@ const FormFull: FC<ContactFormProps> = ({
           dataForm.validationNameRequired,
       ),
 
-    phone: Yup.string().required(`${dataForm.validationPhoneRequired}`),
+    phone: Yup.string().required(`${dataForm.validationPhoneRequired}`)
+      .test("phone-intl", phoneInvalidText(lang) ?? `${dataForm.validationPhoneRequired}`, (v) => !v || isValidLeadPhone(v)),
 
     email: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
       .email(`${dataForm.validationEmailInvalid}`)
-      .required(`${dataForm.validationEmailRequired}`),
+      .required(`${dataForm.validationEmailRequired}`)
+      .test("email-valid", emailInvalidText(lang) ?? `${dataForm.validationEmailInvalid}`, (v) => !v || isValidLeadEmail(v)),
 
     message: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
