@@ -568,8 +568,9 @@
 .cvpm-content { width: min(896px, 100%); }
 @media (min-width: 861px) {
   .cvpm { grid-template-columns: minmax(0, 629px) minmax(0, 1fr); }
-  /* 20% larger (350 → 420px) and standing on the panel's bottom edge (operator, 2026-11-01). */
-  .cvpm__art img { right: auto; left: 0; width: 420px; max-width: none; bottom: 0; }
+  /* Sized by the panel's height (operator, 2026-11-01): standing on the bottom edge, its top 50px below the
+     panel's top. Width follows the picture's own ratio; the far side runs off the panel edge. */
+  .cvpm__art img { right: auto; left: 0; bottom: 0; height: calc(100% - 50px); width: auto; max-width: none; aspect-ratio: auto; }
   [dir="rtl"] .cvpm { grid-template-columns: minmax(0, 1fr) minmax(0, 629px); }
   [dir="rtl"] .cvpm__art img { left: auto; right: 0; }
 }
