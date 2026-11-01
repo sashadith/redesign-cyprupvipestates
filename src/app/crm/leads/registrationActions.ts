@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canEditLead } from "@/lib/crm/access";
-import { isRegistrable, maskPhone, type RegChannel, type RegMark } from "@/lib/crm/registration/core";
+import { checkManualRegistration, isRegistrable, maskPhone, type RegChannel, type RegMark } from "@/lib/crm/registration/core";
 import {
   prepareRegistration, realRegisterDeps, registerLead,
   type PlannedMessage, type RegisterPick, type RegisterResult,
@@ -191,6 +191,74 @@ export async function unskipRegistrationDueAction(leadId: string, developerAccou
       },
     }),
   ]);
+  revalidatePath(`/crm/leads/${lead.id}`);
+  return { ok: true };
+}
+
+const MANUAL_STATUS_LABEL = { SENT: "sent, waiting for confirmation", PRELIMINARY: "preliminary", FIXED: "fixed" } as const;
+
+// A registration made outside the CRM (before it existed, by phone, from a
+// private mailbox): recorded by hand, nothing is sent. Channel NONE. A failed
+// or rejected row for the same developer is replaced; any other row blocks.
+export async function recordManualRegistrationAction(
+  leadId: string, developerAccountId: unknown, developmentIds: unknown, status: unknown, date: unknown, note: unknown,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { user, lead } = await editableLead(leadId);
+  if (!lead) return { ok: false, error: NOT_FOUND };
+  if (typeof developerAccountId !== "string" || !developerAccountId || developerAccountId.length > 64) return { ok: false, error: "Pick a developer." };
+  const picks = cleanPicks([{ developerAccountId, developmentIds }]);
+  if (!picks) return { ok: false, error: "The projects could not be read — reopen the form." };
+  const now = new Date();
+  const c = checkManualRegistration({ status, date, note }, { isOwner: user.isOwner, now });
+  if (!c.ok) return c;
+  const dev = await prisma.developerAccount.findUnique({ where: { id: developerAccountId }, select: { id: true, name: true } });
+  if (!dev) return { ok: false, error: "Developer not found." };
+  // Only this developer's projects; anything else is dropped.
+  const projects = await prisma.development.findMany({ where: { id: { in: picks[0].developmentIds }, developerAccountId: dev.id }, select: { id: true, publicName: true } });
+
+  const prelim = c.status !== "SENT";
+  const data = {
+    developmentIds: projects.map((p) => p.id), channel: "NONE" as const, status: c.status,
+    sentAt: c.at, sentById: user.id, sendError: null, outboundInteractionId: null,
+    preliminaryAt: prelim ? c.at : null, preliminarySource: prelim ? "manual" : null, preliminaryById: prelim ? user.id : null,
+    fixedAt: c.status === "FIXED" ? c.at : null, fixedById: c.status === "FIXED" ? user.id : null, rejectedAt: null,
+    // A back-dated "sent" must not fire the 2-day reminder mail at once; the open item stays visible.
+    reminderSentAt: c.status === "SENT" ? now : null,
+  };
+  const existing = await prisma.developerRegistration.findUnique({
+    where: { leadId_developerAccountId: { leadId: lead.id, developerAccountId: dev.id } },
+    select: { id: true, status: true },
+  });
+  if (existing && existing.status !== "FAILED" && existing.status !== "REJECTED") return { ok: false, error: `Already registered with ${dev.name}.` };
+
+  const day = c.at.toISOString().slice(0, 10).split("-").reverse().join(".");
+  const body = [
+    `Registration with ${dev.name} recorded manually: registered ${day}, ${MANUAL_STATUS_LABEL[c.status]}.`,
+    projects.length ? `Projects: ${projects.map((p) => p.publicName).join(", ")}.` : null,
+    c.note ? `Note: ${c.note}` : null,
+  ].filter(Boolean).join("\n");
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (existing) {
+        const n = await tx.developerRegistration.updateMany({ where: { id: existing.id, status: { in: ["FAILED", "REJECTED"] } }, data });
+        if (n.count !== 1) throw new Error("taken");
+      } else {
+        await tx.developerRegistration.create({ data: { leadId: lead.id, developerAccountId: dev.id, ...data } });
+      }
+      await tx.leadInteraction.create({
+        data: {
+          leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", direction: null, body,
+          createdByUserId: user.id, createdByName: user.name,
+          metadata: { kind: "developer_registration_manual", developerAccountId: dev.id, status: c.status, registeredOn: c.at.toISOString().slice(0, 10) },
+        },
+      });
+    });
+  } catch (e) {
+    // Two people saving at once: the unique (lead, developer) pair or the guarded update refuses the second.
+    if ((e instanceof Error && e.message === "taken") || (e as { code?: string })?.code === "P2002") return { ok: false, error: `Already registered with ${dev.name}.` };
+    console.error("registration: manual record failed", e);
+    return { ok: false, error: "Could not save — please try again." };
+  }
   revalidatePath(`/crm/leads/${lead.id}`);
   return { ok: true };
 }
