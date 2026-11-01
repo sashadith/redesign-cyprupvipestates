@@ -568,7 +568,8 @@
 .cvpm-content { width: min(896px, 100%); }
 @media (min-width: 861px) {
   .cvpm { grid-template-columns: minmax(0, 629px) minmax(0, 1fr); }
-  .cvpm__art img { right: auto; left: 0; width: 350px; }
+  /* 20% larger (350 → 420px) and standing on the panel's bottom edge (operator, 2026-11-01). */
+  .cvpm__art img { right: auto; left: 0; width: 420px; max-width: none; bottom: 0; }
   [dir="rtl"] .cvpm { grid-template-columns: minmax(0, 1fr) minmax(0, 629px); }
   [dir="rtl"] .cvpm__art img { left: auto; right: 0; }
 }
