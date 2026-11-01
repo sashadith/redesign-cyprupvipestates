@@ -560,15 +560,15 @@
    for both popups. The hover is a shade deeper. */
 .cvpm__form button[type="submit"] { background: var(--cvpm-bronze); border-color: var(--cvpm-bronze); color: #fff; }
 .cvpm__form button[type="submit"]:hover { background: #7e5e35; border-color: #7e5e35; box-shadow: 0 12px 40px -14px rgba(142, 107, 61, 0.8); }
-/* The whole popup 20% narrower (operator, 2026-11-01): 1120px → 896px. */
+/* The popup 20% narrower, taken off the picture side only (operator,
+   2026-11-01): 1120px → 896px. The form column keeps its 629px (1120 / 1.78),
+   so the fields stay exactly as they were; the picture column shrinks to what
+   is left. The phone art keeps its size and sits at the column's left edge, so
+   it moves left and its far side runs off the panel edge (the panel clips). */
 .cvpm-content { width: min(896px, 100%); }
-/* At that width "Sprechen Sie mit einem Berater" and the Russian headline
-   (~520px) no longer fit the ~417px column on one line: they may wrap,
-   balanced; English and Polish still fit on one. */
-@media (min-width: 861px) { .cvpm__title { white-space: normal; text-wrap: balance; } }
-/* In the 896px popup the form column is ~417px: consent beside the button broke
-   into three lines. Stacked instead, as in the article form: consent, then the
-   button at its own width. */
-.cvpm__form [class*="footerRow"] { flex-direction: column; align-items: flex-start; gap: 16px; }
-.cvpm__form [class*="footerRow"] [class*="customCheckbox"] { width: 100%; }
-.cvpm__form [class*="footerRow"] button[type="submit"] { min-width: 200px; }
+@media (min-width: 861px) {
+  .cvpm { grid-template-columns: minmax(0, 629px) minmax(0, 1fr); }
+  .cvpm__art img { right: auto; left: 0; width: 350px; }
+  [dir="rtl"] .cvpm { grid-template-columns: minmax(0, 1fr) minmax(0, 629px); }
+  [dir="rtl"] .cvpm__art img { left: auto; right: 0; }
+}
