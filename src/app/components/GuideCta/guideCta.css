@@ -141,3 +141,10 @@
   .cvpm.cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 12px; }
   .cvpm.cvpm--guide .cvpm__form div:has(> input[type="checkbox"]) { margin-bottom: 0; }
 }
+/* Guide popup, desktop (operator, 2026-11-01): twice the air above the eyebrow
+   and below the button (22px → 44px), and 70% more between eyebrow and
+   headline (6px → 10px). Phones keep their tighter 16px. */
+@media (min-width: 521px) {
+  .cvpm.cvpm--guide .cvpm__panel { padding-block: 44px; }
+}
+.cvpm.cvpm--guide .cvpm__guide { margin-bottom: 10px; }

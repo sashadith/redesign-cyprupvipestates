@@ -2,7 +2,9 @@
 // phone + email row (.contactRow) stacks there, a phone number needs the width.
 .nameSurnameWrapper {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  // minmax(0, …): the phone widget's own minimum width made its column wider
+  // than the email column in the narrower popup.
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 12px;
 }
 
