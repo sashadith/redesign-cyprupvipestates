@@ -15,6 +15,7 @@ import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitSyncButton } from "../../components/CockpitSyncButton";
 import { CockpitAssign } from "../../components/CockpitAssign";
+import { CockpitFollowUp } from "../../components/CockpitFollowUp";
 import { CockpitSummary } from "../../components/CockpitSummary";
 import { CockpitRegistrations, type DueRow, type RegistrationRow } from "../../components/CockpitRegistrations";
 import { CockpitPresentations, type PresentationRowView, type SentInfoView } from "../../components/CockpitPresentations";
@@ -45,7 +46,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
-      message: true, notes: true, lastMatchFilters: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true,
+      message: true, notes: true, lastMatchFilters: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -173,6 +174,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} />
+            <CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} />
             <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
             <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />

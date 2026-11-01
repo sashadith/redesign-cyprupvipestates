@@ -13,6 +13,7 @@ import { makeLimiter } from "@/lib/crm/ai/rateLimit";
 import { summariseLead, type SummaryResult } from "@/lib/crm/ai/summary";
 import { DEFAULT_SUMMARY_LOCALE, isSummaryLocale } from "@/lib/crm/summaryLocale";
 import { INTAKE_MAX, INTAKE_MIN, intakeFromText, type IntakeResult } from "@/lib/crm/ai/intake";
+import { followUpLabel, resolveFollowUp, type FollowUpInput } from "@/lib/crm/followUp";
 
 // Lead cockpit writes (CRM v2, 2026-10-18). Same validation as the MCP tool
 // crm_log_interaction; the lead id comes from the page, never from the form.
@@ -170,4 +171,30 @@ export async function intakeFromTextAction(text: string): Promise<IntakeResult> 
   if (len < INTAKE_MIN || len > INTAKE_MAX) return intakeFromText(text);
   if (!intakeLimiter(user.id)) return { ok: false, error: SLOW_DOWN };
   return intakeFromText(text);
+}
+
+// Next follow-up set by hand in the cockpit (2026-11-01): a free date, a shortcut
+// (+1 / +3 / +7 days) or cleared. Logged on the timeline as a SYSTEM row.
+export async function setFollowUpAction(leadId: string, input: FollowUpInput): Promise<{ ok: true; at: string | null } | { error: string }> {
+  const user = await requireCrmUser();
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
+  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  const r = resolveFollowUp(input && typeof input === "object" ? input : {}, new Date());
+  if (!r.ok) return { error: r.error };
+  const body = r.at ? `Next follow-up set to ${followUpLabel(r.at)}` : "Next follow-up cleared";
+  await prisma.$transaction([
+    prisma.lead.update({ where: { id: leadId }, data: { nextFollowUpAt: r.at } }),
+    prisma.leadInteraction.create({
+      data: {
+        leadId, type: "SYSTEM", channel: "SYSTEM", direction: null, body,
+        createdByUserId: user.id, createdByName: user.name,
+        metadata: { kind: "follow_up", nextFollowUpAt: r.at ? r.at.toISOString() : null },
+      },
+    }),
+  ]);
+  revalidatePath(`/crm/leads/${leadId}`);
+  revalidatePath("/crm/pipeline");
+  revalidatePath("/crm/today");
+  return { ok: true, at: r.at ? r.at.toISOString() : null };
 }
