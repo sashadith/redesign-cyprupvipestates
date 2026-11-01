@@ -174,6 +174,8 @@
 .crm-urgcount.now { color: var(--now); }
 /* Lead reminders (2026-10-31): the bar over every CRM page while the user has overdue / due-today leads. */
 .crm-nagbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 14px; border-radius: calc(12px * var(--ds-radius-scale)); background: var(--danger); color: var(--panel); font-weight: 700; font-size: calc(14px * var(--ds-crm-scale)); }
+.crm-nagbar-msg { display: inline-flex; align-items: center; gap: 8px; }
+.crm-nagbar-msg svg { flex: none; }
 .crm-nagbar a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .crm-nagbar.now { background: var(--now-bg); color: var(--now); box-shadow: inset 0 0 0 1px var(--now-line); }
 .crm-hint { color: var(--muted); font-size: calc(13px * var(--ds-crm-scale)); }
@@ -492,6 +494,12 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-search-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .crm-search-btn kbd { font: 600 calc(11px * var(--ds-crm-scale)) var(--mono); border: 1px solid var(--line-strong); border-radius: 999px; padding: 1px 7px; background: var(--panel); }
 .crm-search-btn + .crm-me { margin-left: 0; }
+/* "+ New lead" in the header from 721px (the phone dock hides there). */
+.crm-new-btn { margin-left: auto; display: inline-flex; align-items: center; background: var(--accent); color: var(--onaccent); border-radius: 999px; padding: 7px 14px;
+  font: 600 calc(13px * var(--ds-crm-scale)) var(--body); letter-spacing: 0.02em; text-decoration: none; white-space: nowrap; }
+.crm-new-btn:hover { filter: brightness(1.08); }
+.crm-new-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.crm-new-btn + .crm-search-btn { margin-left: 0; }
 .crm-palette { border: 1px solid var(--line); border-radius: calc(18px * var(--ds-radius-scale)); padding: 0; width: min(560px, calc(100vw - 32px)); margin-top: 12vh; color: var(--ink); background: var(--panel);
   box-shadow: 0 30px 70px -30px color-mix(in srgb, var(--ds-text) 45%, transparent); }
 .crm-palette::backdrop { background: color-mix(in srgb, var(--ds-text) 32%, transparent); }
@@ -511,6 +519,7 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
   .crm-dock { display: none; }
   .crm-main { padding-bottom: 40px; }
 }
+@media (max-width: 720px) { .crm-new-btn { display: none; } }
 @media (max-width: 1100px) and (min-width: 721px) { .crm-logo span { display: none; } }
 @media (max-width: 720px) {
   .crm-top { flex-wrap: nowrap; gap: 10px; padding: 10px 16px; }

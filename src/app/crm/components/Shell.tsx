@@ -88,6 +88,8 @@ export function Shell({ user, themes = { options: [], choiceId: null }, nag: nag
           {user.isOwner && <Link href="/crm/settings/design" className={on("/crm/settings/design")}>Design</Link>}
           {user.oldCrm && <Link href="/admin/crm">Old CRM</Link>}
         </nav>
+        {/* Desktop only (crm.css): on phones the dock carries "New lead". */}
+        <Link href="/crm/leads/new" className="crm-new-btn">+ New lead</Link>
         <button type="button" className="crm-search-btn" onClick={() => palette.current?.open()} aria-label="Search (Command K)">Search <kbd>⌘K</kbd></button>
         <div className="crm-me" ref={meRef}>
           {/* Every user has a menu since 2026-10-31 (Telegram reminders). */}
@@ -114,10 +116,14 @@ export function Shell({ user, themes = { options: [], choiceId: null }, nag: nag
       <main className="crm-main">
         {nag.overdue + nag.now > 0 && path !== "/crm/settings/telegram" && (
           <div className={`crm-nagbar${nag.overdue ? "" : " now"}`} role="status">
-            <span>
-              {nag.overdue > 0 && <>🔴 {nag.overdue} {nag.overdue === 1 ? "lead" : "leads"} overdue</>}
+            <span className="crm-nagbar-msg">
+              {/* Line icon, no emoji (operator, 2026-11-01): a clock for "overdue / due today". */}
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3" />
+              </svg>
+              {nag.overdue > 0 && <>{nag.overdue} {nag.overdue === 1 ? "lead" : "leads"} overdue</>}
               {nag.overdue > 0 && nag.now > 0 && " · "}
-              {nag.now > 0 && <>🟡 {nag.now} due today</>}
+              {nag.now > 0 && <>{nag.now} due today</>}
             </span>
             <Link href="/crm/pipeline?filter=due">Show them →</Link>
           </div>

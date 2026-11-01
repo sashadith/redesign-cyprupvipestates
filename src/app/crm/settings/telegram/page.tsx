@@ -32,7 +32,7 @@ export default async function TelegramSettingsPage() {
       <section className="crm-panel">
         {linkedAt ? (
           <>
-            <p>✅ Connected since {linkedAt}.</p>
+            <p>Connected since {linkedAt}.</p>
             <form action={disconnectTelegramAction}><button type="submit" className="crm-btn">Disconnect</button></form>
           </>
         ) : (
