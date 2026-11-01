@@ -188,3 +188,10 @@ test("send: a failing email is an error and does not block the rest", async () =
   assert.deepEqual(calls.marked, ["UNCONTACTED:y"]);
   assert.deepEqual(r.errors, ["UNCONTACTED x: smtp down"]);
 });
+
+test("owner rules stay silent when the current owner contacted the lead themselves, even before the assignment (2026-11-01)", () => {
+  // Babs Bhavon: WhatsApp sent a day earlier by the same person the lead was assigned to later.
+  assert.deepEqual(due([owned("babs", 300, { lastOutboundContactAt: min(1440), ownerContacted: true })]), []);
+  // Contacted before the assignment by someone else: the new owner still owes a contact.
+  assert.deepEqual(due([owned("other", 300, { lastOutboundContactAt: min(1440), ownerContacted: false })]), ["UNCONTACTED:other", "ESCALATE:other"]);
+});
