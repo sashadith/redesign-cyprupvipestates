@@ -22,6 +22,7 @@ import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formPartnersCopy } from "./FormPartners.copy";
 import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 function tpl(str: string | undefined, vars: Record<string, string | number>) {
   return String(str ?? "").replace(/\{(\w+)\}/g, (_, k) =>
@@ -223,6 +224,10 @@ const FormPartners: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/email", {
         ...values,
         phone: phoneFinal,
@@ -230,6 +235,7 @@ const FormPartners: FC<ContactFormProps> = ({
         currentPage,
         lang,
         ...getAttribution(),
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       if (response.status === 200 && response.data?.ok === true) {
@@ -237,7 +243,7 @@ const FormPartners: FC<ContactFormProps> = ({
           window.fbq("track", "Lead", {
             form_name: "partners_form",
             page_location: currentPage,
-          }, { eventID: newMetaEventId("lead") });
+          }, { eventID: metaEventId });
         }
 
         resetForm({});

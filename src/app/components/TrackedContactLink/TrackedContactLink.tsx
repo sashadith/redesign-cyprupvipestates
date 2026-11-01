@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { newMetaEventId } from "@/lib/metaEventId";
+import { trackMetaContact } from "@/lib/metaContact";
 
 type Props = {
   href: string;
@@ -30,13 +30,11 @@ const TrackedContactLink: React.FC<Props> = ({
     if (contactType === "Email") method = "email";
     if (contactType === "Link" && href.includes("wa.me")) method = "whatsapp";
 
-    if (window.fbq) {
-      window.fbq("track", "Contact", {
-        method,
-        placement,
-        page_location: pageUrl,
-      }, { eventID: newMetaEventId("contact") });
-    }
+    trackMetaContact({
+      method,
+      placement,
+      page_location: pageUrl,
+    });
 
     if (window.dataLayer) {
       window.dataLayer.push({

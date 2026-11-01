@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useTrackingAllowed } from "@/lib/useTrackingAllowed";
+import { useMetaPixelAllowed } from "@/lib/useMetaPixelAllowed";
 
 const FACEBOOK_PIXEL_ID = "1238429281352397";
 
@@ -18,7 +18,9 @@ const FACEBOOK_PIXEL_ID = "1238429281352397";
  * on it were trained on exactly that.
  *
  * The host decision has to happen after mount — see useTrackingAllowed() for
- * why, and for the same guard on the Google Ads and LinkedIn tags.
+ * why, and for the same guard on the Google Ads and LinkedIn tags. Since
+ * 2026-11-01 the pixel additionally needs NEXT_PUBLIC_META_PIXEL_ENABLED=1 and
+ * a visitor that is not an automated browser — see useMetaPixelAllowed().
  *
  * Nothing else needs a guard: every other fbq call site in the app is written
  * `if (window.fbq) …`, and when this component declines to init, `window.fbq`
@@ -27,7 +29,7 @@ const FACEBOOK_PIXEL_ID = "1238429281352397";
 const FacebookPixel = () => {
   // Hook first, then the early return — a hook inside the `if` condition is
   // legal but invites the next person to add one below the return.
-  const allowed = useTrackingAllowed();
+  const allowed = useMetaPixelAllowed();
   if (!allowed) return null;
 
   return (

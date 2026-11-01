@@ -22,9 +22,12 @@ export function trackBrochureOpen(source: BrochureSource): void {
   if (typeof window === "undefined") return;
   const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;
   if (typeof fbq !== "function") return;
-  fbq("track", "InitiateCheckout", {
+  // FormOpen, a custom event (2026-11-01): it used to be the standard
+  // InitiateCheckout, which tells Meta's delivery a purchase has begun and
+  // trained it on modal clicks. A custom name stays out of that optimisation.
+  fbq("trackCustom", "FormOpen", {
     form_name: "brochure_modal",
     source,
     page_location: window.location.href,
-  }, { eventID: newMetaEventId("ic") });
+  }, { eventID: newMetaEventId("fo") });
 }

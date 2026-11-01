@@ -2,11 +2,11 @@
  *
  * Meta deduplicates a browser event against a Conversions API event when both
  * carry the same event name AND the same `event_id`, within 48 hours. Today
- * nothing is sent server-side, so these ids buy NOTHING on their own — that is
- * deliberate, and worth stating plainly rather than dressing up: they are the
- * prerequisite. A Conversions API switched on while the browser events are
- * anonymous would double-count every single conversion, and fixing it at that
- * point means touching all eighteen call sites again, under a live dataset.
+ * Lead and Contact also go out server-side (src/lib/metaCapi.ts, 2026-11-01):
+ * the browser posts the same id to our API, and that is the only reason the
+ * two copies count once. FormOpen ("fo", formerly InitiateCheckout) and
+ * ViewContent stay browser-only, the ids there cost nothing and keep the shape
+ * uniform.
  *
  * Two rules the call sites must keep, both learned the hard way in this repo:
  *
@@ -26,7 +26,7 @@
  */
 
 /** Prefixes in use, so a key read in Events Manager says which event it came from. */
-export type MetaEventPrefix = "lead" | "contact" | "ic" | "vc";
+export type MetaEventPrefix = "lead" | "contact" | "fo" | "vc";
 
 export function newMetaEventId(prefix: MetaEventPrefix): string {
   const time = Date.now().toString(36);

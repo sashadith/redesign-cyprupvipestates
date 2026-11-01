@@ -38,8 +38,13 @@ type Loaded = { default: React.ComponentType<any> };
  * `load` is a function rather than a module path so the caller's static
  * `import()` keeps the path alias resolvable.
  */
-export async function tagReachesDomOn(url: string, load: () => Promise<Loaded>, needle: string): Promise<boolean> {
-  const win = await mountComponentOn(url, load);
+export async function tagReachesDomOn(
+  url: string,
+  load: () => Promise<Loaded>,
+  needle: string,
+  prepare?: (win: any) => void,
+): Promise<boolean> {
+  const win = await mountComponentOn(url, load, {}, prepare);
   return win.document.documentElement.outerHTML.includes(needle);
 }
 
@@ -52,8 +57,12 @@ export async function mountComponentOn(
   url: string,
   load: () => Promise<Loaded>,
   props: Record<string, unknown> = {},
+  // Runs on the fresh window before the mount — e.g. to make navigator look
+  // like an automated browser for the Meta pixel's bot check.
+  prepare?: (win: any) => void,
 ): Promise<any> {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", { url, pretendToBeVisual: true });
+  prepare?.(dom.window);
   const g = globalThis as unknown as Record<string, unknown>;
   g.window = dom.window;
   g.document = dom.window.document;
