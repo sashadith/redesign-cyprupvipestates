@@ -1383,3 +1383,23 @@ img { max-width: 100%; display: block; }
   .formsec__fields { grid-template-columns: 1fr 1fr; column-gap: var(--s-3); }
   .formsec__field--wide, .formsec__fields > .formsec__field--full, .formsec__quals { grid-column: 1 / -1; }
 }
+/* Portrait 20% smaller and its bottom edge on the bottom edge of Send
+   (operator, 2026-11-01). The aside spans both grid rows and the form is the
+   last thing in row 2, so `align-self: end` puts the photo's bottom (the gold
+   divider) on the form's bottom, which is Send. Replaces the centring and the
+   22px lift; the caption is absolute here, so the photo alone sets the height. */
+.formsec__aside { --portrait-w: min(270px, 68%); }
+@media (min-width: 940px) {
+  .formsec__aside { align-self: end; transform: none; }
+}
+/* "What are you looking for?" is a toggle on phones only (operator, 2026-11-01):
+   closed at first there, so the optional fields do not lengthen the form; from
+   560px the row always shows and the heading reads as plain text. */
+button.formsec__quals-head { display: flex; align-items: center; gap: 6px; width: 100%; padding: 0; border: 0; background: none; text-align: start; cursor: default; }
+.formsec__quals-chev { display: none; margin-inline-start: auto; color: var(--text-soft); transition: transform 0.2s var(--ease, ease); }
+@media (max-width: 559px) {
+  button.formsec__quals-head { cursor: pointer; min-height: 40px; }
+  .formsec__quals-chev { display: block; }
+  .formsec__quals.is-open .formsec__quals-chev { transform: rotate(180deg); }
+  .formsec__quals:not(.is-open) .formsec__quals-row { display: none; }
+}

@@ -108,6 +108,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
      reveals its question field pre-filled and the anchor jump (#enquiry)
      brings it into view. The field is shown, not required (2026-10-03). */
   const [prefilledQuestion, setPrefilledQuestion] = useState(false);
+  const [qualsOpen, setQualsOpen] = useState(false);
   useEffect(() => {
     const onEnquire = (e: Event) => {
       const message = (e as CustomEvent<{ message?: string }>).detail?.message;
@@ -339,10 +340,17 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                          Without a heading in this language (Hebrew) the full labels stay. */
                       const heading = qualifierHeading(lang);
                       const lab = (l: string) => (heading ? shortQualifierLabel(l) : l);
+                      /* Phones: the heading folds the three fields away (closed at first, operator
+                         2026-11-01); from 560px they are always shown and the toggle is inert. */
                       return (
-                        <div className="formsec__quals">
-                          {heading && <p className="formsec__quals-head">{heading} <span>{optionalTag(q.budgetLabel)}</span></p>}
-                          <div className="formsec__quals-row">
+                        <div className={`formsec__quals${qualsOpen ? " is-open" : ""}`}>
+                          {heading && (
+                            <button type="button" className="formsec__quals-head" aria-expanded={qualsOpen} aria-controls={`${uid}-quals`} onClick={() => setQualsOpen((o) => !o)}>
+                              {heading} <span>{optionalTag(q.budgetLabel)}</span>
+                              <svg className="formsec__quals-chev" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </button>
+                          )}
+                          <div className="formsec__quals-row" id={`${uid}-quals`}>
                             {/* What, then how much, then when: the order a person actually thinks in.
                                 Several types may be picked; /api/leads gets them as an array. */}
                             <div className="formsec__field">

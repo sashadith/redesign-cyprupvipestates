@@ -448,7 +448,7 @@ const FormStandard: FC<ContactFormProps> = ({
               </div>
 
               {/* Phone and email share a row like the names (compact layout, 2026-11-01). */}
-              <div className={styles.nameSurnameWrapper}>
+              <div className={`${styles.nameSurnameWrapper} ${styles.contactRow}`}>
                 <div className={styles.inputWrapper}>
                   <PhoneInput
                     id={`${uid}-phone`}
