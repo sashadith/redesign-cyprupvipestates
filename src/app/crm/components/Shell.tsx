@@ -88,6 +88,8 @@ export function Shell({ user, themes = { options: [], choiceId: null }, nag: nag
           {user.isOwner && <Link href="/crm/settings/design" className={on("/crm/settings/design")}>Design</Link>}
           {user.oldCrm && <Link href="/admin/crm">Old CRM</Link>}
         </nav>
+        {/* Desktop only (crm.css): on phones the dock carries "New lead". */}
+        <Link href="/crm/leads/new" className="crm-new-btn">+ New lead</Link>
         <button type="button" className="crm-search-btn" onClick={() => palette.current?.open()} aria-label="Search (Command K)">Search <kbd>⌘K</kbd></button>
         <div className="crm-me" ref={meRef}>
           {/* Every user has a menu since 2026-10-31 (Telegram reminders). */}
