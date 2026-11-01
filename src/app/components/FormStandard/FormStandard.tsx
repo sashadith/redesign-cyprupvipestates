@@ -10,6 +10,8 @@ import {
   FormikHelpers,
   FormikProps,
 } from "formik";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
 import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
@@ -256,12 +258,14 @@ const FormStandard: FC<ContactFormProps> = ({
         const ok = /^[+0-9()\-\s]{7,25}$/.test(v);
         if (ok) return true;
         return this.createError({ message: dataForm.validationPhoneInvalid });
-      }),
+      })
+      .test("phone-intl", phoneInvalidText(lang) ?? dataForm.validationPhoneInvalid, (v) => !v || isValidLeadPhone(v)),
 
     email: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
       .email(dataForm.validationEmailInvalid)
-      .required(dataForm.validationEmailRequired),
+      .required(dataForm.validationEmailRequired)
+      .test("email-valid", emailInvalidText(lang) ?? dataForm.validationEmailInvalid, (v) => !v || isValidLeadEmail(v)),
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])

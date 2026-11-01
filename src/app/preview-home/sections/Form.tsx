@@ -2,6 +2,7 @@
 
 import React, { FC, useEffect, useId, useRef, useState } from "react";
 import { Formik, Form as FormikForm, Field, ErrorMessage, FormikHelpers, FormikProps } from "formik";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
 import * as Yup from "yup";
 import dynamic from "next/dynamic";
 import { getAttribution } from "@/lib/attribution";
@@ -125,9 +126,12 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
   const validationSchema = Yup.object({
     name: Yup.string().required(t.vName),
     surname: Yup.string().required(t.vSurname),
-    phone: Yup.string().required(t.vPhone),
+    // Country code required (2026-11-01). The phone check loads with libphonenumber, late, like the input.
+    phone: Yup.string().required(t.vPhone)
+      .test("phone-intl", phoneInvalidText(lang) ?? t.vPhone, async (v) => !v || (await import("@/lib/leads/contactPhone")).isValidLeadPhone(v)),
     ...(showQuestionField ? { question: Yup.string().trim().required(questionRequired) } : {}),
-    email: Yup.string().email(t.vEmailInvalid).required(t.vEmail),
+    email: Yup.string().email(t.vEmailInvalid).required(t.vEmail)
+      .test("email-valid", emailInvalidText(lang) ?? t.vEmailInvalid, (v) => !v || isValidLeadEmail(v)),
     preferredContact: Yup.string().oneOf(["phone", "whatsapp", "email"]).required(t.vContact),
     agreedToPolicy: Yup.boolean().required(t.vConsentReq).oneOf([true], t.vConsentOne),
   });
@@ -149,7 +153,8 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
         ...getAttribution(),
       });
 
-      if (response.status === 200) {
+      // A refused lead also answers 200, with ok: false: never show "thank you" for it.
+      if (response.status === 200 && response.data?.ok === true) {
         if (typeof window !== "undefined" && window.fbq) {
           window.fbq("track", "Lead", {
             form_name: "form_static",

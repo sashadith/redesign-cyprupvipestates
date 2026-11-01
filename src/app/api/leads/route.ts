@@ -1,6 +1,8 @@
 // Lead capture → Postgres (Lead) + Telegram + email notifications.
 // Replaces the former Monday.com flow. Preserves the existing anti-spam protections so
 // existing frontend forms work unchanged (they POST the same body shape).
+import { isValidLeadEmail, normalizeLeadEmail } from "@/lib/leads/contactEmail";
+import { e164LeadPhone } from "@/lib/leads/contactPhone";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
@@ -52,8 +54,10 @@ export async function POST(request: Request) {
     // Validation
     const firstName = String(name ?? "").trim();
     const lastName = String(surname ?? "").trim();
-    const emailNorm = String(email ?? "").trim().toLowerCase();
-    const phoneNorm = String(phone ?? "").trim();
+    const emailNorm = normalizeLeadEmail(email);
+    // E.164 with the country code; null when the number has none or is the wrong length for its country.
+    const phoneNorm = e164LeadPhone(phone) ?? "";
+    const phoneRaw = String(phone ?? "").trim();
     const preferred = String(preferredContact ?? "").trim().toLowerCase();
     // FAQ's Form (showQuestionField) submits the free-text field as "question",
     // not "message" — every other form on the site (FormFull, FormMinimalBlock)
@@ -67,13 +71,13 @@ export async function POST(request: Request) {
     const guide = parseGuideRequest(body, langNorm);
     const messageFinal = messageWithGuide(messageNorm, guide);
 
-    if (!firstName || !phoneNorm || !emailNorm) return blocked("missing_fields");
+    if (!firstName || !phoneRaw || !emailNorm) return blocked("missing_fields");
     if (preferred && !["phone", "whatsapp", "email"].includes(preferred)) return blocked("preferredContact");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return blocked("email");
+    if (!isValidLeadEmail(emailNorm)) return blocked("email");
     if (emailLimiter(emailNorm, 3, 60_000)) return blocked("rate_limit_email");
     if (firstName.length < 2 || firstName.length > 60) return blocked("name");
     if (lastName && (lastName.length < 2 || lastName.length > 60)) return blocked("surname");
-    if (phoneNorm.length < 7 || phoneNorm.length > 25) return blocked("phone");
+    if (!phoneNorm) return blocked("phone");
 
     // Qualification fields (all optional — backward compatible with the basic form)
     const BUDGETS = BUDGET_RANGES;
