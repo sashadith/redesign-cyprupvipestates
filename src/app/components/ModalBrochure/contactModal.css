@@ -555,7 +555,7 @@
 .cvpm__form [class*="inputWrapper"] { margin-bottom: 12px; }
 .cvpm__form [class*="inputWrapper"]:has(> .lf-contact) { margin-top: 6px; }
 .cvpm__form [class*="footerRow"] { margin-top: 24px; } /* collapses with the 12px above: 24px in all */
-.cvpm__form button[type="submit"] { text-transform: none; letter-spacing: 0.01em; font-size: 15px; font-weight: 600; }
+.cvpm__form button[type="submit"] { text-transform: none; letter-spacing: 0.01em; font-size: 15px; font-weight: 400; }
 /* Bronze with white type, like Send on the page form (operator, 2026-11-01),
    for both popups. The hover is a shade deeper. */
 .cvpm__form button[type="submit"] { background: var(--cvpm-bronze); border-color: var(--cvpm-bronze); color: #fff; }

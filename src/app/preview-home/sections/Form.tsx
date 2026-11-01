@@ -75,8 +75,9 @@ const titleNode = (lang: string) => {
 // switched on where the visitor's intent is concrete enough to answer them
 // (project pages today). Filling them is what lets /api/leads run its
 // development matching — left empty the lead is stored exactly as before.
-const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean; showQualifiers?: boolean }> = ({
-  lang = "en", title, subtitle, showQuestionField = false, showQualifiers = false,
+// className: extra class on the section, for a page that tunes the layout (the FAQ's larger portrait).
+const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean; showQualifiers?: boolean; className?: string }> = ({
+  lang = "en", title, subtitle, showQuestionField = false, showQualifiers = false, className,
 }) => {
   const t = formCopy(lang);
   const q = qualifierCopy(lang);
@@ -193,7 +194,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
   };
 
   return (
-    <section className="section is-light formsec" ref={sectionRef}>
+    <section className={`section is-light formsec${className ? ` ${className}` : ""}`} ref={sectionRef}>
       <div className="wrap">
         <div className="formsec__grid">
           <div className="formsec__main">

@@ -1403,3 +1403,8 @@ button.formsec__quals-head { display: flex; align-items: center; gap: 6px; width
   .formsec__quals.is-open .formsec__quals-chev { transform: rotate(180deg); }
   .formsec__quals:not(.is-open) .formsec__quals-row { display: none; }
 }
+/* FAQ (operator, 2026-11-01): the portrait 10% larger there (the form with its
+   question field is taller), still on the Send line; the lead on one line on
+   desktop — the 58ch measure broke it before "directly." */
+.formsec--faq .formsec__aside { --portrait-w: min(312px, 78%); }
+@media (min-width: 940px) { .formsec--faq .formsec__subtitle { max-width: none; } }
