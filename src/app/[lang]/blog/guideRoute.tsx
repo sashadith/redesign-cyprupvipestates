@@ -8,22 +8,12 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { missingTarget } from "@/lib/missingPageRedirect";
-import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
+import { localizedHref } from "@/lib/locale";
 import { guidesSectionSlug, hasGuidesSection, sectionSegments } from "@/lib/articleSections";
-import { getBlogPostByLang, getBlogSlugs } from "@/sanity/sanity.utils";
+import { getBlogPostByLang } from "@/sanity/sanity.utils";
 import { ArticleView, articleMetadata } from "./ArticleView";
 
 type Params = { lang: string; slug: string };
-
-/** Slugs to pre-render for one guides route: only the language that owns that URL segment. */
-export async function guideStaticParams(routeSlug: string): Promise<Params[]> {
-  const out: Params[] = [];
-  for (const lang of PUBLIC_LOCALES) {
-    if (!hasGuidesSection(lang) || guidesSectionSlug(lang) !== routeSlug) continue;
-    for (const slug of await getBlogSlugs(lang, "guides")) out.push({ lang, slug });
-  }
-  return out;
-}
 
 /** Where this URL should end up, or null when it is the right URL for a guide. */
 async function guideRedirectTarget(routeSlug: string, { lang, slug }: Params) {

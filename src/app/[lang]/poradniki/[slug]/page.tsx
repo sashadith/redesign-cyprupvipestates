@@ -1,9 +1,15 @@
 // Guide article URL in one language (see ../../blog/guideRoute.tsx): poradniki.
-import { GuidePage, guideMetadata, guideStaticParams } from "../../blog/guideRoute";
+//
+// Rendered per request, not through ISR: with ISR a guide that is published after the build is generated on its
+// first request, and in production that on-demand render failed (DYNAMIC_SERVER_USAGE, a 500) because
+// getBlogPostByLang asks Next whether Draft Mode is on (src/sanity/sanity.utils.ts, draftFilter). Same setting as the
+// project pages, which are dynamic for the same reason. The sitemap and the guides index list the pages either way.
+import { GuidePage, guideMetadata } from "../../blog/guideRoute";
 
-export const revalidate = 3600;
-export const generateStaticParams = () => guideStaticParams("poradniki");
-export const generateMetadata = (props: { params: { lang: string; slug: string } }) => guideMetadata(props, "poradniki");
-export default function Page(props: { params: { lang: string; slug: string } }) {
+export const dynamic = "force-dynamic";
+export async function generateMetadata(props: { params: { lang: string; slug: string } }) {
+  return guideMetadata(props, "poradniki");
+}
+export default async function Page(props: { params: { lang: string; slug: string } }) {
   return GuidePage(props, "poradniki");
 }
