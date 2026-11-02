@@ -105,22 +105,22 @@ test("assignment time is the latest assignment row, and only if it names the cur
   assert.equal(latestAssignedAt([], owner), null);
 });
 
-test("UNASSIGNED Telegram lists up to 10 lead references (no names), then 'and N more'", () => {
-  const leads = Array.from({ length: 12 }, (_, i) => lead(`l${i}`, { name: i === 0 ? "Tom <b>&</b> Jerry" : `Client ${i}` }));
+test("UNASSIGNED Telegram lists up to 10 escaped names, then 'and N more'", () => {
+  const leads = Array.from({ length: 12 }, (_, i) => lead(`l${i}`, { name: i === 0 ? "Tom <b>&</b> Jerry" : `Lead ${i}` }));
   const text = unassignedTelegram(leads, "https://x.test");
-  assert.doesNotMatch(text, /Tom|Jerry|Client/);
-  assert.match(text, /Lead #l9\b/);
-  assert.doesNotMatch(text, /Lead #l10\b/);
+  assert.match(text, /Tom &lt;b&gt;&amp;&lt;\/b&gt; Jerry/);
+  assert.doesNotMatch(text, /<b>&<\/b>/);
+  assert.match(text, /Lead 9\b/);
+  assert.doesNotMatch(text, /Lead 10\b/);
   assert.match(text, /and 2 more/);
   assert.match(text, /https:\/\/x\.test\/crm\/inbox/);
   assert.doesNotMatch(unassignedTelegram(leads.slice(0, 3), "https://x.test"), /more/);
 });
 
-test("ESCALATE Telegram names the owner (escaped), not the lead: a reference and the link", () => {
+test("ESCALATE Telegram names owner, lead and the lead link, escaped", () => {
   const text = escalateTelegram([owned("abc", 300, { name: "A&B", ownerName: "<Anna>" })], NOW, "https://x.test");
   assert.match(text, /&lt;Anna&gt;/);
-  assert.doesNotMatch(text, /A&amp;B|A&B/);
-  assert.match(text, /Lead #abc/);
+  assert.match(text, /A&amp;B/);
   assert.match(text, /https:\/\/x\.test\/crm\/leads\/abc/);
   assert.match(text, /5 h/);
   assert.match(text.split("\n")[0], /not contacted<\/b>$/);

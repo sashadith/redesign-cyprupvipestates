@@ -1,6 +1,5 @@
 import { ACTIVE_LEAD_STATUSES } from "./leadStatus";
 import { isAssignmentTo } from "./today";
-import { leadRef } from "@/lib/chatPrivacy";
 
 // SLA reminders (CRM v2 Phase 2c). Pure: the cron route loads the rows, this
 // decides which notices are due and renders their text. Idempotency lives in
@@ -117,7 +116,7 @@ export function unassignedTelegram(leads: SlaLead[], base: string): string {
   const lines = [
     `⏰ <b>${leads.length} new lead${leads.length === 1 ? "" : "s"} still unassigned</b>`,
     "",
-    ...shown.map((l) => `• <a href="${slaLeadUrl(base, l.id)}">${esc(leadRef(l.id))}</a>`),
+    ...shown.map((l) => `• <a href="${slaLeadUrl(base, l.id)}">${esc(cut(l.name || "(no name)"))}</a>`),
   ];
   if (leads.length > shown.length) lines.push(`<i>and ${leads.length - shown.length} more</i>`);
   lines.push("", `<a href="${base}/crm/inbox">Assign in the inbox</a>`);
@@ -132,7 +131,7 @@ export function escalateTelegram(leads: SlaLead[], now: Date, base: string): str
   ];
   for (const l of leads) {
     const owner = esc(cut(l.ownerName || "(unknown)")) + (l.ownerActive === false ? " (inactive)" : "");
-    const name = esc(leadRef(l.id)); // reference, not the name: chatPrivacy.ts
+    const name = esc(cut(l.name || "(no name)"));
     const h = l.assignedAt ? ` · assigned ${hoursSince(l.assignedAt, now)} h ago` : "";
     lines.push("", `👤 <b><a href="${slaLeadUrl(base, l.id)}">${name}</a></b>`, `<i>${owner}${h}</i>`);
   }

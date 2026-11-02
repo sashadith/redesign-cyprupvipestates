@@ -2,17 +2,16 @@
 // the DB/Telegram side is leadNagSend.ts. The rule is the pipeline's own (cardUrgency): what is red or yellow
 // on the board is exactly what the reminder lists — nothing else, so the two can never disagree.
 //
-// Operator decisions: 10:00, 12:00, 15:00 and 18:00 Cyprus time; a lead leaves the list only when it is dealt
+// Operator decisions: 10:00 and 18:00 Cyprus time (12:00 and 15:00 dropped 2026-11-02); a lead leaves the list only when it is dealt
 // with (a real contact logged, or a new follow-up date — including the Telegram buttons "Tomorrow" / "+3 days");
 // every employee gets their own leads; unassigned leads, and leads of someone without Telegram, go to the owner.
 // Internal copy: English (project convention).
 import { cardUrgency, type BoardLeadInput, type CardUrgency } from "./boardModel";
 import { isLeadStatus } from "./leadStatus";
 import { CRM_TZ, dayKey } from "./today";
-import { leadRef } from "@/lib/chatPrivacy";
 
 /** Cyprus hours the reminder goes out. */
-export const NAG_HOURS = [10, 12, 15, 18] as const;
+export const NAG_HOURS = [10, 18] as const;
 /** Leads listed (and given buttons) per message; the rest are counted with a link to the board. */
 export const NAG_MAX_LEADS = 30;
 /** Room for the message text (Telegram's hard limit is 4096). */
@@ -40,14 +39,16 @@ export type NagLead = Pick<BoardLeadInput, "id" | "firstName" | "lastName" | "st
 
 export type NagItem = { leadId: string; name: string; urgency: CardUrgency; ownerName: string | null };
 
+const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName} ${l.lastName}`.trim() || "(no name)";
+
 /** The marked leads, most overdue first, then "act now"; ties by name. */
 export function nagItems(leads: NagLead[], now: Date, ownerNameOf: (assignedToId: string | null) => string | null = () => null): NagItem[] {
   const out: NagItem[] = [];
   for (const l of leads) {
     if (!isLeadStatus(l.status)) continue;
     const u = cardUrgency({ ...l, source: "", languagePreference: null, assignedTo: null, projectLabel: null, deals: [], canEdit: false } as BoardLeadInput, l.status, now);
-    // `name` is what the chat shows: a reference, never the client's name (chatPrivacy.ts).
-    if (u) out.push({ leadId: l.id, name: leadRef(l.id), urgency: u, ownerName: ownerNameOf(l.assignedToId) });
+    // Office reminders name the client (operator, 2026-11-02); contact details and messages stay out (chatPrivacy.ts).
+    if (u) out.push({ leadId: l.id, name: leadName(l), urgency: u, ownerName: ownerNameOf(l.assignedToId) });
   }
   const rank = (i: NagItem) => (i.urgency.level === "overdue" ? i.urgency.days : -1);
   return out.sort((a, b) => rank(b) - rank(a) || a.name.localeCompare(b.name, "en"));
@@ -127,10 +128,17 @@ export function buildNagMessage(items: NagItem[], opts: { slot: number; crmBase:
     text = render(shown);
   }
   const keyboard = shown.map((i) => [
-    { text: `⏰ ${i.name}: tomorrow`, callback_data: nagCallbackData(1, i.leadId) },
+    { text: `⏰ ${shortName(i.name)}: tomorrow`, callback_data: nagCallbackData(1, i.leadId) },
     { text: "+3 days", callback_data: nagCallbackData(3, i.leadId) },
   ]);
   return { text, keyboard };
+}
+
+/** First name plus initial, at most 24 characters (button labels are short). */
+export function shortName(name: string): string {
+  const [first, ...rest] = name.trim().split(/\s+/);
+  const s = rest.length ? `${first} ${rest[rest.length - 1][0]}.` : first ?? "";
+  return s.length > 24 ? `${s.slice(0, 23)}…` : s;
 }
 
 // ── Buttons ─────────────────────────────────────────────────────────────────
