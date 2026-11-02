@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { leadRef } from "@/lib/chatPrivacy";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { getCrmUser } from "@/lib/crm/session";
 
 // No admin/user auth here by design — the token itself IS the auth for a
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const presentation = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
-    select: { id: true, leadId: true, status: true, expiresAt: true, greetingName: true },
+    select: { id: true, leadId: true, status: true, expiresAt: true, greetingName: true, lead: { select: { firstName: true, lastName: true } } },
   });
   if (!presentation || presentation.status !== "active" || (presentation.expiresAt && presentation.expiresAt < new Date())) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       },
     }).catch(() => {});
     try {
-      await sendTelegramMessage(`❤️ ${escapeHtml(leadRef(presentation.leadId))} favorited ${escapeHtml(publicName)} — <a href="${requestOrigin(req)}/crm/leads/${presentation.leadId}">CRM</a>`);
+      await sendTelegramMessage(`❤️ ${escapeHtml(leadLabel(presentation.lead, presentation.leadId))} favorited ${escapeHtml(publicName)} — <a href="${requestOrigin(req)}/crm/leads/${presentation.leadId}">CRM</a>`);
     } catch (e) { console.error("Favorite Telegram alert failed:", e); }
   }
 

@@ -281,6 +281,7 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
       const notification = buildLeadMessage({
         outcome,
         language: m.languagePreference,
+        name: `${m.firstName} ${m.lastName}`.trim(),
         budget: m.budget,
         preferredChannel: m.preferredChannel,
         campaignName: lead.campaign_name ?? null,

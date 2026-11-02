@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { leadRef } from "@/lib/chatPrivacy";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { canAssignLeads } from "./access";
 import { EXCLUDE_NEWSLETTER } from "./leadBucket";
@@ -42,7 +42,7 @@ export async function assignLead(actor: SessionCrmUser, leadId: string, userId: 
   const url = leadUrl(lead.id);
   // Notifications must never undo the assignment: failures are logged, not thrown.
   const [tg, mail] = await Promise.allSettled([
-    sendTelegramMessage(`👤 <b>${esc(owner.name)}</b> takes <b>${esc(leadRef(lead.id))}</b> (assigned by ${esc(actor.name)})\n${esc(url)}`),
+    sendTelegramMessage(`👤 <b>${esc(owner.name)}</b> takes <b>${esc(leadLabel(lead, lead.id))}</b> (assigned by ${esc(actor.name)})\n${esc(url)}`),
     sendEmail({ to: owner.email, subject: `New lead for you: ${leadName}`, text: `${actor.name} assigned ${leadName} to you.\n\nOpen the lead: ${url}` }),
   ]);
   for (const r of [tg, mail]) if (r.status === "rejected") console.error("[crm assign notify]", r.reason);

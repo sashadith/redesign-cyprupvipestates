@@ -3,7 +3,6 @@ import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, bucketOf } from "@/lib/crm
 import type { ActionItem } from "../types";
 import { isUnconfirmed, loadUnconfirmedRegistrations, reminderDate } from "@/lib/crm/registration/reminders";
 import { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES, STATUS_LABEL as CENTRAL_STATUS_LABEL } from "@/lib/crm/leadStatus";
-import { leadRef } from "@/lib/chatPrivacy";
 
 const DAY = 86_400_000;
 const NEW_LEAD_URGENT_HOURS = 24;
@@ -220,7 +219,6 @@ async function noFollowUp(): Promise<ActionItem[]> {
         items.push({
           id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
           title: `No follow-up on ${leadName(l)} for ${days} days`,
-          chatTitle: `No follow-up on ${leadRef(l.id)} for ${days} days`,
           description: `${statusLabel}. Last contact ${days} days ago.`,
           deepLink: `/admin/crm/${l.id}`, since: contactSinceViewing,
         });
@@ -232,7 +230,6 @@ async function noFollowUp(): Promise<ActionItem[]> {
       items.push({
         id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
         title: `${leadName(l)}'s viewing was on ${dateLabel} — how did it go?`,
-        chatTitle: `${leadRef(l.id)}: viewing was on ${dateLabel} — how did it go?`,
         description: "No follow-up logged since the viewing.",
         deepLink: `/admin/crm/${l.id}`, since: viewingAt,
       });
@@ -252,7 +249,6 @@ async function noFollowUp(): Promise<ActionItem[]> {
         items.push({
           id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
           title: `No follow-up on ${leadName(l)} for ${days} days`,
-          chatTitle: `No follow-up on ${leadRef(l.id)} for ${days} days`,
           description: `${statusLabel}, but no contact logged in ${days} days.`,
           deepLink: `/admin/crm/${l.id}`, since: anchor,
         });
@@ -264,7 +260,6 @@ async function noFollowUp(): Promise<ActionItem[]> {
       items.push({
         id: `lead-followup:${l.id}`, severity: "URGENT", category: "CRM",
         title: `${leadName(l)} is waiting for a first response since ${hours}h`,
-        chatTitle: `${leadRef(l.id)} is waiting for a first response since ${hours}h`,
         description: `${statusLabel}, no contact logged yet.`,
         deepLink: `/admin/crm/${l.id}`, since: l.createdAt,
       });
@@ -275,7 +270,6 @@ async function noFollowUp(): Promise<ActionItem[]> {
       items.push({
         id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
         title: `No follow-up on ${leadName(l)} for ${days} days`,
-        chatTitle: `No follow-up on ${leadRef(l.id)} for ${days} days`,
         description: `${statusLabel}. Last contact ${days} days ago.`,
         deepLink: `/admin/crm/${l.id}`, since: lastContact,
       });
@@ -309,7 +303,6 @@ async function engagedNoFollowUp(): Promise<ActionItem[]> {
     items.push({
       id: `presentation-engaged:${p.id}`, severity: "ACTION", category: "CRM",
       title: `${leadName(p.lead)} keeps viewing their presentation — call them`,
-      chatTitle: `${leadRef(p.leadId)} keeps viewing their presentation — call them`,
       description: `${p.views.length} visits, most recent ${lastView.toLocaleDateString("en-GB")}.`,
       deepLink: `/admin/crm/${p.leadId}`, since: lastView,
     });
@@ -333,7 +326,6 @@ async function expiringSoon(): Promise<ActionItem[]> {
       return {
         id: `presentation-expiring:${p.id}`, severity: "INFO" as const, category: "CRM" as const,
         title: `${leadName(p.lead!)}'s presentation expires in ${days} day${days === 1 ? "" : "s"}`,
-        chatTitle: `${leadRef(p.leadId)}: presentation expires in ${days} day${days === 1 ? "" : "s"}`,
         description: "Extend it from the presentation editor if the lead is still active.",
         deepLink: `/admin/crm/${p.leadId}`, since: now,
       };
@@ -349,7 +341,6 @@ async function registrationUnconfirmed(): Promise<ActionItem[]> {
   return rows.filter((r) => isUnconfirmed(r, now)).map((r) => ({
     id: `dev-registration:${r.id}`, severity: "ACTION", category: "CRM",
     title: `Registration not confirmed: ${r.lead.name} – ${r.developerName}`,
-    chatTitle: `Registration not confirmed: ${leadRef(r.lead.id)} – ${r.developerName}`,
     description: `Sent ${r.sentAt ? reminderDate(r.sentAt) : "?"}. Mark preliminary when the developer confirms.`,
     deepLink: `/crm/leads/${r.lead.id}`, since: r.sentAt ?? now,
   }));

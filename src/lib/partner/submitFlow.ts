@@ -130,14 +130,13 @@ export function alreadyYoursAnswer(
 }
 
 /** Office Telegram notice (HTML parse mode → every value escaped). The lead link only for a new lead. */
-// No client name: the office chat gets a reference and the link (chatPrivacy.ts).
-export type PartnerClientNotice = { partnerName: string; mode: SubmissionMode; baseUrl?: string } & (
+export type PartnerClientNotice = { clientName?: string; partnerName: string; mode: SubmissionMode; baseUrl?: string } & (
   | { outcome: "CREATED"; leadId: string }
   | { outcome: "REVIEW" }
 );
 
 export function buildPartnerClientNotice(n: PartnerClientNotice): string {
-  const who = n.outcome === "CREATED" ? ` ${escapeHtml(leadRef(n.leadId))}` : "";
+  const who = n.clientName?.trim() ? ` ${escapeHtml(n.clientName.trim())}` : n.outcome === "CREATED" ? ` ${escapeHtml(leadRef(n.leadId))}` : "";
   const head = `Partner client${who} from ${escapeHtml(n.partnerName)} (${modeLabel(n.mode)})`;
   if (n.outcome === "CREATED") {
     const base = (n.baseUrl ?? "").replace(/\/+$/, "");

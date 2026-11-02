@@ -16,7 +16,7 @@ import type { Locale } from "@/lib/crm/presentationMessages";
 import { isLocale } from "@/lib/locale";
 import type { MeetingType } from "@prisma/client";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { leadRef } from "@/lib/chatPrivacy";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { getConfirmedBookings, findConflict } from "@/lib/booking/conflicts";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -122,7 +122,7 @@ export async function proposeSlotAction(token: string, selectedUtcSlots: string[
     },
   });
 
-  await notifyBookingProposed(booking.leadId, slots, cleanLeadTimezone, booking.meetingType);
+  await notifyBookingProposed(booking.leadId, leadLabel(booking.lead, booking.leadId), slots, cleanLeadTimezone, booking.meetingType);
 
   revalidatePath(`/admin/crm/${booking.leadId}`);
   return { ok: true };
@@ -132,7 +132,7 @@ export async function proposeSlotAction(token: string, selectedUtcSlots: string[
 // being recorded. Fires exactly once per proposeSlotAction call (guarded
 // upstream by booking.status !== "PENDING", so a resubmit can't re-trigger
 // this — see the "already_proposed" early return above).
-async function notifyBookingProposed(leadId: string, slotsUtc: string[], leadTimezone: string, meetingType: MeetingType) {
+async function notifyBookingProposed(leadId: string, leadName: string, slotsUtc: string[], leadTimezone: string, meetingType: MeetingType) {
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
     // leadTimezone is detected client-side by the lead's own browser at the
@@ -148,7 +148,7 @@ async function notifyBookingProposed(leadId: string, slotsUtc: string[], leadTim
       return `${i + 1}. Cyprus: ${cyprus}${leadSide}`;
     });
     const msg =
-      `<b>📅 ${esc(leadRef(leadId))} proposed meeting times</b>\n` +
+      `<b>📅 ${esc(leadName)} proposed meeting times</b>\n` +
       `Meeting type: ${meetingType === "ZOOM" ? "Zoom" : "Phone"}\n\n` +
       `${lines.join("\n")}\n\n` +
       `<a href="${siteUrl}/admin/crm/${leadId}">Open in CRM to confirm</a>`;
@@ -324,7 +324,7 @@ export async function cancelBookingAction(bookingRequestId: string): Promise<{ o
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
       const msg =
         `<b>🚫 Meeting cancelled</b>\n` +
-        `${esc(leadRef(booking.leadId))} — was ${formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ)} Cyprus time\n\n` +
+        `${esc(leadName || leadLabel(null, booking.leadId))} — was ${formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ)} Cyprus time\n\n` +
         `<a href="${siteUrl}/admin/crm/${booking.leadId}">Open in CRM</a>`;
       await sendTelegramMessage(msg);
     } catch (e) {

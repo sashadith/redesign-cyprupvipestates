@@ -17,11 +17,12 @@ export const notifyPrefix = () => (process.env.NOTIFY_PREFIX ? `${process.env.NO
 export const adminLeadUrl = (leadId: string) => `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${leadId}`;
 
 /** The stored notification, sent as-is to Telegram and the team WhatsApp
- *  group: no name, e-mail or phone (chatPrivacy.ts). The e-mail twin adds
- *  them back from the lead row (buildLeadEmail). */
+ *  group: the client's name, no e-mail or phone (chatPrivacy.ts). The e-mail
+ *  twin adds those from the lead row (buildLeadEmail). */
 export function buildLeadMessage(o: {
   outcome: "CREATED" | "ATTACHED";
   language: "de" | "en" | null;
+  name?: string;
   budget: BudgetKey | null;
   preferredChannel: LeadPreferredChannel | null;
   campaignName: string | null;
@@ -40,7 +41,7 @@ export function buildLeadMessage(o: {
       : `🏛 <b>Existing lead submitted the form again${region}</b>`;
   const lines = [
     `${esc(notifyPrefix())}${head}`,
-    esc(leadRef(o.leadId)),
+    `<b>${esc(o.name?.trim() || leadRef(o.leadId))}</b>`,
     `Budget: ${esc(o.budget ? BUDGETS[o.budget].label : "not answered")} · Prefers: ${esc(o.preferredChannel ? CHANNEL_LABEL[o.preferredChannel] : "not answered")}`,
   ];
   if (o.budget === "<2") lines.push("⚠️ below Private Collection threshold");

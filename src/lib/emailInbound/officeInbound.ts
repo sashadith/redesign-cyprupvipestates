@@ -96,7 +96,7 @@ export async function handleOfficeMessage(deps: OfficeReplyDeps, m: OfficeMessag
   }
   if (verdict.verdict === "rejected" || verdict.verdict === "unclear" || (verdict.verdict === "confirmed" && ctx.status === "SENT")) {
     await deps.alert(
-      `<b>Developer reply needs a look</b>\n${esc(ctx.developerName)} about ${esc(leadRef(match.leadId))}: ${verdict.verdict}` +
+      `<b>Developer reply needs a look</b>\n${esc(ctx.developerName)} about ${esc(ctx.clientName || leadRef(match.leadId))}: ${verdict.verdict}` +
         `\n<a href="${deps.siteUrl}/crm/leads/${match.leadId}">Open lead</a>`,
     );
     return "alerted";

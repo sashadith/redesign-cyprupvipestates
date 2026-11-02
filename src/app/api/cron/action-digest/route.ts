@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
 import type { ActionItem, Category } from "@/lib/actionCenter/types";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { leadRef } from "@/lib/chatPrivacy";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
@@ -93,16 +93,15 @@ async function todaysAppointmentLines(): Promise<{ chat: string[]; mail: string[
   });
   if (!meetings.length) return { chat: [], mail: [] };
 
-  // Telegram: a reference with a link, not the client's name (chatPrivacy.ts).
-  // The e-mail keeps the name and spells the CRM link out.
+  // Telegram links the name into the CRM; the e-mail spells the link out.
   const head = ["", `<b>📅 Today's appointments (${meetings.length})</b>`];
   const row = (b: (typeof meetings)[number], forChat: boolean) => {
     const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
     const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
     const url = `${siteUrl}/admin/crm/${b.leadId}`;
     return forChat
-      ? `• ${time} — <a href="${url}">${escapeHtml(leadRef(b.leadId))}</a> (${typeLabel})`
-      : `• ${time} — ${escapeHtml(`${b.lead.firstName} ${b.lead.lastName}`.trim())} (${typeLabel}) ${url}`;
+      ? `• ${time} — <a href="${url}">${escapeHtml(leadLabel(b.lead, b.leadId))}</a> (${typeLabel})`
+      : `• ${time} — ${escapeHtml(leadLabel(b.lead, b.leadId))} (${typeLabel}) ${url}`;
   };
   return { chat: [...head, ...meetings.map((b) => row(b, true))], mail: [...head, ...meetings.map((b) => row(b, false))] };
 }
@@ -200,17 +199,15 @@ const SUPPRESSED_SYSTEM_IDS = new Set(["cron-health:feed-sync", "cron-health:dri
 
 type TaggedItem = { item: ActionItem; fresh: boolean };
 
-// Telegram takes the chatTitle when the rule set one: the chat names no
-// client (chatPrivacy.ts). The e-mail keeps the full title.
-function formatItemLine(t: TaggedItem, forChat: boolean): string {
-  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(forChat ? (t.item.chatTitle ?? t.item.title) : t.item.title)}`;
+function formatItemLine(t: TaggedItem): string {
+  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(t.item.title)}`;
 }
 
-function buildCategorySection(label: string, items: TaggedItem[], siteUrl: string, forChat: boolean): string[] {
+function buildCategorySection(label: string, items: TaggedItem[], siteUrl: string): string[] {
   if (!items.length) return [];
   const shown = items.slice(0, CATEGORY_CAP);
   const rest = items.length - shown.length;
-  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map((t) => formatItemLine(t, forChat))];
+  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map((t) => formatItemLine(t))];
   if (rest > 0) lines.push(`… and ${rest} more → <a href="${siteUrl}/admin">Action Center</a>`);
   return lines;
 }
@@ -260,18 +257,18 @@ async function runDigest() {
   const systemExtra = byCategory.get("SYSTEM") ?? [];
   const systemShown = systemExtra.slice(0, CATEGORY_CAP);
   const systemRest = systemExtra.length - systemShown.length;
-  // One builder for both copies: Telegram (no client names) and the e-mail (full titles and names).
+  // One builder for both copies: Telegram (CRM links in the names) and the e-mail (links spelled out).
   const buildLines = (forChat: boolean): string[] => [
     "",
     "<b>🔧 SYSTEM & SYNCS</b>",
     ...morningSyncLines,
-    ...systemShown.map((t) => formatItemLine(t, forChat)),
+    ...systemShown.map((t) => formatItemLine(t)),
     ...(systemRest > 0 ? [`… and ${systemRest} more → <a href="${siteUrl}/admin">Action Center</a>`] : []),
-    ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl, forChat),
-    ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl, forChat),
+    ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl),
+    ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl),
     ...(forChat ? appointmentLines.chat : appointmentLines.mail),
     ...socialSectionLines,
-    ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl, forChat),
+    ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl),
     ...advisorLines,
   ];
   const lines = buildLines(true);

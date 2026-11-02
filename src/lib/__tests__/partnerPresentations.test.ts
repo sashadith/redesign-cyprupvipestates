@@ -305,7 +305,7 @@ test("view route: outbox insert idempotent, office alert prefixed for partner pr
   assert.ok(route.includes("officeAlertPrefix(escapeHtml("));
   assert.ok(route.includes("await sendTelegramMessage(`${officePrefix}👀 ${name} opened their personal page — <a href=\"${crmLink}\">CRM</a>`);"));
   assert.ok(route.includes("await sendTelegramMessage(`${officePrefix}🔁 ${name} is back on their page (visit ${visitNumber}) — <a href=\"${crmLink}\">CRM</a>`);"));
-  assert.ok(route.includes("const name = escapeHtml(leadRef(presentation.leadId));"), "a reference, not the greeting name (chatPrivacy.ts)");
+  assert.ok(route.includes("const name = escapeHtml(leadLabel(presentation.lead, presentation.leadId));"), "the lead's own name (chatPrivacy.ts)");
 });
 
 // ── Create glue ─────────────────────────────────────────────────────────────

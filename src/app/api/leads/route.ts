@@ -193,13 +193,13 @@ export async function POST(request: Request) {
       .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)
       .join("\n          ");
 
-    // Telegram notification (non-fatal). No name, e-mail, phone or message:
+    // Telegram notification (non-fatal). The name, no e-mail, phone or message:
     // the same text goes to the team WhatsApp group (chatPrivacy.ts) — the
     // team e-mail below carries the details.
     const langTag = telegramLanguageTag(ALLOWED_LANGS.has(langNorm) ? langNorm : null);
     const tg =
       `<b>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</b>\n\n` +
-      `${escapeHtml(leadRef(lead.id))}\n` +
+      `<b>${escapeHtml(fullName || leadRef(lead.id))}</b>\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
       (langTag ? `Language: ${escapeHtml(langTag)}\n` : "") +
       tgQualification +
