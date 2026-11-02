@@ -12,6 +12,8 @@ import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
 import { localizedHref, LOCALES, isLocale, PUBLIC_LOCALES } from "@/lib/locale";
+import { guidesSectionSlug, hasGuidesSection } from "@/lib/articleSections";
+import { articlePublicHref } from "@/lib/articlePublicUrl";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { developerImpact, deactivateDeveloperGroup, reactivateDeveloperGroup, deleteDeveloperGroup, deleteConfirmationMatches, type DeveloperImpact } from "@/lib/developerLifecycle";
 import { developerAccountDeleteImpact, type AccountDeleteImpact } from "@/lib/developerAccountDelete";
@@ -131,8 +133,15 @@ function revalidateProjectPublic(language: string, slug: string) {
   revalPublic(language, []);
 }
 function revalidateBlogPublic(language: string, slug: string) {
+  // The article lives under /blog or the language's guides slug depending on its category (articleSections.ts):
+  // refresh both, plus both section indexes (the guides index is the free-guides page, which lists every guide).
   revalPublic(language, ["blog", slug]);
   revalPublic(language, ["blog"]);
+  if (hasGuidesSection(language)) {
+    revalPublic(language, [guidesSectionSlug(language), slug]);
+    revalPublic(language, [guidesSectionSlug(language)]);
+    revalidatePath(`/preview-guides/${language}`);
+  }
 }
 function revalidateSinglepagePublic(language: string, slug: string) {
   revalPublic(language, [slug]);
@@ -736,7 +745,7 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
     // happened so CronRunLog stays a useful audit trail either way.
     if (row.status === "PUBLISHED") {
       const event = before?.status !== "PUBLISHED" ? "blog-published" : "blog-meta-edited";
-      void pingIndexNow(event, [absUrl(localizedHref(row.language, ["blog", row.slug]))]);
+      void articlePublicHref(row).then((href) => pingIndexNow(event, [absUrl(href)]));
     }
     return { ok: "Updated successfully." };
   } catch (e: any) {

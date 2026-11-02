@@ -17,12 +17,16 @@
 // Scanner junk (wp-admin, *.php, .env, very deep paths) is not a content URL and
 // keeps its 404: sending every probe to the homepage would only create soft-404s.
 
+import { articleSegments } from "@/lib/articleSections";
+
 export type MissingKind = "blog" | "page" | "project" | "developer" | "caseStudy";
 
 export interface SlugRow {
   language: string;
   slug: string;
   translationGroupId: string | null;
+  /** Blog rows only: the category's translationGroupId, which decides blog vs guides URL (articleSections.ts). */
+  categoryGroupId?: string | null;
 }
 
 export interface MissingRepo {
@@ -136,15 +140,15 @@ async function resolveRaw(
     if (row) {
       if (row.translationGroupId && env.isPublicLocale(lang)) {
         const sib = await repo.blogSibling(row.translationGroupId, lang);
-        const t = sib && ok(env.href(lang, ["blog", sib.slug]));
+        const t = sib && ok(env.href(lang, articleSegments(lang, sib.slug, sib.categoryGroupId)));
         if (t) return t;
       }
       if (row.translationGroupId && lang !== "en") {
         const en = await repo.blogSibling(row.translationGroupId, "en"); // default language beats the source language
-        const t = en && ok(env.href("en", ["blog", en.slug]));
+        const t = en && ok(env.href("en", articleSegments("en", en.slug, en.categoryGroupId)));
         if (t) return t;
       }
-      const own = ok(env.href(row.language, ["blog", row.slug]));
+      const own = ok(env.href(row.language, articleSegments(row.language, row.slug, row.categoryGroupId)));
       if (own) return own;
     }
     return ok(env.href(lang, ["blog"]));

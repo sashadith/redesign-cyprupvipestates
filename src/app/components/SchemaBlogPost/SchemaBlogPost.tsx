@@ -2,6 +2,7 @@
 import { urlFor } from "@/sanity/sanity.client";
 import { Blog } from "@/types/blog";
 import { abs, localizedPath } from "@/lib/seo";
+import { sectionSegments } from "@/lib/articleSections";
 import { bcp47For } from "@/lib/locale";
 
 interface SchemaBlogPostProps {
@@ -16,8 +17,8 @@ const SchemaBlogPost = ({ blog, lang }: SchemaBlogPostProps) => {
 
   if (!slug) return null;
 
-  // All locales use explicit prefixes (`/de/blog/x` etc.).
-  const url = abs(localizedPath(lang, ["blog", slug]));
+  // All locales use explicit prefixes (`/de/blog/x`); guide articles live under the language's guides slug.
+  const url = abs(localizedPath(lang, sectionSegments(lang, slug, blog.section)));
 
   const imageUrl = blog.previewImage
     ? abs(urlFor(blog.previewImage).width(1200).height(630).url())

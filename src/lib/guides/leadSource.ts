@@ -4,15 +4,19 @@
 // shorter follow-up chain. Pure on purpose: the leads route, the follow-up
 // cadence and the one-off backfill all decide through these functions, and
 // the tests exercise them without a database.
+import { ALL_GUIDES_SLUGS } from "@/lib/articleSections";
 
 /** The marker messageWithGuide() (./request.ts) puts in front of the guide line. */
 export const GUIDE_MARKER = "[Guide]";
+
+// A blog article or a guide article (/blog/x, /guides/x, /de/ratgeber/x, /pl/poradniki/x, /ru/gajdy/x).
+const ARTICLE_PAGE = new RegExp(`/(blog|${ALL_GUIDES_SLUGS.join("|")})/`);
 
 /** The source a new form lead gets. A guide request wins over the page it came from. */
 export function formLeadSource(page: string, isGuideRequest: boolean): "GUIDE_DOWNLOAD" | "PROJECT_ENQUIRY" | "BLOG_ENQUIRY" | "CONTACT_FORM" {
   if (isGuideRequest) return "GUIDE_DOWNLOAD";
   if (/\/projects\//.test(page)) return "PROJECT_ENQUIRY";
-  if (/\/blog\//.test(page)) return "BLOG_ENQUIRY";
+  if (ARTICLE_PAGE.test(page)) return "BLOG_ENQUIRY";
   return "CONTACT_FORM";
 }
 

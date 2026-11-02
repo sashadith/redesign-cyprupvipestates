@@ -13,6 +13,7 @@ import "@/app/preview-insights/insights.css";
 
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
+import { sectionSegments } from "@/lib/articleSections";
 import { blogIndexMode } from "@/lib/blogIndexMode";
 import {
   getBlogPageByLang,
@@ -74,7 +75,10 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
   // once `he` has its own articles the plain nouns apply. LTR never crosses.
   const articleOne = crossLocale ? (t.articleOneCross ?? t.articleOne) : t.articleOne;
   const articleMany = crossLocale ? (t.articleManyCross ?? t.articleMany) : t.articleMany;
-  const total = mode.sourceLang === "he" ? heCount : await getTotalBlogPostsByLang(mode.sourceLang);
+  // The blog lists the "blog" section only: guide articles have their own index (the guides page).
+  // Cross-locale he borrows every English article, guides included, and links each to its own section.
+  const listSection = crossLocale ? undefined : "blog";
+  const total = mode.sourceLang === "he" ? heCount : await getTotalBlogPostsByLang(mode.sourceLang, listSection);
   const pages = totalPagesFor(total);
   if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) {
     // No 404 for a page number that does not exist: the last real page (or the index when
@@ -86,16 +90,15 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
   // Fetch the full ordered list once — the "All" view shows this page's slice +
   // pager, while the client category filter needs every article. Sourced from
   // `mode.sourceLang`, not `lang`, so the cross-locale case fetches EN posts.
-  const allPosts = await getBlogPostsByLangWithPagination(mode.sourceLang, Math.max(total, PAGE_1_TOTAL), 0);
+  const allPosts = await getBlogPostsByLangWithPagination(mode.sourceLang, Math.max(total, PAGE_1_TOTAL), 0, listSection);
   const blogBase = localizedHref(lang, "blog"); // "/blog" | "/de/blog" | ... — this locale's OWN pagination base
   // Card hrefs point at the source locale's article path — for `he` in
   // cross-locale mode that's the EN article ("/blog/<slug>", no /he/ prefix).
-  const articleBase = crossLocale ? localizedHref(mode.sourceLang, "blog") : blogBase;
   const allCards: InsightsCard[] = (allPosts ?? []).map((p: any) => ({
     id: p._id,
     title: p.title,
     excerpt: p.excerpt ?? "",
-    href: `${articleBase}/${slugOf(p, mode.sourceLang)}`,
+    href: localizedHref(mode.sourceLang, sectionSegments(mode.sourceLang, slugOf(p, mode.sourceLang), p.section)),
     image: safeUrl(p.previewImage),
     // Cross-locale mode replaces the (English) category with the "In
     // English" badge in the same slot (icard__cat / ifeat__cat) — it reads

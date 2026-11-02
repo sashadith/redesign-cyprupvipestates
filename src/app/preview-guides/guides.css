@@ -45,3 +45,14 @@
 .gds__stepn { flex: none; width: 38px; height: 38px; border: 1px solid var(--accent); border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display), var(--font-display-cyr), serif; font-size: 1.05rem; color: var(--accent); }
 .gds__steptitle { margin: 4px 0 6px; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.25rem; color: var(--ivory); }
 .gds__steptext { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
+
+/* Guide articles listing (all guides of the language, grouped by category), above the free PDF guides. */
+.gds__articles { padding-block: var(--section-y); }
+.gds__lead { margin: 0 0 var(--s-5); max-width: 62ch; font-family: var(--font-body), sans-serif; color: var(--text); opacity: 0.8; line-height: 1.6; }
+.gds__chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 clamp(28px, 4vw, 48px); }
+.gds__chip { display: inline-block; padding: 8px 14px; border: 1px solid var(--hairline, rgba(0,0,0,.15)); border-radius: 999px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: .04em; color: var(--text); text-decoration: none; }
+.gds__chip:hover, .gds__chip:focus-visible { border-color: var(--accent); color: var(--accent); }
+.gds__group { margin-top: clamp(36px, 5vw, 64px); }
+.gds__group:first-of-type { margin-top: 0; }
+.gds__group-title { margin: 0 0 var(--s-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: var(--text-h3, 1.6rem); color: var(--text); }
+.gds__group-count { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }

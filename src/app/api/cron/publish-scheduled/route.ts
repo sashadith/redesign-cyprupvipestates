@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref } from "@/lib/locale";
+import { articleHref, guidesSectionSlug } from "@/lib/articleSections";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
@@ -37,7 +38,7 @@ async function run() {
     // block gate below, and the other three content types either don't carry
     // this block type (Project) or aren't in scope for the gate yet
     // (Singlepage/CaseStudy — see findEmptyProjectsBlock's own scope note).
-    prisma.blog.findMany({ where, select: { ...select, contentBlocks: true } }),
+    prisma.blog.findMany({ where, select: { ...select, contentBlocks: true, category: { select: { translationGroupId: true } } } }),
     prisma.project.findMany({ where, select }),
     prisma.singlepage.findMany({ where, select }),
     prisma.caseStudy.findMany({ where, select }),
@@ -77,9 +78,16 @@ async function run() {
     published[key] = rows.length;
   }
 
-  await flip(prisma.blog, blogs, (l, s) => { revalidatePath(`/${l}/blog/${s}`); revalidatePath(`/${l}/blog`); }, "blog");
+  // A post lives under /blog or the language's guides slug depending on its category, so refresh both
+  // sections' pages (a no-op for the one it is not in) and the guides index, which lists every guide.
+  await flip(prisma.blog, blogs, (l, s) => {
+    revalidatePath(`/${l}/blog/${s}`);
+    revalidatePath(`/${l}/blog`);
+    revalidatePath(`/${l}/${guidesSectionSlug(l)}/${s}`);
+    revalidatePath(`/preview-guides/${l}`);
+  }, "blog");
   // Fire-and-forget, one per post that just went live via schedule.
-  for (const b of blogs) void pingIndexNow("blog-published-scheduled", [absUrl(localizedHref(b.language, ["blog", b.slug]))]);
+  for (const b of blogs) void pingIndexNow("blog-published-scheduled", [absUrl(articleHref(b.language, b.slug, b.category?.translationGroupId))]);
   await flip(prisma.project, projects, (l, s) => { revalidatePath(`/${l}/projects/${s}`); revalidatePath(`/${l}/projects`); revalidatePath(`/${l}`); }, "project");
   await flip(prisma.singlepage, pages, (l, s) => { revalidatePath(`/${l}/${s}`); }, "singlepage");
   await flip(prisma.caseStudy, caseStudies, (l, s) => { revalidatePath(`/${l}/case-studies/${s}`); revalidatePath(`/${l}/case-studies`); }, "caseStudy");

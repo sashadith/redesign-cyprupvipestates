@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref, isLocale, PUBLIC_LOCALES, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
 import { mergedTargetFor } from "@/middleware";
+import { articleHref, articleSection, sectionWhere, type ArticleSection } from "@/lib/articleSections";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -100,6 +101,20 @@ async function translationsFor(
     select: { language: true, slug: true },
   });
   return siblings.map((s: AnyRow) => ({ slug: { [s.language]: { current: s.slug } } }));
+}
+
+// Blog siblings: same as translationsFor, plus the section ("blog" | "guides") each language's
+// row lives in, so hreflang and the language switcher point at the right URL.
+async function blogTranslationsFor(groupId: string | null | undefined): Promise<{ slug: any; section: any }[]> {
+  if (!groupId) return [];
+  const siblings = await prisma.blog.findMany({
+    where: { translationGroupId: groupId, status: "PUBLISHED" },
+    select: { language: true, slug: true, category: { select: { translationGroupId: true } } },
+  });
+  return siblings.map((s) => ({
+    slug: { [s.language]: { current: s.slug } },
+    section: { [s.language]: articleSection(s.language, s.category?.translationGroupId) },
+  }));
 }
 
 // Singletons (homepage, *Page, footer…) have one doc per language and no translationGroupId
@@ -677,10 +692,13 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
     if (b._type === "inlineRelatedArticleBlock" && b.article?._ref) {
       const art = await prisma.blog.findFirst({
         where: { sanityId: b.article._ref },
-        select: { title: true, excerpt: true, slug: true, language: true },
+        select: { title: true, excerpt: true, slug: true, language: true, category: { select: { translationGroupId: true } } },
       });
       b.resolved = art
-        ? { title: art.title ?? "", excerpt: art.excerpt ?? "", slug: art.slug ?? "", language: art.language ?? lang }
+        ? {
+            title: art.title ?? "", excerpt: art.excerpt ?? "", slug: art.slug ?? "", language: art.language ?? lang,
+            href: art.slug ? articleHref(art.language ?? lang, art.slug, art.category?.translationGroupId) : "",
+          }
         : null;
     }
     out.push(D(b));
@@ -931,7 +949,12 @@ const slugList = (model: any, published: boolean) => async (lang: string): Promi
     select: { slug: true },
   })).map((r: AnyRow) => r.slug);
 export const getProjectSlugs = (lang: string) => slugList(prisma.project, true)(lang);
-export const getBlogSlugs = (lang: string) => slugList(prisma.blog, true)(lang);
+/** Published blog slugs of `lang`, optionally only those of one section. */
+export const getBlogSlugs = async (lang: string, section?: ArticleSection): Promise<string[]> =>
+  (await prisma.blog.findMany({
+    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) },
+    select: { slug: true },
+  })).map((r) => r.slug);
 export const getCaseStudySlugs = (lang: string) => slugList(prisma.caseStudy, true)(lang);
 export const getDeveloperSlugs = async (lang: string): Promise<string[]> =>
   (await prisma.developer.findMany({
@@ -987,8 +1010,8 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
       _id: b.sanityId, _type: "blog", title: b.title,
       category: b.category ? { _id: b.category.sanityId, _type: "category", title: b.category.title, slug: slugObj(b.category), language: b.category.language } : null,
       slug: slugObj(b), publishedAt: b.publishedAt?.toISOString?.() ?? null, previewImage: D(b.previewImage),
-      // Blog posts live at /[lang]/blog/<slug> in their own language.
-      href: localizedHref(b.language, ["blog", b.slug]),
+      // Blog posts live at /[lang]/blog/<slug> in their own language, guides at /[lang]/guides/<slug>.
+      href: articleHref(b.language, b.slug, b.category?.translationGroupId),
     }));
     // Singlepages live at their canonical (possibly nested) path — NOT under /blog. Resolve the
     // full parent/child path per language so related links don't 404 (the old code always linked
@@ -1031,6 +1054,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
     ...base(row, "blog"),
     title: row.title, slug: slugObj(row), seo: row.seo, publishedAt: row.publishedAt?.toISOString?.() ?? null,
     category: row.category ? { _id: row.category.sanityId, title: row.category.title, slug: slugObj(row.category) } : null,
+    section: articleSection(row.language, row.category?.translationGroupId),
     author: row.author ? {
       _id: row.author.sanityId, name: row.author.name, position: row.author.position,
       specialization: row.author.specialization, bio: row.author.bio, linkedin: row.author.linkedin,
@@ -1040,7 +1064,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
     contentBlocks: await resolveBlocks(row.contentBlocks as any[], lang),
     videoBlock: D(row.videoBlock), popularProperties: row.popularProperties,
     relatedArticles: related, language: row.language,
-    _translations: await translationsFor(prisma.blog as any, row.translationGroupId),
+    _translations: await blogTranslationsFor(row.translationGroupId),
   };
   return D(out) as unknown as Blog;
 }
@@ -1056,41 +1080,43 @@ export async function getBlogPageByLang(lang: string): Promise<BlogPage> {
   } as unknown as BlogPage;
 }
 
-export async function getBlogPostsByLang(lang: string): Promise<Blog[]> {
+export async function getBlogPostsByLang(lang: string, section?: ArticleSection): Promise<Blog[]> {
   if (!isLocale(lang)) return [];
   const rows = await prisma.blog.findMany({
-    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" },
+    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) },
     include: { category: true }, orderBy: { publishedAt: "desc" },
   });
   return Promise.all(rows.map(async (b) => D({
     ...base(b, "blog"), title: b.title, slug: slugObj(b), previewImage: D(b.previewImage),
     category: b.category ? { title: b.category.title, slug: slugObj(b.category) } : null,
+    section: articleSection(b.language, b.category?.translationGroupId),
     publishedAt: b.publishedAt?.toISOString?.() ?? null, language: b.language,
-    _translations: await translationsFor(prisma.blog as any, b.translationGroupId),
+    _translations: await blogTranslationsFor(b.translationGroupId),
   }))) as unknown as Blog[];
 }
 
-export async function getBlogPostsByLangWithPagination(lang: string, limit: number, offset: number): Promise<Blog[]> {
+export async function getBlogPostsByLangWithPagination(lang: string, limit: number, offset: number, section?: ArticleSection): Promise<Blog[]> {
   if (!isLocale(lang)) return [];
   const rows = await prisma.blog.findMany({
-    where: { language: lang as any, status: "PUBLISHED" }, include: { category: true },
+    where: { language: lang as any, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) }, include: { category: true },
     orderBy: { publishedAt: "desc" }, skip: offset, take: limit,
   });
   return Promise.all(rows.map(async (b) => D({
     _id: b.sanityId, title: b.title, excerpt: b.excerpt, slug: slugObj(b), previewImage: D(b.previewImage),
-    category: b.category ? { title: b.category.title, slug: slugObj(b.category) } : null,
+    category: b.category ? { title: b.category.title, slug: slugObj(b.category), groupId: b.category.translationGroupId } : null,
+    section: articleSection(b.language, b.category?.translationGroupId),
     publishedAt: b.publishedAt?.toISOString?.() ?? null, language: b.language,
-    _translations: await translationsFor(prisma.blog as any, b.translationGroupId),
+    _translations: await blogTranslationsFor(b.translationGroupId),
   }))) as unknown as Blog[];
 }
 
-export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
+export async function getTotalBlogPostsByLang(lang: string, section?: ArticleSection): Promise<number> {
   if (!isLocale(lang)) return 0;
   // PUBLISHED only — matches the PUBLISHED-only rows the grid actually
   // renders (getBlogPostsByLang/getBlogPostsByLangWithPagination), so the
   // hero counter can never claim more articles than the list shows. Also the
   // basis for the Phase 6 he-article-count gate (blogIndexMode).
-  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED" } });
+  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) } });
 }
 
 // === Case Study ===

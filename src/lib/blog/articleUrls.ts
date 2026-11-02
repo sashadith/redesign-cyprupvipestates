@@ -6,6 +6,7 @@
 // from a hand-built pattern, so a locale that is gated (he) or a sibling
 // that is not PUBLISHED can never be advertised here either.
 import { languageAlternates, pathBuilders } from "@/lib/seo";
+import { articleSection } from "@/lib/articleSections";
 import { LOCALES, LAUNCH_GATED_LOCALES, type Locale } from "@/lib/locale";
 
 // The locales the blog is written in: every known locale that is not launch-
@@ -25,7 +26,8 @@ export type ArticleRow = {
   publishedAt: Date | null;
   updatedAt: Date;
   translationGroupId: string | null;
-  category?: { slug: string; title: string } | null;
+  /** `translationGroupId` places the article in the blog or the guides section (articleSections.ts). */
+  category?: { slug: string; title: string; translationGroupId?: string | null } | null;
 };
 
 export type ArticleGroup = { key: string; rows: ArticleRow[] };
@@ -63,8 +65,9 @@ export function anchorRow(group: ArticleGroup): ArticleRow {
 /** Absolute public URL per locale, via the language switcher's own helper. Null = no published translation. */
 export function localeUrls(group: ArticleGroup): Record<BlogLocale, string | null> {
   const anchor = anchorRow(group);
-  const translations = group.rows.map((r) => ({ slug: { [r.language]: { current: r.slug } } }));
-  const { languages } = languageAlternates({ lang: anchor.language, slug: anchor.slug, pathFor: pathBuilders.blog, translations });
+  const sectionOf = (r: ArticleRow) => articleSection(r.language, r.category?.translationGroupId);
+  const translations = group.rows.map((r) => ({ slug: { [r.language]: { current: r.slug } }, section: { [r.language]: sectionOf(r) } }));
+  const { languages } = languageAlternates({ lang: anchor.language, slug: anchor.slug, pathFor: pathBuilders.blog, translations, section: sectionOf(anchor) });
   const out = {} as Record<BlogLocale, string | null>;
   for (const l of BLOG_LOCALES) out[l] = languages[l] ?? null;
   return out;

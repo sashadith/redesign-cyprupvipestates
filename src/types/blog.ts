@@ -441,6 +441,8 @@ export type Blog = {
   seo: Seo;
   publishedAt: string;
   category: Category;
+  /** "guides" when the article's category is a guide category (src/lib/articleSections.ts), else "blog". */
+  section?: "blog" | "guides";
   author: Author;
   previewImage: ImageAlt;
   excerpt: string;

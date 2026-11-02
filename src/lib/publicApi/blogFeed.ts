@@ -15,7 +15,8 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { loadBlurMap } from "@/lib/blur";
-import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
+import { PUBLIC_LOCALES } from "@/lib/locale";
+import { articleHref } from "@/lib/articleSections";
 import { abs } from "@/lib/seo";
 import {
   ApiImage,
@@ -101,13 +102,14 @@ const BLOG_SELECT = {
   updatedAt: true,
   translationGroupId: true,
   author: { select: { name: true, position: true, bio: true, image: true } },
-  category: { select: { title: true, slug: true } },
+  category: { select: { title: true, slug: true, translationGroupId: true } },
 } as const;
 
 const DETAIL_SELECT = { ...BLOG_SELECT, contentBlocks: true, videoBlock: true } as const;
 
-function canonicalFor(lang: string, slug: string): string {
-  return abs(localizedHref(lang, ["blog", slug]));
+// The article's section (blog or guides, see src/lib/articleSections.ts) follows its category.
+function canonicalFor(lang: string, slug: string, categoryGroupId?: string | null): string {
+  return abs(articleHref(lang, slug, categoryGroupId));
 }
 
 function asRecord(value: unknown): Record<string, any> {
@@ -122,11 +124,11 @@ async function translationsFor(
   if (!translationGroupId) return {};
   const siblings = await prisma.blog.findMany({
     where: { translationGroupId, status: "PUBLISHED", language: { not: selfLang as any } },
-    select: { language: true, slug: true },
+    select: { language: true, slug: true, category: { select: { translationGroupId: true } } },
   });
   const out: Record<string, { slug: string; canonicalUrl: string }> = {};
   for (const s of siblings) {
-    out[s.language] = { slug: s.slug, canonicalUrl: canonicalFor(s.language, s.slug) };
+    out[s.language] = { slug: s.slug, canonicalUrl: canonicalFor(s.language, s.slug, s.category?.translationGroupId) };
   }
   return out;
 }
@@ -146,7 +148,7 @@ export function buildSummary(
     publishedAt: row.publishedAt ? new Date(row.publishedAt).toISOString() : null,
     updatedAt: new Date(row.updatedAt).toISOString(),
     readingTime,
-    canonicalUrl: canonicalFor(row.language, row.slug),
+    canonicalUrl: canonicalFor(row.language, row.slug, row.category?.translationGroupId),
     category: row.category ? { title: row.category.title, slug: row.category.slug } : null,
     author: row.author
       ? {

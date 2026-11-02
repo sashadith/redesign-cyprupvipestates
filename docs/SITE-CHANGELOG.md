@@ -694,3 +694,17 @@ outer `textContent` wrapper instead of the individual block holding the link spa
 property-type router links, which `@portabletext/react` surfaced immediately as "Unknown mark
 type" console errors on a local preview — fixed and reverified (console clean, all 4 links present
 and correctly hrefed) before this was written up.
+
+## 2026-11-02 — Guides section (articles move from `/blog` to the guides URLs)
+
+Branch `feat/guides-section`; takes effect on the day it is deployed, so re-date this entry then.
+Articles whose category is one of the five guide categories (Buying property, Legal & tax, Life in Cyprus,
+Locations & area guides, Lifestyle & expat tips; `src/lib/articleSections.ts`) now live under each language's
+guides slug: `/guides/<slug>`, `/de/ratgeber/<slug>`, `/pl/poradniki/<slug>`, `/ru/gajdy/<slug>` (the slugs the
+free-PDF guides page already had; that page is now the section index and also lists every guide article). The
+old `/blog/<slug>` URL of each of these ~300 articles answers with a permanent redirect (308) to the new one.
+The blog keeps the other categories (market trends, featured properties, developer projects: 10-15 articles per
+language). Hebrew is untouched. Titles, meta, content and the translation links are unchanged; canonical,
+hreflang, the sitemap (`/sitemaps/blog`) and the article JSON-LD follow the new URLs. Expect `/blog/...`
+impressions to move to the new URLs over a few weeks and the "Page with redirect" count in Search Console
+to rise by about 300; that is this change, not a ranking problem.

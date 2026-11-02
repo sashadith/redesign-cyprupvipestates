@@ -44,11 +44,12 @@ test("the four school-proximity pages redirect single-hop to the family-villa fl
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
     mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
-    "/de/blog/wie-nach-zypern-auswandern",
+    // The target is a guide article, so it is the final URL (guides slug), not a /blog URL that would redirect once more.
+    "/de/ratgeber/wie-nach-zypern-auswandern",
   );
   assert.equal(
     mergedTargetFor("/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern"),
-    "/de/blog/steuern-zypern-vs-deutschland-oesterreich-schweiz",
+    "/de/ratgeber/steuern-zypern-vs-deutschland-oesterreich-schweiz",
   );
   assert.equal(mergedTargetFor("/de/blog/ratgeber-fuer-deutsche-rentner"), null);
   assert.equal(mergedTargetFor("/blog/anything"), null);
@@ -62,7 +63,7 @@ test("renamed EN blog articles redirect single-hop to their new slug", () => {
   }
   assert.equal(
     mergedTargetFor("/blog/cyprus-permanent-residency-golden-visa-guide"),
-    "/blog/cyprus-permanent-residency-category-6-2-guide",
+    "/guides/cyprus-permanent-residency-category-6-2-guide",
   );
 });
 

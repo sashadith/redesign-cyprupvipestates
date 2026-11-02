@@ -59,3 +59,14 @@ test("a parked guide lead stays parked: another unanswered call changes nothing,
   assert.deepEqual(guideCadenceStep({ count: 0, status: "KEEP_CONTACT", leadReacted: false }), { kind: "silent" });
   assert.deepEqual(guideCadenceStep({ count: 2, status: "KEEP_CONTACT", leadReacted: true }), { kind: "regular" });
 });
+
+test("a question asked on a guide article counts as an article enquiry, whatever the language's guides slug", () => {
+  for (const page of [
+    "https://cyprusvipestates.com/guides/moving-to-cyprus-with-school-age-children",
+    "https://cyprusvipestates.com/de/ratgeber/wie-nach-zypern-auswandern",
+    "https://cyprusvipestates.com/pl/poradniki/jak-wyemigrowac-na-cypr",
+    "https://cyprusvipestates.com/ru/gajdy/kak-pereekhat-na-kipr-iz-rossii",
+  ]) assert.equal(formLeadSource(page, false), "BLOG_ENQUIRY", page);
+  // The free-guides page itself (the section index) is not an article page.
+  assert.equal(formLeadSource("https://cyprusvipestates.com/ru/gajdy", false), "CONTACT_FORM");
+});

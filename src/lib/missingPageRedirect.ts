@@ -10,12 +10,16 @@ const asRow = (r: { language: string; slug: string; translationGroupId: string |
   r ? { language: String(r.language), slug: r.slug, translationGroupId: r.translationGroupId } : null;
 const asRows = (rs: Array<{ language: string; slug: string; translationGroupId: string | null }>): SlugRow[] =>
   rs.map((r) => asRow(r) as SlugRow);
+// Blog rows also carry their category, because it decides whether the article lives under /blog or the guides slug.
+const blogSel = { ...sel, category: { select: { translationGroupId: true } } } as const;
+const asBlogRow = (r: { language: string; slug: string; translationGroupId: string | null; category: { translationGroupId: string | null } | null } | null): SlugRow | null =>
+  r ? { ...(asRow(r) as SlugRow), categoryGroupId: r.category?.translationGroupId ?? null } : null;
 
 export function prismaMissingRepo(db: PrismaClient): MissingRepo {
   return {
-    blogsBySlug: async (slug) => asRows(await db.blog.findMany({ where: { slug, status: "PUBLISHED" }, select: sel })),
+    blogsBySlug: async (slug) => (await db.blog.findMany({ where: { slug, status: "PUBLISHED" }, select: blogSel })).map((r) => asBlogRow(r) as SlugRow),
     blogSibling: async (groupId, language) =>
-      asRow(await db.blog.findFirst({ where: { translationGroupId: groupId, language: language as any, status: "PUBLISHED" }, select: sel })),
+      asBlogRow(await db.blog.findFirst({ where: { translationGroupId: groupId, language: language as any, status: "PUBLISHED" }, select: blogSel })),
     pagesBySlug: async (slug) => asRows(await db.singlepage.findMany({ where: { slug, status: "PUBLISHED" }, select: sel })),
     pagesEndingWith: async (language, last) =>
       asRows(await db.singlepage.findMany({ where: { language: language as any, status: "PUBLISHED", slug: { endsWith: `/${last}` } }, select: sel })),
