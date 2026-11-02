@@ -84,4 +84,6 @@ test("the webhook files a briefing as a guide lead and never reopens a LOST lead
   assert.ok(src.includes(`source: briefing ? "GUIDE_DOWNLOAD" : "PRIVATE_COLLECTION"`));
   assert.ok(src.includes(`guideTitle: PC_BRIEFING_TITLE`));
   assert.ok(src.includes(`if (dup.status === "LOST" && !briefing)`));
+  // …and a later enquiry from the same reader promotes the guide lead.
+  assert.ok(src.includes(`if (cur?.source === "GUIDE_DOWNLOAD") {`) && src.includes(`source: "PRIVATE_COLLECTION",\n                ...(!cur.lastName`));
 });

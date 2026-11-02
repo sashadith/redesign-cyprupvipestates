@@ -18,12 +18,6 @@ export function leadRef(leadId: string): string {
   return `Lead #${leadId.replace(/-/g, "").slice(0, 6)}`;
 }
 
-/** A partner in a team alert: the company name (not personal data), else
- *  a reference — a partner without a company is a private person. */
-export function partnerRef(p: { id: string; company?: string | null }): string {
-  return p.company?.trim() || `Partner #${p.id.replace(/-/g, "").slice(0, 6)}`;
-}
-
 /** "#3f9a2c" — a partner's client in the partner bot's Telegram texts
  *  (2026-11-02, operator: "nur Nummer"): the first six hex digits of the
  *  claim id. The partner portal shows the same number next to the name. */
@@ -32,13 +26,18 @@ export function clientRef(claimId: string): string {
 }
 
 /** Last line of defence for free text that reaches a chat (the MCP
- *  notify_owner_telegram tool, whose text an AI writes): e-mail addresses and
- *  phone numbers (a "+" number, or nine or more digits
- *  with at most single spaces between them) are cut out. Never a substitute for the
- *  builders leaving the data out in the first place. */
+ *  notify_owner_telegram tool, whose text an AI writes; a stored import
+ *  error): e-mail addresses and phone numbers are cut out. A phone number is a
+ *  run of digits with spaces, "/", "-", "." or brackets between them that
+ *  starts a word: a "+" and 8+ digits, or 9+ digits. Not one glued to a word
+ *  or hyphen (release ids, UUIDs in CRM links), nor a date ("2026-11-04").
+ *  Never a substitute for the builders leaving the data out in the first place. */
 export function redactContactDetails(text: string): string {
   return text
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[e-mail removed]")
-    .replace(/\+\d[\d ()-]{6,}\d/g, "[phone removed]")
-    .replace(/\b\d(?: ?\d){8,}\b/g, "[phone removed]");
+    .replace(/(^|[^\w\/#.-])(\+?\(?\d[\d ()\/.-]*\d)(?![\w-])/g, (whole, lead: string, num: string) => {
+      const digits = num.replace(/\D/g, "").length;
+      const phone = num.startsWith("+") ? digits >= 8 : digits >= 9 && !/^\d{4}-\d{2}-\d{2}/.test(num);
+      return phone ? `${lead}[phone removed]` : whole;
+    });
 }

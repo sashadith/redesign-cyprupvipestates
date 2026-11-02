@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { clientRef, leadRef, partnerRef, redactContactDetails } from "@/lib/chatPrivacy";
+import { clientRef, leadRef, redactContactDetails } from "@/lib/chatPrivacy";
 import { buildDigestTelegram } from "@/lib/partner/digest";
 import { buildInboundLeadTelegramMessage } from "@/lib/leadNotify";
 import { parsePcLead, pcTelegram } from "@/lib/privateCollectionLead";
@@ -30,10 +30,8 @@ const assertNoPii = (text: string, where: string) => {
   assert.ok(text.includes(leadRef(LEAD_ID)) || where.startsWith("review"), `${where} should name the lead by its reference`);
 };
 
-test("leadRef / partnerRef: a short pseudonymous label", () => {
+test("leadRef / clientRef: a short pseudonymous label", () => {
   assert.equal(leadRef(LEAD_ID), "Lead #3f9a2c");
-  assert.equal(partnerRef({ id: LEAD_ID, company: " Acme Realty " }), "Acme Realty");
-  assert.equal(partnerRef({ id: LEAD_ID, company: null }), "Partner #3f9a2c");
   assert.equal(clientRef(LEAD_ID), "#3f9a2c");
 });
 
@@ -41,6 +39,13 @@ test("redactContactDetails removes e-mail addresses and phone numbers, keeps dat
   const out = redactContactDetails("Call Annabel on +49 170 5550123 or 357 99 123 456, mail annabel.k@example.com — budget €350,000, viewing 2026-11-04 10:30, https://cyprusvipestates.com/admin/crm/3f9a2c11-7d4e");
   assert.ok(!out.includes("5550123") && !out.includes("99 123 456") && !out.includes("@example.com"), out);
   for (const keep of ["€350,000", "2026-11-04 10:30", "https://cyprusvipestates.com/admin/crm/3f9a2c11-7d4e"]) assert.ok(out.includes(keep), `${keep} lost: ${out}`);
+  // Local formats go too; release ids, all-digit UUID groups and dates stay.
+  for (const phone of ["0170/5550123", "0170-555-0123", "(0170) 555 0123", "+357 99 123456", "+49 (170) 555-0123"]) {
+    assert.equal(redactContactDetails(`call ${phone} today`), "call [phone removed] today", phone);
+  }
+  for (const keep of ["release cve-20261102105400", "https://x/admin/crm/3f9a2c11-7d4e-4b8a-9c3d-123456789012", "on 2026-11-04", "ref #123456789", "v1.2.3", "€1,250,000"]) {
+    assert.equal(redactContactDetails(keep), keep, keep);
+  }
 });
 
 test("website, partner-form and ROI leads: no contact details in the chat text", () => {
@@ -98,7 +103,7 @@ const INLINE: Array<[string, string[]]> = [
   ["src/app/api/c/[token]/favorite/route.ts", ["sendTelegramMessage(`❤️ ${escapeHtml(leadRef(presentation.leadId))} favorited"]],
   ["src/app/admin/(panel)/crm/[id]/bookingActions.ts", ["`<b>📅 ${esc(leadRef(leadId))} proposed meeting times</b>", "`${esc(leadRef(booking.leadId))} — was "]],
   ["src/app/api/cron/booking-reminders/route.ts", ["`${esc(leadRef(booking.leadId))} — ${time} (Cyprus time)", "sendTelegramMessage(esc(text(leadRef(booking.leadId))))"]],
-  ["src/app/api/cron/action-digest/route.ts", ["escapeHtml(leadRef(b.leadId))", "escapeHtml(t.item.chatTitle ?? t.item.title)"]],
+  ["src/app/api/cron/action-digest/route.ts", ["escapeHtml(leadRef(b.leadId))", "escapeHtml(forChat ? (t.item.chatTitle ?? t.item.title) : t.item.title)", "...buildLines(false).map(stripHtml)"]],
   ["src/lib/crm/assignLead.ts", ["takes <b>${esc(leadRef(lead.id))}</b>"]],
   ["src/lib/emailInbound/processInbound.ts", ["New e-mail reply from ${esc(leadRef(leadId))}"]],
   ["src/lib/emailInbound/officeInbound.ts", ["From ${esc(senderDomain(m.from))}", "about ${esc(leadRef(match.leadId))}"]],
@@ -143,4 +148,13 @@ test("partner bot: every Telegram text builder takes a reference, none a name or
   const hook = read("src/lib/partner/telegramWebhook.ts");
   assert.equal((hook.match(/ref: clientRef\(c\.id\)/g) ?? []).length, 3, "status, client list and client screen use the reference");
   assert.ok(read("src/lib/partner/digestSend.ts").includes("clientRef: clientRef(m.claimId)"));
+});
+
+test("Meta import-failure alert: only the error's first line, contact details cut", async () => {
+  const { failureAlertText } = await import("@/lib/metaLeadgen/processLead");
+  const prismaError = "\nInvalid `prisma.lead.create()` invocation:\n\n{\n  data: {\n    firstName: \"Annabel\",\n    email: \"annabel.k@example.com\",\n    phone: \"+49 170 5550123\"\n  }\n}\nUnknown argument `foo`.";
+  const text = failureAlertText("123", prismaError);
+  assert.match(text, /Invalid `prisma\.lead\.create\(\)` invocation:/);
+  assertNoPii(text.replace("Lead #", ""), "review: meta failure");
+  assert.match(failureAlertText("123", "Graph 500 for annabel.k@example.com"), /Graph 500 for \[e-mail removed\]/);
 });

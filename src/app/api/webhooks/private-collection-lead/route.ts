@@ -57,6 +57,28 @@ export async function POST(req: NextRequest) {
             data: { leadId: dup.id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "private_collection" } },
           });
         }
+        // A briefing reader who then sends the enquiry is a buyer now: the guide
+        // lead moves out of the Guide Leads list and gets the enquiry's answers
+        // where it had none.
+        if (!briefing) {
+          const cur = await tx.lead.findUnique({ where: { id: dup.id }, select: { source: true, lastName: true, phone: true, budgetMin: true, budgetMax: true, preferredChannel: true } });
+          if (cur?.source === "GUIDE_DOWNLOAD") {
+            const noBudget = cur.budgetMin == null && cur.budgetMax == null;
+            await tx.lead.update({
+              where: { id: dup.id },
+              data: {
+                source: "PRIVATE_COLLECTION",
+                ...(!cur.lastName && l.lastName ? { lastName: l.lastName } : {}),
+                ...(!cur.phone && l.phone ? { phone: l.phone } : {}),
+                ...(noBudget ? { budgetMin: l.budgetMin, budgetMax: l.budgetMax } : {}),
+                ...(!cur.preferredChannel && l.preferredChannel ? { preferredChannel: l.preferredChannel } : {}),
+              },
+            });
+            await tx.leadInteraction.create({
+              data: { leadId: dup.id, type: "SYSTEM", channel: "SYSTEM", body: "Source Guide download → Private Collection (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "GUIDE_DOWNLOAD", to: "PRIVATE_COLLECTION", source: "private_collection" } },
+            });
+          }
+        }
         await tx.leadInteraction.create({
           data: { leadId: dup.id, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", subject, body: pcTimelineBody(l, raw, "ATTACHED"), occurredAt, createdByName: ACTOR, metadata: { source: "private_collection", kind: l.kind, answers: raw, matchedOn: dup.matchedOn } },
         });

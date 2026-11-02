@@ -97,6 +97,17 @@ assert.equal((await prisma.lead.findUniqueOrThrow({ where: { id: lead.id } })).s
 assert.ok(await prisma.leadInteraction.findFirst({ where: { leadId: lead.id, subject: "Private Collection briefing download" } }));
 console.log("✓ briefing: GUIDE_DOWNLOAD lead with guide title/language; known LOST lead gets a note, stays LOST");
 
+step("8. a briefing reader who then sends the enquiry becomes a Private Collection lead");
+r = await (await post({ type: "briefing", source: "briefing", locale: "en", firstName: "Pc", email: mail("promo") })).json();
+const promoId = r.leadId;
+r = await (await post(form("promo"))).json();
+assert.equal(r.outcome, "ATTACHED");
+assert.equal(r.leadId, promoId);
+const promo = await prisma.lead.findUniqueOrThrow({ where: { id: promoId } });
+assert.deepEqual([promo.source, promo.budgetMin, promo.budgetMax, promo.preferredChannel, promo.lastName], ["PRIVATE_COLLECTION", 2_000_000, 3_000_000, "PHONE", "Tester promo"]);
+assert.ok(await prisma.leadInteraction.findFirst({ where: { leadId: promoId, body: { contains: "Guide download → Private Collection" } } }));
+console.log("✓ GUIDE_DOWNLOAD → PRIVATE_COLLECTION with budget, channel and surname from the enquiry");
+
 step("7. no client personal data in any chat text (privacy T3)");
 for (const t of [...tg, ...wa]) {
   assert.ok(!t.includes("pc-qa-") && !t.includes("Tester") && !t.includes("Hello") && !t.includes("Second message"), t);
