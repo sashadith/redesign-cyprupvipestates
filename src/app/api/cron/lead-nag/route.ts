@@ -1,5 +1,5 @@
-// Lead reminders (2026-10-31): the CRM nags on Telegram about overdue and due-today leads at 10:00, 12:00,
-// 15:00 and 18:00 Cyprus time. Called hourly by cron (DST-proof: the route decides whether this hour is one
+// Lead reminders (2026-10-31): the CRM nags on Telegram about overdue and due-today leads at 10:00 and
+// 18:00 Cyprus time. Called hourly by cron (DST-proof: the route decides whether this hour is one
 // of them, and sends each slot once per day):
 //   0 7-16 * * * curl -s "http://127.0.0.1:3000/api/cron/lead-nag?key=$CRON_SECRET"
 // ?slot=10&force=1 sends now regardless (manual test).

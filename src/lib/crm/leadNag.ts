@@ -2,7 +2,7 @@
 // the DB/Telegram side is leadNagSend.ts. The rule is the pipeline's own (cardUrgency): what is red or yellow
 // on the board is exactly what the reminder lists — nothing else, so the two can never disagree.
 //
-// Operator decisions: 10:00, 12:00, 15:00 and 18:00 Cyprus time; a lead leaves the list only when it is dealt
+// Operator decisions: 10:00 and 18:00 Cyprus time (12:00 and 15:00 dropped 2026-11-02); a lead leaves the list only when it is dealt
 // with (a real contact logged, or a new follow-up date — including the Telegram buttons "Tomorrow" / "+3 days");
 // every employee gets their own leads; unassigned leads, and leads of someone without Telegram, go to the owner.
 // Internal copy: English (project convention).
@@ -11,7 +11,7 @@ import { isLeadStatus } from "./leadStatus";
 import { CRM_TZ, dayKey } from "./today";
 
 /** Cyprus hours the reminder goes out. */
-export const NAG_HOURS = [10, 12, 15, 18] as const;
+export const NAG_HOURS = [10, 18] as const;
 /** Leads listed (and given buttons) per message; the rest are counted with a link to the board. */
 export const NAG_MAX_LEADS = 30;
 /** Room for the message text (Telegram's hard limit is 4096). */

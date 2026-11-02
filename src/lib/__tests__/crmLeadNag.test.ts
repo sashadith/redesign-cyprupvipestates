@@ -14,10 +14,10 @@ const lead = (n: number, o: Partial<NagLead> = {}): NagLead => ({
   lastContactAt: new Date(NOW.getTime() - 2 * DAY), nextFollowUpAt: null, viewingScheduledAt: null, assignedToId: null, ...o,
 });
 
-test("nagSlot: only 10, 12, 15 and 18 Cyprus time, DST-proof", () => {
+test("nagSlot: only 10 and 18 Cyprus time, DST-proof", () => {
   assert.equal(nagSlot(new Date("2026-10-31T08:05:00Z")), 10); // winter, UTC+2
-  assert.equal(nagSlot(new Date("2026-10-31T10:00:00Z")), 12);
-  assert.equal(nagSlot(new Date("2026-10-31T13:00:00Z")), 15);
+  assert.equal(nagSlot(new Date("2026-10-31T10:00:00Z")), null); // 12:00 dropped 2026-11-02
+  assert.equal(nagSlot(new Date("2026-10-31T13:00:00Z")), null); // 15:00 dropped 2026-11-02
   assert.equal(nagSlot(new Date("2026-10-31T16:00:00Z")), 18);
   assert.equal(nagSlot(new Date("2026-10-31T09:00:00Z")), null);
   assert.equal(nagSlot(new Date("2026-07-01T07:00:00Z")), 10); // summer, UTC+3
@@ -71,7 +71,7 @@ test("buildNagMessage: headline per slot, louder with age, links and two buttons
   assert.ok(m.text.includes("🟡 <a"));
   assert.equal(m.keyboard.length, 4);
   assert.deepEqual(m.keyboard[0].map((b) => b.callback_data), [nagCallbackData(1, id(1)), nagCallbackData(3, id(1))]);
-  assert.ok(buildNagMessage(items, { slot: 15, crmBase: "https://cve.test" })!.text.startsWith("🔔 <b>Still open at 15:00</b>"));
+  assert.ok(buildNagMessage(items, { slot: 18, crmBase: "https://cve.test" })!.text.startsWith("🔔 <b>Still open at 18:00</b>"));
   assert.equal(buildNagMessage([], { slot: 10, crmBase: "x" }), null, "nothing due → no message");
 });
 
@@ -79,7 +79,7 @@ test("buildNagMessage: escapes names, stays under Telegram's limit, counts the r
   const many = Array.from({ length: 60 }, (_, i) => lead(i + 1, {
     firstName: `<b>Évelyne ${i}`, lastName: "O'Brien & Söhne Longname".repeat(2), nextFollowUpAt: new Date(NOW.getTime() - 2 * DAY), lastContactAt: new Date(NOW.getTime() - 9 * DAY),
   }));
-  const m = buildNagMessage(nagItems(many, NOW), { slot: 12, crmBase: "https://cve.test" })!;
+  const m = buildNagMessage(nagItems(many, NOW), { slot: 18, crmBase: "https://cve.test" })!;
   assert.ok(m.text.length <= NAG_TEXT_MAX);
   assert.ok(!m.text.includes("<b>Évelyne") && m.text.includes("&lt;b&gt;Évelyne"));
   assert.ok(/…and \d+ more/.test(m.text));

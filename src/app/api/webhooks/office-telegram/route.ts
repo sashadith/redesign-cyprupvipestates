@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       await sendOfficeMessage(
         msg.chatId,
         linked
-          ? `✅ Connected to CVE Office as <b>${linked.name.replace(/[<>&]/g, "")}</b>.\nYour lead reminders come here at 10:00, 12:00, 15:00 and 18:00. Send /stop to disconnect.`
+          ? `✅ Connected to CVE Office as <b>${linked.name.replace(/[<>&]/g, "")}</b>.\nYour lead reminders come here at 10:00 and 18:00. Send /stop to disconnect.`
           : "This link has expired or was already used. Create a new one in CVE Office → Telegram reminders.",
       );
     } else {
