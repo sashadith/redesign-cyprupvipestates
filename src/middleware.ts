@@ -4,13 +4,15 @@ import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
 import { guidesPageLang } from "@/lib/guidesPage";
+import { ALL_GUIDES_SLUGS } from "@/lib/articleSections";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
 import { retiredProjectTarget } from "@/lib/retiredProjectRedirects";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
-const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
+// The guides slugs (guides, ratgeber, poradniki, gajdy) are section roots like "blog": never a landing-page leaf.
+const RESERVED = new Set(["projects", "blog", ...ALL_GUIDES_SLUGS, "developers", "case-studies", "files", "partners"]);
 // Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is NOT in
 // this set — it is answered with a guaranteed 404 by the gated-locale guard
 // at the top of middleware() below, not by falling through unmatched (that
@@ -231,11 +233,11 @@ export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   // 2026-10-29: was redirected to immobilien-zypern-mit-garantierten-mieteinnahmen, which answers a different
   // question. The queries of this article (Mieteinnahmen aus Deutschland in Zypern versteuern) belong to the
   // DE/AT/CH tax comparison, whose "Miete und Verkaufsgewinn" section carries the worked example.
-  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/steuern-zypern-vs-deutschland-oesterreich-schweiz",
+  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/ratgeber/steuern-zypern-vs-deutschland-oesterreich-schweiz",
 
   // G01 (DACH plan, 2026-10-29): the second "auswandern" guide (707 words, headline "... 2025") merged into
   // wie-nach-zypern-auswandern, the base that carries the content.
-  "blog/auswandern-nach-zypern-aus-deutschland": "/de/blog/wie-nach-zypern-auswandern",
+  "blog/auswandern-nach-zypern-aus-deutschland": "/de/ratgeber/wie-nach-zypern-auswandern",
 
   // German-retiree cannibalization pair (2026-09-30 content inventory):
   // wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen and
@@ -254,7 +256,7 @@ export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   // this redirect went in. Its closing projectsSectionBlock was NOT carried
   // over -- all 6 pinned project refs are archived/missing, the same
   // dead-pin defect documented throughout this file's other merges.
-  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/blog/ratgeber-fuer-deutsche-rentner",
+  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/ratgeber/ratgeber-fuer-deutsche-rentner",
 };
 
 // English (unprefixed) landing-page merges — same shape/mechanism as
@@ -289,7 +291,7 @@ export const EN_LANDING_MERGES: Record<string, string> = {
 // 2026-10-29: the Category 6.2 guide lost "golden-visa" from its slug along with the nickname in
 // its title and text (Cyprus has no golden visa; 6.2 is permanent residence).
 export const EN_BLOG_RENAMES: Record<string, string> = {
-  "blog/cyprus-permanent-residency-golden-visa-guide": "/blog/cyprus-permanent-residency-category-6-2-guide",
+  "blog/cyprus-permanent-residency-golden-visa-guide": "/guides/cyprus-permanent-residency-category-6-2-guide",
 };
 
 // Paphos investment cluster, PL leg (2026-09-09) — same investigation and

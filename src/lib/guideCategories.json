@@ -1,0 +1,34 @@
+[
+  {
+    "key": "buying",
+    "group": "9a572ae7-5cf1-4d54-9819-e8f07f379ec5",
+    "en": { "title": "Buying guides", "slug": "buying-guides" },
+    "de": { "title": "Ratgeber Immobilienkauf", "slug": "ratgeber-immobilienkauf" },
+    "pl": { "title": "Przewodniki: zakup nieruchomości", "slug": "przewodniki-zakup-nieruchomosci" },
+    "ru": { "title": "Гиды: покупка недвижимости", "slug": "gidy-pokupka-nedvizhimosti" }
+  },
+  {
+    "key": "tax",
+    "group": "5191e5f7-7283-4104-ba55-8672ddae9de5",
+    "en": { "title": "Tax & legal guides", "slug": "tax-and-legal-guides" },
+    "de": { "title": "Ratgeber Steuern & Recht", "slug": "ratgeber-steuern-und-recht" },
+    "pl": { "title": "Przewodniki: podatki i prawo", "slug": "przewodniki-podatki-i-prawo" },
+    "ru": { "title": "Гиды: налоги и право", "slug": "gidy-nalogi-i-pravo" }
+  },
+  {
+    "key": "residence",
+    "group": "bc3d5744-2150-4790-b980-7c62b355b66d",
+    "en": { "title": "Visa & residence guides", "slug": "visa-and-residence-guides" },
+    "de": { "title": "Ratgeber Visum & Aufenthalt", "slug": "ratgeber-visum-und-aufenthalt" },
+    "pl": { "title": "Przewodniki: wiza i pobyt", "slug": "przewodniki-wiza-i-pobyt" },
+    "ru": { "title": "Гиды: визы и ВНЖ", "slug": "gidy-vizy-i-vnzh" }
+  },
+  {
+    "key": "life",
+    "group": "c5d12d7a-e55a-4b8a-b888-c5bcca2061a2",
+    "en": { "title": "Life in Cyprus guides", "slug": "life-in-cyprus-guides" },
+    "de": { "title": "Ratgeber Leben auf Zypern", "slug": "ratgeber-leben-auf-zypern" },
+    "pl": { "title": "Przewodniki: życie na Cyprze", "slug": "przewodniki-zycie-na-cyprze" },
+    "ru": { "title": "Гиды: жизнь на Кипре", "slug": "gidy-zhizn-na-kipre" }
+  }
+]

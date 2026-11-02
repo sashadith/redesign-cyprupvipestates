@@ -7,6 +7,7 @@
 
 import { localizedHref, PUBLIC_LOCALES, BCP47, localesForStaticRoute, type Locale } from "./locale";
 import { blogIndexInSitemap } from "./blogIndexMode";
+import { sectionSegments } from "./articleSections";
 
 export const SITE_URL = "https://cyprusvipestates.com";
 
@@ -33,6 +34,8 @@ export function localizedPath(lang: string, segments: string | string[] = ""): s
 
 type TranslationSlug = {
   slug?: Record<string, { current?: string } | undefined> | null;
+  /** Blog/Guides only: the section each language's sibling lives in ("blog" | "guides"). */
+  section?: Record<string, string | undefined> | null;
 };
 
 /**
@@ -44,18 +47,20 @@ type TranslationSlug = {
 export function languageAlternates(opts: {
   lang: string;
   slug: string;
-  pathFor: (lang: string, slug: string) => string;
+  pathFor: (lang: string, slug: string, section?: string) => string;
   translations?: TranslationSlug[] | null;
+  /** Blog/Guides only: the section of the page itself (its siblings carry theirs in `translations`). */
+  section?: string;
 }): { canonical: string; languages: Record<string, string> } {
-  const { lang, slug, pathFor, translations } = opts;
+  const { lang, slug, pathFor, translations, section } = opts;
   const languages: Record<string, string> = {};
-  languages[lang] = abs(pathFor(lang, slug));
+  languages[lang] = abs(pathFor(lang, slug, section));
 
   for (const t of translations ?? []) {
     if (!t?.slug) continue;
     for (const [l, v] of Object.entries(t.slug)) {
       const cur = v?.current;
-      if (l && cur && !languages[l]) languages[l] = abs(pathFor(l, cur));
+      if (l && cur && !languages[l]) languages[l] = abs(pathFor(l, cur, t.section?.[l]));
     }
   }
 
@@ -154,7 +159,8 @@ export function sitemapLocalesForType(
 
 /** Path builders for the localized content types. */
 export const pathBuilders = {
-  blog: (lang: string, slug: string) => localizedPath(lang, ["blog", slug]),
+  /** `section` is "guides" for articles in a guide category (src/lib/articleSections.ts), otherwise the blog. */
+  blog: (lang: string, slug: string, section?: string) => localizedPath(lang, sectionSegments(lang, slug, section)),
   project: (lang: string, slug: string) =>
     localizedPath(lang, ["projects", slug]),
   caseStudy: (lang: string, slug: string) =>

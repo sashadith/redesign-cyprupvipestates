@@ -15,7 +15,7 @@ const Input = z.object({
 
 export const BLOG_ROW_SELECT = {
   id: true, language: true, slug: true, title: true, status: true, seo: true, publishedAt: true, updatedAt: true, translationGroupId: true,
-  category: { select: { slug: true, title: true } },
+  category: { select: { slug: true, title: true, translationGroupId: true } },
 } as const;
 
 export function registerBlogListArticles(server: McpServer) {

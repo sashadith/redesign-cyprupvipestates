@@ -10,6 +10,7 @@ import {
 import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute, type Locale } from "@/lib/locale";
 import { guidesPageAlternates, guidesPagePath } from "@/lib/guidesPage";
 import { isGuideLang } from "@/lib/guides/registry";
+import { articleSegments, sectionSegments } from "@/lib/articleSections";
 import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
@@ -141,7 +142,12 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const cfg = ALT_CFG[typeKey];
   const rows: any[] = (await cfg.model.findMany({
     where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}), ...(cfg.where ?? {}) },
-    select: { language: true, slug: true, translationGroupId: true, ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}) },
+    select: {
+      language: true, slug: true, translationGroupId: true,
+      ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}),
+      // Blog rows live under /blog or the language's guides slug depending on their category.
+      ...(typeKey === "blog" ? { category: { select: { translationGroupId: true } } } : {}),
+    },
   })).filter((r: any) => (langs as readonly string[]).includes(r.language));
 
   // Resolve a row to its full path segments. Detail types are always single-segment
@@ -166,6 +172,8 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
       }
       return out;
     };
+  } else if (typeKey === "blog") {
+    segsFor = (r) => articleSegments(r.language, r.slug, r.category?.translationGroupId);
   } else {
     segsFor = (r) => [cfg.seg, r.slug];
   }
@@ -291,7 +299,7 @@ async function generateBlogSitemap(): Promise<SitemapPage[]> {
       if (isRedirectedRow("blog", { language: lang, slug })) return;
 
       pages.push({
-        route: `${prefix}/blog/${slug}`,
+        route: localizedHref(lang, sectionSegments(lang, slug, (post as any).section)),
         changefreq: "weekly",
         priority: 0.7,
         lastmod: post._updatedAt,
