@@ -56,3 +56,9 @@
 .gds__group:first-of-type { margin-top: 0; }
 .gds__group-title { margin: 0 0 var(--s-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: var(--text-h3, 1.6rem); color: var(--text); }
 .gds__group-count { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+/* The shared .icard styles are made for the dark ground of the blog listing (ivory title, hairline border). The guides list
+   sits on the light ground: dark title that turns accent on hover, no border round the picture. */
+.gds__articles .icard__media { border: 0; }
+.gds__articles .icard__title { color: var(--text); }
+.gds__articles .icard:hover .icard__title,
+.gds__articles .icard:focus-visible .icard__title { color: var(--accent); }
