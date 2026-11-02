@@ -44,13 +44,19 @@ test("name and a valid email are required", () => {
   assert.equal(parsePcLead(null).ok, false);
 });
 
-test("the Telegram text escapes user input and links the CRM", () => {
+test("the Telegram text names no one, escapes user input and links the CRM", () => {
   const r = parsePcLead(form);
   if (!r.ok) throw new Error("parse");
-  const t = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x/admin/crm/L1" });
+  const t = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x/admin/crm/L1", leadId: "3f9a2c11-1" });
   assert.match(t, /New Private Collection enquiry/);
+  assert.match(t, /Lead #3f9a2c/);
   assert.match(t, /Budget: €3–5M · Purpose: Investment · Prefers: WhatsApp/);
-  assert.match(t, /Bitte &lt;Rückruf&gt; &amp; Unterlagen/);
+  assert.match(t, /Message: yes, see CRM/);
   assert.match(t, /<a href="https:\/\/x\/admin\/crm\/L1">/);
-  assert.match(pcTelegram(r.lead, { outcome: "ATTACHED", crmLink: "x", priorStatus: "CONTACTED" }), /Existing lead[\s\S]*status is CONTACTED/);
+  for (const v of [r.lead.firstName, r.lead.lastName, r.lead.email, r.lead.phone, "Rückruf"]) if (v) assert.ok(!t.includes(v), `chat text leaks ${v}`);
+  // The team e-mail reuses the text with the details put back, escaped.
+  const mail = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "x", leadId: "3f9a2c11-1", withContact: true });
+  assert.ok(mail.includes(r.lead.email));
+  assert.match(mail, /Bitte &lt;Rückruf&gt; &amp; Unterlagen/);
+  assert.match(pcTelegram(r.lead, { outcome: "ATTACHED", crmLink: "x", leadId: "L", priorStatus: "CONTACTED" }), /Existing lead[\s\S]*status is CONTACTED/);
 });

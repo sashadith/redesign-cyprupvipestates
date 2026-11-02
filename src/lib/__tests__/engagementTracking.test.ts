@@ -72,7 +72,8 @@ test("each event fires at most once per page view", () => {
 test("the server keeps the same privacy and bot contract as the page-view route", () => {
   const src = read(ROUTE);
   assert.ok(/isbot\(/.test(src), "bot detection dropped — engagement rates would be inflated against honest view counts");
-  assert.ok(/visitorHash/.test(src) && /sha256/.test(src), "the daily-rotating visitor hash is gone");
+  // Since 2026-11-02 the hash is computed in one place, with the secret salt (visitorHash.ts).
+  assert.ok(/visitorHash = dailyVisitorHash\(ip, ua\)/.test(src), "the daily-rotating visitor hash is gone");
   assert.equal(/\bip\b\s*:/.test(src), false, "an IP address must never be stored");
   assert.ok(/UUID_RE\.test\(rawId\)/.test(src), "contentId is no longer validated as a UUID — a slug would look joinable and match nothing");
 });

@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
 import type { ActionItem, Category } from "@/lib/actionCenter/types";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadRef } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
@@ -76,6 +77,7 @@ async function maybeAppendAdvisorSummary(): Promise<string[]> {
 // wall-clock<->UTC conversion the booking slot generator already uses, not
 // a new calculation.
 async function todaysAppointmentLines(): Promise<string[]> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const now = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: CYPRUS_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
   const y = Number(parts.find((p) => p.type === "year")!.value);
@@ -87,7 +89,7 @@ async function todaysAppointmentLines(): Promise<string[]> {
   const meetings = await prisma.bookingRequest.findMany({
     where: { status: "CONFIRMED", confirmedSlotUtc: { gte: start, lt: end } },
     orderBy: { confirmedSlotUtc: "asc" },
-    include: { lead: { select: { firstName: true, lastName: true } } },
+    select: { leadId: true, confirmedSlotUtc: true, meetingType: true },
   });
   if (!meetings.length) return [];
 
@@ -96,9 +98,9 @@ async function todaysAppointmentLines(): Promise<string[]> {
     `<b>📅 Today's appointments (${meetings.length})</b>`,
     ...meetings.map((b) => {
       const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
-      const leadName = escapeHtml(`${b.lead.firstName} ${b.lead.lastName}`.trim());
+      // A reference with a link, not the client's name (chatPrivacy.ts).
       const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
-      return `• ${time} — ${leadName} (${typeLabel})`;
+      return `• ${time} — <a href="${siteUrl}/admin/crm/${b.leadId}">${escapeHtml(leadRef(b.leadId))}</a> (${typeLabel})`;
     }),
   ];
 }
@@ -196,8 +198,9 @@ const SUPPRESSED_SYSTEM_IDS = new Set(["cron-health:feed-sync", "cron-health:dri
 
 type TaggedItem = { item: ActionItem; fresh: boolean };
 
+// chatTitle when the rule set one: the digest names no client (chatPrivacy.ts).
 function formatItemLine(t: TaggedItem): string {
-  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(t.item.title)}`;
+  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(t.item.chatTitle ?? t.item.title)}`;
 }
 
 function buildCategorySection(label: string, items: TaggedItem[], siteUrl: string): string[] {

@@ -9,6 +9,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { getAutoReplyEmail } from "@/lib/emailTemplates";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead, telegramLanguageTag } from "@/lib/leadNotify";
+import { leadRef } from "@/lib/chatPrivacy";
 import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { resolveProjectInterest } from "@/lib/leads/projectInterest";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
@@ -183,23 +184,26 @@ export async function POST(request: Request) {
     if (propertyTypeInterest.length) qualification.push(["Property interest", propertyTypeInterest.join(", ")]);
     if (nationality) qualification.push(["Nationality", nationality]);
 
+    // Nationality stays out of the chats (chatPrivacy.ts); the e-mail keeps it.
     const tgQualification = qualification
+      .filter(([k]) => k !== "Nationality")
       .map(([k, v]) => `${k}: ${escapeHtml(v)}\n`)
       .join("");
     const mailQualification = qualification
       .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)
       .join("\n          ");
 
-    // Telegram notification (non-fatal)
+    // Telegram notification (non-fatal). No name, e-mail, phone or message:
+    // the same text goes to the team WhatsApp group (chatPrivacy.ts) — the
+    // team e-mail below carries the details.
     const langTag = telegramLanguageTag(ALLOWED_LANGS.has(langNorm) ? langNorm : null);
     const tg =
       `<b>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</b>\n\n` +
-      `<b>${escapeHtml(fullName || "-")}</b>\n` +
-      `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
+      `${escapeHtml(leadRef(lead.id))}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
       (langTag ? `Language: ${escapeHtml(langTag)}\n` : "") +
       tgQualification +
-      (messageFinal ? `Message: ${escapeHtml(messageFinal)}\n` : "") +
+      (messageFinal ? `Message: yes, see CRM\n` : "") +
       `Page: ${escapeHtml(page)}\n` +
       matchLines +
       `\n<a href="${crmLink}">Open in CRM</a>`;

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, dailyVisitorHash } from "@/lib/visitorHash";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadRef } from "@/lib/chatPrivacy";
 import { getCrmUser } from "@/lib/crm/session";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { submittedName } from "@/lib/partner/matchGlue";
@@ -111,7 +112,8 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   }
 
   const crmLink = `${requestOrigin(req)}/crm/leads/${presentation.leadId}`;
-  const name = escapeHtml(presentation.greetingName);
+  // No client name in the chat (chatPrivacy.ts) — the CRM link says who.
+  const name = escapeHtml(leadRef(presentation.leadId));
 
   // Alerts are mutually exclusive and best-effort — never let a Telegram hiccup
   // break the page for the client. Sascha's call (2026-08-14, overriding the
@@ -128,7 +130,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         await sendTelegramMessage(`${officePrefix}👀 ${name} opened their personal page — <a href="${crmLink}">CRM</a>`);
       } else {
         const visitNumber = priorPageVisits + 1;
-        await sendTelegramMessage(`${officePrefix}🔁 ${name} is back on their page (visit #${visitNumber})`);
+        await sendTelegramMessage(`${officePrefix}🔁 ${name} is back on their page (visit ${visitNumber}) — <a href="${crmLink}">CRM</a>`);
       }
     }
   } catch (e) { console.error("Presentation view Telegram alert failed:", e); }

@@ -88,7 +88,8 @@ export async function POST(req: NextRequest) {
   // Notifications — the lead is safe in the CRM from here on, so none of these
   // may turn the answer into a failure (the caller would send a duplicate notice).
   const crmLink = `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${result.id}`;
-  const tg = pcTelegram(l, { outcome: result.outcome, crmLink, priorStatus: result.priorStatus });
+  const tg = pcTelegram(l, { outcome: result.outcome, crmLink, leadId: result.id, priorStatus: result.priorStatus });
+  const mailBody = pcTelegram(l, { outcome: result.outcome, crmLink, leadId: result.id, priorStatus: result.priorStatus, withContact: true });
   const name = `${l.firstName} ${l.lastName}`.trim();
   try {
     if (await sendTelegramMessage(tg)) await prisma.lead.update({ where: { id: result.id }, data: { telegramNotified: true } }).catch(() => {});
@@ -96,8 +97,8 @@ export async function POST(req: NextRequest) {
   try {
     await sendEmail({
       subject: result.outcome === "CREATED" ? `New Private Collection enquiry: ${name}` : `Private Collection enquiry (existing lead): ${name}`,
-      text: tg.replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
-      html: tg.split("\n").join("<br/>\n"),
+      text: mailBody.replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
+      html: mailBody.split("\n").join("<br/>\n"),
       replyTo: l.email,
     });
     if (result.outcome === "CREATED") await prisma.lead.update({ where: { id: result.id }, data: { emailNotified: true } }).catch(() => {});

@@ -9,6 +9,10 @@ import { fetchNewMessages, withReadOnlyInbox, type ImapCredentials } from "./ima
 import { canonicalizeEmail } from "./matchLead";
 import { matchRegistrationReply } from "./registrationMatch";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
+import { leadRef } from "@/lib/chatPrivacy";
+
+/** "developer.com" from "Name <sales@developer.com>". */
+const senderDomain = (from: string) => from.match(/@([^\s>]+)/)?.[1] ?? "unknown sender";
 
 // Office mailbox poll for developer registration replies (spec 2026-10-27
 // §7.6). office@ receives every reply because registrations are sent from it.
@@ -64,9 +68,10 @@ export async function handleOfficeMessage(deps: OfficeReplyDeps, m: OfficeMessag
     if (m.autoSubmitted) return "ignored";
     const v = await deps.classify({ subject: m.subject, body: m.body, developerName: "", clientName: "" });
     if (v.verdict === "autoreply") return "ignored";
-    const links = match.candidates.map((c) => `<a href="${deps.siteUrl}/crm/leads/${c.leadId}">${esc(c.leadId.slice(0, 8))}</a>`).join(", ");
+    const links = match.candidates.map((c) => `<a href="${deps.siteUrl}/crm/leads/${c.leadId}">${esc(leadRef(c.leadId))}</a>`).join(", ");
     await deps.alert(
-      `<b>Developer reply matches several registrations</b>\nFrom ${esc(m.from)}: ${esc(m.subject || "(no subject)")}\nVerdict: ${esc(v.verdict)}${v.evidence ? `\n${esc(v.evidence)}` : ""}\nLeads: ${links}`,
+      // Sender domain only; no subject or quote, they may name the client (chatPrivacy.ts).
+      `<b>Developer reply matches several registrations</b>\nFrom ${esc(senderDomain(m.from))}\nVerdict: ${esc(v.verdict)}\nLeads: ${links}`,
     );
     return "alerted";
   }
@@ -91,8 +96,8 @@ export async function handleOfficeMessage(deps: OfficeReplyDeps, m: OfficeMessag
   }
   if (verdict.verdict === "rejected" || verdict.verdict === "unclear" || (verdict.verdict === "confirmed" && ctx.status === "SENT")) {
     await deps.alert(
-      `<b>Developer reply needs a look</b>\n${esc(ctx.developerName)} about ${esc(ctx.clientName)}: ${verdict.verdict}` +
-        `${verdict.evidence ? `\n${esc(verdict.evidence)}` : ""}\n<a href="${deps.siteUrl}/crm/leads/${match.leadId}">Open lead</a>`,
+      `<b>Developer reply needs a look</b>\n${esc(ctx.developerName)} about ${esc(leadRef(match.leadId))}: ${verdict.verdict}` +
+        `\n<a href="${deps.siteUrl}/crm/leads/${match.leadId}">Open lead</a>`,
     );
     return "alerted";
   }

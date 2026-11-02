@@ -14,7 +14,7 @@ import { effectiveStateOf } from "./claimFacts";
 import type { PartnerSessionInfo } from "./session";
 import type { SubmissionInput } from "./submission";
 import {
-  alreadyYoursAnswer, buildPartnerClientNotice, claimSubmissionJson, clientDisplayName, leadDataFromSubmission, partnerDisplayName,
+  alreadyYoursAnswer, buildPartnerClientNotice, claimSubmissionJson, leadDataFromSubmission, partnerDisplayName,
   partnerSubmissionNote, type PartnerClientNotice,
 } from "./submitFlow";
 
@@ -93,7 +93,6 @@ async function createLeadWithClaim(partner: Partner, input: SubmissionInput, pro
 
 function notifyOffice(partner: Partner, input: SubmissionInput, outcome: { outcome: "CREATED"; leadId: string } | { outcome: "REVIEW" }) {
   const notice: PartnerClientNotice = {
-    clientName: clientDisplayName(input),
     partnerName: partnerDisplayName(partner),
     mode: input.mode,
     baseUrl: process.env.NEXT_PUBLIC_SITE_URL || "",

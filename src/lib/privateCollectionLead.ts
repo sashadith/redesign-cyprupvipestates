@@ -7,6 +7,7 @@
 //
 // Pure: parsing, value mapping and notification text. The route does the I/O.
 import type { LeadPreferredChannel } from "@prisma/client";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -88,16 +89,18 @@ export function pcTimelineBody(l: PcLead, raw: Record<string, string>, outcome: 
 }
 
 /** Telegram HTML — also the source of the e-mail and WhatsApp copies. English, admin-facing. */
-export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; priorStatus?: string | null }): string {
+/** Telegram/WhatsApp text: no name, contact details or message (chatPrivacy.ts).
+ *  `withContact` adds them back for the team e-mail, which reuses this text. */
+export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; leadId: string; priorStatus?: string | null; withContact?: boolean }): string {
   const head = o.outcome === "CREATED" ? "⚡️ <b>New Private Collection enquiry</b>" : "⚡️ <b>Existing lead sent the Private Collection enquiry again</b>";
   const lines = [
     head,
-    `<b>${esc(`${l.firstName} ${l.lastName}`.trim())}</b>`,
+    o.withContact ? `<b>${esc(`${l.firstName} ${l.lastName}`.trim())}</b>` : esc(leadRef(o.leadId)),
     `Budget: ${esc(l.budgetKey ? PC_BUDGETS[l.budgetKey].label : "not answered")} · Purpose: ${esc(l.purpose ?? "not answered")} · Prefers: ${esc(l.preferredChannel ? CHANNEL_LABEL[l.preferredChannel] : "not answered")}`,
-    [l.email, l.phone].filter(Boolean).map(esc).join(" · "),
   ];
+  if (o.withContact) lines.push([l.email, l.phone].filter(Boolean).map(esc).join(" · "));
   if (o.priorStatus && o.priorStatus !== "NEW") lines.push(`ℹ️ lead status is ${esc(o.priorStatus)}`);
-  if (l.message) lines.push(`Message: ${esc(l.message.length > 500 ? `${l.message.slice(0, 500)}…` : l.message)}`);
+  if (l.message) lines.push(o.withContact ? `Message: ${esc(l.message.length > 500 ? `${l.message.slice(0, 500)}…` : l.message)}` : "Message: yes, see CRM");
   lines.push(`→ <a href="${o.crmLink}">Open in CRM</a>`);
   return lines.join("\n");
 }

@@ -9,6 +9,7 @@
 import { cardUrgency, type BoardLeadInput, type CardUrgency } from "./boardModel";
 import { isLeadStatus } from "./leadStatus";
 import { CRM_TZ, dayKey } from "./today";
+import { leadRef } from "@/lib/chatPrivacy";
 
 /** Cyprus hours the reminder goes out. */
 export const NAG_HOURS = [10, 12, 15, 18] as const;
@@ -39,15 +40,14 @@ export type NagLead = Pick<BoardLeadInput, "id" | "firstName" | "lastName" | "st
 
 export type NagItem = { leadId: string; name: string; urgency: CardUrgency; ownerName: string | null };
 
-const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName} ${l.lastName}`.trim() || "(no name)";
-
 /** The marked leads, most overdue first, then "act now"; ties by name. */
 export function nagItems(leads: NagLead[], now: Date, ownerNameOf: (assignedToId: string | null) => string | null = () => null): NagItem[] {
   const out: NagItem[] = [];
   for (const l of leads) {
     if (!isLeadStatus(l.status)) continue;
     const u = cardUrgency({ ...l, source: "", languagePreference: null, assignedTo: null, projectLabel: null, deals: [], canEdit: false } as BoardLeadInput, l.status, now);
-    if (u) out.push({ leadId: l.id, name: leadName(l), urgency: u, ownerName: ownerNameOf(l.assignedToId) });
+    // `name` is what the chat shows: a reference, never the client's name (chatPrivacy.ts).
+    if (u) out.push({ leadId: l.id, name: leadRef(l.id), urgency: u, ownerName: ownerNameOf(l.assignedToId) });
   }
   const rank = (i: NagItem) => (i.urgency.level === "overdue" ? i.urgency.days : -1);
   return out.sort((a, b) => rank(b) - rank(a) || a.name.localeCompare(b.name, "en"));
@@ -127,17 +127,10 @@ export function buildNagMessage(items: NagItem[], opts: { slot: number; crmBase:
     text = render(shown);
   }
   const keyboard = shown.map((i) => [
-    { text: `⏰ ${shortName(i.name)}: tomorrow`, callback_data: nagCallbackData(1, i.leadId) },
+    { text: `⏰ ${i.name}: tomorrow`, callback_data: nagCallbackData(1, i.leadId) },
     { text: "+3 days", callback_data: nagCallbackData(3, i.leadId) },
   ]);
   return { text, keyboard };
-}
-
-/** First name plus initial, at most 24 characters (button labels are short). */
-export function shortName(name: string): string {
-  const [first, ...rest] = name.trim().split(/\s+/);
-  const s = rest.length ? `${first} ${rest[rest.length - 1][0]}.` : first ?? "";
-  return s.length > 24 ? `${s.slice(0, 23)}…` : s;
 }
 
 // ── Buttons ─────────────────────────────────────────────────────────────────

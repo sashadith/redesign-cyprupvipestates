@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { isLocale, LOCALE_LABELS, type Locale } from "@/lib/locale";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -35,12 +36,11 @@ export function telegramLanguageTag(locale: string | null | undefined): string |
 
 // Pure message builder (no DB, no Telegram call) — split out of
 // recordInboundLead so it's directly testable with fakes. Admin-facing copy
-// stays English per project convention.
+// stays English per project convention. No name, e-mail or phone: the text
+// also goes to the team WhatsApp group (chatPrivacy.ts).
 export function buildInboundLeadTelegramMessage(opts: {
+  leadId: string;
   source: string;
-  email: string;
-  name?: string;
-  phone?: string | null;
   page?: string;
   language?: string | null;
   link: string;
@@ -48,8 +48,7 @@ export function buildInboundLeadTelegramMessage(opts: {
   const langTag = telegramLanguageTag(opts.language);
   return (
     `<b>New ${esc(opts.source.replace(/_/g, " "))} lead</b>\n` +
-    `<b>${esc(opts.name || "-")}</b>\n` +
-    `Email: ${esc(opts.email)}\nPhone: ${esc(opts.phone || "-")}\n` +
+    `${esc(leadRef(opts.leadId))}\n` +
     (langTag ? `Language: ${esc(langTag)}\n` : "") +
     (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
     `\n<a href="${opts.link}">Open in CRM</a>`

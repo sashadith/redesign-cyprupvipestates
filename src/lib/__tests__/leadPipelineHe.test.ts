@@ -97,14 +97,14 @@ test("telegramLanguageTag: upper-cased locale code from LOCALE_LABELS, no four-l
 });
 
 test("buildInboundLeadTelegramMessage: renders HE for a Hebrew lead, DE unchanged for German", () => {
-  const heMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", email: "a@b.com", name: "Some One", language: "he", link: "https://x/admin/crm/1" });
+  const heMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", leadId: "1", language: "he", link: "https://x/admin/crm/1" });
   assert.match(heMsg, /Language: HE\n/);
 
-  const deMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", email: "a@b.com", name: "Some One", language: "de", link: "https://x/admin/crm/1" });
+  const deMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", leadId: "1", language: "de", link: "https://x/admin/crm/1" });
   assert.match(deMsg, /Language: DE\n/);
 
   // no language known → no Language line at all (not "Language: null")
-  const noLangMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", email: "a@b.com", name: "Some One", link: "https://x/admin/crm/1" });
+  const noLangMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", leadId: "1", link: "https://x/admin/crm/1" });
   assert.doesNotMatch(noLangMsg, /Language:/);
 });
 
@@ -129,8 +129,7 @@ test("normalizeLeadLocale: known locale (any case) → lowercase Locale; junk/bl
 test("ROI-calculator sender pipeline: raw `lang` reaches the Telegram message as HE / DE", () => {
   const heMsg = buildInboundLeadTelegramMessage({
     source: "ROI_CALCULATOR",
-    email: "a@b.com",
-    name: "Some One",
+    leadId: "1",
     language: normalizeLeadLocale("he"),
     link: "https://x/admin/crm/1",
   });
@@ -138,8 +137,7 @@ test("ROI-calculator sender pipeline: raw `lang` reaches the Telegram message as
 
   const deMsg = buildInboundLeadTelegramMessage({
     source: "ROI_CALCULATOR",
-    email: "a@b.com",
-    name: "Some One",
+    leadId: "1",
     language: normalizeLeadLocale("de"),
     link: "https://x/admin/crm/1",
   });
@@ -149,8 +147,7 @@ test("ROI-calculator sender pipeline: raw `lang` reaches the Telegram message as
 test("Partner-form sender pipeline: raw `lang` reaches the Telegram message as HE / DE", () => {
   const heMsg = buildInboundLeadTelegramMessage({
     source: "PARTNER",
-    email: "a@b.com",
-    name: "Some One",
+    leadId: "1",
     language: normalizeLeadLocale("he"),
     link: "https://x/admin/crm/1",
   });
@@ -158,8 +155,7 @@ test("Partner-form sender pipeline: raw `lang` reaches the Telegram message as H
 
   const deMsg = buildInboundLeadTelegramMessage({
     source: "PARTNER",
-    email: "a@b.com",
-    name: "Some One",
+    leadId: "1",
     language: normalizeLeadLocale("de"),
     link: "https://x/admin/crm/1",
   });
@@ -180,8 +176,8 @@ test("Cockpit locale label map: derived from LOCALE_LABELS, matches the old lite
   assert.equal(LOCALE_LABEL.he, "HE");
 });
 
-test("buildInboundLeadTelegramMessage: escapes HTML in the name/email/page fields", () => {
-  const msg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", email: "a@b.com", name: "<script>", language: "he", link: "https://x" });
+test("buildInboundLeadTelegramMessage: escapes HTML in the page field", () => {
+  const msg = buildInboundLeadTelegramMessage({ leadId: "1", source: "CONTACT_FORM", page: "<script>", language: "he", link: "https://x" });
   assert.doesNotMatch(msg, /<script>/);
   assert.match(msg, /&lt;script&gt;/);
 });
