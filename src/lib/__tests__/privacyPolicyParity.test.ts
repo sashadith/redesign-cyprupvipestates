@@ -8,6 +8,7 @@ import { PRIVACY_DE } from "@/app/preview-legal/[lang]/[doc]/privacy.de";
 import { PRIVACY_PL } from "@/app/preview-legal/[lang]/[doc]/privacy.pl";
 import { PRIVACY_RU } from "@/app/preview-legal/[lang]/[doc]/privacy.ru";
 import { PRIVACY_HE } from "@/app/preview-legal/[lang]/[doc]/privacy.he";
+import { PRIVACY_HE_DRAFT } from "@/app/preview-legal/[lang]/[doc]/privacy.he.draft";
 import { ATTRIBUTION_DAYS, ATTRIBUTION_COOKIE } from "@/lib/attribution";
 import { cookieSettingsLabel } from "@/app/components/CustomCookieConsent/cookieSettings";
 
@@ -23,7 +24,9 @@ import { cookieSettingsLabel } from "@/app/components/CustomCookieConsent/cookie
  * other fails here instead of turning the policy into a false promise.
  */
 
-const DOCS: Record<string, LegalDoc> = { en: PRIVACY_EN, de: PRIVACY_DE, pl: PRIVACY_PL, ru: PRIVACY_RU, he: PRIVACY_HE };
+// Hebrew is held to the same standard through its draft: the live page keeps
+// the reviewed 2026-08-21 text until a native speaker has checked the new one.
+const DOCS: Record<string, LegalDoc> = { en: PRIVACY_EN, de: PRIVACY_DE, pl: PRIVACY_PL, ru: PRIVACY_RU, he: PRIVACY_HE_DRAFT };
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
 const shape = (b: LegalBlock) => ("items" in b ? `${b.kind}(${b.items.length})` : b.kind);
@@ -67,4 +70,23 @@ test("each language quotes the footer link exactly as that language's page shows
     assert.ok(label, lang);
     assert.ok(fullText(doc).includes(label!), `privacy.${lang}.ts should refer to the footer link as “${label}”`);
   }
+});
+
+test("the live Hebrew page stays on its reviewed text until the draft is checked", () => {
+  // Operator decision 2026-11-02: HE goes live only after native review.
+  // Publishing the draft = replacing privacy.he.ts with privacy.he.draft.ts
+  // (export renamed) and deleting this test.
+  assert.equal(PRIVACY_HE.updated, "2026-08-21");
+  assert.ok(PRIVACY_HE.bindingNote, "the live Hebrew page must keep its 'English version is binding' note");
+  const registry = read("src/app/preview-legal/[lang]/[doc]/registry.ts");
+  assert.ok(registry.includes('import { PRIVACY_HE } from "./privacy.he";') && !registry.includes("privacy.he.draft"));
+});
+
+test("Telegram and WhatsApp alerts are described as carrying no personal data (privacy T3)", () => {
+  // EN and DE checked word for word; the parity test above keeps PL, RU and HE in step.
+  const en = fullText(PRIVACY_EN);
+  assert.ok(en.includes("These alerts contain no name, contact details or message"));
+  assert.ok(!en.includes("Art. 49"), "the Art. 49 transfer basis is gone with the data it covered");
+  assert.ok(fullText(PRIVACY_DE).includes("Diese Benachrichtigungen enthalten weder Ihren Namen"));
+  for (const [lang, doc] of Object.entries(DOCS)) assert.ok(!/49 \(1\) \(b\)|49 Abs\. 1|art\. 49 ust/.test(fullText(doc)), `${lang} still cites Art. 49`);
 });

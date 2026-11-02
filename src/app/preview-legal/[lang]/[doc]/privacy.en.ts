@@ -23,12 +23,14 @@ import type { LegalDoc } from "./types";
      + sources other than our own forms (Meta lead forms, partner
        introductions, WhatsApp/e-mail correspondence) — Art. 14
      + personal presentation links and what they record
-     + internal notifications via Telegram (UAE) and WhatsApp, Hostinger,
-       Anthropic (AI assistance), Zoom, map tiles / embedded content
+     + internal notifications via Telegram (UAE) and WhatsApp — since T3
+       (src/lib/chatPrivacy.ts) they carry a lead reference, never a name,
+       contact details or message — Hostinger, Anthropic (AI assistance),
+       Zoom, map tiles / embedded content
+     + the visitor code is keyed with a secret (ANALYTICS_SALT, privacy T1)
      + verified figures only: server logs 14 days (logrotate), deleted enquiries
        purged 90 days after deletion, links valid 30 days, consent cookie 180 days
-   The legal bases for the Telegram transfer and for the tab-only attribution
-   storage are marked for the lawyer's review in the change list given to the
+   The legal basis for the tab-only attribution storage is marked for the lawyer's review in the change list given to the
    operator; the wording here describes what happens, it does not settle that.
 
    NOT legal advice — needs review by a Cyprus-qualified lawyer. */
@@ -107,7 +109,7 @@ export const PRIVACY_EN: LegalDoc = {
             },
             {
               term: "Site analytics (our own, without cookies)",
-              text: "We count page views on our own server, without cookies and without any third party. For each page view we store the page and language, the domain of the site that referred you, your browser string and device type, the country derived from your IP address, any campaign parameters in the link (utm_source, utm_medium, utm_campaign), whether you have answered the cookie banner, and a code computed from your IP address, your browser string and the date; that code changes every day, and your IP address itself is not stored. On project pages we also note how far you scroll and which buttons you use. We use these statistics only in aggregate to see which content is useful, never to identify you. Legal basis: Art. 6 (1) (f) GDPR (our legitimate interest in understanding how the site is used).",
+              text: "We count page views on our own server, without cookies and without any third party. For each page view we store the page and language, the domain of the site that referred you, your browser string and device type, the country derived from your IP address, any campaign parameters in the link (utm_source, utm_medium, utm_campaign), whether you have answered the cookie banner, and a code computed from your IP address, your browser string, the date and a secret key held only on our server; that code changes every day, cannot be traced back to you without that key, and your IP address itself is not stored. On project pages we also note how far you scroll and which buttons you use. We use these statistics only in aggregate to see which content is useful, never to identify you. Legal basis: Art. 6 (1) (f) GDPR (our legitimate interest in understanding how the site is used).",
             },
             {
               term: "Campaign attribution",
@@ -156,7 +158,7 @@ export const PRIVACY_EN: LegalDoc = {
             "Property developers in Cyprus — to register you as our client and to arrange viewings and offers for the properties you are interested in. For the registration we send your name, your property interest and budget and a partly masked phone number; if you go ahead with a viewing or an offer, the developer receives the contact details needed for it. Legal basis: Art. 6 (1) (b) GDPR.",
             "Independent lawyers — for legal checks and contract drafting, where you ask us to introduce you. They act as separate controllers and are bound by their own professional confidentiality.",
             "The partner who introduced you, if any — they see the stage of their introduction and the presentations we prepared (see section 2).",
-            "Our team’s messaging services — each new enquiry is forwarded to our team chats on Telegram (Telegram FZ-LLC, United Arab Emirates) and WhatsApp (WhatsApp Ireland Limited) so that we can answer quickly, and we correspond with you on WhatsApp if you choose it.",
+            "Our team’s messaging services — when a new enquiry arrives, our team is alerted on Telegram (Telegram FZ-LLC, United Arab Emirates) and WhatsApp (WhatsApp Ireland Limited). These alerts contain no name, contact details or message — only the type of enquiry, the options you selected (such as budget range or preferred way of contact), an internal reference number and a link to our customer database, which requires a login. We correspond with you on WhatsApp if you choose it.",
             "Our IT service providers, acting as processors under Art. 28 GDPR and only on our documented instructions: Hostinger International Ltd. (server hosting and email), Anthropic (an AI assistant our team uses to summarise enquiries, draft replies and sort developers’ answers — it sees the content of the enquiry and its history), and the video-call provider for meetings you agree to.",
             "Meta, Google, LinkedIn and Microsoft — as described in section 2, and only with your consent where section 2 says so.",
           ],
@@ -177,7 +179,7 @@ export const PRIVACY_EN: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Notifications of new enquiries are passed through Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision. We use it only to handle your enquiry promptly at your request (Art. 49 (1) (b) GDPR).",
+          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, contain no name, contact details or message (see section 3). Only an internal reference number links them to you, and only we can resolve it.",
         },
         {
           kind: "p",
