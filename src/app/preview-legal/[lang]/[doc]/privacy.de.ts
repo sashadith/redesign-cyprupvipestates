@@ -2,8 +2,9 @@ import type { LegalDoc } from "./types";
 
 /* Datenschutzerklärung — Deutsch. Inhaltlich identisch zur englischen
    Fassung (privacy.en.ts); dort steht auch, welche DSGVO-Pflichtangaben
-   gegenüber dem alten Text ergänzt wurden. Anker-IDs sind bewusst NICHT
-   übersetzt, damit derselbe Abschnitt in jeder Sprache dieselbe URL hat.
+   gegenüber dem alten Text ergänzt wurden und was die Überarbeitung vom
+   2026-11-02 geändert hat. Anker-IDs sind bewusst NICHT übersetzt, damit
+   derselbe Abschnitt in jeder Sprache dieselbe URL hat.
 
    KEINE Rechtsberatung — vor Veröffentlichung anwaltlich prüfen lassen. */
 
@@ -16,7 +17,7 @@ export const PRIVACY_DE: LegalDoc = {
   intro:
     "Diese Erklärung beschreibt, welche personenbezogenen Daten wir erheben, wenn Sie diese Website nutzen oder uns kontaktieren, warum wir sie verarbeiten, wer sie erhält, wie lange wir sie speichern und welche Rechte Sie jederzeit ausüben können.",
   updatedLabel: "Stand",
-  updated: "2026-08-21",
+  updated: "2026-11-02",
   tocLabel: "Auf dieser Seite",
 
   sections: [
@@ -49,31 +50,55 @@ export const PRIVACY_DE: LegalDoc = {
           items: [
             {
               term: "Server-Logfiles",
-              text: "Bei jedem Seitenaufruf speichert unser Server Browsertyp und -version, Betriebssystem, Referrer-URL, Hostname des zugreifenden Geräts, Uhrzeit der Anfrage und die IP-Adresse. Das ist technisch erforderlich, um die Seite auszuliefern und Missbrauch zu erkennen. Eine Zusammenführung mit anderen Datenquellen findet nicht statt. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer sicheren, funktionsfähigen Website).",
+              text: "Bei jedem Seitenaufruf speichert unser Server die aufgerufene Seite, Browsertyp und -version, Betriebssystem, Referrer-URL, Uhrzeit der Anfrage und die IP-Adresse. Das ist technisch erforderlich, um die Seite auszuliefern und Missbrauch zu erkennen. Eine Zusammenführung mit anderen Datenquellen findet nicht statt. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer sicheren, funktionsfähigen Website).",
             },
             {
-              term: "Kontaktformulare und Anfragen",
-              text: "Wenn Sie uns eine Anfrage senden, speichern wir Ihre Angaben — in der Regel Name, Kontaktdaten, bevorzugter Kontaktweg und Ihre Nachricht — um Ihre Anfrage zu beantworten und Rückfragen zu bearbeiten. Anfragen werden in unserem Kundenverwaltungssystem gespeichert, damit die betreuende Kollegin oder der betreuende Kollege den Verlauf Ihres Anliegens sieht. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage).",
+              term: "Anfragen und Formulare",
+              text: "Wenn Sie uns eine Anfrage senden — über ein Kontaktformular, den Rendite-Rechner, die Anforderung eines unserer kostenlosen Ratgeber oder das Formular für Kooperationspartner — speichern wir Ihre Eingaben: in der Regel Name, E-Mail-Adresse, Telefonnummer, bevorzugter Kontaktweg und Ihre Nachricht sowie freiwillige Angaben (zum Beispiel Budget, Zeitrahmen, Objektart oder Staatsangehörigkeit). Außerdem vermerken wir, von welcher Seite Sie die Anfrage gesendet haben und wie Sie auf unsere Website gelangt sind (siehe „Kampagnen-Zuordnung“). Wir antworten per E-Mail, Telefon oder WhatsApp, senden Ihnen den angeforderten Ratgeber oder die Berechnung und speichern die Anfrage in unserem Kundenverwaltungssystem, damit die betreuende Kollegin oder der betreuende Kollege den Verlauf Ihres Anliegens sieht. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen auf Ihre Anfrage).",
+            },
+            {
+              term: "Korrespondenz per E-Mail und WhatsApp",
+              text: "Nachrichten, die Sie mit uns per E-Mail oder WhatsApp austauschen, legen wir bei Ihrer Anfrage ab, damit jede Person, die Ihnen antwortet, weiß, was bereits besprochen wurde. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO sowie Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer vollständigen Dokumentation unserer Beratung).",
+            },
+            {
+              term: "Anfragen über Lead-Formulare auf Facebook und Instagram",
+              text: "Wenn Sie in einer unserer Anzeigen auf Facebook oder Instagram ein Anfrageformular ausfüllen, übermittelt uns Meta Platforms Ireland Limited die dort eingegebenen Angaben (in der Regel Name, Kontaktdaten und Ihre Antworten). Wir behandeln sie wie jede andere Anfrage. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.",
+            },
+            {
+              term: "Vermittlung durch unsere Partner",
+              text: "Hat ein Partner — etwa ein anderer Makler oder Berater — Sie an uns vermittelt, haben wir Ihre Angaben von diesem Partner erhalten. Der Partner kann in unserem Partnerportal den Stand seiner Vermittlung und die für Sie erstellten Objektpräsentationen einsehen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO sowie Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an der Zusammenarbeit mit Partnern, die uns Kunden vermitteln).",
+            },
+            {
+              term: "Persönliche Objektpräsentationen",
+              text: "Wir senden Ihnen gegebenenfalls einen persönlichen Link zu einer Auswahl von Objekten. Wenn Sie ihn öffnen, speichern wir, wann und wie lange Sie ihn angesehen haben und welche Objekte Sie als Favoriten markiert haben, und die Person, die ihn erstellt hat, wird benachrichtigt — so können wir gezielt auf das eingehen, was Sie tatsächlich interessiert. Der Link verfällt nach 30 Tagen, sofern nichts anderes vereinbart ist. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO sowie Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer auf Sie zugeschnittenen Beratung).",
             },
             {
               term: "Termine",
-              text: "Wenn Sie über unsere Terminseite Zeiten vorschlagen oder bestätigen, verarbeiten wir die vorgeschlagenen Zeiten, Ihre Zeitzone und Ihre Kontaktdaten, um den Termin zu vereinbaren und zu bestätigen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.",
+              text: "Wenn Sie über unsere Terminseite Zeiten vorschlagen oder bestätigen, verarbeiten wir die vorgeschlagenen Zeiten, Ihre Zeitzone und Ihre Kontaktdaten, um den Termin zu vereinbaren und zu bestätigen. Vereinbaren wir ein Videogespräch, verarbeitet der Anbieter des genutzten Videodienstes (zum Beispiel Zoom) die für die Verbindung nötigen Daten. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.",
             },
             {
               term: "Newsletter",
-              text: "Wenn Sie sich anmelden, verarbeiten wir Ihre E-Mail-Adresse, um Ihnen unseren Newsletter zu senden. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), die Sie jederzeit widerrufen können.",
+              text: "Wenn Sie sich anmelden, verarbeiten wir Ihre E-Mail-Adresse, um Ihnen unseren Newsletter zu senden. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), die Sie jederzeit mit einer Nachricht an office@cyprusvipestates.com widerrufen können.",
             },
             {
-              term: "Website-Statistik (ohne Cookies)",
-              text: "Wir zählen Seitenaufrufe über einen täglich wechselnden, nicht umkehrbaren Hash aus IP-Adresse und Browser-Kennung. Der Hash ändert sich jeden Tag, wird nie zusammen mit Ihrer IP-Adresse gespeichert und erlaubt weder Ihre Identifikation noch ein Wiedererkennen über mehrere Tage. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse zu erfahren, welche Inhalte nützlich sind), abgewogen dadurch, dass kein dauerhafter Identifikator entsteht.",
+              term: "Website-Statistik (eigene, ohne Cookies)",
+              text: "Wir zählen Seitenaufrufe auf unserem eigenen Server, ohne Cookies und ohne Dritte. Zu jedem Seitenaufruf speichern wir die Seite und Sprache, die Domain der verweisenden Website, Ihre Browser-Kennung und den Gerätetyp, das aus Ihrer IP-Adresse abgeleitete Land, etwaige Kampagnenparameter im Link (utm_source, utm_medium, utm_campaign), ob Sie das Cookie-Banner bereits beantwortet haben, sowie einen Code, der aus Ihrer IP-Adresse, Ihrer Browser-Kennung, dem Datum und einem geheimen Schlüssel berechnet wird, den nur unser Server kennt; dieser Code wechselt täglich, lässt sich ohne diesen Schlüssel nicht auf Sie zurückführen, und Ihre IP-Adresse selbst wird nicht gespeichert. Auf Projektseiten erfassen wir zusätzlich, wie weit Sie scrollen und welche Schaltflächen Sie nutzen. Wir werten diese Statistik nur zusammengefasst aus, um zu sehen, welche Inhalte nützlich sind — nie, um Sie zu identifizieren. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse zu verstehen, wie die Website genutzt wird).",
+            },
+            {
+              term: "Kampagnen-Zuordnung",
+              text: "Kommen Sie über eine Anzeige, einen Kampagnenlink oder den Empfehlungslink eines Partners, speichert Ihr Browser die Herkunft des Besuchs (Kampagnenparameter, Klick-Kennungen von Anzeigen wie gclid oder fbclid, die verweisende Adresse und einen Partnercode) im Speicher des aktuellen Browser-Tabs; dieser wird geleert, sobald Sie den Tab schließen. Senden Sie während dieses Besuchs eine Anfrage, wird die Herkunft mit ihr gespeichert, damit wir wissen, welche Kampagne oder welcher Partner Sie zu uns gebracht hat. Nur wenn Sie Cookies zustimmen, bewahren wir sie zusätzlich 90 Tage in einem Cookie („cve_attr“) auf, damit auch eine spätere Anfrage richtig zugeordnet wird. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse zu wissen, von welchem Partner oder welcher Kampagne eine Anfrage stammt) für den Tab-Speicher und Art. 6 Abs. 1 lit. a DSGVO (Einwilligung) für das Cookie.",
             },
             {
               term: "Google Tag Manager, Google Analytics und Google Ads",
-              text: "Nur wenn Sie Analyse- und Marketing-Cookies zustimmen, laden wir den Google Tag Manager (Google Ireland Limited), der seinerseits Google Analytics 4 zur Reichweitenmessung und Google Ads zur Conversion-Messung und für Remarketing aktiviert. Der Tag Manager selbst verwaltet nur die übrigen Tags; die Datenverarbeitung erfolgt durch die von ihm geladenen Dienste. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
+              text: "Nur wenn Sie Cookies zustimmen, laden wir den Google Tag Manager (Google Ireland Limited), der seinerseits Google Analytics 4 zur Reichweitenmessung und Google Ads zur Conversion-Messung und für Remarketing aktiviert. Der Tag Manager selbst verwaltet nur die übrigen Tags; die Datenverarbeitung erfolgt durch die von ihm geladenen Dienste. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
             },
             {
               term: "Meta-Pixel",
               text: "Nur mit Ihrer Einwilligung. Anbieter: Meta Platforms Ireland Limited. Es misst, ob ein Besuch auf eine unserer Anzeigen zurückgeht, und ermöglicht das Ansprechen vergleichbarer Zielgruppen. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
+            },
+            {
+              term: "Meta Conversions API",
+              text: "Nur wenn Sie Cookies zugestimmt haben, übermitteln wir zusätzlich zwei Ereignisse direkt von unserem Server an Meta Platforms Ireland Limited: das Absenden einer Anfrage („Lead“) und die Kontaktaufnahme per WhatsApp, Telefon oder E-Mail („Contact“). Bei einer Anfrage senden wir Ihre E-Mail-Adresse und Telefonnummer in pseudonymisierter Form (als SHA-256-Hashwerte, niemals im Klartext); bei beiden Ereignissen Ihre IP-Adresse, Ihre Browser-Kennung, die Adresse der Seite und die Meta-Cookie-Kennungen (_fbp, _fbc). Eine Ereignis-ID stellt sicher, dass Meta ein Ereignis nur einmal zählt, auch wenn es sowohl von Ihrem Browser als auch von unserem Server eintrifft. Meta nutzt diese Daten, um unsere Werbung zu messen und zu verbessern; für diese Verarbeitung sind wir gemeinsam mit Meta verantwortlich (Art. 26 DSGVO). Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
             },
             {
               term: "LinkedIn Insight Tag",
@@ -82,6 +107,10 @@ export const PRIVACY_DE: LegalDoc = {
             {
               term: "Microsoft Clarity — einschließlich Sitzungsaufzeichnung",
               text: "Clarity (Microsoft Ireland Operations Limited) zeigt uns, wie Seiten tatsächlich genutzt werden: Mausbewegungen, Scrollen, Klicks und Interaktionen, die als anonymisierte Sitzungsaufzeichnung abgespielt und zu Heatmaps zusammengefasst werden können. Das geht deutlich weiter als bloßes Zählen von Aufrufen, weshalb wir es hier gesondert benennen. Das Clarity-Skript wird auf jeder Seite geladen, erhält dabei aber die Information, ob Sie eingewilligt haben: ohne Ihre Einwilligung läuft es im eingeschränkten Modus von Microsoft, der keine Cookies setzt und kein Profil bildet; mit Ihrer Einwilligung zeichnet es die vollständige Sitzung auf. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung) für den vollen Modus und Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse zu erkennen, wo die Seite Nutzer verwirrt) für den eingeschränkten Modus. Dem letzteren können Sie jederzeit nach Art. 21 widersprechen.",
+            },
+            {
+              term: "Karten und andere eingebundene Inhalte",
+              text: "Zur Darstellung von Karten laden einige Seiten Kartenkacheln direkt von OpenFreeMap und der OpenStreetMap Foundation; ältere Kartenansichten laden Markierungssymbole aus dem Content-Netzwerk von Cloudflare. Das Feld für die Telefonnummer lädt kleine Länderflaggen von GitHub Pages, und einige Seiten binden Videos von YouTube (Google) ein. Lädt Ihr Browser solche Inhalte, erhält der Anbieter — wie bei jeder Anfrage im Internet — Ihre IP-Adresse und Browserinformationen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse, Lagen und Videos gut nutzbar darzustellen).",
             },
           ],
         },
@@ -95,13 +124,16 @@ export const PRIVACY_DE: LegalDoc = {
           kind: "callout",
           text: "Die Weitergabe Ihrer Daten an einen Bauträger oder eine Anwältin ist ein Kernbestandteil unserer Leistung. Sie erfolgt ausschließlich für das konkrete Immobilieninteresse, das Sie uns genannt haben.",
         },
-        { kind: "p", text: "Je nach Anliegen können Ihre Kontaktdaten weitergegeben werden an:" },
+        { kind: "p", text: "Je nach Anliegen können Ihre Daten erhalten:" },
         {
           kind: "list",
           items: [
-            "Bauträger auf Zypern — zur Organisation von Besichtigungen und zur Erstellung von Angeboten für die Objekte, die Sie interessieren. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.",
+            "Bauträger auf Zypern — um Sie als unseren Kunden zu registrieren und Besichtigungen und Angebote für die Objekte zu organisieren, die Sie interessieren. Für die Registrierung übermitteln wir Ihren Namen, Ihr Immobilieninteresse und Budget sowie eine teilweise unkenntlich gemachte Telefonnummer; kommt es zu einer Besichtigung oder einem Angebot, erhält der Bauträger die dafür nötigen Kontaktdaten. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.",
             "Unabhängige Anwältinnen und Anwälte — für rechtliche Prüfungen und Vertragsgestaltung, sofern Sie um eine Vermittlung bitten. Sie handeln als eigene Verantwortliche und unterliegen ihrer eigenen Verschwiegenheitspflicht.",
-            "Unsere IT-Dienstleister — Hosting, E-Mail-Versand und die Systeme zur Bearbeitung von Anfragen. Diese handeln als Auftragsverarbeiter nach Art. 28 DSGVO ausschließlich nach unseren dokumentierten Weisungen.",
+            "Der Partner, der Sie gegebenenfalls vermittelt hat — er sieht den Stand seiner Vermittlung und die für Sie erstellten Präsentationen (siehe Abschnitt 2).",
+            "Die Messenger-Dienste unseres Teams — bei jeder neuen Anfrage wird unser Team über Telegram (Telegram FZ-LLC, Vereinigte Arabische Emirate) und WhatsApp (WhatsApp Ireland Limited) benachrichtigt. Diese Benachrichtigungen enthalten weder Ihren Namen noch Ihre Kontaktdaten oder Ihre Nachricht, sondern nur die Art der Anfrage, die Optionen, die Sie ausgewählt haben (etwa Budgetrahmen oder bevorzugten Kontaktweg), eine interne Referenznummer und einen Link in unsere Kundendatenbank, die eine Anmeldung erfordert. Wenn Sie es wünschen, korrespondieren wir mit Ihnen über WhatsApp.",
+            "Unsere IT-Dienstleister, die als Auftragsverarbeiter nach Art. 28 DSGVO ausschließlich nach unseren dokumentierten Weisungen handeln: Hostinger International Ltd. (Server-Hosting und E-Mail), Anthropic (ein KI-Assistent, mit dem unser Team Anfragen zusammenfasst, Antworten entwirft und Rückmeldungen von Bauträgern sortiert — er sieht den Inhalt der Anfrage und ihren Verlauf) sowie der Anbieter des Videodienstes für mit Ihnen vereinbarte Gespräche.",
+            "Meta, Google, LinkedIn und Microsoft — wie in Abschnitt 2 beschrieben und, wo es dort so steht, nur mit Ihrer Einwilligung.",
           ],
         },
         {
@@ -116,7 +148,11 @@ export const PRIVACY_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Google, Meta, Microsoft und LinkedIn sind über ihre irischen Gesellschaften eingebunden; die Verarbeitung auf deren Infrastruktur kann jedoch Übermittlungen in die USA umfassen. Diese stützen sich auf den Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework, soweit der Empfänger darunter zertifiziert ist, im Übrigen auf Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO.",
+          text: "Google, Meta, Microsoft und LinkedIn sind über ihre irischen Gesellschaften eingebunden; die Verarbeitung auf deren Infrastruktur kann jedoch Übermittlungen in die USA umfassen, ebenso unsere Nutzung von Anthropic, Zoom, Cloudflare und GitHub. Diese Übermittlungen stützen sich auf den Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework, soweit der Empfänger darunter zertifiziert ist, im Übrigen auf Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO.",
+        },
+        {
+          kind: "p",
+          text: "Die Team-Benachrichtigungen über Telegram, dessen Betreiber seinen Sitz in den Vereinigten Arabischen Emiraten hat, einem Land ohne Angemessenheitsbeschluss der EU, enthalten weder Ihren Namen noch Ihre Kontaktdaten oder Ihre Nachricht (siehe Abschnitt 3). Nur eine interne Referenznummer verbindet sie mit Ihnen, und nur wir können sie zuordnen. Ebenso enthalten Neuigkeiten, die wir einem vermittelnden Partner über Telegram schicken, nur eine Referenznummer und den Stand der Vermittlung.",
         },
         {
           kind: "p",
@@ -135,12 +171,13 @@ export const PRIVACY_DE: LegalDoc = {
         {
           kind: "list",
           items: [
-            "Server-Logfiles: nur so lange, wie es für den sicheren Betrieb und die Aufklärung von Störungen oder Missbrauch erforderlich ist, danach Löschung oder Anonymisierung.",
-            "Anfragen und zugehörige Korrespondenz: solange wir zu Ihrem Anliegen mit Ihnen in Kontakt stehen, und danach nur so lange, wie daraus noch ein Folgegespräch entstehen kann.",
+            "Server-Logfiles: 14 Tage, danach Löschung.",
+            "Anfragen, Korrespondenz und Aufrufe von Präsentationen: solange wir zu Ihrem Anliegen mit Ihnen in Kontakt stehen, und danach nur so lange, wie daraus noch ein Folgegespräch entstehen kann. Löschen wir eine Anfrage, wird sie nach 90 Tagen endgültig aus unserem System entfernt.",
             "Daten zu einem abgeschlossenen Geschäft: für den Zeitraum, den zyprisches Handels- und Steuerrecht vorschreibt.",
             "Newsletter-Anmeldungen: bis zur Abmeldung.",
-            "Einwilligungsnachweise: solange wir die Erteilung der Einwilligung belegen können müssen.",
-            "Cookielose Statistik: ausschließlich aggregierte Zählwerte — der Tages-Hash ist zu keinem Zeitpunkt auf eine Person zurückführbar.",
+            "Ihre Cookie-Entscheidung: 180 Tage in Ihrem Browser, danach fragen wir erneut. Das Cookie zur Kampagnen-Zuordnung (nur mit Einwilligung): 90 Tage. Der Tab-Speicher: bis Sie den Tab schließen.",
+            "Links, die wir Ihnen senden: Download-Links zu unseren Ratgebern und persönliche Präsentationslinks verfallen nach 30 Tagen.",
+            "Website-Statistik: nur in der in Abschnitt 2 beschriebenen pseudonymen Form, und gelöscht, sobald sie für den Vergleich der Nutzung über die Zeit nicht mehr benötigt wird.",
           ],
         },
         {
@@ -155,28 +192,28 @@ export const PRIVACY_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Unser Cookie-Banner bietet dieselben drei Kategorien, die auch in dieser Erklärung verwendet werden:",
+          text: "Unser Cookie-Banner lässt Ihnen eine Wahl: alle optionalen Cookies akzeptieren oder nur die notwendigen zulassen. Die Zustimmung umfasst die unten genannten Kategorien Analyse und Marketing; lehnen Sie ab, bleibt nur das Notwendige.",
         },
         {
           kind: "definitions",
           items: [
             {
               term: "Notwendig",
-              text: "Für den Betrieb der Website erforderlich — etwa zum Speichern Ihrer Sprachwahl und Ihrer Cookie-Entscheidung selbst. Grundlage: Art. 6 Abs. 1 lit. f DSGVO; diese lassen sich nicht abschalten.",
+              text: "Für den Betrieb der Website erforderlich: das Cookie „cookieConsent“, das Ihre Entscheidung 180 Tage speichert, und der in Abschnitt 2 beschriebene Tab-Speicher zur Kampagnen-Zuordnung. Ihre Sprache ist Teil der Seitenadresse, dafür wird kein Cookie benötigt. Grundlage: Art. 6 Abs. 1 lit. f DSGVO.",
             },
             {
               term: "Analyse",
-              text: "Google Analytics 4 (über den Google Tag Manager) und Microsoft Clarity im vollen Modus. Werden erst nach Ihrer Zustimmung gesetzt.",
+              text: "Google Analytics 4 (über den Google Tag Manager) und Microsoft Clarity im vollen Modus, die eigene Cookies setzen (zum Beispiel _ga, _clck, _clsk). Werden erst nach Ihrer Zustimmung gesetzt.",
             },
             {
               term: "Marketing",
-              text: "Google Ads, das Meta-Pixel und das LinkedIn Insight Tag. Werden erst nach Ihrer Zustimmung gesetzt.",
+              text: "Google Ads, das Meta-Pixel und die Conversions API sowie das LinkedIn Insight Tag, die eigene Cookies setzen (zum Beispiel _gcl_au, _fbp, _fbc und die li_-Cookies von LinkedIn), und unser Cookie zur Kampagnen-Zuordnung „cve_attr“ (90 Tage). Werden erst nach Ihrer Zustimmung gesetzt.",
             },
           ],
         },
         {
           kind: "p",
-          text: "Sie können Ihre Entscheidung jederzeit über das Cookie-Banner ändern oder widerrufen; die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung bleibt unberührt. Sie können Cookies zudem in Ihren Browsereinstellungen blockieren oder löschen — Teile der Website funktionieren dann möglicherweise nicht wie vorgesehen.",
+          text: "Sie können Ihre Entscheidung jederzeit über den Link „Cookie-Einstellungen“ am Ende jeder Seite ändern oder widerrufen; nach einem Widerruf lädt die Seite ohne die optionalen Dienste neu. Die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung bleibt unberührt. Sie können Cookies zudem in Ihren Browsereinstellungen blockieren oder löschen — Teile der Website funktionieren dann möglicherweise nicht wie vorgesehen.",
         },
       ],
     },
@@ -223,7 +260,7 @@ export const PRIVACY_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Eine automatisierte Entscheidungsfindung oder ein Profiling mit rechtlicher Wirkung oder ähnlich erheblicher Beeinträchtigung im Sinne des Art. 22 DSGVO findet nicht statt. Soweit wir Software zur Sortierung oder Zusammenfassung von Anfragen einsetzen, entscheidet stets ein Mensch über das weitere Vorgehen.",
+          text: "Eine automatisierte Entscheidungsfindung oder ein Profiling mit rechtlicher Wirkung oder ähnlich erheblicher Beeinträchtigung im Sinne des Art. 22 DSGVO findet nicht statt. Unsere Software schlägt Objekte vor, die zu den von Ihnen genannten Wünschen passen, und unser Team nutzt einen KI-Assistenten, um Anfragen zusammenzufassen und Antworten zu entwerfen (siehe Abschnitt 3); das Ergebnis prüft stets ein Mensch, der auch über das weitere Vorgehen entscheidet.",
         },
       ],
     },
