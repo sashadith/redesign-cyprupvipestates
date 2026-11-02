@@ -82,15 +82,16 @@ test("the live Hebrew page stays on its reviewed text until the draft is checked
   assert.ok(registry.includes('import { PRIVACY_HE } from "./privacy.he";') && !registry.includes("privacy.he.draft"));
 });
 
-test("Telegram alerts: no contact details or message; reminders name the client under Art. 49 (1) (b)", () => {
-  // Privacy T3 (2026-11-02), then the operator wanted names back in the
-  // follow-up reminders the same day. EN and DE word for word; PL and RU via
-  // the citation. The Hebrew draft is not updated (operator: HE only on request).
+test("Telegram alerts: the client's name, no contact details or message, under Art. 49 (1) (b)", () => {
+  // Privacy T3 (2026-11-02), then the operator wanted names back in every team
+  // alert the same day. EN and DE word for word; PL and RU via the citation.
+  // The Hebrew draft is not updated (operator: HE only on request).
   const en = fullText(PRIVACY_EN);
-  assert.ok(en.includes("These alerts contain no name, contact details or message"));
-  assert.ok(en.includes("Follow-up reminders that our team receives on Telegram show your first and last name"));
+  assert.ok(en.includes("These alerts, and the reminders our team receives on Telegram, show your first and last name"));
+  assert.ok(en.includes("They never contain your contact details or message."));
+  assert.ok(!en.includes("internal reference number"), "no alert identifies a client by reference any more");
   assert.ok(en.includes("(Art. 49 (1) (b) GDPR)"));
-  assert.ok(fullText(PRIVACY_DE).includes("Erinnerungen an fällige Rückmeldungen, die unser Team über Telegram erhält, zeigen Ihren Vor- und Nachnamen"));
+  assert.ok(fullText(PRIVACY_DE).includes("Diese Benachrichtigungen und die Erinnerungen, die unser Team über Telegram erhält, zeigen Ihren Vor- und Nachnamen"));
   assert.ok(fullText(PRIVACY_DE).includes("Art. 49 Abs. 1 lit. b DSGVO"));
   assert.ok(fullText(PRIVACY_PL).includes("art. 49 ust. 1 lit. b RODO"));
   assert.ok(fullText(PRIVACY_RU).includes("ст. 49 (1) (b) GDPR"));

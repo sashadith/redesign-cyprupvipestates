@@ -105,10 +105,10 @@ export function pcTimelineBody(l: PcLead, raw: Record<string, string>, outcome: 
 }
 
 /** Telegram HTML — also the source of the e-mail and WhatsApp copies. English, admin-facing.
- *  Telegram/WhatsApp text: no name, contact details or message (chatPrivacy.ts).
- *  `withContact` adds them back for the team e-mail, which reuses this text. */
+ *  Telegram/WhatsApp text: the client's name, no contact details or message (chatPrivacy.ts).
+ *  `withContact` adds those for the team e-mail, which reuses this text. */
 export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; leadId: string; priorStatus?: string | null; withContact?: boolean }): string {
-  const who = o.withContact ? `<b>${esc(`${l.firstName} ${l.lastName}`.trim())}</b>` : esc(leadRef(o.leadId));
+  const who = `<b>${esc(`${l.firstName} ${l.lastName}`.trim() || leadRef(o.leadId))}</b>`;
   if (l.kind === "briefing") {
     const lines = [
       o.outcome === "CREATED" ? "📄 <b>New Private Collection briefing download</b>" : "📄 <b>Existing lead downloaded the Private Collection briefing</b>",

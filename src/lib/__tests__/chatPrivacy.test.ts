@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { clientRef, leadRef, redactContactDetails } from "@/lib/chatPrivacy";
+import { clientRef, leadLabel, leadRef, redactContactDetails } from "@/lib/chatPrivacy";
 import { buildDigestTelegram } from "@/lib/partner/digest";
 import { buildInboundLeadTelegramMessage } from "@/lib/leadNotify";
 import { parsePcLead, pcTelegram } from "@/lib/privateCollectionLead";
@@ -13,21 +13,20 @@ import { dueTelegram } from "@/lib/crm/registration/due";
 import { reminderTelegram } from "@/lib/crm/registration/reminders";
 import { buildPartnerClientNotice } from "@/lib/partner/submitFlow";
 
-/* Why this exists (2026-11-02, privacy T3).
+/* Why this exists (2026-11-02, privacy T3; names back the same day).
  *
  * Every new enquiry used to reach the office Telegram (a UAE company, no EU
  * adequacy decision) and the team WhatsApp group with the client's name,
  * e-mail, phone and message. The privacy policy now says these alerts carry
- * none of that — a reference and a CRM link only. This file holds the code to
- * that promise: each chat-text builder gets a lead full of personal data, and
- * none of it may come out the other end.
+ * the client's name and a CRM link, nothing else (operator: "ich will aber die
+ * namen sehen"). This file holds the code to that promise: each chat-text
+ * builder gets a lead full of personal data, and only the name may come out
+ * the other end.
  */
 
 const LEAD_ID = "3f9a2c11-7d4e-4b8a-9c3d-2e1f0a9b8c7d";
 const PII = ["Annabel", "Kowalczyk", "annabel.k@example.com", "+49 170 5550123", "4917055501", "Polish", "please call after six"];
-// Office reminders (follow-up nags, SLA, registration due/reminders) name the
-// client again (operator, 2026-11-02: "ich will aber die namen sehen"; the
-// privacy policy says so). Contact details, nationality and the message still never go out.
+// Contact details, nationality and the message never go out; the name does.
 const CONTACT = PII.slice(2);
 const assertNameOnly = (text: string, where: string) => {
   for (const v of CONTACT) assert.ok(!text.includes(v), `${where} leaks "${v}"`);
@@ -41,6 +40,9 @@ const assertNoPii = (text: string, where: string) => {
 test("leadRef / clientRef: a short pseudonymous label", () => {
   assert.equal(leadRef(LEAD_ID), "Lead #3f9a2c");
   assert.equal(clientRef(LEAD_ID), "#3f9a2c");
+  assert.equal(leadLabel({ firstName: "Annabel", lastName: "Kowalczyk" }, LEAD_ID), "Annabel Kowalczyk");
+  assert.equal(leadLabel({ firstName: " ", lastName: null }, LEAD_ID), "Lead #3f9a2c", "no name: the reference");
+  assert.equal(leadLabel(null, LEAD_ID), "Lead #3f9a2c");
 });
 
 test("redactContactDetails removes e-mail addresses and phone numbers, keeps dates, prices and links", () => {
@@ -56,21 +58,22 @@ test("redactContactDetails removes e-mail addresses and phone numbers, keeps dat
   }
 });
 
-test("website, partner-form and ROI leads: no contact details in the chat text", () => {
-  assertNoPii(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, source: "PARTNER", page: "/en/partners", language: "pl", link: "https://x/admin/crm/" + LEAD_ID }), "inbound lead");
+test("website, partner-form and ROI leads: the name, no contact details in the chat text", () => {
+  assertNameOnly(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, name: "Annabel Kowalczyk", source: "PARTNER", page: "/en/partners", language: "pl", link: "https://x/admin/crm/" + LEAD_ID }), "inbound lead");
+  assertNoPii(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, source: "ROI_CALCULATOR", link: "https://x" }), "inbound lead without a name");
 });
 
-test("Private Collection: no contact details or message in the chat text, all of it in the e-mail", () => {
+test("Private Collection: the name, no contact details or message in the chat text, all of it in the e-mail", () => {
   const r = parsePcLead({ type: "consultation", locale: "en", firstName: "Annabel", lastName: "Kowalczyk", email: "annabel.k@example.com", phone: "+49 170 5550123", considering: "investment", budget: "3-5m", contact: "whatsapp", message: "please call after six" });
   if (!r.ok) throw new Error("parse");
-  assertNoPii(pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x", leadId: LEAD_ID }), "PC chat");
+  assertNameOnly(pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x", leadId: LEAD_ID }), "PC chat");
   const mail = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x", leadId: LEAD_ID, withContact: true });
   for (const v of ["Annabel", "annabel.k@example.com", "+49 170 5550123", "please call after six"]) assert.ok(mail.includes(v), `PC e-mail lacks ${v}`);
 });
 
-test("Meta lead form: the stored chat text carries no contact details", () => {
-  assertNoPii(buildLeadMessage({
-    outcome: "CREATED", language: "en", budget: "3-5", preferredChannel: "WHATSAPP", campaignName: "UK Leads", formName: "CVE PC Briefing EN v2",
+test("Meta lead form: the stored chat text carries the name, no contact details", () => {
+  assertNameOnly(buildLeadMessage({
+    outcome: "CREATED", language: "en", name: "Annabel Kowalczyk", budget: "3-5", preferredChannel: "WHATSAPP", campaignName: "UK Leads", formName: "CVE PC Briefing EN v2",
     placeholderReason: null, unmatchedCount: 0, leadId: LEAD_ID,
   }), "Meta lead");
 });
@@ -97,44 +100,38 @@ test("office reminders (nag, SLA, registrations): the client's name, never conta
   }], "https://x"), "registration reminder");
 });
 
-test("partner-submitted client: the office notice names the partner, not the client", () => {
-  assertNoPii(buildPartnerClientNotice({ partnerName: "Acme", mode: "HANDOVER", outcome: "CREATED", leadId: LEAD_ID, baseUrl: "https://x" }), "partner client");
+test("partner-submitted client: the office notice names the client and the partner", () => {
+  assertNameOnly(buildPartnerClientNotice({ clientName: "Annabel Kowalczyk", partnerName: "Acme", mode: "HANDOVER", outcome: "CREATED", leadId: LEAD_ID, baseUrl: "https://x" }), "partner client");
   assertNoPii(buildPartnerClientNotice({ partnerName: "Acme", mode: "FIX", outcome: "REVIEW" }), "review notice");
 });
 
-/* Senders that build their text inline. Their chat strings must take the
-   lead's reference, not a name field: checked on the source, since these are
-   route handlers and server actions with the database behind them. */
+/* Senders that build their text inline. Their chat strings take the lead's
+   name through leadLabel (or a name the code already holds) and nothing else
+   from the lead: checked on the source, since these are route handlers and
+   server actions with the database behind them. */
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const INLINE: Array<[string, string[]]> = [
-  ["src/app/api/c/[token]/view/route.ts", ["const name = escapeHtml(leadRef(presentation.leadId));"]],
-  ["src/app/api/c/[token]/favorite/route.ts", ["sendTelegramMessage(`❤️ ${escapeHtml(leadRef(presentation.leadId))} favorited"]],
-  ["src/app/admin/(panel)/crm/[id]/bookingActions.ts", ["`<b>📅 ${esc(leadRef(leadId))} proposed meeting times</b>", "`${esc(leadRef(booking.leadId))} — was "]],
-  ["src/app/api/cron/booking-reminders/route.ts", ["`${esc(leadRef(booking.leadId))} — ${time} (Cyprus time)", "sendTelegramMessage(esc(text(leadRef(booking.leadId))))"]],
-  ["src/app/api/cron/action-digest/route.ts", ["escapeHtml(leadRef(b.leadId))", "escapeHtml(forChat ? (t.item.chatTitle ?? t.item.title) : t.item.title)", "...buildLines(false).map(stripHtml)"]],
-  ["src/lib/crm/assignLead.ts", ["takes <b>${esc(leadRef(lead.id))}</b>"]],
-  ["src/lib/emailInbound/processInbound.ts", ["New e-mail reply from ${esc(leadRef(leadId))}"]],
-  ["src/lib/emailInbound/officeInbound.ts", ["From ${esc(senderDomain(m.from))}", "about ${esc(leadRef(match.leadId))}"]],
-  ["src/app/api/leads/route.ts", ["`${escapeHtml(leadRef(lead.id))}\\n` +"]],
+  ["src/app/api/c/[token]/view/route.ts", ["const name = escapeHtml(leadLabel(presentation.lead, presentation.leadId));"]],
+  ["src/app/api/c/[token]/favorite/route.ts", ["sendTelegramMessage(`❤️ ${escapeHtml(leadLabel(presentation.lead, presentation.leadId))} favorited"]],
+  ["src/app/admin/(panel)/crm/[id]/bookingActions.ts", ["`<b>📅 ${esc(leadName)} proposed meeting times</b>", "`${esc(leadName || leadLabel(null, booking.leadId))} — was "]],
+  ["src/app/api/cron/booking-reminders/route.ts", ["`${esc(leadLabel(booking.lead, booking.leadId))} — ${time} (Cyprus time)", "sendTelegramMessage(esc(text(leadLabel(booking.lead, booking.leadId))))"]],
+  ["src/app/api/cron/action-digest/route.ts", ["escapeHtml(leadLabel(b.lead, b.leadId))", "...buildLines(false).map(stripHtml)"]],
+  ["src/lib/crm/assignLead.ts", ["takes <b>${esc(leadLabel(lead, lead.id))}</b>"]],
+  ["src/lib/emailInbound/processInbound.ts", ["New e-mail reply from ${esc(leadLabel(lead, leadId))}"]],
+  ["src/lib/emailInbound/officeInbound.ts", ["From ${esc(senderDomain(m.from))}", "about ${esc(ctx.clientName || leadRef(match.leadId))}"]],
+  ["src/app/api/leads/route.ts", ["`<b>${escapeHtml(fullName || leadRef(lead.id))}</b>\\n` +"]],
   ["src/lib/mcp/tools/notifyOwnerTelegram.ts", ["deps.send(redactContactDetails(text))"]],
 ];
-const FORBIDDEN = /greetingName\)|esc\(leadName\)|escapeHtml\(fullName \|\||emailNorm\)\}\\nPhone|esc\(ctx\.clientName\)|esc\(excerpt\)|esc\(m\.subject/;
+// The contact details and the client's own words, as they were interpolated before T3.
+const FORBIDDEN = /emailNorm\)\}\\nPhone|esc\(excerpt\)|esc\(m\.subject|Message: \$\{escapeHtml\(messageFinal|esc\(lead\.email|esc\(lead\.phone/;
 
-test("inline chat senders use the reference, and the old name interpolations are gone", () => {
+test("inline chat senders name the lead, and no contact details or message text go in", () => {
   for (const [file, needles] of INLINE) {
     const src = read(file);
     for (const n of needles) assert.ok(src.includes(n), `${file}: expected ${n}`);
     const bad = src.split("\n").filter((l) => FORBIDDEN.test(l) && !/sendEmail|subject:/.test(l));
-    assert.deepEqual(bad, [], `${file} puts client data into a chat text`);
+    assert.deepEqual(bad, [], `${file} puts client contact data into a chat text`);
   }
-});
-
-test("every CRM action item that names a client also has a chatTitle without the name", () => {
-  const src = read("src/lib/actionCenter/rules/crm.ts");
-  const titles = src.split("\n").filter((l) => /^\s*title: `.*(leadName\(|\.lead\.name)/.test(l)).length;
-  const chatTitles = src.split("\n").filter((l) => /^\s*chatTitle: `.*leadRef\(/.test(l)).length;
-  assert.ok(titles > 0);
-  assert.equal(chatTitles, titles, "a title with a client name lacks its chatTitle twin");
 });
 
 /* The partner bot (2026-11-02, operator: "nur Nummer"): a partner's Telegram

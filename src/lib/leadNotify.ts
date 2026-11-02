@@ -36,10 +36,11 @@ export function telegramLanguageTag(locale: string | null | undefined): string |
 
 // Pure message builder (no DB, no Telegram call) — split out of
 // recordInboundLead so it's directly testable with fakes. Admin-facing copy
-// stays English per project convention. No name, e-mail or phone: the text
-// also goes to the team WhatsApp group (chatPrivacy.ts).
+// stays English per project convention. The client's name, but no e-mail or
+// phone: the text also goes to the team WhatsApp group (chatPrivacy.ts).
 export function buildInboundLeadTelegramMessage(opts: {
   leadId: string;
+  name?: string;
   source: string;
   page?: string;
   language?: string | null;
@@ -48,7 +49,7 @@ export function buildInboundLeadTelegramMessage(opts: {
   const langTag = telegramLanguageTag(opts.language);
   return (
     `<b>New ${esc(opts.source.replace(/_/g, " "))} lead</b>\n` +
-    `${esc(leadRef(opts.leadId))}\n` +
+    `<b>${esc(opts.name?.trim() || leadRef(opts.leadId))}</b>\n` +
     (langTag ? `Language: ${esc(langTag)}\n` : "") +
     (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
     `\n<a href="${opts.link}">Open in CRM</a>`

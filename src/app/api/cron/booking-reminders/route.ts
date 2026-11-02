@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCronLog } from "@/lib/cronLog";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { leadRef } from "@/lib/chatPrivacy";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { formatInZone, CYPRUS_TZ } from "@/lib/booking/timezone";
 import type { BookingRequest } from "@prisma/client";
@@ -44,7 +44,7 @@ async function sendReminder(booking: ReminderBooking, label: "1h" | "10m", siteU
     : "";
   const msg =
     `<b>⏰ Meeting ${whenLabel}</b>\n` +
-    `${esc(leadRef(booking.leadId))} — ${time} (Cyprus time) · ${typeLabel}` +
+    `${esc(leadLabel(booking.lead, booking.leadId))} — ${time} (Cyprus time) · ${typeLabel}` +
     zoomNote +
     `\n\n<a href="${siteUrl}/admin/crm/${booking.leadId}">Open in CRM</a>`;
   try {
@@ -64,7 +64,6 @@ async function sendReminder(booking: ReminderBooking, label: "1h" | "10m", siteU
 async function sendFailureAlert(booking: ReminderBooking, label: "1h" | "10m", siteUrl: string): Promise<void> {
   const leadName = `${booking.lead.firstName} ${booking.lead.lastName}`.trim();
   const time = formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ);
-  // Telegram gets the reference, the e-mail the name (chatPrivacy.ts).
   const text = (who: string) => [
     `🔴 Meeting reminder (${label}) failed to send — ${who}`,
     `Meeting at ${time} (Cyprus time). Telegram delivery failed ${MAX_REMINDER_ATTEMPTS} times in a row — giving up, the client was not notified by this system.`,
@@ -72,7 +71,7 @@ async function sendFailureAlert(booking: ReminderBooking, label: "1h" | "10m", s
     `${siteUrl}/admin/crm/${booking.leadId}`,
   ].join("\n");
   const subject = `Meeting reminder (${label}) failed — ${leadName}`;
-  await Promise.allSettled([sendTelegramMessage(esc(text(leadRef(booking.leadId)))), sendEmail({ subject, text: text(leadName) })]);
+  await Promise.allSettled([sendTelegramMessage(esc(text(leadLabel(booking.lead, booking.leadId)))), sendEmail({ subject, text: text(leadName) })]);
 }
 
 async function scanAndSendReminders() {

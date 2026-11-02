@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, dailyVisitorHash } from "@/lib/visitorHash";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { leadRef } from "@/lib/chatPrivacy";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { getCrmUser } from "@/lib/crm/session";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { submittedName } from "@/lib/partner/matchGlue";
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const presentation = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
-    select: { id: true, status: true, expiresAt: true, greetingName: true, leadId: true, partnerId: true },
+    select: { id: true, status: true, expiresAt: true, greetingName: true, leadId: true, partnerId: true, lead: { select: { firstName: true, lastName: true } } },
   });
   if (!presentation || presentation.status !== "active" || (presentation.expiresAt && presentation.expiresAt < new Date())) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -112,8 +112,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   }
 
   const crmLink = `${requestOrigin(req)}/crm/leads/${presentation.leadId}`;
-  // No client name in the chat (chatPrivacy.ts) — the CRM link says who.
-  const name = escapeHtml(leadRef(presentation.leadId));
+  const name = escapeHtml(leadLabel(presentation.lead, presentation.leadId));
 
   // Alerts are mutually exclusive and best-effort — never let a Telegram hiccup
   // break the page for the client. Sascha's call (2026-08-14, overriding the

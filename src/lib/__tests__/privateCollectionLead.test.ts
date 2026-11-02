@@ -44,16 +44,16 @@ test("name and a valid email are required", () => {
   assert.equal(parsePcLead(null).ok, false);
 });
 
-test("the Telegram text names no one, escapes user input and links the CRM", () => {
+test("the Telegram text names the client, no contact details, escapes user input and links the CRM", () => {
   const r = parsePcLead(form);
   if (!r.ok) throw new Error("parse");
   const t = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x/admin/crm/L1", leadId: "3f9a2c11-1" });
   assert.match(t, /New Private Collection enquiry/);
-  assert.match(t, /Lead #3f9a2c/);
+  assert.ok(t.includes(`<b>${r.lead.firstName} ${r.lead.lastName}`.trim()), t);
   assert.match(t, /Budget: €3–5M · Purpose: Investment · Prefers: WhatsApp/);
   assert.match(t, /Message: yes, see CRM/);
   assert.match(t, /<a href="https:\/\/x\/admin\/crm\/L1">/);
-  for (const v of [r.lead.firstName, r.lead.lastName, r.lead.email, r.lead.phone, "Rückruf"]) if (v) assert.ok(!t.includes(v), `chat text leaks ${v}`);
+  for (const v of [r.lead.email, r.lead.phone, "Rückruf"]) if (v) assert.ok(!t.includes(v), `chat text leaks ${v}`);
   // The team e-mail reuses the text with the details put back, escaped.
   const mail = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "x", leadId: "3f9a2c11-1", withContact: true });
   assert.ok(mail.includes(r.lead.email));
@@ -61,15 +61,15 @@ test("the Telegram text names no one, escapes user input and links the CRM", () 
   assert.match(pcTelegram(r.lead, { outcome: "ATTACHED", crmLink: "x", leadId: "L", priorStatus: "CONTACTED" }), /Existing lead[\s\S]*status is CONTACTED/);
 });
 
-test("a briefing download (2026-11-02) is its own kind: guide-lead texts, no name in the chat", () => {
+test("a briefing download (2026-11-02) is its own kind: guide-lead texts, name but no e-mail in the chat", () => {
   const r = parsePcLead({ type: "briefing", source: "briefing", locale: "de", firstName: "Annabel", email: "Annabel.K@example.com" });
   if (!r.ok) throw new Error("parse");
   assert.equal(r.lead.kind, "briefing");
   const chat = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x/admin/crm/3f9a2c11", leadId: "3f9a2c11-1" });
   assert.match(chat, /briefing download/);
-  assert.match(chat, /Lead #3f9a2c/);
+  assert.match(chat, /<b>Annabel<\/b>/);
   assert.match(chat, /Language: de/);
-  assert.ok(!chat.includes("Annabel") && !chat.includes("example.com"), chat);
+  assert.ok(!chat.includes("example.com"), chat);
   const mail = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "x", leadId: "3f9a2c11-1", withContact: true });
   assert.ok(mail.includes("Annabel") && mail.includes("annabel.k@example.com"), mail);
   assert.match(pcTimelineBody(r.lead, r.raw, "ATTACHED"), /^Existing lead downloaded the Private Collection briefing\.\nLanguage: de$/);
