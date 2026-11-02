@@ -16,6 +16,8 @@ import { footerCopy } from "./Footer.copy";
 import { GUIDE_LANGS, type GuideLang } from "@/lib/guides/types";
 import { guidesPagePath } from "@/lib/guidesPage";
 import { guidesPageCopy } from "@/app/preview-guides/copy";
+import CookieSettingsLink from "@/app/components/CustomCookieConsent/CookieSettingsLink";
+import { cookieSettingsLabel, cookieSettingsLabelIsEnglishFallback } from "@/app/components/CustomCookieConsent/cookieSettings";
 import OptImg from "@/app/preview-home/sections/OptImg"; // footer sits below the fold on every page: lazy + resized, and no <link rel=preload> hint (those competed with the render-blocking CSS)
 
 /* Global site footer — quiet-luxury redesign (migrated from the staging preview).
@@ -40,6 +42,7 @@ const placeholderFor = (lang: string) => footerCopy(lang).emailPlaceholder;
 const Footer = async ({ params }: Props) => {
   const data = await getFooterByLang(params.lang);
   const hasGuides = (GUIDE_LANGS as readonly string[]).includes(params.lang);
+  const cookieLabel = cookieSettingsLabel(params.lang);
   if (!data) return null;
 
   const {
@@ -149,7 +152,7 @@ const Footer = async ({ params }: Props) => {
         <div className="pf__bottom">
           <div className="pf__bottom-row">
             {copyright && <p className="pf__copy">{copyright}</p>}
-            {(policyLinks?.length > 0 || hasGuides) && (
+            {(policyLinks?.length > 0 || hasGuides || cookieLabel) && (
               <div className="pf__policy">
                 {policyLinks?.map((p: FooterLink) => (
                   <Link key={p._key} href={p.link}>
@@ -158,6 +161,8 @@ const Footer = async ({ params }: Props) => {
                 ))}
                 {/* The free guides page; no Hebrew version exists, so Hebrew gets no link. */}
                 {hasGuides && <Link href={guidesPagePath(params.lang)}>{guidesPageCopy(params.lang as GuideLang).heroEyebrow}</Link>}
+                {/* Reopens the consent banner (Hebrew: English label until reviewed). */}
+                {cookieLabel && <CookieSettingsLink label={cookieLabel} englishFallback={cookieSettingsLabelIsEnglishFallback(params.lang)} />}
               </div>
             )}
           </div>

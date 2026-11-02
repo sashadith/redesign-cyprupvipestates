@@ -9,6 +9,7 @@ import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { COOKIE_CONSENT_COPY } from "./CustomCookieConsent.copy";
 import { onMarketingConsentChanged } from "@/lib/attribution";
 import { CONSENT_EVENT } from "../ConsentScripts/ConsentScripts";
+import { COOKIE_SETTINGS_EVENT, hadTrackingConsent } from "./cookieSettings";
 
 const COOKIE_NAME = "cookieConsent";
 
@@ -40,6 +41,10 @@ export default function CustomCookieConsent({ lang }: Props) {
     if (!saved) {
       setVisible(true);
     }
+    // The footer's "Cookie settings" link reopens the banner to change the choice.
+    const open = () => setVisible(true);
+    window.addEventListener(COOKIE_SETTINGS_EVENT, open);
+    return () => window.removeEventListener(COOKIE_SETTINGS_EVENT, open);
   }, []);
 
   const acceptAll = () => {
@@ -61,6 +66,9 @@ export default function CustomCookieConsent({ lang }: Props) {
   };
 
   const rejectAll = () => {
+    // Withdrawing an earlier yes: tags already running in this page (pixel,
+    // GTM, Clarity) cannot be unloaded, so the page reloads without them.
+    const withdrawing = hadTrackingConsent(Cookies.get(COOKIE_NAME));
     const consent: Consent = {
       necessary: true,
       analytics: false,
@@ -72,6 +80,10 @@ export default function CustomCookieConsent({ lang }: Props) {
     });
     // No marketing consent: drop any 90-day attribution cookie.
     onMarketingConsentChanged();
+    if (withdrawing) {
+      window.location.reload();
+      return;
+    }
     setVisible(false);
     window.dispatchEvent(new Event(CONSENT_EVENT)); // static homepage tree re-selects its tags
     router.refresh();

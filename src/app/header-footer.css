@@ -936,10 +936,12 @@ html[lang="ru"] .nav__cta-label { display: none; }
 @media (min-width: 768px) { .pf__copy { text-align: unset; } }
 .pf__policy { display: flex; flex-wrap: wrap; justify-content: center; }
 @media (min-width: 768px) { .pf__policy { justify-content: flex-start; } }
-.pf__policy a { color: var(--text-soft); text-decoration: none; font-family: var(--font-body), sans-serif; font-size: clamp(0.75rem, 0.688rem + 0.25vw, 0.875rem); letter-spacing: 0.4px; transition: color var(--dur-sm) var(--ease); }
-.pf__policy a:hover { color: var(--accent); }
-.pf__policy a::after { content: "|"; margin: 0 20px; color: var(--text-faint); }
-.pf__policy a:last-child::after { content: ""; margin: 0; }
+.pf__policy > a, .pf__policy > button { color: var(--text-soft); text-decoration: none; font-family: var(--font-body), sans-serif; font-size: clamp(0.75rem, 0.688rem + 0.25vw, 0.875rem); letter-spacing: 0.4px; transition: color var(--dur-sm) var(--ease); }
+/* The "Cookie settings" entry is a button (it opens the banner, it navigates nowhere): reset it to look like the links. */
+.pf__policy > button { background: none; border: 0; padding: 0; margin: 0; line-height: inherit; cursor: pointer; }
+.pf__policy > a:hover, .pf__policy > button:hover { color: var(--accent); }
+.pf__policy > a::after, .pf__policy > button::after { content: "|"; margin: 0 20px; color: var(--text-faint); }
+.pf__policy > :last-child::after { content: ""; margin: 0; }
 .pf__disclaimer { margin-top: 40px; font-family: var(--font-body), sans-serif; font-size: 12px; line-height: 1.5; color: var(--text-faint); text-align: center; }
 @media (min-width: 768px) { .pf__disclaimer { text-align: start; } }
 

@@ -13,6 +13,7 @@ import "@/app/rtl.css"; // direction- and script-aware base rules shared by ever
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
 import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
+import SiteConsent from "@/app/components/SiteConsent/SiteConsent"; // banner + consent-gated tags; this tree does not inherit [lang]/layout.tsx
 
 /* FAQ — redesigned. Reuses the homepage design tokens + fonts + smooth scroll
    (same pattern as preview-insights/preview-projects). The live /faq page
@@ -61,6 +62,7 @@ export default function FaqLayout({
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>
+        <SiteConsent lang={params.lang} />
       </body>
     </html>
   );
