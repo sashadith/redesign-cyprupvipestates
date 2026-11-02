@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isbot } from "isbot";
 import { prisma } from "@/lib/prisma";
-import crypto from "node:crypto";
+import { dailyVisitorHash } from "@/lib/visitorHash";
 import { detectDeviceType } from "@/lib/deviceType";
 import { lookupCountry } from "@/lib/geoCountry";
 import { extractUtm, hasUtm, utmFromBody } from "@/lib/analytics/pageViewUtm";
@@ -88,13 +88,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = clientIp(req);
-    const salt = process.env.ANALYTICS_SALT ?? "cvp";
-    const day = new Date().toISOString().slice(0, 10); // UTC day → hash rotates daily
-    const visitorHash = crypto
-      .createHash("sha256")
-      .update(`${salt}|${day}|${ip}|${ua}`)
-      .digest("hex")
-      .slice(0, 32);
+    const visitorHash = dailyVisitorHash(ip, ua);
 
     // Our own verification/smoke-test beacons — recorded (so a bad deploy is still
     // visible in raw counts if someone goes looking) but excluded from every analytics

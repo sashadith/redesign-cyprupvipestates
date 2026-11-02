@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isbot } from "isbot";
 import { prisma } from "@/lib/prisma";
-import crypto from "node:crypto";
+import { dailyVisitorHash } from "@/lib/visitorHash";
 import { detectDeviceType } from "@/lib/deviceType";
 import { lookupCountry } from "@/lib/geoCountry";
 
@@ -56,9 +56,7 @@ export async function POST(req: NextRequest) {
     const contentId = UUID_RE.test(rawId) ? rawId : null;
 
     const ip = clientIp(req);
-    const salt = process.env.ANALYTICS_SALT ?? "cvp";
-    const day = new Date().toISOString().slice(0, 10); // UTC day → hash rotates daily
-    const visitorHash = crypto.createHash("sha256").update(`${salt}|${day}|${ip}|${ua}`).digest("hex").slice(0, 32);
+    const visitorHash = dailyVisitorHash(ip, ua);
 
     const secPurpose = req.headers.get("sec-purpose") ?? "";
     const purpose = req.headers.get("purpose") ?? "";

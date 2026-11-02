@@ -7,6 +7,7 @@ import { sendEmail } from "@/lib/sendEmail";
 import { BUDGETS, CHANNEL_LABEL, leadRegion, type BudgetKey } from "./mapFields";
 import type { LeadPreferredChannel } from "@prisma/client";
 import { teamWhatsAppChat, telegramHtmlToWhatsApp } from "@/lib/teamWhatsApp";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -15,12 +16,12 @@ export const notifyPrefix = () => (process.env.NOTIFY_PREFIX ? `${process.env.NO
 
 export const adminLeadUrl = (leadId: string) => `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${leadId}`;
 
+/** The stored notification, sent as-is to Telegram and the team WhatsApp
+ *  group: no name, e-mail or phone (chatPrivacy.ts). The e-mail twin adds
+ *  them back from the lead row (buildLeadEmail). */
 export function buildLeadMessage(o: {
   outcome: "CREATED" | "ATTACHED";
   language: "de" | "en" | null;
-  name: string;
-  email: string | null;
-  phone: string | null;
   budget: BudgetKey | null;
   preferredChannel: LeadPreferredChannel | null;
   campaignName: string | null;
@@ -39,13 +40,12 @@ export function buildLeadMessage(o: {
       : `🏛 <b>Existing lead submitted the form again${region}</b>`;
   const lines = [
     `${esc(notifyPrefix())}${head}`,
-    `<b>${esc(o.name || "-")}</b>`,
+    esc(leadRef(o.leadId)),
     `Budget: ${esc(o.budget ? BUDGETS[o.budget].label : "not answered")} · Prefers: ${esc(o.preferredChannel ? CHANNEL_LABEL[o.preferredChannel] : "not answered")}`,
   ];
   if (o.budget === "<2") lines.push("⚠️ below Private Collection threshold");
   if (o.reopened) lines.push("↩️ was LOST — reopened as NEW");
   if (o.priorStatus === "CLOSED") lines.push("ℹ️ lead status is CLOSED (left unchanged)");
-  lines.push([o.email, o.phone].filter(Boolean).map(esc).join(" · ") || "-");
   if (o.placeholderReason) lines.push(`⚠️ phone looks like a placeholder (${esc(o.placeholderReason)})`);
   if (o.unmatchedCount) lines.push(`⚠️ ${o.unmatchedCount} answer(s) could not be mapped — see timeline`);
   lines.push(`Campaign: ${esc(o.campaignName || "-")} · Form: ${esc(o.formName || "-")}`);
@@ -56,12 +56,16 @@ export function buildLeadMessage(o: {
 /** The e-mail twin of a new-lead Telegram (2026-10-15): same content, built
  *  from the stored Telegram text so both channels always say the same thing.
  *  That text is Telegram HTML (<b>, <a>, escaped entities, \n line breaks). */
-export function buildLeadEmail(notification: string, o: { outcome: "CREATED" | "ATTACHED" | string | null; name: string }): { subject: string; text: string; html: string } {
+export function buildLeadEmail(notification: string, o: { outcome: "CREATED" | "ATTACHED" | string | null; name: string; email?: string | null; phone?: string | null }): { subject: string; text: string; html: string } {
   const p = notifyPrefix();
   const who = o.name.trim() || "unknown";
   const subject = o.outcome === "ATTACHED" ? `${p}Meta lead (existing lead, form submitted again): ${who}` : `${p}New Meta lead: ${who}`;
-  const html = notification.split("\n").join("<br/>\n");
-  const text = notification
+  // The stored text carries no contact details (it is also the chat text):
+  // they go in under the headline, for the team mailbox only.
+  const [head, ...rest] = notification.split("\n");
+  const full = [head, `<b>${esc(who)}</b>`, [o.email, o.phone].filter(Boolean).map(esc).join(" · ") || "-", ...rest].join("\n");
+  const html = full.split("\n").join("<br/>\n");
+  const text = full
     .replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1")
     .replace(/<[^>]+>/g, "")
     .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");

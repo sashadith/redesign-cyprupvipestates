@@ -20,7 +20,8 @@ export function isoWeekKey(date: Date): string {
   return `${isoYear}-W${String(week).padStart(2, "0")}`;
 }
 
-export type DigestUpdate = { clientName: string; key: string; vars?: Record<string, string>; at: Date };
+/** clientName goes into the e-mail, clientRef ("#3f9a2c") into the Telegram summary. */
+export type DigestUpdate = { clientName: string; clientRef: string; key: string; vars?: Record<string, string>; at: Date };
 export type DigestTotals = { expected: number; earned: number; developerPaid: number; paidOut: number };
 /** `publishedAt` orders the list (newest first); it is not shown. */
 export type DigestProject = { name: string; town: string | null; handoverRate: number | null; url: string; publishedAt: Date };
@@ -120,7 +121,7 @@ export function buildDigestTelegram(locale: PartnerLocale, p: { content: DigestC
   const { updates, totals, newProjects } = p.content;
   const updateLines = updates.map((u) => {
     const label = fmt(lookup(locale, u.key) ?? lookup(locale, "stages.onHold")!, u.vars ?? {});
-    return `• ${esc(u.clientName.trim() || "—")}: ${esc(label)} (${esc(date(u.at))})`;
+    return `• ${esc(u.clientRef)}: ${esc(label)} (${esc(date(u.at))})`;
   });
   const totalLines = totals.expected + totals.earned + totals.developerPaid + totals.paidOut > 0
     ? [

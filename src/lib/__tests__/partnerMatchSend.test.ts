@@ -233,13 +233,13 @@ test("buildPresentationOpenedEmail: 4 locales, presentations link, escaped", () 
 
 test("Telegram texts for MATCH and PRESENTATION_OPENED are escaped and linked", () => {
   const tg = buildTelegramNotification("de", {
-    kind: "MATCH", clientName: "A<b>", projectName: "Sea & View", changeType: "unit_price_changed", priceFrom: "290.000 €",
+    kind: "MATCH", clientRef: "#A<b>", projectName: "Sea & View", changeType: "unit_price_changed", priceFrom: "290.000 €",
     url: matchInput.url, portalUrl: matchInput.portalUrl,
   });
   assert.ok(tg.includes("A&lt;b&gt;") && tg.includes("Sea &amp; View"));
   assert.ok(tg.includes(`href="${matchInput.url}"`) && tg.includes(`href="${matchInput.portalUrl}"`));
-  const po = buildTelegramNotification("en", { kind: "PRESENTATION_OPENED", clientName: "Bob", url: "https://partner.example/presentations", portalUrl: "https://partner.example" });
-  assert.ok(po.includes("Bob") && po.includes('href="https://partner.example/presentations"'));
+  const po = buildTelegramNotification("en", { kind: "PRESENTATION_OPENED", clientRef: "#b0b", url: "https://partner.example/presentations", portalUrl: "https://partner.example" });
+  assert.ok(po.includes("#b0b") && po.includes('href="https://partner.example/presentations"'));
 });
 
 // ── sender gates ────────────────────────────────────────────────────────────

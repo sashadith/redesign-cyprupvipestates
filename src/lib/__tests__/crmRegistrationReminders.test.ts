@@ -31,7 +31,10 @@ test("mail and Telegram text", () => {
   assert.equal(m.subject, "Registration not confirmed: Anna Muster – Marinakis");
   assert.match(m.text, /28\.10\.2026/);
   assert.match(m.text, /https:\/\/x\/crm\/leads\/L1/);
-  assert.match(reminderTelegram([row({ lead: { ...row().lead, name: "A<b>" } })], "https://x"), /A&lt;b&gt;/);
+  // The e-mail names the client; Telegram gets a reference (chatPrivacy.ts).
+  const tg = reminderTelegram([row()], "https://x");
+  assert.doesNotMatch(tg, /Anna|Muster/);
+  assert.match(tg, /<a href="https:\/\/x\/crm\/leads\/L1">Lead #L1<\/a>/);
 });
 
 function fake(over: Partial<ReminderDeps> = {}) {

@@ -10,6 +10,10 @@
 // Telegram, e-mail to EMAIL_TO, and the team WhatsApp group — each
 // best-effort. The answer tells the caller whether the CRM has it; on a
 // failure the caller sends its own fallback notice so nothing is lost.
+//
+// Briefing downloads (2026-11-02, type "briefing"): a new address becomes a
+// guide lead (GUIDE_DOWNLOAD, guide "Private Collection Briefing"), a known
+// one gets a timeline note — and no LOST → NEW, reading a PDF is no enquiry.
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +22,7 @@ import { sendEmail } from "@/lib/sendEmail";
 import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { findDuplicateLead } from "@/lib/crm/createLead";
 import { emailKey } from "@/lib/crm/leadIdentity";
-import { parsePcLead, pcTelegram, pcTimelineBody } from "@/lib/privateCollectionLead";
+import { parsePcLead, pcTelegram, pcTimelineBody, PC_BRIEFING_TITLE } from "@/lib/privateCollectionLead";
 
 export const dynamic = "force-dynamic";
 const ACTOR = "Private Collection site";
@@ -36,6 +40,8 @@ export async function POST(req: NextRequest) {
   const parsed = parsePcLead(await req.json().catch(() => null));
   if (!parsed.ok) return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
   const { lead: l, raw } = parsed;
+  const briefing = l.kind === "briefing";
+  const subject = briefing ? "Private Collection briefing download" : "Private Collection enquiry";
 
   let result: { id: string; outcome: "CREATED" | "ATTACHED"; priorStatus: string | null };
   try {
@@ -45,20 +51,42 @@ export async function POST(req: NextRequest) {
       const dup = await findDuplicateLead(l.email, l.phone);
       const occurredAt = new Date();
       if (dup) {
-        if (dup.status === "LOST") {
+        if (dup.status === "LOST" && !briefing) {
           await tx.lead.update({ where: { id: dup.id }, data: { status: "NEW", lostReason: null } });
           await tx.leadInteraction.create({
             data: { leadId: dup.id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "private_collection" } },
           });
         }
+        // A briefing reader who then sends the enquiry is a buyer now: the guide
+        // lead moves out of the Guide Leads list and gets the enquiry's answers
+        // where it had none.
+        if (!briefing) {
+          const cur = await tx.lead.findUnique({ where: { id: dup.id }, select: { source: true, lastName: true, phone: true, budgetMin: true, budgetMax: true, preferredChannel: true } });
+          if (cur?.source === "GUIDE_DOWNLOAD") {
+            const noBudget = cur.budgetMin == null && cur.budgetMax == null;
+            await tx.lead.update({
+              where: { id: dup.id },
+              data: {
+                source: "PRIVATE_COLLECTION",
+                ...(!cur.lastName && l.lastName ? { lastName: l.lastName } : {}),
+                ...(!cur.phone && l.phone ? { phone: l.phone } : {}),
+                ...(noBudget ? { budgetMin: l.budgetMin, budgetMax: l.budgetMax } : {}),
+                ...(!cur.preferredChannel && l.preferredChannel ? { preferredChannel: l.preferredChannel } : {}),
+              },
+            });
+            await tx.leadInteraction.create({
+              data: { leadId: dup.id, type: "SYSTEM", channel: "SYSTEM", body: "Source Guide download → Private Collection (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "GUIDE_DOWNLOAD", to: "PRIVATE_COLLECTION", source: "private_collection" } },
+            });
+          }
+        }
         await tx.leadInteraction.create({
-          data: { leadId: dup.id, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", subject: "Private Collection enquiry", body: pcTimelineBody(l, raw, "ATTACHED"), occurredAt, createdByName: ACTOR, metadata: { source: "private_collection", answers: raw, matchedOn: dup.matchedOn } },
+          data: { leadId: dup.id, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", subject, body: pcTimelineBody(l, raw, "ATTACHED"), occurredAt, createdByName: ACTOR, metadata: { source: "private_collection", kind: l.kind, answers: raw, matchedOn: dup.matchedOn } },
         });
         return { id: dup.id, outcome: "ATTACHED" as const, priorStatus: dup.status };
       }
       const created = await tx.lead.create({
         data: {
-          source: "PRIVATE_COLLECTION",
+          source: briefing ? "GUIDE_DOWNLOAD" : "PRIVATE_COLLECTION",
           status: "NEW",
           firstName: l.firstName,
           lastName: l.lastName,
@@ -69,14 +97,17 @@ export async function POST(req: NextRequest) {
           budgetMin: l.budgetMin,
           budgetMax: l.budgetMax,
           preferredChannel: l.preferredChannel,
-          message: [l.purpose ? `Purpose: ${l.purpose}` : null, l.message].filter(Boolean).join("\n\n") || null,
+          message: briefing
+            ? `[Guide] ${PC_BRIEFING_TITLE} (${(l.languagePreference ?? "en").toUpperCase()})`
+            : [l.purpose ? `Purpose: ${l.purpose}` : null, l.message].filter(Boolean).join("\n\n") || null,
+          ...(briefing ? { notes: "Lead magnet: private-collection-briefing", guideTitle: PC_BRIEFING_TITLE, guideLanguage: l.languagePreference ?? "en" } : {}),
           pageSource: "private.cyprusvipestates.com",
         },
         select: { id: true },
       });
-      await tx.leadActivity.create({ data: { leadId: created.id, type: "INBOUND", content: "Lead received via the Private Collection enquiry form", createdBy: ACTOR } });
+      await tx.leadActivity.create({ data: { leadId: created.id, type: "INBOUND", content: briefing ? "Lead received via the Private Collection briefing download" : "Lead received via the Private Collection enquiry form", createdBy: ACTOR } });
       await tx.leadInteraction.create({
-        data: { leadId: created.id, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", subject: "Private Collection enquiry", body: pcTimelineBody(l, raw, "CREATED"), occurredAt, createdByName: ACTOR, metadata: { source: "private_collection", answers: raw } },
+        data: { leadId: created.id, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", subject, body: pcTimelineBody(l, raw, "CREATED"), occurredAt, createdByName: ACTOR, metadata: { source: "private_collection", kind: l.kind, answers: raw } },
       });
       return { id: created.id, outcome: "CREATED" as const, priorStatus: null };
     });
@@ -88,16 +119,17 @@ export async function POST(req: NextRequest) {
   // Notifications — the lead is safe in the CRM from here on, so none of these
   // may turn the answer into a failure (the caller would send a duplicate notice).
   const crmLink = `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${result.id}`;
-  const tg = pcTelegram(l, { outcome: result.outcome, crmLink, priorStatus: result.priorStatus });
+  const tg = pcTelegram(l, { outcome: result.outcome, crmLink, leadId: result.id, priorStatus: result.priorStatus });
+  const mailBody = pcTelegram(l, { outcome: result.outcome, crmLink, leadId: result.id, priorStatus: result.priorStatus, withContact: true });
   const name = `${l.firstName} ${l.lastName}`.trim();
   try {
     if (await sendTelegramMessage(tg)) await prisma.lead.update({ where: { id: result.id }, data: { telegramNotified: true } }).catch(() => {});
   } catch (e) { console.error("private-collection-lead: telegram failed", e); }
   try {
     await sendEmail({
-      subject: result.outcome === "CREATED" ? `New Private Collection enquiry: ${name}` : `Private Collection enquiry (existing lead): ${name}`,
-      text: tg.replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
-      html: tg.split("\n").join("<br/>\n"),
+      subject: result.outcome === "CREATED" ? `New ${subject}: ${name}` : `${subject} (existing lead): ${name}`,
+      text: mailBody.replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
+      html: mailBody.split("\n").join("<br/>\n"),
       replyTo: l.email,
     });
     if (result.outcome === "CREATED") await prisma.lead.update({ where: { id: result.id }, data: { emailNotified: true } }).catch(() => {});

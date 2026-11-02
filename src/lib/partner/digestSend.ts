@@ -12,6 +12,7 @@ import { pickPartnerLocale } from "./i18n";
 import { emailThemeForPartner } from "@/lib/design/store";
 import { partnerBaseUrl } from "./mail";
 import { TRANSPORT_BREAKER, truncateError } from "./notify";
+import { clientRef } from "@/lib/chatPrivacy";
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { inQuietHours, quietWindow } from "./notifyPrefs";
 import { myCommissions, myRecentMilestones, projectRates, recentlyPublishedProjects, type PublishedProjects } from "./scope";
@@ -181,7 +182,7 @@ export async function sendWeeklyDigests(now: Date, start: Date, limit = 200): Pr
       const shares = { handoverShare: Number(p.handoverShare), fixShare: Number(p.fixShare), trustMode: false };
       const publishedAt = new Map(published.rows.map((r) => [r.id, r.publishedAt]));
       const content = digestContent({
-        updates: milestones.map((m) => ({ clientName: m.name, key: m.key, at: m.at })),
+        updates: milestones.map((m) => ({ clientName: m.name, clientRef: clientRef(m.claimId), key: m.key, at: m.at })),
         totals: digestTotals(commissions.totals),
         newProjects: projectRates(published.rows, published.rates, shares).map((pr) => ({
           name: pr.name, town: pr.town, handoverRate: pr.handoverRate, url: newProjectUrl(locale, pr.slug!),

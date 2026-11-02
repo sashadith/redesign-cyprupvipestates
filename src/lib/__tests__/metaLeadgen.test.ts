@@ -124,7 +124,7 @@ test("sinceHours: default 48, capped at 90 days, junk → default", () => {
 
 test("telegram text: new lead, below threshold, duplicate, placeholder", () => {
   const base = {
-    outcome: "CREATED" as const, language: "en" as const, name: "Richard Benjamin", email: "richard@manchesterdrinks.com", phone: "+447961182628",
+    outcome: "CREATED" as const, language: "en" as const,
     budget: "2-3" as const, preferredChannel: "WHATSAPP" as const, campaignName: "UK Leads", formName: "CVE PC Briefing EN v2",
     placeholderReason: null, unmatchedCount: 0, leadId: "abc",
   };
@@ -137,7 +137,8 @@ test("telegram text: new lead, below threshold, duplicate, placeholder", () => {
   assert.match(buildLeadMessage({ ...base, budget: "<2" }), /below Private Collection threshold/);
   assert.match(buildLeadMessage({ ...base, outcome: "ATTACHED", language: "de", campaignName: "CVE Private Collection — DE Leads (Instant Form)" }), /Existing lead submitted the form again \(DACH\)/);
   assert.match(buildLeadMessage({ ...base, placeholderReason: "x" }), /phone looks like a placeholder/);
-  assert.match(buildLeadMessage({ ...base, name: "<b>x</b>" }), /&lt;b&gt;x/);
+  assert.match(buildLeadMessage({ ...base, campaignName: "<b>x</b>" }), /&lt;b&gt;x/);
+  assert.match(t, /Lead #abc/, "a reference, not the name (chatPrivacy.ts)");
 });
 
 /* 2026-10-12, first live run: Meta named the contact fields after the form's

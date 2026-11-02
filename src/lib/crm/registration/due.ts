@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { nicosiaDayStart } from "@/lib/openwa/sendGuards";
 import { devLabel, isRegistrable, type RegChannel, type RegStatus } from "./core";
+import { leadRef } from "@/lib/chatPrivacy";
 
 // "Registrations due" (2026-10-28): every developer whose projects went to the
 // client in a personal selection must be registered by our team — also when a
@@ -122,7 +123,7 @@ export function dueTelegram(groups: DueLeadGroup[], now: Date, siteUrl: string):
     const names = g.pairs.map((p) => devLabel(p.developerName));
     const devs = names.slice(0, DEVS_PER_LINE).map(esc).join(", ") + (names.length > DEVS_PER_LINE ? ` <i>+${names.length - DEVS_PER_LINE} more</i>` : "");
     const meta = [g.ownerName ? esc(g.ownerName) : null, `sent ${ago(new Date(sinceOf(g)), now)}`].filter(Boolean).join(" · ");
-    out.push("", `👤 <b><a href="${siteUrl}/crm/leads/${g.leadId}">${esc(g.leadName)}</a></b> · <i>${meta}</i>`, `🏗 ${devs}`);
+    out.push("", `👤 <b><a href="${siteUrl}/crm/leads/${g.leadId}">${esc(leadRef(g.leadId))}</a></b> · <i>${meta}</i>`, `🏗 ${devs}`);
   }
   if (n > shown.length) out.push("", `<i>and ${n - shown.length} more client${n - shown.length === 1 ? "" : "s"}</i>`);
   out.push("", `<a href="${siteUrl}/crm/today">Open Today in the CRM</a>`);

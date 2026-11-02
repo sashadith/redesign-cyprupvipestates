@@ -15,6 +15,10 @@ export type ActionItem = {
   severity: Severity;
   category: Category;
   title: string;
+  // The same title with the client's name replaced by a reference, for the
+  // Telegram/e-mail digest (chatPrivacy.ts). Set by every rule whose title
+  // names a client; the digest falls back to `title` for everything else.
+  chatTitle?: string;
   description: string;
   deepLink: string;
   // When the underlying condition became true (or best-effort proxy where the
