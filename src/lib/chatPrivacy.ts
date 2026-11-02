@@ -24,6 +24,13 @@ export function partnerRef(p: { id: string; company?: string | null }): string {
   return p.company?.trim() || `Partner #${p.id.replace(/-/g, "").slice(0, 6)}`;
 }
 
+/** "#3f9a2c" — a partner's client in the partner bot's Telegram texts
+ *  (2026-11-02, operator: "nur Nummer"): the first six hex digits of the
+ *  claim id. The partner portal shows the same number next to the name. */
+export function clientRef(claimId: string): string {
+  return `#${claimId.replace(/-/g, "").slice(0, 6)}`;
+}
+
 /** Last line of defence for free text that reaches a chat (the MCP
  *  notify_owner_telegram tool, whose text an AI writes): e-mail addresses and
  *  phone numbers (a "+" number, or nine or more digits

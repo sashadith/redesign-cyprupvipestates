@@ -12,7 +12,7 @@ test("maps every form option onto our fields", () => {
   if (!r.ok) return;
   assert.deepEqual(
     { ...r.lead },
-    { firstName: "Anna", lastName: "Müller", email: "anna@example.com", phone: "+49 170 1234567", languagePreference: "de", budgetKey: "3-5m", budgetMin: 3_000_000, budgetMax: 5_000_000, purpose: "Investment", preferredChannel: "WHATSAPP", message: "Bitte <Rückruf> & Unterlagen" },
+    { kind: "consultation", firstName: "Anna", lastName: "Müller", email: "anna@example.com", phone: "+49 170 1234567", languagePreference: "de", budgetKey: "3-5m", budgetMin: 3_000_000, budgetMax: 5_000_000, purpose: "Investment", preferredChannel: "WHATSAPP", message: "Bitte <Rückruf> & Unterlagen" },
   );
 });
 
@@ -59,4 +59,29 @@ test("the Telegram text names no one, escapes user input and links the CRM", () 
   assert.ok(mail.includes(r.lead.email));
   assert.match(mail, /Bitte &lt;Rückruf&gt; &amp; Unterlagen/);
   assert.match(pcTelegram(r.lead, { outcome: "ATTACHED", crmLink: "x", leadId: "L", priorStatus: "CONTACTED" }), /Existing lead[\s\S]*status is CONTACTED/);
+});
+
+test("a briefing download (2026-11-02) is its own kind: guide-lead texts, no name in the chat", () => {
+  const r = parsePcLead({ type: "briefing", source: "briefing", locale: "de", firstName: "Annabel", email: "Annabel.K@example.com" });
+  if (!r.ok) throw new Error("parse");
+  assert.equal(r.lead.kind, "briefing");
+  const chat = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x/admin/crm/3f9a2c11", leadId: "3f9a2c11-1" });
+  assert.match(chat, /briefing download/);
+  assert.match(chat, /Lead #3f9a2c/);
+  assert.match(chat, /Language: de/);
+  assert.ok(!chat.includes("Annabel") && !chat.includes("example.com"), chat);
+  const mail = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "x", leadId: "3f9a2c11-1", withContact: true });
+  assert.ok(mail.includes("Annabel") && mail.includes("annabel.k@example.com"), mail);
+  assert.match(pcTimelineBody(r.lead, r.raw, "ATTACHED"), /^Existing lead downloaded the Private Collection briefing\.\nLanguage: de$/);
+
+  const consultation = parsePcLead({ locale: "en", firstName: "A", email: "a@b.cy" });
+  assert.equal(consultation.ok && consultation.lead.kind, "consultation");
+});
+
+test("the webhook files a briefing as a guide lead and never reopens a LOST lead for it", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync("src/app/api/webhooks/private-collection-lead/route.ts", "utf8");
+  assert.ok(src.includes(`source: briefing ? "GUIDE_DOWNLOAD" : "PRIVATE_COLLECTION"`));
+  assert.ok(src.includes(`guideTitle: PC_BRIEFING_TITLE`));
+  assert.ok(src.includes(`if (dup.status === "LOST" && !briefing)`));
 });

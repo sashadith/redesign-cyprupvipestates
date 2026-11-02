@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { leadRef, partnerRef, redactContactDetails } from "@/lib/chatPrivacy";
+import { clientRef, leadRef, partnerRef, redactContactDetails } from "@/lib/chatPrivacy";
+import { buildDigestTelegram } from "@/lib/partner/digest";
 import { buildInboundLeadTelegramMessage } from "@/lib/leadNotify";
 import { parsePcLead, pcTelegram } from "@/lib/privateCollectionLead";
 import { buildLeadMessage } from "@/lib/metaLeadgen/notify";
@@ -33,6 +34,7 @@ test("leadRef / partnerRef: a short pseudonymous label", () => {
   assert.equal(leadRef(LEAD_ID), "Lead #3f9a2c");
   assert.equal(partnerRef({ id: LEAD_ID, company: " Acme Realty " }), "Acme Realty");
   assert.equal(partnerRef({ id: LEAD_ID, company: null }), "Partner #3f9a2c");
+  assert.equal(clientRef(LEAD_ID), "#3f9a2c");
 });
 
 test("redactContactDetails removes e-mail addresses and phone numbers, keeps dates, prices and links", () => {
@@ -120,4 +122,25 @@ test("every CRM action item that names a client also has a chatTitle without the
   const chatTitles = src.split("\n").filter((l) => /^\s*chatTitle: `.*leadRef\(/.test(l)).length;
   assert.ok(titles > 0);
   assert.equal(chatTitles, titles, "a title with a client name lacks its chatTitle twin");
+});
+
+/* The partner bot (2026-11-02, operator: "nur Nummer"): a partner's Telegram
+   names the client "#3f9a2c" — the portal shows the same number next to the
+   name — and a message from the team stays in the portal and the e-mail. */
+test("partner bot: the weekly summary on Telegram names clients by reference, the e-mail by name", () => {
+  const html = buildDigestTelegram("de", {
+    portalUrl: "https://partner.example/home",
+    content: { updates: [{ clientName: "Annabel Kowalczyk", clientRef: "#3f9a2c", key: "stages.viewing", at: new Date("2026-11-01T10:00:00Z") }], totals: { expected: 0, earned: 0, developerPaid: 0, paidOut: 0 }, newProjects: [] },
+  })!;
+  assert.ok(html.includes("#3f9a2c") && !html.includes("Annabel"), html);
+});
+
+test("partner bot: every Telegram text builder takes a reference, none a name or a message body", () => {
+  for (const f of ["src/lib/partner/telegram.ts", "src/lib/partner/telegramMenu.ts"]) {
+    const src = read(f);
+    assert.ok(!/clientName|messageBody|\bc\.name\b|\bd\.name\b/.test(src.replace(/\/\/.*$/gm, "")), `${f} still reads a client name or message`);
+  }
+  const hook = read("src/lib/partner/telegramWebhook.ts");
+  assert.equal((hook.match(/ref: clientRef\(c\.id\)/g) ?? []).length, 3, "status, client list and client screen use the reference");
+  assert.ok(read("src/lib/partner/digestSend.ts").includes("clientRef: clientRef(m.claimId)"));
 });

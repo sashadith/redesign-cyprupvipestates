@@ -118,7 +118,7 @@ export function overviewScreen(l: PartnerLocale, d: OverviewData): MenuScreen {
   return { html: lines.join("\n"), keyboard: [[btn(t.clients, "c:1"), btn(t.commission, "k")]] };
 }
 
-export type ClientsData = { items: { id: string; name: string; stageKey: string }[]; page: number; pages: number; more: boolean };
+export type ClientsData = { items: { id: string; ref: string; stageKey: string }[]; page: number; pages: number; more: boolean };
 
 const stageOf = (l: PartnerLocale, key: string) => lookup(l, key) ?? lookup(l, "stages.onHold")!;
 const clip = (s: string, n: number) => (Array.from(s).length > n ? `${Array.from(s).slice(0, n - 1).join("")}…` : s);
@@ -135,15 +135,15 @@ export function clientsScreen(l: PartnerLocale, d: ClientsData): MenuScreen {
   return {
     html: lines.join("\n"),
     keyboard: [
-      ...d.items.map((c) => [btn(`${clip(c.name.trim() || "—", 28)} · ${clip(stageOf(l, c.stageKey), 22)}`, `cl:${c.id}`)]),
+      ...d.items.map((c) => [btn(`${clip(c.ref, 28)} · ${clip(stageOf(l, c.stageKey), 22)}`, `cl:${c.id}`)]),
       ...(nav.length ? [nav] : []),
     ],
   };
 }
 
-export function clientScreen(l: PartnerLocale, d: { name: string; stageKey: string; protectedUntil: string | null; url: string }): MenuScreen {
+export function clientScreen(l: PartnerLocale, d: { ref: string; stageKey: string; protectedUntil: string | null; url: string }): MenuScreen {
   const t = M(l);
-  const lines = [`<b>${esc(d.name.trim() || "—")}</b>`, esc(stageOf(l, d.stageKey))];
+  const lines = [`<b>${esc(d.ref)}</b>`, esc(stageOf(l, d.stageKey))];
   if (d.protectedUntil) lines.push(esc(fmt(t.protectedUntil, { date: d.protectedUntil })));
   return {
     html: lines.join("\n"),

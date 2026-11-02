@@ -1,7 +1,8 @@
 // Partner Telegram bot (partner portal phase 3e). Pure, no I/O: command parsing, link codes, channel
 // routing, reply and notification texts, chat rate limit. The Bot API calls live in telegramApi.ts.
 // Every outgoing text is Telegram HTML (parse_mode HTML): only <b>, <i> and <a href> are emitted, and
-// every dynamic value is HTML-escaped. Texts carry only what the portal shows the partner.
+// every dynamic value is HTML-escaped. Texts carry only what the portal shows the partner, and never a
+// client's name or a message text: a client is "#3f9a2c" (chatPrivacy.ts clientRef, 2026-11-02).
 import { randomInt } from "node:crypto";
 import { dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { escapeHtml } from "./mail";
@@ -109,8 +110,8 @@ const text = (v: string | null | undefined, max: number) => {
 export type BotReplyKind = "linked" | "invalidCode" | "unlinked" | "notLinked" | "help" | "status" | "commission" | "rateLimited";
 export type BotReplyData = {
   portalUrl?: string;
-  /** Effectively active clients: the name the partner submitted and a partner-dictionary stage key. */
-  clients?: { name: string; stageKey: string }[];
+  /** Effectively active clients: the reference (clientRef) and a partner-dictionary stage key. */
+  clients?: { ref: string; stageKey: string }[];
   /** Clients beyond the list (the caller loads at most 10). */
   more?: number;
   /** Commission totals per stage (COMMISSION_STAGES key) with a pre-formatted amount. */
@@ -148,7 +149,7 @@ export function buildBotReply(locale: PartnerLocale, reply: { kind: BotReplyKind
       const shown = clients.slice(0, STATUS_LIST_MAX);
       const more = Math.max(0, data.more ?? 0) + (clients.length - shown.length);
       const stageOf = (k: string) => lookup(locale, k) ?? lookup(locale, "stages.onHold")!;
-      const lines = [`<b>${esc(t.statusTitle)}</b>`, ...shown.map((c) => `• ${text(c.name, 80)} — ${esc(stageOf(c.stageKey))}`)];
+      const lines = [`<b>${esc(t.statusTitle)}</b>`, ...shown.map((c) => `• ${text(c.ref, 80)} — ${esc(stageOf(c.stageKey))}`)];
       if (more > 0) lines.push(esc(fmt(t.statusMore, { n: more })));
       return lines.join("\n") + portalLink("/clients");
     }
@@ -175,9 +176,9 @@ function unhandledReply(kind: never): never {
 
 export type TelegramNotificationInput = {
   kind: NotificationKind;
-  clientName?: string | null;
+  /** The client as "#3f9a2c" (clientRef) — never the name. */
+  clientRef?: string | null;
   stageKey?: string | null;
-  messageBody?: string | null;
   accepted?: boolean;
   /** Pre-formatted amount (formatPayoutAmount). */
   amount?: string | null;
@@ -207,7 +208,7 @@ export type TelegramNotificationInput = {
 export function buildTelegramNotification(locale: PartnerLocale, input: TelegramNotificationInput): string {
   const d = dict(locale).telegram;
   const t = d.notify;
-  const client = text(input.clientName, 120);
+  const client = text(input.clientRef, 120);
   // Escaped values are substituted into escaped templates (dictionary text has no markup).
   const line = (tpl: string, vars: Record<string, string> = {}) => fmt(esc(tpl), vars);
   const open = link(input.url, t.open);
@@ -219,14 +220,10 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
       out = `<b>${line(t.stage, { client, stage: esc(stage) })}</b>${extra.length ? `\n${extra.join("\n")}` : ""}\n\n${open}`;
       break;
     }
-    case "MESSAGE": {
-      const head = `<b>${line(t.message, { client })}</b>\n\n`;
-      const tail = `\n\n${open}`;
-      const budget = TELEGRAM_MAX_CHARS - head.length - tail.length - "<i></i>".length;
-      const body = (input.messageBody ?? "").trim();
-      out = head + (body && budget > 1 ? `<i>${clipEscaped(body, budget)}</i>` : "") + tail;
+    case "MESSAGE":
+      // The message itself stays in the portal (and the e-mail): it is about the client.
+      out = `<b>${line(t.message, { client })}</b>\n\n${open}`;
       break;
-    }
     case "CLAIM_OUTCOME":
       out = `<b>${line(input.accepted ? t.claimAccepted : t.claimRejected, { client })}</b>\n\n${open}`;
       break;
