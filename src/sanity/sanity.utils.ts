@@ -1011,6 +1011,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
       category: b.category ? { _id: b.category.sanityId, _type: "category", title: b.category.title, slug: slugObj(b.category), language: b.category.language } : null,
       slug: slugObj(b), publishedAt: b.publishedAt?.toISOString?.() ?? null, previewImage: D(b.previewImage),
       // Blog posts live at /[lang]/blog/<slug> in their own language, guides at /[lang]/guides/<slug>.
+      section: articleSection(b.language, b.category?.translationGroupId),
       href: articleHref(b.language, b.slug, b.category?.translationGroupId),
     }));
     // Singlepages live at their canonical (possibly nested) path — NOT under /blog. Resolve the

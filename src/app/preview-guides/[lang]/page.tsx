@@ -5,7 +5,7 @@ import type { Translation } from "@/types/homepage";
 import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Form from "../../preview-home/sections/Form";
-import { getBlogPostsByLangWithPagination, getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
+import { getBlogPostsByLangWithPagination, getFormStandardDocumentByLang, getTotalBlogPostsByLang } from "@/sanity/sanity.utils";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { GUIDE_CATEGORY_GROUPS, articleHref, sectionSegments } from "@/lib/articleSections";
@@ -34,7 +34,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
   // Not a guide language (a direct hit on /preview-guides/xx): the layout redirects, no metadata to build.
   if (!isGuideLang(lang)) return {};
-  const t = guidesPageCopy(lang);
+  // A language with no guide articles yet keeps the page as it was: free PDF guides only.
+  const t = guidesPageCopy(lang, (await getTotalBlogPostsByLang(lang, "guides")) > 0);
   const { canonical, languages } = languageAlternates({
     lang,
     slug: GUIDES_PAGE_SLUG[lang],
@@ -61,7 +62,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function GuidesPage({ params }: Props) {
   const { lang } = params;
-  const t = guidesPageCopy(lang);
   const ui = GUIDE_UI[lang];
   const form = await getFormStandardDocumentByLang(lang);
 
@@ -83,11 +83,8 @@ export default async function GuidesPage({ params }: Props) {
     title: byGroup.get(g)![0].category.title as string,
     items: byGroup.get(g)!,
   }));
+  const t = guidesPageCopy(lang, articles.length > 0);
   const sec = guidesSectionStrings(lang);
-  const dateFmt = (d?: string) => {
-    const dt = d ? new Date(d) : null;
-    return dt && !isNaN(dt.getTime()) ? dt.toLocaleDateString(sec.dateLocale, { day: "numeric", month: "long", year: "numeric" }) : "";
-  };
   const imgUrl = (img: unknown) => {
     try {
       return urlFor(img as never).url();
@@ -170,8 +167,8 @@ export default async function GuidesPage({ params }: Props) {
                           <div className="icard__body">
                             <h4 className="icard__title">{a.title}</h4>
                             {a.excerpt && <p className="icard__excerpt">{a.excerpt}</p>}
+                            {/* No date on a guide card: guides carry no dates. */}
                             <div className="icard__foot">
-                              <time className="icard__date">{dateFmt(a.publishedAt)}</time>
                               <span className="icard__more">{sec.read}</span>
                             </div>
                           </div>

@@ -380,7 +380,8 @@ export const ArticleView = async ({ params }: Props) => {
                 <span className="iart__meta-dot">
                   {lang === "he" && minutes === 1 ? "דקת קריאה אחת" : <>{minutes} {t.minRead}</>}
                 </span>
-                {fmtDate(blog.publishedAt) && <span className="iart__meta-dot">{fmtDate(blog.publishedAt)}</span>}
+                {/* Guides carry no dates: they are kept current, not dated. (Blog articles show theirs.) */}
+                {section !== "guides" && fmtDate(blog.publishedAt) && <span className="iart__meta-dot">{fmtDate(blog.publishedAt)}</span>}
               </div>
             </div>
           </header>
@@ -478,7 +479,7 @@ export const ArticleView = async ({ params }: Props) => {
                     <div className="icard__body">
                       <h3 className="icard__title">{a.title}</h3>
                       <div className="icard__foot">
-                        <span className="icard__date">{fmtDate(a.publishedAt)}</span>
+                        <span className="icard__date">{a.section === "guides" ? "" : fmtDate(a.publishedAt)}</span>
                         <span className="icard__more">{t.read}</span>
                       </div>
                     </div>

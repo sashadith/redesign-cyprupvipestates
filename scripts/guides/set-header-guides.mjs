@@ -2,10 +2,9 @@
 // Usage: node scripts/guides/set-header-guides.mjs <backup.json>                     (dry run: prints what would change)
 //        node scripts/guides/set-header-guides.mjs <backup.json> --apply             (backs up the four header documents, then writes)
 // The menu lives in the database (SiteDocument type "header"); links are stored WITHOUT a language prefix (the header adds it),
-// so the link is the language's own guides slug (src/lib/guidesPage.ts). Effects, per language:
-//   1. a top-level "Guides" entry right after "Projects" (before the blog entry);
-//   2. the "PDF guides" item of the About-us submenu (scripts/guides/add-header-link.mjs) is removed: the free PDF guides now
-//      sit on the guides page itself, so the submenu entry would point at the same page twice.
+// so the link is the language's own guides slug (src/lib/guidesPage.ts). Adds, per language, a top-level "Guides" entry right
+// after "Projects" (before the blog entry). The blog entry is not renamed and the "PDF guides" item of the About-us submenu
+// (scripts/guides/add-header-link.mjs) stays as it is.
 // Idempotent. The owner can reorder or rename the entries in the admin.
 import fs from "fs";
 
@@ -32,9 +31,7 @@ for (const [lang, item] of Object.entries(ITEMS)) {
   if (!doc) { console.log(lang, "no header document, skipped"); continue; }
   let links = Array.isArray(doc.data?.navLinks) ? doc.data.navLinks : [];
   saved[lang] = { id: doc.id, data: doc.data };
-  // 2. drop the PDF item from every submenu
-  links = links.map((l) => (Array.isArray(l.subLinks) ? { ...l, subLinks: l.subLinks.filter((s) => s.link !== item.link) } : l));
-  // 1. the top-level entry, after "Projects" (a stale copy elsewhere is replaced)
+  // The top-level entry, after "Projects" (a stale top-level copy is replaced; the About-us submenu item is untouched).
   links = links.filter((l) => l.link !== item.link);
   const at = links.findIndex((l) => l.link === "/projects");
   links.splice(at >= 0 ? at + 1 : 0, 0, { _key: Math.random().toString(16).slice(2, 14), link: item.link, label: item.label });
