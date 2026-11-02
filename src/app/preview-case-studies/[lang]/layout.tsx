@@ -15,6 +15,7 @@ import "@/app/rtl.css"; // direction- and script-aware base rules shared by ever
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
 import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
+import SiteConsent from "@/app/components/SiteConsent/SiteConsent"; // banner + consent-gated tags; this tree does not inherit [lang]/layout.tsx
 
 /* Case Studies — redesigned. Reuses the homepage design tokens AND the
    Insights index's own stylesheet directly (not re-approximated values) —
@@ -72,6 +73,7 @@ export default async function CaseStudiesLayout({
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>
+        <SiteConsent lang={params.lang} />
       </body>
     </html>
   );
