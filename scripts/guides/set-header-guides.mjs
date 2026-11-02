@@ -1,8 +1,6 @@
 // Puts the guides section into the main menu of en/de/pl/ru (Hebrew has no guides section).
 // Usage: node scripts/guides/set-header-guides.mjs <backup.json>                     (dry run: prints what would change)
 //        node scripts/guides/set-header-guides.mjs <backup.json> --apply             (backs up the four header documents, then writes)
-//        add --rename-blog to rename the blog entry where it reads like a guide: Russian "Гид по Кипру" -> "Блог", Polish "Przewodnik po Cyprze" -> "Blog"
-//        (next to the new "Гиды" / "Przewodniki" entry they would be confusing).
 // The menu lives in the database (SiteDocument type "header"); links are stored WITHOUT a language prefix (the header adds it),
 // so the link is the language's own guides slug (src/lib/guidesPage.ts). Effects, per language:
 //   1. a top-level "Guides" entry right after "Projects" (before the blog entry);
@@ -23,10 +21,8 @@ const ITEMS = {
 };
 
 const [backup, ...flags] = process.argv.slice(2);
-if (!backup) { console.error("usage: set-header-guides.mjs <backup.json> [--apply] [--rename-blog]"); process.exit(2); }
+if (!backup) { console.error("usage: set-header-guides.mjs <backup.json> [--apply]"); process.exit(2); }
 const apply = flags.includes("--apply");
-const renameBlog = flags.includes("--rename-blog");
-const BLOG_LABEL = { ru: "Блог", pl: "Blog" };
 const { PrismaClient } = await import("@prisma/client");
 const prisma = new PrismaClient();
 const saved = {};
@@ -42,7 +38,6 @@ for (const [lang, item] of Object.entries(ITEMS)) {
   links = links.filter((l) => l.link !== item.link);
   const at = links.findIndex((l) => l.link === "/projects");
   links.splice(at >= 0 ? at + 1 : 0, 0, { _key: Math.random().toString(16).slice(2, 14), link: item.link, label: item.label });
-  if (renameBlog && BLOG_LABEL[lang]) links = links.map((l) => (l.link === "/blog" ? { ...l, label: BLOG_LABEL[lang] } : l));
   plan.push({ lang, id: doc.id, data: { ...doc.data, navLinks: links }, summary: links.map((l) => l.label).join(" | ") });
 }
 for (const p of plan) console.log(`${p.lang}: ${p.summary}`);

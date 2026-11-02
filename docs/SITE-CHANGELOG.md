@@ -695,16 +695,20 @@ property-type router links, which `@portabletext/react` surfaced immediately as 
 type" console errors on a local preview — fixed and reverified (console clean, all 4 links present
 and correctly hrefed) before this was written up.
 
-## 2026-11-02 — Guides section (articles move from `/blog` to the guides URLs)
+## 2026-11-02 — Guides section (a few evergreen articles move from `/blog` to the guides URLs)
 
 Branch `feat/guides-section`; takes effect on the day it is deployed, so re-date this entry then.
-Articles whose category is one of the five guide categories (Buying property, Legal & tax, Life in Cyprus,
-Locations & area guides, Lifestyle & expat tips; `src/lib/articleSections.ts`) now live under each language's
-guides slug: `/guides/<slug>`, `/de/ratgeber/<slug>`, `/pl/poradniki/<slug>`, `/ru/gajdy/<slug>` (the slugs the
-free-PDF guides page already had; that page is now the section index and also lists every guide article). The
-old `/blog/<slug>` URL of each of these ~300 articles answers with a permanent redirect (308) to the new one.
-The blog keeps the other categories (market trends, featured properties, developer projects: 10-15 articles per
-language). Hebrew is untouched. Titles, meta, content and the translation links are unchanged; canonical,
-hreflang, the sitemap (`/sitemaps/blog`) and the article JSON-LD follow the new URLs. Expect `/blog/...`
-impressions to move to the new URLs over a few weeks and the "Page with redirect" count in Search Console
-to rise by about 300; that is this change, not a ranking problem.
+A new section "Guides" (`/guides`, `/de/ratgeber`, `/pl/poradniki`, `/ru/gajdy`: the slugs the free-PDF guides page
+already had; that page is now the section index and lists every guide article). An article is in the section when its
+category is one of four dedicated guide categories (buying, tax & legal, visa & residence, life;
+`src/lib/guideCategories.json`), so moving an article is changing its category in the admin. The blog is not renamed
+and keeps everything else.
+First move (`scripts/guides/move-articles-to-guides.mjs`, list in `scripts/guides/moved-articles.json`): 18
+article groups (how to buy, cost of buying, VAT, taxes on property, title deed, buying remotely, mortgages, tax
+residency, selling, permanent residency, Category 6.2, residency for non-EU citizens, digital nomad, immigrating,
+cost of living, health insurance, moving with children), 69 rows in en/de/pl/ru. The old `/blog/<slug>` URL of each
+answers with a permanent redirect (308) to the new one. All new RU guides (visas, relocation, taxes, Belarus) are
+created in the section. Titles, meta, content and the translation links are unchanged; canonical, hreflang, the
+sitemap (`/sitemaps/blog`) and the article JSON-LD follow the new URLs. Hebrew is untouched. Expect the moved
+`/blog/...` URLs to show up under "Page with redirect" in Search Console and their impressions to move to the new
+URLs over a few weeks; that is this change, not a ranking problem.

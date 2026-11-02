@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import {
   ALL_GUIDES_SLUGS,
   GUIDE_CATEGORY_GROUPS,
@@ -15,8 +17,8 @@ import { GUIDES_PAGE_SLUG } from "@/lib/guidesPage";
 import { languageAlternates, pathBuilders } from "@/lib/seo";
 import { groupArticles, localeUrls, type ArticleRow } from "@/lib/blog/articleUrls";
 
-const LIFE = "0cb25ffc-8e3f-4e89-b663-b6d73d949ec0"; // life-in-cyprus: a guide category
-const TRENDS = "625ee4d3-a718-40d7-b1a9-3814b059b5bf"; // investment-and-market-trends: stays in the blog
+const LIFE = "c5d12d7a-e55a-4b8a-b888-c5bcca2061a2"; // "life" guide category
+const TRENDS = "625ee4d3-a718-40d7-b1a9-3814b059b5bf"; // investment-and-market-trends: an ordinary blog category
 
 test("the guides slug of each language is the one the free-guides page already uses", () => {
   assert.equal(guidesSectionSlug("en"), "guides");
@@ -24,6 +26,22 @@ test("the guides slug of each language is the one the free-guides page already u
   assert.equal(guidesSectionSlug("pl"), "poradniki");
   assert.equal(guidesSectionSlug("ru"), "gajdy");
   assert.deepEqual([...ALL_GUIDES_SLUGS].sort(), Object.values(GUIDES_PAGE_SLUG).sort());
+});
+
+test("the guide categories are four, each in all four languages with distinct slugs and ids", () => {
+  const cats = JSON.parse(fs.readFileSync(path.join(process.cwd(), "src/lib/guideCategories.json"), "utf8"));
+  assert.equal(cats.length, 4);
+  assert.deepEqual(cats.map((c: any) => c.group), [...GUIDE_CATEGORY_GROUPS]);
+  assert.equal(new Set(cats.map((c: any) => c.group)).size, 4);
+  for (const lang of ["en", "de", "pl", "ru"]) {
+    const slugs = cats.map((c: any) => c[lang].slug);
+    assert.equal(new Set(slugs).size, 4, lang);
+    for (const c of cats) assert.ok(c[lang].title.length > 0 && c[lang].slug.length > 0);
+  }
+  // Every article the move script relocates names a real target.
+  const moved = JSON.parse(fs.readFileSync(path.join(process.cwd(), "scripts/guides/moved-articles.json"), "utf8"));
+  for (const m of moved) assert.ok(cats.some((c: any) => c.key === m.to), m.note);
+  assert.equal(new Set(moved.map((m: any) => m.group)).size, moved.length);
 });
 
 test("a guide-category article is in the guides section, anything else in the blog", () => {

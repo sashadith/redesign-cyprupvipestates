@@ -3,8 +3,8 @@
  *   node scripts/sweep-blog-links-to-guides.mjs            # dry run: counts per table, nothing written
  *   node scripts/sweep-blog-links-to-guides.mjs --apply    # writes, after saving a JSON backup of every changed row
  *
- * Which articles moved is decided by src/lib/articleSections.ts (the category's translationGroupId), read from the
- * database here with the same list. The old /blog/<slug> URL of a moved article keeps working (permanent redirect), so
+ * Which articles moved is decided by their category (src/lib/articleSections.ts), read from the database here with
+ * the same list (src/lib/guideCategories.json). The old /blog/<slug> URL of a moved article keeps working (permanent redirect), so
  * this sweep only removes a hop; run it AFTER the guides routes are deployed: the new URLs 404 until then.
  *
  * Links are matched in any stored JSON text: "/blog/<slug>", "/de/blog/<slug>", with or without the site's origin.
@@ -21,11 +21,9 @@ const { PrismaClient } = await import("@prisma/client");
 const prisma = new PrismaClient();
 const apply = process.argv.includes("--apply");
 
-// Keep in sync with src/lib/articleSections.ts and src/lib/guidesPage.ts.
-const GUIDE_GROUPS = [
-  "678f40ba-004f-48d1-95e9-8be5b03566cf", "a90f42e8-a9e4-4a61-8639-29fa6df09654", "0cb25ffc-8e3f-4e89-b663-b6d73d949ec0",
-  "a3e8946e-8857-4c0f-a2bc-ab20c0abacd2", "696a0e69-d198-4af3-a296-e61776d6c56a",
-];
+// The guide categories come from src/lib/guideCategories.json (same list articleSections.ts uses); the guides slugs are
+// the ones of src/lib/guidesPage.ts.
+const GUIDE_GROUPS = JSON.parse(fs.readFileSync(new URL("../src/lib/guideCategories.json", import.meta.url), "utf8")).map((c) => c.group);
 const SLUG = { en: "guides", de: "ratgeber", pl: "poradniki", ru: "gajdy" };
 const PREFIX = { en: "", de: "/de", pl: "/pl", ru: "/ru" };
 
