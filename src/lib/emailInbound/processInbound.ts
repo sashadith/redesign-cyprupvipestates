@@ -6,9 +6,9 @@ import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./q
 import { replyAllRecipients } from "./replyRecipients";
 import { stripHtmlToText } from "@/lib/emailSignature";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const MAX_BODY_LENGTH = 10_000; // defensive cap — a reply this long is not the common case, and this is a timeline entry, not an archive
-const TELEGRAM_EXCERPT_LENGTH = 200;
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -17,16 +17,12 @@ const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g,
 // caller's existing Message-ID guard (see the "already" check above this
 // call site): a retried poll finds the interaction already exists and skips
 // before ever reaching here, so this never fires twice for the same reply.
-async function notifyInboundReply(leadId: string, subject: string | null, body: string) {
+// No name, subject or excerpt — the client's words stay in the CRM (chatPrivacy.ts).
+async function notifyInboundReply(leadId: string) {
   try {
-    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true } });
-    const leadName = lead ? `${lead.firstName} ${lead.lastName}`.trim() : "Unknown lead";
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
-    const excerpt = body.slice(0, TELEGRAM_EXCERPT_LENGTH);
     const msg =
-      `<b>📧 New reply from ${esc(leadName)}</b>\n` +
-      `${esc(subject || "(no subject)")}\n\n` +
-      `${esc(excerpt)}${body.length > TELEGRAM_EXCERPT_LENGTH ? "…" : ""}\n\n` +
+      `<b>📧 New e-mail reply from ${esc(leadRef(leadId))}</b>\n\n` +
       `<a href="${siteUrl}/admin/crm/${leadId}">Open in CRM</a>`;
     await sendTelegramMessage(msg);
   } catch (e) {
@@ -101,7 +97,7 @@ export async function fileInboundEmail(
       metadata: { attachmentCount, ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}), ...(replyCc.length ? { cc: replyCc } : {}), ...(ctx.notify ? {} : { via: "imap-sync" }) },
     },
   });
-  if (ctx.notify) await notifyInboundReply(match.leadId, parsed.subject ?? null, body);
+  if (ctx.notify) await notifyInboundReply(match.leadId);
   return { status: "filed", leadId: match.leadId, ambiguous: match.ambiguous };
 }
 

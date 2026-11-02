@@ -78,7 +78,7 @@ test("isoWeekKey uses Cyprus time: Sunday night UTC is already Monday in Cyprus"
 });
 
 const totals0 = { expected: 0, earned: 0, developerPaid: 0, paidOut: 0 };
-const upd = (i: number, name = "Client " + i) => ({ clientName: name, key: "milestones.firstContact", at: new Date(Date.UTC(2026, 9, 15, 10, i)) });
+const upd = (i: number, name = "Client " + i) => ({ clientName: name, clientRef: "#c" + i, key: "milestones.firstContact", at: new Date(Date.UTC(2026, 9, 15, 10, i)) });
 const pub = (day: number) => new Date(Date.UTC(2026, 9, day, 9));
 test("digestContent is null without news (totals alone are not news) and caps the lists", () => {
   assert.equal(digestContent({ updates: [], totals: totals0, newProjects: [] }), null);

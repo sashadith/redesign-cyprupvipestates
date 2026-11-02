@@ -130,17 +130,17 @@ test("partner display name and SYSTEM note", () => {
 // ─── office notice ───────────────────────────────────────────────────────────
 
 test("buildPartnerClientNotice: CREATED links the lead, REVIEW points to the inbox", () => {
-  const created = buildPartnerClientNotice({ clientName: "Anna Meyer", partnerName: "Acme", mode: "HANDOVER", outcome: "CREATED", leadId: "lead-1", baseUrl: "https://example.com/" });
-  assert.equal(created, "Partner client: Anna Meyer from Acme (Handover) → https://example.com/crm/leads/lead-1");
-  const review = buildPartnerClientNotice({ clientName: "Anna Meyer", partnerName: "Acme", mode: "FIX", outcome: "REVIEW" });
-  assert.equal(review, "Partner client: Anna Meyer from Acme (Fix) → needs review in /crm/inbox");
+  // No client name in the office chat (chatPrivacy.ts): a reference and the link.
+  const created = buildPartnerClientNotice({ partnerName: "Acme", mode: "HANDOVER", outcome: "CREATED", leadId: "3f9a2c11-1", baseUrl: "https://example.com/" });
+  assert.equal(created, "Partner client Lead #3f9a2c from Acme (Handover) → https://example.com/crm/leads/3f9a2c11-1");
+  const review = buildPartnerClientNotice({ partnerName: "Acme", mode: "FIX", outcome: "REVIEW" });
+  assert.equal(review, "Partner client from Acme (Fix) → needs review in /crm/inbox");
   assert.doesNotMatch(review, /crm\/leads/);
 });
 test("buildPartnerClientNotice escapes HTML in every value", () => {
-  const s = buildPartnerClientNotice({ clientName: "<b>Eve</b> & co", partnerName: "A\"<i>", mode: "HANDOVER", outcome: "REVIEW" });
-  assert.doesNotMatch(s, /<b>|<i>/);
-  assert.match(s, /&lt;b&gt;Eve&lt;\/b&gt; &amp; co/);
-  assert.match(s, /A&quot;&lt;i&gt;/);
+  const s = buildPartnerClientNotice({ partnerName: "A\"<i> & co", mode: "HANDOVER", outcome: "REVIEW" });
+  assert.doesNotMatch(s, /<i>/);
+  assert.match(s, /A&quot;&lt;i&gt; &amp; co/);
 });
 
 // ─── project rates (scope) ───────────────────────────────────────────────────

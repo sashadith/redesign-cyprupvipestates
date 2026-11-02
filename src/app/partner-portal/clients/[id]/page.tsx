@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { clientRef } from "@/lib/chatPrivacy";
 import { notFound } from "next/navigation";
 import { RESPONSE_KEYS, type SubmissionView } from "@/lib/partner/clientDto";
 import { fmt, type PartnerDict, type PartnerLocale } from "@/lib/partner/i18n";
@@ -58,7 +59,7 @@ export default async function PartnerClient({ params }: { params: { id: string }
   const head = (
     <section className="pp-card pp-card-wide pp-card-full">
       <p className="pp-small pp-back"><Link href="/clients">← {C.back}</Link></p>
-      <p className="pp-eyebrow">{fmt(C.submittedOn, { date: date.format(c.submittedAt) })}</p>
+      <p className="pp-eyebrow">{clientRef(c.id)} · {fmt(C.submittedOn, { date: date.format(c.submittedAt) })}</p>
       <h1>{c.name || "—"}</h1>
       <Chip label={tr(locale, c.chipKey)} tone={chipTone(c.chipKey)} />
     </section>

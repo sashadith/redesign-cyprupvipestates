@@ -5,6 +5,7 @@ import { emailKey, phonesMatch } from "@/lib/crm/leadIdentity";
 import { escapeHtml } from "./mail";
 import { parseBudgetField } from "./budgetField";
 import type { SubmissionInput, SubmissionMode } from "./submission";
+import { leadRef } from "@/lib/chatPrivacy";
 
 export { parseBudgetField };
 
@@ -129,13 +130,15 @@ export function alreadyYoursAnswer(
 }
 
 /** Office Telegram notice (HTML parse mode → every value escaped). The lead link only for a new lead. */
-export type PartnerClientNotice = { clientName: string; partnerName: string; mode: SubmissionMode; baseUrl?: string } & (
+// No client name: the office chat gets a reference and the link (chatPrivacy.ts).
+export type PartnerClientNotice = { partnerName: string; mode: SubmissionMode; baseUrl?: string } & (
   | { outcome: "CREATED"; leadId: string }
   | { outcome: "REVIEW" }
 );
 
 export function buildPartnerClientNotice(n: PartnerClientNotice): string {
-  const head = `Partner client: ${escapeHtml(n.clientName)} from ${escapeHtml(n.partnerName)} (${modeLabel(n.mode)})`;
+  const who = n.outcome === "CREATED" ? ` ${escapeHtml(leadRef(n.leadId))}` : "";
+  const head = `Partner client${who} from ${escapeHtml(n.partnerName)} (${modeLabel(n.mode)})`;
   if (n.outcome === "CREATED") {
     const base = (n.baseUrl ?? "").replace(/\/+$/, "");
     return `${head} → ${escapeHtml(`${base}/crm/leads/${encodeURIComponent(n.leadId)}`)}`;

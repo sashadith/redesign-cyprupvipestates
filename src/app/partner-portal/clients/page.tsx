@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { clientRef } from "@/lib/chatPrivacy";
 import { cookies } from "next/headers";
 import {
   CLIENT_FILTERS, CLIENTS_FILTER_COOKIE, COMMISSION_STAGES, DEFAULT_CLIENT_FILTER, cleanQuery, parseClientFilter, type ClientFilter,
@@ -78,7 +79,7 @@ export default async function PartnerClients({ searchParams }: { searchParams: S
                 <tr key={c.id}>
                   <th scope="row">
                     <Link href={`/clients/${encodeURIComponent(c.id)}`}>{c.name || "—"}</Link>
-                    <span className="pp-cell-sub">{fmt(C.submittedOn, { date: date.format(c.submittedAt) })}</span>
+                    <span className="pp-cell-sub">{clientRef(c.id)} · {fmt(C.submittedOn, { date: date.format(c.submittedAt) })}</span>
                   </th>
                   <td data-label={C.colStage}><Chip label={tr(locale, c.chipKey)} tone={chipTone(c.chipKey)} /></td>
                   <td data-label={C.colContact}>{c.contactName ?? (c.state === "ACTIVE" ? <span className="pp-muted">—</span> : null)}</td>

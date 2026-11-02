@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
 import type { ActionItem, Category } from "@/lib/actionCenter/types";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadRef } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
@@ -75,7 +76,8 @@ async function maybeAppendAdvisorSummary(): Promise<string[]> {
 // (start-of-day inclusive, start-of-next-day exclusive) — the same
 // wall-clock<->UTC conversion the booking slot generator already uses, not
 // a new calculation.
-async function todaysAppointmentLines(): Promise<string[]> {
+async function todaysAppointmentLines(): Promise<{ chat: string[]; mail: string[] }> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const now = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: CYPRUS_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
   const y = Number(parts.find((p) => p.type === "year")!.value);
@@ -87,20 +89,22 @@ async function todaysAppointmentLines(): Promise<string[]> {
   const meetings = await prisma.bookingRequest.findMany({
     where: { status: "CONFIRMED", confirmedSlotUtc: { gte: start, lt: end } },
     orderBy: { confirmedSlotUtc: "asc" },
-    include: { lead: { select: { firstName: true, lastName: true } } },
+    select: { leadId: true, confirmedSlotUtc: true, meetingType: true, lead: { select: { firstName: true, lastName: true } } },
   });
-  if (!meetings.length) return [];
+  if (!meetings.length) return { chat: [], mail: [] };
 
-  return [
-    "",
-    `<b>📅 Today's appointments (${meetings.length})</b>`,
-    ...meetings.map((b) => {
-      const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
-      const leadName = escapeHtml(`${b.lead.firstName} ${b.lead.lastName}`.trim());
-      const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
-      return `• ${time} — ${leadName} (${typeLabel})`;
-    }),
-  ];
+  // Telegram: a reference with a link, not the client's name (chatPrivacy.ts).
+  // The e-mail keeps the name and spells the CRM link out.
+  const head = ["", `<b>📅 Today's appointments (${meetings.length})</b>`];
+  const row = (b: (typeof meetings)[number], forChat: boolean) => {
+    const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
+    const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
+    const url = `${siteUrl}/admin/crm/${b.leadId}`;
+    return forChat
+      ? `• ${time} — <a href="${url}">${escapeHtml(leadRef(b.leadId))}</a> (${typeLabel})`
+      : `• ${time} — ${escapeHtml(`${b.lead.firstName} ${b.lead.lastName}`.trim())} (${typeLabel}) ${url}`;
+  };
+  return { chat: [...head, ...meetings.map((b) => row(b, true))], mail: [...head, ...meetings.map((b) => row(b, false))] };
 }
 
 // GROSSER AUFTRAG Teil 5 (2026-08-13) — daily confirmation of the 4am sync
@@ -196,15 +200,17 @@ const SUPPRESSED_SYSTEM_IDS = new Set(["cron-health:feed-sync", "cron-health:dri
 
 type TaggedItem = { item: ActionItem; fresh: boolean };
 
-function formatItemLine(t: TaggedItem): string {
-  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(t.item.title)}`;
+// Telegram takes the chatTitle when the rule set one: the chat names no
+// client (chatPrivacy.ts). The e-mail keeps the full title.
+function formatItemLine(t: TaggedItem, forChat: boolean): string {
+  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(forChat ? (t.item.chatTitle ?? t.item.title) : t.item.title)}`;
 }
 
-function buildCategorySection(label: string, items: TaggedItem[], siteUrl: string): string[] {
+function buildCategorySection(label: string, items: TaggedItem[], siteUrl: string, forChat: boolean): string[] {
   if (!items.length) return [];
   const shown = items.slice(0, CATEGORY_CAP);
   const rest = items.length - shown.length;
-  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map(formatItemLine)];
+  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map((t) => formatItemLine(t, forChat))];
   if (rest > 0) lines.push(`… and ${rest} more → <a href="${siteUrl}/admin">Action Center</a>`);
   return lines;
 }
@@ -237,7 +243,7 @@ async function runDigest() {
   // every morning, success or not), so in practice this only stays false if
   // CronRunLog itself is unreachable — that already surfaces via the outer
   // catch/withCronLog, not silently here.
-  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length && !morningSyncLines.length && !socialSectionLines.length) {
+  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.chat.length && !morningSyncLines.length && !socialSectionLines.length) {
     return { sent: false, count: 0, fresh: 0, recurring: 0, quiet };
   }
 
@@ -254,19 +260,21 @@ async function runDigest() {
   const systemExtra = byCategory.get("SYSTEM") ?? [];
   const systemShown = systemExtra.slice(0, CATEGORY_CAP);
   const systemRest = systemExtra.length - systemShown.length;
-  const lines: string[] = [
+  // One builder for both copies: Telegram (no client names) and the e-mail (full titles and names).
+  const buildLines = (forChat: boolean): string[] => [
     "",
     "<b>🔧 SYSTEM & SYNCS</b>",
     ...morningSyncLines,
-    ...systemShown.map(formatItemLine),
+    ...systemShown.map((t) => formatItemLine(t, forChat)),
     ...(systemRest > 0 ? [`… and ${systemRest} more → <a href="${siteUrl}/admin">Action Center</a>`] : []),
-    ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl),
-    ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl),
-    ...appointmentLines,
+    ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl, forChat),
+    ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl, forChat),
+    ...(forChat ? appointmentLines.chat : appointmentLines.mail),
     ...socialSectionLines,
-    ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl),
+    ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl, forChat),
     ...advisorLines,
   ];
+  const lines = buildLines(true);
 
   const footerLines = [
     quiet > 0 ? `\n${quiet} other known issue${quiet === 1 ? "" : "s"} still open (reminded within the last ${REMINDER_THROTTLE_DAYS} days, not repeated today).` : "",
@@ -284,8 +292,8 @@ async function runDigest() {
     if (r) anySent = true;
   }
 
-  // Same structure as Telegram, reusing the exact same `lines` (a plain-text
-  // strip of the HTML version) so the two can never drift apart — replaces
+  // Same structure as Telegram, from the same builder (buildLines(false): the
+  // full titles and names, chatPrivacy.ts) so the two can never drift apart — replaces
   // a separately hand-built plain-text version that duplicated all of the
   // section-building logic above.
   // Entities are decoded too, or an escaped link (…?d=1&amp;a=339303) would
@@ -293,7 +301,7 @@ async function runDigest() {
   const stripHtml = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const emailText = [
     "Daily Action Center Digest",
-    ...lines.map(stripHtml),
+    ...buildLines(false).map(stripHtml),
     quiet > 0 ? `\n${quiet} other known issue(s) still open (not repeated today).` : "",
     "",
     `${siteUrl}/admin`,

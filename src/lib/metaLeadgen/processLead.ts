@@ -12,6 +12,7 @@ import { mapFieldData, BUDGETS, CHANNEL_LABEL, type MappedLead } from "./mapFiel
 import { alertBoth, buildLeadEmail, buildLeadMessage, buildLeadWhatsApp, leadWhatsAppChat } from "./notify";
 import { createOpenWaClient } from "@/lib/openwa/client";
 import { sendEmail } from "@/lib/sendEmail";
+import { redactContactDetails } from "@/lib/chatPrivacy";
 
 // A PROCESSING claim older than this belongs to a run that died mid-way.
 export const STALE_CLAIM_MS = 5 * 60_000;
@@ -98,8 +99,13 @@ async function markFailed(leadgenId: string, error: unknown): Promise<void> {
   // retried by the next poll run (≤15 min) and alerted only if that fails too.
 }
 
+/** The error's first line only: a Prisma validation error goes on to print the
+ *  whole create call, the lead's name and contact details included (chatPrivacy.ts). */
+export const alertableError = (error: string | null) =>
+  error ? redactContactDetails(error.split("\n").map((l) => l.trim()).find(Boolean) ?? "").slice(0, 200) || "unknown error" : "unknown error";
+
 export const failureAlertText = (leadgenId: string, error: string | null) =>
-  `⚠️ Meta lead import failed\nleadgen_id: ${leadgenId}\n${error ?? "unknown error"}\nThe import was retried in the same run and failed again. The poller keeps retrying every 15 minutes; you won't be alerted again for this lead.`;
+  `⚠️ Meta lead import failed\nleadgen_id: ${leadgenId}\n${alertableError(error)}\nThe import was retried in the same run and failed again. The poller keeps retrying every 15 minutes; you won't be alerted again for this lead.`;
 
 /** End of a poll run: one alert per leadgen_id that this run tried and that is
  *  STILL failed now, never one already alerted. Token and config failures are
@@ -154,8 +160,8 @@ export async function sendOwedEmail(leadgenId: string, text: string, leadId: str
     .catch(() => ({ count: 0 }));
   if (claimed.count !== 1) return false;
   try {
-    const lead = leadId ? await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true, email: true } }) : null;
-    const mail = buildLeadEmail(text, { outcome, name: `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}` });
+    const lead = leadId ? await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true, email: true, phone: true } }) : null;
+    const mail = buildLeadEmail(text, { outcome, name: `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}`, email: lead?.email, phone: lead?.phone });
     await sendEmail({ ...mail, ...(lead?.email ? { replyTo: lead.email } : {}) });
     if (leadId && outcome === "CREATED") await prisma.lead.update({ where: { id: leadId }, data: { emailNotified: true } }).catch(() => {});
     return true;
@@ -275,9 +281,6 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
       const notification = buildLeadMessage({
         outcome,
         language: m.languagePreference,
-        name: `${m.firstName} ${m.lastName}`.trim(),
-        email: m.email,
-        phone: m.phone,
         budget: m.budget,
         preferredChannel: m.preferredChannel,
         campaignName: lead.campaign_name ?? null,

@@ -2,13 +2,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   NAG_ALARM_DAYS, NAG_TEXT_MAX, buildNagMessage, extractNagCallback, maySnooze, nagCallbackData, nagCounts, nagItems, nagSlot,
-  parseNagCallback, parseOfficeCommand, routeNag, shortName, snoozeUntil, withoutLeadRow, type NagLead, type NagUser,
+  parseNagCallback, parseOfficeCommand, routeNag, snoozeUntil, withoutLeadRow, type NagLead, type NagUser,
 } from "@/lib/crm/leadNag";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const DAY = 86_400_000;
 // Saturday 31 Oct 2026, 10:00 Cyprus (UTC+2 since 25 Oct).
 const NOW = new Date("2026-10-31T08:00:00Z");
-const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+// n leads the id, so every lead gets its own leadRef ("Lead #010000").
+const id = (n: number) => `${String(n).padStart(2, "0")}000000-0000-4000-8000-000000000000`;
 const lead = (n: number, o: Partial<NagLead> = {}): NagLead => ({
   id: id(n), firstName: `First${n}`, lastName: `Last${n}`, status: "CONTACTED", createdAt: new Date(NOW.getTime() - 30 * DAY),
   lastContactAt: new Date(NOW.getTime() - 2 * DAY), nextFollowUpAt: null, viewingScheduledAt: null, assignedToId: null, ...o,
@@ -65,7 +67,9 @@ test("buildNagMessage: headline per slot, louder with age, links and two buttons
   ], NOW);
   const m = buildNagMessage(items, { slot: 10, crmBase: "https://cve.test/" })!;
   assert.ok(m.text.startsWith("🔔 <b>Leads need you</b> — 3 leads overdue, 1 due today"));
-  assert.ok(m.text.includes(`🚨 <b><a href="https://cve.test/crm/leads/${id(1)}">First1 Last1</a> — left alone for ${NAG_ALARM_DAYS + 2} days</b>`));
+  assert.ok(m.text.includes(`🚨 <b><a href="https://cve.test/crm/leads/${id(1)}">${leadRef(id(1))}</a> — left alone for ${NAG_ALARM_DAYS + 2} days</b>`));
+  assert.ok(!/First\d|Last\d/.test(m.text + JSON.stringify(m.keyboard)), "no client name in the chat (chatPrivacy.ts)");
+  assert.equal(m.keyboard[0][0].text, `⏰ ${leadRef(id(1))}: tomorrow`);
   assert.ok(m.text.includes("🔴🔴 <a"), "4 days late doubles the mark");
   assert.ok(m.text.includes("🔴 <a") && m.text.includes("<b>Overdue 1d</b>"));
   assert.ok(m.text.includes("🟡 <a"));
@@ -75,13 +79,13 @@ test("buildNagMessage: headline per slot, louder with age, links and two buttons
   assert.equal(buildNagMessage([], { slot: 10, crmBase: "x" }), null, "nothing due → no message");
 });
 
-test("buildNagMessage: escapes names, stays under Telegram's limit, counts the rest", () => {
+test("buildNagMessage: no names even when they need escaping, stays under Telegram's limit, counts the rest", () => {
   const many = Array.from({ length: 60 }, (_, i) => lead(i + 1, {
     firstName: `<b>Évelyne ${i}`, lastName: "O'Brien & Söhne Longname".repeat(2), nextFollowUpAt: new Date(NOW.getTime() - 2 * DAY), lastContactAt: new Date(NOW.getTime() - 9 * DAY),
   }));
   const m = buildNagMessage(nagItems(many, NOW), { slot: 12, crmBase: "https://cve.test" })!;
   assert.ok(m.text.length <= NAG_TEXT_MAX);
-  assert.ok(!m.text.includes("<b>Évelyne") && m.text.includes("&lt;b&gt;Évelyne"));
+  assert.ok(!m.text.includes("Évelyne") && !m.text.includes("Brien"));
   assert.ok(/…and \d+ more/.test(m.text));
   assert.ok(m.keyboard.length < 60 && m.keyboard.length >= 1);
   for (const row of m.keyboard) for (const b of row) assert.ok(b.text.length <= 64 && b.callback_data.length <= 64);
@@ -93,8 +97,6 @@ test("buttons: callback data round-trips; only 1 or 3 days; a uuid lead id", () 
   assert.equal(parseNagCallback(nagCallbackData(9, id(7))), null);
   assert.equal(parseNagCallback("nag:1:not-a-uuid"), null);
   assert.equal(parseNagCallback("menu:clients"), null);
-  assert.equal(shortName("Anna Maria Müller"), "Anna M.");
-  assert.equal(shortName("Cher"), "Cher");
 });
 
 test("snoozeUntil: 09:00 Cyprus on the chosen day, across the DST change", () => {
