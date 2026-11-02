@@ -152,7 +152,7 @@ export const PRIVACY_DE: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Die Team-Benachrichtigungen über Telegram, dessen Betreiber seinen Sitz in den Vereinigten Arabischen Emiraten hat, einem Land ohne Angemessenheitsbeschluss der EU, enthalten weder Ihren Namen noch Ihre Kontaktdaten oder Ihre Nachricht (siehe Abschnitt 3). Nur eine interne Referenznummer verbindet sie mit Ihnen, und nur wir können sie zuordnen.",
+          text: "Die Team-Benachrichtigungen über Telegram, dessen Betreiber seinen Sitz in den Vereinigten Arabischen Emiraten hat, einem Land ohne Angemessenheitsbeschluss der EU, enthalten weder Ihren Namen noch Ihre Kontaktdaten oder Ihre Nachricht (siehe Abschnitt 3). Nur eine interne Referenznummer verbindet sie mit Ihnen, und nur wir können sie zuordnen. Ebenso enthalten Neuigkeiten, die wir einem vermittelnden Partner über Telegram schicken, nur eine Referenznummer und den Stand der Vermittlung.",
         },
         {
           kind: "p",

@@ -179,7 +179,7 @@ export const PRIVACY_EN: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, contain no name, contact details or message (see section 3). Only an internal reference number links them to you, and only we can resolve it.",
+          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, contain no name, contact details or message (see section 3). Only an internal reference number links them to you, and only we can resolve it. Updates we send on Telegram to a partner who introduced you likewise carry only a reference number and the stage of the introduction.",
         },
         {
           kind: "p",
