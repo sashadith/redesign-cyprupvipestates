@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { cookieSettingsLabel, hadTrackingConsent, COOKIE_SETTINGS_EVENT } from "@/app/components/CustomCookieConsent/cookieSettings";
+import { cookieSettingsLabel, cookieSettingsLabelIsEnglishFallback, hadTrackingConsent, COOKIE_SETTINGS_EVENT } from "@/app/components/CustomCookieConsent/cookieSettings";
 
 /* Why this exists (2026-11-02).
  *
@@ -67,6 +67,52 @@ test("every tree a public URL is rewritten onto renders the cookie banner and it
   assert.deepEqual(missing, [], `layouts without banner + consent-gated tags: ${missing.join(", ")}`);
 });
 
+/* The middleware parser above only sees rewrites written the way today's are.
+ * This second net does not depend on how a route is wired: every layout that
+ * opens its own <html> must render the banner, or be named here as a tree no
+ * visitor reaches (all of these are noindex and none is a middleware target). */
+const NOT_PUBLIC_ROOT_LAYOUTS = new Set([
+  "src/app/admin/layout.tsx",
+  "src/app/book/layout.tsx", // tokenised booking links, no tags by design
+  "src/app/c/layout.tsx", // tokenised client presentations, no tags by design
+  "src/app/crm/layout.tsx",
+  "src/app/crm-preview/crm/layout.tsx",
+  "src/app/crm-preview/portal/layout.tsx",
+  "src/app/partner-portal/layout.tsx",
+  "src/app/preview-home/layout.tsx", // staging previews of the redesign
+  "src/app/preview-insights/layout.tsx",
+  "src/app/preview-landing/[lang]/layout.tsx",
+  "src/app/preview-projects/layout.tsx",
+  "src/app/sandbox/layout.tsx",
+  "src/app/sandbox-v2/layout.tsx",
+  "src/app/sandbox-v3/layout.tsx",
+  "src/app/sandbox-v4/layout.tsx",
+  "src/app/sandbox-v5/layout.tsx",
+  "src/app/style/layout.tsx",
+]);
+
+function rootLayouts(dir = "src/app"): string[] {
+  const found: string[] = [];
+  for (const name of readdirSync(join(process.cwd(), dir))) {
+    const rel = `${dir}/${name}`;
+    if (statSync(join(process.cwd(), rel)).isDirectory()) found.push(...rootLayouts(rel));
+    else if (name === "layout.tsx" && /<html\b/.test(read(rel))) found.push(rel);
+  }
+  return found;
+}
+
+test("every root layout renders the banner unless it is a known non-public tree", () => {
+  const layouts = rootLayouts();
+  assert.ok(layouts.length >= 20, `found only ${layouts.length} root layouts — the walker is broken`);
+  const uncovered = layouts.filter((l) => !NOT_PUBLIC_ROOT_LAYOUTS.has(l) && !/<SiteConsent\b|<CustomCookieConsent\b/.test(read(l)));
+  assert.deepEqual(uncovered, [], `root layouts without a cookie banner: ${uncovered.join(", ")} — render <SiteConsent> or add the tree to NOT_PUBLIC_ROOT_LAYOUTS with the reason`);
+  // A middleware target must never hide behind the exemption list.
+  for (const tree of rewriteTrees(MIDDLEWARE)) {
+    const l = layoutOf(tree);
+    assert.ok(!l || !NOT_PUBLIC_ROOT_LAYOUTS.has(l), `${l} is a rewrite target, it cannot be exempt`);
+  }
+});
+
 test("SiteConsent itself carries banner, consent-gated tags and the page-view beacon", () => {
   const src = read("src/app/components/SiteConsent/SiteConsent.tsx");
   assert.match(src, /<CustomCookieConsent\b/);
@@ -99,12 +145,15 @@ test("the banner reopens on the footer's event and reloads when consent is withd
   assert.equal(COOKIE_SETTINGS_EVENT, "cvp:consent-open");
 });
 
-test("cookie-settings label: the four client languages, none for Hebrew or stray segments", () => {
+test("cookie-settings label: four client languages, English for Hebrew, none for stray segments", () => {
   assert.equal(cookieSettingsLabel("en"), "Cookie settings");
   assert.equal(cookieSettingsLabel("de"), "Cookie-Einstellungen");
   assert.equal(cookieSettingsLabel("pl"), "Ustawienia cookies");
   assert.equal(cookieSettingsLabel("ru"), "Настройки cookie");
-  assert.equal(cookieSettingsLabel("he"), null);
+  // Operator decision 2026-11-02: English until a native speaker checks a Hebrew label.
+  assert.equal(cookieSettingsLabel("he"), "Cookie settings");
+  assert.equal(cookieSettingsLabelIsEnglishFallback("he"), true);
+  assert.equal(cookieSettingsLabelIsEnglishFallback("de"), false);
   assert.equal(cookieSettingsLabel("constructor"), null);
   assert.equal(cookieSettingsLabel("xx"), null);
 });

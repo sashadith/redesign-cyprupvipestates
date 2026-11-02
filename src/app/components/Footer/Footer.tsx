@@ -17,7 +17,7 @@ import { GUIDE_LANGS, type GuideLang } from "@/lib/guides/types";
 import { guidesPagePath } from "@/lib/guidesPage";
 import { guidesPageCopy } from "@/app/preview-guides/copy";
 import CookieSettingsLink from "@/app/components/CustomCookieConsent/CookieSettingsLink";
-import { cookieSettingsLabel } from "@/app/components/CustomCookieConsent/cookieSettings";
+import { cookieSettingsLabel, cookieSettingsLabelIsEnglishFallback } from "@/app/components/CustomCookieConsent/cookieSettings";
 import OptImg from "@/app/preview-home/sections/OptImg"; // footer sits below the fold on every page: lazy + resized, and no <link rel=preload> hint (those competed with the render-blocking CSS)
 
 /* Global site footer — quiet-luxury redesign (migrated from the staging preview).
@@ -161,8 +161,8 @@ const Footer = async ({ params }: Props) => {
                 ))}
                 {/* The free guides page; no Hebrew version exists, so Hebrew gets no link. */}
                 {hasGuides && <Link href={guidesPagePath(params.lang)}>{guidesPageCopy(params.lang as GuideLang).heroEyebrow}</Link>}
-                {/* Reopens the consent banner; Hebrew has no label yet, so no button. */}
-                {cookieLabel && <CookieSettingsLink label={cookieLabel} />}
+                {/* Reopens the consent banner (Hebrew: English label until reviewed). */}
+                {cookieLabel && <CookieSettingsLink label={cookieLabel} englishFallback={cookieSettingsLabelIsEnglishFallback(params.lang)} />}
               </div>
             )}
           </div>

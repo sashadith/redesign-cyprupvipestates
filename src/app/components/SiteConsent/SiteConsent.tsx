@@ -21,6 +21,7 @@ export default function SiteConsent({ lang }: { lang: string }) {
     <>
       {/* First-party cookieless analytics — always on (no PII stored) */}
       <AnalyticsTracker locale={locale} />
+      {/* Keep in step with DISABLE_TRACKING in [lang]/layout.tsx and home-static/[lang]/layout.tsx. */}
       <ConsentScripts disableTracking={false} />
       <CustomCookieConsent lang={locale} />
     </>

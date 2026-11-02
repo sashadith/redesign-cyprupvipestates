@@ -9,14 +9,19 @@ import type { Locale } from "@/lib/locale";
 /** Dispatched on window by CookieSettingsLink; CustomCookieConsent shows itself again. */
 export const COOKIE_SETTINGS_EVENT = "cvp:consent-open";
 
-// No Hebrew label: no new Hebrew copy without a native check, so Hebrew gets
-// no link (same as the guides link in the footer).
-const LABELS: Partial<Record<Locale, string>> = {
+// Hebrew shows the English label until a native speaker has checked a Hebrew
+// one (operator decision 2026-11-02: an English way to withdraw beats none).
+const LABELS: Record<Locale, string> = {
   en: "Cookie settings",
   de: "Cookie-Einstellungen",
   pl: "Ustawienia cookies",
   ru: "Настройки cookie",
+  he: "Cookie settings", // English on purpose — REVIEW(he)
 };
+
+/** Locales whose label is the English fallback, so the button is marked lang="en" dir="ltr". */
+const ENGLISH_FALLBACK: ReadonlySet<string> = new Set(["he"]);
+export const cookieSettingsLabelIsEnglishFallback = (lang: string): boolean => ENGLISH_FALLBACK.has(lang);
 
 // Own keys only: a stray route segment such as "constructor" must not reach Object.prototype.
 export const cookieSettingsLabel = (lang: string): string | null =>

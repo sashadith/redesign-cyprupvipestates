@@ -17,7 +17,7 @@ import { GUIDE_LANGS, type GuideLang } from "@/lib/guides/types";
 import { guidesPagePath } from "@/lib/guidesPage";
 import { guidesPageCopy } from "@/app/preview-guides/copy";
 import CookieSettingsLink from "@/app/components/CustomCookieConsent/CookieSettingsLink";
-import { cookieSettingsLabel } from "@/app/components/CustomCookieConsent/cookieSettings";
+import { cookieSettingsLabel, cookieSettingsLabelIsEnglishFallback } from "@/app/components/CustomCookieConsent/cookieSettings";
 
 /* Footer — restyled to the redesign (dark). Reuses getFooterByLang + the
    contact/newsletter logic (via preview FooterContact / FooterNewsletter).
@@ -137,8 +137,8 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
                 ))}
                 {/* The free guides page; no Hebrew version exists, so Hebrew gets no link. */}
                 {hasGuides && <Link href={guidesPagePath(lang)}>{guidesPageCopy(lang as GuideLang).heroEyebrow}</Link>}
-                {/* Reopens the consent banner; Hebrew has no label yet, so no button. */}
-                {cookieLabel && <CookieSettingsLink label={cookieLabel} />}
+                {/* Reopens the consent banner (Hebrew: English label until reviewed). */}
+                {cookieLabel && <CookieSettingsLink label={cookieLabel} englishFallback={cookieSettingsLabelIsEnglishFallback(lang)} />}
               </div>
             )}
           </div>
