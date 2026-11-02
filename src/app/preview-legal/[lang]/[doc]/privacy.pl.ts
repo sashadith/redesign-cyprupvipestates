@@ -4,6 +4,7 @@ import type { LegalDoc } from "./types";
    (privacy.en.ts), gdzie opisano też, które obowiązkowe informacje RODO
    uzupełniono względem starego tekstu. Identyfikatory kotwic celowo NIE są
    tłumaczone, aby ta sama sekcja miała ten sam adres we wszystkich językach.
+   Dostosowano do angielskiej wersji zmienionej 2026-11-02.
 
    TO NIE JEST porada prawna — przed publikacją wymagana weryfikacja prawnika. */
 
@@ -16,7 +17,7 @@ export const PRIVACY_PL: LegalDoc = {
   intro:
     "Ta polityka wyjaśnia, jakie dane osobowe zbieramy, gdy korzystasz z tej witryny lub kontaktujesz się z nami, dlaczego je przetwarzamy, kto je otrzymuje, jak długo je przechowujemy i z jakich praw możesz skorzystać w każdej chwili.",
   updatedLabel: "Ostatnia aktualizacja",
-  updated: "2026-08-21",
+  updated: "2026-11-02",
   tocLabel: "Na tej stronie",
 
   sections: [
@@ -39,15 +40,22 @@ export const PRIVACY_PL: LegalDoc = {
       title: "2. Co zbieramy i dlaczego",
       blocks: [
         { kind: "definitions", items: [
-          { term: "Pliki dziennika serwera", text: "Przy każdym żądaniu strony serwer zapisuje typ i wersję przeglądarki, system operacyjny, adres odsyłający, nazwę hosta urządzenia, czas żądania i adres IP. Jest to technicznie niezbędne do udostępnienia witryny i wykrywania nadużyć. Dane nie są łączone z innymi źródłami. Podstawa prawna: art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w bezpiecznej, działającej witrynie)." },
-          { term: "Formularze kontaktowe i zapytania", text: "Gdy przesyłasz zapytanie, przechowujemy podane dane — zwykle imię i nazwisko, dane kontaktowe, preferowany kanał kontaktu i treść wiadomości — aby odpowiedzieć i obsłużyć dalszą korespondencję. Zapytania trafiają do naszego systemu obsługi klienta, aby opiekująca się Tobą osoba widziała historię sprawy. Podstawa prawna: art. 6 ust. 1 lit. b RODO (działania przed zawarciem umowy na Twoje żądanie)." },
-          { term: "Terminy spotkań", text: "Jeśli proponujesz lub potwierdzasz termin przez naszą stronę rezerwacji, przetwarzamy proponowane godziny, Twoją strefę czasową i dane kontaktowe w celu ustalenia i potwierdzenia spotkania. Podstawa prawna: art. 6 ust. 1 lit. b RODO." },
-          { term: "Newsletter", text: "Po zapisaniu się przetwarzamy Twój adres e-mail, aby wysyłać newsletter. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda), którą możesz wycofać w każdej chwili." },
-          { term: "Statystyka witryny (bez plików cookie)", text: "Liczymy odsłony przy użyciu codziennie zmieniającego się, nieodwracalnego skrótu utworzonego z adresu IP i identyfikatora przeglądarki. Skrót zmienia się każdego dnia, nigdy nie jest przechowywany razem z adresem IP i nie pozwala Cię zidentyfikować ani rozpoznać w kolejnych dniach. Podstawa prawna: art. 6 ust. 1 lit. f RODO (uzasadniony interes w poznaniu, które treści są przydatne), zrównoważony brakiem trwałego identyfikatora." },
-          { term: "Google Tag Manager, Google Analytics i Google Ads", text: "Tylko jeśli wyrazisz zgodę na pliki analityczne i marketingowe, ładujemy Google Tag Manager (Google Ireland Limited), który następnie uruchamia Google Analytics 4 do pomiaru zasięgu oraz Google Ads do pomiaru konwersji i remarketingu. Sam Tag Manager jedynie zarządza pozostałymi tagami; dane przetwarzają uruchamiane przez niego usługi. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda)." },
+          { term: "Pliki dziennika serwera", text: "Przy każdym żądaniu strony serwer zapisuje żądaną stronę, typ i wersję przeglądarki, system operacyjny, adres odsyłający, czas żądania i adres IP. Jest to technicznie niezbędne do udostępnienia witryny i wykrywania nadużyć. Dane nie są łączone z innymi źródłami. Podstawa prawna: art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w bezpiecznej, działającej witrynie)." },
+          { term: "Zapytania i formularze", text: "Gdy przesyłasz nam zapytanie — przez formularz kontaktowy, kalkulator ROI, prośbę o jeden z naszych bezpłatnych przewodników lub formularz współpracy partnerskiej — przechowujemy to, co wpiszesz: zwykle imię i nazwisko, adres e-mail, numer telefonu, preferowany kanał kontaktu i treść wiadomości, a także odpowiedzi na pytania nieobowiązkowe, jeśli ich udzielisz (na przykład budżet, termin, rodzaj nieruchomości lub obywatelstwo). Odnotowujemy również stronę, z której wysłano zapytanie, oraz to, w jaki sposób trafiłeś na naszą witrynę (zob. „Atrybucja kampanii”). Odpowiadamy e-mailem, telefonicznie lub przez WhatsApp, przesyłamy przewodnik lub wyliczenie, o które prosiłeś, i przechowujemy zapytanie w naszym systemie obsługi klienta, aby opiekująca się Tobą osoba widziała jego historię. Podstawa prawna: art. 6 ust. 1 lit. b RODO (działania przed zawarciem umowy na Twoje żądanie)." },
+          { term: "Korespondencja e-mailowa i przez WhatsApp", text: "Wiadomości, które wymieniasz z nami e-mailem lub przez WhatsApp, są dołączane do Twojego zapytania, aby każdy, kto Ci odpowiada, wiedział, co zostało już omówione. Podstawa prawna: art. 6 ust. 1 lit. b RODO oraz art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w posiadaniu pełnej dokumentacji naszego doradztwa)." },
+          { term: "Zapytania przez formularze w reklamach na Facebooku i Instagramie", text: "Jeśli wypełnisz formularz kontaktowy w jednej z naszych reklam na Facebooku lub Instagramie, Meta Platforms Ireland Limited przekazuje nam podane tam dane (zwykle imię i nazwisko, dane kontaktowe i Twoje odpowiedzi). Traktujemy je tak samo jak każde inne zapytanie. Podstawa prawna: art. 6 ust. 1 lit. b RODO." },
+          { term: "Polecenia od naszych partnerów", text: "Jeśli polecił Cię nam partner — na przykład inny agent lub doradca — Twoje dane otrzymaliśmy od tego partnera. W naszym portalu partnerskim partner może śledzić etap swojego polecenia oraz przygotowane przez nas prezentacje nieruchomości. Podstawa prawna: art. 6 ust. 1 lit. b RODO oraz art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes we współpracy z partnerami, którzy polecają nam klientów)." },
+          { term: "Osobiste prezentacje nieruchomości", text: "Możemy przesłać Ci osobisty link do wybranych nieruchomości. Gdy go otworzysz, zapisujemy, kiedy i jak długo oglądałeś prezentację oraz które nieruchomości oznaczyłeś jako ulubione, a osoba, która ją przygotowała, otrzymuje powiadomienie — dzięki temu możemy nawiązać do tego, co rzeczywiście Cię interesuje. Link wygasa po 30 dniach, chyba że uzgodnimy inaczej. Podstawa prawna: art. 6 ust. 1 lit. b RODO oraz art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w dopasowaniu naszego doradztwa do Twoich potrzeb)." },
+          { term: "Terminy spotkań", text: "Jeśli proponujesz lub potwierdzasz termin przez naszą stronę rezerwacji, przetwarzamy proponowane godziny, Twoją strefę czasową i dane kontaktowe w celu ustalenia i potwierdzenia spotkania. Jeśli uzgodnimy spotkanie w formie wideorozmowy, dostawca używanej przez nas usługi wideo (na przykład Zoom) przetwarza dane niezbędne do nawiązania połączenia. Podstawa prawna: art. 6 ust. 1 lit. b RODO." },
+          { term: "Newsletter", text: "Po zapisaniu się przetwarzamy Twój adres e-mail, aby wysyłać newsletter. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda), którą możesz wycofać w każdej chwili, pisząc na office@cyprusvipestates.com." },
+          { term: "Statystyka witryny (własna, bez plików cookie)", text: "Liczymy odsłony na własnym serwerze, bez plików cookie i bez udziału jakichkolwiek podmiotów trzecich. Przy każdej odsłonie zapisujemy stronę i język, domenę witryny, z której do nas trafiłeś, identyfikator przeglądarki i typ urządzenia, kraj ustalony na podstawie adresu IP, ewentualne parametry kampanii zawarte w linku (utm_source, utm_medium, utm_campaign), informację, czy odpowiedziałeś już na baner cookie, oraz kod obliczony z Twojego adresu IP, identyfikatora przeglądarki i daty; kod ten zmienia się codziennie, a sam adres IP nie jest przechowywany. Na stronach projektów odnotowujemy też, jak daleko przewijasz stronę i z których przycisków korzystasz. Statystyki te wykorzystujemy wyłącznie w formie zagregowanej, aby sprawdzić, które treści są przydatne, i nigdy w celu ustalenia Twojej tożsamości. Podstawa prawna: art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w zrozumieniu, w jaki sposób korzysta się z witryny)." },
+          { term: "Atrybucja kampanii", text: "Jeśli trafiasz do nas przez reklamę, link kampanii lub link polecający partnera, Twoja przeglądarka zapisuje źródło wizyty (parametry kampanii, identyfikatory kliknięć reklam, takie jak gclid lub fbclid, adres odsyłający oraz kod partnera) w pamięci bieżącej karty przeglądarki, która jest czyszczona po zamknięciu karty. Jeśli w trakcie tej wizyty wyślesz zapytanie, źródło zostaje zapisane razem z nim, abyśmy wiedzieli, która kampania lub który partner skierował Cię do nas. Tylko jeśli zaakceptujesz pliki cookie, przechowujemy je również w pliku cookie („cve_attr”) przez 90 dni, aby zapytanie wysłane przez Ciebie później zostało prawidłowo przypisane. Podstawa prawna: art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w ustaleniu, od którego partnera lub z której kampanii pochodzi zapytanie) dla pamięci karty oraz art. 6 ust. 1 lit. a RODO (zgoda) dla pliku cookie." },
+          { term: "Google Tag Manager, Google Analytics i Google Ads", text: "Tylko jeśli zaakceptujesz pliki cookie, ładujemy Google Tag Manager (Google Ireland Limited), który następnie uruchamia Google Analytics 4 do pomiaru zasięgu oraz Google Ads do pomiaru konwersji i remarketingu. Sam Tag Manager jedynie zarządza pozostałymi tagami; dane przetwarzają uruchamiane przez niego usługi. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda)." },
           { term: "Piksel Meta", text: "Wyłącznie za Twoją zgodą. Dostawca: Meta Platforms Ireland Limited. Mierzy, czy wizyta nastąpiła po jednej z naszych reklam, i pozwala docierać do podobnych odbiorców. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda)." },
+          { term: "Meta Conversions API", text: "Tylko jeśli zaakceptowałeś pliki cookie, zgłaszamy również dwa zdarzenia bezpośrednio z naszego serwera do Meta Platforms Ireland Limited: wysłanie zapytania („Lead”) oraz nawiązanie kontaktu przez WhatsApp, telefonicznie lub e-mailem („Contact”). W przypadku zapytania przesyłamy Twój adres e-mail i numer telefonu w formie pseudonimizowanej (jako wartości skrótu SHA-256, nigdy otwartym tekstem); w przypadku obu zdarzeń przesyłamy Twój adres IP, identyfikator przeglądarki, adres strony oraz identyfikatory z plików cookie Meta (_fbp, _fbc). Identyfikator zdarzenia zapewnia, że Meta policzy dane zdarzenie tylko raz, nawet jeśli dotrze ono zarówno z Twojej przeglądarki, jak i z naszego serwera. Meta wykorzystuje te dane do pomiaru i ulepszania naszych reklam; w zakresie tego przetwarzania jesteśmy wraz z Meta współadministratorami (art. 26 RODO). Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda)." },
           { term: "LinkedIn Insight Tag", text: "Wyłącznie za Twoją zgodą. Dostawca: LinkedIn Ireland Unlimited Company. Mierzy skuteczność naszych kampanii na LinkedIn i umożliwia tam kierowanie reklam. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda)." },
           { term: "Microsoft Clarity — w tym nagrywanie sesji", text: "Clarity (Microsoft Ireland Operations Limited) pokazuje nam, jak faktycznie korzysta się ze stron: ruch myszy, przewijanie, kliknięcia i interakcje, które można odtworzyć jako zanonimizowane nagranie sesji i zebrać w mapy cieplne. To znacznie więcej niż samo liczenie odsłon, dlatego wymieniamy tę usługę osobno. Skrypt Clarity ładuje się na każdej stronie, ale otrzymuje informację, czy wyraziłeś zgodę: bez zgody działa w ograniczonym trybie Microsoftu, który nie ustawia plików cookie ani nie buduje profilu; za zgodą rejestruje pełną sesję. Podstawa prawna: art. 6 ust. 1 lit. a RODO (zgoda) dla trybu pełnego oraz art. 6 ust. 1 lit. f RODO (nasz uzasadniony interes w rozpoznaniu, gdzie witryna dezorientuje użytkowników) dla trybu ograniczonego. Wobec tego drugiego możesz w każdej chwili wnieść sprzeciw na podstawie art. 21." },
+          { term: "Mapy i inne treści osadzone", text: "Aby wyświetlać mapy, niektóre strony pobierają kafelki map bezpośrednio z OpenFreeMap i OpenStreetMap Foundation, a starsze widoki map pobierają obrazy znaczników z sieci dostarczania treści Cloudflare. Pole numeru telefonu pobiera niewielkie obrazki flag państw z GitHub Pages, a niektóre strony osadzają filmy z YouTube (Google). Gdy Twoja przeglądarka pobiera takie treści, dostawca otrzymuje Twój adres IP i informacje o przeglądarce, jak przy każdym żądaniu w internecie. Podstawa prawna: art. 6 ust. 1 lit. f RODO (nasz prawnie uzasadniony interes w przedstawianiu lokalizacji i filmów w użyteczny sposób)." },
         ]},
       ],
     },
@@ -56,11 +64,14 @@ export const PRIVACY_PL: LegalDoc = {
       title: "3. Kto otrzymuje Twoje dane",
       blocks: [
         { kind: "callout", text: "Przekazanie Twoich danych deweloperowi lub prawnikowi jest istotną częścią naszej usługi. Następuje wyłącznie w związku z konkretnym zainteresowaniem nieruchomością, które nam zgłosiłeś." },
-        { kind: "p", text: "W zależności od zapytania Twoje dane kontaktowe mogą zostać przekazane:" },
+        { kind: "p", text: "W zależności od zapytania Twoje dane mogą otrzymać:" },
         { kind: "list", items: [
-          "Deweloperom na Cyprze — w celu organizacji oglądania i przygotowania ofert dla interesujących Cię nieruchomości. Podstawa prawna: art. 6 ust. 1 lit. b RODO.",
-          "Niezależnym prawnikom — do weryfikacji prawnej i sporządzenia umów, jeśli poprosisz o taki kontakt. Działają jako odrębni administratorzy i są związani własną tajemnicą zawodową.",
-          "Naszym dostawcom IT — hosting, wysyłka poczty i systemy obsługi zapytań. Działają jako podmioty przetwarzające na podstawie art. 28 RODO, wyłącznie zgodnie z naszymi udokumentowanymi poleceniami.",
+          "Deweloperzy na Cyprze — w celu zarejestrowania Cię jako naszego klienta oraz zorganizowania oglądania i przygotowania ofert dla interesujących Cię nieruchomości. Przy rejestracji przekazujemy Twoje imię i nazwisko, informację o interesującej Cię nieruchomości i budżecie oraz częściowo zamaskowany numer telefonu; jeśli zdecydujesz się na oglądanie lub ofertę, deweloper otrzymuje dane kontaktowe niezbędne do ich realizacji. Podstawa prawna: art. 6 ust. 1 lit. b RODO.",
+          "Niezależni prawnicy — do weryfikacji prawnej i sporządzenia umów, jeśli poprosisz o taki kontakt. Działają jako odrębni administratorzy i są związani własną tajemnicą zawodową.",
+          "Partner, który Cię polecił, jeśli taki jest — widzi etap swojego polecenia oraz przygotowane przez nas prezentacje (zob. punkt 2).",
+          "Komunikatory naszego zespołu — każde nowe zapytanie jest przekazywane do czatów naszego zespołu w Telegramie (Telegram FZ-LLC, Zjednoczone Emiraty Arabskie) i WhatsAppie (WhatsApp Ireland Limited), abyśmy mogli szybko odpowiedzieć; jeśli wybierzesz WhatsApp, korespondujemy z Tobą również tym kanałem.",
+          "Nasi dostawcy usług IT, działający jako podmioty przetwarzające na podstawie art. 28 RODO i wyłącznie zgodnie z naszymi udokumentowanymi poleceniami: Hostinger International Ltd. (hosting serwera i poczta e-mail), Anthropic (asystent AI, z którego nasz zespół korzysta do streszczania zapytań, przygotowywania projektów odpowiedzi i porządkowania odpowiedzi deweloperów — ma wgląd w treść zapytania i jego historię) oraz dostawca wideorozmów w przypadku spotkań, na które się zgodzisz.",
+          "Meta, Google, LinkedIn i Microsoft — w zakresie opisanym w punkcie 2, a tam, gdzie punkt 2 tak stanowi, wyłącznie za Twoją zgodą.",
         ]},
         { kind: "p", text: "Nie sprzedajemy Twoich danych osobowych i nie przekazujemy ich do celów reklamowych osób trzecich." },
       ],
@@ -69,7 +80,8 @@ export const PRIVACY_PL: LegalDoc = {
       id: "transfers",
       title: "4. Przekazywanie poza EOG",
       blocks: [
-        { kind: "p", text: "Google, Meta, Microsoft i LinkedIn działają poprzez swoje irlandzkie spółki, jednak przetwarzanie na ich infrastrukturze może obejmować przekazanie danych do Stanów Zjednoczonych. Opiera się ono na decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony w ramach EU–US Data Privacy Framework, o ile odbiorca posiada certyfikat, a w pozostałych przypadkach na standardowych klauzulach umownych zgodnie z art. 46 ust. 2 lit. c RODO." },
+        { kind: "p", text: "Google, Meta, Microsoft i LinkedIn działają poprzez swoje irlandzkie spółki, jednak przetwarzanie na ich infrastrukturze może obejmować przekazanie danych do Stanów Zjednoczonych; to samo dotyczy korzystania przez nas z usług Anthropic, Zoom, Cloudflare i GitHub. Przekazanie to opiera się na decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony w ramach EU–US Data Privacy Framework, o ile odbiorca posiada certyfikat, a w pozostałych przypadkach na standardowych klauzulach umownych zgodnie z art. 46 ust. 2 lit. c RODO." },
+        { kind: "p", text: "Powiadomienia o nowych zapytaniach są przekazywane przez Telegram, którego operator ma siedzibę w Zjednoczonych Emiratach Arabskich — państwie, wobec którego nie wydano decyzji UE stwierdzającej odpowiedni stopień ochrony. Korzystamy z niego wyłącznie po to, aby na Twoje żądanie niezwłocznie obsłużyć Twoje zapytanie (art. 49 ust. 1 lit. b RODO)." },
         { kind: "p", text: "Kopię stosowanych zabezpieczeń możesz uzyskać, kontaktując się z nami w sposób wskazany w punkcie 1." },
       ],
     },
@@ -79,12 +91,13 @@ export const PRIVACY_PL: LegalDoc = {
       blocks: [
         { kind: "p", text: "Dane osobowe przechowujemy tylko tak długo, jak wymaga tego cel ich zebrania, a dłużej wyłącznie wtedy, gdy istnieje ustawowy obowiązek przechowywania." },
         { kind: "list", items: [
-          "Pliki dziennika serwera: tylko tak długo, jak to konieczne do bezpiecznego działania witryny oraz wyjaśnienia awarii lub nadużyć, następnie usuwane lub anonimizowane.",
-          "Zapytania i związana z nimi korespondencja: przez czas kontaktu w sprawie Twojego zapytania, a potem tylko dopóki może z niego jeszcze wyniknąć dalsza rozmowa.",
+          "Pliki dziennika serwera: 14 dni, następnie usuwane.",
+          "Zapytania, korespondencja i wyświetlenia prezentacji: przez czas kontaktu w sprawie Twojego zapytania, a potem tylko dopóki może z niego jeszcze wyniknąć dalsza rozmowa. Gdy usuwamy zapytanie, zostaje ono trwale usunięte z naszego systemu po upływie 90 dni.",
           "Dane związane z zawartą transakcją: przez okres wymagany cypryjskim prawem handlowym i podatkowym.",
           "Zapisy na newsletter: do momentu wypisania się.",
-          "Dowody zgody: tak długo, jak musimy móc wykazać, że zgoda została udzielona.",
-          "Statystyka bez plików cookie: wyłącznie zagregowane liczniki — dziennego skrótu na żadnym etapie nie da się powiązać z osobą.",
+          "Twój wybór dotyczący plików cookie: przechowywany w Twojej przeglądarce przez 180 dni, po czym ponownie o niego zapytamy. Plik cookie atrybucji kampanii (tylko za zgodą): 90 dni. Pamięć karty: do zamknięcia karty.",
+          "Linki, które Ci wysyłamy: linki do pobrania naszych przewodników i osobiste linki do prezentacji wygasają po 30 dniach.",
+          "Statystyka witryny: przechowywana wyłącznie w postaci pseudonimizowanych zapisów opisanych w punkcie 2 i usuwana, gdy nie jest już potrzebna do porównywania korzystania z witryny w czasie.",
         ]},
         { kind: "p", text: "Jeśli chcesz wiedzieć, jak długo przechowujemy określoną kategorię Twoich danych, zapytaj nas — poinformujemy Cię." },
       ],
@@ -93,13 +106,13 @@ export const PRIVACY_PL: LegalDoc = {
       id: "cookies",
       title: "6. Pliki cookie i zgoda",
       blocks: [
-        { kind: "p", text: "Nasz baner cookie oferuje te same trzy kategorie, których używamy w tej polityce:" },
+        { kind: "p", text: "Nasz baner cookie daje Ci jeden wybór: zaakceptować wszystkie opcjonalne pliki cookie albo zezwolić tylko na niezbędne. Akceptacja obejmuje opisane poniżej kategorie „Analityczne” i „Marketingowe”; odmowa pozostawia wyłącznie to, co niezbędne." },
         { kind: "definitions", items: [
-          { term: "Niezbędne", text: "Wymagane do działania witryny — na przykład zapamiętanie wyboru języka i samej decyzji o plikach cookie. Podstawa: art. 6 ust. 1 lit. f RODO; nie można ich wyłączyć." },
-          { term: "Analityczne", text: "Google Analytics 4 (przez Google Tag Manager) oraz Microsoft Clarity w trybie pełnym. Ustawiane dopiero po Twojej zgodzie." },
-          { term: "Marketingowe", text: "Google Ads, piksel Meta i LinkedIn Insight Tag. Ustawiane dopiero po Twojej zgodzie." },
+          { term: "Niezbędne", text: "Wymagane do działania witryny: plik cookie „cookieConsent”, który zapamiętuje Twój wybór przez 180 dni, oraz opisana w punkcie 2 pamięć karty na potrzeby atrybucji kampanii. Język jest częścią adresu strony, więc nie wymaga pliku cookie. Podstawa: art. 6 ust. 1 lit. f RODO." },
+          { term: "Analityczne", text: "Google Analytics 4 (przez Google Tag Manager) oraz Microsoft Clarity w trybie pełnym, które ustawiają własne pliki cookie (na przykład _ga, _clck, _clsk). Ustawiane dopiero po Twojej zgodzie." },
+          { term: "Marketingowe", text: "Google Ads, piksel Meta i Conversions API oraz LinkedIn Insight Tag, które ustawiają własne pliki cookie (na przykład _gcl_au, _fbp, _fbc oraz pliki cookie li_ serwisu LinkedIn), a także nasz plik cookie atrybucji kampanii „cve_attr” (90 dni). Ustawiane dopiero po Twojej zgodzie." },
         ]},
-        { kind: "p", text: "Swoją decyzję możesz w każdej chwili zmienić lub wycofać za pomocą banera cookie; nie wpływa to na zgodność z prawem przetwarzania dokonanego wcześniej. Pliki cookie możesz też blokować lub usuwać w ustawieniach przeglądarki — części witryny mogą wtedy nie działać zgodnie z przeznaczeniem." },
+        { kind: "p", text: "Swoją decyzję możesz w każdej chwili zmienić lub wycofać za pomocą linku „Ustawienia cookies” na dole każdej strony; po wycofaniu zgody strona załaduje się ponownie bez narzędzi opcjonalnych. Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania dokonanego wcześniej. Pliki cookie możesz też blokować lub usuwać w ustawieniach przeglądarki — części witryny mogą wtedy nie działać zgodnie z przeznaczeniem." },
       ],
     },
     {
@@ -131,7 +144,7 @@ export const PRIVACY_PL: LegalDoc = {
       id: "automated-decisions",
       title: "9. Zautomatyzowane decyzje",
       blocks: [
-        { kind: "p", text: "Nie stosujemy zautomatyzowanego podejmowania decyzji ani profilowania wywołującego skutki prawne lub w podobny sposób istotnie wpływającego na Ciebie w rozumieniu art. 22 RODO. Jeśli używamy oprogramowania do porządkowania lub streszczania zapytań, o dalszych krokach zawsze decyduje człowiek." },
+        { kind: "p", text: "Nie stosujemy zautomatyzowanego podejmowania decyzji ani profilowania wywołującego skutki prawne lub w podobny sposób istotnie wpływającego na Ciebie w rozumieniu art. 22 RODO. Nasze oprogramowanie proponuje nieruchomości odpowiadające podanym przez Ciebie preferencjom, a nasz zespół korzysta z asystenta AI do streszczania zapytań i przygotowywania projektów odpowiedzi (zob. punkt 3); wynik zawsze sprawdza człowiek, który decyduje o dalszych krokach." },
       ],
     },
     {
