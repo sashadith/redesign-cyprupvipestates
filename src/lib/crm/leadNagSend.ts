@@ -15,7 +15,6 @@ import {
   type InlineButton, type NagLead, type NagUser,
 } from "./leadNag";
 import { answerOfficeCallback, editOfficeKeyboard, officeBotConfig, sendOfficeMessage } from "./officeBot";
-import { leadRef } from "@/lib/chatPrivacy";
 
 const LEAD_CAP = 3000;
 /** A link code is valid this long. */
@@ -106,7 +105,7 @@ export async function handleNagSnooze(input: {
   await prisma.leadActivity.create({
     data: { leadId: lead.id, type: "EDIT", content: `Follow-up moved to ${label} from the Telegram reminder`, createdBy: who.slice(0, 120), createdById: chatUser?.id ?? null },
   });
-  await answerOfficeCallback(input.callbackId, `${leadRef(lead.id)}: follow-up ${label}.`);
+  await answerOfficeCallback(input.callbackId, `${`${lead.firstName} ${lead.lastName}`.trim() || "Lead"}: follow-up ${label}.`);
   await editOfficeKeyboard(input.chatId, input.messageId, withoutLeadRow(input.keyboard, lead.id));
 }
 

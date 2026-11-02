@@ -25,6 +25,14 @@ import { buildPartnerClientNotice } from "@/lib/partner/submitFlow";
 
 const LEAD_ID = "3f9a2c11-7d4e-4b8a-9c3d-2e1f0a9b8c7d";
 const PII = ["Annabel", "Kowalczyk", "annabel.k@example.com", "+49 170 5550123", "4917055501", "Polish", "please call after six"];
+// Office reminders (follow-up nags, SLA, registration due/reminders) name the
+// client again (operator, 2026-11-02: "ich will aber die namen sehen"; the
+// privacy policy says so). Contact details, nationality and the message still never go out.
+const CONTACT = PII.slice(2);
+const assertNameOnly = (text: string, where: string) => {
+  for (const v of CONTACT) assert.ok(!text.includes(v), `${where} leaks "${v}"`);
+  assert.ok(text.includes("Annabel"), `${where} should name the lead`);
+};
 const assertNoPii = (text: string, where: string) => {
   for (const v of PII) assert.ok(!text.includes(v), `${where} leaks "${v}"`);
   assert.ok(text.includes(leadRef(LEAD_ID)) || where.startsWith("review"), `${where} should name the lead by its reference`);
@@ -67,7 +75,7 @@ test("Meta lead form: the stored chat text carries no contact details", () => {
   }), "Meta lead");
 });
 
-test("office reminders (nag, SLA, registrations): references, never names", () => {
+test("office reminders (nag, SLA, registrations): the client's name, never contact details", () => {
   const DAY = 86_400_000;
   const now = new Date("2026-11-02T08:00:00Z");
   const items = nagItems([{
@@ -75,15 +83,15 @@ test("office reminders (nag, SLA, registrations): references, never names", () =
     lastContactAt: new Date(now.getTime() - 9 * DAY), nextFollowUpAt: new Date(now.getTime() - 2 * DAY), viewingScheduledAt: null, assignedToId: null,
   }], now);
   const nag = buildNagMessage(items, { slot: 10, crmBase: "https://x" })!;
-  assertNoPii(nag.text + JSON.stringify(nag.keyboard), "nag");
+  assertNameOnly(nag.text + JSON.stringify(nag.keyboard), "nag");
 
   const sla: SlaLead = { id: LEAD_ID, name: "Annabel Kowalczyk", status: "NEW", createdAt: now, assignedToId: "u1", ownerName: "Sascha", ownerEmail: "s@x", assignedAt: new Date(now.getTime() - 5 * 3_600_000) } as SlaLead;
-  assertNoPii(unassignedTelegram([sla], "https://x"), "SLA unassigned");
-  assertNoPii(escalateTelegram([sla], now, "https://x"), "SLA escalate");
+  assertNameOnly(unassignedTelegram([sla], "https://x"), "SLA unassigned");
+  assertNameOnly(escalateTelegram([sla], now, "https://x"), "SLA escalate");
 
   const pair = { developerAccountId: "d1", developerName: "Marinakis", channel: "EMAIL" as const, registrable: true, developmentIds: ["p1"], projects: ["Sea View"], since: new Date(now.getTime() - DAY), lastRemindedAt: null };
-  assertNoPii(dueTelegram([{ leadId: LEAD_ID, leadName: "Annabel Kowalczyk", ownerName: "Sascha", pairs: [pair] }], now, "https://x"), "registration due");
-  assertNoPii(reminderTelegram([{
+  assertNameOnly(dueTelegram([{ leadId: LEAD_ID, leadName: "Annabel Kowalczyk", ownerName: "Sascha", pairs: [pair] }], now, "https://x"), "registration due");
+  assertNameOnly(reminderTelegram([{
     id: "r1", status: "SENT", sentAt: now, reminderSentAt: null, developerName: "Marinakis",
     lead: { id: LEAD_ID, name: "Annabel Kowalczyk", status: "CONTACTED", deletedAt: null, assignedTo: null },
   }], "https://x"), "registration reminder");
