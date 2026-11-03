@@ -71,7 +71,7 @@ export function PresentationEmailSend({ leadId, leadEmail, token, initialSubject
         </>
       )}
 
-      {step.kind === "done" && <p className="crm-pres-sent">{step.message}</p>}
+      {step.kind === "done" && <p className="crm-pres-done">{step.message}</p>}
 
       {error && <p className="crm-dialog-error" role="alert">{error}</p>}
 

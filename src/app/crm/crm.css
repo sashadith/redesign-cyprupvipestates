@@ -994,7 +994,7 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-pres-mailto { font-size: calc(14px * var(--ds-crm-scale)); }
 .crm-pres-code { font: 700 calc(20px * var(--ds-crm-scale)) var(--body) !important; letter-spacing: .3em; text-transform: uppercase; max-width: 220px; }
 .crm-pres-hint { font-size: calc(12.5px * var(--ds-crm-scale)); }
-.crm-pres-sent { color: var(--good); font-weight: 600; font-size: calc(13.5px * var(--ds-crm-scale)); }
+.crm-pres-done { color: var(--good); font-weight: 600; font-size: calc(13.5px * var(--ds-crm-scale)); }
 .crm-pres-waconfirm { display: grid; gap: 8px; border: 1px solid var(--line-strong); border-radius: calc(12px * var(--ds-radius-scale)); padding: 12px 14px; }
 .crm-pres-waconfirm pre { margin: 0; white-space: pre-wrap; font: 500 calc(13.5px * var(--ds-crm-scale)) var(--body); line-height: 1.5; color: var(--ink); }
 @media (max-width: 760px) {

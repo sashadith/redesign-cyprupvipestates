@@ -81,7 +81,7 @@ export function PresentationCreated({ leadId, created, hasEmail, onEmail, onClos
           </div>
         </div>
       )}
-      {wa.kind === "sent" && <p className="crm-pres-sent">{wa.message}</p>}
+      {wa.kind === "sent" && <p className="crm-pres-done">{wa.message}</p>}
       <div className="crm-dialog-actions">
         <button type="button" className="crm-btn primary" onClick={onClose}>Close</button>
       </div>
