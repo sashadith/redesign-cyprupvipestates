@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useLayoutEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import PropertyCard, { type PresentationItemVM } from "./PropertyCard";
 import PropertyOverlay, { type OverlayUnit } from "./PropertyOverlay";
@@ -78,11 +78,50 @@ export default function PresentationBody({
     document.getElementById(`cp-card-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
+  // The open overlay's view row: its time on screen is sent back like ViewTracker does for the page,
+  // so the CRM's per-project "views · m:ss" (and the hot card's 60-second test) has a real duration.
+  // Before 2026-11-03 nothing ever sent it, and every project read 0:00.
+  const projectView = useRef<{ start: number; viewId: string | null; pending: Promise<string | null> } | null>(null);
+
+  const sendProjectDuration = useCallback((closing: boolean) => {
+    const v = projectView.current;
+    if (!v) return;
+    if (closing) projectView.current = null;
+    const durationSec = Math.round((Date.now() - v.start) / 1000);
+    const send = (viewId: string | null) => {
+      if (!viewId) return;
+      const payload = JSON.stringify({ viewId, durationSec });
+      navigator.sendBeacon?.(`/api/c/${token}/view`, new Blob([payload], { type: "application/json" }));
+    };
+    if (v.viewId) send(v.viewId);
+    else v.pending.then(send);
+  }, [token]);
+
   const openDetails = useCallback((developmentId: string) => {
     setOpenId(developmentId);
     if (!trackViews) return;
-    fetch(`/api/c/${token}/view`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ developmentId }) }).catch(() => {});
-  }, [token, trackViews]);
+    sendProjectDuration(true);
+    const entry: { start: number; viewId: string | null; pending: Promise<string | null> } = { start: Date.now(), viewId: null, pending: Promise.resolve(null) };
+    entry.pending = fetch(`/api/c/${token}/view`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ developmentId }) })
+      .then((r) => r.json())
+      .then((d) => { entry.viewId = typeof d?.id === "string" ? d.id : null; return entry.viewId; })
+      .catch(() => null);
+    projectView.current = entry;
+  }, [token, trackViews, sendProjectDuration]);
+
+  // Closing the overlay ends the project view; hiding the tab or leaving the page reports the time so far
+  // (a later report for the same row overwrites it with the longer figure).
+  useEffect(() => { if (openId == null) sendProjectDuration(true); }, [openId, sendProjectDuration]);
+  useEffect(() => {
+    const onHide = () => sendProjectDuration(false);
+    const onVisibility = () => { if (document.visibilityState === "hidden") onHide(); };
+    window.addEventListener("pagehide", onHide);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [sendProjectDuration]);
 
   // Cards reveal in batches as they scroll into view (ScrollTrigger.batch groups
   // elements that enter around the same time — naturally one grid row at a
