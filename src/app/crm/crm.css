@@ -183,9 +183,12 @@
 .crm-card .av { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: calc(9.5px * var(--ds-crm-scale)); font-weight: 700; color: var(--onaccent); background: var(--accent); }
 .crm-card .av.none { background: var(--colbg); color: var(--muted); font-size: calc(12px * var(--ds-crm-scale)); }
 /* Money: Fraunces in bronze ink (small sizes need #7A5A30 for AA). */
-.crm-card .c-deal { display: flex; justify-content: space-between; gap: 6px; border-top: 1px dashed var(--line-strong); padding-top: 7px;
-  font: 500 calc(13.5px * var(--ds-crm-scale) * var(--ds-heading-scale)) var(--display); color: var(--accent-ink); font-variant-numeric: tabular-nums; }
-.crm-card .c-deal .comm { color: var(--accent-ink); font-style: italic; }
+/* Deal line (operator pick 2026-11-03): small caps label over each figure, both figures champagne in the body font. */
+.crm-card .c-deal { display: flex; justify-content: space-between; align-items: flex-end; gap: 6px; border-top: 1px dashed var(--line-strong); padding-top: 7px;
+  font: 700 calc(14px * var(--ds-crm-scale)) var(--body); color: var(--champagne); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.crm-card .c-deal > span { display: flex; flex-direction: column; }
+.crm-card .c-deal .comm { align-items: flex-end; }
+.crm-card .c-deal i { font: 700 calc(9px * var(--ds-crm-scale)) var(--body); font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
 .crm-cardwrap { position: relative; }
 .crm-move { position: absolute; top: 8px; right: 8px; opacity: 0; border: 1px solid var(--line-strong); background: var(--panel); color: var(--muted);
   font: 600 calc(11px * var(--ds-crm-scale)) var(--body); border-radius: calc(7px * var(--ds-radius-scale)); padding: 2px 7px; cursor: pointer; transition: opacity .15s; }
