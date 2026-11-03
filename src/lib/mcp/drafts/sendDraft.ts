@@ -9,7 +9,12 @@ import { checkCcRecipients } from "./ccRecipients";
 // Spec "Draft → approve → send", step 3. The code is checked by the pure
 // reducer; every state change here is an atomic conditional update so two
 // concurrent sends of one draft cannot both go out.
-export async function sendEmailDraft(actor: EmailActor, draftId: string, approvalCode: string, access: LeadScope) {
+export async function sendEmailDraft(
+  actor: EmailActor, draftId: string, approvalCode: string, access: LeadScope,
+  // origin "crm": the operator wrote it, so not AI-generated; a presentation
+  // email links its selection and leaves the cadence alone (counted at creation).
+  opts: { origin?: "mcp" | "crm"; presentationToken?: string } = {},
+) {
   const draft = await prisma.leadEmailDraft.findUnique({
     where: { id: draftId },
     select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
@@ -45,7 +50,9 @@ export async function sendEmailDraft(actor: EmailActor, draftId: string, approva
   const claimed = await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "PENDING" }, data: { status: "SENDING" } });
   if (claimed.count !== 1) throw new ToolError("validation", "This draft is already being sent.");
 
-  const result = await sendLeadEmail(actor, draft.leadId, { subject: draft.subject, body: draft.body, cc: draft.cc, aiGenerated: true, via: "mcp", draftId: draft.id });
+  const result = opts.origin === "crm"
+    ? await sendLeadEmail(actor, draft.leadId, { subject: draft.subject, body: draft.body, cc: draft.cc, draftId: draft.id, presentationToken: opts.presentationToken, skipCadence: true })
+    : await sendLeadEmail(actor, draft.leadId, { subject: draft.subject, body: draft.body, cc: draft.cc, aiGenerated: true, via: "mcp", draftId: draft.id });
   if (!result.ok) {
     await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "SENDING" }, data: { status: "PENDING" } });
     const scrub = (s: string) => s.split(draft.approvalCode).join("••••••");

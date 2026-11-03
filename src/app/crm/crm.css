@@ -986,6 +986,17 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-pres-share { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .crm-pres-share a.crm-btn { text-decoration: none; }
 .crm-pres-copied { font-size: calc(12.5px * var(--ds-crm-scale)); color: var(--good); font-weight: 600; }
+/* Sending a new selection (2026-11-03): email with approval code, WhatsApp via the CRM number. */
+.crm-pres-mail { gap: 8px; width: min(560px, 100%); max-width: none; }
+.crm-pres-mail label { margin-top: 4px; }
+.crm-pres-mail textarea { border: 1px solid var(--field-line); border-radius: calc(12px * var(--ds-radius-scale)); padding: 9px 11px; font: 500 calc(14px * var(--ds-crm-scale)) var(--body); line-height: 1.5; color: var(--ink); background: var(--field-bg); resize: vertical; }
+.crm-pres-mail textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.crm-pres-mailto { font-size: calc(14px * var(--ds-crm-scale)); }
+.crm-pres-code { font: 700 calc(20px * var(--ds-crm-scale)) var(--body) !important; letter-spacing: .3em; text-transform: uppercase; max-width: 220px; }
+.crm-pres-hint { font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-pres-sent { color: var(--good); font-weight: 600; font-size: calc(13.5px * var(--ds-crm-scale)); }
+.crm-pres-waconfirm { display: grid; gap: 8px; border: 1px solid var(--line-strong); border-radius: calc(12px * var(--ds-radius-scale)); padding: 12px 14px; }
+.crm-pres-waconfirm pre { margin: 0; white-space: pre-wrap; font: 500 calc(13.5px * var(--ds-crm-scale)) var(--body); line-height: 1.5; color: var(--ink); }
 @media (max-width: 760px) {
   .crm-dialog.crm-pres-dialog { width: 100vw; height: 100dvh; max-height: none; margin: 0; border-radius: 0; border: 0; }
   .crm-pres-head, .crm-pres-scroll, .crm-pres-foot { padding-left: 16px; padding-right: 16px; }
