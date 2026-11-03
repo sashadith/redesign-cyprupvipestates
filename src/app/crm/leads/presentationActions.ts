@@ -12,7 +12,6 @@ import { listPresentationLocationOptions, type LocationOptions } from "@/lib/crm
 import { buildEditorItems, type EditorItem } from "@/lib/crm/presentations/editorItems";
 import { favoritesSeedFromRows, type FavoritesSeed } from "@/lib/crm/presentations/favoritesSeed";
 import { matchDevelopmentsForLead, type MatchFilters, type DevelopmentMatch } from "@/lib/crm/matching";
-import { sendLeadEmail } from "@/lib/crm/sendLeadEmail";
 
 // Client presentations in the new CRM. Middleware does not protect server
 // actions: every export checks the session and presentationGuard itself, and
@@ -180,37 +179,6 @@ export async function deletePresentationAction(id: string): Promise<{ ok: true }
   if (!r) return { error: NOT_FOUND };
   revalidatePath(`/crm/leads/${owner.leadId}`);
   return { ok: true };
-}
-
-export async function sendPresentationEmailAction(
-  leadId: string,
-  opts: { subject: string; body: string; leadReacted?: boolean; presentationToken?: string },
-): Promise<{ ok: string } | { error: string }> {
-  const { user, lead, error } = await guardedLead(leadId);
-  if (error || !lead || !user) return { error: error ?? NOT_FOUND };
-  // sendLeadEmail does not check the token belongs to this lead.
-  if (opts?.presentationToken !== undefined) {
-    const t = opts.presentationToken;
-    const own = typeof t === "string" && t.length > 0 && t.length <= 64
-      ? await prisma.clientPresentation.findFirst({ where: { token: t, leadId: lead.id }, select: { id: true } })
-      : null;
-    if (!own) return { error: "Selection not found." };
-  }
-  const result = await sendLeadEmail(
-    { userId: user.id, userName: user.name },
-    lead.id,
-    {
-      subject: opts?.subject, body: opts?.body, leadReacted: opts?.leadReacted,
-      presentationToken: opts?.presentationToken, skipCadence: true,
-    },
-  );
-  if (!result.ok) return { error: result.error };
-  revalidatePath(`/crm/leads/${lead.id}`);
-  return {
-    ok: result.interactionError
-      ? `Email sent to ${result.sentTo}, but the timeline entry failed (${result.interactionError}); add it by hand.`
-      : `Email sent to ${result.sentTo}.`,
-  };
 }
 
 // ---------- Saved advisor notes (2026-11-03) ----------

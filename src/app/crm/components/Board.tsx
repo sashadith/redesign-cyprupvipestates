@@ -78,7 +78,7 @@ export function CardView({ card, drag: dragAll }: { card: BoardCard; drag?: Drag
           <div className="c-urg"><span className={`urg ${card.urgency.level}`} title={card.urgency.reason}>{card.urgency.label}</span></div>
         )}
         {card.dealValue != null && (
-          <div className="c-deal"><span>{eur(card.dealValue)}</span>{card.dealCommission != null && <span className="comm">{card.status === "CLOSED" ? "Earned" : "Exp."} {eur(card.dealCommission)}</span>}</div>
+          <div className="c-deal"><span><i>Deal</i>{eur(card.dealValue)}</span>{card.dealCommission != null && <span className="comm"><i>{card.status === "CLOSED" ? "Earned" : "Commission"}</i>{eur(card.dealCommission)}</span>}</div>
         )}
       </a>
       {drag && (

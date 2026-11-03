@@ -50,7 +50,7 @@ export type LogInteractionInput = {
   occurredAt?: Date;
   leadReacted?: boolean;
   aiGenerated?: boolean;
-  via?: "mcp" | "mcp-whatsapp";
+  via?: "mcp" | "mcp-whatsapp" | "crm-whatsapp";
 };
 
 export async function logLeadInteraction(actor: EmailActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {

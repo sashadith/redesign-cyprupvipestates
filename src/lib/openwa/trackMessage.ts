@@ -84,11 +84,17 @@ const MEDIA_LABEL: Record<string, string> = {
   document: "[Document]", sticker: "[Sticker]", location: "[Location]", vcard: "[Contact card]",
 };
 
+// A photo without caption arrives with its base64 JPEG thumbnail in `body` ("/9j/4AAQ…", 2026-11-03),
+// which the timeline then printed as 4,700 characters of noise. Real text always has a space or a
+// line break somewhere in this length; a thumbnail never does.
+const BASE64_BLOB = /^[A-Za-z0-9+/]{200,}={0,2}$/;
+
 /** The text a timeline row shows: the message body, or a label for a media message without caption. */
 export function messageText(msg: Pick<WaMessage, "body" | "type">): string | null {
-  const body = (msg.body ?? "").trim();
-  if (body) return body.slice(0, MAX_BODY);
-  return MEDIA_LABEL[(msg.type ?? "").trim()] ?? null;
+  const raw = (msg.body ?? "").trim();
+  const blob = BASE64_BLOB.test(raw);
+  if (raw && !blob) return raw.slice(0, MAX_BODY);
+  return MEDIA_LABEL[(msg.type ?? "").trim()] ?? (blob ? "[Media]" : null);
 }
 
 /** The customer's side of a one-to-one chat ("…@c.us" or "…@lid"), or null for groups, broadcasts and the like. */
