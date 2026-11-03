@@ -179,7 +179,7 @@ export const PRIVACY_EN: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, show your name, contact details and message (see section 3). We pass these details to Telegram only to handle your enquiry promptly at your request (Art. 49 (1) (b) GDPR). Updates we send on Telegram to a partner who introduced you carry only a reference number and the stage of the introduction.",
+          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, show your name, contact details and message (see section 3). We pass these details to Telegram only to handle your enquiry promptly at your request (Art. 49 (1) (b) GDPR). Updates we send on Telegram to a partner who introduced you carry your name and the stage of the introduction, never your contact details.",
         },
         {
           kind: "p",

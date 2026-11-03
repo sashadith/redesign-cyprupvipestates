@@ -108,7 +108,7 @@ function onlyTelegramTags(s: string) {
 test("buildBotReply: every kind renders in every locale with Telegram-safe HTML", () => {
   const data = {
     portalUrl: "https://partners.example.com",
-    clients: [{ ref: "#3f9a2c <script>alert(1)</script>", stageKey: "stages.viewing" }],
+    clients: [{ name: "Anna <script>alert(1)</script>", stageKey: "stages.viewing" }],
     more: 2,
     totals: [{ stage: "EXPECTED", amount: "€1,000" }, { stage: "PAID_OUT", amount: "€500" }],
     lastPayout: { amount: "€500", creditNoteNumber: "CN-2026-0001" },
@@ -124,10 +124,10 @@ test("buildBotReply: every kind renders in every locale with Telegram-safe HTML"
   }
 });
 
-test("buildBotReply: status escapes references, lists stage, notes more", () => {
+test("buildBotReply: status escapes names, lists stage, notes more", () => {
   const s = buildBotReply("en", {
     kind: "status",
-    data: { portalUrl: "https://p.example", clients: [{ ref: "A & B <x>", stageKey: "stages.viewing" }], more: 3 },
+    data: { portalUrl: "https://p.example", clients: [{ name: "A & B <x>", stageKey: "stages.viewing" }], more: 3 },
   });
   assert.match(s, /A &amp; B &lt;x&gt;/);
   assert.match(s, /Viewing/i);
@@ -135,7 +135,7 @@ test("buildBotReply: status escapes references, lists stage, notes more", () => 
 });
 
 test("buildBotReply: status caps at 10 lines", () => {
-  const clients = Array.from({ length: 14 }, (_, i) => ({ ref: `Client${i}`, stageKey: "stages.submitted" }));
+  const clients = Array.from({ length: 14 }, (_, i) => ({ name: `Client${i}`, stageKey: "stages.submitted" }));
   const s = buildBotReply("en", { kind: "status", data: { portalUrl: "https://p.example", clients } });
   assert.match(s, /Client9\b/);
   assert.doesNotMatch(s, /Client10\b/);
@@ -179,7 +179,7 @@ test("buildTelegramNotification: every kind in every locale", () => {
   for (const l of PARTNER_LOCALES) {
     for (const kind of NOTIFICATION_KINDS) {
       const s = buildTelegramNotification(l, {
-        ...base, kind, clientRef: "#3f9a2c", stageKey: "stages.offer", accepted: true,
+        ...base, kind, clientName: "Anna", stageKey: "stages.offer", messageBody: "Hello", accepted: true,
         amount: "€1,000", creditNoteNumber: "CN-1", projectName: "Sea View", changeType: "price_from_changed", priceFrom: "€250,000",
       });
       assert.ok(s.length > 0 && s.length <= TELEGRAM_MAX_CHARS, `${l} ${kind}`);
@@ -190,28 +190,37 @@ test("buildTelegramNotification: every kind in every locale", () => {
   }
 });
 
-test("buildTelegramNotification: the client is a reference, a message stays in the portal (2026-11-02)", () => {
-  const s = buildTelegramNotification("en", { ...base, kind: "MESSAGE", clientRef: "#3f9a2c<script>" });
+test("buildTelegramNotification: escapes client name and message body", () => {
+  const s = buildTelegramNotification("en", { ...base, kind: "MESSAGE", clientName: "<script>x</script>", messageBody: "<b>hi</b> & <script>" });
   assert.doesNotMatch(s, /<script>/);
-  assert.match(s, /#3f9a2c&lt;script&gt;/);
-  assert.match(s, /href="https:\/\/p\.example\/clients\/c1"/);
+  assert.match(s, /&lt;script&gt;x&lt;\/script&gt;/);
+  assert.match(s, /&lt;b&gt;hi&lt;\/b&gt; &amp;/);
   onlyTelegramTags(s);
-  // No messageBody field any more: a body can only reach the partner by e-mail or in the portal.
-  const input: Parameters<typeof buildTelegramNotification>[1] = { ...base, kind: "MESSAGE", clientRef: "#1" };
-  assert.ok(!("messageBody" in input));
+});
+
+test("buildTelegramNotification: long message is truncated with an ellipsis", () => {
+  const s = buildTelegramNotification("en", { ...base, kind: "MESSAGE", clientName: "Anna", messageBody: "x".repeat(5000) });
+  assert.ok(s.length <= TELEGRAM_MAX_CHARS);
+  assert.match(s, /x…/);
+});
+
+test("buildTelegramNotification: truncation never cuts an entity in half", () => {
+  const s = buildTelegramNotification("en", { ...base, kind: "MESSAGE", clientName: "Anna", messageBody: "&".repeat(3000) });
+  assert.ok(s.length <= TELEGRAM_MAX_CHARS);
+  assert.doesNotMatch(s.replace(/&amp;/g, ""), /&(?!lt;|gt;|quot;|#39;)/);
 });
 
 test("buildTelegramNotification: claim outcome accepted vs rejected differ; rejection is neutral", () => {
-  const a = buildTelegramNotification("en", { ...base, kind: "CLAIM_OUTCOME", clientRef: "#3f9a2c", accepted: true });
-  const r = buildTelegramNotification("en", { ...base, kind: "CLAIM_OUTCOME", clientRef: "#3f9a2c", accepted: false });
+  const a = buildTelegramNotification("en", { ...base, kind: "CLAIM_OUTCOME", clientName: "Anna", accepted: true });
+  const r = buildTelegramNotification("en", { ...base, kind: "CLAIM_OUTCOME", clientName: "Anna", accepted: false });
   assert.notEqual(a, r);
 });
 
 test("buildTelegramNotification: payout and match carry their figures", () => {
-  const p = buildTelegramNotification("de", { ...base, kind: "PAYOUT", clientRef: "#3f9a2c", amount: "1.000 €", creditNoteNumber: "CN-9" });
+  const p = buildTelegramNotification("de", { ...base, kind: "PAYOUT", clientName: "Anna", amount: "1.000 €", creditNoteNumber: "CN-9" });
   assert.match(p, /1\.000 €/);
   assert.match(p, /CN-9/);
-  const m = buildTelegramNotification("en", { ...base, kind: "MATCH", clientRef: "#3f9a2c", projectName: "Sea <View>", changeType: "published", priceFrom: "€300,000" });
+  const m = buildTelegramNotification("en", { ...base, kind: "MATCH", clientName: "Anna", projectName: "Sea <View>", changeType: "published", priceFrom: "€300,000" });
   assert.match(m, /Sea &lt;View&gt;/);
   assert.match(m, /€300,000/);
 });

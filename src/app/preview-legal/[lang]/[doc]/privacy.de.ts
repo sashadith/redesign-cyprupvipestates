@@ -152,7 +152,7 @@ export const PRIVACY_DE: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Die Team-Benachrichtigungen über Telegram, dessen Betreiber seinen Sitz in den Vereinigten Arabischen Emiraten hat, einem Land ohne Angemessenheitsbeschluss der EU, zeigen Ihren Namen, Ihre Kontaktdaten und Ihre Nachricht (siehe Abschnitt 3). Diese Angaben geben wir an Telegram nur weiter, um Ihre Anfrage auf Ihren Wunsch zügig zu bearbeiten (Art. 49 Abs. 1 lit. b DSGVO). Neuigkeiten, die wir einem vermittelnden Partner über Telegram schicken, enthalten nur eine Referenznummer und den Stand der Vermittlung.",
+          text: "Die Team-Benachrichtigungen über Telegram, dessen Betreiber seinen Sitz in den Vereinigten Arabischen Emiraten hat, einem Land ohne Angemessenheitsbeschluss der EU, zeigen Ihren Namen, Ihre Kontaktdaten und Ihre Nachricht (siehe Abschnitt 3). Diese Angaben geben wir an Telegram nur weiter, um Ihre Anfrage auf Ihren Wunsch zügig zu bearbeiten (Art. 49 Abs. 1 lit. b DSGVO). Neuigkeiten, die wir einem vermittelnden Partner über Telegram schicken, enthalten Ihren Namen und den Stand der Vermittlung, nie Ihre Kontaktdaten.",
         },
         {
           kind: "p",

@@ -13,7 +13,6 @@ import { formatPayoutAmount, formatShare, partnerDate } from "./notify";
 import { quietWindow } from "./notifyPrefs";
 import { getMyClient, listMyClients, myCommissions, myOverview, projectRates, recentlyPublishedProjects } from "./scope";
 import { STATUS_LIST_MAX, buildBotReply, normalizeLinkCode, parseBotCommand, type BotReplyData, type BotReplyKind } from "./telegram";
-import { clientRef } from "@/lib/chatPrivacy";
 import { answerPartnerCallback, editPartnerTelegram, sendPartnerTelegram } from "./telegramApi";
 import {
   CLIENTS_PER_PAGE, CLIENT_PAGES_MAX, channelScreen, clientScreen, clientsScreen, commissionScreen, keyboardAction, keyboardMessage, languageScreen,
@@ -80,7 +79,7 @@ async function statusData(partnerId: string): Promise<BotReplyData> {
   // Clients on later pages are not loaded; they are counted (some may still be in review).
   const beyond = list.pages > 1 ? Math.max(0, list.total - list.items.length) : 0;
   return {
-    clients: active.slice(0, STATUS_LIST_MAX).map((c) => ({ ref: clientRef(c.id), stageKey: c.chipKey })),
+    clients: active.slice(0, STATUS_LIST_MAX).map((c) => ({ name: c.name, stageKey: c.chipKey })),
     more: Math.max(0, active.length - STATUS_LIST_MAX) + beyond,
   };
 }
@@ -236,7 +235,7 @@ async function screenFor(p: MenuPartner, locale: PartnerLocale, action: MenuActi
       const pages = Math.max(1, Math.min(CLIENT_PAGES_MAX, Math.ceil(active.length / CLIENTS_PER_PAGE)));
       const page = Math.min(action.page, pages);
       return clientsScreen(locale, {
-        items: active.slice((page - 1) * CLIENTS_PER_PAGE, page * CLIENTS_PER_PAGE).map((c) => ({ id: c.id, ref: clientRef(c.id), stageKey: c.chipKey })),
+        items: active.slice((page - 1) * CLIENTS_PER_PAGE, page * CLIENTS_PER_PAGE).map((c) => ({ id: c.id, name: c.name, stageKey: c.chipKey })),
         page, pages,
         more: list.pages > 1 || active.length > CLIENT_PAGES_MAX * CLIENTS_PER_PAGE,
       });
@@ -246,7 +245,7 @@ async function screenFor(p: MenuPartner, locale: PartnerLocale, action: MenuActi
       const c = await getMyClient(p.id, action.id);
       if (!c) return clientsScreen(locale, { items: [], page: 1, pages: 1, more: false });
       return clientScreen(locale, {
-        ref: clientRef(c.id), stageKey: c.chipKey,
+        name: c.name, stageKey: c.chipKey,
         protectedUntil: c.kind === "active" && !c.protection.expired ? partnerDate(locale, c.protection.until) : null,
         url: portal ? `${portal}/clients/${encodeURIComponent(c.id)}` : "",
       });

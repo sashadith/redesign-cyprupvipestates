@@ -752,7 +752,7 @@ export const pl: PartnerDict = {
     },
     notify: {
       stage: "Nowe informacje o Państwa kliencie {client}: {stage}",
-      message: "Nowa wiadomość od Cyprus VIP Estates dotycząca Państwa klienta {client}.",
+      message: "Nowa wiadomość od Cyprus VIP Estates dotycząca Państwa klienta {client}:",
       claimAccepted: "Klient {client} został zarejestrowany jako Państwa klient.",
       claimRejected: "Państwa zgłoszenie {client} zostało rozpatrzone. Niestety nie możemy zarejestrować tego kontaktu jako Państwa klienta.",
       payout: "Prowizja za klienta {client} została wypłacona: {amount}.",

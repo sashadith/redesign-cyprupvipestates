@@ -23,7 +23,7 @@ test("menu actions: every button this module emits parses; forged or stale data 
   for (const l of PARTNER_LOCALES) {
     const screens = [
       mainMenu(l, PORTAL), settingsScreen(l, settings), languageScreen(l, l), quietScreen(l, null), notifyScreen(l, settings.switches), channelScreen(l, "BOTH"),
-      clientsScreen(l, { items: [{ id: UUID, ref: "#3f9a2c", stageKey: "stages.viewing" }], page: 2, pages: 3, more: false }),
+      clientsScreen(l, { items: [{ id: UUID, name: "Anna", stageKey: "stages.viewing" }], page: 2, pages: 3, more: false }),
     ];
     for (const s of screens) for (const d of datas(s)) {
       assert.ok(Buffer.byteLength(d) <= 64, `${d} fits Telegram's 64 bytes`);
@@ -63,8 +63,8 @@ test("screens: escaped values, portal links only over https, sub-screens lead ba
       tier: { name: "Silver <b>", next: { name: "Gold", remaining: 2 } },
     });
     assert.ok(ov.html.includes("€4,500") && ov.html.includes("Silver &lt;b&gt;"));
-    const cl = clientScreen(l, { ref: "#3f9a2c <script>", stageKey: "stages.viewing", protectedUntil: "2 Dec 2026", url: `${PORTAL}/clients/${UUID}` });
-    assert.ok(cl.html.includes("#3f9a2c &lt;script&gt;") && cl.html.includes("2 Dec 2026"));
+    const cl = clientScreen(l, { name: "Anna <script>", stageKey: "stages.viewing", protectedUntil: "2 Dec 2026", url: `${PORTAL}/clients/${UUID}` });
+    assert.ok(cl.html.includes("Anna &lt;script&gt;") && cl.html.includes("2 Dec 2026"));
     const pr = projectsScreen(l, { items: [{ name: "Sea & Sun", town: "Paphos", detail: "Your rate: 1.5%", url: "https://cyprusvipestates.com/projects/sea" }] });
     assert.ok(pr.html.includes("Sea &amp; Sun") && pr.html.includes('href="https://cyprusvipestates.com/projects/sea"'));
     // Top-level screens need no back button (the persistent menu is always there); sub-screens go back to their parent.
@@ -76,7 +76,7 @@ test("screens: escaped values, portal links only over https, sub-screens lead ba
 });
 
 test("client list: pages of 8, previous/next only where they lead somewhere", () => {
-  const items = Array.from({ length: CLIENTS_PER_PAGE }, (_, i) => ({ id: UUID, ref: `#c${i} with a very long label indeed`, stageKey: "stages.offer" }));
+  const items = Array.from({ length: CLIENTS_PER_PAGE }, (_, i) => ({ id: UUID, name: `Client ${i} with a very long name indeed`, stageKey: "stages.offer" }));
   const first = clientsScreen("en", { items, page: 1, pages: 2, more: false });
   assert.deepEqual(datas(first).filter((d) => d.startsWith("c:")), ["c:2"]);
   const last = clientsScreen("en", { items, page: 2, pages: 2, more: true });
