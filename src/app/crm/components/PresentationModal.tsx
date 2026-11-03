@@ -11,7 +11,7 @@ import type { EditorItem } from "@/lib/crm/presentations/editorItems";
 import { initialFilters } from "@/lib/crm/presentations/seedFilters";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
 import {
-  createPresentationAction, loadPresentationForEditAction, locationsAction, matchAction, saveFiltersAction,
+  createPresentationAction, loadAdvisorNotesAction, loadPresentationForEditAction, locationsAction, matchAction, saveAdvisorNoteAction, saveFiltersAction,
   savePresentationEditAction,
 } from "../leads/presentationActions";
 import {
@@ -87,6 +87,16 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   const [autoSelected, setAutoSelected] = useState<Set<string>>(new Set());
   const [unitOverrides, setUnitOverrides] = useState<Map<string, Set<string>>>(new Map());
   const [comments, setComments] = useState<Map<string, string>>(new Map());
+  // The advisor's saved notes (operator 2026-11-03): a project without a note
+  // typed in this modal shows its saved one. `comments` holds only what was
+  // typed here, so a prefilled note never makes the modal "dirty".
+  const [savedNotes, setSavedNotes] = useState<Map<string, string>>(new Map());
+  const [savingNote, setSavingNote] = useState<string | null>(null);
+  const effectiveComments = useMemo(() => {
+    const m = new Map(savedNotes);
+    comments.forEach((v, k) => m.set(k, v));
+    return m;
+  }, [savedNotes, comments]);
   const [showAllUnits, setShowAllUnits] = useState<Set<string>>(new Set());
 
   const [greetingName, setGreetingName] = useState(suggestedGreeting(initialLocale, lead.firstName));
@@ -117,6 +127,28 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   });
 
   useEffect(() => { dlg.current?.showModal(); }, []);
+
+  useEffect(() => {
+    let live = true;
+    loadAdvisorNotesAction()
+      .then((r) => { if (live && !("error" in r)) setSavedNotes(new Map(Object.entries(r))); })
+      .catch(() => { /* no saved notes: the modal works as before */ });
+    return () => { live = false; };
+  }, []);
+
+  async function saveNote(devId: string, text: string) {
+    setSavingNote(devId);
+    try {
+      const r = await saveAdvisorNoteAction(devId, text);
+      if ("error" in r) { window.alert(r.error); return; }
+      setSavedNotes((p) => { const n = new Map(p); if (r.text) n.set(devId, r.text); else n.delete(devId); return n; });
+      setComments((p) => new Map(p).set(devId, r.text));
+    } catch {
+      window.alert("Could not save the note. Check your connection and try again.");
+    } finally {
+      setSavingNote(null);
+    }
+  }
 
   useEffect(() => {
     if (!editId) return;
@@ -326,7 +358,7 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     const dropped = droppedSelections(selectedIds, unitOverrides, results);
     if (dropped.length && !force) { setDropWarning(dropped); return; }
     setDropWarning(null);
-    const items = buildItems(selectedIds, unitOverrides, comments, results);
+    const items = buildItems(selectedIds, unitOverrides, effectiveComments, results);
     if (!items.length) { setGenError("Nothing left to send — every selected project has no matching unit."); return; }
     setGenerating(true);
     try {
@@ -370,7 +402,7 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     const out: EditorItem[] = [];
     selectedIds.forEach((id) => {
       const m = knownMatches.current.get(id);
-      if (m && !itemIds.has(id)) out.push(editorItemFromMatch(m, unitOverrides.get(id), comments.get(id) ?? ""));
+      if (m && !itemIds.has(id)) out.push(editorItemFromMatch(m, unitOverrides.get(id), effectiveComments.get(id) ?? ""));
     });
     return out;
   }
@@ -496,10 +528,10 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
             <div className={`crm-pres-grid${mapMarkers.length ? " has-map" : ""}`}>
               <PresentationResults
                 results={shownResults} loading={loading} error={matchError} selected={selectedDevs} expanded={expanded} showAll={showAllUnits}
-                unitOverrides={unitOverrides} comments={comments} sent={sent}
+                unitOverrides={unitOverrides} comments={effectiveComments} sent={sent} savedNotes={savedNotes} savingNote={savingNote}
                 onToggleDev={toggleDev} onToggleExpand={(id) => setExpanded((p) => toggleIn(p, id))}
                 onToggleShowAll={(id) => setShowAllUnits((p) => toggleIn(p, id))} onToggleUnit={toggleUnit}
-                onComment={(id, text) => setComments((p) => new Map(p).set(id, text))} onRetry={() => runMatch(filters)}
+                onComment={(id, text) => setComments((p) => new Map(p).set(id, text))} onSaveNote={(id, text) => void saveNote(id, text)} onRetry={() => runMatch(filters)}
               />
               {mapMarkers.length > 0 && (
                 <div className="crm-pres-map" ref={mapBox}>

@@ -12,7 +12,6 @@ import { listPresentationLocationOptions, type LocationOptions } from "@/lib/crm
 import { buildEditorItems, type EditorItem } from "@/lib/crm/presentations/editorItems";
 import { favoritesSeedFromRows, type FavoritesSeed } from "@/lib/crm/presentations/favoritesSeed";
 import { matchDevelopmentsForLead, type MatchFilters, type DevelopmentMatch } from "@/lib/crm/matching";
-import { sendLeadEmail } from "@/lib/crm/sendLeadEmail";
 
 // Client presentations in the new CRM. Middleware does not protect server
 // actions: every export checks the session and presentationGuard itself, and
@@ -180,4 +179,37 @@ export async function deletePresentationAction(id: string): Promise<{ ok: true }
   if (!r) return { error: NOT_FOUND };
   revalidatePath(`/crm/leads/${owner.leadId}`);
   return { ok: true };
+}
+
+// ---------- Saved advisor notes (2026-11-03) ----------
+// One line per project and advisor, prefilled into every later selection that
+// advisor builds. Stored per signed-in user; no lead involved.
+
+const NOTE_MAX = 300;
+
+export async function loadAdvisorNotesAction(): Promise<Record<string, string> | { error: string }> {
+  const user = await getCrmUser();
+  if (!user) return { error: NOT_SIGNED_IN };
+  const rows = await prisma.advisorProjectNote.findMany({ where: { userId: user.id }, select: { developmentId: true, text: true } });
+  return Object.fromEntries(rows.map((r) => [r.developmentId, r.text]));
+}
+
+/** Saves the note as this advisor's default for the project; an empty note removes the saved one. */
+export async function saveAdvisorNoteAction(developmentId: string, text: string): Promise<{ ok: true; text: string } | { error: string }> {
+  const user = await getCrmUser();
+  if (!user) return { error: NOT_SIGNED_IN };
+  if (!validId(developmentId)) return { error: "Project not found." };
+  const clean = String(text ?? "").replace(/\s+/g, " ").trim().slice(0, NOTE_MAX);
+  if (!clean) {
+    await prisma.advisorProjectNote.deleteMany({ where: { userId: user.id, developmentId } });
+    return { ok: true, text: "" };
+  }
+  const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { id: true } });
+  if (!dev) return { error: "Project not found." };
+  await prisma.advisorProjectNote.upsert({
+    where: { userId_developmentId: { userId: user.id, developmentId } },
+    create: { userId: user.id, developmentId, text: clean },
+    update: { text: clean },
+  });
+  return { ok: true, text: clean };
 }

@@ -726,6 +726,7 @@ model MediaFolder {
 
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
+  advisorNotes AdvisorProjectNote[]
   dealsCreated Deal[] @relation("DealsCreated")
   managedPartners Partner[] @relation("PartnerManager")
   partnerMessagesAuthored PartnerMessage[] @relation("PartnerMessagesAuthored")
@@ -1579,6 +1580,7 @@ model DeveloperFeedAnalysis {
 // mirrored to our object storage; only our URLs are stored here.
 // ─────────────────────────────────────────────────────────────────────────
 model Development {
+  advisorNotes AdvisorProjectNote[]
   deals Deal[]
   commissionRate CommissionRate?
   id                 String  @id @default(uuid())
@@ -2622,4 +2624,19 @@ model DesignSettingsVersion {
 
   @@index([createdAt])
   @@map("design_settings_versions")
+}
+
+// An advisor's saved one-line note per project (2026-11-03): "Save" next to the
+// note in the presentation editor stores it here, and every later presentation
+// that advisor builds starts with it prefilled. Per user — it is their voice.
+model AdvisorProjectNote {
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  developmentId String
+  development   Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  text          String
+  updatedAt     DateTime    @updatedAt
+
+  @@id([userId, developmentId])
+  @@map("advisor_project_notes")
 }
