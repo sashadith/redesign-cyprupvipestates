@@ -199,7 +199,14 @@ export function refineStylianidesUnits<T extends TableUnit>(units: T[]): T[] {
    come back under a new ref: the old rows would turn "unlisted", new rows with
    new ids would appear, and a published page would lose its unit ids — which
    are what Xellex and client presentations hold. So a fresh list that shares
-   fewer than half of the references we already list is refused, not written. */
+   fewer than half of the references we already list is refused, not written.
+   "Already list" means units still for sale: Stylianides drop sold units from
+   a new list (Residence 28 on 2026-11-02 kept only its 4 unsold of 28), and a
+   sold unit that disappears is no sign of a wrong column (driftBaseRefs). */
+export function driftBaseRefs(existing: { feedRef?: string | null; ref?: string | null; source: string; status: string | null }[]): string[] {
+  return existing.filter((u) => u.source !== "manual" && u.status !== "unlisted" && u.status !== "sold").map((u) => u.feedRef || u.ref || "");
+}
+
 export function refDrift(existingRefs: string[], freshRefs: string[], projectName: string): string | null {
   if (existingRefs.length < 3) return null;
   const fresh = new Set(freshRefs.map((r) => normalizeRef(r, projectName)));

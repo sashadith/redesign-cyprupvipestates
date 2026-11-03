@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tablesFromPages, unitsFromTable, validateMapping, type ColumnField, type PdfPage, type RawTable, type TableMapping, type TableUnit } from "@/lib/ai/availabilityTable";
-import { findStylianidesPriceList, normalizeStylianidesTable, fixStylianidesMapping, refineStylianidesUnits, mergeTableUnits, refDrift } from "@/lib/stylianides";
+import { findStylianidesPriceList, normalizeStylianidesTable, fixStylianidesMapping, refineStylianidesUnits, mergeTableUnits, refDrift, driftBaseRefs } from "@/lib/stylianides";
 import type { DropboxFile } from "@/lib/dropbox";
 
 /* Stylianides Group's eight price lists as of 2026-10-30. The fixtures are the
@@ -175,4 +175,18 @@ test("a reference drift refuses the write; a normal list passes", () => {
   assert.equal(refDrift(existing, ["6A", "6B", "6C"], "Trianon"), null, "half kept is still a list");
   assert.match(refDrift(existing, ["12", "13", "14", "15", "16", "17"], "Trianon") ?? "", /only 0 of 6/);
   assert.equal(refDrift(["1", "2"], ["9"], "X"), null, "too few to judge");
+});
+
+test("a new list without the sold units is not drift (Residence 28, 2026-11-02)", () => {
+  const sold = ["A101", "A102", "A103", "A104", "A201", "A202", "A203", "A204", "A301", "A302", "A303", "A304", "B101", "B102", "B103", "B104", "B201", "B202", "B203", "B204", "B301", "B302", "B303", "B304"];
+  const existing = [
+    ...sold.map((ref) => ({ ref, feedRef: ref, source: "feed", status: "sold" })),
+    ...["A401", "A402", "B401", "B402"].map((ref) => ({ ref, feedRef: ref, source: "feed", status: "available" })),
+    { ref: "X1", feedRef: null, source: "manual", status: "available" },
+    { ref: "A999", feedRef: "A999", source: "feed", status: "unlisted" },
+  ];
+  assert.deepEqual(driftBaseRefs(existing), ["A401", "A402", "B401", "B402"]);
+  assert.equal(refDrift(driftBaseRefs(existing), ["A401", "A402", "B401", "B402"], "Residence 28"), null);
+  // A remapped reference column is still caught on the unsold units.
+  assert.match(refDrift(driftBaseRefs(existing), ["1", "2", "3", "4"], "Residence 28") ?? "", /only 0 of 4/);
 });
