@@ -139,6 +139,10 @@ test("a photo without caption still counts as a message; captions win", () => {
   assert.equal(messageText({ body: "", type: "image" }), "[Photo]");
   assert.equal(messageText({ body: "the view", type: "image" }), "the view");
   assert.equal(messageText({ body: null, type: "e2e_notification" }), null);
+  // A captionless photo carries its base64 thumbnail as body — show the label, never the blob.
+  const thumb = "/9j/4AAQSkZJRgABAQAASABIAAD/4QCMRXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAAQCgAwAEAAAAAQAAAQ==";
+  assert.equal(messageText({ body: thumb, type: "image" }), "[Photo]");
+  assert.equal(messageText({ body: thumb, type: null }), "[Media]");
 });
 
 test("dry run counts but never writes", async () => {
