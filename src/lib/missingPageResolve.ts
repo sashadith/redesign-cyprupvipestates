@@ -155,6 +155,10 @@ async function resolveRaw(
   }
 
   if (kind === "page") {
+    // Middleware already 308s unknown locales; what still lands here with a non-locale first segment is
+    // /api/<missing>, /.well-known/..., /uploads/... — never content, and the language-filtered queries
+    // below would fail on the enum (2026-11-03: ~30 logged "lookup failed" a day). Keep the 404.
+    if (!env.isPublicLocale(lang)) return null;
     const full = segments.join("/");
     const flat = await repo.pagesEndingWith(lang, segments[segments.length - 1]);
     const child = flat.find((r) => r.slug !== full);
