@@ -180,10 +180,7 @@ test("sender wiring: routeNotification decides channels, blocked chat unlinked o
   assert.ok(s.includes("where: { id: d.partnerId, telegramChatId: d.telegram.chatId }"), "only the chat that blocked is cleared");
   assert.ok(s.includes("return deliveryOutcome(results);"));
   assert.ok(s.includes('kind: "MATCH", projectName, changeType, url, portalUrl: common.link'));
-  assert.ok(s.includes('{ kind: "PRESENTATION_OPENED", clientRef: forClaim ? clientRef(forClaim.id) : "", url: link, portalUrl: base }'));
-  // Client names stay out of the partner bot's Telegram (2026-11-02): only the e-mail carries them.
-  assert.ok(s.includes('const tgCommon = { clientRef: claim ? clientRef(claim.id) : "", url: common.link, portalUrl: base };'));
-  assert.ok(s.includes('{ ...tgCommon, kind: "MESSAGE" },'), "a message body never goes to Telegram");
+  assert.ok(s.includes('{ kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base }'));
   // A partially delivered STAGE row still counts as "last mailed" for the unchanged-stage check.
   assert.ok(s.includes("{ error: { startsWith: PARTIAL_PREFIX } }"));
   assert.ok(!s.includes('from "@/lib/telegram"'), "never the office bot");

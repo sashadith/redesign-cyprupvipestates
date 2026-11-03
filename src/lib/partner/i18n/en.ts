@@ -750,7 +750,7 @@ export const en = {
     },
     notify: {
       stage: "Update on your client {client}: {stage}",
-      message: "New message from Cyprus VIP Estates about your client {client}.",
+      message: "New message from Cyprus VIP Estates about your client {client}:",
       claimAccepted: "Your client {client} has been accepted.",
       claimRejected: "Your submission {client} has been reviewed. Unfortunately, we cannot register this contact as your client.",
       payout: "Your commission for {client} has been paid: {amount}.",

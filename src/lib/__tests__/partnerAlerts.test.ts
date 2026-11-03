@@ -184,13 +184,13 @@ test("telegram v2 notifications: escaped, linked, within the limit", () => {
       assert.ok(!h.includes("<b>P0</b>"), "names escaped");
       assert.ok(h.includes("&lt;b&gt;P0"), "first project kept");
     }
-    const prot = buildTelegramNotification(l, { kind: "PROTECTION_ENDING", ...base, clientRef: "#3f9a2c <x>", date: "2 December 2026" });
-    assert.ok(prot.includes("#3f9a2c &lt;x&gt;") && prot.includes("2 December 2026"));
-    assert.ok(buildTelegramNotification(l, { kind: "CLIENT_QUIET", ...base, clientRef: "#3f9a2c" }).includes("#3f9a2c"));
-    const bank = buildTelegramNotification(l, { kind: "BANK_MISSING", ...base, clientRef: "#3f9a2c", developerPaid: true, url: "https://partner.cyprusvipestates.com/profile#bank" });
+    const prot = buildTelegramNotification(l, { kind: "PROTECTION_ENDING", ...base, clientName: "Anna <x>", date: "2 December 2026" });
+    assert.ok(prot.includes("Anna &lt;x&gt;") && prot.includes("2 December 2026"));
+    assert.ok(buildTelegramNotification(l, { kind: "CLIENT_QUIET", ...base, clientName: "Anna" }).includes("Anna"));
+    const bank = buildTelegramNotification(l, { kind: "BANK_MISSING", ...base, clientName: "Anna", developerPaid: true, url: "https://partner.cyprusvipestates.com/profile#bank" });
     assert.ok(bank.includes(dict(l).telegram.notify.addBank) && bank.includes("/profile#bank"));
     assert.ok(buildTelegramNotification(l, { kind: "TIER_NEAR", ...base, tierName: "Gold" }).includes("Gold"));
-    const stage = buildTelegramNotification(l, { kind: "STAGE", ...base, clientRef: "#3f9a2c", stageKey: "stages.viewing", extra: ["Viewing on 5 November 2026"] });
+    const stage = buildTelegramNotification(l, { kind: "STAGE", ...base, clientName: "Anna", stageKey: "stages.viewing", extra: ["Viewing on 5 November 2026"] });
     assert.ok(stage.includes("Viewing on 5 November 2026"));
   }
 });
@@ -219,7 +219,7 @@ test("weekly summary: follows the channel, Telegram text fits and is escaped", (
   assert.deepEqual(digestChannels({ notifyChannel: "TELEGRAM", chatLinked: false, botConfigured: true, hasEmail: true }), { email: true, telegram: false }, "unlinked → e-mail");
   assert.deepEqual(digestChannels({ notifyChannel: "TELEGRAM", chatLinked: true, botConfigured: true, hasEmail: false }), { email: false, telegram: true });
   const content = {
-    updates: Array.from({ length: 10 }, (_, i) => ({ clientName: `<i>C${i}</i> ${"n".repeat(300)}`, clientRef: `<i>#C${i}</i> ${"n".repeat(300)}`, key: "stages.viewing", at: NOW })),
+    updates: Array.from({ length: 10 }, (_, i) => ({ clientName: `<i>C${i}</i> ${"n".repeat(300)}`, key: "stages.viewing", at: NOW })),
     totals: { expected: 1000, earned: 0, developerPaid: 0, paidOut: 0 },
     newProjects: [{ name: "Sea & Sun", town: "Paphos", handoverRate: 1.5, url: "https://cyprusvipestates.com/projects/sea", publishedAt: NOW }],
   };

@@ -5,8 +5,8 @@
 // office alerts carry name, e-mail, phone, nationality and the message again.
 // The privacy policy says so (privacyPolicyParity.test.ts).
 //
-// The partner bot is different: partners see their client by number only
-// (clientRef), never contact details.
+// The partner bot names the partner's own clients again too (operator,
+// 2026-11-03), never with the client's contact details.
 
 /** "Lead #3f9a2c" — the first six hex digits of the lead's id. A display
  *  label, not a key: it only has to tell two alerts apart at a glance. */
@@ -18,13 +18,6 @@ export function leadRef(leadId: string): string {
  *  has no name. */
 export function leadLabel(lead: { firstName?: string | null; lastName?: string | null } | null | undefined, leadId: string): string {
   return `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}`.trim() || leadRef(leadId);
-}
-
-/** "#3f9a2c" — a partner's client in the partner bot's Telegram texts
- *  (2026-11-02, operator: "nur Nummer"): the first six hex digits of the
- *  claim id. The partner portal shows the same number next to the name. */
-export function clientRef(claimId: string): string {
-  return `#${claimId.replace(/-/g, "").slice(0, 6)}`;
 }
 
 /** Last line of defence for free text that reaches a chat (the MCP

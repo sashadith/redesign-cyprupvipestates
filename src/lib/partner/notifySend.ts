@@ -14,7 +14,6 @@ import { dict, fmt, pickPartnerLocale, type PartnerLocale } from "./i18n";
 import { emailThemeForPartner } from "@/lib/design/store";
 import type { EmailTheme } from "@/lib/design/theme";
 import { partnerBaseUrl, type BuiltEmail } from "./mail";
-import { clientRef } from "@/lib/chatPrivacy";
 import { buildTelegramNotification, buildTelegramProjectNews, routeNotification, type TelegramNotificationInput } from "./telegram";
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
@@ -189,8 +188,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
   // Every kind but the partner-only ones has a claim from here on (checked just above); those cases never read it.
   const own = claim as NonNullable<typeof claim>;
   const common = { partnerFirstName: partner.firstName, clientName: claim ? visibleName(claim) : "", link: claim ? clientLink(base, claim.id) : base };
-  // Telegram names the client by its reference only (chatPrivacy.ts); the e-mail keeps the name.
-  const tgCommon = { clientRef: claim ? clientRef(claim.id) : "", url: common.link, portalUrl: base };
+  const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
 
   // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
   switch (row.kind) {
@@ -221,7 +219,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
       if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== own.leadId) return { skip: "message missing" };
       return deliver(
         buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }, theme),
-        { ...tgCommon, kind: "MESSAGE" },
+        { ...tgCommon, kind: "MESSAGE", messageBody: msg.body },
       );
     }
     case "CLAIM_OUTCOME":
@@ -275,12 +273,9 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
       const raw = obj(row.payload).clientName;
       const clientName = typeof raw === "string" ? raw.trim().slice(0, 120) : "";
       const link = presentationsLink(base);
-      const forClaim = row.leadId
-        ? await prisma.partnerClaim.findFirst({ where: { partnerId: row.partnerId, leadId: row.leadId }, select: { id: true }, orderBy: { createdAt: "desc" } })
-        : null;
       return deliver(
         buildPresentationOpenedEmail(locale, { partnerFirstName: partner.firstName, clientName, link }, theme),
-        { kind: "PRESENTATION_OPENED", clientRef: forClaim ? clientRef(forClaim.id) : "", url: link, portalUrl: base },
+        { kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base },
       );
     }
     case "TIER_UP": {

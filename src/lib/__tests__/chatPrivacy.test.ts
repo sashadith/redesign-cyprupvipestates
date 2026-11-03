@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { clientRef, leadLabel, leadRef, redactContactDetails } from "@/lib/chatPrivacy";
+import { leadLabel, leadRef, redactContactDetails } from "@/lib/chatPrivacy";
 import { buildDigestTelegram } from "@/lib/partner/digest";
 import { buildInboundLeadTelegramMessage } from "@/lib/leadNotify";
 import { parsePcLead, pcTelegram } from "@/lib/privateCollectionLead";
@@ -16,8 +16,8 @@ import { buildPartnerClientNotice } from "@/lib/partner/submitFlow";
 /* History: privacy T3 (2026-11-02) took client data out of the office chats;
  * the operator restored it on 2026-11-03 ("Ich will die Nachrichten so haben
  * wie vorher. Mit Telefonnummer und email adresse"). Office alerts (Telegram +
- * team WhatsApp group) carry name, e-mail, phone and message again. The
- * partner bot still names clients by number only.
+ * team WhatsApp group) carry name, e-mail, phone and message again; the
+ * partner bot names clients again too.
  */
 
 const LEAD_ID = "3f9a2c11-7d4e-4b8a-9c3d-2e1f0a9b8c7d";
@@ -31,9 +31,8 @@ const assertNoPii = (text: string, where: string) => {
   assert.ok(text.includes(leadRef(LEAD_ID)) || where.startsWith("review"), `${where} should name the lead by its reference`);
 };
 
-test("leadRef / clientRef: a short pseudonymous label", () => {
+test("leadRef: a short pseudonymous label", () => {
   assert.equal(leadRef(LEAD_ID), "Lead #3f9a2c");
-  assert.equal(clientRef(LEAD_ID), "#3f9a2c");
   assert.equal(leadLabel({ firstName: "Annabel", lastName: "Kowalczyk" }, LEAD_ID), "Annabel Kowalczyk");
   assert.equal(leadLabel({ firstName: " ", lastName: null }, LEAD_ID), "Lead #3f9a2c", "no name: the reference");
   assert.equal(leadLabel(null, LEAD_ID), "Lead #3f9a2c");
@@ -122,25 +121,14 @@ test("inline chat senders name the lead; new leads and replies carry the details
   assert.ok(!read("src/app/api/leads/route.ts").includes(`k !== "Nationality"`), "nationality goes to the chat again");
 });
 
-/* The partner bot (2026-11-02, operator: "nur Nummer"): a partner's Telegram
-   names the client "#3f9a2c" — the portal shows the same number next to the
-   name — and a message from the team stays in the portal and the e-mail. */
-test("partner bot: the weekly summary on Telegram names clients by reference, the e-mail by name", () => {
+/* The partner bot named clients by number only from 2026-11-02; the operator
+   restored names on 2026-11-03. */
+test("partner bot: the weekly summary on Telegram names clients", () => {
   const html = buildDigestTelegram("de", {
     portalUrl: "https://partner.example/home",
-    content: { updates: [{ clientName: "Annabel Kowalczyk", clientRef: "#3f9a2c", key: "stages.viewing", at: new Date("2026-11-01T10:00:00Z") }], totals: { expected: 0, earned: 0, developerPaid: 0, paidOut: 0 }, newProjects: [] },
+    content: { updates: [{ clientName: "Annabel Kowalczyk", key: "stages.viewing", at: new Date("2026-11-01T10:00:00Z") }], totals: { expected: 0, earned: 0, developerPaid: 0, paidOut: 0 }, newProjects: [] },
   })!;
-  assert.ok(html.includes("#3f9a2c") && !html.includes("Annabel"), html);
-});
-
-test("partner bot: every Telegram text builder takes a reference, none a name or a message body", () => {
-  for (const f of ["src/lib/partner/telegram.ts", "src/lib/partner/telegramMenu.ts"]) {
-    const src = read(f);
-    assert.ok(!/clientName|messageBody|\bc\.name\b|\bd\.name\b/.test(src.replace(/\/\/.*$/gm, "")), `${f} still reads a client name or message`);
-  }
-  const hook = read("src/lib/partner/telegramWebhook.ts");
-  assert.equal((hook.match(/ref: clientRef\(c\.id\)/g) ?? []).length, 3, "status, client list and client screen use the reference");
-  assert.ok(read("src/lib/partner/digestSend.ts").includes("clientRef: clientRef(m.claimId)"));
+  assert.ok(html.includes("Annabel Kowalczyk") && !html.includes("#3f9a2c"), html);
 });
 
 test("Meta import-failure alert: only the error's first line, contact details cut", async () => {
