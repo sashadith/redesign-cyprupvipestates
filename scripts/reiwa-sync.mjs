@@ -48,7 +48,8 @@ function unitRow(p, u, i) {
   // UNO's list adds two layers: "Livable" = internal + veranda, and "Total
   // Covered" = livable + the unit's share of common areas + its storage room.
   const r2 = (x) => Math.round(x * 100) / 100;
-  const sum = r2((u.internal ?? 0) + (u.veranda ?? 0));
+  // Reiwa Center's ground-floor units add a mezzanine to the printed total.
+  const sum = r2((u.internal ?? 0) + (u.mezzanine ?? 0) + (u.veranda ?? 0));
   const expected = u.livable != null ? u.livable : u.total;
   if (expected != null && Math.abs(sum - expected) > 0.6) problems.push(`${p.name} ${u.ref}: internal ${u.internal} + veranda ${u.veranda ?? 0} = ${sum}, list says ${expected}`);
   if (u.livable != null && u.total != null) {
@@ -57,6 +58,7 @@ function unitRow(p, u, i) {
   }
   if (u.status === "available" && !u.price) problems.push(`${p.name} ${u.ref}: available without a price`);
   const attrs = [];
+  if (u.mezzanine != null) attrs.push({ name: "Mezzanine", value: m2(u.mezzanine) });
   if (u.livable != null) attrs.push({ name: "Livable area", value: m2(u.livable) });
   if (u.common != null) attrs.push({ name: "Common area share", value: m2(u.common) });
   if (u.storage != null) attrs.push({ name: "Storage room", value: m2(u.storage) });
@@ -69,8 +71,8 @@ function unitRow(p, u, i) {
     type: u.type,
     status: u.status,
     price: u.price ?? null,
-    beds: String(u.beds),
-    baths: String(u.baths),
+    beds: u.beds == null ? null : String(u.beds),
+    baths: u.baths == null ? null : String(u.baths),
     areaBuilt: m2(u.internal),
     areaInternal: m2(u.internal),
     areaVeranda: m2(u.veranda),
