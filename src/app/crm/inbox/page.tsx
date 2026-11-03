@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const INBOX_CAP = 200;
 
-const SOURCE_LABEL: Record<string, string> = { PARTNER: "Partner", META_LEAD_AD: "Meta ad", CONTACT_FORM: "Website", PROJECT_ENQUIRY: "Project page", WHATSAPP: "WhatsApp" };
+const SOURCE_LABEL: Record<string, string> = { PARTNER: "Partner", META_LEAD_AD: "Meta ad", CONTACT_FORM: "Website", PROJECT_ENQUIRY: "Website", BLOG_ENQUIRY: "Website", WHATSAPP: "WhatsApp" };
 
 export default async function InboxPage() {
   const user = await requireCrmUser();

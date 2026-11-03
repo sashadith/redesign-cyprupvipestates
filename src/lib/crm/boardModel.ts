@@ -43,8 +43,9 @@ export type BoardCard = {
 
 export type BoardColumn = { status: LeadStatusValue; label: string; cards: BoardCard[]; total: number };
 
+// Contact form, project-page and blog enquiries all read "Website" on the card (operator 2026-11-03).
 export const SOURCE_LABEL: Record<string, string> = {
-  CONTACT_FORM: "Website", PROJECT_ENQUIRY: "Project page", BLOG_ENQUIRY: "Blog", WHATSAPP: "WhatsApp", PHONE: "Phone",
+  CONTACT_FORM: "Website", PROJECT_ENQUIRY: "Website", BLOG_ENQUIRY: "Website", WHATSAPP: "WhatsApp", PHONE: "Phone",
   REFERRAL: "Referral", MANUAL: "Manual", PARTNER: "Partner", ROI_CALCULATOR: "ROI calculator", NEWSLETTER: "Newsletter",
   OTHER: "Other", META_LEAD_AD: "Meta ad", PRIVATE_COLLECTION: "Private Collection", GUIDE_DOWNLOAD: "Guide download",
 };
