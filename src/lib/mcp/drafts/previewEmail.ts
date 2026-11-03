@@ -14,7 +14,11 @@ export function buildPreviewEmail(input: {
   /** CC recipients — shown in the header so the operator checks them before
    *  approving. Omitted/empty = no CC line. */
   cc?: string[];
+  /** Where the code is typed: the CVE LEADS chat (Claude's drafts, default) or
+   *  the CRM's own send dialog (operator-written presentation emails, 2026-11-03). */
+  approveIn?: "chat" | "crm";
 }): { subject: string; html: string; text: string } {
+  const crm = input.approveIn === "crm";
   const cc = (input.cc ?? []).filter(Boolean);
   const rendered = renderLeadEmail(input.body, input.signatureHtml, input.locale);
   const header =
@@ -22,13 +26,17 @@ export function buildPreviewEmail(input: {
     `<div><strong>Draft for ${esc(input.leadName)}</strong> · To: ${esc(input.leadEmail)}</div>` +
     (cc.length ? `<div style="margin-top:6px;">CC: <strong>${cc.map(esc).join(", ")}</strong></div>` : "") +
     `<div style="margin-top:6px;">Approval code: <strong>${esc(input.approvalCode)}</strong> · Expires ${esc(input.expiresAtLabel)} Cyprus</div>` +
-    `<div style="margin-top:6px;color:#6B7280;">Reply in the CVE LEADS chat with "Freigabe ${esc(input.approvalCode)}" to send it exactly as shown below, or tell Claude what to change.</div>` +
+    (crm
+      ? `<div style="margin-top:6px;color:#6B7280;">Enter this code in the CRM send dialog to send it exactly as shown below.</div>`
+      : `<div style="margin-top:6px;color:#6B7280;">Reply in the CVE LEADS chat with "Freigabe ${esc(input.approvalCode)}" to send it exactly as shown below, or tell Claude what to change.</div>`) +
     `</div>`;
   const textHeader =
     `DRAFT for ${input.leadName} · To: ${input.leadEmail}\n` +
     (cc.length ? `CC: ${cc.join(", ")}\n` : "") +
     `Approval code: ${input.approvalCode} · Expires ${input.expiresAtLabel} Cyprus\n` +
-    `Reply in the CVE LEADS chat with "Freigabe ${input.approvalCode}" to send, or tell Claude what to change.\n\n------------------------------\n\n`;
+    (crm
+      ? `Enter this code in the CRM send dialog to send it exactly as shown below.\n\n------------------------------\n\n`
+      : `Reply in the CVE LEADS chat with "Freigabe ${input.approvalCode}" to send, or tell Claude what to change.\n\n------------------------------\n\n`);
   return {
     subject: `[DRAFT] ${input.subject}`,
     html: `${header}${rendered.html}`,

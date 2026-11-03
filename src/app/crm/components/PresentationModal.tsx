@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { MatchingMapMarker } from "@/app/admin/(panel)/crm/[id]/MatchingMap";
-import ComposeEmailModal from "@/app/admin/(panel)/crm/[id]/ComposeEmailModal";
 import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import type { LocationOptions } from "@/lib/crm/presentations/locations";
@@ -13,7 +12,7 @@ import { initialFilters } from "@/lib/crm/presentations/seedFilters";
 import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
 import {
   createPresentationAction, loadPresentationForEditAction, locationsAction, matchAction, saveFiltersAction,
-  savePresentationEditAction, sendPresentationEmailAction,
+  savePresentationEditAction,
 } from "../leads/presentationActions";
 import {
   buildItems, confirmDiscard, droppedSelections, editorItemFromMatch, editPayloadItems, editSnapshot, emptyEditItems,
@@ -22,6 +21,7 @@ import {
 import { PresentationFilters } from "./presentation/PresentationFilters";
 import { PresentationResults } from "./presentation/PresentationResults";
 import { PresentationCreated, type CreatedPresentation } from "./presentation/PresentationCreated";
+import { PresentationEmailSend } from "./presentation/PresentationEmailSend";
 import { PresentationSelection } from "./presentation/PresentationSelection";
 import { PresentationSaved, type SavedPresentation } from "./presentation/PresentationSaved";
 
@@ -430,7 +430,18 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     >
       {created ? (
         <div className="crm-pres-body">
-          <PresentationCreated created={created} hasEmail={!!lead.email} onEmail={() => setShowComposeEmail(true)} onClose={closeNow} />
+          {showComposeEmail && lead.email ? (() => {
+            const t = PRESENTATION_EMAIL_TEMPLATE[locale](greetingName, created.url);
+            return (
+              <PresentationEmailSend
+                leadId={lead.id} leadEmail={lead.email} token={created.token}
+                initialSubject={t.subject} initialBody={t.body}
+                onBack={() => setShowComposeEmail(false)} onSent={() => router.refresh()}
+              />
+            );
+          })() : (
+            <PresentationCreated leadId={lead.id} created={created} hasEmail={!!lead.email} onEmail={() => setShowComposeEmail(true)} onClose={closeNow} />
+          )}
         </div>
       ) : saved ? (
         <div className="crm-pres-body">
@@ -587,28 +598,6 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
           </div>
         </div>
       )}
-      {showComposeEmail && created && lead.email && (() => {
-        const t = PRESENTATION_EMAIL_TEMPLATE[locale](greetingName, created.url);
-        return (
-          <ComposeEmailModal
-            leadEmail={lead.email}
-            initialSubject={t.subject}
-            initialBody={t.body}
-            presentationToken={created.token}
-            showLeadReacted={false}
-            sendAction={async (opts) => {
-              try {
-                const r = await sendPresentationEmailAction(lead.id, opts);
-                if ("ok" in r) router.refresh();
-                return r;
-              } catch {
-                return { error: "Could not send — check your connection and try again." };
-              }
-            }}
-            onClose={() => setShowComposeEmail(false)}
-          />
-        );
-      })()}
     </dialog>
   );
 }
