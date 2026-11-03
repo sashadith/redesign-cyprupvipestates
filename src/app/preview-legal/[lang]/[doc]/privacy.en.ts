@@ -24,8 +24,8 @@ import type { LegalDoc } from "./types";
        introductions, WhatsApp/e-mail correspondence) — Art. 14
      + personal presentation links and what they record
      + internal notifications via Telegram (UAE) and WhatsApp — since T3
-       (src/lib/chatPrivacy.ts) they carry the client's name (operator,
-       2026-11-02; Art. 49 (1) (b)), never contact details or a message — Hostinger, Anthropic (AI assistance),
+       (src/lib/chatPrivacy.ts) they carry the client's name, contact details
+       and message again (operator, 2026-11-03; Art. 49 (1) (b)) — Hostinger, Anthropic (AI assistance),
        Zoom, map tiles / embedded content
      + the visitor code is keyed with a secret (ANALYTICS_SALT, privacy T1)
      + verified figures only: server logs 14 days (logrotate), deleted enquiries
@@ -158,7 +158,7 @@ export const PRIVACY_EN: LegalDoc = {
             "Property developers in Cyprus — to register you as our client and to arrange viewings and offers for the properties you are interested in. For the registration we send your name, your property interest and budget and a partly masked phone number; if you go ahead with a viewing or an offer, the developer receives the contact details needed for it. Legal basis: Art. 6 (1) (b) GDPR.",
             "Independent lawyers — for legal checks and contract drafting, where you ask us to introduce you. They act as separate controllers and are bound by their own professional confidentiality.",
             "The partner who introduced you, if any — they see the stage of their introduction and the presentations we prepared (see section 2).",
-            "Our team’s messaging services — when a new enquiry arrives, our team is alerted on Telegram (Telegram FZ-LLC, United Arab Emirates) and WhatsApp (WhatsApp Ireland Limited). These alerts, and the reminders our team receives on Telegram, show your first and last name, the type of enquiry, the options you selected (such as budget range or preferred way of contact) and a link to our customer database, which requires a login. They never contain your contact details or message. We correspond with you on WhatsApp if you choose it.",
+            "Our team’s messaging services — when a new enquiry arrives, our team is alerted on Telegram (Telegram FZ-LLC, United Arab Emirates) and WhatsApp (WhatsApp Ireland Limited). These alerts, and the reminders our team receives on Telegram, show your first and last name, your e-mail address and phone number, the type of enquiry, the options you selected (such as budget range or preferred way of contact), your message and a link to our customer database, which requires a login. We correspond with you on WhatsApp if you choose it.",
             "Our IT service providers, acting as processors under Art. 28 GDPR and only on our documented instructions: Hostinger International Ltd. (server hosting and email), Anthropic (an AI assistant our team uses to summarise enquiries, draft replies and sort developers’ answers — it sees the content of the enquiry and its history), and the video-call provider for meetings you agree to.",
             "Meta, Google, LinkedIn and Microsoft — as described in section 2, and only with your consent where section 2 says so.",
           ],
@@ -179,7 +179,7 @@ export const PRIVACY_EN: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, show your name but contain no contact details or message (see section 3). We pass your name to Telegram only to handle your enquiry promptly at your request (Art. 49 (1) (b) GDPR). Updates we send on Telegram to a partner who introduced you carry only a reference number and the stage of the introduction.",
+          text: "Our team alerts on Telegram, whose operator is based in the United Arab Emirates, a country without an EU adequacy decision, show your name, contact details and message (see section 3). We pass these details to Telegram only to handle your enquiry promptly at your request (Art. 49 (1) (b) GDPR). Updates we send on Telegram to a partner who introduced you carry only a reference number and the stage of the introduction.",
         },
         {
           kind: "p",

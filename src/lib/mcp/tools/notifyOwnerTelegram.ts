@@ -2,7 +2,6 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { redactContactDetails } from "@/lib/chatPrivacy";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
@@ -70,8 +69,7 @@ export async function performNotify(deps: NotifyDeps, input: unknown, detail: No
 
   let messageId: number | null;
   try {
-    // Telegram gets no client contact details (chatPrivacy.ts), whatever the caller wrote.
-    messageId = await deps.send(redactContactDetails(text));
+    messageId = await deps.send(text);
   } catch {
     throw new ToolError("internal", "Telegram did not accept the message. Nothing was sent.");
   }
@@ -86,7 +84,7 @@ export function registerNotifyOwnerTelegram(server: McpServer) {
     {
       title: "Notify the owner on Telegram",
       description:
-        `Sends one plain-text Telegram message to the owner (Sascha), via the platform's own bot — the same chat as the cron alerts and the morning report. The recipient is fixed and cannot be chosen. Text only, max ${NOTIFY_MAX_CHARS} characters, no formatting. At most ${NOTIFY_PER_HOUR} messages per hour across all callers. Use it for things the owner must act on, not as a log. Never put client personal data in the text — no names, e-mail addresses, phone numbers or quotes from their messages: refer to a lead by its CRM link (https://cyprusvipestates.com/admin/crm/<leadId>). E-mail addresses and phone numbers are removed before sending.`,
+        `Sends one plain-text Telegram message to the owner (Sascha), via the platform's own bot — the same chat as the cron alerts and the morning report. The recipient is fixed and cannot be chosen. Text only, max ${NOTIFY_MAX_CHARS} characters, no formatting. At most ${NOTIFY_PER_HOUR} messages per hour across all callers. Use it for things the owner must act on, not as a log. Link a lead by its CRM URL (https://cyprusvipestates.com/admin/crm/<leadId>).`,
       inputSchema: NotifyInput,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false, openWorldHint: true },
     },

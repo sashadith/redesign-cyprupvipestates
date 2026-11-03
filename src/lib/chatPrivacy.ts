@@ -1,17 +1,12 @@
-// Team chat alerts and client data (privacy T3, 2026-11-02; names back the
-// same day, operator: "ich will aber die namen sehen").
+// Team chat alerts and client data. Privacy T3 (2026-11-02) took client data
+// out of the office Telegram and the team WhatsApp group; the operator undid
+// it the next day ("Ich will die Nachrichten so haben wie vorher. Mit
+// Telefonnummer und email adresse — ich bin der einzige, der sie bekommt"):
+// office alerts carry name, e-mail, phone, nationality and the message again.
+// The privacy policy says so (privacyPolicyParity.test.ts).
 //
-// Telegram (the office bot and its group) is run by a company in the UAE,
-// a country without an EU adequacy decision; the team WhatsApp group goes
-// through Meta. An alert names the client (first and last name) and links
-// into the CRM, where the rest sits behind a login. No e-mail address, phone
-// number, nationality, message text, e-mail subject or excerpt goes into a
-// Telegram or WhatsApp text about a client — e-mail notifications to the team
-// (our own Hostinger mailbox) still carry the full details. The privacy policy
-// says exactly this (privacyPolicyParity.test.ts).
-//
-// chatPrivacy.test.ts feeds every chat-message builder a lead full of
-// personal data and fails when any contact detail comes out the other end.
+// The partner bot is different: partners see their client by number only
+// (clientRef), never contact details.
 
 /** "Lead #3f9a2c" — the first six hex digits of the lead's id. A display
  *  label, not a key: it only has to tell two alerts apart at a glance. */
@@ -19,10 +14,8 @@ export function leadRef(leadId: string): string {
   return `Lead #${leadId.replace(/-/g, "").slice(0, 6)}`;
 }
 
-/** The client's name for an office chat text (operator, 2026-11-02: "ich will
- *  aber die namen sehen" — names back in every team alert, the privacy policy
- *  says so). Contact details, nationality and the message still stay out.
- *  Falls back to the reference when the lead has no name. */
+/** The client's name for an office chat text; the reference when the lead
+ *  has no name. */
 export function leadLabel(lead: { firstName?: string | null; lastName?: string | null } | null | undefined, leadId: string): string {
   return `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}`.trim() || leadRef(leadId);
 }

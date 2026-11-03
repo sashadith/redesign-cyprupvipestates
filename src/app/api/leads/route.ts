@@ -184,26 +184,24 @@ export async function POST(request: Request) {
     if (propertyTypeInterest.length) qualification.push(["Property interest", propertyTypeInterest.join(", ")]);
     if (nationality) qualification.push(["Nationality", nationality]);
 
-    // Nationality stays out of the chats (chatPrivacy.ts); the e-mail keeps it.
     const tgQualification = qualification
-      .filter(([k]) => k !== "Nationality")
       .map(([k, v]) => `${k}: ${escapeHtml(v)}\n`)
       .join("");
     const mailQualification = qualification
       .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)
       .join("\n          ");
 
-    // Telegram notification (non-fatal). The name, no e-mail, phone or message:
-    // the same text goes to the team WhatsApp group (chatPrivacy.ts) — the
-    // team e-mail below carries the details.
+    // Telegram notification (non-fatal); the same text goes to the team
+    // WhatsApp group. Full contact details (chatPrivacy.ts).
     const langTag = telegramLanguageTag(ALLOWED_LANGS.has(langNorm) ? langNorm : null);
     const tg =
       `<b>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</b>\n\n` +
       `<b>${escapeHtml(fullName || leadRef(lead.id))}</b>\n` +
+      `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
       (langTag ? `Language: ${escapeHtml(langTag)}\n` : "") +
       tgQualification +
-      (messageFinal ? `Message: yes, see CRM\n` : "") +
+      (messageFinal ? `Message: ${escapeHtml(messageFinal)}\n` : "") +
       `Page: ${escapeHtml(page)}\n` +
       matchLines +
       `\n<a href="${crmLink}">Open in CRM</a>`;

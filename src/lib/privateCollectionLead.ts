@@ -105,9 +105,8 @@ export function pcTimelineBody(l: PcLead, raw: Record<string, string>, outcome: 
 }
 
 /** Telegram HTML — also the source of the e-mail and WhatsApp copies. English, admin-facing.
- *  Telegram/WhatsApp text: the client's name, no contact details or message (chatPrivacy.ts).
- *  `withContact` adds those for the team e-mail, which reuses this text. */
-export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; leadId: string; priorStatus?: string | null; withContact?: boolean }): string {
+ *  Full contact details and the message (chatPrivacy.ts). */
+export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; leadId: string; priorStatus?: string | null }): string {
   const who = `<b>${esc(`${l.firstName} ${l.lastName}`.trim() || leadRef(o.leadId))}</b>`;
   if (l.kind === "briefing") {
     const lines = [
@@ -115,7 +114,7 @@ export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmL
       who,
       `Language: ${esc(l.languagePreference ?? "-")}`,
     ];
-    if (o.withContact) lines.push(esc(l.email));
+    lines.push(esc(l.email));
     lines.push(`→ <a href="${o.crmLink}">Open in CRM</a>`);
     return lines.join("\n");
   }
@@ -125,9 +124,9 @@ export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmL
     who,
     `Budget: ${esc(l.budgetKey ? PC_BUDGETS[l.budgetKey].label : "not answered")} · Purpose: ${esc(l.purpose ?? "not answered")} · Prefers: ${esc(l.preferredChannel ? CHANNEL_LABEL[l.preferredChannel] : "not answered")}`,
   ];
-  if (o.withContact) lines.push([l.email, l.phone].filter(Boolean).map(esc).join(" · "));
+  lines.push([l.email, l.phone].filter(Boolean).map(esc).join(" · "));
   if (o.priorStatus && o.priorStatus !== "NEW") lines.push(`ℹ️ lead status is ${esc(o.priorStatus)}`);
-  if (l.message) lines.push(o.withContact ? `Message: ${esc(l.message.length > 500 ? `${l.message.slice(0, 500)}…` : l.message)}` : "Message: yes, see CRM");
+  if (l.message) lines.push(`Message: ${esc(l.message.length > 500 ? `${l.message.slice(0, 500)}…` : l.message)}`);
   lines.push(`→ <a href="${o.crmLink}">Open in CRM</a>`);
   return lines.join("\n");
 }
