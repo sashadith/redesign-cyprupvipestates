@@ -151,3 +151,20 @@ test("blog: an article that exists only in Hebrew is not a target for other loca
   assert.equal(await resolveMissing(repo(blog, PAGE), env, { kind: "blog", lang: "ru", segments: ["only-in-hebrew"] }), "/ru/blog");
   assert.equal(await resolveMissing(repo(blog, PAGE), env, { kind: "blog", lang: "he", segments: ["steuern-auf-immobilien-in-zypern"] }), "/blog/taxes-on-real-estate-in-cyprus");
 });
+
+test("page: a first segment that is not a locale (/api/trpc, /.well-known/...) keeps its 404 without a lookup", async () => {
+  // Prisma rejects a language outside the enum; the old code queried anyway, logged the failure and answered 404.
+  const strict = repo(BLOG, PAGE);
+  for (const k of ["pagesEndingWith", "pageSibling", "pageExists"] as const) {
+    const inner = strict[k] as (...a: any[]) => Promise<any>;
+    (strict as any)[k] = async (...a: any[]) => {
+      const l = k === "pagesEndingWith" || k === "pageExists" ? a[0] : a[1];
+      if (!PUBLIC.has(l)) throw new Error(`invalid language ${l}`);
+      return inner(...a);
+    };
+  }
+  for (const [lang, segs] of [["api", ["trpc"]], ["api", ["status"]], [".well-known", ["traffic-advice"]], ["uploads", ["foo"]]] as const) {
+    assert.equal(await resolveMissing(strict, env, { kind: "page", lang, segments: [...segs] }), null, `/${lang}/${segs.join("/")}`);
+  }
+  assert.equal(await resolveMissing(strict, env, { kind: "page", lang: "ru", segments: ["nothing-here"] }), "/ru");
+});
