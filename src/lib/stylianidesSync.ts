@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { dropboxConfigured, getDropboxAccessToken, listSharedFolder, downloadSharedFile, isDropboxShareUrl, type DropboxFile } from "./dropbox";
 import { readPdfPages, tablesFromPages, mapTableColumns, unitsFromTable, type TableUnit } from "./ai/availabilityTable";
-import { findStylianidesPriceList, normalizeStylianidesTable, stylianidesMappingContext, fixStylianidesMapping, refineStylianidesUnits, mergeTableUnits, refDrift } from "./stylianides";
+import { findStylianidesPriceList, normalizeStylianidesTable, stylianidesMappingContext, fixStylianidesMapping, refineStylianidesUnits, mergeTableUnits, refDrift, driftBaseRefs } from "./stylianides";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { beginSyncWindow } from "./imageMirror";
@@ -160,7 +160,7 @@ export async function syncStylianides(
         select: { id: true, ref: true, feedRef: true, source: true, status: true, type: true, price: true, beds: true, baths: true, floor: true, areaInternal: true, areaBuilt: true, areaPlot: true, areaVeranda: true, areaVerandaOpen: true },
       });
       const key = (u: { feedRef?: string | null; ref?: string | null }) => normalizeRef((u.feedRef || u.ref || "").toString(), p.publicName);
-      const listedRefs = existing.filter((u) => u.source !== "manual" && u.status !== "unlisted").map((u) => u.feedRef || u.ref || "");
+      const listedRefs = driftBaseRefs(existing);
       const drift = refDrift(listedRefs, read.units.map((u) => u.ref), p.publicName);
       if (drift) { r.issues.push(drift); continue; }
 
