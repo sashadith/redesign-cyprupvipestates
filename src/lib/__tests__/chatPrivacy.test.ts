@@ -13,25 +13,19 @@ import { dueTelegram } from "@/lib/crm/registration/due";
 import { reminderTelegram } from "@/lib/crm/registration/reminders";
 import { buildPartnerClientNotice } from "@/lib/partner/submitFlow";
 
-/* Why this exists (2026-11-02, privacy T3; names back the same day).
- *
- * Every new enquiry used to reach the office Telegram (a UAE company, no EU
- * adequacy decision) and the team WhatsApp group with the client's name,
- * e-mail, phone and message. The privacy policy now says these alerts carry
- * the client's name and a CRM link, nothing else (operator: "ich will aber die
- * namen sehen"). This file holds the code to that promise: each chat-text
- * builder gets a lead full of personal data, and only the name may come out
- * the other end.
+/* History: privacy T3 (2026-11-02) took client data out of the office chats;
+ * the operator restored it on 2026-11-03 ("Ich will die Nachrichten so haben
+ * wie vorher. Mit Telefonnummer und email adresse"). Office alerts (Telegram +
+ * team WhatsApp group) carry name, e-mail, phone and message again. The
+ * partner bot still names clients by number only.
  */
 
 const LEAD_ID = "3f9a2c11-7d4e-4b8a-9c3d-2e1f0a9b8c7d";
 const PII = ["Annabel", "Kowalczyk", "annabel.k@example.com", "+49 170 5550123", "4917055501", "Polish", "please call after six"];
-// Contact details, nationality and the message never go out; the name does.
-const CONTACT = PII.slice(2);
-const assertNameOnly = (text: string, where: string) => {
-  for (const v of CONTACT) assert.ok(!text.includes(v), `${where} leaks "${v}"`);
-  assert.ok(text.includes("Annabel"), `${where} should name the lead`);
+const assertHas = (text: string, needles: string[], where: string) => {
+  for (const v of needles) assert.ok(text.includes(v), `${where} lacks "${v}"`);
 };
+const assertNameOnly = (text: string, where: string) => assertHas(text, ["Annabel"], where);
 const assertNoPii = (text: string, where: string) => {
   for (const v of PII) assert.ok(!text.includes(v), `${where} leaks "${v}"`);
   assert.ok(text.includes(leadRef(LEAD_ID)) || where.startsWith("review"), `${where} should name the lead by its reference`);
@@ -58,24 +52,22 @@ test("redactContactDetails removes e-mail addresses and phone numbers, keeps dat
   }
 });
 
-test("website, partner-form and ROI leads: the name, no contact details in the chat text", () => {
-  assertNameOnly(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, name: "Annabel Kowalczyk", source: "PARTNER", page: "/en/partners", language: "pl", link: "https://x/admin/crm/" + LEAD_ID }), "inbound lead");
-  assertNoPii(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, source: "ROI_CALCULATOR", link: "https://x" }), "inbound lead without a name");
+test("website, partner-form and ROI leads: name, e-mail and phone in the chat text", () => {
+  assertHas(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, name: "Annabel Kowalczyk", email: "annabel.k@example.com", phone: "+49 170 5550123", source: "PARTNER", page: "/en/partners", language: "pl", link: "https://x/admin/crm/" + LEAD_ID }), ["Annabel Kowalczyk", "annabel.k@example.com", "+49 170 5550123"], "inbound lead");
+  assert.match(buildInboundLeadTelegramMessage({ leadId: LEAD_ID, source: "ROI_CALCULATOR", link: "https://x" }), /Lead #3f9a2c/, "no name: the reference");
 });
 
-test("Private Collection: the name, no contact details or message in the chat text, all of it in the e-mail", () => {
+test("Private Collection: name, contact details and message in the chat text", () => {
   const r = parsePcLead({ type: "consultation", locale: "en", firstName: "Annabel", lastName: "Kowalczyk", email: "annabel.k@example.com", phone: "+49 170 5550123", considering: "investment", budget: "3-5m", contact: "whatsapp", message: "please call after six" });
   if (!r.ok) throw new Error("parse");
-  assertNameOnly(pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x", leadId: LEAD_ID }), "PC chat");
-  const mail = pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x", leadId: LEAD_ID, withContact: true });
-  for (const v of ["Annabel", "annabel.k@example.com", "+49 170 5550123", "please call after six"]) assert.ok(mail.includes(v), `PC e-mail lacks ${v}`);
+  assertHas(pcTelegram(r.lead, { outcome: "CREATED", crmLink: "https://x", leadId: LEAD_ID }), ["Annabel", "annabel.k@example.com", "+49 170 5550123", "please call after six"], "PC chat");
 });
 
-test("Meta lead form: the stored chat text carries the name, no contact details", () => {
-  assertNameOnly(buildLeadMessage({
-    outcome: "CREATED", language: "en", name: "Annabel Kowalczyk", budget: "3-5", preferredChannel: "WHATSAPP", campaignName: "UK Leads", formName: "CVE PC Briefing EN v2",
+test("Meta lead form: the stored chat text carries name, e-mail and phone", () => {
+  assertHas(buildLeadMessage({
+    outcome: "CREATED", language: "en", name: "Annabel Kowalczyk", email: "annabel.k@example.com", phone: "+49 170 5550123", budget: "3-5", preferredChannel: "WHATSAPP", campaignName: "UK Leads", formName: "CVE PC Briefing EN v2",
     placeholderReason: null, unmatchedCount: 0, leadId: LEAD_ID,
-  }), "Meta lead");
+  }), ["Annabel Kowalczyk", "annabel.k@example.com · +49 170 5550123"], "Meta lead");
 });
 
 test("office reminders (nag, SLA, registrations): the client's name, never contact details", () => {
@@ -105,10 +97,9 @@ test("partner-submitted client: the office notice names the client and the partn
   assertNoPii(buildPartnerClientNotice({ partnerName: "Acme", mode: "FIX", outcome: "REVIEW" }), "review notice");
 });
 
-/* Senders that build their text inline. Their chat strings take the lead's
-   name through leadLabel (or a name the code already holds) and nothing else
-   from the lead: checked on the source, since these are route handlers and
-   server actions with the database behind them. */
+/* Senders that build their text inline (route handlers and server actions,
+   checked on the source): the lead's name, and for new leads and e-mail
+   replies the contact details / the client's own words. */
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const INLINE: Array<[string, string[]]> = [
   ["src/app/api/c/[token]/view/route.ts", ["const name = escapeHtml(leadLabel(presentation.lead, presentation.leadId));"]],
@@ -117,21 +108,18 @@ const INLINE: Array<[string, string[]]> = [
   ["src/app/api/cron/booking-reminders/route.ts", ["`${esc(leadLabel(booking.lead, booking.leadId))} — ${time} (Cyprus time)", "sendTelegramMessage(esc(text(leadLabel(booking.lead, booking.leadId))))"]],
   ["src/app/api/cron/action-digest/route.ts", ["escapeHtml(leadLabel(b.lead, b.leadId))", "...buildLines(false).map(stripHtml)"]],
   ["src/lib/crm/assignLead.ts", ["takes <b>${esc(leadLabel(lead, lead.id))}</b>"]],
-  ["src/lib/emailInbound/processInbound.ts", ["New e-mail reply from ${esc(leadLabel(lead, leadId))}"]],
-  ["src/lib/emailInbound/officeInbound.ts", ["From ${esc(senderDomain(m.from))}", "about ${esc(ctx.clientName || leadRef(match.leadId))}"]],
-  ["src/app/api/leads/route.ts", ["`<b>${escapeHtml(fullName || leadRef(lead.id))}</b>\\n` +"]],
-  ["src/lib/mcp/tools/notifyOwnerTelegram.ts", ["deps.send(redactContactDetails(text))"]],
+  ["src/lib/emailInbound/processInbound.ts", ["New e-mail reply from ${esc(leadLabel(lead, leadId))}", "${esc(subject || \"(no subject)\")}", "esc(body.slice(0, TELEGRAM_EXCERPT_LENGTH))"]],
+  ["src/lib/emailInbound/officeInbound.ts", ["From ${esc(m.from)}: ${esc(m.subject", "about ${esc(ctx.clientName || leadRef(match.leadId))}"]],
+  ["src/app/api/leads/route.ts", ["`<b>${escapeHtml(fullName || leadRef(lead.id))}</b>\\n` +", "`Email: ${escapeHtml(emailNorm)}\\nPhone: ${escapeHtml(phoneNorm)}\\n` +", "`Message: ${escapeHtml(messageFinal)}\\n`"]],
+  ["src/lib/mcp/tools/notifyOwnerTelegram.ts", ["deps.send(text)"]],
 ];
-// The contact details and the client's own words, as they were interpolated before T3.
-const FORBIDDEN = /emailNorm\)\}\\nPhone|esc\(excerpt\)|esc\(m\.subject|Message: \$\{escapeHtml\(messageFinal|esc\(lead\.email|esc\(lead\.phone/;
 
-test("inline chat senders name the lead, and no contact details or message text go in", () => {
+test("inline chat senders name the lead; new leads and replies carry the details", () => {
   for (const [file, needles] of INLINE) {
     const src = read(file);
     for (const n of needles) assert.ok(src.includes(n), `${file}: expected ${n}`);
-    const bad = src.split("\n").filter((l) => FORBIDDEN.test(l) && !/sendEmail|subject:/.test(l));
-    assert.deepEqual(bad, [], `${file} puts client contact data into a chat text`);
   }
+  assert.ok(!read("src/app/api/leads/route.ts").includes(`k !== "Nationality"`), "nationality goes to the chat again");
 });
 
 /* The partner bot (2026-11-02, operator: "nur Nummer"): a partner's Telegram

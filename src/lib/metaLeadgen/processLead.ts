@@ -160,8 +160,8 @@ export async function sendOwedEmail(leadgenId: string, text: string, leadId: str
     .catch(() => ({ count: 0 }));
   if (claimed.count !== 1) return false;
   try {
-    const lead = leadId ? await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true, email: true, phone: true } }) : null;
-    const mail = buildLeadEmail(text, { outcome, name: `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}`, email: lead?.email, phone: lead?.phone });
+    const lead = leadId ? await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true, email: true } }) : null;
+    const mail = buildLeadEmail(text, { outcome, name: `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}` });
     await sendEmail({ ...mail, ...(lead?.email ? { replyTo: lead.email } : {}) });
     if (leadId && outcome === "CREATED") await prisma.lead.update({ where: { id: leadId }, data: { emailNotified: true } }).catch(() => {});
     return true;
@@ -282,6 +282,8 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         outcome,
         language: m.languagePreference,
         name: `${m.firstName} ${m.lastName}`.trim(),
+        email: m.email,
+        phone: m.phone,
         budget: m.budget,
         preferredChannel: m.preferredChannel,
         campaignName: lead.campaign_name ?? null,
