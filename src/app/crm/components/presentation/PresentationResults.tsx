@@ -5,21 +5,24 @@ import { sentLabel, type SentInfo } from "@/lib/crm/presentations/sentHistory";
 
 // Matched projects with their units, as in the old matching table: tick a
 // project, open it to narrow its units (or add near-misses via "show all"),
-// and leave a one-line note for the client.
+// and leave a one-line note for the client. "Save" keeps that note as the
+// advisor's default for the project, prefilled in every later selection.
 
 const fmtPrice = (n: number | null) => (n == null ? "—" : `€${n.toLocaleString("en-US")}`);
 const scoreClass = (s: number) => (s >= 80 ? "hi" : s >= 60 ? "mid" : "lo");
 
 export function PresentationResults({
-  results, loading, error, selected, expanded, showAll, unitOverrides, comments, sent,
-  onToggleDev, onToggleExpand, onToggleShowAll, onToggleUnit, onComment, onRetry,
+  results, loading, error, selected, expanded, showAll, unitOverrides, comments, sent, savedNotes, savingNote,
+  onToggleDev, onToggleExpand, onToggleShowAll, onToggleUnit, onComment, onSaveNote, onRetry,
 }: {
   results: DevelopmentMatch[]; loading: boolean; error: string | null;
   selected: Set<string>; expanded: Set<string>; showAll: Set<string>;
   unitOverrides: Map<string, Set<string>>; comments: Map<string, string>; sent: Record<string, SentInfo>;
+  /** The advisor's saved default note per project; `savingNote` = the project whose save is in flight. */
+  savedNotes: Map<string, string>; savingNote: string | null;
   onToggleDev: (id: string) => void; onToggleExpand: (id: string) => void; onToggleShowAll: (id: string) => void;
   onToggleUnit: (devId: string, unitId: string, allAvailableIds: string[]) => void;
-  onComment: (devId: string, text: string) => void; onRetry: () => void;
+  onComment: (devId: string, text: string) => void; onSaveNote: (devId: string, text: string) => void; onRetry: () => void;
 }) {
   if (error) {
     return (
@@ -52,6 +55,9 @@ export function PresentationResults({
         const priceFrom = prices.length ? Math.min(...prices) : null;
         const place = d.district || d.town || d.area;
         const s = sent[d.id];
+        const note = comments.get(d.id) ?? "";
+        const saved = savedNotes.get(d.id) ?? "";
+        const noteClean = note.replace(/\s+/g, " ").trim();
         const rateTitle = d.commission.source === "PROJECT" ? "Project rate (overrides the developer default)"
           : d.commission.source === "DEVELOPER" ? "Developer default" : "No rate set for this developer or project";
         return (
@@ -79,6 +85,7 @@ export function PresentationResults({
                   <span>{d.unitsAvailable} available</span>
                 </div>
                 {s && <div className="crm-pres-sent">{sentLabel(s)}</div>}
+                {isSel && noteClean && <div className="crm-pres-noteflag">Including advisor&apos;s note</div>}
               </div>
               <span className={`crm-pres-score ${scoreClass(m.score)}`}>{m.score}%</span>
               <button type="button" className="crm-pres-expand" aria-expanded={isOpen} title="Show units" onClick={() => onToggleExpand(d.id)}>{isOpen ? "▾" : "▸"}</button>
@@ -86,9 +93,19 @@ export function PresentationResults({
             {isOpen && (
               <div className="crm-pres-units">
                 {isSel && (
-                  <input className="crm-pres-comment" value={comments.get(d.id) ?? ""} maxLength={300}
-                    onChange={(e) => onComment(d.id, e.target.value)}
-                    placeholder="Advisor's note for this property (optional, one line)" aria-label={`Note for ${d.publicName}`} />
+                  <div className="crm-pres-noterow">
+                    <input className="crm-pres-comment" value={note} maxLength={300}
+                      onChange={(e) => onComment(d.id, e.target.value)}
+                      placeholder="Advisor's note for this property (optional, one line)" aria-label={`Note for ${d.publicName}`} />
+                    {noteClean === saved
+                      ? saved && <span className="crm-pres-notesaved" title="Prefilled in your future selections">Saved</span>
+                      : (
+                        <button type="button" className="crm-btn" disabled={savingNote === d.id} onClick={() => onSaveNote(d.id, note)}
+                          title={noteClean ? "Use this note in all your future selections" : "Stop prefilling a note for this project"}>
+                          {savingNote === d.id ? "Saving…" : noteClean ? "Save" : "Forget saved"}
+                        </button>
+                      )}
+                  </div>
                 )}
                 {m.allAvailableUnits.length === 0 ? (
                   <p className="crm-muted">No individual unit data for this project — the whole project&apos;s available units will show.</p>
