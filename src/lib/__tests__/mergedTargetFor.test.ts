@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import nestedPageRedirects from "../nestedPageRedirects.json";
 import assert from "node:assert/strict";
-import { DE_LANDING_MERGES, EN_BLOG_RENAMES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, mergedTargetFor, nestedCanonicalFor } from "../../middleware";
+import { DE_BLOG_RENAMES, DE_LANDING_MERGES, EN_BLOG_RENAMES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, mergedTargetFor, nestedCanonicalFor } from "../../middleware";
 
 test("mergedTargetFor answers exactly what each locale's merge map says", () => {
   for (const [k, v] of Object.entries(DE_LANDING_MERGES)) assert.equal(mergedTargetFor(`/de/${k}`), v, `de ${k}`);
@@ -64,6 +64,18 @@ test("renamed EN blog articles redirect single-hop to their new slug", () => {
   assert.equal(
     mergedTargetFor("/blog/cyprus-permanent-residency-golden-visa-guide"),
     "/guides/cyprus-permanent-residency-category-6-2-guide",
+  );
+});
+
+test("renamed DE guide articles redirect single-hop to their year-free Ratgeber URL", () => {
+  for (const [k, v] of Object.entries(DE_BLOG_RENAMES)) {
+    assert.equal(mergedTargetFor(`/de/${k}`), v, k);
+    assert.equal(mergedTargetFor(v), null, `target must not redirect again: ${v}`);
+    assert.ok(!/20\d\d/.test(v), `no year in the new URL: ${v}`);
+  }
+  assert.equal(
+    mergedTargetFor("/de/blog/non-dom-status-zypern-2026"),
+    "/de/ratgeber/non-dom-status-zypern",
   );
 });
 

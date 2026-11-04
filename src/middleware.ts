@@ -294,6 +294,20 @@ export const EN_BLOG_RENAMES: Record<string, string> = {
   "blog/cyprus-permanent-residency-golden-visa-guide": "/guides/cyprus-permanent-residency-category-6-2-guide",
 };
 
+// Renamed German guide articles (/de/blog/<slug> -> /de/ratgeber/<slug>), old path -> new path. 2026-11-04: six evergreen
+// guides moved into the Ratgeber section and lost the year from their slug ("-2026"), so the URL stays valid in 2027
+// (the year now lives only in the title). The row keeps its identity; only category and slug change, and the old
+// /de/blog URL answers a single-hop 301 to the new one. Ship this BEFORE the DB rename
+// (scripts/guides/rename-de-guides-2026-11-04.mjs refuses to run until the live old URL already answers the 301).
+export const DE_BLOG_RENAMES: Record<string, string> = {
+  "blog/steuern-auf-zypern-privatpersonen-2026": "/de/ratgeber/steuern-auf-zypern-privatpersonen",
+  "blog/einkommensteuer-zypern-2026-stufen-beispiele": "/de/ratgeber/einkommensteuer-zypern-stufen-beispiele",
+  "blog/non-dom-status-zypern-2026": "/de/ratgeber/non-dom-status-zypern",
+  "blog/kapitalertraege-dividenden-krypto-zypern-2026": "/de/ratgeber/kapitalertraege-dividenden-krypto-zypern",
+  "blog/selbstaendig-auf-zypern-steuern-sozialabgaben-2026": "/de/ratgeber/selbstaendig-auf-zypern-steuern-sozialabgaben",
+  "blog/rentner-zypern-rente-steuern-krankenversicherung-2026": "/de/ratgeber/rentner-zypern-rente-steuern-krankenversicherung",
+};
+
 // Paphos investment cluster, PL leg (2026-09-09) — same investigation and
 // same reasoning as the DE entry above: inwestycje-w-nieruchomosci-pafos
 // never filtered on propertyType despite its "investment" framing (198
@@ -421,7 +435,7 @@ export const RU_LANDING_MERGES: Record<string, string> = {
 /**
  * Where the plain-map redirects below already send `pathname` (single-hop 301), or null.
  * Order matters and is the order the checks always ran in: DE landing merges, retired DE blog
- * articles, PL, RU, then EN (the unprefixed one-segment pages), then renamed EN blog articles. Exported so the missing-page
+ * articles, renamed DE guide articles, PL, RU, then EN (the unprefixed one-segment pages), then renamed EN blog articles. Exported so the missing-page
  * resolver (src/lib/missingPageResolve.ts) never picks one of these retired slugs as its
  * target, which would turn its redirect into a two-hop chain.
  */
@@ -429,6 +443,7 @@ export function mergedTargetFor(pathname: string): string | null {
   const de = pathname.match(/^\/de\/(.+)$/);
   if (de && DE_LANDING_MERGES[de[1]]) return DE_LANDING_MERGES[de[1]];
   if (de && RETIRED_BLOG_REDIRECTS[de[1]]) return RETIRED_BLOG_REDIRECTS[de[1]];
+  if (de && DE_BLOG_RENAMES[de[1]]) return DE_BLOG_RENAMES[de[1]];
   const pl = pathname.match(/^\/pl\/(.+)$/);
   if (pl && PL_LANDING_MERGES[pl[1]]) return PL_LANDING_MERGES[pl[1]];
   const ru = pathname.match(/^\/ru\/(.+)$/);
