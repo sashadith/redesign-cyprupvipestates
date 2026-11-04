@@ -44,8 +44,8 @@ test("the four school-proximity pages redirect single-hop to the family-villa fl
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
     mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
-    // The target is a guide article, so it is the final URL (guides slug), not a /blog URL that would redirect once more.
-    "/de/ratgeber/wie-nach-zypern-auswandern",
+    // The target article lives in the blog today, so /de/blog/... is the final URL; a /de/ratgeber URL would add a 308 hop back.
+    "/de/blog/wie-nach-zypern-auswandern",
   );
   assert.equal(
     mergedTargetFor("/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern"),

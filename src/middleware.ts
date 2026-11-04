@@ -235,9 +235,11 @@ export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   // DE/AT/CH tax comparison, whose "Miete und Verkaufsgewinn" section carries the worked example.
   "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/ratgeber/steuern-zypern-vs-deutschland-oesterreich-schweiz",
 
+  // 2026-11-04: both targets below stay in the BLOG (/de/blog/...), where the articles live. Pointing at /de/ratgeber/...
+  // made a two-hop chain (301, then the 308 back to the blog). Repoint them if the articles ever move into the Ratgeber.
   // G01 (DACH plan, 2026-10-29): the second "auswandern" guide (707 words, headline "... 2025") merged into
   // wie-nach-zypern-auswandern, the base that carries the content.
-  "blog/auswandern-nach-zypern-aus-deutschland": "/de/ratgeber/wie-nach-zypern-auswandern",
+  "blog/auswandern-nach-zypern-aus-deutschland": "/de/blog/wie-nach-zypern-auswandern",
 
   // German-retiree cannibalization pair (2026-09-30 content inventory):
   // wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen and
@@ -256,7 +258,7 @@ export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   // this redirect went in. Its closing projectsSectionBlock was NOT carried
   // over -- all 6 pinned project refs are archived/missing, the same
   // dead-pin defect documented throughout this file's other merges.
-  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/ratgeber/ratgeber-fuer-deutsche-rentner",
+  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/blog/ratgeber-fuer-deutsche-rentner",
 };
 
 // English (unprefixed) landing-page merges — same shape/mechanism as
