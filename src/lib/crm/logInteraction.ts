@@ -16,7 +16,7 @@
 import { prisma } from "@/lib/prisma";
 import { applyFollowUpCadence } from "./followUpCadence";
 import type { EmailActor } from "./sendLeadEmail";
-import { bodyRequirement, type LoggableInteractionType } from "./logRule";
+import { bodyRequirement, type CallOutcome, type LoggableInteractionType } from "./logRule";
 
 // The type list and bodyRequirement() live in the import-free logRule.ts (the
 // cockpit's client form uses them too); re-exported here for existing callers.
@@ -51,15 +51,18 @@ export type LogInteractionInput = {
   leadReacted?: boolean;
   aiGenerated?: boolean;
   via?: "mcp" | "mcp-whatsapp" | "crm-whatsapp";
+  callOutcome?: CallOutcome;
 };
 
 export async function logLeadInteraction(actor: EmailActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {
-  const { content, subject, ok } = bodyRequirement(input.type, input.body, input.subject);
+  const callOutcome = input.type === "CALL" ? input.callOutcome : undefined;
+  const { content, subject, ok } = bodyRequirement(input.type, input.body, input.subject, callOutcome);
   if (!ok) throw new Error("Message is required.");
   const shape = interactionShape(input.type);
   const when = input.occurredAt ?? new Date();
-  const leadReacted = shape.forcesLeadReacted || !!input.leadReacted;
+  const leadReacted = shape.forcesLeadReacted || !!input.leadReacted || callOutcome === "SPOKE";
   const metadata = {
+    ...(callOutcome ? { callOutcome } : {}),
     ...(leadReacted ? { leadReacted: true } : {}),
     ...(input.aiGenerated ? { aiGenerated: true } : {}),
     ...(input.via ? { via: input.via } : {}),

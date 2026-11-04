@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LOGGABLE_TYPES, bodyRequirement, type LoggableInteractionType } from "@/lib/crm/logRule";
+import { CALL_OUTCOMES, CALL_OUTCOME_LABEL, LOGGABLE_TYPES, bodyRequirement, type CallOutcome, type LoggableInteractionType } from "@/lib/crm/logRule";
 import { logInteractionAction } from "../leads/actions";
 import { useToast } from "./Toast";
 
@@ -23,6 +23,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
   const [subject, setSubject] = useState("");
   const [when, setWhen] = useState("");
   const [replied, setReplied] = useState(false);
+  const [outcome, setOutcome] = useState<CallOutcome | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The latest allowed time, in the browser's zone. Set only after mount: a
@@ -36,7 +37,8 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
   const inbound = type === "WHATSAPP_IN" || type === "EMAIL_IN";
   // The checkbox is hidden for notes, so a tick never carries over into one.
   const showReplied = type !== "NOTE";
-  const ready = bodyRequirement(type, body, isEmail ? subject : null).ok;
+  const callOutcome = type === "CALL" ? outcome : null;
+  const ready = bodyRequirement(type, body, isEmail ? subject : null, callOutcome).ok;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +59,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
         subject: isEmail ? subject.trim() || undefined : undefined,
         occurredAt,
         leadReacted: inbound || (showReplied && replied) || undefined,
+        callOutcome: callOutcome ?? undefined,
       });
     } catch {
       res = { error: "Could not save — check your connection and try again." };
@@ -64,7 +67,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
       setBusy(false);
     }
     if ("error" in res) { setError(res.error); return; }
-    setBody(""); setSubject(""); setWhen(""); setReplied(false);
+    setBody(""); setSubject(""); setWhen(""); setReplied(false); setOutcome(null);
     toast.show(`${TYPE_LABEL[type]} logged`);
     router.refresh();
   }
@@ -83,6 +86,16 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
               </label>
             ))}
           </div>
+          {type === "CALL" && (
+            <div className="crm-ck-types" role="radiogroup" aria-label="Call outcome">
+              {CALL_OUTCOMES.map((o) => (
+                <label key={o} className={`crm-chip${outcome === o ? " on" : ""}`}>
+                  <input type="radio" name="crm-log-outcome" value={o} checked={outcome === o} onChange={() => setOutcome(o)} onClick={() => outcome === o && setOutcome(null)} className="sr-only" />
+                  {CALL_OUTCOME_LABEL[o]}
+                </label>
+              ))}
+            </div>
+          )}
           {isEmail && (
             <label className="crm-ck-field">
               <span>Subject</span>
@@ -90,7 +103,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
             </label>
           )}
           <label className="crm-ck-field">
-            <span>{type === "NOTE" ? "Note" : isEmail ? "Message (optional with a subject)" : "What was said"}</span>
+            <span>{type === "NOTE" ? "Note" : isEmail ? "Message (optional with a subject)" : callOutcome ? "What was said (optional)" : "What was said"}</span>
             <textarea value={body} maxLength={4000} rows={4} onChange={(e) => setBody(e.target.value)} />
           </label>
           <div className="crm-ck-logrow">

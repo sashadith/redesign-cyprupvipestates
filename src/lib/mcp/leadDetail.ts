@@ -1,5 +1,6 @@
 import type { LeadStateInput } from "@/lib/crm/compose/leadState";
 import { fmtDate, truncateText, untrusted } from "./format";
+import { CALL_OUTCOMES, isCallOutcome, type CallOutcome } from "@/lib/crm/logRule";
 
 export const INBOUND_TYPES = new Set(["EMAIL_IN", "WHATSAPP_IN"]);
 
@@ -21,6 +22,7 @@ type ShapedInteraction = {
   occurredAt: ReturnType<typeof fmtDate>; by: string | null; truncated: boolean;
   body?: string | null; untrusted_content?: string | null;
   cc?: string[];
+  callOutcome?: CallOutcome;
 };
 
 // Addresses only — stored after validation (ccRecipients / replyRecipients).
@@ -34,7 +36,11 @@ function ccOf(metadata: unknown): string[] {
 // summary even when the direction is INBOUND).
 export function shapeInteraction(i: InteractionLike): ShapedInteraction {
   const cc = ccOf(i.metadata);
-  const base = { id: i.id, type: i.type, direction: i.direction, channel: i.channel, subject: i.subject, occurredAt: fmtDate(i.occurredAt), by: i.createdByName, ...(cc.length ? { cc } : {}) };
+  const outcome = (i.metadata as { callOutcome?: unknown } | null | undefined)?.callOutcome;
+  const base = {
+    id: i.id, type: i.type, direction: i.direction, channel: i.channel, subject: i.subject, occurredAt: fmtDate(i.occurredAt), by: i.createdByName,
+    ...(cc.length ? { cc } : {}), ...(isCallOutcome(outcome) ? { callOutcome: outcome } : {}),
+  };
   if (INBOUND_TYPES.has(i.type)) {
     const u = untrusted(i.body);
     return { ...base, untrusted_content: u?.untrusted_content ?? null, truncated: u?.truncated ?? false };
@@ -80,4 +86,24 @@ export function attributionOf(lead: {
     ref: lead.attributionRef ?? null,
     referrer: lead.referrer ?? null,
   };
+}
+
+/** Calls on the lead, newest first in: how many, how each ended (calls logged before 2026-11-04 have
+ *  no outcome and count as "unknown"), and how many unanswered attempts since the last conversation. */
+export function callAttempts(calls: { occurredAt: Date; metadata: unknown }[]) {
+  const outcomeOf = (m: unknown): CallOutcome | null => {
+    const o = (m as { callOutcome?: unknown } | null)?.callOutcome;
+    return isCallOutcome(o) ? o : null;
+  };
+  const byOutcome = Object.fromEntries([...CALL_OUTCOMES, "UNKNOWN"].map((k) => [k, 0])) as Record<CallOutcome | "UNKNOWN", number>;
+  let unansweredSinceSpoke = 0;
+  let spokeSeen = false;
+  for (const c of calls) {
+    const outcome = outcomeOf(c.metadata) ?? "UNKNOWN";
+    byOutcome[outcome]++;
+    if (outcome === "SPOKE") spokeSeen = true;
+    if (!spokeSeen && (outcome === "NO_ANSWER" || outcome === "VOICEMAIL")) unansweredSinceSpoke++;
+  }
+  const last = calls[0];
+  return { total: calls.length, byOutcome, unansweredSinceSpoke, lastCallAt: fmtDate(last?.occurredAt ?? null), lastOutcome: last ? outcomeOf(last.metadata) : null };
 }

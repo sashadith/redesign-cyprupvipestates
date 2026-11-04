@@ -1,3 +1,4 @@
+import { CALL_OUTCOME_LABEL, isCallOutcome } from "./logRule";
 import { LOST_REASON_LABEL, STATUS_LABEL, isLeadStatus, type LostReasonValue } from "./leadStatus";
 
 // The lead cockpit's timeline (CRM v2, 2026-10-18). Pure: turns LeadInteraction
@@ -45,7 +46,12 @@ function toItem(r: TimelineInput): TimelineItem {
   const base = { id: r.id, at: r.occurredAt.toISOString(), by: r.createdByName, inbound: r.direction === "INBOUND" };
   const text = cut(r.body);
   switch (r.type) {
-    case "CALL": return { ...base, kind: "call", title: "Call", text };
+    case "CALL": {
+      const outcome = (r.metadata as { callOutcome?: unknown } | null)?.callOutcome;
+      const label = isCallOutcome(outcome) ? CALL_OUTCOME_LABEL[outcome] : null;
+      // A call logged with an outcome and no text carries the label as its body; don't print it twice.
+      return { ...base, kind: "call", title: label ? `Call · ${label}` : "Call", text: label && text === label ? null : text };
+    }
     case "NOTE": return { ...base, kind: "note", inbound: false, title: "Note", text };
     case "WHATSAPP_IN": return { ...base, kind: "whatsapp", inbound: true, title: "WhatsApp received", text };
     case "WHATSAPP_OUT": return { ...base, kind: "whatsapp", inbound: false, title: "WhatsApp sent", text };

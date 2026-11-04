@@ -8,7 +8,7 @@ import { contextFromAuthInfo } from "../context";
 import { loadScope } from "../leadScope";
 import { fmtDate, untrusted, MAX_TIMELINE_ROWS } from "../format";
 import { LEAD_ROW_SELECT, CONTACT_TYPES, leadRow } from "../leadRow";
-import { shapeInteraction, leadStateInput, LEAD_STATE_LABEL, attributionOf } from "../leadDetail";
+import { shapeInteraction, leadStateInput, LEAD_STATE_LABEL, attributionOf, callAttempts } from "../leadDetail";
 
 const Input = z.object({ leadId: z.string().uuid() });
 
@@ -51,6 +51,7 @@ export function registerGetLead(server: McpServer) {
           orderBy: { occurredAt: "desc" },
           select: { type: true, occurredAt: true },
         });
+        const calls = await prisma.leadInteraction.findMany({ where: { leadId, type: "CALL" }, orderBy: { occurredAt: "desc" }, select: { occurredAt: true, metadata: true } });
         const row = leadRow({ ...lead, interactions: lastContact ? [{ type: lastContact.type, occurredAt: lastContact.occurredAt }] : [] });
 
         const primary = lead.presentations[0];
@@ -75,6 +76,7 @@ export function registerGetLead(server: McpServer) {
           assignedTo: lead.assignedTo?.name ?? null,
           viewingScheduledAt: fmtDate(lead.viewingScheduledAt),
           autoFollowUpCount: lead.autoFollowUpCount,
+          callAttempts: callAttempts(calls),
           updatedAt: fmtDate(lead.updatedAt),
           enquiryMessage: untrusted(lead.message),
           adminNotes: lead.notes,

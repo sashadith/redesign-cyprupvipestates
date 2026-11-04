@@ -28,10 +28,10 @@ export async function logInteractionAction(leadId: string, raw: unknown): Promis
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid entry." };
   const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
   if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
-  const { type, body, subject, occurredAt, leadReacted } = parsed.data;
+  const { type, body, subject, occurredAt, leadReacted, callOutcome } = parsed.data;
   const when = occurredAt ? new Date(occurredAt) : undefined;
   if (when && when.getTime() > Date.now() + FUTURE_SLACK_MS) return { error: "The date cannot be in the future." };
-  await logLeadInteraction({ userId: user.id, userName: user.name }, leadId, { type, body, subject, occurredAt: when, leadReacted });
+  await logLeadInteraction({ userId: user.id, userName: user.name }, leadId, { type, body, subject, occurredAt: when, leadReacted, callOutcome });
   revalidatePath(`/crm/leads/${leadId}`);
   // A logged contact changes the board card's age / stale flag.
   revalidatePath("/crm/pipeline");

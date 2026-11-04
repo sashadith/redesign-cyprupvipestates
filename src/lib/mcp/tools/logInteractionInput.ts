@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LOGGABLE_TYPES, bodyRequirement } from "@/lib/crm/logRule";
+import { CALL_OUTCOMES, LOGGABLE_TYPES, bodyRequirement } from "@/lib/crm/logRule";
 
 // Input contract of crm_log_interaction, kept prisma-free so the pure test can
 // import it. The six types are exactly what the admin's log buttons write
@@ -21,9 +21,12 @@ export const LogInteractionInput = z
     occurredAt: z.string().datetime({ offset: true }).optional().describe("ISO 8601, with or without a UTC offset; defaults to now"),
     leadReacted: z.boolean().optional().describe("The lead responded — resets the auto-follow-up chain (implied for WHATSAPP_IN and EMAIL_IN)"),
     followUpAt: followUpAtField,
+    callOutcome: z.enum(CALL_OUTCOMES).optional()
+      .describe("CALL only: NO_ANSWER, VOICEMAIL, SPOKE (counts as the lead reacting) or WRONG_NUMBER. With an outcome, body is optional."),
   })
   .superRefine((v, ctx) => {
-    if (bodyRequirement(v.type, v.body, v.subject).ok) return;
+    if (v.callOutcome && v.type !== "CALL") ctx.addIssue({ code: "custom", path: ["callOutcome"], message: "callOutcome is only for type CALL." });
+    if (bodyRequirement(v.type, v.body, v.subject, v.callOutcome).ok) return;
     ctx.addIssue({
       code: "custom",
       path: ["body"],
