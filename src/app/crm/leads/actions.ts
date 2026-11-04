@@ -7,6 +7,7 @@ import { contactToCheck, createLeadRecord, findDuplicateLead } from "@/lib/crm/c
 import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
 import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
+import { emailEditData } from "@/lib/crm/leadHints";
 import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
@@ -121,7 +122,7 @@ export async function updateLeadDetailsAction(leadId: string, raw: unknown): Pro
 
   const changed = changeSummary(fields);
   await prisma.$transaction([
-    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "" } }),
+    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "", ...emailEditData(lead.email, data.email) } }),
     prisma.leadActivity.create({ data: { leadId, type: "EDIT", content: `Lead details edited: ${changed}`, createdBy: user.name, createdById: user.id } }),
     prisma.leadInteraction.create({
       data: {

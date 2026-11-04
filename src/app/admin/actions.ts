@@ -35,6 +35,7 @@ import { createOpenWaClient, type WaGroup } from "@/lib/openwa/client";
 import { bucketOf, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { moveLeadBucket } from "@/lib/crm/moveBucket";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
+import { emailEditData } from "@/lib/crm/leadHints";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
 
@@ -1043,7 +1044,7 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
 // and assignment are managed by their own controls and are intentionally untouched here.
 export async function updateLead(id: string, _prev: any, formData: FormData): Promise<{ error?: string }> {
   const session = await requireSession();
-  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
+  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, email: true } });
   if (!existing) return { error: "Lead not found." };
 
   const firstName = String(formData.get("firstName") ?? "").trim();
@@ -1064,6 +1065,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
       firstName,
       lastName: lastName || "",
       email: email || null,
+      ...emailEditData(existing.email, email || null),
       phone: phone || null,
       nationality: String(formData.get("nationality") ?? "").trim() || null,
       countryOfResidence: String(formData.get("countryOfResidence") ?? "").trim() || null,

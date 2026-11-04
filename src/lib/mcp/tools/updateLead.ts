@@ -6,6 +6,7 @@ import { applyLeadStatusChange, standaloneLostReason } from "@/lib/crm/updateLea
 import { LOST_REASONS } from "@/lib/crm/leadStatus";
 import { findDuplicateLead } from "@/lib/crm/createLead";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
+import { emailEditData } from "@/lib/crm/leadHints";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { assertCanEdit, loadScope } from "../leadScope";
@@ -83,7 +84,10 @@ export function registerUpdateLead(server: McpServer) {
         if (input.timeline !== undefined) set("timeline", input.timeline, "timeline");
         if (input.financing !== undefined) set("financing", input.financing, "financing");
         if (input.notes !== undefined) set("notes", input.notes?.trim() || null, "notes");
-        if (email !== undefined && email !== lead.email) set("email", email, "email");
+        if (email !== undefined && email !== lead.email) {
+          set("email", email, "email");
+          Object.assign(data, emailEditData(lead.email, email));
+        }
 
         if (Object.keys(data).length) {
           await prisma.lead.update({ where: { id: input.leadId }, data });

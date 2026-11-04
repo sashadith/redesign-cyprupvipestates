@@ -47,7 +47,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
-      message: true, notes: true, lastMatchFilters: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
+      message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,

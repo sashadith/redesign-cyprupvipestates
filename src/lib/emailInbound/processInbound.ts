@@ -4,6 +4,9 @@ import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfigu
 import { matchLeadForInboundEmail, canonicalizeEmail, type LeadMatch } from "./matchLead";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
 import { replyAllRecipients } from "./replyRecipients";
+import { parseBounce } from "./bounce";
+import { bounceInput } from "./bounceInput";
+import { handleBounce } from "./bounceHandler";
 import { stripHtmlToText } from "@/lib/emailSignature";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { leadLabel } from "@/lib/chatPrivacy";
@@ -60,6 +63,10 @@ export async function fileInboundEmail(
     const already = await prisma.leadInteraction.findFirst({ where: { messageId: inboundMessageId }, select: { id: true } });
     if (already) return { status: "duplicate" };
   }
+
+  // A delivery failure report is not a reply: it marks the lead's address dead instead (2026-11-04).
+  const bounce = parseBounce(bounceInput(parsed));
+  if (bounce) return handleBounce(bounce, parsed, internalDate, ctx);
 
   const references = Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [];
   const fromAddress = parsed.from?.value?.[0]?.address ?? "";

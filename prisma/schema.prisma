@@ -929,6 +929,11 @@ model Lead {
   // The automatic cadence leaves such a date alone while it lies in the future; its own writes
   // clear the flag again. See followUpCadence.ts.
   followUpManual       Boolean               @default(false)
+  // 2026-11-04 — a hard bounce (550 user unknown) for the current email address, read from the
+  // operator's mailbox by the inbound poller (emailInbound/bounceHandler.ts). While set, nothing is
+  // sent to the address; changing the email clears both fields.
+  emailInvalidAt       DateTime?
+  emailInvalidReason   String?
   // Compose batch (2026-07-24) — title form for the DE/PL formal first-contact
   // salutation ("Sehr geehrter Herr [Nachname]" / "Szanowny Panie [Nachname]").
   // Manually maintained (no reliable data source); UNKNOWN falls back to a

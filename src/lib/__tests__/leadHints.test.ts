@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { budgetCurrencyUnverified, leadHints, nameEmailMismatch, phoneKind } from "@/lib/crm/leadHints";
+import { budgetCurrencyUnverified, emailEditData, leadHints, nameEmailMismatch, phoneKind } from "@/lib/crm/leadHints";
 
 const meta = { source: "META_LEAD_AD", budgetMin: 2_000_000, budgetMax: 3_000_000 };
 
@@ -48,4 +48,13 @@ test("phone type: UK 01/02/03 and other landlines are flagged, mobiles and uncle
   const h = leadHints({ source: "META_LEAD_AD", countryOfResidence: "GB", phone: "+44 1632 960123" });
   assert.equal(h.phoneType, "landline");
   assert.deepEqual(h.messages, ["Landline number (United Kingdom) — probably no WhatsApp; call instead"]);
+});
+
+test("a bounced address is shown as a hint; changing the address clears the mark, re-casing does not", () => {
+  const h = leadHints({ source: "CONTACT_FORM", countryOfResidence: null, emailInvalidAt: new Date("2026-11-04T08:00:00Z"), emailInvalidReason: "550 5.1.1 user unknown" });
+  assert.equal(h.emailInvalid, true);
+  assert.match(h.messages[0], /bounced on 2026-11-04 \(550 5\.1\.1 user unknown\)/);
+  assert.deepEqual(emailEditData("a@x.com", "b@x.com"), { emailInvalidAt: null, emailInvalidReason: null });
+  assert.deepEqual(emailEditData("a@x.com", " A@X.com "), {});
+  assert.deepEqual(emailEditData("a@x.com", null), { emailInvalidAt: null, emailInvalidReason: null });
 });

@@ -17,7 +17,7 @@ test("leadRow maps a Prisma lead to the compact shape and never leaks extra fiel
   assert.equal(r.hot, false);
   assert.equal(r.guide, null);
   assert.equal(r.lastContact?.type, "EMAIL_OUT");
-  assert.deepEqual(Object.keys(r).sort(), ["bucket", "budget", "budgetCurrencyUnverified", "countryOfResidence", "createdAt", "email", "guide", "hints", "hot", "hotSince", "language", "lastContact", "leadId", "lostReason", "name", "nameEmailMismatch", "nextFollowUpAt", "phone", "phoneType", "projectInterest", "source", "status"]);
+  assert.deepEqual(Object.keys(r).sort(), ["bucket", "budget", "budgetCurrencyUnverified", "countryOfResidence", "createdAt", "email", "emailInvalid", "guide", "hints", "hot", "hotSince", "language", "lastContact", "leadId", "lostReason", "name", "nameEmailMismatch", "nextFollowUpAt", "phone", "phoneType", "projectInterest", "source", "status"]);
 });
 
 test("leadRow returns a stored lost reason", () => {

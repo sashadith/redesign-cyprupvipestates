@@ -11,6 +11,12 @@ import { renderLeadEmail } from "./renderLeadEmail";
 
 export type EmailActor = { userId: string; userName: string };
 
+/** A bounced address (emailInvalidAt) is never written to again until someone changes it. */
+export function emailInvalidMessage(l: { email: string | null; emailInvalidAt: Date | null; emailInvalidReason: string | null }): string {
+  const when = l.emailInvalidAt ? l.emailInvalidAt.toISOString().slice(0, 10) : "";
+  return `${l.email} bounced on ${when}${l.emailInvalidReason ? ` (${l.emailInvalidReason})` : ""}. Fix the email address in the lead before sending.`;
+}
+
 export type SendLeadEmailOpts = {
   subject: string;
   body: string;
@@ -31,8 +37,9 @@ export type SendLeadEmailResult =
   | { ok: false; error: string };
 
 export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: SendLeadEmailOpts): Promise<SendLeadEmailResult> {
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { email: true, languagePreference: true, status: true } });
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { email: true, languagePreference: true, status: true, emailInvalidAt: true, emailInvalidReason: true } });
   if (!lead?.email) return { ok: false, error: "This lead has no email address." };
+  if (lead.emailInvalidAt) return { ok: false, error: emailInvalidMessage(lead) };
 
   const subject = opts.subject.trim();
   const body = opts.body.trim();

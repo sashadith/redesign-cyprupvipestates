@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { getSignatureHtml } from "@/lib/emailSignature";
 import { sendUserEmail, getUserEmailSettingsRow, EmailSettingsMissingError } from "@/lib/crm/sendCrmEmail";
-import type { EmailActor } from "@/lib/crm/sendLeadEmail";
+import { emailInvalidMessage, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { adminDateTime } from "@/lib/adminTime";
 import { ToolError } from "../toolWrapper";
 import { assertCanEdit, type LeadScope } from "../leadScope";
@@ -30,11 +30,12 @@ export async function createEmailDraft(
 
   const lead = await prisma.lead.findFirst({
     where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
-    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true },
+    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true, emailInvalidAt: true, emailInvalidReason: true },
   });
   if (!lead) throw new ToolError("not_found", "Lead not found.");
   assertCanEdit(access.user, lead);
   if (!lead.email) throw new ToolError("validation", "This lead has no email address — a draft cannot be sent to them.");
+  if (lead.emailInvalidAt) throw new ToolError("validation", emailInvalidMessage(lead));
   // CC: what the caller gave (validated strictly; [] = deliberately none), or
   // — when nothing was given — "reply all": the other participants of the
   // lead's latest inbound email, e.g. a partner who was in CC. Either way the

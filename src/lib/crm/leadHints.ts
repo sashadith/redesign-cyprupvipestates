@@ -4,6 +4,12 @@ import { countryOf, countryOfPhone, internationalDigits, type CountryInfo } from
 // follow edits to the lead. Shown in the cockpit, in the new-lead Telegram and in the MCP lead rows.
 // Pure and import-free apart from countryInfo (the cockpit is server-rendered, but keep it light).
 
+/** Lead fields to write with an email edit: a changed address drops the bounce mark of the old one. */
+export function emailEditData(before: string | null, after: string | null): { emailInvalidAt?: null; emailInvalidReason?: null } {
+  const norm = (e: string | null) => (e ?? "").trim().toLowerCase();
+  return norm(before) === norm(after) ? {} : { emailInvalidAt: null, emailInvalidReason: null };
+}
+
 export type HintLead = {
   source: string;
   countryOfResidence: string | null;
@@ -12,6 +18,8 @@ export type HintLead = {
   phone?: string | null;
   budgetMin?: number | null;
   budgetMax?: number | null;
+  emailInvalidAt?: Date | null;
+  emailInvalidReason?: string | null;
 };
 
 /* Meta lead forms ask for a budget in euros, but a buyer outside the euro area may have answered in
@@ -120,15 +128,17 @@ export function phoneKind(phone: string | null | undefined, countryOfResidence?:
   return { kind: prefixes.some((p) => n.nsn.startsWith(p)) ? "mobile" : "landline", country: n.country.name };
 }
 
-export type LeadHints = { budgetCurrencyUnverified: boolean; nameEmailMismatch: string | null; phoneType: PhoneKind; messages: string[] };
+export type LeadHints = { emailInvalid: boolean; budgetCurrencyUnverified: boolean; nameEmailMismatch: string | null; phoneType: PhoneKind; messages: string[] };
 
 export function leadHints(l: HintLead): LeadHints {
   const messages: string[] = [];
+  const emailInvalid = l.emailInvalidAt != null;
+  if (emailInvalid) messages.push(`Email bounced on ${l.emailInvalidAt!.toISOString().slice(0, 10)}${l.emailInvalidReason ? ` (${l.emailInvalidReason})` : ""} — fix the address; nothing is sent to it`);
   const budget = budgetCurrencyUnverified(l);
   if (budget) messages.push(`Budget possibly in local currency (${countryOf(l.countryOfResidence)!.name}), not euros`);
   const mismatch = nameEmailMismatch(l.lastName, l.email);
   if (mismatch) messages.push(`Name and email differ: last name "${l.lastName!.trim()}", address has "${mismatch}" — check the spelling`);
   const phone = phoneKind(l.phone, l.countryOfResidence);
   if (phone.kind === "landline") messages.push(`Landline number (${phone.country}) — probably no WhatsApp; call instead`);
-  return { budgetCurrencyUnverified: budget, nameEmailMismatch: mismatch, phoneType: phone.kind, messages };
+  return { emailInvalid, budgetCurrencyUnverified: budget, nameEmailMismatch: mismatch, phoneType: phone.kind, messages };
 }
