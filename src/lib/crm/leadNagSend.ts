@@ -10,6 +10,7 @@ import { ACTIVE_LEAD_STATUSES } from "./leadStatus";
 import { EXCLUDE_PARTNER_ENQUIRY } from "./leadBucket";
 import { lastManualStatusChanges } from "./statusTouch";
 import { dayKey } from "./today";
+import { manualFollowUpData } from "./followUpRule";
 import {
   NAG_EXCLUDED_SOURCES, buildNagMessage, maySnooze, nagCounts, nagItems, routeNag, snoozeUntil, withoutLeadRow,
   type InlineButton, type NagLead, type NagUser,
@@ -101,7 +102,7 @@ export async function handleNagSnooze(input: {
   const until = snoozeUntil(input.now, input.days);
   const label = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Nicosia" }).format(until);
   const who = chatUser?.name ?? input.byName;
-  await prisma.lead.update({ where: { id: lead.id }, data: { nextFollowUpAt: until } });
+  await prisma.lead.update({ where: { id: lead.id }, data: manualFollowUpData(until) });
   await prisma.leadActivity.create({
     data: { leadId: lead.id, type: "EDIT", content: `Follow-up moved to ${label} from the Telegram reminder`, createdBy: who.slice(0, 120), createdById: chatUser?.id ?? null },
   });

@@ -62,5 +62,5 @@ export async function sendEmailDraft(
     where: { id: draft.id, status: "SENDING" },
     data: { status: "SENT", sentAt: new Date(), sentInteractionId: result.interactionId },
   });
-  return { sentTo: result.sentTo, cc: result.cc, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
+  return { leadId: draft.leadId, sentTo: result.sentTo, cc: result.cc, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
 }

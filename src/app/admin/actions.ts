@@ -34,6 +34,7 @@ import { normalizeProfile } from "@/lib/crm/registration/core";
 import { createOpenWaClient, type WaGroup } from "@/lib/openwa/client";
 import { bucketOf, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { moveLeadBucket } from "@/lib/crm/moveBucket";
+import { manualFollowUpData } from "@/lib/crm/followUpRule";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
 
@@ -902,7 +903,7 @@ export async function addEmailLog(
 export async function updateLeadFollowUp(id: string, dateStr: string) {
   await requireSession();
   const nextFollowUpAt = dateStr ? new Date(`${dateStr}T00:00:00.000Z`) : null;
-  await prisma.lead.update({ where: { id }, data: { nextFollowUpAt } });
+  await prisma.lead.update({ where: { id }, data: manualFollowUpData(nextFollowUpAt) });
   revalidatePath(`/admin/crm/${id}`);
 }
 

@@ -6,6 +6,7 @@ import { canAssignLeads, canEditLead, canViewLead } from "@/lib/crm/access";
 import { contactToCheck, createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
 import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
+import { manualFollowUpData } from "@/lib/crm/followUpRule";
 import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
@@ -184,7 +185,7 @@ export async function setFollowUpAction(leadId: string, input: FollowUpInput): P
   if (!r.ok) return { error: r.error };
   const body = r.at ? `Next follow-up set to ${followUpLabel(r.at)}` : "Next follow-up cleared";
   await prisma.$transaction([
-    prisma.lead.update({ where: { id: leadId }, data: { nextFollowUpAt: r.at } }),
+    prisma.lead.update({ where: { id: leadId }, data: manualFollowUpData(r.at) }),
     prisma.leadInteraction.create({
       data: {
         leadId, type: "SYSTEM", channel: "SYSTEM", direction: null, body,

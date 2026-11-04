@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { applyLeadStatusChange, standaloneLostReason } from "@/lib/crm/updateLeadStatus";
 import { findDuplicateLead } from "@/lib/crm/createLead";
+import { manualFollowUpData } from "@/lib/crm/followUpRule";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { assertCanEdit, loadScope } from "../leadScope";
@@ -64,7 +65,11 @@ export function registerUpdateLead(server: McpServer) {
         const reasonOnly = standaloneLostReason(lead.status, input.status, input.lostReason);
         if (reasonOnly) set("lostReason", reasonOnly, "lostReason");
         if (input.viewingScheduledAt !== undefined && !(input.status && input.status !== lead.status)) set("viewingScheduledAt", input.viewingScheduledAt ? new Date(input.viewingScheduledAt) : null, "viewingScheduledAt");
-        if (input.nextFollowUpAt !== undefined) set("nextFollowUpAt", input.nextFollowUpAt ? new Date(input.nextFollowUpAt) : null, "nextFollowUpAt");
+        if (input.nextFollowUpAt !== undefined) {
+          const at = input.nextFollowUpAt ? new Date(input.nextFollowUpAt) : null;
+          set("nextFollowUpAt", at, "nextFollowUpAt");
+          data.followUpManual = manualFollowUpData(at).followUpManual;
+        }
         if (input.hot !== undefined && input.hot !== (lead.hotAt != null)) set("hotAt", input.hot ? new Date() : null, "hot");
         if (input.preferredChannel !== undefined) set("preferredChannel", input.preferredChannel, "preferredChannel");
         if (input.languagePreference !== undefined) set("languagePreference", input.languagePreference, "languagePreference");
