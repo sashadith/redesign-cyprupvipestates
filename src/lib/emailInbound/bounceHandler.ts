@@ -20,7 +20,9 @@ export async function handleBounce(
     const sent = await prisma.leadInteraction.findFirst({ where: { messageId: bounce.originalMessageId, type: "EMAIL_OUT" }, select: { leadId: true } });
     leadId = sent?.leadId ?? null;
   }
-  if (!leadId && bounce.recipient) {
+  // A plain-text "bounce" is only trusted when it names one of our own sent messages: sender and
+  // subject alone can be forged to block a lead's address.
+  if (!leadId && bounce.recipient && bounce.structured) {
     const rows = await prisma.lead.findMany({ where: { email: { equals: bounce.recipient, mode: "insensitive" }, deletedAt: null }, select: { id: true }, take: 2 });
     if (rows.length === 1) leadId = rows[0].id;
   }

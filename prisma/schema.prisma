@@ -1146,6 +1146,10 @@ model LeadEmailDraft {
   // CC recipients (2026-10-02), fixed at draft time: shown in the operator's
   // preview and sent verbatim by crm_send_email — never edited in between.
   cc                String[]             @default([])
+  // 2026-11-04 — the address the preview showed. A draft is only sent while the lead's email is
+  // still this address: the approval covers one recipient, not whatever the lead row says later.
+  // Null on drafts made before; those keep the old behaviour until they expire (24 h).
+  toEmail           String?
   status            LeadEmailDraftStatus @default(PENDING)
   failedAttempts    Int                  @default(0)
   expiresAt         DateTime

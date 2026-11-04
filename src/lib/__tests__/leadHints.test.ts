@@ -37,6 +37,7 @@ test("phone type: UK 01/02/03 and other landlines are flagged, mobiles and uncle
   assert.equal(phoneKind("0044 7700 900123").kind, "mobile");
   assert.equal(phoneKind("01632 960123", "GB").kind, "landline"); // national format, read with the country
   assert.equal(phoneKind("01632 960123", null).kind, "unknown");
+  assert.equal(phoneKind("447700900123", "GB").kind, "mobile"); // country code stored without "+"
   assert.equal(phoneKind("+49 151 23456789").kind, "mobile");
   assert.equal(phoneKind("+49 211 1234567").kind, "landline");
   assert.equal(phoneKind("+27 82 555 1234").kind, "mobile");

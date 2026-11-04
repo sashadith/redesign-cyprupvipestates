@@ -116,6 +116,10 @@ function nationalNumber(phone: string, home: CountryInfo | null): { country: Cou
   }
   const digits = phone.replace(/\D/g, "");
   if (!home || !digits) return null;
+  // "447700900123": the country code without "+" (some imports store it so).
+  if (!digits.startsWith("0") && digits.startsWith(home.dial) && digits.length >= home.dial.length + 9) {
+    return { country: home, nsn: digits.slice(home.dial.length) };
+  }
   // Italy keeps its leading 0 in international format; everyone else drops the trunk 0.
   return { country: home, nsn: home.iso === "IT" ? digits : digits.replace(/^0/, "") };
 }

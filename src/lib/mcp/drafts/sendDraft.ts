@@ -17,7 +17,7 @@ export async function sendEmailDraft(
 ) {
   const draft = await prisma.leadEmailDraft.findUnique({
     where: { id: draftId },
-    select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
+    select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, toEmail: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
   });
   if (!draft || draft.userId !== actor.userId) throw new ToolError("not_found", "Draft not found.");
   // The draft is the operator's own, but the lead may have been reassigned
@@ -41,6 +41,11 @@ export async function sendEmailDraft(
 
   const lead = await prisma.lead.findFirst({ where: { id: draft.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { email: true } });
   if (!lead?.email) throw new ToolError("validation", "The lead was deleted or has no email address any more — the draft cannot be sent.");
+  // The operator approved the address the preview showed; if the lead's email changed since, that
+  // approval does not cover the new one.
+  if (draft.toEmail && draft.toEmail.trim().toLowerCase() !== lead.email.trim().toLowerCase()) {
+    throw new ToolError("validation", `The lead's email changed after this draft was approved (preview went to ${draft.toEmail}). Create a new draft.`);
+  }
   // The CC list goes out exactly as stored on the draft (and as the preview
   // showed it) — re-checked only against the lead's CURRENT address, which may
   // have been edited since the draft was made. Never altered here.

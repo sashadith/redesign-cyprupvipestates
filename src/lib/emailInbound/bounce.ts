@@ -15,7 +15,9 @@ export type BounceInput = {
   attachments: { contentType: string; content: string }[];
 };
 
-export type Bounce = { recipient: string | null; status: string | null; reason: string; originalMessageId: string | null };
+/** structured: a real delivery report (multipart/report or a delivery-status part), not just a
+ *  daemon-looking sender and subject, which anyone can forge. */
+export type Bounce = { recipient: string | null; status: string | null; reason: string; originalMessageId: string | null; structured: boolean };
 
 const DAEMON = /^(mailer-daemon|postmaster|mail-daemon|mailerdaemon)@/i;
 const SUBJECT = /(undeliver|delivery status notification \(failure\)|mail delivery (failed|failure|subsystem)|returned mail|failure notice|delivery has failed|nicht zustellbar|unzustellbar)/i;
@@ -28,10 +30,11 @@ function field(text: string, name: string): string | null {
   return m ? m[1].trim() : null;
 }
 
+const isStructured = (b: BounceInput) =>
+  (/multipart\/report/i.test(b.contentType ?? "") && /delivery-status/i.test(b.contentType ?? "")) || b.attachments.some((a) => /message\/delivery-status/i.test(a.contentType));
+
 export function isBounceReport(b: BounceInput): boolean {
-  if (/multipart\/report/i.test(b.contentType ?? "") && /delivery-status/i.test(b.contentType ?? "")) return true;
-  if (b.attachments.some((a) => /message\/delivery-status/i.test(a.contentType))) return true;
-  return DAEMON.test(b.from ?? "") && SUBJECT.test(b.subject ?? "");
+  return isStructured(b) || (DAEMON.test(b.from ?? "") && SUBJECT.test(b.subject ?? ""));
 }
 
 /** A hard bounce, or null (not a bounce, or only a temporary failure). */
@@ -54,5 +57,5 @@ export function parseBounce(b: BounceInput): Bounce | null {
   const originalMessageId = idLine?.match(/<[^>]+>/)?.[0] ?? null;
   const reason = (diagnostic ?? text.split("\n").map((l) => l.trim()).find((l) => HARD_TEXT.test(l)) ?? status ?? "Permanent delivery failure")
     .replace(/^smtp;\s*/i, "").slice(0, 300);
-  return { recipient, status, reason, originalMessageId };
+  return { recipient, status, reason, originalMessageId, structured: isStructured(b) };
 }

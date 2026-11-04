@@ -49,6 +49,7 @@ test("a real-shaped Gmail hard bounce yields the dead address, the reason and ou
   assert.equal(b.status, "5.1.1");
   assert.match(b.reason, /^550 5\.1\.1/);
   assert.equal(b.originalMessageId, "<orig-42@cyprusvipestates.com>");
+  assert.equal(b.structured, true);
 });
 
 test("a temporary failure (4.x.x) and an ordinary reply are not bounces", async () => {
@@ -62,4 +63,6 @@ test("a plain-text bounce from a mailer daemon without a DSN part is still read"
   const raw = "From: MAILER-DAEMON@mail.example.net\r\nSubject: Undelivered Mail Returned to Sender\r\n\r\n<old@example.org>: host mx.example.org said: 550 5.1.1 <old@example.org>: Recipient address rejected: User unknown\r\n";
   const b = parseBounce(bounceInput(await simpleParser(raw)));
   assert.equal(b?.recipient, "old@example.org");
+  // Sender + subject only: trusted solely via one of our own Message-IDs (bounceHandler.ts).
+  assert.equal(b?.structured, false);
 });

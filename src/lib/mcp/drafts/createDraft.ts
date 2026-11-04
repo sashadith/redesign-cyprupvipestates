@@ -102,7 +102,7 @@ export async function createEmailDraft(
     const superseded = await tx.leadEmailDraft.findFirst({ where: { leadId: lead.id, status: "PENDING" }, select: { id: true } });
     if (superseded) await tx.leadEmailDraft.update({ where: { id: superseded.id }, data: { status: "SUPERSEDED" } });
     const draft = await tx.leadEmailDraft.create({
-      data: { leadId: lead.id, userId: actor.userId, subject, body, cc, approvalCode, expiresAt, previewMessageId },
+      data: { leadId: lead.id, userId: actor.userId, subject, body, cc, toEmail: lead.email, approvalCode, expiresAt, previewMessageId },
       select: { id: true },
     });
     await tx.leadInteraction.create({
