@@ -8,6 +8,7 @@ import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
 import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
 import { emailEditData } from "@/lib/crm/leadHints";
+import { isTimeZone } from "@/lib/crm/leadLocalTime";
 import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
@@ -199,4 +200,17 @@ export async function setFollowUpAction(leadId: string, input: FollowUpInput): P
   revalidatePath("/crm/pipeline");
   revalidatePath("/crm/today");
   return { ok: true, at: r.at ? r.at.toISOString() : null };
+}
+
+// The lead's time zone, picked on the cockpit when its country has several (2026-11-04). null goes
+// back to deriving it from country and phone. Display only.
+export async function setLeadTimeZoneAction(leadId: string, zone: string | null): Promise<{ ok: true } | { error: string }> {
+  const user = await requireCrmUser();
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
+  if (zone !== null && !isTimeZone(zone)) return { error: "Unknown time zone." };
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
+  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  await prisma.lead.update({ where: { id: leadId }, data: { timeZone: zone } });
+  revalidatePath(`/crm/leads/${leadId}`);
+  return { ok: true };
 }

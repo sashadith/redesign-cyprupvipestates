@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { leadHints } from "@/lib/crm/leadHints";
+import { callWindowFromEnv, leadTimeSummary } from "@/lib/crm/leadLocalTime";
 import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { isLocale, LOCALE_LABELS, type Locale } from "@/lib/locale";
 import { leadRef } from "@/lib/chatPrivacy";
@@ -49,6 +50,7 @@ export function buildInboundLeadTelegramMessage(opts: {
   language?: string | null;
   link: string;
   hints?: string[];
+  localTime?: string | null;
 }): string {
   const langTag = telegramLanguageTag(opts.language);
   return (
@@ -57,18 +59,23 @@ export function buildInboundLeadTelegramMessage(opts: {
     `Email: ${esc(opts.email || "-")}\nPhone: ${esc(opts.phone || "-")}\n` +
     (langTag ? `Language: ${esc(langTag)}\n` : "") +
     (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
+    (opts.localTime ? `🕐 ${esc(opts.localTime)}\n` : "") +
     (opts.hints ?? []).map((h) => `⚠️ ${esc(h)}\n`).join("") +
     `\n<a href="${opts.link}">Open in CRM</a>`
   );
 }
 
-// Best-effort: a lookup failure only drops the warnings, never the alert.
-async function hintsFor(leadId: string): Promise<string[]> {
+// Best-effort: a lookup failure only drops the warnings and the local time, never the alert.
+async function hintsFor(leadId: string): Promise<{ hints: string[]; localTime: string | null }> {
   try {
-    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { source: true, countryOfResidence: true, budgetMin: true, budgetMax: true, lastName: true, email: true, phone: true } });
-    return lead ? leadHints(lead).messages : [];
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { source: true, countryOfResidence: true, budgetMin: true, budgetMax: true, lastName: true, email: true, phone: true, timeZone: true },
+    });
+    if (!lead) return { hints: [], localTime: null };
+    return { hints: leadHints(lead).messages, localTime: `Local time: ${leadTimeSummary(lead, new Date(), callWindowFromEnv()).text}` };
   } catch {
-    return [];
+    return { hints: [], localTime: null };
   }
 }
 
@@ -102,7 +109,7 @@ export async function recordInboundLead(opts: {
   if (opts.notifyTelegram === false) return;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const link = `${siteUrl}/admin/crm/${opts.leadId}`;
-  const msg = buildInboundLeadTelegramMessage({ ...opts, link, hints: await hintsFor(opts.leadId) });
+  const msg = buildInboundLeadTelegramMessage({ ...opts, link, ...(await hintsFor(opts.leadId)) });
   try {
     const tgResult = await sendTelegramMessage(msg);
     if (tgResult) {

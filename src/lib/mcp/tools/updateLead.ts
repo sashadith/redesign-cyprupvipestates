@@ -22,7 +22,7 @@ export function registerUpdateLead(server: McpServer) {
     {
       title: "Update a lead",
       description:
-        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing, admin notes, email address, owner (assignedTo: an employee's name or id, admins only) or bucket (leads/partner). Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Name and phone are changed in the cockpit, not here; an unsupported field is an error. Setting status LOST requires lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NO_RESPONSE, NOT_INTERESTED, TIMING, INVALID, OTHER); NO_RESPONSE = contacted but never answered.",
+        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing, admin notes, time zone, email address, owner (assignedTo: an employee's name or id, admins only) or bucket (leads/partner). Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Name and phone are changed in the cockpit, not here; an unsupported field is an error. Setting status LOST requires lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NO_RESPONSE, NOT_INTERESTED, TIMING, INVALID, OTHER); NO_RESPONSE = contacted but never answered.",
       inputSchema: UpdateLeadInput,
       annotations: { readOnlyHint: false, idempotentHint: true, destructiveHint: false },
     },
@@ -84,6 +84,7 @@ export function registerUpdateLead(server: McpServer) {
         if (input.timeline !== undefined) set("timeline", input.timeline, "timeline");
         if (input.financing !== undefined) set("financing", input.financing, "financing");
         if (input.notes !== undefined) set("notes", input.notes?.trim() || null, "notes");
+        if (input.timeZone !== undefined) set("timeZone", input.timeZone, "timeZone");
         if (email !== undefined && email !== lead.email) {
           set("email", email, "email");
           Object.assign(data, emailEditData(lead.email, email));

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { LEAD_STATUSES, LOST_REASONS } from "@/lib/crm/leadStatus";
 import { EMAIL_RE } from "@/lib/crm/newLeadForm";
 import { LOCALES } from "@/lib/locale";
+import { isTimeZone } from "@/lib/crm/leadLocalTime";
 
 // Input contract of crm_update_lead, kept prisma-free so the pure test can import it.
 //
@@ -37,6 +38,8 @@ export const UpdateLeadInput = z
     assignedTo: z.string().trim().min(1).max(120).nullable().optional()
       .describe("Owner: an active employee's full name (e.g. \"Sascha Dith\") or user id; null removes the owner. Admins only"),
     bucket: z.enum(UPDATABLE_BUCKETS).optional().describe("Move between the Leads and Partner buckets"),
+    timeZone: z.string().trim().refine(isTimeZone, "Not an IANA time zone (e.g. Europe/London, America/Toronto).").nullable().optional()
+      .describe("The lead's IANA time zone, for a country with several zones (\"zone unclear\") or to correct the derived one; null = derive from country/phone again"),
   })
   .passthrough();
 

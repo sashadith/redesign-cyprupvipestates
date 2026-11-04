@@ -32,6 +32,7 @@ async function loadNagLeads(where: { assignedToId?: string | null | { in: string
     orderBy: { updatedAt: "desc" },
     select: {
       id: true, firstName: true, lastName: true, status: true, createdAt: true, nextFollowUpAt: true, viewingScheduledAt: true, assignedToId: true,
+      timeZone: true, countryOfResidence: true, phone: true,
       interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
   });

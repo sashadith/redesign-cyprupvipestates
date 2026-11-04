@@ -11,6 +11,7 @@ import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { loadScope, withScope } from "../leadScope";
 import { fmtDate } from "../format";
+import { leadTimeFields } from "../leadTime";
 import { mapWorklistItems } from "./worklistMap";
 
 const Input = z.object({ limit: z.number().int().min(1).max(50).default(25) });
@@ -22,7 +23,7 @@ export function registerWorklist(server: McpServer) {
     {
       title: "Lead worklist",
       description:
-        "Leads that need attention right now, most urgent first — the same follow-up rules as the admin Action Center (never contacted, stale >7 days, viewing without follow-up), plus the leads whose nextFollowUpAt is due (this tool's own query, not subject to Action Center snoozes) and the count of new leads in the last 7 days. Leads who only asked for a PDF guide (source GUIDE_DOWNLOAD) are kept apart from buyer leads in `guideLeads` (same shape: followUps + dueFollowUps). Call this first in a session.",
+        "Leads that need attention right now, most urgent first — the same follow-up rules as the admin Action Center (never contacted, stale >7 days, viewing without follow-up), plus the leads whose nextFollowUpAt is due (this tool's own query, not subject to Action Center snoozes) and the count of new leads in the last 7 days. Leads who only asked for a PDF guide (source GUIDE_DOWNLOAD) are kept apart from buyer leads in `guideLeads` (same shape: followUps + dueFollowUps). Every lead entry carries the lead's local time with a call light and the follow-up as a calendar week. Call this first in a session.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
@@ -41,6 +42,7 @@ export function registerWorklist(server: McpServer) {
             where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
             select: {
               id: true, firstName: true, lastName: true, status: true, source: true, hotAt: true, nextFollowUpAt: true, languagePreference: true,
+              timeZone: true, countryOfResidence: true, phone: true,
               interactions: { where: { type: { in: CONTACT_TYPES } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true, type: true } },
             },
           }),
@@ -53,7 +55,7 @@ export function registerWorklist(server: McpServer) {
           prisma.lead.count({ where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } }, scope) }),
           prisma.lead.findMany({
             where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } }, scope),
-            select: { id: true, firstName: true, lastName: true, status: true, source: true, nextFollowUpAt: true },
+            select: { id: true, firstName: true, lastName: true, status: true, source: true, nextFollowUpAt: true, timeZone: true, countryOfResidence: true, phone: true },
             orderBy: { nextFollowUpAt: "asc" },
             take: limit,
           }),
@@ -70,9 +72,10 @@ export function registerWorklist(server: McpServer) {
             status: l.status, language: l.languagePreference, hotSince: fmtDate(l.hotAt), nextFollowUpAt: fmtDate(l.nextFollowUpAt),
             lastContact: l.interactions[0] ? { type: l.interactions[0].type, at: fmtDate(l.interactions[0].occurredAt) } : null,
             waitingSince: fmtDate(f.since),
+            ...leadTimeFields(l),
           };
         };
-        const toDue = (l: (typeof dueFollowUps)[number]) => ({ leadId: l.id, name: `${l.firstName} ${l.lastName}`.trim(), status: l.status, dueAt: fmtDate(l.nextFollowUpAt) });
+        const toDue = (l: (typeof dueFollowUps)[number]) => ({ leadId: l.id, name: `${l.firstName} ${l.lastName}`.trim(), status: l.status, dueAt: fmtDate(l.nextFollowUpAt), ...leadTimeFields(l) });
         const known = leadFollowups.filter((f) => byId.has(f.leadId));
         return {
           followUps: known.filter((f) => !isGuide(byId.get(f.leadId)!.source)).slice(0, limit).map(toFollowUp),

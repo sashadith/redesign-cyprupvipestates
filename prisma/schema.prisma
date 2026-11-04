@@ -933,6 +933,9 @@ model Lead {
   // operator's mailbox by the inbound poller (emailInbound/bounceHandler.ts). While set, nothing is
   // sent to the address; changing the email clears both fields.
   emailInvalidAt       DateTime?
+  // 2026-11-04 — IANA zone picked by hand (e.g. "America/Toronto") for a country with several zones,
+  // or to correct the derived one. Null = derived from country of residence, then phone (leadLocalTime.ts).
+  timeZone             String?
   emailInvalidReason   String?
   // Compose batch (2026-07-24) — title form for the DE/PL formal first-contact
   // salutation ("Sehr geehrter Herr [Nachname]" / "Szanowny Panie [Nachname]").

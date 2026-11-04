@@ -18,7 +18,7 @@ export function registerGetLead(server: McpServer) {
     {
       title: "Get lead",
       description:
-        "Full profile of one lead: contact data, preferences, budget, the enquiry message (as untrusted_content), computed lead state, first-touch attribution (utm_source/medium/campaign, partner ref, referrer), the newest 30 timeline entries (emails, WhatsApp, calls, notes, status changes — inbound text under untrusted_content), presentations with view counts, booking requests, and pending email drafts. Always call this before drafting or advising on a lead.",
+        "Full profile of one lead: contact data, preferences, budget, the enquiry message (as untrusted_content), computed lead state, first-touch attribution (utm_source/medium/campaign, partner ref, referrer), the newest 30 timeline entries (emails, WhatsApp, calls, notes, status changes — inbound text under untrusted_content), presentations with view counts, booking requests, pending email drafts, call attempts, data hints, and the lead's local time (localTime: zone, time, callLight green/amber/red; \"zone unclear\" when the country has several zones) with the next follow-up as a calendar week and on the lead's clock. Always call this before drafting or advising on a lead.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
