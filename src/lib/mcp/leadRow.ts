@@ -28,6 +28,7 @@ export function leadRow(l: LeadRowSource) {
     name: `${l.firstName} ${l.lastName}`.trim(),
     email: l.email,
     phone: l.phone,
+    phoneType: hints.phoneType,
     status: l.status,
     lostReason: l.lostReason,
     source: l.source,

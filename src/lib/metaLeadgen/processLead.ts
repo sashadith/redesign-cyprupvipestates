@@ -302,7 +302,7 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         leadId: id,
         priorStatus: existing && existing.status !== "LOST" ? existing.status : null,
         reopened: existing?.status === "LOST",
-        hints: leadHints({ source: "META_LEAD_AD", countryOfResidence: m.countryOfResidence, budgetMin: m.budgetMin, budgetMax: m.budgetMax, lastName: m.lastName, email: m.email }).messages,
+        hints: leadHints({ source: "META_LEAD_AD", countryOfResidence: m.countryOfResidence, budgetMin: m.budgetMin, budgetMax: m.budgetMax, lastName: m.lastName, email: m.email, phone: m.placeholderReason ? null : m.phone }).messages,
       });
       const done = await tx.metaLeadgenEvent.updateMany({
         where: { leadgenId, status: "PROCESSING", attempts: claimedAttempts },

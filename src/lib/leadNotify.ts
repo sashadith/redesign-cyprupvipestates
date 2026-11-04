@@ -65,7 +65,7 @@ export function buildInboundLeadTelegramMessage(opts: {
 // Best-effort: a lookup failure only drops the warnings, never the alert.
 async function hintsFor(leadId: string): Promise<string[]> {
   try {
-    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { source: true, countryOfResidence: true, budgetMin: true, budgetMax: true, lastName: true, email: true } });
+    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { source: true, countryOfResidence: true, budgetMin: true, budgetMax: true, lastName: true, email: true, phone: true } });
     return lead ? leadHints(lead).messages : [];
   } catch {
     return [];

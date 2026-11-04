@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { budgetCurrencyUnverified, leadHints, nameEmailMismatch } from "@/lib/crm/leadHints";
+import { budgetCurrencyUnverified, leadHints, nameEmailMismatch, phoneKind } from "@/lib/crm/leadHints";
 
 const meta = { source: "META_LEAD_AD", budgetMin: 2_000_000, budgetMax: 3_000_000 };
 
@@ -27,4 +27,25 @@ test("name vs email: a clear near-miss of the last name is flagged, everything e
   const h = leadHints({ source: "CONTACT_FORM", countryOfResidence: "GB", lastName: "Ashford", email: "ashworth@example.com" });
   assert.equal(h.nameEmailMismatch, "ashworth");
   assert.match(h.messages[0], /Ashford.*ashworth/);
+});
+
+test("phone type: UK 01/02/03 and other landlines are flagged, mobiles and unclear numbers are not", () => {
+  assert.equal(phoneKind("+44 1632 960123").kind, "landline");
+  assert.equal(phoneKind("+44 20 7946 0958").kind, "landline");
+  assert.equal(phoneKind("+44 3069 990123").kind, "landline");
+  assert.equal(phoneKind("+44 7700 900123").kind, "mobile");
+  assert.equal(phoneKind("0044 7700 900123").kind, "mobile");
+  assert.equal(phoneKind("01632 960123", "GB").kind, "landline"); // national format, read with the country
+  assert.equal(phoneKind("01632 960123", null).kind, "unknown");
+  assert.equal(phoneKind("+49 151 23456789").kind, "mobile");
+  assert.equal(phoneKind("+49 211 1234567").kind, "landline");
+  assert.equal(phoneKind("+27 82 555 1234").kind, "mobile");
+  assert.equal(phoneKind("+27 11 555 1234").kind, "landline");
+  assert.equal(phoneKind("+357 99 123456").kind, "mobile");
+  assert.equal(phoneKind("+1 212 555 0100").kind, "unknown"); // +1 cannot be told apart
+  assert.equal(phoneKind("+66 81 234 5678").kind, "unknown"); // no rule for the country
+  assert.equal(phoneKind(null).kind, "unknown");
+  const h = leadHints({ source: "META_LEAD_AD", countryOfResidence: "GB", phone: "+44 1632 960123" });
+  assert.equal(h.phoneType, "landline");
+  assert.deepEqual(h.messages, ["Landline number (United Kingdom) — probably no WhatsApp; call instead"]);
 });
