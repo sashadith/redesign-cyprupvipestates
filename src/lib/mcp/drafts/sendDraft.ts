@@ -3,7 +3,7 @@ import { sendLeadEmail, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ToolError } from "../toolWrapper";
 import { assertCanEdit, type LeadScope } from "../leadScope";
-import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
+import { draftForCode, evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
 import { checkCcRecipients } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 3. The code is checked by the pure
@@ -63,4 +63,23 @@ export async function sendEmailDraft(
     data: { status: "SENT", sentAt: new Date(), sentInteractionId: result.interactionId },
   });
   return { leadId: draft.leadId, sentTo: result.sentTo, cc: result.cc, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
+}
+
+/* The draft a code belongs to, when crm_send_email gets no draftId. A code that matches none of the
+   operator's open drafts counts as a wrong attempt on every one of them: without that, leaving out
+   the draftId would allow unlimited guessing. */
+export async function draftIdForCode(actor: EmailActor, approvalCode: string): Promise<string> {
+  const now = new Date();
+  const open = await prisma.leadEmailDraft.findMany({
+    where: { userId: actor.userId, status: "PENDING" },
+    select: { id: true, approvalCode: true, expiresAt: true, failedAttempts: true },
+  });
+  const hit = draftForCode(open, approvalCode, now);
+  if (hit.kind === "one") return hit.id;
+  if (hit.kind === "many") throw new ToolError("validation", "More than one open draft has this code; pass the draftId as well.");
+  const live = open.filter((d) => d.expiresAt.getTime() >= now.getTime()).map((d) => d.id);
+  if (!live.length) throw new ToolError("validation", "No open draft to send — create a draft first.");
+  await prisma.leadEmailDraft.updateMany({ where: { id: { in: live }, status: "PENDING" }, data: { failedAttempts: { increment: 1 } } });
+  await prisma.leadEmailDraft.updateMany({ where: { id: { in: live }, status: "PENDING", failedAttempts: { gte: MAX_CODE_ATTEMPTS } }, data: { status: "LOCKED" } });
+  throw new ToolError("validation", "Approval code not accepted: it matches none of your open drafts. Each wrong code counts against every open draft.");
 }

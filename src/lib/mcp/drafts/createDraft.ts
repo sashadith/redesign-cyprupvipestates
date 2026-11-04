@@ -65,7 +65,11 @@ export async function createEmailDraft(
   if (perLead >= DRAFTS_PER_LEAD_PER_HOUR) throw new ToolError("rate_limited", `Loop guard: at most ${DRAFTS_PER_LEAD_PER_HOUR} drafts per lead per hour — the limit resets within the hour.`);
   if (perUser >= DRAFTS_PER_USER_PER_DAY) throw new ToolError("rate_limited", `Loop guard: at most ${DRAFTS_PER_USER_PER_DAY} drafts per day — the limit resets within 24 hours.`);
 
-  const approvalCode = generateApprovalCode();
+  // Unique among the operator's open drafts, so crm_send_email can find the draft by its code alone.
+  const open = await prisma.leadEmailDraft.findMany({ where: { userId: actor.userId, status: "PENDING", expiresAt: { gt: new Date(now) } }, select: { approvalCode: true } });
+  const taken = new Set(open.map((d) => d.approvalCode));
+  let approvalCode = generateApprovalCode();
+  for (let i = 0; i < 20 && taken.has(approvalCode); i++) approvalCode = generateApprovalCode();
   const expiresAt = new Date(now + DRAFT_TTL_MS);
   const locale = lead.languagePreference ?? "en";
   const preview = buildPreviewEmail({

@@ -36,3 +36,19 @@ test("failedAttempts already at the cap on a still-PENDING draft → locked, eve
   assert.equal(r.action, "reject");
   assert.match(r.action === "reject" ? r.message : "", /locked/);
 });
+
+test("crm_send_email without draftId: the code alone picks the one open draft it belongs to", async () => {
+  const { draftForCode } = await import("@/lib/mcp/drafts/draftState");
+  const now = new Date("2026-11-04T10:00:00Z");
+  const later = new Date("2026-11-05T10:00:00Z");
+  const drafts = [
+    { id: "a", approvalCode: "ABC234", expiresAt: later, failedAttempts: 0 },
+    { id: "b", approvalCode: "XYZ789", expiresAt: later, failedAttempts: 0 },
+  ];
+  assert.deepEqual(draftForCode(drafts, "xyz-789", now), { kind: "one", id: "b" });
+  assert.deepEqual(draftForCode(drafts, "QQQ222", now), { kind: "none" });
+  assert.deepEqual(draftForCode([...drafts, { id: "c", approvalCode: "ABC234", expiresAt: later, failedAttempts: 0 }], "ABC234", now), { kind: "many" });
+  // An expired or locked-by-attempts draft is never picked.
+  assert.deepEqual(draftForCode([{ id: "d", approvalCode: "ABC234", expiresAt: new Date("2026-11-03T10:00:00Z"), failedAttempts: 0 }], "ABC234", now), { kind: "none" });
+  assert.deepEqual(draftForCode([{ id: "e", approvalCode: "ABC234", expiresAt: later, failedAttempts: 5 }], "ABC234", now), { kind: "none" });
+});

@@ -43,3 +43,16 @@ export function evaluateSendAttempt(draft: DraftSnapshot, givenCode: string, now
   }
   return { action: "send" };
 }
+
+/* crm_send_email without a draftId (2026-11-04): the code alone picks the draft among the operator's
+   own pending, unexpired drafts. Codes are drawn unique among those (createDraft.ts), so "many" only
+   happens for drafts made before that rule; the caller then has to name the draft. */
+export type CodeLookup = { kind: "one"; id: string } | { kind: "none" } | { kind: "many" };
+
+export function draftForCode(
+  drafts: { id: string; approvalCode: string; expiresAt: Date; failedAttempts: number }[], givenCode: string, now: Date = new Date(),
+): CodeLookup {
+  const hits = drafts.filter((d) => d.expiresAt.getTime() >= now.getTime() && d.failedAttempts < MAX_CODE_ATTEMPTS && approvalCodesMatch(givenCode, d.approvalCode));
+  if (hits.length === 1) return { kind: "one", id: hits[0].id };
+  return hits.length ? { kind: "many" } : { kind: "none" };
+}
