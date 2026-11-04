@@ -7,6 +7,7 @@ import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
 import { buildCockpitPartnerCard, messagePartnerLabel, type ClaimStateValue } from "@/lib/crm/partnerClaims";
 import { CockpitContact, CockpitHeader, type CockpitLead } from "../../components/CockpitHeader";
+import { leadHints } from "@/lib/crm/leadHints";
 import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
 import { toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
 import { CockpitStage } from "../../components/CockpitStage";
@@ -119,6 +120,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     status: lead.status, lostReason: lead.lostReason, source: lead.source, ownerName: lead.assignedTo?.name ?? null,
     project: lead.projectInterest ? [lead.projectInterest.title, lead.projectInterest.city].filter(Boolean).join(" · ") : null,
     createdAt: lead.createdAt, attribution,
+    hints: leadHints(lead).messages,
   };
   const temperature = toPublicTemperature(
     (await temperaturesFor([{ id: lead.id, status: lead.status, timeline: lead.timeline, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, createdAt: lead.createdAt }], now)).get(lead.id),

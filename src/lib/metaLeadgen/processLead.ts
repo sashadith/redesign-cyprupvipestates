@@ -14,6 +14,7 @@ import { createOpenWaClient } from "@/lib/openwa/client";
 import { sendEmail } from "@/lib/sendEmail";
 import { redactContactDetails } from "@/lib/chatPrivacy";
 import { metaDefaultOwner } from "./defaultOwner";
+import { leadHints } from "@/lib/crm/leadHints";
 
 // A PROCESSING claim older than this belongs to a run that died mid-way.
 export const STALE_CLAIM_MS = 5 * 60_000;
@@ -301,6 +302,7 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         leadId: id,
         priorStatus: existing && existing.status !== "LOST" ? existing.status : null,
         reopened: existing?.status === "LOST",
+        hints: leadHints({ source: "META_LEAD_AD", countryOfResidence: m.countryOfResidence, budgetMin: m.budgetMin, budgetMax: m.budgetMax }).messages,
       });
       const done = await tx.metaLeadgenEvent.updateMany({
         where: { leadgenId, status: "PROCESSING", attempts: claimedAttempts },

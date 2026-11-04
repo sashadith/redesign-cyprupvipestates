@@ -390,6 +390,9 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 }
 
 .crm-ck-facts { margin: 0; display: grid; gap: 8px; }
+/* Soft data warnings above the facts (leadHints.ts, 2026-11-04). */
+.crm-ck-hints { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 4px; }
+.crm-ck-hints li { padding: 6px 10px; border-left: 2px solid var(--champagne); background: color-mix(in srgb, var(--champagne) 8%, transparent); border-radius: 0 calc(6px * var(--ds-radius-scale)) calc(6px * var(--ds-radius-scale)) 0; font-size: calc(12.5px * var(--ds-crm-scale)); }
 .crm-ck-facts > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; }
 .crm-ck-facts dt { color: var(--muted); font-size: calc(12.5px * var(--ds-crm-scale)); font-weight: 600; }
 .crm-ck-facts dd { margin: 0; display: flex; gap: 4px 10px; flex-wrap: wrap; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }

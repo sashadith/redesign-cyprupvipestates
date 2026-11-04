@@ -18,6 +18,8 @@ export type CockpitLead = {
   propertyTypes: string[]; message: string | null; notes: string | null; status: string; lostReason: string | null; source: string;
   ownerName: string | null; project: string | null; createdAt: Date;
   attribution: { label: string; value: string }[];
+  /** Soft warnings about the lead's data (leadHints.ts). */
+  hints: string[];
 };
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
@@ -74,6 +76,11 @@ export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp
   return (
     <section className="crm-panel crm-ck-contact" aria-labelledby="crm-ck-contact-h">
       <h2 id="crm-ck-contact-h">Contact</h2>
+      {lead.hints.length > 0 && (
+        <ul className="crm-ck-hints" aria-label="Check">
+          {lead.hints.map((h) => <li key={h}>{h}</li>)}
+        </ul>
+      )}
       <dl className="crm-ck-facts">
         {lead.phone && (
           <div>

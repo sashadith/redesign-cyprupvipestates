@@ -33,6 +33,7 @@ export function buildLeadMessage(o: {
   leadId: string;
   priorStatus?: string | null; // existing lead's status when it isn't an active one worth stating (e.g. CLOSED)
   reopened?: boolean; // existing lead was LOST and has been set back to NEW
+  hints?: string[]; // soft data warnings (crm/leadHints.ts)
 }): string {
   const r = leadRegion(o.campaignName, o.language);
   const region = r ? ` (${esc(r)})` : "";
@@ -51,6 +52,7 @@ export function buildLeadMessage(o: {
   lines.push([o.email, o.phone].filter(Boolean).map(esc).join(" · ") || "-");
   if (o.placeholderReason) lines.push(`⚠️ phone looks like a placeholder (${esc(o.placeholderReason)})`);
   if (o.unmatchedCount) lines.push(`⚠️ ${o.unmatchedCount} answer(s) could not be mapped — see timeline`);
+  for (const h of o.hints ?? []) lines.push(`⚠️ ${esc(h)}`);
   lines.push(`Campaign: ${esc(o.campaignName || "-")} · Form: ${esc(o.formName || "-")}`);
   lines.push(`→ <a href="${adminLeadUrl(o.leadId)}">${esc(adminLeadUrl(o.leadId))}</a>`);
   return lines.join("\n");

@@ -2,6 +2,7 @@ import type { LeadInteractionType, Prisma } from "@prisma/client";
 import { bucketOf } from "@/lib/crm/leadBucket";
 import { LAST_CONTACT_TYPES } from "@/app/admin/(panel)/crm/leadListShared";
 import { fmtDate } from "./format";
+import { leadHints } from "@/lib/crm/leadHints";
 
 export const CONTACT_TYPES = [...LAST_CONTACT_TYPES] as LeadInteractionType[];
 
@@ -21,6 +22,7 @@ export type LeadRowSource = Prisma.LeadGetPayload<{ select: typeof LEAD_ROW_SELE
 
 export function leadRow(l: LeadRowSource) {
   const last = l.interactions[0];
+  const hints = leadHints(l);
   return {
     leadId: l.id,
     name: `${l.firstName} ${l.lastName}`.trim(),
@@ -33,6 +35,7 @@ export function leadRow(l: LeadRowSource) {
     countryOfResidence: l.countryOfResidence,
     language: l.languagePreference,
     budget: { min: l.budgetMin, max: l.budgetMax },
+    budgetCurrencyUnverified: hints.budgetCurrencyUnverified,
     projectInterest: l.projectInterest?.title ?? null,
     // GUIDE_DOWNLOAD leads (2026-10-19): the PDF guide they asked for. Null otherwise.
     guide: l.guideTitle ? { title: l.guideTitle, language: l.guideLanguage } : null,
@@ -41,5 +44,7 @@ export function leadRow(l: LeadRowSource) {
     nextFollowUpAt: fmtDate(l.nextFollowUpAt),
     lastContact: last ? { type: last.type, at: fmtDate(last.occurredAt) } : null,
     createdAt: fmtDate(l.createdAt),
+    // Soft warnings about the data (leadHints.ts); empty when there is nothing to check.
+    hints: hints.messages,
   };
 }
