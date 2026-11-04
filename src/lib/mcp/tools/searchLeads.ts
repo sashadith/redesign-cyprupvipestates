@@ -4,14 +4,16 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope, withScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
+import { LEAD_STATUSES } from "@/lib/crm/leadStatus";
 
 // Stored Lead.phone values keep whatever punctuation the lead typed in
 // ("+49 151 234"); reduce to digits-only so we can compare against a
 // digits-only query regardless of formatting on either side.
 export const digitsOf = (s: string) => s.replace(/\D/g, "");
 
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"] as const;
+const STATUSES = LEAD_STATUSES;
 
 const Input = z.object({
   query: z.string().trim().min(1).max(100).optional().describe("Matches first/last name, email or phone (case-insensitive contains)."),
@@ -35,6 +37,7 @@ export function registerSearchLeads(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_search_leads", contextFromAuthInfo(ctx.http?.authInfo), null, async (c) => {
+        const { where: scope } = await loadScope(c);
         // Stored phone numbers are unnormalised ("+49 151 234"); a plain
         // `contains` on the input digits misses them. Normalise the column
         // side with a raw query instead, gated on a minimum digit count so
@@ -45,7 +48,7 @@ export function registerSearchLeads(server: McpServer) {
           const phoneMatches = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM leads WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${digits}%`}`;
           phoneIds = phoneMatches.map((r) => r.id);
         }
-        const where: Prisma.LeadWhereInput = {
+        const where: Prisma.LeadWhereInput = withScope({
           deletedAt: null,
           ...(input.bucket === "partner" ? { source: "PARTNER" } : { source: { notIn: ["NEWSLETTER", "PARTNER"] } }),
           ...(input.status ? { status: input.status } : {}),
@@ -63,7 +66,7 @@ export function registerSearchLeads(server: McpServer) {
                 ],
               }
             : {}),
-        };
+        }, scope);
         const [total, rows] = await Promise.all([
           prisma.lead.count({ where }),
           prisma.lead.findMany({ where, select: LEAD_ROW_SELECT, orderBy: { createdAt: "desc" }, skip: (input.page - 1) * input.pageSize, take: input.pageSize }),

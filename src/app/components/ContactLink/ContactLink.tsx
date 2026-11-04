@@ -6,6 +6,7 @@ import { Contact } from "@/types/footer";
 import styles from "../Footer/Footer.module.scss";
 import { urlFor } from "@/sanity/sanity.client";
 import Bdi from "@/app/components/Bdi";
+import { trackMetaContact } from "@/lib/metaContact";
 
 type Props = {
   contact: Contact;
@@ -53,13 +54,11 @@ export default function ContactLink({ contact }: Props) {
     }
 
     // ✅ Meta Pixel
-    if (window.fbq) {
-      window.fbq("track", "Contact", {
-        method,
-        placement: "footer_contact",
-        page_location: pageUrl,
-      });
-    }
+    trackMetaContact({
+      method,
+      placement: "footer_contact",
+      page_location: pageUrl,
+    });
 
     // ✅ GTM (у тебя уже было — просто чуть улучшим)
     if (window.dataLayer) {

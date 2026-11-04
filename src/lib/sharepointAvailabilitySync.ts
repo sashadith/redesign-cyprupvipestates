@@ -21,6 +21,7 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { publicDeveloperLabel } from "./developerPublicLabel";
 import { awaitedFolderFor, checkAwaited, type AwaitedCheck } from "./korantinaAwaited";
+import { intervalMs, notDueYet } from "./syncInterval";
 
 /* Korantina Homes' SharePoint sync (2026-08-26).
 
@@ -573,13 +574,6 @@ export type KorantinaWriteResult = {
   awaitedHeld?: string[];
 };
 
-// Same vocabulary as every other adapter's per-developer interval (the admin
-// panel's dropdown writes DeveloperAccount.driveSyncInterval regardless of
-// provider). Re-stated rather than imported for the same reason the Kuutio sync
-// re-states it: one four-branch map is not worth coupling two adapters.
-const intervalMs = (i: string | null | undefined) =>
-  i === "off" ? Infinity : i === "weekly" ? 7 * 864e5 : i === "2day" ? 2 * 864e5 : 864e5;
-
 export async function writeKorantinaDraft(
   developerAccountId: string,
   opts: { force?: boolean; respectInterval?: boolean } = {},
@@ -594,7 +588,7 @@ export async function writeKorantinaDraft(
   if (opts.respectInterval && !opts.force) {
     const iv = intervalMs(acct.driveSyncInterval);
     const last = acct.driveSyncedAt ? new Date(acct.driveSyncedAt).getTime() : null;
-    if (iv === Infinity || (last !== null && Date.now() - last < iv)) {
+    if (notDueYet(acct.driveSyncInterval, acct.driveSyncedAt)) {
       return {
         created: [], updated: [], skippedExisting: [], skippedEmpty: [], notes: [],
         notDue: iv === Infinity

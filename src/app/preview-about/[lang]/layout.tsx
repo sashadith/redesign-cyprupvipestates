@@ -19,6 +19,7 @@ import "@/app/rtl.css"; // direction- and script-aware base rules shared by ever
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
 import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
+import SiteConsent from "@/app/components/SiteConsent/SiteConsent"; // banner + consent-gated tags; this tree does not inherit [lang]/layout.tsx
 
 /* About — redesigned. Isolated route tree, same as preview-partners /
    preview-faq / preview-case-studies — deliberately NOT nested under
@@ -59,6 +60,7 @@ export default function AboutLayout({
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>
+        <SiteConsent lang={params.lang} />
       </body>
     </html>
   );

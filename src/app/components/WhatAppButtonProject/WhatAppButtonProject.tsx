@@ -5,6 +5,7 @@ import styles from "./WhatAppButtonProject.module.scss";
 import { isLocale } from "@/lib/locale";
 import { messageWithUrl, label as labelByLang } from "./WhatAppButtonProject.copy";
 import { getAttribution, attributionTag } from "@/lib/attribution";
+import { trackMetaContact } from "@/lib/metaContact";
 
 type Props = {
   lang: string;
@@ -28,13 +29,11 @@ const WhatAppButtonProject: FC<Props> = ({ lang }) => {
       const encodedText = encodeURIComponent(message);
       const finalUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedText}`;
 
-      if (window.fbq) {
-        window.fbq("track", "Contact", {
-          method: "whatsapp",
-          placement: "project_whatsapp_button",
-          page_location: pageUrl,
-        });
-      }
+      trackMetaContact({
+        method: "whatsapp",
+        placement: "project_whatsapp_button",
+        page_location: pageUrl,
+      });
 
       if (
         typeof window !== "undefined" &&

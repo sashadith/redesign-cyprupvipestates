@@ -2,11 +2,15 @@
 // board the Private Collection site (private.cyprusvipestates.com, separate repo
 // at /var/www/private-collection) used to write to: the company no longer works
 // with Monday, so its enquiry form now posts here
-// (/api/webhooks/private-collection-lead). Briefing downloads are NOT sent —
-// operator's call, they stay a Telegram/WhatsApp notice on that site.
+// (/api/webhooks/private-collection-lead). Briefing downloads come here too
+// since 2026-11-02 (operator's call, reversing the 10-15 one): the team chats
+// no longer carry names (chatPrivacy.ts), so a download that only went to a
+// chat would be a lost contact. They become guide leads (GUIDE_DOWNLOAD),
+// like the PDF guides on the main site.
 //
 // Pure: parsing, value mapping and notification text. The route does the I/O.
 import type { LeadPreferredChannel } from "@prisma/client";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -21,7 +25,12 @@ export const PC_PURPOSES: Record<string, string> = { relocation: "Relocation", h
 export const PC_CHANNELS: Record<string, LeadPreferredChannel> = { call: "PHONE", whatsapp: "WHATSAPP", email: "EMAIL" };
 const CHANNEL_LABEL: Record<LeadPreferredChannel, string> = { PHONE: "Call", WHATSAPP: "WhatsApp", EMAIL: "Email" };
 
+/** The briefing as a guide: its title in the CRM's guide-lead fields. */
+export const PC_BRIEFING_TITLE = "Private Collection Briefing";
+
 export type PcLead = {
+  /** "briefing" = the PDF download form (first name and e-mail only). */
+  kind: "consultation" | "briefing";
   firstName: string;
   lastName: string;
   email: string;
@@ -55,10 +64,12 @@ export function parsePcLead(body: unknown): { ok: true; lead: PcLead; raw: Recor
     const v = str(b[k], k === "message" ? 4000 : 200);
     if (v) raw[k] = v;
   }
+  const kind = b.type === "briefing" || b.source === "briefing" ? "briefing" : "consultation";
   return {
     ok: true,
     raw,
     lead: {
+      kind,
       firstName,
       lastName: str(b.lastName, 100),
       email,
@@ -76,6 +87,12 @@ export function parsePcLead(body: unknown): { ok: true; lead: PcLead; raw: Recor
 
 /** Timeline body: every answer, mapped where we could, raw where we could not. */
 export function pcTimelineBody(l: PcLead, raw: Record<string, string>, outcome: "CREATED" | "ATTACHED"): string {
+  if (l.kind === "briefing") {
+    return [
+      outcome === "CREATED" ? "Lead created from a Private Collection briefing download." : "Existing lead downloaded the Private Collection briefing.",
+      `Language: ${l.languagePreference ?? raw.locale ?? "-"}`,
+    ].join("\n");
+  }
   const lines = [
     outcome === "CREATED" ? "Lead created from the Private Collection enquiry form." : "Existing lead submitted the Private Collection enquiry form again.",
     `Budget: ${l.budgetKey ? PC_BUDGETS[l.budgetKey].label : raw.budget ? `${raw.budget} (unmapped)` : "not answered"}`,
@@ -87,15 +104,27 @@ export function pcTimelineBody(l: PcLead, raw: Record<string, string>, outcome: 
   return lines.join("\n");
 }
 
-/** Telegram HTML — also the source of the e-mail and WhatsApp copies. English, admin-facing. */
-export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; priorStatus?: string | null }): string {
+/** Telegram HTML — also the source of the e-mail and WhatsApp copies. English, admin-facing.
+ *  Full contact details and the message (chatPrivacy.ts). */
+export function pcTelegram(l: PcLead, o: { outcome: "CREATED" | "ATTACHED"; crmLink: string; leadId: string; priorStatus?: string | null }): string {
+  const who = `<b>${esc(`${l.firstName} ${l.lastName}`.trim() || leadRef(o.leadId))}</b>`;
+  if (l.kind === "briefing") {
+    const lines = [
+      o.outcome === "CREATED" ? "📄 <b>New Private Collection briefing download</b>" : "📄 <b>Existing lead downloaded the Private Collection briefing</b>",
+      who,
+      `Language: ${esc(l.languagePreference ?? "-")}`,
+    ];
+    lines.push(esc(l.email));
+    lines.push(`→ <a href="${o.crmLink}">Open in CRM</a>`);
+    return lines.join("\n");
+  }
   const head = o.outcome === "CREATED" ? "⚡️ <b>New Private Collection enquiry</b>" : "⚡️ <b>Existing lead sent the Private Collection enquiry again</b>";
   const lines = [
     head,
-    `<b>${esc(`${l.firstName} ${l.lastName}`.trim())}</b>`,
+    who,
     `Budget: ${esc(l.budgetKey ? PC_BUDGETS[l.budgetKey].label : "not answered")} · Purpose: ${esc(l.purpose ?? "not answered")} · Prefers: ${esc(l.preferredChannel ? CHANNEL_LABEL[l.preferredChannel] : "not answered")}`,
-    [l.email, l.phone].filter(Boolean).map(esc).join(" · "),
   ];
+  lines.push([l.email, l.phone].filter(Boolean).map(esc).join(" · "));
   if (o.priorStatus && o.priorStatus !== "NEW") lines.push(`ℹ️ lead status is ${esc(o.priorStatus)}`);
   if (l.message) lines.push(`Message: ${esc(l.message.length > 500 ? `${l.message.slice(0, 500)}…` : l.message)}`);
   lines.push(`→ <a href="${o.crmLink}">Open in CRM</a>`);

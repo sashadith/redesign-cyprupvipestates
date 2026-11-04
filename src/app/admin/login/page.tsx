@@ -30,6 +30,7 @@ export default async function LoginPage({
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
+        remember: formData.get("remember") === "on" ? "true" : "false",
         redirectTo: callbackUrl,
       });
     } catch (e) {
@@ -54,9 +55,13 @@ export default async function LoginPage({
         <input id="email" name="email" type="email" required autoComplete="username"
           className={`${inputClass} mb-4`} />
         <label className="block text-sm text-[#111827] mb-1" htmlFor="password">Password</label>
-        <div className="mb-6">
+        <div className="mb-4">
           <PasswordInput id="password" name="password" required autoComplete="current-password" className={inputClass} />
         </div>
+        <label className="mb-6 flex items-center gap-2 text-sm text-[#374151] select-none">
+          <input type="checkbox" name="remember" defaultChecked className="h-4 w-4 accent-[#1B4B43]" />
+          Keep me signed in for 30 days
+        </label>
         <button type="submit"
           className="w-full rounded-md bg-[#1B4B43] text-white text-sm font-medium py-2.5 hover:bg-[#142E2D] transition-colors">
           Sign in

@@ -519,3 +519,62 @@
   .cvpm__art img,
   .cvpm__form form > * { animation: none; }
 }
+
+/* ---------------------------------------------------- compact layout (2026-11-01)
+   Same structure as the page form: fields 48px (were 56px), phone + email in
+   one row, "Contact me by" as the shared segmented row (components/leadForm)
+   and consent + button in one row, the button as tall as the picked segment
+   (48 − 2 − 6 = 40px). The segmented row is a <fieldset> of <label>s, so the
+   pill rules above (`.cvpm__form fieldset label`, the centred legend) are
+   taken back for it here: (0,3,0) beats their (0,1,2). */
+.cvpm__form input[type="text"],
+.cvpm__form input[type="email"],
+.cvpm__form input[type="tel"],
+.cvpm__form .PhoneInput { height: 48px; }
+.cvpm__form .lf-contact {
+  --lf-line: var(--cvpm-line);
+  --lf-bg: var(--cvpm-field);
+  --lf-ink: var(--cvpm-ivory);
+  --lf-soft: rgba(239, 233, 219, 0.78);
+}
+.cvpm__form .lf-contact .lf-contact__legend { text-align: start; margin: 0 0 6px; font-size: 13px; color: rgba(239, 233, 219, 0.66); }
+.cvpm__form .lf-contact .lf-contact__opt { background: transparent; border: 0; border-radius: 9px; line-height: normal; font-size: 13.5px; color: var(--lf-soft); padding-inline: 6px; gap: 7px; }
+.cvpm__form .lf-contact .lf-contact__opt:hover { background: rgba(255, 255, 255, 0.06); color: var(--cvpm-ivory); }
+.cvpm__form .lf-contact .lf-contact__opt:has(input:checked) { background: var(--cvpm-bronze); color: #fff; }
+.cvpm__form .lf-contact .lf-contact__opt--whatsapp:has(input:checked) { background: #25D366; color: #fff; }
+.cvpm__form [class*="footerRow"] button[type="submit"] { height: 40px; margin-bottom: 0; border-radius: 9px; padding-inline: 30px; white-space: nowrap; flex: none; }
+.cvpm__form [class*="footerRow"] button[type="submit"] { margin-bottom: 0; }
+/* The shorter form makes a shorter panel; the phone art is scaled with it so
+   the top of the handset stays inside the panel instead of being cut off. */
+.cvpm__art img { width: min(100%, 350px); }
+/* Spacing as on the page form (operator, 2026-11-01): lead → fields 24px,
+   12px between fields, 18px from the last field to "What's the best way…",
+   24px from the contact row to the consent + button row. The button reads
+   "Contact me" in the body face, not spaced capitals. */
+.cvpm .cvpm__lead { margin-bottom: 24px; }
+.cvpm__form [class*="inputWrapper"] { margin-bottom: 12px; }
+.cvpm__form [class*="inputWrapper"]:has(> .lf-contact) { margin-top: 6px; }
+.cvpm__form [class*="footerRow"] { margin-top: 24px; } /* collapses with the 12px above: 24px in all */
+.cvpm__form button[type="submit"] { text-transform: none; letter-spacing: 0.01em; font-size: 15px; font-weight: 400; }
+/* Bronze with white type, like Send on the page form (operator, 2026-11-01),
+   for both popups. The hover is a shade deeper. */
+.cvpm__form button[type="submit"] { background: var(--cvpm-bronze); border-color: var(--cvpm-bronze); color: #fff; }
+.cvpm__form button[type="submit"]:hover { background: #7e5e35; border-color: #7e5e35; box-shadow: 0 12px 40px -14px rgba(142, 107, 61, 0.8); }
+/* The popup 20% narrower, taken off the picture side only (operator,
+   2026-11-01): 1120px → 896px. The form column keeps its 629px (1120 / 1.78),
+   so the fields stay exactly as they were; the picture column shrinks to what
+   is left. The phone art keeps its size and sits at the column's left edge, so
+   it moves left and its far side runs off the panel edge (the panel clips). */
+.cvpm-content { width: min(896px, 100%); }
+@media (min-width: 861px) {
+  .cvpm { grid-template-columns: minmax(0, 629px) minmax(0, 1fr); }
+  /* Sized by the panel's height (operator, 2026-11-01), its top 40px below the panel's top at rest. The picture
+     moves (cvpmArtFloat: up to 7px up; cvpmArtTilt: ±2deg about 55% / bottom), so it is placed for the extremes:
+     its right edge sits on the panel's right edge, which is where the bottom-right corner (where the arm leaves
+     the picture) lands at the full left tilt, and it reaches 13px below the panel, more than the most a bottom
+     corner rises (7px float + 0.55 × width × sin 2deg ≈ 6px). So no edge of the picture ever shows at the
+     bottom or the bottom right; the overhang is clipped by the panel. */
+  .cvpm__art img { left: auto; right: -1px; bottom: -13px; height: calc(100% - 27px); width: auto; max-width: none; aspect-ratio: auto; }
+  [dir="rtl"] .cvpm { grid-template-columns: minmax(0, 1fr) minmax(0, 629px); }
+  [dir="rtl"] .cvpm__art img { right: auto; left: -1px; }
+}

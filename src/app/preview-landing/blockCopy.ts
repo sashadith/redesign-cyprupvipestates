@@ -19,7 +19,7 @@ export const BULLETS_ICONS: string[] = [
 ];
 
 const BULLETS_EN: string[] = [
-  "340 SUNNY DAYS A YEAR",
+  "OVER 320 SUNNY DAYS A YEAR",
   "MEMBER OF THE EUROPEAN UNION",
   "ONE OF THE BEST TAX SYSTEMS",
   "excellent quality of life",
@@ -29,7 +29,7 @@ const BULLETS_EN: string[] = [
 
 export const BULLETS_TEXT: Record<Locale, string[]> = {
   de: [
-    "340 SONNENTAGE IM JAHR",
+    "ÜBER 320 SONNENTAGE IM JAHR",
     "MITGLIED DER EUROPÄISCHEN UNION",
     "EINES DER BESTEN STEUERSYSTEME",
     "ausgezeichnete Lebensqualität",
@@ -38,7 +38,7 @@ export const BULLETS_TEXT: Record<Locale, string[]> = {
   ],
   en: BULLETS_EN,
   pl: [
-    "340 SŁONECZNYCH DNI W ROKU",
+    "PONAD 320 SŁONECZNYCH DNI W ROKU",
     "CZŁONEK UNII EUROPEJSKIEJ",
     "JEDEN Z NAJLEPSZYCH SYSTEMÓW KONTROLI",
     "doskonała jakość życia",
@@ -46,7 +46,7 @@ export const BULLETS_TEXT: Record<Locale, string[]> = {
     "NOWOCZESNY system opieki zdrowotnej",
   ],
   ru: [
-    "340 СОЛНЕЧНЫХ ДНЕЙ В ГОДУ",
+    "БОЛЕЕ 320 СОЛНЕЧНЫХ ДНЕЙ В ГОДУ",
     "Расположение в ЕС",
     "Комфортная налоговая система",
     "отличное качество жизни",
@@ -54,7 +54,7 @@ export const BULLETS_TEXT: Record<Locale, string[]> = {
     "СОВРЕМЕННАЯ система здравоохранения",
   ],
   he: [
-    "340 ימי שמש בשנה",
+    "יותר מ-320 ימי שמש בשנה",
     "מדינה חברה באיחוד האירופי",
     "אחת ממערכות המס הטובות ביותר",
     "איכות חיים גבוהה",

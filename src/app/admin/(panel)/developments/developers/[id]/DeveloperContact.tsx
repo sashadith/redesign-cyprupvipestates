@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { saveDeveloperContact } from "@/app/admin/actions";
 
@@ -29,6 +29,35 @@ const field = (label: string, name: string, value: string | null, type = "text")
   </div>
 );
 
+// Long notes (DTA Group's run to ~60 lines) pushed the whole page down. Show
+// four lines and a toggle — only when the text actually overflows them.
+function ClampedText({ text, lines = 4 }: { text: string; lines?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => { if (!open) setOverflows(el.scrollHeight > el.clientHeight + 1); };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open, text]);
+  return (
+    <div>
+      <div ref={ref} style={open ? undefined : { display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: lines, overflow: "hidden" }}>
+        {text}
+      </div>
+      {(overflows || open) && (
+        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-1 text-xs font-medium text-[#1B4B43] hover:underline">
+          {open ? "Show less" : "Read more…"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function DeveloperContact({ dev, badge, pageLinkSection }: { dev: Dev; badge: React.ReactNode; pageLinkSection?: React.ReactNode }) {
   const [editing, setEditing] = useState(false);
   const [state, action] = useFormState(saveDeveloperContact.bind(null, dev.id), null as { ok?: boolean; error?: string } | null);
@@ -43,7 +72,7 @@ export default function DeveloperContact({ dev, badge, pageLinkSection }: { dev:
     ["Developer Cloud", dev.developerCloudUrl ? <a href={dev.developerCloudUrl} target="_blank" rel="noopener noreferrer" className="text-[#1B4B43] hover:underline">Open portal ↗</a> : null],
     ["Drive folder", dev.driveFolderUrl ? <a href={dev.driveFolderUrl} target="_blank" rel="noopener noreferrer" className="text-[#1B4B43] hover:underline">Open folder ↗</a> : null],
     ["More", dev.contactInfo],
-    ["Notes", dev.notes],
+    ["Notes", dev.notes ? <ClampedText text={dev.notes} /> : null],
   ];
   const filled = rows.filter(([, v]) => v);
 

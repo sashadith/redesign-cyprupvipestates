@@ -7,12 +7,13 @@ import "@/app/header-footer.css"; // global header + footer chrome (redesign) â€
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import type { Metadata } from "next";
 import { cookies, draftMode } from "next/headers";
-import { GoogleTagManager } from "@next/third-parties/google";
+import GoogleTagManagerScript from "@/app/components/GoogleTagManagerScript/GoogleTagManagerScript";
 import { ModalProvider } from "../context/ModalContext";
 import MicrosoftClarity from "../components/MicrosoftClarity/MicrosoftClarity";
 import CustomCookieConsent from "../components/CustomCookieConsent/CustomCookieConsent";
 import GoogleAdsScript from "../components/GoogleAdsScript/GoogleAdsScript";
 import FacebookPixel from "../components/FacebookPixel/FacebookPixel";
+import MetaPageViewTracker from "../components/MetaPageViewTracker/MetaPageViewTracker";
 import LenisProvider from "../components/LenisProvider/LenisProvider";
 import LinkedInPixel from "../components/LinkedInPixel/LinkedInPixel";
 import AnalyticsTracker from "../components/AnalyticsTracker/AnalyticsTracker";
@@ -23,6 +24,7 @@ import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } fro
 import { notFound } from "next/navigation";
 import { isPublicLocale, localeDir, nonDefaultLocalePattern, type Locale } from "@/lib/locale";
 import { frankRuhlLibre } from "@/app/fonts/hebrew";
+import { ALL_GUIDES_SLUGS } from "@/lib/articleSections";
 
 // Localized label for the "skip to main content" accessibility link.
 const SKIP_LINK_LABELS: Record<Locale, string> = {
@@ -36,7 +38,7 @@ const SKIP_LINK_LABELS: Record<Locale, string> = {
 // Built from the same helper as isDarkHeroPath() in navShared.tsx so the two
 // route tests cannot drift apart.
 const NON_DEFAULT = nonDefaultLocalePattern();
-const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';var d=document.documentElement;if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))d.setAttribute('data-hero-dark','');else if(/^(\\/(${NON_DEFAULT}))?\\/(projects|blog)\\/[^/]+$/.test(p))d.setAttribute('data-hero-scrim','')}catch(e){}})()`;
+const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';var d=document.documentElement;if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))d.setAttribute('data-hero-dark','');else if(/^(\\/(${NON_DEFAULT}))?\\/(projects|blog|${ALL_GUIDES_SLUGS.join("|")})\\/[^/]+$/.test(p))d.setAttribute('data-hero-scrim','')}catch(e){}})()`;
 
 // One Rubik load for every script on this layout: the same family also backs
 // `--font-body-he` (consumed by rtl.css's `:lang(he)` rule), so the Hebrew body
@@ -182,9 +184,10 @@ export default function RootLayout({
         {hasAnalytics && (
           <>
             {!DISABLE_TRACKING && <MicrosoftClarity hasConsent={true} />}
-            <GoogleTagManager gtmId="GTM-MQNF6L9V" />
+            <GoogleTagManagerScript />
             <GoogleAdsScript />
             {!DISABLE_TRACKING && <FacebookPixel />}
+            {!DISABLE_TRACKING && <MetaPageViewTracker />}
             <LinkedInPixel />
           </>
         )}

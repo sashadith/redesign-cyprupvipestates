@@ -5,6 +5,7 @@ import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { restoreLead } from "@/lib/crm/trashLead";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, loadScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 
 const Input = z.object({ leadId: z.string().uuid() });
@@ -21,8 +22,10 @@ export function registerRestoreLead(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_restore_lead", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: { not: null }, ...EXCLUDE_NEWSLETTER }, select: { id: true } });
+        const { user, where: scope } = await loadScope(c);
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: { not: null }, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, assignedToId: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
+        assertCanEdit(user, lead);
         await restoreLead({ userId: c.userId, userName: c.userName }, lead.id, { via: "mcp" });
         const fresh = await prisma.lead.findUniqueOrThrow({ where: { id: lead.id }, select: LEAD_ROW_SELECT });
         return { restored: true, lead: leadRow(fresh) };

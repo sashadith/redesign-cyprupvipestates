@@ -244,7 +244,10 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
   }
   const usableMatches = matches.filter((m) => m.score >= MIN_SCORE_TO_MENTION).slice(0, TOP_MATCHES);
 
-  const timelineForPrompt = lead.interactions.slice(0, 12).map((i) => ({
+  // Developer registration rows are third-party correspondence, not the
+  // conversation with this client — keep them out of the drafting context.
+  const isRegistrationRow = (m: unknown) => !!m && typeof m === "object" && String((m as { kind?: unknown }).kind ?? "").startsWith("developer_registration");
+  const timelineForPrompt = lead.interactions.filter((i) => !isRegistrationRow(i.metadata)).slice(0, 12).map((i) => ({
     type: i.type,
     direction: i.direction,
     occurredAt: i.occurredAt.toISOString().slice(0, 10),

@@ -12,6 +12,7 @@ import type { EmailActor } from "./sendLeadEmail";
 import type { Locale } from "@/lib/locale";
 import { EXCLUDE_NEWSLETTER } from "./leadBucket";
 import { emailKey, phoneDigits, phonesMatch, MIN_PHONE_DIGITS, PHONE_SUFFIX_DIGITS } from "./leadIdentity";
+import type { LeadStatusValue } from "@/lib/crm/leadStatus";
 
 export type CreateLeadData = {
   firstName: string;
@@ -27,7 +28,7 @@ export type CreateLeadData = {
   propertyTypeInterest?: string[];
   message?: string | null;
   notes?: string | null;
-  status?: "NEW" | "CONTACTED" | "COMMUNICATING" | "VIEWING_SCHEDULED" | "OFFER" | "KEEP_CONTACT" | "CLOSED" | "LOST";
+  status?: LeadStatusValue;
   assignedToId?: string | null;
   via?: "mcp";
 };
@@ -109,4 +110,13 @@ export async function createLeadRecord(actor: EmailActor, data: CreateLeadData):
     },
   });
   return { id: lead.id };
+}
+
+// Lead edit (2026-10-28): the contact values to run the duplicate check on — only what really changed
+// (same Gmail address in another spelling, or the same number reformatted, is
+// not a change of person).
+export function contactToCheck(before: { email: string | null; phone: string | null }, after: { email: string | null; phone: string | null }) {
+  const email = after.email && emailKey(after.email) !== emailKey(before.email) ? after.email : null;
+  const phone = after.phone && !phonesMatch(after.phone, before.phone) ? after.phone : null;
+  return { email, phone };
 }

@@ -88,6 +88,42 @@ export function marketingConsentFrom(raw: string | null | undefined): boolean {
   }
 }
 
+/* PURE: the visitor's answer to the cookie banner, as a DECISION — tri-state.
+ *
+ * `null` is not `false`. Someone who has not answered the banner is a different
+ * visitor from someone who declined it, and both are missing from the Meta
+ * pixel's numbers (it renders only in the consent-gated branch of
+ * [lang]/layout.tsx and ConsentScripts). Collapsing the two is exactly the
+ * ambiguity this was added to remove: on 2026-10-23 Meta recorded 129 PageView
+ * against 188 real views, and nothing said how much of that 31 % was refusal
+ * and how much was a blocked pixel. Those have opposite answers.
+ *
+ * Reads the `analytics` flag because that is the gate the pixel is behind.
+ * CustomCookieConsent sets `marketing` to the same value — the banner is
+ * accept-all or reject-all, with no granular toggles — so the two cannot
+ * diverge today; if they ever can, a server-side send needs `marketing`, and
+ * this is the line that will have to say which it means.
+ *
+ * Tolerant of both spellings of the same cookie, because the two callers read
+ * it from different places: `document.cookie` yields the percent-encoded value
+ * js-cookie wrote, while Next's cookies() and NextRequest.cookies decode it
+ * first (hence [lang]/layout.tsx JSON.parsing it directly).
+ */
+export function analyticsConsentFrom(raw: string | null | undefined): boolean | null {
+  if (!raw) return null;
+  const attempt = (v: string): unknown => {
+    try { return JSON.parse(v); } catch { return undefined; }
+  };
+  let obj = attempt(raw);
+  if (obj === undefined) {
+    try { obj = attempt(decodeURIComponent(raw)); } catch { return null; }
+  }
+  // `typeof [] === "object"`, so arrays need saying out loud: without this an
+  // unreadable `[]` would read as a decision of "declined" and bias the split.
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return null;
+  return (obj as { analytics?: unknown }).analytics === true;
+}
+
 /* ── browser plumbing ───────────────────────────────────────────────────── */
 
 function readCookie(name: string): string | null {

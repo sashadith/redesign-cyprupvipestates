@@ -76,6 +76,10 @@ export async function changedSince(
               // developer whose switch was touched in this window" — the
               // mirror of removedSince()'s second source.
               { developerAccount: { bridgeChangedAt: { gt: since } } },
+              // A commission rate of the account was saved or deleted
+              // (2026-10-24). Rates live on no Development row, so without
+              // this a changed rate would never reach Xellex.
+              { developerAccount: { commissionChangedAt: { gt: since } } },
             ],
           }
         : {}),

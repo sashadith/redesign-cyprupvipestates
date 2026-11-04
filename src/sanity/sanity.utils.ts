@@ -8,6 +8,8 @@ import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref, isLocale, PUBLIC_LOCALES, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
+import { mergedTargetFor } from "@/middleware";
+import { articleHref, articleSection, sectionWhere, type ArticleSection } from "@/lib/articleSections";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -99,6 +101,20 @@ async function translationsFor(
     select: { language: true, slug: true },
   });
   return siblings.map((s: AnyRow) => ({ slug: { [s.language]: { current: s.slug } } }));
+}
+
+// Blog siblings: same as translationsFor, plus the section ("blog" | "guides") each language's
+// row lives in, so hreflang and the language switcher point at the right URL.
+async function blogTranslationsFor(groupId: string | null | undefined): Promise<{ slug: any; section: any }[]> {
+  if (!groupId) return [];
+  const siblings = await prisma.blog.findMany({
+    where: { translationGroupId: groupId, status: "PUBLISHED" },
+    select: { language: true, slug: true, category: { select: { translationGroupId: true } } },
+  });
+  return siblings.map((s) => ({
+    slug: { [s.language]: { current: s.slug } },
+    section: { [s.language]: articleSection(s.language, s.category?.translationGroupId) },
+  }));
 }
 
 // Singletons (homepage, *Page, footer…) have one doc per language and no translationGroupId
@@ -304,6 +320,15 @@ function resolvedPropertyType(row: any): string | undefined {
 // below), so the cap only ever discards sold-out overflow before it discards
 // anything available.
 const MAX_FILTERED_PROJECTS = 60;
+
+// Page size of a landingProjectsBlock with pagesEnabled: the block's own `pageSize` when it is a whole number
+// between 1 and MAX_FILTERED_PROJECTS, otherwise MAX_FILTERED_PROJECTS (what every existing paginated block uses,
+// none of them stores a pageSize). resolveBlocks and getPaginatedLandingPageSlugs both call this so the page count a
+// sitemap advertises always equals the page count the live page serves.
+function landingPageSize(b: any): number {
+  const n = b?.pageSize;
+  return Number.isInteger(n) && n >= 1 && n <= MAX_FILTERED_PROJECTS ? n : MAX_FILTERED_PROJECTS;
+}
 
 // Thrown by resolveBlocks when a requested ?page=N exceeds a pagesEnabled
 // block's real totalPages -- caught in _getSinglePageByLang and converted to
@@ -613,7 +638,7 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // 2026-07-22 bug — a real published article's hand-picked selection
         // rendered nothing because the guard treated it like a weak query).
         b._hasLiveCriteria = hasCriteria;
-      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null || b.filterStage) {
+      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null || b.filterStage || (b._type === "landingProjectsBlock" && b.pagesEnabled)) {
         // Only compute the live query when a page actually opts in — avoids an
         // unbounded Project+Development query (now uncapped, for pagination) on
         // every one of the other manual-array pages that never read this field.
@@ -653,7 +678,7 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         if (b.pagesEnabled && b._type === "landingProjectsBlock") {
           pageConsumed = true;
           const requestedPage = page ?? 1;
-          const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, MAX_FILTERED_PROJECTS);
+          const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, landingPageSize(b));
           if (requestedPage > paged.totalPages) throw new PageOutOfRangeError();
           b.filteredProjects = paged.items;
           b.totalPages = paged.totalPages;
@@ -667,10 +692,13 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
     if (b._type === "inlineRelatedArticleBlock" && b.article?._ref) {
       const art = await prisma.blog.findFirst({
         where: { sanityId: b.article._ref },
-        select: { title: true, excerpt: true, slug: true, language: true },
+        select: { title: true, excerpt: true, slug: true, language: true, category: { select: { translationGroupId: true } } },
       });
       b.resolved = art
-        ? { title: art.title ?? "", excerpt: art.excerpt ?? "", slug: art.slug ?? "", language: art.language ?? lang }
+        ? {
+            title: art.title ?? "", excerpt: art.excerpt ?? "", slug: art.slug ?? "", language: art.language ?? lang,
+            href: art.slug ? articleHref(art.language ?? lang, art.slug, art.category?.translationGroupId) : "",
+          }
         : null;
     }
     out.push(D(b));
@@ -865,10 +893,10 @@ export async function getPaginatedLandingPageSlugs(lang: string): Promise<{ slug
       priceMin: block.priceMin,
       priceMax: block.priceMax,
     };
-    // Page size must match resolveBlocks' own call exactly (MAX_FILTERED_PROJECTS)
+    // Page size must match resolveBlocks' own call exactly (landingPageSize)
     // -- a mismatch here would advertise a totalPages the live page disagrees
     // with, either 404ing a listed URL or leaving a real page unlisted.
-    const { totalPages } = await computeFilteredProjectsPaged(lang, block.filterCity, block.filterPropertyType, liveOpts, 1, MAX_FILTERED_PROJECTS);
+    const { totalPages } = await computeFilteredProjectsPaged(lang, block.filterCity, block.filterPropertyType, liveOpts, 1, landingPageSize(block));
     if (totalPages > 1) out.push({ slug: row.slug, totalPages });
   }
   return out;
@@ -921,7 +949,12 @@ const slugList = (model: any, published: boolean) => async (lang: string): Promi
     select: { slug: true },
   })).map((r: AnyRow) => r.slug);
 export const getProjectSlugs = (lang: string) => slugList(prisma.project, true)(lang);
-export const getBlogSlugs = (lang: string) => slugList(prisma.blog, true)(lang);
+/** Published blog slugs of `lang`, optionally only those of one section. */
+export const getBlogSlugs = async (lang: string, section?: ArticleSection): Promise<string[]> =>
+  (await prisma.blog.findMany({
+    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) },
+    select: { slug: true },
+  })).map((r) => r.slug);
 export const getCaseStudySlugs = (lang: string) => slugList(prisma.caseStudy, true)(lang);
 export const getDeveloperSlugs = async (lang: string): Promise<string[]> =>
   (await prisma.developer.findMany({
@@ -969,39 +1002,60 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
   let related: any[] = [];
   if (relRefs.length) {
     const [blogs, pages] = await Promise.all([
-      prisma.blog.findMany({ where: { sanityId: { in: relRefs } }, include: { category: true } }),
-      prisma.singlepage.findMany({ where: { sanityId: { in: relRefs } } }),
+      prisma.blog.findMany({ where: { sanityId: { in: relRefs }, ...draftFilter() }, include: { category: true } }),
+      prisma.singlepage.findMany({ where: { sanityId: { in: relRefs }, ...draftFilter() } }),
     ]);
     const m = new Map<string, any>();
     blogs.forEach((b) => m.set(b.sanityId, {
       _id: b.sanityId, _type: "blog", title: b.title,
       category: b.category ? { _id: b.category.sanityId, _type: "category", title: b.category.title, slug: slugObj(b.category), language: b.category.language } : null,
       slug: slugObj(b), publishedAt: b.publishedAt?.toISOString?.() ?? null, previewImage: D(b.previewImage),
-      // Blog posts live at /[lang]/blog/<slug> in their own language.
-      href: localizedHref(b.language, ["blog", b.slug]),
+      // Blog posts live at /[lang]/blog/<slug> in their own language, guides at /[lang]/guides/<slug>.
+      section: articleSection(b.language, b.category?.translationGroupId),
+      href: articleHref(b.language, b.slug, b.category?.translationGroupId),
     }));
     // Singlepages live at their canonical (possibly nested) path — NOT under /blog. Resolve the
     // full parent/child path per language so related links don't 404 (the old code always linked
     // /blog/<slug>) or bounce through the flat->nested redirect.
     const pathCache = new Map<string, Map<string, string[]>>();
-    for (const p of pages) {
-      if (!pathCache.has(p.language)) {
-        const all = await getAllPathsForLang(p.language);
-        pathCache.set(p.language, new Map(all.map((s) => [s[s.length - 1], s])));
+    const pathsFor = async (language: string) => {
+      if (!pathCache.has(language)) {
+        const all = await getAllPathsForLang(language);
+        pathCache.set(language, new Map(all.map((s) => [s[s.length - 1], s])));
       }
-      const segs = pathCache.get(p.language)!.get(p.slug) ?? [p.slug];
-      m.set(p.sanityId, {
-        _id: p.sanityId, _type: "singlepage", title: p.title, slug: slugObj(p),
-        previewImage: D(p.previewImage), href: localizedHref(p.language, segs),
-      });
+      return pathCache.get(language)!;
+    };
+    const pageCard = async (p: { sanityId: string; language: string; slug: string; title: string | null; previewImage: unknown }) => {
+      const segs = (await pathsFor(p.language)).get(p.slug) ?? [p.slug];
+      return {
+        _id: p.sanityId, _type: "singlepage", title: p.title, slug: slugObj(p as any),
+        previewImage: D(p.previewImage), href: localizedHref(p.language as any, segs),
+      };
+    };
+    for (const p of pages) {
+      // A merged landing page keeps status PUBLISHED but 301s (middleware *_LANDING_MERGES), so its card
+      // would link a redirect. Show the merge target instead, with its own title and image; drop the card
+      // when the target is not a published page.
+      let card: any = await pageCard(p);
+      const target = mergedTargetFor(card.href);
+      if (target) {
+        const tp = await prisma.singlepage.findFirst({
+          where: { language: p.language, slug: target.split("/").filter(Boolean).pop(), status: "PUBLISHED" },
+        });
+        card = tp ? await pageCard(tp) : null;
+        if (card && card.href !== target) card = null;
+      }
+      if (card) m.set(p.sanityId, card);
     }
-    related = relRefs.map((id) => m.get(id)).filter(Boolean);
+    const seen = new Set<string>([localizedHref(row.language as any, ["blog", row.slug])]);
+    related = relRefs.map((id) => m.get(id)).filter((a) => a && !seen.has(a.href) && seen.add(a.href));
   }
 
   const out: AnyRow = {
     ...base(row, "blog"),
     title: row.title, slug: slugObj(row), seo: row.seo, publishedAt: row.publishedAt?.toISOString?.() ?? null,
     category: row.category ? { _id: row.category.sanityId, title: row.category.title, slug: slugObj(row.category) } : null,
+    section: articleSection(row.language, row.category?.translationGroupId),
     author: row.author ? {
       _id: row.author.sanityId, name: row.author.name, position: row.author.position,
       specialization: row.author.specialization, bio: row.author.bio, linkedin: row.author.linkedin,
@@ -1011,7 +1065,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
     contentBlocks: await resolveBlocks(row.contentBlocks as any[], lang),
     videoBlock: D(row.videoBlock), popularProperties: row.popularProperties,
     relatedArticles: related, language: row.language,
-    _translations: await translationsFor(prisma.blog as any, row.translationGroupId),
+    _translations: await blogTranslationsFor(row.translationGroupId),
   };
   return D(out) as unknown as Blog;
 }
@@ -1027,41 +1081,43 @@ export async function getBlogPageByLang(lang: string): Promise<BlogPage> {
   } as unknown as BlogPage;
 }
 
-export async function getBlogPostsByLang(lang: string): Promise<Blog[]> {
+export async function getBlogPostsByLang(lang: string, section?: ArticleSection): Promise<Blog[]> {
   if (!isLocale(lang)) return [];
   const rows = await prisma.blog.findMany({
-    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" },
+    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) },
     include: { category: true }, orderBy: { publishedAt: "desc" },
   });
   return Promise.all(rows.map(async (b) => D({
     ...base(b, "blog"), title: b.title, slug: slugObj(b), previewImage: D(b.previewImage),
     category: b.category ? { title: b.category.title, slug: slugObj(b.category) } : null,
+    section: articleSection(b.language, b.category?.translationGroupId),
     publishedAt: b.publishedAt?.toISOString?.() ?? null, language: b.language,
-    _translations: await translationsFor(prisma.blog as any, b.translationGroupId),
+    _translations: await blogTranslationsFor(b.translationGroupId),
   }))) as unknown as Blog[];
 }
 
-export async function getBlogPostsByLangWithPagination(lang: string, limit: number, offset: number): Promise<Blog[]> {
+export async function getBlogPostsByLangWithPagination(lang: string, limit: number, offset: number, section?: ArticleSection): Promise<Blog[]> {
   if (!isLocale(lang)) return [];
   const rows = await prisma.blog.findMany({
-    where: { language: lang as any, status: "PUBLISHED" }, include: { category: true },
+    where: { language: lang as any, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) }, include: { category: true },
     orderBy: { publishedAt: "desc" }, skip: offset, take: limit,
   });
   return Promise.all(rows.map(async (b) => D({
     _id: b.sanityId, title: b.title, excerpt: b.excerpt, slug: slugObj(b), previewImage: D(b.previewImage),
-    category: b.category ? { title: b.category.title, slug: slugObj(b.category) } : null,
+    category: b.category ? { title: b.category.title, slug: slugObj(b.category), groupId: b.category.translationGroupId } : null,
+    section: articleSection(b.language, b.category?.translationGroupId),
     publishedAt: b.publishedAt?.toISOString?.() ?? null, language: b.language,
-    _translations: await translationsFor(prisma.blog as any, b.translationGroupId),
+    _translations: await blogTranslationsFor(b.translationGroupId),
   }))) as unknown as Blog[];
 }
 
-export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
+export async function getTotalBlogPostsByLang(lang: string, section?: ArticleSection): Promise<number> {
   if (!isLocale(lang)) return 0;
   // PUBLISHED only — matches the PUBLISHED-only rows the grid actually
   // renders (getBlogPostsByLang/getBlogPostsByLangWithPagination), so the
   // hero counter can never claim more articles than the list shows. Also the
   // basis for the Phase 6 he-article-count gate (blogIndexMode).
-  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED" } });
+  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED", ...(section ? sectionWhere(lang, section) : {}) } });
 }
 
 // === Case Study ===
@@ -1073,13 +1129,28 @@ async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStud
   // Related projects may be linked to a different language's row — map to the same-language
   // sibling so the slug matches `lang` (otherwise /<lang>/projects/<wrong-slug> 404s).
   const relatedMapped = await mapProjectRowsToLang(related.map((r) => r.project as AnyRow), lang);
+  // A related-project card must open the project's CURRENT page. These rows are legacy Project rows, and
+  // most of them have since been archived in favour of a Development under another slug: linking
+  // /projects/<old-slug> works only through a 308 (and 41 such cards were found across the case studies,
+  // 2026-10-21). An archived row therefore carries the redirect target as its href; if that target is
+  // not a project page (the project is gone and only the developer page remains) the card is dropped
+  // rather than pointing a "property" card at a developer.
+  const relatedCards = (
+    await Promise.all(
+      relatedMapped.map(async (p) => {
+        if (p.status !== "ARCHIVED") return { p, href: null as string | null };
+        const target = await getLegacyProjectRedirect(lang, String(p.slug ?? ""));
+        return target && /^(?:\/[a-z]{2})?\/projects\/[^/?#]+$/.test(target) ? { p, href: target } : null;
+      }),
+    )
+  ).filter((x): x is { p: AnyRow; href: string | null } => x !== null);
   const out: AnyRow = {
     ...base(row, "caseStudy"),
     title: row.title, slug: slugObj(row), seo: row.seo, category: row.category, fullTitle: row.fullTitle,
     excerpt: row.excerpt, clientOverview: row.clientOverview, previewImage: D(row.previewImage),
     caseDetails: D(row.caseDetails), mainContent: await resolveBlocks(row.mainContent as any[], lang),
-    relatedProjects: relatedMapped.map((p) => ({
-      _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug,
+    relatedProjects: relatedCards.map(({ p, href }) => ({
+      _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug, href,
       previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: p.isSold,
     })),
     publishedAt: row.publishedAt?.toISOString?.() ?? null, language: row.language,

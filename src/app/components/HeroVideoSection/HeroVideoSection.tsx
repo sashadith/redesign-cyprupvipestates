@@ -63,14 +63,11 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("error", markError);
 
-    // Важно: пробуем play сразу после монтирования
-    (async () => {
-      try {
-        await el.play();
-      } catch {
-        // autoplay может быть заблокирован — тогда постер останется (это ок)
-      }
-    })();
+    // Operator decision 2026-10-30: the hero video plays at once on every device, phones included (it
+    // was poster-only on phones and delayed 4 s on desktop since 2026-10-19 for PageSpeed — the accepted
+    // cost is a lower lab score). `autoPlay` starts it at parse time; this call only covers browsers that
+    // ignored the attribute. Blocked autoplay (e.g. iOS Low Power Mode) keeps the poster.
+    el.play().catch(() => {});
 
     return () => {
       el.removeEventListener("loadeddata", onLoadedData);
@@ -105,24 +102,15 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
         <video
           ref={videoRef}
           className={styles.video}
-          autoPlay
           muted
           loop
           playsInline
-          // Was "auto": the browser started eagerly downloading the ENTIRE
-          // hero video (10.5MB, confirmed via a live PSI run 2026-07-20) at
-          // high priority from parse time, competing for bandwidth with the
-          // poster image (this page's actual LCP element, already `priority`
-          // via next/image below) and every other above-the-fold asset —
-          // under Lighthouse's throttled mobile network simulation this
-          // showed up as the dominant contributor to a ~10-20s LCP. "none"
-          // means the browser doesn't fetch until the `el.play()` call in
-          // the effect below actually runs, at normal (not elevated) request
-          // priority — no visual change: the poster overlay already covers
-          // the video until `isVideoReady` flips, exactly as before.
-          preload="none"
-          // poster можно оставить как фоллбек, но главный контроль у overlay:
-          poster={posterUrl}
+          autoPlay
+          // "auto" (2026-10-30): the video is wanted at once on every device. Until 2026-10-30 this was
+          // "none" so the 6+ MB file did not compete with the poster (the LCP element) for bandwidth.
+          preload="auto"
+          // No `poster` attribute: the next/image overlay above already is the poster. The attribute made the
+          // browser fetch the raw 1920 px JPEG a second time (146 KB, High priority) in the CSS window (2026-10-19).
         >
           <source src={videoSrc} type="video/mp4" />
         </video>

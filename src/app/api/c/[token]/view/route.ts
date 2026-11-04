@@ -3,7 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, dailyVisitorHash } from "@/lib/visitorHash";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadLabel } from "@/lib/chatPrivacy";
+import { getCrmUser } from "@/lib/crm/session";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { submittedName } from "@/lib/partner/matchGlue";
+import { brandDisplayName, officeAlertPrefix, presentationOpenedRow } from "@/lib/partner/presentationBranding";
 
 const ipLimiter = makeRateLimiter();
 
@@ -24,9 +28,13 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const body = await req.json().catch(() => ({}) as any);
 
+  // Someone signed in to the CRM is the team, not the client: no view row, no "New for you" clearing, no
+  // Telegram, no partner outbox. The page already skips the POST for them; this guards stale tabs/caches.
+  if (await getCrmUser().catch(() => null)) return NextResponse.json({ ignored: "staff" });
+
   const presentation = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
-    select: { id: true, status: true, expiresAt: true, greetingName: true },
+    select: { id: true, status: true, expiresAt: true, greetingName: true, leadId: true, partnerId: true, lead: { select: { firstName: true, lastName: true } } },
   });
   if (!presentation || presentation.status !== "active" || (presentation.expiresAt && presentation.expiresAt < new Date())) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -75,8 +83,36 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     }).catch(() => {});
   }
 
-  const crmLink = `${requestOrigin(req)}/admin/crm`; // per-lead deep link not resolvable from a view alone without another query; kept simple + best-effort
-  const name = escapeHtml(presentation.greetingName);
+  // Partner presentation (phase 3e): first page-level view → PRESENTATION_OPENED outbox row for the partner
+  // (refKey unique, skipDuplicates — a race or retry never doubles it), and the office alert names the partner.
+  // Presentations without a partnerId skip all of this.
+  let officePrefix = "";
+  if (presentation.partnerId) {
+    try {
+      const partner = await prisma.partner.findUnique({
+        where: { id: presentation.partnerId },
+        select: { brandName: true, company: true, firstName: true, lastName: true },
+      });
+      officePrefix = officeAlertPrefix(escapeHtml(partner ? brandDisplayName(partner) : "unknown partner"));
+      if (developmentId == null && priorPageVisits === 0) {
+        const claim = await prisma.partnerClaim.findFirst({
+          where: { partnerId: presentation.partnerId, leadId: presentation.leadId },
+          select: { submission: true },
+          orderBy: { createdAt: "desc" },
+        });
+        const row = presentationOpenedRow({
+          presentation: { id: presentation.id, leadId: presentation.leadId, partnerId: presentation.partnerId, greetingName: presentation.greetingName },
+          developmentId,
+          priorPageVisits,
+          claimName: claim ? submittedName(claim.submission) : null,
+        });
+        if (row) await prisma.partnerNotification.createMany({ data: [row], skipDuplicates: true });
+      }
+    } catch (e) { console.error("Partner presentation-opened outbox failed:", e instanceof Error ? e.name : "error"); }
+  }
+
+  const crmLink = `${requestOrigin(req)}/crm/leads/${presentation.leadId}`;
+  const name = escapeHtml(leadLabel(presentation.lead, presentation.leadId));
 
   // Alerts are mutually exclusive and best-effort — never let a Telegram hiccup
   // break the page for the client. Sascha's call (2026-08-14, overriding the
@@ -90,10 +126,10 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   try {
     if (developmentId == null) {
       if (isFirstViewEver) {
-        await sendTelegramMessage(`👀 ${name} opened their personal page — <a href="${crmLink}">CRM</a>`);
+        await sendTelegramMessage(`${officePrefix}👀 ${name} opened their personal page — <a href="${crmLink}">CRM</a>`);
       } else {
         const visitNumber = priorPageVisits + 1;
-        await sendTelegramMessage(`🔁 ${name} is back on their page (visit #${visitNumber})`);
+        await sendTelegramMessage(`${officePrefix}🔁 ${name} is back on their page (visit ${visitNumber}) — <a href="${crmLink}">CRM</a>`);
       }
     }
   } catch (e) { console.error("Presentation view Telegram alert failed:", e); }

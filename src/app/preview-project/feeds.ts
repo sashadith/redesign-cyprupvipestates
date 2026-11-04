@@ -2,6 +2,7 @@ import { parseStringPromise } from "xml2js";
 import type { UnitVM } from "./UnitsView";
 import { sizeKey, sizeOf } from "./imageSize";
 import { toTitleCaseName } from "@/lib/textCase";
+import type { ExtraLink } from "@/lib/developmentExtraLinks";
 
 /* Developer-agnostic feed adapters → one canonical ProjectVM the preview page
    renders. Each adapter maps a raw feed (Island Blue XML, Qubehub API, …) to the
@@ -18,6 +19,10 @@ export type ProjectVM = {
   amenities?: string[]; // project-level features/benefits (feed) — else unit features
   extraFacts?: { label: string; value: string }[]; // extra development specs for the facts panel
   heroVideo?: string; // looping hero video (admin-uploaded in prod)
+  // Admin-attached buttons under the description (project video, 360° tour,
+  // virtual walkthrough, project camera). DB pipeline only — no feed carries
+  // these, so the live-feed adapters leave it undefined and nothing renders.
+  extraLinks?: ExtraLink[];
   vatApplies?: boolean | null; // admin override only — null/undefined = unknown, don't show "+VAT"
   center: { lat: number; lng: number } | null; units: UnitVM[];
   // Auto-computed (haversine), DB pipeline only — see src/lib/developmentDistances.ts.
@@ -90,6 +95,12 @@ const SUB_REGIONS = [
   // and sat inside the old box. Our easternmost Kouklia row is at 32.6136, so
   // the margin is 0.036 on our side and 0.043 to Pissouri.
   { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.65 },
+  // Famagusta (free area: Ayia Napa, Protaras, Paralimni, Deryneia, Sotira,
+  // Liopetri), added 2026-10-28 for Giovani Homes; the coarse band below calls
+  // everything east of 33.4 Larnaca. lngMin 33.87 leaves Xylofagou (~33.85,
+  // Larnaca district) out; latMax 35.085 stops at the buffer zone north of
+  // Deryneia/Kapparis (occupied Famagusta city sits at ~35.12).
+  { name: "Famagusta", latMin: 34.95, latMax: 35.085, lngMin: 33.87, lngMax: 34.12 },
 ];
 const districtFor = (center?: { lat: number; lng: number } | null): string => {
   if (!center) return "";
@@ -110,6 +121,7 @@ const DISTRICT_TOWNS: Record<string, RegExp> = {
   Kouklia: /kouklia|venus rock|secret valley|aphrodite hills|petra tou romiou/i,
   Paphos: /paphos|pafos|chloraka|peyia|pegeia|coral bay|geroskipou|yeroskipou|anavargos|emba|empa|konia|tala|mesogi|mesoyi|kissonerga|tombs of the kings/i,
   Limassol: /limassol|lemesos|agios athanasios|agia fyla|germasogeia|agios nikolaos|mesa geitonia|polemidia|katholiki|tsiflikoudia|petrou kai pavlou|agios tychonas|parekklisia|erimi|pyrgos/i,
+  Famagusta: /famagusta|ammochostos|protaras|paralimni|ayia napa|agia napa|kapparis|pernera|deryneia|derynia|sotira|liopetri|frenaros|avgorou|achna|cape gre[ck]o/i,
   Larnaca: /larnaca|larnaka|oroklini|pyla|livadia|dhekelia|aradippou/i,
   Nicosia: /nicosia|lefkosia|strovolos|engomi|aglantzia/i,
 };

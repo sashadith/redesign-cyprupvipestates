@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PARTNER_LANG_COOKIE, partnerLangFromQuery, partnerRewritePath, routingHost } from "@/lib/partner/host";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
 import { guidesPageLang } from "@/lib/guidesPage";
+import { ALL_GUIDES_SLUGS } from "@/lib/articleSections";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
 import { retiredProjectTarget } from "@/lib/retiredProjectRedirects";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
-const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
+// The guides slugs (guides, ratgeber, poradniki, gajdy) are section roots like "blog": never a landing-page leaf.
+const RESERVED = new Set(["projects", "blog", ...ALL_GUIDES_SLUGS, "developers", "case-studies", "files", "partners"]);
 // Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is NOT in
 // this set — it is answered with a guaranteed 404 by the gated-locale guard
 // at the top of middleware() below, not by falling through unmatched (that
@@ -24,6 +27,7 @@ const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on pr
 // Hoisted to module scope so these are compiled once, not on every request.
 const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
 const FAQ_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?faq$`);
+const HOME_RE = new RegExp(`^/(${NON_DEFAULT})?/?$`);
 const CASE_STUDIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?case-studies(?:/([^/]+))?$`);
 const PARTNERS_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?partners$`);
 
@@ -176,6 +180,46 @@ export const DE_LANDING_MERGES: Record<string, string> = {
   // link to the retiring page (from strandimmobilien-paphos) was
   // repointed directly to the new target first.
   "investment-immobilien-paphos": "/de/villen-paphos-investoren-kaufen",
+
+  // DACH plan rows P01 and P02 (2026-10-29): the two hub pages were rewritten
+  // as the head-query pages ("zypern immobilien", "zypern haus kaufen") and
+  // the duplicates folded into them. Unlike the Häuser cluster reversal of
+  // 2026-09-11 above (which pointed houses at the villa flagship, a different
+  // query), these four go to the page of the SAME query: immobilien-zypern-
+  // kaufen and top-100-immobilien-auf-zypern -> immobilien-auf-zypern;
+  // haeuser-in-zypern and neubau-haeuser-zypern -> haeuser-auf-zypern. All four
+  // carried only pinned refs to ARCHIVED legacy projects (93 / 20 / 21 of them)
+  // and unsourced yield claims; their unique facts were folded in first.
+  "immobilien-zypern-kaufen": "/de/immobilien-auf-zypern",
+  "top-100-immobilien-auf-zypern": "/de/immobilien-auf-zypern",
+  "haeuser-in-zypern": "/de/haeuser-auf-zypern",
+  "neubau-haeuser-zypern": "/de/haeuser-auf-zypern",
+
+  // DACH plan rows P06, P11, P12 and P30 (2026-10-29): the remaining eight
+  // duplicates of the rewritten landings, each folded into the page of the same
+  // query after reading it in full (unique facts moved, unsourced yield/cost
+  // claims dropped). The two nested ones (strandhaus-auf-zypern,
+  // haeuser-in-limassol-kaufen) carry both the nested path and the bare leaf,
+  // as the note above requires, so a flat hit does not chain through the
+  // nestedPageRedirects.json 308 first. The four "nahe internationalen Schulen"
+  // pages are NOT here: the plan's audit says keep/observe (one holds position
+  // 7.8 for a school query), so folding them into familienvillen-zypern waits.
+  "strandvillen-zypern-kaufen": "/de/strandvillen-zypern",
+  "strandnahe-immobilien-zypern": "/de/strandvillen-zypern",
+  "haeuser-auf-zypern/strandhaus-auf-zypern": "/de/strandvillen-zypern",
+  "strandhaus-auf-zypern": "/de/strandvillen-zypern",
+  "villen-paphos-investoren-kaufen": "/de/haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos",
+  "haeuser-zum-verkauf-limassol": "/de/villen-limassol-kaufen",
+  "villen-in-limassol-fuer-investoren": "/de/villen-limassol-kaufen",
+  "haeuser-auf-zypern/haeuser-in-limassol-kaufen": "/de/villen-limassol-kaufen",
+  "haeuser-in-limassol-kaufen": "/de/villen-limassol-kaufen",
+  "villen-paphos-mit-privatem-pool": "/de/haeuser-auf-zypern/haus-mit-pool-auf-zypern",
+  // The four school-proximity pages: the family-villa flagship now carries the
+  // school-distance tables and per-school project lists for all four cities.
+  "immobilien-nahe-internationalen-schulen-zypern": "/de/familienvillen-zypern",
+  "immobilien-nahe-internationalen-schulen-limassol": "/de/familienvillen-zypern",
+  "immobilien-nahe-internationalen-schulen-paphos": "/de/familienvillen-zypern",
+  "immobilien-nahe-internationalen-schulen-larnaka": "/de/familienvillen-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
@@ -185,8 +229,15 @@ export const DE_LANDING_MERGES: Record<string, string> = {
 // ships, the old URL redirects immediately, even while the row is still
 // PUBLISHED — that's intentional, so the redirect can go out ahead of the
 // unpublish with no 404 gap.
-const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
-  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+export const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
+  // 2026-10-29: was redirected to immobilien-zypern-mit-garantierten-mieteinnahmen, which answers a different
+  // question. The queries of this article (Mieteinnahmen aus Deutschland in Zypern versteuern) belong to the
+  // DE/AT/CH tax comparison, whose "Miete und Verkaufsgewinn" section carries the worked example.
+  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/ratgeber/steuern-zypern-vs-deutschland-oesterreich-schweiz",
+
+  // G01 (DACH plan, 2026-10-29): the second "auswandern" guide (707 words, headline "... 2025") merged into
+  // wie-nach-zypern-auswandern, the base that carries the content.
+  "blog/auswandern-nach-zypern-aus-deutschland": "/de/ratgeber/wie-nach-zypern-auswandern",
 
   // German-retiree cannibalization pair (2026-09-30 content inventory):
   // wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen and
@@ -205,7 +256,7 @@ const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   // this redirect went in. Its closing projectsSectionBlock was NOT carried
   // over -- all 6 pinned project refs are archived/missing, the same
   // dead-pin defect documented throughout this file's other merges.
-  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/blog/ratgeber-fuer-deutsche-rentner",
+  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/ratgeber/ratgeber-fuer-deutsche-rentner",
 };
 
 // English (unprefixed) landing-page merges — same shape/mechanism as
@@ -233,6 +284,14 @@ const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
 export const EN_LANDING_MERGES: Record<string, string> = {
   "villas-limassol": "/houses-in-cyprus/houses-in-limassol",
   "west-coast-properties-cyprus": "/west-coast-properties-paphos",
+};
+
+// Renamed English blog articles (unprefixed /blog/<slug>), old path -> new path. The article keeps
+// its row; only the slug changed, so the old URL has to answer a single-hop 301 to the new one.
+// 2026-10-29: the Category 6.2 guide lost "golden-visa" from its slug along with the nickname in
+// its title and text (Cyprus has no golden visa; 6.2 is permanent residence).
+export const EN_BLOG_RENAMES: Record<string, string> = {
+  "blog/cyprus-permanent-residency-golden-visa-guide": "/guides/cyprus-permanent-residency-category-6-2-guide",
 };
 
 // Paphos investment cluster, PL leg (2026-09-09) — same investigation and
@@ -362,7 +421,7 @@ export const RU_LANDING_MERGES: Record<string, string> = {
 /**
  * Where the plain-map redirects below already send `pathname` (single-hop 301), or null.
  * Order matters and is the order the checks always ran in: DE landing merges, retired DE blog
- * articles, PL, RU, then EN (the unprefixed one-segment pages). Exported so the missing-page
+ * articles, PL, RU, then EN (the unprefixed one-segment pages), then renamed EN blog articles. Exported so the missing-page
  * resolver (src/lib/missingPageResolve.ts) never picks one of these retired slugs as its
  * target, which would turn its redirect into a two-hop chain.
  */
@@ -376,6 +435,8 @@ export function mergedTargetFor(pathname: string): string | null {
   if (ru && RU_LANDING_MERGES[ru[1]]) return RU_LANDING_MERGES[ru[1]];
   const en = pathname.match(/^\/([^/]+)$/);
   if (en && EN_LANDING_MERGES[en[1]]) return EN_LANDING_MERGES[en[1]];
+  const enBlog = pathname.match(/^\/(blog\/[^/]+)$/);
+  if (enBlog && EN_BLOG_RENAMES[enBlog[1]]) return EN_BLOG_RENAMES[enBlog[1]];
   return null;
 }
 
@@ -396,6 +457,26 @@ export function nestedCanonicalFor(pathname: string): string | null {
 }
 
 export default async function middleware(request: NextRequest) {
+  // Partner portal host: rewrite into the internal /partner-portal segment and skip all
+  // locale logic. The main host must never reach that segment.
+  const partnerTarget = partnerRewritePath(
+    routingHost(request.headers.get("host"), request.headers.get("x-forwarded-host")),
+    request.nextUrl.pathname,
+    process.env,
+  );
+  if (partnerTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = partnerTarget === "block" ? "/_gated-locale-404" : partnerTarget;
+    // A link from the main site carries ?lang= so the portal opens in the page's language,
+    // not the browser's. Set on the request too, so this very render already uses it.
+    const lang = partnerTarget === "block" ? null : partnerLangFromQuery(request.nextUrl.searchParams);
+    if (!lang) return NextResponse.rewrite(url);
+    request.cookies.set(PARTNER_LANG_COOKIE, lang);
+    const res = NextResponse.rewrite(url, { request: { headers: request.headers } });
+    res.cookies.set(PARTNER_LANG_COOKIE, lang, { maxAge: 60 * 60 * 24 * 365, sameSite: "lax", path: "/", httpOnly: false, secure: process.env.NODE_ENV === "production" });
+    return res;
+  }
+
   // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
   // launch): answer 404 instead of letting next-intl treat "he" as a plain
   // path segment and the singlepage catch-all serve English content at a
@@ -591,7 +672,27 @@ export default async function middleware(request: NextRequest) {
     // remains the fallback for excluded (title-sweep) paths.
     localePrefix: "as-needed",
     localeDetection: false,
+    // next-intl's default adds an HTTP `Link: <...>; rel="alternate"; hreflang=...` header built from the SAME
+    // path in every locale (e.g. /pl/luxusvillen-in-zypern, which does not exist), contradicting the per-page
+    // hreflang the pages render themselves from their translation groups. The HTML tags are the single source.
+    alternateLinks: false,
   });
+
+  // Homepage (/, /de, /pl, /ru) -> home-static/[lang]: the same page, but under a layout with no
+  // cookies()/draftMode(), so it is statically generated and served from the ISR cache (revalidate 1800)
+  // instead of being rendered on every request (TTFB 1.6 s -> cache hit). Locales that are not live yet
+  // (NON_DEFAULT only holds PUBLIC_LOCALES) never match and keep the old guard. Query strings (utm_*) do not affect the cached HTML.
+  const homeMatch = request.nextUrl.pathname.match(HOME_RE);
+  if (homeMatch) {
+    const url = request.nextUrl.clone();
+    // A browser/crawler document request (Accept: text/html) gets the same prerendered HTML with its stylesheets
+    // inlined (src/app/home-inline/[lang]/route.ts, why: src/lib/homeInline.ts). Anything else — notably the App
+    // Router's client-side RSC/prefetch fetches, which send Accept: */* — goes to the real page. (Middleware does not
+    // see the RSC/_rsc markers: Next strips them before it runs, so Accept is the reliable signal.)
+    const wantsDocument = (request.headers.get("accept") || "").includes("text/html") && request.headers.get("rsc") !== "1";
+    url.pathname = `${wantsDocument ? "/home-inline" : "/home-static"}/${homeMatch[1] || "en"}`;
+    return NextResponse.rewrite(url);
+  }
 
   return handleI18nRouting(request);
 }
@@ -640,7 +741,9 @@ export const config = {
   // matcher's blast radius beyond what's actually needed right now.
   // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
   // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
+  // crm (2026-10-18): the new CRM at /crm (own layout, own auth check) — anchored so /crmfoo still localises.
+  // crm-preview (2026-10-22): the owner's design live-preview frames (own layouts, owner check) — anchored like crm.
   matcher: [
-    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|crm(?![\\w-])|crm-preview(?![\\w-])|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|icons/|manifest.webmanifest|sandbox|og|home-static|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-guides|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };

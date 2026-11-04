@@ -16,6 +16,7 @@ import type { Locale } from "@/lib/crm/presentationMessages";
 import { isLocale } from "@/lib/locale";
 import type { MeetingType } from "@prisma/client";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { getConfirmedBookings, findConflict } from "@/lib/booking/conflicts";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -121,7 +122,7 @@ export async function proposeSlotAction(token: string, selectedUtcSlots: string[
     },
   });
 
-  await notifyBookingProposed(booking.leadId, `${booking.lead.firstName} ${booking.lead.lastName}`.trim(), slots, cleanLeadTimezone, booking.meetingType);
+  await notifyBookingProposed(booking.leadId, leadLabel(booking.lead, booking.leadId), slots, cleanLeadTimezone, booking.meetingType);
 
   revalidatePath(`/admin/crm/${booking.leadId}`);
   return { ok: true };
@@ -323,7 +324,7 @@ export async function cancelBookingAction(bookingRequestId: string): Promise<{ o
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
       const msg =
         `<b>🚫 Meeting cancelled</b>\n` +
-        `${esc(leadName)} — was ${formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ)} Cyprus time\n\n` +
+        `${esc(leadName || leadLabel(null, booking.leadId))} — was ${formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ)} Cyprus time\n\n` +
         `<a href="${siteUrl}/admin/crm/${booking.leadId}">Open in CRM</a>`;
       await sendTelegramMessage(msg);
     } catch (e) {

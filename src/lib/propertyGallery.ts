@@ -33,7 +33,7 @@ const SITE = "https://cypruspropertygallery.com";
 
 /** Their project ids that belong together, mapped to one feedProjectId. */
 export const PG_MERGE: Record<string, string> = {
-  "70": "yoo-limassol", "90": "yoo-limassol",
+  "70": "yoo-limassol", "90": "yoo-limassol", "63": "yoo-limassol",
   "76": "venera-residences", "81": "venera-residences",
   "102": "mir-residences", "103": "mir-residences",
 };

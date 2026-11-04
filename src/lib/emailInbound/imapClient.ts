@@ -74,6 +74,29 @@ export async function withReadOnlyInbox<T>(
   creds: ImapCredentials,
   fn: (client: ImapFlow, mailbox: Awaited<ReturnType<ImapFlow["mailboxOpen"]>>) => Promise<T>,
 ): Promise<T> {
+  return withReadOnlyMailbox(creds, async () => "INBOX", fn);
+}
+
+export class MailboxNotFoundError extends Error {}
+
+/**
+ * The account's sent-mail folder: the one flagged \Sent (RFC 6154), else the usual names. Hostinger
+ * and most Dovecot hosts flag it; the name list is the fallback for a server that doesn't.
+ */
+export async function findSentMailbox(client: ImapFlow): Promise<string | null> {
+  const boxes = await client.list();
+  const flagged = boxes.find((b) => b.specialUse === "\\Sent");
+  if (flagged) return flagged.path;
+  const named = boxes.find((b) => /^(inbox[./])?sent( items| messages| mail)?$/i.test(b.path));
+  return named ? named.path : null;
+}
+
+/** Same as withReadOnlyInbox for any mailbox `pick` names (EXAMINE, hard read-only assertion, bounded logout). */
+export async function withReadOnlyMailbox<T>(
+  creds: ImapCredentials,
+  pick: (client: ImapFlow) => Promise<string | null>,
+  fn: (client: ImapFlow, mailbox: Awaited<ReturnType<ImapFlow["mailboxOpen"]>>) => Promise<T>,
+): Promise<T> {
   const client = new ImapFlow({
     host: creds.host,
     port: creds.port,
@@ -94,7 +117,9 @@ export async function withReadOnlyInbox<T>(
   await client.connect();
   try {
     // The one line that matters: `readOnly: true` sends EXAMINE, not SELECT.
-    const mailbox = await client.mailboxOpen("INBOX", { readOnly: true });
+    const path = await pick(client);
+    if (!path) throw new MailboxNotFoundError("Mailbox not found.");
+    const mailbox = await client.mailboxOpen(path, { readOnly: true });
     // Hard assertion, not a comment-level promise: if the server (or a
     // future code change) ever results in a non-read-only mailbox, abort
     // before touching a single message rather than silently proceeding.

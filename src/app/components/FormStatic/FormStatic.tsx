@@ -10,6 +10,8 @@ import {
   FormikHelpers,
   FormikProps,
 } from "formik";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
 import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
@@ -21,6 +23,8 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formStaticCopy } from "./FormStatic.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 export type FormData = {
   name: string;
@@ -68,11 +72,13 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
 
     surname: Yup.string().required(formStaticCopy(lang).surnameRequired),
 
-    phone: Yup.string().required(formStaticCopy(lang).phoneRequired),
+    phone: Yup.string().required(formStaticCopy(lang).phoneRequired)
+      .test("phone-intl", phoneInvalidText(lang) ?? formStaticCopy(lang).phoneRequired, (v) => !v || isValidLeadPhone(v)),
 
     email: Yup.string()
       .email(formStaticCopy(lang).emailInvalid)
-      .required(formStaticCopy(lang).emailRequired),
+      .required(formStaticCopy(lang).emailRequired)
+      .test("email-valid", emailInvalidText(lang) ?? formStaticCopy(lang).emailInvalid, (v) => !v || isValidLeadEmail(v)),
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
@@ -94,6 +100,10 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -101,15 +111,17 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
         currentPage,
         lang,
         ...getAttribution(),
+        metaEventId: leadIdForServer(metaEventId),
       });
 
-      if (response.status === 200) {
+      // A refused lead also answers 200, with ok: false: never show "thank you" for it.
+      if (response.status === 200 && response.data?.ok === true) {
         if (typeof window !== "undefined" && window.fbq) {
           window.fbq("track", "Lead", {
             form_name: "form_static",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: metaEventId });
         }
         if (
           typeof window !== "undefined" &&

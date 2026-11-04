@@ -53,9 +53,9 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, lang }) => {
     return date.toLocaleDateString("en-GB").replace(/\//g, ".");
   };
 
-  const generateSlug = (slug: any, language: string) =>
+  const generateSlug = (slug: any, language: string, section?: string) =>
     slug?.[language]?.current
-      ? `${localePrefix(language)}/blog/${slug[language].current}`
+      ? `${localePrefix(language)}/${section === "guides" ? "guides" : "blog"}/${slug[language].current}`
       : "#";
 
   const getLoadMoreText = () => copy(lang).loadMore(LIMIT);
@@ -123,7 +123,7 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, lang }) => {
 
               return (
                 <Link
-                  href={generateSlug(post.slug, lang)}
+                  href={generateSlug(post.slug, lang, post.section)}
                   key={post._id}
                   className={styles.article}
                   hidden={index >= visibleCount}

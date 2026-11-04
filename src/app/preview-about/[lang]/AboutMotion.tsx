@@ -32,7 +32,7 @@ export default function AboutMotion() {
       /* ---------------- HERO (on load) ---------------- */
       const headline = document.querySelector<HTMLElement>(".abt__hero .hero__headline");
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap
           .timeline()
@@ -45,7 +45,7 @@ export default function AboutMotion() {
 
       /* ---------------- SECTION HEADINGS (line-by-line) ---------------- */
       toArr(".abt__title").forEach((el) => {
-        const split = new SplitText(el, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(el, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap.from(split.lines, {
           y: 60,

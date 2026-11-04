@@ -1,4 +1,5 @@
 import { workbookToText } from "@/lib/sheetToText";
+import { folderProjectName } from "@/lib/driveFolderNames";
 
 /* Minimal Google Drive REST client for the availability sync. Uses a stored OAuth
    refresh token (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN),
@@ -163,11 +164,16 @@ export type FindPriceOpts = {
    *  a plain spreadsheet and lose every sold/reserved marker. Reported as "no
    *  price list" instead, which is visible, rather than silently mis-parsed. */
   spreadsheetsOnly?: boolean;
+  /** The project this folder belongs to. A spreadsheet named exactly like it
+   *  ("Aura.xlsx" in Olias' "Aura" folder, 2026-10-31) is as unambiguous as a
+   *  "Price List" name, so it counts as named. */
+  projectName?: string;
 };
 
 export function findPriceFile(files: DriveFile[], opts: FindPriceOpts = {}): DriveFile | null {
   const sheets = files.filter(isSpreadsheet);
-  const namedSheets = sheets.filter((f) => PRICE_NAME_RE.test(f.name));
+  const projectKey = opts.projectName ? normKey(opts.projectName) : "";
+  const namedSheets = sheets.filter((f) => PRICE_NAME_RE.test(f.name) || (!!projectKey && normKey(f.name.replace(/\.[a-z0-9]+$/i, "")) === projectKey));
   const sheetPool = opts.requireNamed ? namedSheets : namedSheets.length ? namedSheets : sheets;
   if (sheetPool.length) return sheetPool.sort((a, b) => (a.modifiedTime < b.modifiedTime ? 1 : -1))[0];
   if (opts.spreadsheetsOnly) return null;
@@ -287,7 +293,7 @@ export async function listProjectFolders(
       out.push({ folder, files: [], price: null });
       continue;
     }
-    out.push({ folder, files, price: findPriceFile(files, { requireNamed: true, spreadsheetsOnly: !opts?.allowPdfPriceList }) });
+    out.push({ folder, files, price: findPriceFile(files, { requireNamed: true, spreadsheetsOnly: !opts?.allowPdfPriceList, projectName: folderProjectName(folder.name) }) });
   }
   return out;
 }

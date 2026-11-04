@@ -84,7 +84,7 @@ export function registerNotifyOwnerTelegram(server: McpServer) {
     {
       title: "Notify the owner on Telegram",
       description:
-        `Sends one plain-text Telegram message to the owner (Sascha), via the platform's own bot — the same chat as the cron alerts and the morning report. The recipient is fixed and cannot be chosen. Text only, max ${NOTIFY_MAX_CHARS} characters, no formatting. At most ${NOTIFY_PER_HOUR} messages per hour across all callers. Use it for things the owner must act on, not as a log.`,
+        `Sends one plain-text Telegram message to the owner (Sascha), via the platform's own bot — the same chat as the cron alerts and the morning report. The recipient is fixed and cannot be chosen. Text only, max ${NOTIFY_MAX_CHARS} characters, no formatting. At most ${NOTIFY_PER_HOUR} messages per hour across all callers. Use it for things the owner must act on, not as a log. Link a lead by its CRM URL (https://cyprusvipestates.com/admin/crm/<leadId>).`,
       inputSchema: NotifyInput,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false, openWorldHint: true },
     },

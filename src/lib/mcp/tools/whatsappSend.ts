@@ -9,8 +9,10 @@ import { createOpenWaClient } from "@/lib/openwa/client";
 import { readOpenWaConfig } from "@/lib/openwa/config";
 import { shapeThread, type RawMessage } from "@/lib/openwa/shapeMessages";
 import { decideSend, nicosiaDayStart } from "@/lib/openwa/sendGuards";
+import { countWhatsAppSentToday } from "@/lib/openwa/sentToday";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { assertCanEdit, type LeadScope, loadScope } from "../leadScope";
 import { fmtDate } from "../format";
 
 // Repo convention: a named ZodObject, passed whole as inputSchema.
@@ -50,23 +52,23 @@ function logRedacted(what: string, e: unknown): void {
   );
 }
 
-export function realSendDeps(): SendDeps {
+export function realSendDeps(access: LeadScope): SendDeps {
   const cfg = readOpenWaConfig();
   const client = createOpenWaClient();
   return {
-    findLead: (leadId) =>
-      prisma.lead.findFirst({
-        where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
-        select: { id: true, phone: true },
-      }),
-    countSentToday: (since) =>
-      prisma.leadInteraction.count({
-        where: {
-          type: "WHATSAPP_OUT",
-          occurredAt: { gte: since },
-          metadata: { path: ["via"], equals: "mcp-whatsapp" },
-        },
-      }),
+    // Outside the scope → null → the guards' ordinary "Lead not found.";
+    // visible but not editable → refused here, before anything is sent.
+    findLead: async (leadId) => {
+      const lead = await prisma.lead.findFirst({
+        where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
+        select: { id: true, phone: true, assignedToId: true },
+      });
+      if (!lead) return null;
+      assertCanEdit(access.user, lead);
+      return { id: lead.id, phone: lead.phone };
+    },
+    // Shared with developer registrations — one cap for the company number.
+    countSentToday: countWhatsAppSentToday,
     fetchThread: (chatId, limit) => client.fetchThread(chatId, limit),
     sendText: (chatId, text) => client.sendText(chatId, text),
     logInteraction: logLeadInteraction,
@@ -74,8 +76,11 @@ export function realSendDeps(): SendDeps {
   };
 }
 
-export async function performSend(deps: SendDeps, input: SendInput, actor: EmailActor) {
-  const lead = await deps.findLead(input.leadId);
+// The guards on their own, without sending: performSend runs them right before
+// the send, and the CRM's "Send via WhatsApp (CRM)" button asks first so it is
+// only clickable when a send would go through.
+export async function checkSend(deps: Omit<SendDeps, "sendText" | "logInteraction">, leadId: string) {
+  const lead = await deps.findLead(leadId);
   const chatId = lead ? chatIdFor(lead.phone) : null;
 
   // Guard 3: a conversation exists only if the thread holds at least one REAL
@@ -107,6 +112,11 @@ export async function performSend(deps: SendDeps, input: SendInput, actor: Email
   const sentToday = await deps.countSentToday(nicosiaDayStart(new Date()));
 
   const decision = decideSend({ leadExists: !!lead, chatId, threadExists, sentToday, dailyCap: deps.dailyCap });
+  return { lead, chatId, decision };
+}
+
+export async function performSend(deps: SendDeps, input: SendInput, actor: EmailActor, opts: { via?: LogInteractionInput["via"] } = {}) {
+  const { lead, chatId, decision } = await checkSend(deps, input.leadId);
   if (!decision.allowed) throw new ToolError(decision.code, decision.reason);
 
   await deps.sendText(chatId!, input.text);
@@ -125,7 +135,7 @@ export async function performSend(deps: SendDeps, input: SendInput, actor: Email
     const { interactionId } = await deps.logInteraction(actor, lead!.id, {
       type: "WHATSAPP_OUT",
       body: input.text,
-      via: "mcp-whatsapp",
+      via: opts.via ?? "mcp-whatsapp",
     });
     return { sent: true, interactionId, to: lead!.phone, address: chatId!, at: fmtDate(new Date()) };
   } catch (e) {
@@ -156,7 +166,7 @@ export function registerWhatsappSend(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_whatsapp_send", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) =>
-        performSend(realSendDeps(), input, { userId: c.userId, userName: c.userName }),
+        performSend(realSendDeps(await loadScope(c)), input, { userId: c.userId, userName: c.userName }),
       ),
   );
 }

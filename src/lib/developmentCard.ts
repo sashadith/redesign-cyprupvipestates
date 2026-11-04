@@ -240,6 +240,9 @@ const TYPE_SYNONYMS: Record<string, string[]> = {
   townhouse: ["semi-detached", "semi detached", "terraced"],
   commercial: ["office", "shop", "hotel"],
   villa: [],
+  // 2026-10-20: Penthouse is its own filter value (operator). It still answers
+  // Apartment above as well — a penthouse is an apartment.
+  penthouse: [],
 };
 
 export function matchesPropertyTypeFilter(resolvedType: string, filterValue: string): boolean {

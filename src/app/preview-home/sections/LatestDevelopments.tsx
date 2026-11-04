@@ -3,6 +3,7 @@ import { getLatestDevelopmentsByLang } from "@/sanity/sanity.utils";
 import { localePrefix, fmtPrice } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
 import Bdi from "@/app/components/Bdi";
+import OptImg from "./OptImg";
 
 /* Latest Developments — light "gallery" section: a deep-green title tile sits
    in the grid alongside the most recently published Developments (reusing the
@@ -40,7 +41,7 @@ export default async function LatestDevelopments({ lang = "en" }: { lang?: strin
             return (
               <a key={d._id} className="pcard" href={`${px}/projects/${d.slug}`}>
                 <div className="pcard__media">
-                  {d.previewImage && <img src={d.previewImage} alt={d.title} />}
+                  {d.previewImage && <OptImg src={d.previewImage} alt={d.title} sizes="(max-width: 768px) 100vw, 34vw" />}
                   {d.isSold && <span className="pcard__sold">{t.sold}</span>}
                   <div className="pcard__shade" />
                 </div>

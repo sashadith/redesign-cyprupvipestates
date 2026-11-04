@@ -1,12 +1,15 @@
 // Lead capture → Postgres (Lead) + Telegram + email notifications.
 // Replaces the former Monday.com flow. Preserves the existing anti-spam protections so
 // existing frontend forms work unchanged (they POST the same body shape).
+import { isValidLeadEmail, normalizeLeadEmail } from "@/lib/leads/contactEmail";
+import { e164LeadPhone } from "@/lib/leads/contactPhone";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getAutoReplyEmail } from "@/lib/emailTemplates";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead, telegramLanguageTag } from "@/lib/leadNotify";
+import { leadRef } from "@/lib/chatPrivacy";
 import { notifyTeamWhatsApp } from "@/lib/teamWhatsApp";
 import { resolveProjectInterest } from "@/lib/leads/projectInterest";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
@@ -16,6 +19,8 @@ import { PROPERTY_VALUES, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, lea
 import { LOCALES } from "@/lib/locale";
 import { parseGuideRequest, messageWithGuide, guideNote, guideLink } from "@/lib/guides/request";
 import { getGuideEmail } from "@/lib/guides/email";
+import { formLeadSource } from "@/lib/guides/leadSource";
+import { sendLeadToMeta } from "@/lib/metaCapi";
 
 const ALLOWED_LANGS = new Set<string>(LOCALES);  // locally named ALLOWED_LANGS to avoid shadowing the imported LOCALES constant
 
@@ -28,12 +33,6 @@ const transporter = nodemailer.createTransport({
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();
-
-function leadSource(page: string) {
-  if (/\/projects\//.test(page)) return "PROJECT_ENQUIRY" as const;
-  if (/\/blog\//.test(page)) return "BLOG_ENQUIRY" as const;
-  return "CONTACT_FORM" as const;
-}
 
 export async function POST(request: Request) {
   const guard = guardRequest(request, ipLimiter);
@@ -57,8 +56,10 @@ export async function POST(request: Request) {
     // Validation
     const firstName = String(name ?? "").trim();
     const lastName = String(surname ?? "").trim();
-    const emailNorm = String(email ?? "").trim().toLowerCase();
-    const phoneNorm = String(phone ?? "").trim();
+    const emailNorm = normalizeLeadEmail(email);
+    // E.164 with the country code; null when the number has none or is the wrong length for its country.
+    const phoneNorm = e164LeadPhone(phone) ?? "";
+    const phoneRaw = String(phone ?? "").trim();
     const preferred = String(preferredContact ?? "").trim().toLowerCase();
     // FAQ's Form (showQuestionField) submits the free-text field as "question",
     // not "message" — every other form on the site (FormFull, FormMinimalBlock)
@@ -72,13 +73,13 @@ export async function POST(request: Request) {
     const guide = parseGuideRequest(body, langNorm);
     const messageFinal = messageWithGuide(messageNorm, guide);
 
-    if (!firstName || !phoneNorm || !emailNorm) return blocked("missing_fields");
+    if (!firstName || !phoneRaw || !emailNorm) return blocked("missing_fields");
     if (preferred && !["phone", "whatsapp", "email"].includes(preferred)) return blocked("preferredContact");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return blocked("email");
+    if (!isValidLeadEmail(emailNorm)) return blocked("email");
     if (emailLimiter(emailNorm, 3, 60_000)) return blocked("rate_limit_email");
     if (firstName.length < 2 || firstName.length > 60) return blocked("name");
     if (lastName && (lastName.length < 2 || lastName.length > 60)) return blocked("surname");
-    if (phoneNorm.length < 7 || phoneNorm.length > 25) return blocked("phone");
+    if (!phoneNorm) return blocked("phone");
 
     // Qualification fields (all optional — backward compatible with the basic form)
     const BUDGETS = BUDGET_RANGES;
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
 
     // Link to a project when the form was submitted from / pre-selected a project
     let projectInterestId: string | null = null;
-    let source = leadSource(page);
+    let source: string = formLeadSource(page, false);
     const projectSlug = String(body.projectSlug ?? "").trim();
     if (projectSlug && ALLOWED_LANGS.has(langNorm)) {
       // Legacy Project row first (today's behaviour, byte-identical for
@@ -109,6 +110,10 @@ export async function POST(request: Request) {
       const interest = await resolveProjectInterest({ projectSlug, lang: langNorm, prisma });
       if (interest.projectInterestId) { projectInterestId = interest.projectInterestId; source = interest.source ?? source; }
     }
+    // A guide request is a reader asking for a PDF, not a buyer's enquiry
+    // (2026-10-19): it gets its own source whatever page it came from.
+    const isGuideLead = guide != null;
+    if (isGuideLead) source = formLeadSource(page, true);
 
     // Persist to Postgres
     const lead = await prisma.lead.create({
@@ -130,6 +135,8 @@ export async function POST(request: Request) {
         projectInterestId,
         languagePreference: ALLOWED_LANGS.has(langNorm) ? (langNorm as any) : null,
         pageSource: page,
+        guideTitle: guide?.title ?? null,
+        guideLanguage: guide?.lang ?? null,
         ...parseAttribution(body),
       },
     });
@@ -141,11 +148,17 @@ export async function POST(request: Request) {
     // Timeline entry (audit L1). This route does its own Telegram below, so skip it here.
     await recordInboundLead({ leadId: lead.id, source, email: emailNorm, name: fullName, phone: phoneNorm, page, notifyTelegram: false });
 
+    // Server copy of the browser's Lead (consent-gated, deduplicated by the
+    // form's metaEventId). Not awaited: it never throws and must not hold the reply.
+    void sendLeadToMeta(request, body, { email: emailNorm, phone: phoneNorm, page, contentName: source });
+
     // Top property matches (non-fatal, best-effort) — auto-match against the
     // lead's own data, no admin filters, so this is necessarily a rough first
     // pass (no bedroom/location signal exists on a fresh Lead — see matching.ts).
+    // Not for guide leads: without a budget or a property type the matcher has
+    // nothing to go on, and its top three would only be noise.
     let matchLines = "";
-    try {
+    if (!isGuideLead) try {
       const matches = await matchDevelopmentsForLead({ budgetMin, budgetMax, propertyTypeInterest });
       const top3 = matches.filter((m) => m.score > 0).slice(0, 3);
       if (top3.length) {
@@ -178,11 +191,12 @@ export async function POST(request: Request) {
       .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)
       .join("\n          ");
 
-    // Telegram notification (non-fatal)
+    // Telegram notification (non-fatal); the same text goes to the team
+    // WhatsApp group. Full contact details (chatPrivacy.ts).
     const langTag = telegramLanguageTag(ALLOWED_LANGS.has(langNorm) ? langNorm : null);
     const tg =
-      `<b>New Lead — Cyprus VIP Estates</b>\n\n` +
-      `<b>${escapeHtml(fullName || "-")}</b>\n` +
+      `<b>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</b>\n\n` +
+      `<b>${escapeHtml(fullName || leadRef(lead.id))}</b>\n` +
       `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
       (langTag ? `Language: ${escapeHtml(langTag)}\n` : "") +
@@ -204,11 +218,11 @@ export async function POST(request: Request) {
       await transporter.sendMail({
         from: process.env.EMAIL_USER!,
         to: process.env.EMAIL_TO || "office@cyprusvipestates.com",
-        subject: `New Lead: ${fullName}`,
-        text: `New lead ${fullName} — ${emailNorm} / ${phoneNorm}\n`
+        subject: `${isGuideLead ? "New Guide Lead" : "New Lead"}: ${fullName}`,
+        text: `${isGuideLead ? "New guide lead" : "New lead"} ${fullName} — ${emailNorm} / ${phoneNorm}\n`
           + qualification.map(([k, v]) => `${k}: ${v}`).join("\n")
           + `${qualification.length ? "\n" : ""}Page: ${page}\nCRM: ${crmLink}`,
-        html: `<h2>New Lead — Cyprus VIP Estates</h2>
+        html: `<h2>${isGuideLead ? "New Guide Lead" : "New Lead"} — Cyprus VIP Estates</h2>
           <p><b>Name:</b> ${escapeHtml(fullName)}</p>
           <p><b>Email:</b> ${escapeHtml(emailNorm)}</p>
           <p><b>Phone:</b> ${escapeHtml(phoneNorm)}</p>

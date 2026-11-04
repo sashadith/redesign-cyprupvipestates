@@ -51,6 +51,7 @@ import ParallaxBand from "@/app/preview-home/sections/ParallaxBand";
 import Form from "@/app/preview-home/sections/Form";
 import ConsultButton from "@/app/preview-home/sections/ConsultButton";
 import { homeStrings } from "@/app/preview-home/sections/homeI18n";
+import { stripBlurDataUrls } from "@/lib/stripBlur";
 
 export const revalidate = 1800;
 export function generateStaticParams() {
@@ -100,7 +101,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Home({ params }: Props) {
   const { lang } = params;
-  const homePage = await getHomePageByLang(lang);
+  // No homepage component renders a blur placeholder, but every dereferenced image carries its base64 lqip
+  // and all of them end up in the RSC payload inside the HTML (172 copies, ~91 KB). Dropped here.
+  const homePageRaw = await getHomePageByLang(lang);
+  const homePage = homePageRaw ? stripBlurDataUrls(homePageRaw) : homePageRaw;
   // The track-record band is built in code, not taken from the CMS block:
   // its figures are live (see siteStats) and must match the Partners and About
   // bands. The CMS heading is kept. he has no band today, so it keeps the CMS

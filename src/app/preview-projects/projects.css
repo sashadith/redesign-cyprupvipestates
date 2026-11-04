@@ -262,6 +262,8 @@
    right edge and grows to its longest option instead of truncating them. */
 .px__select--sort .pxsel__panel { inset-inline: auto 0; min-width: 100%; width: max-content; max-width: calc(100vw - 32px); }
 .px__select--sort .pxsel__value.is-placeholder { color: inherit; }
+.px__results-title { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.px__h1 { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, Georgia), Georgia, serif; font-weight: 400; font-size: clamp(1.5rem, 2.6vw, 2.25rem); line-height: 1.15; color: var(--ivory); text-wrap: balance; }
 .px__count { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); }
 .px__count strong { color: var(--ivory); font-weight: 700; font-size: 1.05rem; }
 .px__count-area { color: var(--accent); }

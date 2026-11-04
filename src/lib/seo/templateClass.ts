@@ -1,4 +1,5 @@
 import { nonDefaultLocalePattern } from "@/lib/locale";
+import { ALL_GUIDES_SLUGS } from "@/lib/articleSections";
 
 // Groups a URL into a coarse "template class" so per-page signals (like Core
 // Web Vitals) can be reported once per SHARED TEMPLATE rather than once per
@@ -12,7 +13,8 @@ const L = nonDefaultLocalePattern();
 const HOME = new RegExp(`^/(${L})?$`);
 const LISTING = new RegExp(`^(?:/(${L}))?/projects$`);
 const PROJECT = new RegExp(`^(?:/(?:${L}))?/projects/([^/]+)$`);
-const BLOG = new RegExp(`^(?:/(${L}))?/blog/[^/]+$`);
+// A blog post and a guide article are one template: the same article page (see articleSections.ts).
+const BLOG = new RegExp(`^(?:/(${L}))?/(?:blog|${ALL_GUIDES_SLUGS.join("|")})/[^/]+$`);
 
 const TEMPLATE_CLASS_LABEL: Record<TemplateClass, string> = {
   homepage: "the homepage",

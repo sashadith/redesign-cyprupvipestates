@@ -32,7 +32,7 @@ export default function FaqMotion() {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.from(".faqp__eyebrow", { y: 18, autoAlpha: 0, duration: 0.6 }, 0);
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         tl.from(split.lines, { y: 40, autoAlpha: 0, duration: 0.8, stagger: 0.1 }, 0.1);
       }

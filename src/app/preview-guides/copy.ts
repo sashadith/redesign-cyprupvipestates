@@ -7,6 +7,8 @@ export type GuidesPageCopy = {
   heroTitle: [string, string, string];
   heroLead: string;
   heroCta: string;
+  /** Second hero button: jumps to the free PDF guides block. */
+  heroCta2: string;
   listEyebrow: string;
   listTitle: string;
   stepsEyebrow: string;
@@ -15,20 +17,21 @@ export type GuidesPageCopy = {
   note: string;
   ctaButton: string;
   breadcrumbHome: string;
+  /** The page as it was before it listed guide articles: shown while a language has no guide articles yet. */
+  pdfOnly: Pick<GuidesPageCopy, "metaTitle" | "metaDescription" | "heroEyebrow" | "heroTitle" | "heroLead" | "heroCta" | "listEyebrow" | "listTitle">;
 };
 
 const COPY: Record<GuideLang, GuidesPageCopy> = {
   en: {
-    metaTitle: "Free Guides on Buying Property in Cyprus (PDF) | Cyprus VIP Estates",
-    metaDescription:
-      "Four free PDF guides: the true cost of buying, the step-by-step buying process with a due-diligence checklist, rent or buy, and permanent residence through property. Figures as of October 2026.",
-    heroEyebrow: "Free guides",
-    heroTitle: ["Four free guides to ", "buying property", " in Cyprus"],
-    heroLead:
-      "Costs, the buying process, rent or buy, and residence rules, each in one document. Written from our published articles, with worked examples and figures as of October 2026.",
-    heroCta: "Choose a guide",
-    listEyebrow: "The guides",
-    listTitle: "Pick the question you need answered",
+    metaTitle: "Cyprus Guides: Property, Tax, Residence | Cyprus VIP Estates",
+    metaDescription: "Guides to buying property in Cyprus, taxes, residence permits and everyday life, with worked examples and dated figures, plus four free PDF guides.",
+    heroEyebrow: "Guides",
+    heroTitle: ["Guides to ", "buying property and living", " in Cyprus"],
+    heroLead: "Step-by-step guides with worked examples and dated figures, from the cost of buying to taxes, residence permits and everyday life. Four of them are also available as free PDF downloads.",
+    heroCta: "Browse all guides",
+    heroCta2: "Free PDF guides",
+    listEyebrow: "Free PDF guides",
+    listTitle: "Four guides to download",
     stepsEyebrow: "How it works",
     stepsTitle: "From the form to the PDF in a minute",
     steps: [
@@ -39,18 +42,27 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
     note: "General information as of October 2026, not legal or tax advice. Check every figure with a licensed lawyer or tax adviser before you commit.",
     ctaButton: "Ask for a consultation",
     breadcrumbHome: "Home",
+    pdfOnly: {
+      metaTitle: "Free Guides on Buying Property in Cyprus (PDF) | Cyprus VIP Estates",
+      metaDescription: "Four free PDF guides: the true cost of buying, the step-by-step buying process with a due-diligence checklist, rent or buy, and permanent residence through property. Figures as of October 2026.",
+      heroEyebrow: "Free guides",
+      heroTitle: ["Four free guides to ", "buying property", " in Cyprus"],
+      heroLead: "Costs, the buying process, rent or buy, and residence rules, each in one document. Written from our published articles, with worked examples and figures as of October 2026.",
+      heroCta: "Choose a guide",
+      listEyebrow: "The guides",
+      listTitle: "Pick the question you need answered",
+    },
   },
   de: {
-    metaTitle: "Kostenlose Ratgeber zum Immobilienkauf auf Zypern (PDF) | Cyprus VIP Estates",
-    metaDescription:
-      "Vier kostenlose PDF-Ratgeber: die wahren Kosten des Kaufs, der Kaufablauf Schritt für Schritt mit Prüfliste, Mieten oder Kaufen und Daueraufenthalt durch Immobilienkauf. Stand Oktober 2026.",
-    heroEyebrow: "Kostenlose Ratgeber",
-    heroTitle: ["Vier kostenlose Ratgeber zum ", "Immobilienkauf", " auf Zypern"],
-    heroLead:
-      "Kosten, Kaufablauf, Mieten oder Kaufen und Aufenthaltsrecht, jeweils in einem Dokument. Erarbeitet aus unseren veröffentlichten Artikeln, mit Rechenbeispielen und Zahlen mit Stand Oktober 2026.",
-    heroCta: "Ratgeber auswählen",
-    listEyebrow: "Die Ratgeber",
-    listTitle: "Wählen Sie die Frage, die Sie klären möchten",
+    metaTitle: "Zypern-Ratgeber: Immobilien, Steuern, Aufenthalt | Cyprus VIP Estates",
+    metaDescription: "Ratgeber zu Immobilienkauf, Steuern, Aufenthaltstiteln und Alltag auf Zypern, mit Rechenbeispielen und datierten Zahlen, dazu vier kostenlose PDF-Ratgeber.",
+    heroEyebrow: "Ratgeber",
+    heroTitle: ["Ratgeber zu ", "Immobilienkauf und Leben", " auf Zypern"],
+    heroLead: "Ratgeber Schritt für Schritt, mit Rechenbeispielen und datierten Zahlen: von den Kaufkosten über Steuern und Aufenthaltstitel bis zum Alltag. Vier davon gibt es zusätzlich als kostenlosen PDF-Download.",
+    heroCta: "Alle Ratgeber ansehen",
+    heroCta2: "Kostenlose PDF-Ratgeber",
+    listEyebrow: "Kostenlose PDF-Ratgeber",
+    listTitle: "Vier Ratgeber zum Herunterladen",
     stepsEyebrow: "So funktioniert es",
     stepsTitle: "Vom Formular zum PDF in einer Minute",
     steps: [
@@ -61,18 +73,27 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
     note: "Allgemeine Informationen mit Stand Oktober 2026, keine Rechts- oder Steuerberatung. Prüfen Sie jede Zahl vor dem Kauf mit einem zugelassenen Rechtsanwalt oder Steuerberater.",
     ctaButton: "Beratung anfragen",
     breadcrumbHome: "Startseite",
+    pdfOnly: {
+      metaTitle: "Kostenlose Ratgeber zum Immobilienkauf auf Zypern (PDF) | Cyprus VIP Estates",
+      metaDescription: "Vier kostenlose PDF-Ratgeber: die wahren Kosten des Kaufs, der Kaufablauf Schritt für Schritt mit Prüfliste, Mieten oder Kaufen und Daueraufenthalt durch Immobilienkauf. Stand Oktober 2026.",
+      heroEyebrow: "Kostenlose Ratgeber",
+      heroTitle: ["Vier kostenlose Ratgeber zum ", "Immobilienkauf", " auf Zypern"],
+      heroLead: "Kosten, Kaufablauf, Mieten oder Kaufen und Aufenthaltsrecht, jeweils in einem Dokument. Erarbeitet aus unseren veröffentlichten Artikeln, mit Rechenbeispielen und Zahlen mit Stand Oktober 2026.",
+      heroCta: "Ratgeber auswählen",
+      listEyebrow: "Die Ratgeber",
+      listTitle: "Wählen Sie die Frage, die Sie klären möchten",
+    },
   },
   pl: {
-    metaTitle: "Bezpłatne przewodniki o zakupie nieruchomości na Cyprze (PDF) | Cyprus VIP Estates",
-    metaDescription:
-      "Cztery bezpłatne przewodniki PDF: prawdziwy koszt zakupu, proces zakupu krok po kroku z listą kontrolną, wynajem czy zakup oraz pobyt stały przez zakup nieruchomości. Stan na październik 2026.",
-    heroEyebrow: "Bezpłatne przewodniki",
-    heroTitle: ["Cztery bezpłatne przewodniki po ", "zakupie nieruchomości", " na Cyprze"],
-    heroLead:
-      "Koszty, proces zakupu, wynajem czy zakup oraz zasady pobytu, każdy temat w jednym dokumencie. Opracowane na podstawie naszych artykułów, z przykładami obliczeń i liczbami według stanu na październik 2026.",
-    heroCta: "Wybierz przewodnik",
-    listEyebrow: "Przewodniki",
-    listTitle: "Wybierz pytanie, na które szukasz odpowiedzi",
+    metaTitle: "Przewodniki po Cyprze: nieruchomości, podatki, pobyt | Cyprus VIP Estates",
+    metaDescription: "Przewodniki o zakupie nieruchomości, podatkach, pozwoleniach na pobyt i życiu na Cyprze, z przykładami obliczeń i datowanymi liczbami, oraz cztery bezpłatne przewodniki PDF.",
+    heroEyebrow: "Przewodniki",
+    heroTitle: ["Przewodniki o ", "zakupie nieruchomości i życiu", " na Cyprze"],
+    heroLead: "Przewodniki krok po kroku z przykładami obliczeń i datowanymi liczbami: od kosztów zakupu przez podatki i pozwolenia na pobyt po codzienne życie. Cztery z nich dostępne są także jako bezpłatne pliki PDF.",
+    heroCta: "Zobacz wszystkie przewodniki",
+    heroCta2: "Bezpłatne przewodniki PDF",
+    listEyebrow: "Bezpłatne przewodniki PDF",
+    listTitle: "Cztery przewodniki do pobrania",
     stepsEyebrow: "Jak to działa",
     stepsTitle: "Od formularza do PDF w minutę",
     steps: [
@@ -83,31 +104,52 @@ const COPY: Record<GuideLang, GuidesPageCopy> = {
     note: "Informacje ogólne według stanu na październik 2026, nie stanowią porady prawnej ani podatkowej. Przed decyzją sprawdź każdą liczbę z licencjonowanym prawnikiem lub doradcą podatkowym.",
     ctaButton: "Zamów konsultację",
     breadcrumbHome: "Strona główna",
+    pdfOnly: {
+      metaTitle: "Bezpłatne przewodniki o zakupie nieruchomości na Cyprze (PDF) | Cyprus VIP Estates",
+      metaDescription: "Cztery bezpłatne przewodniki PDF: prawdziwy koszt zakupu, proces zakupu krok po kroku z listą kontrolną, wynajem czy zakup oraz pobyt stały przez zakup nieruchomości. Stan na październik 2026.",
+      heroEyebrow: "Bezpłatne przewodniki",
+      heroTitle: ["Cztery bezpłatne przewodniki po ", "zakupie nieruchomości", " na Cyprze"],
+      heroLead: "Koszty, proces zakupu, wynajem czy zakup oraz zasady pobytu, każdy temat w jednym dokumencie. Opracowane na podstawie naszych artykułów, z przykładami obliczeń i liczbami według stanu na październik 2026.",
+      heroCta: "Wybierz przewodnik",
+      listEyebrow: "Przewodniki",
+      listTitle: "Wybierz pytanie, na które szukasz odpowiedzi",
+    },
   },
   ru: {
-    metaTitle: "Бесплатные гайды по покупке недвижимости на Кипре (PDF) | Cyprus VIP Estates",
-    metaDescription:
-      "Четыре бесплатных PDF-гайда: реальная стоимость покупки, пошаговый процесс покупки с чек-листом проверки, аренда или покупка и ПМЖ через покупку недвижимости. Данные на октябрь 2026.",
-    heroEyebrow: "Бесплатные гайды",
-    heroTitle: ["Четыре бесплатных гайда по ", "покупке недвижимости", " на Кипре"],
-    heroLead:
-      "Расходы, процесс покупки, аренда или покупка и правила ПМЖ, каждая тема в одном документе. Составлены по нашим опубликованным статьям, с примерами расчётов и цифрами на октябрь 2026 года.",
-    heroCta: "Выбрать гайд",
-    listEyebrow: "Гайды",
-    listTitle: "Выберите вопрос, на который нужен ответ",
+    metaTitle: "Гиды по Кипру: недвижимость, налоги, ВНЖ | Cyprus VIP Estates",
+    metaDescription: "Гиды по покупке недвижимости на Кипре, налогам, видам на жительство и жизни, с расчётами на примерах и датированными цифрами, плюс четыре бесплатных PDF-гида.",
+    heroEyebrow: "Гиды",
+    heroTitle: ["Гиды по ", "покупке недвижимости и жизни", " на Кипре"],
+    heroLead: "Пошаговые гиды с расчётами на примерах и датированными цифрами: от стоимости покупки до налогов, видов на жительство и повседневной жизни. Четыре из них можно скачать бесплатно в PDF.",
+    heroCta: "Все гиды",
+    heroCta2: "Бесплатные PDF-гиды",
+    listEyebrow: "Бесплатные PDF-гиды",
+    listTitle: "Четыре гида для скачивания",
     stepsEyebrow: "Как это работает",
     stepsTitle: "От формы до PDF за минуту",
     steps: [
-      { title: "Выберите гайд", text: "Каждый посвящён одному решению: таблицы, пример расчёта и чек-лист." },
+      { title: "Выберите гид", text: "Каждый посвящён одному решению: таблицы, пример расчёта и чек-лист." },
       { title: "Оставьте данные", text: "Имя, телефон и email, та же короткая форма, что и везде на сайте." },
       { title: "Скачайте сразу", text: "PDF открывается сразу, а копия приходит на вашу почту. Ссылка действует 30 дней." },
     ],
     note: "Общая информация на октябрь 2026 года, не юридическая и не налоговая консультация. Перед решением проверьте каждую цифру у лицензированного юриста или налогового консультанта.",
     ctaButton: "Запросить консультацию",
     breadcrumbHome: "Главная",
+    pdfOnly: {
+      metaTitle: "Бесплатные гайды по покупке недвижимости на Кипре (PDF) | Cyprus VIP Estates",
+      metaDescription: "Четыре бесплатных PDF-гайда: реальная стоимость покупки, пошаговый процесс покупки с чек-листом проверки, аренда или покупка и ПМЖ через покупку недвижимости. Данные на октябрь 2026.",
+      heroEyebrow: "Бесплатные гайды",
+      heroTitle: ["Четыре бесплатных гайда по ", "покупке недвижимости", " на Кипре"],
+      heroLead: "Расходы, процесс покупки, аренда или покупка и правила ПМЖ, каждая тема в одном документе. Составлены по нашим опубликованным статьям, с примерами расчётов и цифрами на октябрь 2026 года.",
+      heroCta: "Выбрать гайд",
+      listEyebrow: "Гайды",
+      listTitle: "Выберите вопрос, на который нужен ответ",
+    },
   },
 };
 
-export function guidesPageCopy(lang: GuideLang): GuidesPageCopy {
-  return COPY[lang];
+/** The page copy; `withArticles` false (no guide article in this language yet) swaps in the free-PDF-only hero and list titles. */
+export function guidesPageCopy(lang: GuideLang, withArticles = true): GuidesPageCopy {
+  const c = COPY[lang];
+  return withArticles ? c : { ...c, ...c.pdfOnly };
 }

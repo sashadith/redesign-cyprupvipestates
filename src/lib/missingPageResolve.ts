@@ -17,12 +17,16 @@
 // Scanner junk (wp-admin, *.php, .env, very deep paths) is not a content URL and
 // keeps its 404: sending every probe to the homepage would only create soft-404s.
 
+import { articleSegments } from "@/lib/articleSections";
+
 export type MissingKind = "blog" | "page" | "project" | "developer" | "caseStudy";
 
 export interface SlugRow {
   language: string;
   slug: string;
   translationGroupId: string | null;
+  /** Blog rows only: the category's translationGroupId, which decides blog vs guides URL (articleSections.ts). */
+  categoryGroupId?: string | null;
 }
 
 export interface MissingRepo {
@@ -72,6 +76,12 @@ export function looksLikeContentPath(segments: string[]): boolean {
   if (segments.length < 1 || segments.length > 4) return false;
   return segments.every((s) => s.length > 0 && s.length <= 140 && s[0] !== "-" && !BAD_SEGMENT.test(s) && !SCANNER_SEGMENTS.has(s.toLowerCase()));
 }
+
+/* Hebrew pages are authored on their own (English slugs, no translation group), so a slug that exists ONLY in
+   Hebrew would otherwise win for every other locale: /ru/paphos, /de/villas-cyprus and /de/limassol/new-projects all
+   redirected to a Hebrew page (2026-10-23, found through the Search Console "Page with redirect" report). A
+   non-Hebrew visitor is never sent to a Hebrew page; Hebrew requests still resolve normally. */
+const reachableFrom = (lang: string) => (r: SlugRow) => r.language !== "he" || lang === "he";
 
 const prefer = (rows: SlugRow[], isPublic: (l: string) => boolean): SlugRow | null => {
   const ok = rows.filter((r) => isPublic(r.language));
@@ -125,26 +135,30 @@ async function resolveRaw(
   const ok = (t: string | null | undefined): string | null => (t && t !== self ? t : null);
 
   if (kind === "blog") {
-    const rows = await repo.blogsBySlug(segments[0]);
+    const rows = (await repo.blogsBySlug(segments[0])).filter(reachableFrom(lang));
     const row = prefer(rows, env.isPublicLocale);
     if (row) {
       if (row.translationGroupId && env.isPublicLocale(lang)) {
         const sib = await repo.blogSibling(row.translationGroupId, lang);
-        const t = sib && ok(env.href(lang, ["blog", sib.slug]));
+        const t = sib && ok(env.href(lang, articleSegments(lang, sib.slug, sib.categoryGroupId)));
         if (t) return t;
       }
       if (row.translationGroupId && lang !== "en") {
         const en = await repo.blogSibling(row.translationGroupId, "en"); // default language beats the source language
-        const t = en && ok(env.href("en", ["blog", en.slug]));
+        const t = en && ok(env.href("en", articleSegments("en", en.slug, en.categoryGroupId)));
         if (t) return t;
       }
-      const own = ok(env.href(row.language, ["blog", row.slug]));
+      const own = ok(env.href(row.language, articleSegments(row.language, row.slug, row.categoryGroupId)));
       if (own) return own;
     }
     return ok(env.href(lang, ["blog"]));
   }
 
   if (kind === "page") {
+    // Middleware already 308s unknown locales; what still lands here with a non-locale first segment is
+    // /api/<missing>, /.well-known/..., /uploads/... — never content, and the language-filtered queries
+    // below would fail on the enum (2026-11-03: ~30 logged "lookup failed" a day). Keep the 404.
+    if (!env.isPublicLocale(lang)) return null;
     const full = segments.join("/");
     const flat = await repo.pagesEndingWith(lang, segments[segments.length - 1]);
     const child = flat.find((r) => r.slug !== full);
@@ -165,7 +179,7 @@ async function resolveRaw(
       }
       return ok(env.href(row.language, row.slug.split("/")));
     };
-    const row = prefer((await repo.pagesBySlug(full)).filter((r) => r.language !== lang), env.isPublicLocale);
+    const row = prefer((await repo.pagesBySlug(full)).filter((r) => r.language !== lang && reachableFrom(lang)(r)), env.isPublicLocale);
     if (row) {
       const t = await viaRow(row);
       if (t) return t;
@@ -178,7 +192,7 @@ async function resolveRaw(
       const same = leaf.find((r) => r.language === lang);
       const t = same ? ok(env.href(lang, last.split("/"))) : null;
       if (t) return t;
-      const other = prefer(leaf.filter((r) => r.language !== lang), env.isPublicLocale);
+      const other = prefer(leaf.filter((r) => r.language !== lang && reachableFrom(lang)(r)), env.isPublicLocale);
       const t2 = other && (await viaRow(other));
       if (t2) return t2;
     }

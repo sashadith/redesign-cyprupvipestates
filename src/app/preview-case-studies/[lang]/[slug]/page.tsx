@@ -251,7 +251,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
                   const img = safeUrl(p.previewImage);
                   const pslug = typeof p.slug === "string" ? p.slug : p.slug?.[lang]?.current ?? (Object.values(p.slug ?? {})[0] as any)?.current ?? "";
                   return (
-                    <a className="pcard" href={localizedHref(lang, ["projects", pslug])} key={p._id}>
+                    <a className="pcard" href={p.href ?? localizedHref(lang, ["projects", pslug])} key={p._id}>
                       <div className="pcard__media">{img && <img src={img} alt={p.title} loading="lazy" />}</div>
                       <div className="pcard__shade" />
                       {p.isSold && <span className="pcard__sold">{t.soldBadge}</span>}

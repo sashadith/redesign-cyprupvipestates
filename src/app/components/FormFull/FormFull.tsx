@@ -10,6 +10,8 @@ import {
   FormikHelpers,
   FormikProps,
 } from "formik";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
 import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
@@ -21,6 +23,8 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { formFullCopy } from "./FormFull.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 export type FormData = {
   name: string;
@@ -121,12 +125,14 @@ const FormFull: FC<ContactFormProps> = ({
           dataForm.validationNameRequired,
       ),
 
-    phone: Yup.string().required(`${dataForm.validationPhoneRequired}`),
+    phone: Yup.string().required(`${dataForm.validationPhoneRequired}`)
+      .test("phone-intl", phoneInvalidText(lang) ?? `${dataForm.validationPhoneRequired}`, (v) => !v || isValidLeadPhone(v)),
 
     email: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
       .email(`${dataForm.validationEmailInvalid}`)
-      .required(`${dataForm.validationEmailRequired}`),
+      .required(`${dataForm.validationEmailRequired}`)
+      .test("email-valid", emailInvalidText(lang) ?? `${dataForm.validationEmailInvalid}`, (v) => !v || isValidLeadEmail(v)),
 
     message: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
@@ -152,6 +158,10 @@ const FormFull: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -159,6 +169,7 @@ const FormFull: FC<ContactFormProps> = ({
         currentPage,
         lang,
         ...getAttribution(),
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       if (
@@ -171,7 +182,7 @@ const FormFull: FC<ContactFormProps> = ({
             form_name: "form_full",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: metaEventId });
         }
         if (
           typeof window !== "undefined" &&

@@ -64,6 +64,6 @@ test("the inbound poller stores the reply-all list on EMAIL_IN, excluding the op
   // the source; the rules themselves are tested above.
   const { readFileSync } = await import("node:fs");
   const src = readFileSync("src/lib/emailInbound/processInbound.ts", "utf8");
-  assert.match(src, /replyAllRecipients\(parsed, \[settings\.fromAddress, leadEmail\], canonicalizeEmail\)/);
+  assert.match(src, /replyAllRecipients\(parsed, \[ctx\.ownFromAddress, leadEmail\], canonicalizeEmail\)/);
   assert.match(src, /\.\.\.\(replyCc\.length \? \{ cc: replyCc \} : \{\}\)/);
 });

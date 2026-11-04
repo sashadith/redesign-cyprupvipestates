@@ -1,0 +1,14 @@
+{
+  "_source": "Mariam Venizelou (Senior Business Development, Marinakis Property Developers) to office@cyprusvipestates.com, 2026-10-30 08:11 Nicosia, Re: Inquiry Regarding Property Sales Collaboration. Her exact words: 'Marigate: under construction, delivery April 2027 / PH-13: under construction, delivery June 2027 / Serene Springs: under construction, delivery October 2027 / Olivea Park: off plan, waiting for permit / Eden Valley: off plan, delivery per villa 18 months'.",
+  "_mapping": "Her five names cover our six projects. PH-13 = 13 Pearl House (Pearl House 13; also the only one left by elimination). 'Olivea Park' is the Olivéa development, which we carry as two projects, Olivéa Villas and Olivéa Suites.",
+  "_quarters": "April 2027 → Q2 2027, June 2027 → Q2 2027, October 2027 → Q4 2027. The quarter is the operator's chosen format (2026-10-30) and is also what completionDate.ts reads best — 49 of the 82 developments carrying a completion value already use it.",
+  "_left_empty": "Olivéa Villas, Olivéa Suites and Eden Valley get NO date. 'Waiting for permit' is not a date, and 'delivery per villa 18 months' does not say 18 months from what — from signing, or from the start of that villa's own build. A quarter counted from today would state something the developer did not. Ask Mariam before filling these.",
+  "_stage_conflict": "Her mail calls Olivea Park and Eden Valley OFF PLAN. Our override has Olivéa Villas and Olivéa Suites as 'Under Construction' on live pages (Eden Valley already reads Off Plan). Not touched here — this file only sets delivery — but it is a factual contradiction on two published pages.",
+  "feedKeyPrefix": "manual:marinakis-",
+  "source": "Mariam Venizelou (Marinakis), e-mail 2026-10-30",
+  "projects": {
+    "marigate-larnaca": "Q2 2027",
+    "13-pearl-house": "Q2 2027",
+    "serene-springs": "Q4 2027"
+  }
+}

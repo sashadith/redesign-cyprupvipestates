@@ -61,7 +61,7 @@ const About: FC<Props> = ({ aboutBlock, lang = "en" }) => {
               return (
                 <li className="about__bullet" key={b._key}>
                   <span className="about__medallion">
-                    {icon && <img src={icon} alt="" />}
+                    {icon && <img src={icon} alt="" loading="lazy" decoding="async" />}
                   </span>
                   <span className="about__bullet-text">{b.description}</span>
                 </li>

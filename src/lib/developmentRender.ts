@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { resolveGalleryOrder } from "@/lib/developmentHero";
 import { prisma } from "@/lib/prisma";
 import type { Development, DevelopmentOverride, DevelopmentUnit } from "@prisma/client";
 import type { ProjectVM } from "@/app/preview-project/feeds";
@@ -6,6 +7,7 @@ import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
 import { resolveDevelopmentPrice, resolveDevelopmentLocation, resolveRelativeCompletion } from "@/lib/developmentCard";
 import { developmentCopy } from "@/lib/developmentCopy";
+import { parseExtraLinks } from "@/lib/developmentExtraLinks";
 import { localizedHref, isLocale } from "@/lib/locale";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
@@ -57,10 +59,9 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
   const district = ov?.district || d.district || "";
   const town = ov?.town || d.town || "";
   const area = ov?.area || d.area || "";
-  // Admin-managed gallery (reordered/uploaded) wins over the feed gallery.
-  const gallery = arr<string>(ov?.gallery).length ? arr<string>(ov?.gallery) : arr<string>(d.gallery);
-  const main = ov?.mainImage || null;
-  const finalGallery = main ? [main, ...gallery.filter((u) => u !== main)] : gallery;
+  // Admin hero → admin-managed gallery → feed gallery: the one rule the page
+  // and the MCP connector share (src/lib/developmentHero.ts, 2026-10-19).
+  const finalGallery = resolveGalleryOrder({ gallery: d.gallery, override: ov ? { mainImage: ov.mainImage, gallery: ov.gallery } : null });
   const amenities = Array.from(new Set([...arr<string>(ov?.amenities), ...arr<string>(d.amenities)]));
 
   const units: UnitVM[] = d.units.map((u) => ({
@@ -109,6 +110,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     promoBlocks: (({ en: ov?.promoBlocksEN, de: ov?.promoBlocksDE, pl: ov?.promoBlocksPL, ru: ov?.promoBlocksRU, he: ov?.promoBlocksHE } as Record<string, unknown>)[lang] || ov?.promoBlocksEN || []) as any[],
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,
+    extraLinks: parseExtraLinks(ov?.extraLinks),
     vatApplies: ov?.vatApplies ?? null,
     center: (ov?.latitude ?? d.latitude) != null && (ov?.longitude ?? d.longitude) != null
       ? { lat: (ov?.latitude ?? d.latitude)!, lng: (ov?.longitude ?? d.longitude)! }

@@ -10,6 +10,9 @@ import Form from "@/app/preview-home/sections/Form";
 
 import HeroMedia from "@/app/preview-project/HeroMedia";
 import Benefits from "@/app/preview-project/Benefits";
+import ExtraLinks from "@/app/preview-project/ExtraLinks";
+import { atSize } from "@/app/preview-project/imageSize";
+import { isDistanceClaim } from "@/lib/distanceClaims";
 import areaLibrary from "@/app/preview-project/areas.json";
 import PlanGrid from "@/app/preview-project/PlanGrid";
 import PropertyMapBlock from "@/app/preview-project/PropertyMapBlock";
@@ -22,13 +25,14 @@ import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 import { computeAvailability, listedUnits, resolveAvailabilityStatusLabel, resolveStageLabel } from "@/lib/developmentAvailability";
 import { renderInsightsBlock } from "@/app/preview-insights/insightsBlocks";
+import { parseExtraLinks } from "@/lib/developmentExtraLinks";
 import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 import type { GoldPhrase } from "@/lib/developmentCopy";
 import { fmtPrice, bidiIsolate, ltrIsolate, localeDir } from "@/lib/locale";
 import { hePlaceList } from "@/lib/hePlaces";
-import { heFeedLabel } from "@/lib/heFeedVocab";
+import { typeLabel } from "@/lib/typeLabels";
 import Bdi from "@/app/components/Bdi";
 
 // Shared render body for both the SEO-facing slug route (the Development
@@ -125,12 +129,14 @@ export default async function ProjectPageBody({
   const types = resolveDevelopmentType(p.category, p.units)
     .split(" · ")
     .filter(Boolean)
-    .map((x) => (lang === "he" ? heFeedLabel(x) : x));
+    .map((x) => typeLabel(x, lang));
   // Same story for the place string ("Peyia, Paphos"): raw feed text, shown
   // twice (hero eyebrow + facts panel). Transliterated per he-glossary.md §1
   // for `he`, unknown parts kept Latin and bidi-isolated.
   const locationLabel = lang === "he" ? hePlaceList(p.location) : p.location;
-  const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter(Boolean);
+  // Distance claims ("300 meters from the beach", "5 min to A6 Highway") are left
+  // to the Distances strip above the map — see src/lib/distanceClaims.ts.
+  const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter((b) => b && !isDistanceClaim(b));
   // Neighbourhood text: prefer the APPROVED area description from the DB in the
   // page's language (English fallback); otherwise the static demo library.
   const slugOfArea = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
@@ -168,6 +174,9 @@ export default async function ProjectPageBody({
      with them (src/lib/promoDistances.ts, 2026-10-04); git history has it if the
      duplication ever becomes a problem again. */
   const promoBlocks = Array.isArray(p.promoBlocks) ? p.promoBlocks : [];
+  // Already parsed by developmentRender; the guard is for the live-feed
+  // adapters and the preview page, which never set it.
+  const extraLinks = parseExtraLinks(p.extraLinks);
   // Trust strip figure — the shared site figure (src/lib/siteStats.ts), i.e.
   // exactly what /projects lists in this locale, so it matches the homepage and
   // About bands. Was a raw count of published developments until 2026-10-06:
@@ -210,7 +219,8 @@ export default async function ProjectPageBody({
     ...(p.extraFacts ?? []).filter(
       (f) =>
         !/^\s*total\s+units\s*$/i.test(f.label) &&
-        !(p.dev === "leptos" && LEPTOS_FEED_DISTANCES.has(f.label.trim().toLowerCase())),
+        !(p.dev === "leptos" && LEPTOS_FEED_DISTANCES.has(f.label.trim().toLowerCase())) &&
+        !isDistanceClaim(`${f.label}: ${f.value}`),
     ),
   ].filter(Boolean) as { label: string; value: string }[];
 
@@ -353,6 +363,16 @@ export default async function ProjectPageBody({
                 ))}
               </>
             )}
+            {/* Admin-attached links (project video, 360° tour, walkthrough,
+                project camera) — under the description, where a reader who has
+                just read what the project is wants to see it. Outside the
+                `p.description &&` block above on purpose: the buttons are
+                independent of whether anyone has written copy yet.
+
+                rel="nofollow": these point at the developer's own site, which
+                the operator allowed (2026-10-30), but our link equity does not
+                follow them there. */}
+            <ExtraLinks links={extraLinks} lang={lang} title={p.publicName} poster={p.gallery[0] ? atSize(p.gallery[0], "large") : undefined} />
           </div>
         </section>
 

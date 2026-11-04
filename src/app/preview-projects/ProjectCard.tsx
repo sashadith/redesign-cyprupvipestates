@@ -14,7 +14,8 @@ import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { fmtPrice, ltrIsolate } from "@/lib/locale";
 import { hePlaceList } from "@/lib/hePlaces";
-import { heFeedLabel, heBedrooms } from "@/lib/heFeedVocab";
+import { heBedrooms } from "@/lib/heFeedVocab";
+import { typeLabelList } from "@/lib/typeLabels";
 import Bdi from "@/app/components/Bdi";
 
 export type Distances = {
@@ -113,7 +114,8 @@ export function ProjectCard({
   // compound in one shot never matches and silently falls through to the
   // untranslated English text. Split, translate each part, rejoin — same
   // treatment ProjectPageBody.tsx already gives the identical value.
-  const typeLabel = isHe ? c.type.split(" · ").filter(Boolean).map(heFeedLabel).join(" · ") : c.type;
+  // en keeps the raw word; de/pl/ru/he go through the shared type dictionary.
+  const typeLabel = typeLabelList(c.type, locale);
   // he needs the whole phrase (the numeral for one is written out and
   // postposed, a studio takes no unit word at all), so it replaces the
   // "{value} {bedUnit}" pattern rather than just the unit word.

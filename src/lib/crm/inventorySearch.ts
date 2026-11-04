@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
 import { resolveRelativeCompletion, completionSortKey } from "@/lib/completionDate";
 import { parseBeds, normalizeType, rangesOverlap, locationMatch } from "@/lib/crm/matching";
+import { heroImageUrl, absoluteUrls } from "@/lib/developmentHero";
 
 /* Catalogue search without a lead (MCP connector Phase 3). Filter + sort,
    never a score — scores only mean something relative to a lead, and
@@ -37,8 +38,8 @@ export type SearchUnit = { type: string | null; status: string | null; price: nu
 export type SearchDevelopment = {
   id: string; publicName: string; developerName: string; developer: string | null; category: string | null; stage: string | null; status: string | null;
   completion: string | null; district: string | null; town: string | null; area: string | null; priceFrom: number | null; priceTo: number | null;
-  currency: string | null; amenities: unknown; slug: string | null; publishStatus: string; syncedAt: Date | null; updatedAt: Date; units: SearchUnit[];
-  override: { alias: string | null; district: string | null; town: string | null; area: string | null; completion: string | null; stage: string | null; amenities: unknown } | null;
+  currency: string | null; amenities: unknown; gallery?: unknown; slug: string | null; publishStatus: string; syncedAt: Date | null; updatedAt: Date; units: SearchUnit[];
+  override: { alias: string | null; district: string | null; town: string | null; area: string | null; completion: string | null; stage: string | null; amenities: unknown; mainImage?: string | null; gallery?: unknown } | null;
 };
 
 export type SearchRow = {
@@ -48,6 +49,8 @@ export type SearchRow = {
   availability: { total: number; available: number; soldOut: boolean };
   matchingUnits: { count: number; minPrice: number | null; maxPrice: number | null; types: string[]; priceFallback?: true };
   publicUrl: { en: string; de: string; pl: string; ru: string; he: string } | null;
+  publicUrlAbsolute: { en: string; de: string; pl: string; ru: string; he: string } | null;
+  heroImageUrl: string | null; // the page's hero at its largest hosted tier; null unless published
   lastSyncedAt: Date | null;
 };
 
@@ -196,6 +199,8 @@ export function filterAndRank(rows: SearchDevelopment[], filters: SearchFilters,
         ...(priceFallback ? { priceFallback } : {}),
       },
       publicUrl: publicUrlFor(d.slug, d.publishStatus),
+      publicUrlAbsolute: absoluteUrls(publicUrlFor(d.slug, d.publishStatus)),
+      heroImageUrl: heroImageUrl(d),
       lastSyncedAt: d.syncedAt,
     });
   }
@@ -236,7 +241,8 @@ export const SEARCH_DEVELOPMENT_SELECT = {
   district: true, town: true, area: true, priceFrom: true, priceTo: true, currency: true, amenities: true, slug: true, publishStatus: true,
   syncedAt: true, updatedAt: true,
   units: { select: { type: true, status: true, price: true, beds: true, amenities: true } },
-  override: { select: { alias: true, district: true, town: true, area: true, completion: true, stage: true, amenities: true } },
+  gallery: true, // read for the hero only — the row never carries the gallery
+  override: { select: { alias: true, district: true, town: true, area: true, completion: true, stage: true, amenities: true, mainImage: true, gallery: true } },
 } as const;
 
 export async function searchDevelopments(filters: SearchFilters): Promise<SearchResult> {

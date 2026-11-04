@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
 import type { ActionItem, Category } from "@/lib/actionCenter/types";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +19,8 @@ import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
 import { flagHyperactiveSessions } from "@/lib/analyticsBotDetect";
 import { formatInZone, cyprusWallTimeToUtc, CYPRUS_TZ } from "@/lib/booking/timezone";
 import { classifyForDigest, chunkLines, REMINDER_THROTTLE_DAYS } from "@/lib/actionCenter/digestNotify";
+import { CONTRACT_ITEM_PREFIX } from "@/lib/actionCenter/rules/contracts";
+import { sendDueContractReminders } from "@/lib/developerContractReminders";
 import { loadSocialDigestLines } from "@/lib/social/load";
 
 // Piggybacks on this existing daily cron, same pattern as feed-sync's
@@ -73,7 +76,8 @@ async function maybeAppendAdvisorSummary(): Promise<string[]> {
 // (start-of-day inclusive, start-of-next-day exclusive) — the same
 // wall-clock<->UTC conversion the booking slot generator already uses, not
 // a new calculation.
-async function todaysAppointmentLines(): Promise<string[]> {
+async function todaysAppointmentLines(): Promise<{ chat: string[]; mail: string[] }> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const now = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: CYPRUS_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
   const y = Number(parts.find((p) => p.type === "year")!.value);
@@ -85,20 +89,21 @@ async function todaysAppointmentLines(): Promise<string[]> {
   const meetings = await prisma.bookingRequest.findMany({
     where: { status: "CONFIRMED", confirmedSlotUtc: { gte: start, lt: end } },
     orderBy: { confirmedSlotUtc: "asc" },
-    include: { lead: { select: { firstName: true, lastName: true } } },
+    select: { leadId: true, confirmedSlotUtc: true, meetingType: true, lead: { select: { firstName: true, lastName: true } } },
   });
-  if (!meetings.length) return [];
+  if (!meetings.length) return { chat: [], mail: [] };
 
-  return [
-    "",
-    `<b>📅 Today's appointments (${meetings.length})</b>`,
-    ...meetings.map((b) => {
-      const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
-      const leadName = escapeHtml(`${b.lead.firstName} ${b.lead.lastName}`.trim());
-      const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
-      return `• ${time} — ${leadName} (${typeLabel})`;
-    }),
-  ];
+  // Telegram links the name into the CRM; the e-mail spells the link out.
+  const head = ["", `<b>📅 Today's appointments (${meetings.length})</b>`];
+  const row = (b: (typeof meetings)[number], forChat: boolean) => {
+    const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
+    const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
+    const url = `${siteUrl}/admin/crm/${b.leadId}`;
+    return forChat
+      ? `• ${time} — <a href="${url}">${escapeHtml(leadLabel(b.lead, b.leadId))}</a> (${typeLabel})`
+      : `• ${time} — ${escapeHtml(leadLabel(b.lead, b.leadId))} (${typeLabel}) ${url}`;
+  };
+  return { chat: [...head, ...meetings.map((b) => row(b, true))], mail: [...head, ...meetings.map((b) => row(b, false))] };
 }
 
 // GROSSER AUFTRAG Teil 5 (2026-08-13) — daily confirmation of the 4am sync
@@ -202,7 +207,7 @@ function buildCategorySection(label: string, items: TaggedItem[], siteUrl: strin
   if (!items.length) return [];
   const shown = items.slice(0, CATEGORY_CAP);
   const rest = items.length - shown.length;
-  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map(formatItemLine)];
+  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map((t) => formatItemLine(t))];
   if (rest > 0) lines.push(`… and ${rest} more → <a href="${siteUrl}/admin">Action Center</a>`);
   return lines;
 }
@@ -222,7 +227,9 @@ async function socialLines(): Promise<string[]> {
 }
 
 async function runDigest() {
-  const items = (await getActionCenterItems()).filter((i) => (i.severity === "URGENT" || i.severity === "ACTION") && i.category !== "SOCIAL");
+  // Contract items (rules/contracts.ts) are left out too: sendDueContractReminders()
+  // already sends each of them as its own Telegram message and email.
+  const items = (await getActionCenterItems()).filter((i) => (i.severity === "URGENT" || i.severity === "ACTION") && i.category !== "SOCIAL" && !i.id.startsWith(CONTRACT_ITEM_PREFIX));
   const { fresh, recurring, quiet } = await classifyForDigest(items);
   const advisorLines = await maybeAppendAdvisorSummary();
   const appointmentLines = await todaysAppointmentLines();
@@ -233,7 +240,7 @@ async function runDigest() {
   // every morning, success or not), so in practice this only stays false if
   // CronRunLog itself is unreachable — that already surfaces via the outer
   // catch/withCronLog, not silently here.
-  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length && !morningSyncLines.length && !socialSectionLines.length) {
+  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.chat.length && !morningSyncLines.length && !socialSectionLines.length) {
     return { sent: false, count: 0, fresh: 0, recurring: 0, quiet };
   }
 
@@ -250,19 +257,21 @@ async function runDigest() {
   const systemExtra = byCategory.get("SYSTEM") ?? [];
   const systemShown = systemExtra.slice(0, CATEGORY_CAP);
   const systemRest = systemExtra.length - systemShown.length;
-  const lines: string[] = [
+  // One builder for both copies: Telegram (CRM links in the names) and the e-mail (links spelled out).
+  const buildLines = (forChat: boolean): string[] => [
     "",
     "<b>🔧 SYSTEM & SYNCS</b>",
     ...morningSyncLines,
-    ...systemShown.map(formatItemLine),
+    ...systemShown.map((t) => formatItemLine(t)),
     ...(systemRest > 0 ? [`… and ${systemRest} more → <a href="${siteUrl}/admin">Action Center</a>`] : []),
     ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl),
     ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl),
-    ...appointmentLines,
+    ...(forChat ? appointmentLines.chat : appointmentLines.mail),
     ...socialSectionLines,
     ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl),
     ...advisorLines,
   ];
+  const lines = buildLines(true);
 
   const footerLines = [
     quiet > 0 ? `\n${quiet} other known issue${quiet === 1 ? "" : "s"} still open (reminded within the last ${REMINDER_THROTTLE_DAYS} days, not repeated today).` : "",
@@ -280,8 +289,8 @@ async function runDigest() {
     if (r) anySent = true;
   }
 
-  // Same structure as Telegram, reusing the exact same `lines` (a plain-text
-  // strip of the HTML version) so the two can never drift apart — replaces
+  // Same structure as Telegram, from the same builder (buildLines(false): the
+  // full titles and names, chatPrivacy.ts) so the two can never drift apart — replaces
   // a separately hand-built plain-text version that duplicated all of the
   // section-building logic above.
   // Entities are decoded too, or an escaped link (…?d=1&amp;a=339303) would
@@ -289,7 +298,7 @@ async function runDigest() {
   const stripHtml = (s: string) => s.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const emailText = [
     "Daily Action Center Digest",
-    ...lines.map(stripHtml),
+    ...buildLines(false).map(stripHtml),
     quiet > 0 ? `\n${quiet} other known issue(s) still open (not repeated today).` : "",
     "",
     `${siteUrl}/admin`,
@@ -306,9 +315,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
+    // Contract-renewal reminders (2026-10-29) ride on this daily run with their
+    // own CronRunLog job. First and caught, so neither can cost the other: a
+    // failing digest must not swallow a contract that ends tomorrow.
+    const contractReminders = await withCronLog("contract-reminders", () => sendDueContractReminders(),
+      (r) => `${r.sent} of ${r.due} sent${r.failed.length ? `, failed: ${r.failed.join(", ")}` : ""}`, (r) => r.failed.length === 0)
+      .catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
     const result = await withCronLog("action-digest", runDigest, (r) => (r.sent ? `sent, ${r.count} item(s)` : "nothing to send"));
     const botCleanup = await runBotCleanup();
-    return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, botCleanup });
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, botCleanup, contractReminders });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

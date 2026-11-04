@@ -5,11 +5,15 @@ import { FC, useId, useState } from "react";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import Link from "next/link";
 import { consentCopy } from "../consentCopy";
 import { PROPERTY_VALUES, TIMELINE_VALUES, qualifierCopy } from "@/app/components/qualifierFields";
 import { bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
+import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 type Lang = Locale;
 
@@ -84,9 +88,13 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
     if (!firstName || !email || !phone || fd.get("agreedToPolicy") !== "on") {
       setStatus("err"); setErrMsg(t.required); return;
     }
+    if (!isValidLeadPhone(phone)) { setStatus("err"); setErrMsg(phoneInvalidText(lang) ?? t.required); return; }
+    if (!isValidLeadEmail(email)) { setStatus("err"); setErrMsg(emailInvalidText(lang) ?? t.required); return; }
     setStatus("sending"); setErrMsg(null);
     try {
       const parsed = parsePhoneNumberFromString(phone || "");
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+      const metaEventId = newMetaEventId("lead");
       const res = await axios.post("/api/leads", {
         name: firstName,
         surname: get("surname"),
@@ -105,10 +113,11 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
         projectSlug: projectSlug ?? "",
         lang,
         ...getAttribution(),
+        metaEventId: leadIdForServer(metaEventId),
       });
       if (res.status === 200 && res.data?.ok) {
         setStatus("ok");
-        if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq("track", "Lead", { form_name: "qualification" });
+        if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq("track", "Lead", { form_name: "qualification" }, { eventID: metaEventId });
       } else { setStatus("err"); setErrMsg(t.error); }
     } catch { setStatus("err"); setErrMsg(t.error); }
   }

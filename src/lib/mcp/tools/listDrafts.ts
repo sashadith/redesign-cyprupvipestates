@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 import { fmtDate, truncateText } from "../format";
 
 const Input = z.object({
@@ -22,8 +23,9 @@ export function registerListDrafts(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_list_drafts", contextFromAuthInfo(ctx.http?.authInfo), input.leadId ?? null, async (c) => {
+        const { where: scope } = await loadScope(c);
         const rows = await prisma.leadEmailDraft.findMany({
-          where: { userId: c.userId, status: input.status, ...(input.leadId ? { leadId: input.leadId } : {}), lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER } },
+          where: { userId: c.userId, status: input.status, ...(input.leadId ? { leadId: input.leadId } : {}), lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope } },
           orderBy: { createdAt: "desc" },
           take: 50,
           select: { id: true, leadId: true, subject: true, body: true, cc: true, status: true, failedAttempts: true, createdAt: true, expiresAt: true, sentAt: true, lead: { select: { firstName: true, lastName: true } } },

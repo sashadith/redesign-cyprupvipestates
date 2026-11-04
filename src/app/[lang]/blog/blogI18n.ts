@@ -40,6 +40,9 @@ export type BlogStrings = {
   // cities the projects filter knows.
   fallbackProperties: string;
   fallbackPropertiesInCity: string; // contains the literal placeholder {city}
+  // Heading above the three hand-picked projects stored in the article's
+  // popularProperties (see src/lib/popularProperties.ts).
+  popularProperties: string;
   // Phase 6 cross-locale badge: shown on every card/featured item when /he/blog
   // is rendering EN articles (blogIndexMode's sourceLang !== the route locale).
   englishBadge: string;
@@ -69,6 +72,7 @@ const EN: BlogStrings = {
   relatedAccent: "reading",
   fallbackProperties: "Recommended properties",
   fallbackPropertiesInCity: "Recommended properties in {city}",
+  popularProperties: "Popular properties",
   englishBadge: "In English",
 };
 
@@ -115,6 +119,8 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     // preposition takes the hyphen form the style guide §3 prescribes.
     fallbackPropertiesInCity: "נכסים מומלצים ב-\u2068{city}\u2069",
     // REVIEW(he)
+    popularProperties: "נכסים פופולריים",
+    // REVIEW(he)
     englishBadge: "באנגלית",
   },
   de: {
@@ -141,6 +147,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     relatedAccent: "Beiträge",
     fallbackProperties: "Empfohlene Objekte",
     fallbackPropertiesInCity: "Empfohlene Objekte in {city}",
+    popularProperties: "Beliebte Objekte",
     englishBadge: "Auf Englisch",
   },
   pl: {
@@ -167,6 +174,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     relatedAccent: "artykuły",
     fallbackProperties: "Polecane nieruchomości",
     fallbackPropertiesInCity: "Polecane nieruchomości w {city}",
+    popularProperties: "Popularne nieruchomości",
     englishBadge: "Po angielsku",
   },
   ru: {
@@ -193,6 +201,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     relatedAccent: "статьи",
     fallbackProperties: "Рекомендуемые объекты",
     fallbackPropertiesInCity: "Рекомендуемые объекты в {city}",
+    popularProperties: "Популярные объекты",
     englishBadge: "На английском",
   },
 };

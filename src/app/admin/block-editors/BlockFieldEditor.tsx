@@ -533,7 +533,7 @@ function ProjectsSectionEditor({ block, set, titleRow, marginRow }: { block: any
           <label className="text-xs text-[#6B7280] block">City
             <select className={input} value={block.filterCity ?? ""} onChange={(e) => set({ filterCity: e.target.value || undefined })}>
               <option value="">Any</option>
-              {["Paphos", "Limassol", "Larnaca"].map((c) => <option key={c} value={c}>{c}</option>)}
+              {["Paphos", "Limassol", "Larnaca", "Famagusta"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
           <label className="text-xs text-[#6B7280] block">Property type

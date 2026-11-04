@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, bucketOf } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
+import { isUnconfirmed, loadUnconfirmedRegistrations, reminderDate } from "@/lib/crm/registration/reminders";
+import { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES, STATUS_LABEL as CENTRAL_STATUS_LABEL } from "@/lib/crm/leadStatus";
 
 const DAY = 86_400_000;
 const NEW_LEAD_URGENT_HOURS = 24;
@@ -46,12 +48,13 @@ const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName}
 // this closes a real pre-existing gap: a lead that reached VIEWING_SCHEDULED
 // or OFFER previously fell out of this rule entirely and could go stale
 // without ever triggering a follow-up nudge again.
-const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
+export const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
 // Statuses this rule tracks for stale-follow-up nagging. KEEP_CONTACT is
 // deliberately NOT here (2026-08-11) — it's the one status that means "I'm
 // choosing not to be nagged about this right now", so noFollowUp() must
 // never fire for it.
-export const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
+// (list lives in @/lib/crm/leadStatus; re-exported so existing importers keep working)
+export { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES };
 // Exported — reused by developers.ts's backInStockReminders() for its "warm
 // contact" lead count. A DIFFERENT set than ACTIVE_LEAD_STATUSES on purpose:
 // a KEEP_CONTACT lead is exactly the kind of person who should hear first
@@ -63,16 +66,16 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // lead can sit at NEW or CONTACTED purely because an admin flipped the
 // dropdown — no real conversation required, so "no contact logged yet" is
 // still plausibly true and stays URGENT there. COMMUNICATING/
-// VIEWING_SCHEDULED/OFFER structurally imply prior real engagement (you
-// don't reach an ongoing dialogue, a scheduled viewing, or an offer without
-// having actually talked to the lead) — Konstantin sat at VIEWING_SCHEDULED
+// VIEWING_SCHEDULED/OFFER/RESERVED structurally imply prior real engagement
+// (you don't reach an ongoing dialogue, a scheduled viewing, an offer or a
+// reservation without having actually talked to the lead) — Konstantin sat at VIEWING_SCHEDULED
 // while flagged "New lead, no contact logged yet" for 3380+ hours; the real
 // contact existed (a WhatsApp message) but was logged as a NOTE before the
 // proper WhatsApp-logging tool existed (built 2026-07-23, see
-// logWhatsAppSentAction). For these three statuses "no REAL_CONTACT_TYPES
-// row" is far more likely a logging gap than a genuinely untouched lead, so
-// it never reaches URGENT: recent activity of ANY kind (a note, or a status
-// change TO one of these three — see RECENT_ACTIVITY_TYPES below) suppresses
+// logWhatsAppSentAction). For these four statuses (RESERVED joined in
+// 2026-10) "no REAL_CONTACT_TYPES row" is far more likely a logging gap
+// than a genuinely untouched lead, so it never reaches URGENT: recent activity of ANY kind (a note, or a status
+// change TO one of these — see RECENT_ACTIVITY_TYPES below) suppresses
 // the item entirely; once that goes stale too, it's ACTION with honest
 // wording, never URGENT.
 //
@@ -87,7 +90,7 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // deliberately does not cover.
 //
 // So the elevated path is now taken for ANY no-contact lead with human-written
-// activity on file, not only for the three statuses that structurally imply it.
+// activity on file, not only for the four statuses that structurally imply it.
 // A NOTE is somebody sitting down and typing about this person. That is enough
 // to make "waiting for a FIRST response" a false statement, even though it
 // proves nothing about whether they were actually contacted — and the ACTION
@@ -116,9 +119,8 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // parseStatusChangeTarget's comment already rules out as a standing dependency.
 // Exported — also used by actions.ts's updateLeadStatus to decide whether a
 // STATUS_CHANGE row's target status should count as contact-equivalent (see
-// parseStatusChangeTarget below): these three can't be reached without a real
+// parseStatusChangeTarget below): these four can't be reached without a real
 // conversation, so a transition TO one of them is itself a contact signal.
-export const ELEVATED_NO_CONTACT_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
 type ElevatedStatus = (typeof ELEVATED_NO_CONTACT_STATUSES)[number];
 const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(s);
 
@@ -152,14 +154,11 @@ function parseStatusChangeTarget(row: { metadata: unknown; body: string | null }
 // Human-readable status for the item text — was hard-coded to "New lead"
 // regardless of actual status (misleading for e.g. a VIEWING_SCHEDULED lead
 // like Konstantin); now always names the real status.
-const STATUS_LABEL: Record<string, string> = {
-  NEW: "New", CONTACTED: "Contacted", COMMUNICATING: "Communicating",
-  VIEWING_SCHEDULED: "Viewing scheduled", OFFER: "Offer",
-};
+const STATUS_LABEL: Record<string, string> = CENTRAL_STATUS_LABEL;
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
-    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, ...EXCLUDE_NEWSLETTER },
+    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY] },
     select: {
       id: true, firstName: true, lastName: true, createdAt: true, status: true, viewingScheduledAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
@@ -333,7 +332,21 @@ async function expiringSoon(): Promise<ActionItem[]> {
     });
 }
 
+// Developer registration sent 2+ days ago and still not confirmed (spec
+// 2026-10-27 §7.7). Stays while the registration is SENT, independent of the
+// one-off reminder email (reminderSentAt).
+async function registrationUnconfirmed(): Promise<ActionItem[]> {
+  const now = new Date();
+  const rows = await loadUnconfirmedRegistrations(now);
+  return rows.filter((r) => isUnconfirmed(r, now)).map((r) => ({
+    id: `dev-registration:${r.id}`, severity: "ACTION", category: "CRM",
+    title: `Registration not confirmed: ${r.lead.name} – ${r.developerName}`,
+    description: `Sent ${r.sentAt ? reminderDate(r.sentAt) : "?"}. Mark preliminary when the developer confirms.`,
+    deepLink: `/crm/leads/${r.lead.id}`, since: r.sentAt ?? now,
+  }));
+}
+
 export async function crmRules(): Promise<ActionItem[]> {
-  const [fg, h, i] = await Promise.all([noFollowUp(), engagedNoFollowUp(), expiringSoon()]);
-  return [...fg, ...h, ...i];
+  const [fg, h, i, reg] = await Promise.all([noFollowUp(), engagedNoFollowUp(), expiringSoon(), registrationUnconfirmed()]);
+  return [...fg, ...h, ...i, ...reg];
 }

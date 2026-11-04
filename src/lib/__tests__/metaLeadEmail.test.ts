@@ -15,6 +15,10 @@ test("subject names the lead; an existing lead is labelled as such", () => {
   assert.equal(buildLeadEmail(tg, { outcome: "CREATED", name: "  " }).subject, "New Meta lead: unknown");
 });
 
+test("the Telegram text carries name and contact details", () => {
+  for (const s of ["Stephen Pattichis", "s@example.com · +447700900123"]) assert.ok(tg.includes(s), s);
+});
+
 test("the plain-text body carries every fact of the Telegram, without tags or entities", () => {
   const { text } = buildLeadEmail(tg, { outcome: "CREATED", name: "Stephen Pattichis" });
   for (const s of ["New Private Collection lead", "Stephen Pattichis", "s@example.com", "+447700900123", "Campaign: CVE Private Collection — UK Leads (Instant Form)", "/admin/crm/lead-1"]) {
@@ -44,7 +48,7 @@ import { buildLeadWhatsApp, leadWhatsAppChat } from "@/lib/metaLeadgen/notify";
 test("WhatsApp text: *bold* instead of <b>, bare CRM link, no tags or entities", () => {
   const wa = buildLeadWhatsApp(tg);
   assert.match(wa, /\*New Private Collection lead \(UK\)\*/);
-  assert.match(wa, /\*Stephen Pattichis\*/);
+  assert.match(wa, /\*Stephen Pattichis\*[\s\S]*s@example.com · \+447700900123/);
   assert.match(wa, /https?:\/\/\S+\/admin\/crm\/lead-1/);
   assert.match(wa, /Campaign: CVE Private Collection — UK Leads \(Instant Form\)/);
   assert.doesNotMatch(wa, /<[a-z/]|&amp;|&lt;|&gt;/);

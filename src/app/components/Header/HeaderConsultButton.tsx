@@ -1,6 +1,7 @@
 "use client";
 
 import { useModal } from "@/app/context/ModalContext";
+import { preloadBrochureModal } from "@/app/components/ModalBrochure/ModalBrochureLazy";
 import { trackBrochureOpen } from "@/app/components/ModalBrochure/trackBrochureOpen";
 import { isLocale } from "@/lib/locale";
 import { HEADER_CONSULT_COPY } from "./HeaderConsultButton.copy";
@@ -29,7 +30,7 @@ export default function HeaderConsultButton({ lang }: { lang: string }) {
   };
 
   return (
-    <button type="button" className="nav__cta" onClick={onClick} aria-label={label}>
+    <button type="button" className="nav__cta" onClick={onClick} onPointerEnter={preloadBrochureModal} onFocus={preloadBrochureModal} onTouchStart={preloadBrochureModal} aria-label={label}>
       <span className="nav__cta-label">{label}</span>
       <span className="nav__cta-ico" aria-hidden="true">
         {/* A speech bubble, not a handset. The modal this opens asks the visitor

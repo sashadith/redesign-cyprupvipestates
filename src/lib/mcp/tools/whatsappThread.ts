@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { chatIdFor } from "@/lib/openwa/phoneMatch";
@@ -7,6 +8,7 @@ import { createOpenWaClient } from "@/lib/openwa/client";
 import { shapeThread, type RawMessage } from "@/lib/openwa/shapeMessages";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 
 // Repo convention: a named ZodObject, passed whole as inputSchema — see
 // getLead.ts and searchLeads.ts. Not a raw shape.
@@ -52,12 +54,12 @@ function logRedacted(what: string, e: unknown): void {
   );
 }
 
-export function realThreadDeps(): ThreadDeps {
+export function realThreadDeps(scope: Prisma.LeadWhereInput): ThreadDeps {
   const client = createOpenWaClient();
   return {
     findLead: (leadId) =>
       prisma.lead.findFirst({
-        where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
+        where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
         select: { id: true, firstName: true, lastName: true, phone: true },
       }),
     fetchThread: (chatId, limit) => client.fetchThread(chatId, limit),
@@ -107,8 +109,8 @@ export function registerWhatsappThread(server: McpServer) {
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async (input, ctx) =>
-      runTool("crm_whatsapp_thread", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async () =>
-        readThread(realThreadDeps(), input),
+      runTool("crm_whatsapp_thread", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) =>
+        readThread(realThreadDeps((await loadScope(c)).where), input),
       ),
   );
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { loadScope } from "../leadScope";
 import { fmtDate } from "../format";
 import { createEmailDraft } from "../drafts/createDraft";
 import { MAX_CC } from "../drafts/ccRecipients";
@@ -25,7 +26,7 @@ export function registerDraftEmail(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_draft_email", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
-        const r = await createEmailDraft({ userId: c.userId, userName: c.userName }, input);
+        const r = await createEmailDraft({ userId: c.userId, userName: c.userName }, input, await loadScope(c));
         return {
           draftId: r.draftId,
           previewSentTo: r.previewSentTo,

@@ -22,6 +22,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { submitIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref } from "@/lib/locale";
+import { articleHref } from "@/lib/articleSections";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const runtime = "nodejs";
@@ -58,11 +59,11 @@ async function run() {
 
   const where = { status: "PUBLISHED" as const, updatedAt: { gte: since } };
   const [blogs, pages] = await Promise.all([
-    prisma.blog.findMany({ where, select: { language: true, slug: true } }),
+    prisma.blog.findMany({ where, select: { language: true, slug: true, category: { select: { translationGroupId: true } } } }),
     prisma.singlepage.findMany({ where, select: { language: true, slug: true } }),
   ]);
   const candidates = [
-    ...blogs.map((b) => absUrl(localizedHref(b.language, ["blog", b.slug]))),
+    ...blogs.map((b) => absUrl(articleHref(b.language, b.slug, b.category?.translationGroupId))),
     ...pages.map((p) => absUrl(localizedHref(p.language, [p.slug]))),
   ];
   const unique = Array.from(new Set(candidates)).slice(0, MAX_URLS);

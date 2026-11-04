@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createTypefullyClient, CACHE_TTL_MS, FAILURE_TTL_MS, type DraftListResult, type TypefullyDraft } from "@/lib/social/typefully";
+import { createTypefullyClient, CACHE_TTL_MS, FAILURE_TTL_MS, MONITOR_TIMEOUT_MS, MONITOR_RETRY_DELAYS_MS, type DraftListResult, type TypefullyDraft } from "@/lib/social/typefully";
 import { socialActionItems, socialDigestLines, draftLink, draftTitle, platformsOf, NO_WEEK_DRAFTS_LINE } from "@/lib/social/socialMonitor";
 
 /* Social monitoring over Typefully (2026-10-03). Typefully is mocked throughout:
@@ -180,6 +180,104 @@ test("a network error is a result with status null, not a throw", async () => {
   const r = await client.listDrafts("planned");
   assert.deepEqual(r.ok, false);
   assert.ok(!r.ok && r.status === null && /fetch failed/.test(r.message));
+});
+
+/* ── Monitoring check: 20 s timeout, two retries (2026-10-24) ─────────────── */
+
+function scriptedFetch(script: (Response | Error)[]) {
+  const calls: RequestInit[] = [];
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    calls.push(init);
+    const next = script[Math.min(calls.length - 1, script.length - 1)];
+    if (next instanceof Error) throw next;
+    return next.clone();
+  };
+  return { calls, fetchImpl };
+}
+const okResponse = () => new Response(JSON.stringify({ results: [], next: "" }), { status: 200 });
+const timeoutError = () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
+
+test("monitoring check: timeout, then 503, then OK → ok after waiting 5 s and 15 s", async () => {
+  const slept: number[] = [];
+  const { calls, fetchImpl } = scriptedFetch([timeoutError(), new Response("", { status: 503 }), okResponse()]);
+  const client = createTypefullyClient({ apiKey: () => "k", fetchImpl, sleep: async (ms) => { slept.push(ms); } });
+  const r = await client.listDrafts("planned", { monitor: true });
+  assert.ok(r.ok, "a failure that the retries cure is not a failed check");
+  assert.equal(calls.length, 3);
+  assert.deepEqual(slept, [5_000, 15_000]);
+  assert.deepEqual(MONITOR_RETRY_DELAYS_MS, [5_000, 15_000]);
+  assert.equal(MONITOR_TIMEOUT_MS, 20_000);
+  for (const c of calls) assert.equal(c.method, "GET");
+});
+
+test("monitoring check: three timeouts → ONE failed result after exactly 3 attempts", async () => {
+  const slept: number[] = [];
+  const { calls, fetchImpl } = scriptedFetch([timeoutError()]);
+  const client = createTypefullyClient({ apiKey: () => "k", fetchImpl, sleep: async (ms) => { slept.push(ms); } });
+  const r = await client.listDrafts("planned", { monitor: true });
+  assert.ok(!r.ok && r.status === null && /timeout/.test(r.message));
+  assert.equal(calls.length, 3);
+  assert.deepEqual(slept, [5_000, 15_000]);
+});
+
+test("monitoring check: 429 and 5xx are retried, 401 is not", async () => {
+  for (const [status, attempts] of [[429, 3], [500, 3], [502, 3], [401, 1], [404, 1]] as const) {
+    const { calls, fetchImpl } = scriptedFetch([new Response("", { status })]);
+    const client = createTypefullyClient({ apiKey: () => "k", fetchImpl, sleep: async () => {} });
+    const r = await client.listDrafts("planned", { monitor: true });
+    assert.ok(!r.ok && r.status === status);
+    assert.equal(calls.length, attempts, `HTTP ${status}`);
+  }
+});
+
+test("admin pages (no monitor flag) keep one 5-second attempt, no retries", async () => {
+  const slept: number[] = [];
+  const { calls, fetchImpl } = scriptedFetch([new Response("", { status: 503 })]);
+  const client = createTypefullyClient({ apiKey: () => "k", fetchImpl, sleep: async (ms) => { slept.push(ms); } });
+  const r = await client.listDrafts("planned");
+  assert.ok(!r.ok && r.status === 503);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(slept, []);
+});
+
+test("the monitoring check does not join an admin page's in-flight request", async () => {
+  let n = 0;
+  let release!: () => void;
+  const gate = new Promise<void>((r) => { release = r; });
+  const client = createTypefullyClient({ apiKey: () => "k", sleep: async () => {}, fetchImpl: async () => {
+    n++; await gate;
+    return okResponse();
+  } });
+  const admin = client.listDrafts("planned"), check = client.listDrafts("planned", { monitor: true });
+  release();
+  await Promise.all([admin, check]);
+  assert.equal(n, 2);
+});
+
+/* ── Outage verdict from the reminder cron's state ───────────────────────── */
+
+test("a failed fetch that has not earned an alert shows no 'unreachable' item or digest line", () => {
+  const items = socialActionItems({ planned: fail(503), errored: fail(503), outageConfirmed: false }, WEDNESDAY);
+  assert.deepEqual(items, []);
+  const lines = socialDigestLines({ scheduled: fail(null, "request failed: timeout"), planned: EMPTY, errored: EMPTY, outageConfirmed: false }, WEDNESDAY);
+  assert.deepEqual(lines, []);
+});
+
+test("a confirmed outage (or an unreadable state) still shows the 'unreachable' item and line", () => {
+  for (const outageConfirmed of [true, null, undefined]) {
+    const items = socialActionItems({ planned: fail(503), errored: EMPTY, outageConfirmed }, WEDNESDAY);
+    assert.deepEqual(items.map((i) => i.id), ["social-api-unreachable"], String(outageConfirmed));
+    const lines = socialDigestLines({ scheduled: fail(503), planned: EMPTY, errored: EMPTY, outageConfirmed }, WEDNESDAY);
+    assert.ok(lines.some((l) => l.includes("Typefully unreachable (HTTP 503)")), String(outageConfirmed));
+  }
+});
+
+test("a missing API key is always shown, whatever the outage state says", () => {
+  const missing = fail(null, "TYPEFULLY_API_KEY is not set");
+  const items = socialActionItems({ planned: missing, errored: missing, outageConfirmed: false }, WEDNESDAY);
+  assert.deepEqual(items.map((i) => i.id), ["social-api-key-missing"]);
+  const lines = socialDigestLines({ scheduled: missing, planned: missing, errored: missing, outageConfirmed: false }, WEDNESDAY);
+  assert.ok(lines.some((l) => l.includes("Typefully unreachable")));
 });
 
 test("platforms come from every *_post_enabled flag, in a fixed order", () => {

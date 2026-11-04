@@ -12,17 +12,21 @@ const fakeClient = (sent: { chatId: string; text: string }[], fail = false) => (
     if (fail) throw new Error("gateway down");
     sent.push({ chatId, text });
   },
+  getSession: async () => ({ status: "ready", lastError: null }),
+  startSession: async () => {},
+  resolvePhone: async () => null,
+  listGroups: async () => [],
 });
 
 const partner = buildInboundLeadTelegramMessage({
-  source: "PARTNER", email: "a&b@example.com", name: "Anna <Test>", phone: "+357 99 000000", page: "/partners", language: "de", link: "https://cyprusvipestates.com/admin/crm/L1",
+  leadId: "3f9a2c11-0000-4000-8000-000000000000", source: "PARTNER", page: "/partners?a=1&b=<2>", language: "de", link: "https://cyprusvipestates.com/admin/crm/L1",
 });
 
 test("an inbound-lead Telegram becomes clean WhatsApp text", () => {
   const wa = telegramHtmlToWhatsApp(partner);
   assert.match(wa, /^\*New PARTNER lead\*/);
-  assert.match(wa, /\*Anna <Test>\*/, "entities decoded");
-  assert.match(wa, /Email: a&b@example\.com/);
+  assert.match(wa, /Lead #3f9a2c/);
+  assert.match(wa, /Page: \/partners\?a=1&b=<2>/, "entities decoded");
   assert.match(wa, /https:\/\/cyprusvipestates\.com\/admin\/crm\/L1/, "link kept as bare URL");
   assert.doesNotMatch(wa, /<b>|<a |&amp;|&lt;/);
 });

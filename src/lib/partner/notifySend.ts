@@ -1,0 +1,606 @@
+// Partner notification outbox — server half (collect STATUS_CHANGE events, send pending rows).
+// Pure builders and the planner: notify.ts. Cron entry: src/app/api/cron/partner-notify/route.ts.
+import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/sendEmail";
+import { effectiveStateOf, leadClaimFacts } from "./claimFacts";
+import { cyDate, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
+import { lastClientActivity } from "./alertsSend";
+import { loadTiers } from "./tierStore";
+import { quietEndsAt, quietWindow, switchGate } from "./notifyPrefs";
+import { activeSince, isCommitted } from "./claimState";
+import { visibleName } from "./clientDto";
+import { creditNoteWhere } from "./commissions";
+import { dict, fmt, pickPartnerLocale, type PartnerLocale } from "./i18n";
+import { emailThemeForPartner } from "@/lib/design/store";
+import type { EmailTheme } from "@/lib/design/theme";
+import { partnerBaseUrl, type BuiltEmail } from "./mail";
+import { buildTelegramNotification, buildTelegramProjectNews, routeNotification, type TelegramNotificationInput } from "./telegram";
+import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
+import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
+import {
+  INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail,
+  buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
+  buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
+  isUnchangedStage, partnerDate, projectNewsLines, projectsLink, watchChangeLabels,
+  stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
+  planStageNotifications, presentationsLink, stageKeyFor, stageRefKey, truncateError, unhandledKind, type NotificationKind, type StageRow,
+} from "./notify";
+import { MATCH_CHANGE_TYPES } from "./matchAlerts";
+import { isOwnProjectUrl, localizedProjectUrl } from "./matchGlue";
+import { parseTierUpPayload } from "./tierFlow";
+
+export { notifyStartFromEnv };
+
+const LOOKBACK_MS = 7 * 86_400_000;
+/** Kinds the daily partner-alerts run writes in bulk: sent after everything else in a run. */
+const BATCH_KINDS = ["PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR"] as const;
+const INTERACTION_CAP = 1000;
+const CLAIM_SCAN_CAP = 5000;
+/** Skip-counter keys for rows closed because Telegram failed permanently and no e-mail was allowed. */
+const TELEGRAM_BLOCKED = "telegram blocked";
+const TELEGRAM_REJECTED = "telegram rejected";
+
+export type CollectResult = { scanned: number; pending: number; collapsed: number; settlingLeads: number; inserted: number };
+
+/** Scans recent STATUS_CHANGE rows on leads with an ACTIVE claim and writes STAGE outbox rows. */
+export async function collectStageEvents(now: Date, start: Date): Promise<CollectResult> {
+  const since = new Date(Math.max(start.getTime(), now.getTime() - LOOKBACK_MS));
+  const claims = await prisma.partnerClaim.findMany({
+    where: { state: "ACTIVE" },
+    orderBy: { createdAt: "desc" },
+    take: CLAIM_SCAN_CAP,
+    select: { id: true, leadId: true, partnerId: true, createdAt: true, reviewedAt: true },
+  });
+  if (claims.length === 0) return { scanned: 0, pending: 0, collapsed: 0, settlingLeads: 0, inserted: 0 };
+  const claimByLead = new Map(claims.map((c) => [c.leadId, c]));
+
+  const interactions = await prisma.leadInteraction.findMany({
+    where: { type: "STATUS_CHANGE", leadId: { in: Array.from(claimByLead.keys()) }, occurredAt: { gte: since } },
+    orderBy: { occurredAt: "desc" }, // the cap drops the oldest, never the newest
+    take: INTERACTION_CAP,
+    select: { id: true, leadId: true, occurredAt: true, metadata: true },
+  });
+  if (interactions.length === 0) return { scanned: 0, pending: 0, collapsed: 0, settlingLeads: 0, inserted: 0 };
+
+  const rows: StageRow[] = interactions.flatMap((i) => {
+    const c = claimByLead.get(i.leadId);
+    if (!c) return [];
+    const meta = i.metadata && typeof i.metadata === "object" && !Array.isArray(i.metadata) ? (i.metadata as Record<string, unknown>) : {};
+    return [{
+      interactionId: i.id, leadId: i.leadId, occurredAt: i.occurredAt, toStatus: meta.toStatus,
+      claimId: c.id, partnerId: c.partnerId, claimActiveSince: activeSince(c),
+    }];
+  });
+  const existing = await prisma.partnerNotification.findMany({
+    where: { refKey: { in: rows.map((r) => stageRefKey(r.interactionId)) } },
+    select: { refKey: true },
+  });
+  const plan = planStageNotifications({ rows, existingRefKeys: existing.map((e) => e.refKey), now, start });
+  let inserted = 0;
+  if (plan.rows.length) {
+    const r = await prisma.partnerNotification.createMany({
+      data: plan.rows.map((p) => ({
+        kind: p.kind, refKey: p.refKey, partnerId: p.partnerId, leadId: p.leadId, claimId: p.claimId,
+        payload: p.payload, sentAt: p.sentAt, error: p.error,
+      })),
+      skipDuplicates: true,
+    });
+    inserted = r.count;
+  }
+  return { scanned: rows.length, pending: plan.pending, collapsed: plan.collapsed, settlingLeads: plan.settlingLeads, inserted };
+}
+
+export type SendResult = { sent: number; skipped: Record<string, number>; failed: number; dead: number; errors: string[]; stoppedEarly?: string };
+
+/** What to deliver for one row: e-mail and/or Telegram (routeNotification), plus an e-mail fallback for a permanent Telegram failure. */
+type Delivery = {
+  partnerId: string;
+  email: { to: string; mail: BuiltEmail } | null;
+  /** One or more messages, sent in order (only the new-projects post is ever split). */
+  telegram: { chatId: string; messages: string[] } | null;
+  /** E-mail allowed for this row but not routed (the partner chose Telegram only): used when Telegram fails permanently (blocked, 4xx, not configured). */
+  fallbackEmail: { to: string; mail: BuiltEmail } | null;
+  /** Set while the partner's Telegram quiet hours run: the Telegram part waits until then (e-mail is never held). */
+  quietUntil: Date | null;
+};
+type Outcome = { skip: string } | Delivery;
+
+const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+
+type OutboxRow = {
+  id: string; kind: NotificationKind; refKey: string; partnerId: string; claimId: string | null; leadId: string | null;
+  payload: unknown; createdAt: Date;
+};
+
+/** Decides what to do with one outbox row: a reason to drop it, or what to send on which channel(s). */
+async function prepare(row: OutboxRow, now: Date, start: Date, base: string, themes: Map<string, EmailTheme>): Promise<Outcome> {
+  if (beforeStart(row, start)) return { skip: "before start" };
+  const partner = await prisma.partner.findUnique({
+    where: { id: row.partnerId },
+    select: {
+      status: true, firstName: true, language: true, emailNotifications: true, notifyChannel: true, telegramChatId: true,
+      notifyClients: true, notifyNewProjects: true, notifyProjectUpdates: true, notifyReminders: true, quietFrom: true, quietTo: true,
+      bankDetailsEnc: true, tierKey: true,
+      users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true } },
+    },
+  });
+  const partnerSkip = partnerStatusGate(partner?.status);
+  if (partnerSkip || !partner) return { skip: partnerSkip ?? "partner missing" };
+  // v2 per-type switches (all channels).
+  const switchedOff = switchGate(row.kind, partner);
+  if (switchedOff) return { skip: switchedOff };
+  // A Telegram-only copy held over the quiet hours (its e-mail went out with the original row): `ref` is the
+  // original refKey, which the per-kind parsers below read.
+  const tgOf = obj(row.payload).tgOf;
+  const tgOnly = typeof tgOf === "string" && tgOf.length > 0;
+  const ref = tgOnly ? (tgOf as string) : row.refKey;
+  const to = partner.users[0]?.email?.trim() || null;
+  const chatId = partner.telegramChatId?.trim() || null;
+  // Channel(s) per Decision 2. The profile switch (3d) suppresses STAGE/MESSAGE e-mail only, never Telegram.
+  // Without the bot env no Telegram send is attempted: the row routes as if no chat were linked.
+  const route = routeNotification({
+    kind: row.kind, notifyChannel: partner.notifyChannel, chatLinked: !!chatId, botConfigured: partnerBotConfigured(),
+    emailNotifications: partner.emailNotifications,
+  });
+  const emailAllowed = !tgOnly && !!to && !optOutGate(row.kind, partner.emailNotifications);
+  const sendEmailToo = !tgOnly && route.email && !!to;
+  const sendTelegram = route.telegram && !!chatId;
+  if (tgOnly && !sendTelegram) return { skip: "telegram unavailable" };
+  if (!sendEmailToo && !sendTelegram) {
+    // Switched off in the profile: the row is closed as sent with error "opted out" (never mailed later).
+    const optedOut = optOutGate(row.kind, partner.emailNotifications);
+    return { skip: optedOut ?? "no recipient" };
+  }
+
+  const claim = row.claimId
+    ? await prisma.partnerClaim.findUnique({
+        where: { id: row.claimId },
+        select: { id: true, state: true, createdAt: true, reviewedAt: true, submission: true, partnerId: true, leadId: true },
+      })
+    : null;
+  const accepted = obj(row.payload).accepted === true;
+  // A rejection, a payout and a presentation-opened row never need the lead; everything else is gated on the claim's effective state.
+  const needsState = !!claim && row.kind !== "PAYOUT" && row.kind !== "BANK_MISSING" && !PARTNER_ONLY_KINDS.includes(row.kind) && !(row.kind === "CLAIM_OUTCOME" && !accepted);
+  const skip = notificationGate({
+    kind: row.kind,
+    accepted,
+    claim: claim
+      ? { ownedByPartner: claim.partnerId === row.partnerId, effective: needsState ? await effectiveStateOf(prisma, claim, now) : claim.state }
+      : null,
+  });
+  if (skip) return { skip };
+
+  const locale = pickPartnerLocale({ partnerLanguage: partner.language });
+  // One theme lookup per partner per run; emailThemeForPartner never throws (falls back to Classic).
+  let theme = themes.get(row.partnerId);
+  if (!theme) {
+    theme = await emailThemeForPartner(row.partnerId);
+    themes.set(row.partnerId, theme);
+  }
+  const deliver = (mail: BuiltEmail, tg: TelegramNotificationInput | string[]): Delivery => ({
+    partnerId: row.partnerId,
+    email: sendEmailToo && to ? { to, mail } : null,
+    telegram: sendTelegram && chatId ? { chatId, messages: Array.isArray(tg) ? tg : [buildTelegramNotification(locale, tg)] } : null,
+    fallbackEmail: !sendEmailToo && emailAllowed && to ? { to, mail } : null,
+    quietUntil: sendTelegram ? quietEndsAt(now, quietWindow(partner.quietFrom, partner.quietTo)) : null,
+  });
+  if (!claim && !PARTNER_ONLY_KINDS.includes(row.kind)) return { skip: "claim missing" };
+  // Every kind but the partner-only ones has a claim from here on (checked just above); those cases never read it.
+  const own = claim as NonNullable<typeof claim>;
+  const common = { partnerFirstName: partner.firstName, clientName: claim ? visibleName(claim) : "", link: claim ? clientLink(base, claim.id) : base };
+  const tgCommon = { clientName: common.clientName, url: common.link, portalUrl: base };
+
+  // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
+  switch (row.kind) {
+    case "STAGE": {
+      const toStatus = obj(row.payload).toStatus;
+      const stageKey = stageKeyFor(toStatus);
+      if (!stageKey) return { skip: "invalid status" };
+      const lastMailed = await prisma.partnerNotification.findFirst({
+        where: {
+          claimId: own.id, kind: "STAGE", sentAt: { not: null }, id: { not: row.id },
+          OR: [{ error: null }, { error: { startsWith: PARTIAL_PREFIX } }],
+        },
+        orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
+        select: { payload: true },
+      });
+      if (!tgOnly && lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
+      const extra = await stageExtras(locale, toStatus, own.leadId, now);
+      return deliver(buildStageEmail(locale, { ...common, stageKey, extra }, theme), { ...tgCommon, kind: "STAGE", stageKey, extra });
+    }
+    case "MESSAGE": {
+      const messageId = messageIdFromRefKey(ref);
+      const msg = messageId
+        ? await prisma.partnerMessage.findUnique({
+            where: { id: messageId },
+            select: { partnerId: true, leadId: true, body: true, author: { select: { name: true } } },
+          })
+        : null;
+      if (!msg || msg.partnerId !== row.partnerId || msg.leadId !== own.leadId) return { skip: "message missing" };
+      return deliver(
+        buildMessageEmail(locale, { ...common, body: msg.body, authorFirstName: firstNameOf(msg.author?.name) }, theme),
+        { ...tgCommon, kind: "MESSAGE", messageBody: msg.body },
+      );
+    }
+    case "CLAIM_OUTCOME":
+      return deliver(buildClaimOutcomeEmail(locale, { ...common, accepted }, theme), { ...tgCommon, kind: "CLAIM_OUTCOME", accepted });
+    case "PAYOUT": {
+      const creditNoteId = obj(row.payload).creditNoteId;
+      const note = typeof creditNoteId === "string" && creditNoteId
+        ? await prisma.creditNote.findFirst({
+            where: creditNoteWhere(row.partnerId, creditNoteId),
+            select: {
+              number: true, totalAmount: true, dealId: true,
+              deal: { select: { leadId: true, unitLabel: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
+            },
+          })
+        : null;
+      if (!note || note.deal.leadId !== own.leadId || payoutDealIdFromRefKey(ref) !== note.dealId) return { skip: "credit note missing" };
+      const dev = note.deal.development;
+      const amount = formatPayoutAmount(locale, note.totalAmount);
+      return deliver(
+        buildPayoutEmail(locale, {
+          ...common,
+          link: commissionsLink(base),
+          project: dev ? dev.override?.alias?.trim() || dev.publicName : null,
+          unit: note.deal.unitLabel,
+          amount,
+          creditNoteNumber: note.number,
+        }, theme),
+        { ...tgCommon, kind: "PAYOUT", url: commissionsLink(base), amount, creditNoteNumber: note.number },
+      );
+    }
+    case "MATCH": {
+      // Gated above: partner ACTIVE and the claim still effectively ACTIVE (notificationGate).
+      const p = obj(row.payload);
+      const projectName = typeof p.projectName === "string" ? p.projectName.trim() : "";
+      const changeType = typeof p.changeType === "string" && (MATCH_CHANGE_TYPES as readonly string[]).includes(p.changeType) ? p.changeType : null;
+      const price = typeof p.priceFrom === "number" && Number.isFinite(p.priceFrom) && p.priceFrom > 0 ? p.priceFrom : null;
+      if (!projectName || !changeType || !isOwnProjectUrl(p.url)) return { skip: "invalid payload" };
+      const url = localizedProjectUrl(p.url, locale);
+      return deliver(
+        buildMatchEmail(locale, {
+          partnerFirstName: partner.firstName, clientName: common.clientName, projectName, changeType, priceFrom: price, url, portalUrl: common.link,
+        }, theme),
+        {
+          ...tgCommon, kind: "MATCH", projectName, changeType, url, portalUrl: common.link,
+          priceFrom: price != null ? formatPayoutAmount(locale, price) : null,
+        },
+      );
+    }
+    case "PRESENTATION_OPENED": {
+      // Gated on the partner only. The client name the presentation was made for comes from the producer's payload.
+      const raw = obj(row.payload).clientName;
+      const clientName = typeof raw === "string" ? raw.trim().slice(0, 120) : "";
+      const link = presentationsLink(base);
+      return deliver(
+        buildPresentationOpenedEmail(locale, { partnerFirstName: partner.firstName, clientName, link }, theme),
+        { kind: "PRESENTATION_OPENED", clientName, url: link, portalUrl: base },
+      );
+    }
+    case "TIER_UP": {
+      // Gated on the partner only (ACTIVE, above); no claim. The tier and shares come from the CRM Accept's payload.
+      const tier = parseTierUpPayload(row.payload);
+      if (!tier) return { skip: "invalid payload" };
+      const link = commissionsLink(base);
+      return deliver(
+        buildTierUpEmail(locale, { partnerFirstName: partner.firstName, tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, portalUrl: link }, theme),
+        { kind: "TIER_UP", tierName: tier.tierName, handoverShare: tier.handoverShare, fixShare: tier.fixShare, url: link, portalUrl: base },
+      );
+    }
+    case "PROJECT_NEWS": {
+      const items = readNewsPayload(row.payload, isOwnProjectUrl);
+      if (!items.length) return { skip: "invalid payload" };
+      const projects = items.map((pr) => ({ ...pr, url: localizedProjectUrl(pr.url, locale) }));
+      const link = projectsLink(base);
+      return deliver(
+        buildProjectNewsEmail(locale, { partnerFirstName: partner.firstName, projects, link }, theme),
+        buildTelegramProjectNews(locale, projects.map((pr) => ({ name: pr.name, url: pr.url, lines: projectNewsLines(locale, pr) })), link),
+      );
+    }
+    case "WATCH": {
+      const items = readWatchPayload(row.payload, isOwnProjectUrl);
+      if (!items.length) return { skip: "invalid payload" };
+      const projects = items.map((pr) => ({ ...pr, url: localizedProjectUrl(pr.url, locale) }));
+      const link = presentationsLink(base);
+      return deliver(
+        buildWatchEmail(locale, { partnerFirstName: partner.firstName, projects, link }, theme),
+        {
+          kind: "WATCH", url: link, portalUrl: base,
+          projects: projects.map((pr) => ({
+            name: pr.name, url: pr.url,
+            detail: [
+              watchChangeLabels(locale, pr.changes),
+              pr.priceFrom != null ? fmtLine(locale, "priceFrom", { price: formatPayoutAmount(locale, pr.priceFrom) }) : "",
+            ].filter(Boolean).join(" · "),
+          })),
+        },
+      );
+    }
+    case "PROTECTION_ENDING": {
+      // Gated above: the claim is still effectively ACTIVE. Re-check that it is uncommitted and that the end
+      // date is still the one this row was planned for (a new real contact moved it → a new row is planned).
+      const planned = payloadDate(row.payload, "protectedUntil");
+      if (!planned) return { skip: "invalid payload" };
+      const facts = await leadClaimFacts(prisma, own.leadId);
+      if (isCommitted(facts)) return { skip: "committed" };
+      const until = protectionEnd(activeSince(own), facts.lastRealContactAt);
+      if (cyDate(until) !== cyDate(planned) || until.getTime() <= now.getTime()) return { skip: "superseded" };
+      const date = partnerDate(locale, until);
+      return deliver(
+        buildProtectionEndingEmail(locale, { ...common, until }, theme),
+        { ...tgCommon, kind: "PROTECTION_ENDING", date },
+      );
+    }
+    case "CLIENT_QUIET": {
+      const since = payloadDate(row.payload, "since");
+      if (!since) return { skip: "invalid payload" };
+      const lead = await prisma.lead.findUnique({ where: { id: own.leadId }, select: { status: true } });
+      if (!lead || ["KEEP_CONTACT", "LOST", "CLOSED", "RESERVED"].includes(lead.status)) return { skip: "not quiet" };
+      const last = await lastClientActivity(own.leadId, activeSince(own));
+      if (last.getTime() > since.getTime()) return { skip: "superseded" };
+      return deliver(buildClientQuietEmail(locale, common, theme), { ...tgCommon, kind: "CLIENT_QUIET" });
+    }
+    case "BANK_MISSING": {
+      if (partner.bankDetailsEnc) return { skip: "bank details present" };
+      const p = obj(row.payload);
+      const dealId = typeof p.dealId === "string" ? p.dealId : "";
+      const deal = dealId ? await prisma.deal.findUnique({ where: { id: dealId }, select: { leadId: true, commissionStatus: true } }) : null;
+      if (!deal || deal.leadId !== own.leadId || deal.commissionStatus === "CANCELLED" || deal.commissionStatus === "PAID_OUT") return { skip: "deal not open" };
+      const developerPaid = p.stage === "devpaid";
+      const link = bankLink(base);
+      return deliver(
+        buildBankMissingEmail(locale, { ...common, link, developerPaid }, theme),
+        { ...tgCommon, kind: "BANK_MISSING", url: link, developerPaid },
+      );
+    }
+    case "TIER_NEAR": {
+      const p = obj(row.payload);
+      const tierKey = typeof p.tierKey === "string" ? p.tierKey : "";
+      const tierName = typeof p.tierName === "string" ? p.tierName.trim() : "";
+      const handoverShare = typeof p.handoverShare === "number" ? p.handoverShare : null;
+      const fixShare = typeof p.fixShare === "number" ? p.fixShare : null;
+      if (!tierKey || !tierName || handoverShare == null || fixShare == null) return { skip: "invalid payload" };
+      // Reached (or passed) meanwhile: nothing to announce.
+      const tiers = await loadTiers();
+      const sortOf = (k: string | null) => tiers.find((t) => t.key === k)?.sort ?? -1;
+      if (partner.tierKey && sortOf(partner.tierKey) >= sortOf(tierKey)) return { skip: "tier reached" };
+      const link = commissionsLink(base);
+      return deliver(
+        buildTierNearEmail(locale, { partnerFirstName: partner.firstName, tierName, handoverShare, fixShare, portalUrl: link }, theme),
+        { kind: "TIER_NEAR", tierName, handoverShare, fixShare, url: link, portalUrl: base },
+      );
+    }
+    default:
+      return unhandledKind(row.kind);
+  }
+}
+
+/** A telegram.notify line in the partner's language with {vars} filled (plain text; escaped by the builders). */
+function fmtLine(locale: PartnerLocale, key: "priceFrom" | "projectRate" | "viewingOn" | "expectedCommission", vars: Record<string, string>): string {
+  return fmt(dict(locale).telegram.notify[key], vars);
+}
+
+/**
+ * STAGE extras (v2): the viewing date when the client moved to VIEWING_SCHEDULED and the date is still
+ * ahead; the partner's expected commission (live deals) when the client RESERVED.
+ */
+async function stageExtras(locale: PartnerLocale, toStatus: unknown, leadId: string, now: Date): Promise<string[]> {
+  if (toStatus === "VIEWING_SCHEDULED") {
+    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { viewingScheduledAt: true } });
+    const at = lead?.viewingScheduledAt;
+    return at && at.getTime() > now.getTime() ? [fmtLine(locale, "viewingOn", { date: partnerDate(locale, at) })] : [];
+  }
+  if (toStatus === "RESERVED") {
+    const r = await prisma.deal.aggregate({
+      where: { leadId, commissionStatus: { not: "CANCELLED" }, partnerCommission: { gt: 0 } },
+      _sum: { partnerCommission: true },
+    });
+    const sum = r._sum.partnerCommission ?? 0;
+    return sum > 0 ? [fmtLine(locale, "expectedCommission", { amount: formatPayoutAmount(locale, sum) })] : [];
+  }
+  return [];
+}
+
+/**
+ * Sends one prepared row on its channel(s). A permanent Telegram failure (classifyTelegramFailure: blocked
+ * chat, other 4xx except 429, bot not configured) e-mails the row instead when allowed; a blocked chat is
+ * also unlinked — only if it is still the partner's chat.
+ */
+async function deliverRow(d: Delivery, refKey: string, errors: string[]): Promise<DeliveryOutcome> {
+  const results: { email?: ChannelResult; telegram?: ChannelResult } = {};
+  if (d.telegram) {
+    // A split post goes out in order; a failure stops the rest. Once a part went out, a later failure is not
+    // retried (the retry would repeat the parts already sent): it is reported as an error and the row is done.
+    const r = await sendPartnerTelegram(d.telegram.chatId, d.telegram.messages[0]);
+    for (let i = 1; r.ok && i < d.telegram.messages.length; i++) {
+      const next = await sendPartnerTelegram(d.telegram.chatId, d.telegram.messages[i]);
+      if (!next.ok) {
+        errors.push(truncateError(`${refKey}: Telegram part ${i + 1}/${d.telegram.messages.length} not sent: ${next.status} ${next.description}`));
+        break;
+      }
+    }
+    results.telegram = r.ok ? { ok: true } : telegramFailureResult(truncateError(`${r.status} ${r.description}`), r.failure);
+    if (!r.ok && r.failure === "blocked") {
+      await prisma.partner
+        .updateMany({
+          where: { id: d.partnerId, telegramChatId: d.telegram.chatId },
+          data: { telegramChatId: null, telegramLinkedAt: null, notifyChannel: "EMAIL" },
+        })
+        .catch((e) => errors.push(`${refKey}: could not unlink blocked chat: ${truncateError(e)}`));
+    }
+  }
+  const tg = results.telegram;
+  const telegramPermanent = !!tg && !tg.ok && tg.permanent === true;
+  const email = d.email ?? (permanentFallbackToEmail({ telegramPermanent, emailAttempted: false, emailAllowed: !!d.fallbackEmail }) ? d.fallbackEmail : null);
+  if (email) {
+    try {
+      await sendEmail({ to: email.to, subject: email.mail.subject, text: email.mail.text, html: email.mail.html });
+      results.email = { ok: true };
+    } catch (e) {
+      results.email = { ok: false, error: truncateError(e), transport: true };
+    }
+  }
+  return deliveryOutcome(results);
+}
+
+/** Advisory-lock key of the partner-notify run ("PNOT"). */
+const NOTIFY_LOCK_KEY = 0x504e4f54;
+const LOCK_HOLD_MS = 15 * 60_000;
+
+/**
+ * Runs fn while holding the partner-notify advisory lock; null when another run holds it.
+ * The lock is transaction-scoped (pg_try_advisory_xact_lock) on a connection pinned by an otherwise idle
+ * interactive transaction: a session lock taken through Prisma's pool could be released on a different
+ * connection and stay held forever. Commit/rollback (also a crash) releases it. fn itself uses the
+ * normal client; per-row claiming (sendPendingNotifications) stays correct even without the lock.
+ */
+export async function withNotifyLock<T>(fn: () => Promise<T>): Promise<T | null> {
+  return prisma.$transaction(
+    async (tx) => {
+      const rows = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(${NOTIFY_LOCK_KEY}::bigint) AS locked`;
+      if (!rows[0]?.locked) return null;
+      return fn();
+    },
+    { maxWait: 10_000, timeout: LOCK_HOLD_MS },
+  );
+}
+
+/**
+ * Sends up to `limit` due outbox rows, oldest first (call inside withNotifyLock).
+ * Each row is claimed with a guarded update (sentAt: null → now, error "sending") before anything is
+ * mailed, so two runs can never mail the same row. A failed send releases the row (sentAt null,
+ * failedAt, error) and charges an attempt; due again after the backoff (retryAt), up to MAX_ATTEMPTS.
+ * Delivery goes to the partner's channel(s) (deliverRow): sent when at least one channel succeeded; a row
+ * whose every channel failed permanently (blocked chat, Telegram 4xx, bot not configured, no e-mail allowed)
+ * is closed. When no channel got through, the row is released as above. Only shared transport failures
+ * (mail transport, Telegram 5xx/429/network/timeout) feed the breaker: three in a row stop the batch
+ * without charging those rows; any other failure is charged an attempt at once and never stops the batch.
+ * Rows left at "sending" for over an hour (a run died mid-send) are first released as a failed attempt.
+ */
+export async function sendPendingNotifications(now: Date, start: Date, limit = 50): Promise<SendResult> {
+  const result: SendResult = { sent: 0, skipped: {}, failed: 0, dead: 0, errors: [] };
+  // A run that died after claiming a row left it at "sending": release it as a failed attempt (it may or
+  // may not have been mailed — at most one duplicate, against a lost mail), then backoff/dead apply as usual.
+  const recovered = await prisma.partnerNotification.updateMany({
+    where: stuckSendingWhere(now),
+    data: { sentAt: null, attempts: { increment: 1 }, failedAt: now, error: INTERRUPTED_ERROR },
+  });
+  if (recovered.count) result.errors.push(`recovered ${recovered.count} row(s) interrupted while sending`);
+  // Client- and money-related rows first; the daily v2 batch (one row per partner) only fills what is left
+  // of the run, so a big morning batch never holds back a stage change or a payout.
+  const select = { id: true, kind: true, refKey: true, partnerId: true, claimId: true, leadId: true, payload: true, createdAt: true } as const;
+  const [urgent, dead] = await Promise.all([
+    prisma.partnerNotification.findMany({ where: { ...dueWhere(now), kind: { notIn: [...BATCH_KINDS] } }, orderBy: { createdAt: "asc" }, take: limit, select }),
+    prisma.partnerNotification.count({ where: deadWhere() }),
+  ]);
+  const rows = urgent.length < limit
+    ? urgent.concat(await prisma.partnerNotification.findMany({
+        where: { ...dueWhere(now), kind: { in: [...BATCH_KINDS] } }, orderBy: { createdAt: "asc" }, take: limit - urgent.length, select,
+      }))
+    : urgent;
+  result.dead = dead;
+  if (rows.length === 0) return result;
+  const base = partnerBaseUrl(); // throws in production without PARTNER_HOST — never mail a localhost link
+
+  const streak = new TransportStreak();
+  const charge = async (ids: string[]) => {
+    if (!ids.length) return;
+    await prisma.partnerNotification
+      .updateMany({ where: { id: { in: ids }, sentAt: null }, data: { attempts: { increment: 1 } } })
+      .catch((e) => result.errors.push(`could not count attempts: ${truncateError(e)}`));
+  };
+  const release = async (row: OutboxRow, error: string, countAttempt: boolean) => {
+    result.failed++;
+    result.errors.push(`${row.refKey}: ${error}`);
+    await prisma.partnerNotification
+      .update({
+        where: { id: row.id },
+        data: { sentAt: null, failedAt: new Date(), error, ...(countAttempt ? { attempts: { increment: 1 } } : {}) },
+      })
+      .catch((e2) => result.errors.push(`${row.refKey}: could not record failure: ${truncateError(e2)}`));
+  };
+
+  const themes = new Map<string, EmailTheme>();
+  let tripped = false;
+  for (const row of rows) {
+    const claimed = await prisma.partnerNotification.updateMany({ where: { id: row.id, sentAt: null }, data: { sentAt: new Date(), error: SENDING_MARK } /* claim time, not run start: stuck-row recovery measures from here */ });
+    if (claimed.count !== 1) continue; // another run took it
+
+    let o: Outcome;
+    try {
+      o = await prepare(row, now, start, base, themes);
+    } catch (e) {
+      await release(row, truncateError(e), true);
+      continue;
+    }
+    if ("skip" in o) {
+      await prisma.partnerNotification
+        .update({ where: { id: row.id }, data: { error: o.skip } })
+        .catch((e) => result.errors.push(`${row.refKey}: could not record skip: ${truncateError(e)}`));
+      result.skipped[o.skip] = (result.skipped[o.skip] ?? 0) + 1;
+      continue;
+    }
+    // Telegram quiet hours (v2): Telegram waits until they end; e-mail is never held.
+    if (o.telegram && o.quietUntil) {
+      const quietUntil = o.quietUntil;
+      if (!o.email) {
+        // Telegram only: the row itself waits (released unsent, no attempt charged).
+        await prisma.partnerNotification
+          .update({ where: { id: row.id }, data: { sentAt: null, error: null, notBefore: quietUntil } })
+          .catch((e) => result.errors.push(`${row.refKey}: could not hold for quiet hours: ${truncateError(e)}`));
+        result.skipped["quiet hours"] = (result.skipped["quiet hours"] ?? 0) + 1;
+        continue;
+      }
+      // E-mail now; a Telegram-only copy waits (refKey unique: a rerun never doubles it).
+      try {
+        await prisma.partnerNotification.createMany({
+          data: [{
+            kind: row.kind, refKey: `${row.refKey}#tg`, partnerId: row.partnerId, leadId: row.leadId, claimId: row.claimId,
+            payload: { ...obj(row.payload), tgOf: row.refKey } as object, notBefore: quietUntil,
+          }],
+          skipDuplicates: true,
+        });
+        o = { ...o, telegram: null, fallbackEmail: null };
+      } catch (e) {
+        // Could not park the Telegram part: send it now rather than lose it.
+        result.errors.push(`${row.refKey}: could not hold Telegram for quiet hours: ${truncateError(e)}`);
+      }
+    }
+    const out = await deliverRow(o, row.refKey, result.errors);
+    if (out.state === "closed") {
+      // Nothing went out and nothing can (Telegram failed permanently, no e-mail allowed): done, with the reason.
+      await prisma.partnerNotification
+        .update({ where: { id: row.id }, data: { sentAt: new Date(), error: truncateError(out.error) } })
+        .catch((e) => result.errors.push(`${row.refKey}: could not record outcome: ${truncateError(e)}`));
+      const key = out.blocked ? TELEGRAM_BLOCKED : TELEGRAM_REJECTED;
+      result.skipped[key] = (result.skipped[key] ?? 0) + 1;
+      continue;
+    }
+    if (out.state === "failed") {
+      if (!out.transport) {
+        // Not a shared outage: charge the attempt now (normal backoff); the breaker is not involved.
+        await release(row, truncateError(out.error), true);
+        continue;
+      }
+      await release(row, truncateError(out.error), false);
+      if (streak.fail(row.id)) {
+        tripped = true;
+        result.stoppedEarly = "delivery transport failing";
+        break;
+      }
+      continue;
+    }
+    result.sent++;
+    if (out.error) result.errors.push(`${row.refKey}: ${out.error}`);
+    await charge(streak.succeed());
+    // It went out on at least one channel: a failure to clear the marker must not turn into a resend.
+    try {
+      await prisma.partnerNotification.update({ where: { id: row.id }, data: { sentAt: new Date(), error: out.error ? truncateError(out.error) : null } });
+    } catch (e) {
+      console.error("[partner-notify] sent but could not mark", row.refKey, truncateError(e));
+    }
+  }
+  await charge(streak.finish(tripped));
+  return result;
+}

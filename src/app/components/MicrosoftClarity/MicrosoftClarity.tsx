@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTrackingAllowed } from "@/lib/useTrackingAllowed";
 
 declare global {
   interface Window {
@@ -10,12 +11,33 @@ declare global {
   }
 }
 
+/**
+ * Microsoft Clarity session recording, on a production hostname only.
+ *
+ * The project id is compiled into the bundle, so until 2026-10-22 every
+ * developer's `npm run dev` recorded a session into the live Clarity project —
+ * the same hole as the Meta pixel, Google Ads and GTM (see
+ * src/lib/trackingHost.ts). Clarity's cost is not a polluted conversion count
+ * but polluted RECORDINGS and heatmaps: whoever watches them was watching
+ * someone else's localhost.
+ *
+ * The guard sits INSIDE both effects rather than as an early `return null`.
+ * That is deliberate and not a style choice: this component calls three hooks,
+ * so returning early after the first would skip the two effects on the initial
+ * render and then call them once the host resolves — "rendered more hooks than
+ * during the previous render". The Script-based tags can return early because
+ * useTrackingAllowed() is their only hook.
+ */
 export default function MicrosoftClarity({
   hasConsent,
 }: {
   hasConsent: boolean;
 }) {
+  const allowed = useTrackingAllowed();
+
   useEffect(() => {
+    if (!allowed) return;
+
     // 1. Инициализация Clarity (твой же сниппет)
     (function (c: any, l: Document, a: string, r: string, i: string) {
       // если clarity уже инициалирован — ничего не делаем повторно
@@ -55,9 +77,11 @@ export default function MicrosoftClarity({
         setTimeout(insert, 2000);
       }
     })(window, document, "clarity", "script", "qoasnhd0ms");
-  }, []);
+  }, [allowed]);
 
   useEffect(() => {
+    if (!allowed) return;
+
     // 2. Передаём согласие безопасно
     // Трюк: даже если clarity ещё подгружается, её shim-функция уже есть.
     // shim складывает вызовы в очередь (c[a].q).
@@ -73,7 +97,7 @@ export default function MicrosoftClarity({
       // (после загрузки clarity сама ещё раз вызовет очередь .q)
       console.warn("Clarity consent set failed early:", err);
     }
-  }, [hasConsent]);
+  }, [hasConsent, allowed]);
 
   return null;
 }

@@ -15,6 +15,7 @@ import { listedUnits } from "@/lib/developmentAvailability";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
 import { syncOneDevelopment, type SyncOneDevelopmentResult } from "@/lib/feedSync";
 import { uniqueDevelopmentSlug, autoMetaTitle, autoMetaDescription, isAutoSeoText } from "@/lib/developmentSeo";
+import { extraLinksFromJson } from "@/lib/developmentExtraLinks";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
@@ -143,7 +144,7 @@ export async function generateDescription(developmentId: string, words: number, 
     ].filter(Boolean).join(", ");
 
     const texts = await generateProjectDescription({
-      publicName: ov?.alias || d.publicName, developer: d.developer ?? undefined,
+      publicName: ov?.alias || d.publicName, otherNames: ov?.alias ? [d.publicName] : undefined, developer: d.developer ?? undefined,
       district: ov?.district || d.district || "",
       town: ov?.town || d.town || "",
       area,
@@ -524,6 +525,11 @@ export async function saveOverride(formData: FormData) {
     town: clean(formData, "town"),
     area: clean(formData, "area"),
     heroVideo: clean(formData, "heroVideo"),
+    // Buttons under the description (project video, 360° tour, virtual
+    // walkthrough, project camera). extraLinksFromJson refuses anything that
+    // is not an https:// URL on a known kind and stores null for an empty
+    // list — same null-when-empty convention as the fields around it.
+    extraLinks: extraLinksFromJson(formData.get("extraLinks")) as any,
     descriptionEN: clean(formData, "descriptionEN"),
     descriptionDE: clean(formData, "descriptionDE"),
     descriptionPL: clean(formData, "descriptionPL"),

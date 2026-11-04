@@ -10,11 +10,12 @@ import {
 import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute, type Locale } from "@/lib/locale";
 import { guidesPageAlternates, guidesPagePath } from "@/lib/guidesPage";
 import { isGuideLang } from "@/lib/guides/registry";
+import { articleSegments, sectionSegments } from "@/lib/articleSections";
 import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
-import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES } from "@/middleware";
+import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, RETIRED_BLOG_REDIRECTS } from "@/middleware";
 
 const websiteUrl = "https://cyprusvipestates.com";
 const langs = PUBLIC_LOCALES;
@@ -44,6 +45,17 @@ const MERGED_SLUGS_BY_LANG: Partial<Record<Locale, Record<string, string>>> = {
   en: EN_LANDING_MERGES,
   ru: RU_LANDING_MERGES,
 };
+
+// A row whose URL now 301s elsewhere (a merged landing page, a retired DE blog article) is not a page
+// in its own right: it must not be listed as a <loc>, and must not appear as another page's hreflang
+// alternate either. The <loc> lists and the alternates share this one test so they cannot drift apart.
+// Blog: the redirect map is keyed "blog/<slug>" and only ever applies under /de/ (middleware).
+// Pages: only flat, single-segment slugs are merge keys (see MERGED_SLUGS_BY_LANG above).
+function isRedirectedRow(typeKey: string, r: { language: string; slug: string; parentSanityId?: string | null }): boolean {
+  if (typeKey === "blog") return r.language === "de" && !!RETIRED_BLOG_REDIRECTS[`blog/${r.slug}`];
+  if (typeKey === "pages") return !r.parentSanityId && !!MERGED_SLUGS_BY_LANG[r.language as Locale]?.[r.slug];
+  return false;
+}
 
 type Alt = { hreflang: string; href: string };
 type SitemapPage = {
@@ -130,7 +142,12 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const cfg = ALT_CFG[typeKey];
   const rows: any[] = (await cfg.model.findMany({
     where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}), ...(cfg.where ?? {}) },
-    select: { language: true, slug: true, translationGroupId: true, ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}) },
+    select: {
+      language: true, slug: true, translationGroupId: true,
+      ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}),
+      // Blog rows live under /blog or the language's guides slug depending on their category.
+      ...(typeKey === "blog" ? { category: { select: { translationGroupId: true } } } : {}),
+    },
   })).filter((r: any) => (langs as readonly string[]).includes(r.language));
 
   // Resolve a row to its full path segments. Detail types are always single-segment
@@ -155,6 +172,8 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
       }
       return out;
     };
+  } else if (typeKey === "blog") {
+    segsFor = (r) => articleSegments(r.language, r.slug, r.category?.translationGroupId);
   } else {
     segsFor = (r) => [cfg.seg, r.slug];
   }
@@ -162,6 +181,11 @@ async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const groups = new Map<string, any[]>();
   for (const r of rows) {
     if (!r.translationGroupId) continue;
+    // A redirected row (merged landing, retired article) is not a page: it advertises no hreflang and none
+    // is advertised to it. It stays in `rows` above on purpose: a merged PARENT still anchors the nested
+    // URL of its children (/pl/sprzedaz-domow-na-cyprze/domy-w-limassol); dropping it from the parent
+    // lookup collapsed those children to flat paths that redirect.
+    if (isRedirectedRow(typeKey, r)) continue;
     (groups.get(r.translationGroupId) ?? groups.set(r.translationGroupId, []).get(r.translationGroupId)!).push(r);
   }
   const index = new Map<string, Alt[]>();
@@ -272,9 +296,10 @@ async function generateBlogSitemap(): Promise<SitemapPage[]> {
     posts.forEach((post) => {
       const slug = post.slug?.[lang]?.current;
       if (!slug) return;
+      if (isRedirectedRow("blog", { language: lang, slug })) return;
 
       pages.push({
-        route: `${prefix}/blog/${slug}`,
+        route: localizedHref(lang, sectionSegments(lang, slug, (post as any).section)),
         changefreq: "weekly",
         priority: 0.7,
         lastmod: post._updatedAt,

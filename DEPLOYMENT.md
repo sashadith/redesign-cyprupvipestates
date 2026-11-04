@@ -19,6 +19,7 @@ of the 2026-07 staging→production merge.
 | Database | **Same shared Postgres DB as production** (read-mostly use in practice, but nothing enforces that — see below) | `cyprusvipestates` on `localhost:5432` |
 | Crons | **None** — production's crons own the shared DB; staging's own `drive-sync`/`feed-sync` entries were disabled (commented out, not deleted) 2026-07-16 once production took over both jobs | All production-facing crons active — see "Cron topology" below for the full schedule |
 | `public/uploads` | Symlink → `/var/www/shared-uploads` | Symlink → `/var/www/shared-uploads` |
+| Developer contract PDFs | `CONTRACTS_DIR` or `/var/www/shared-contracts` (same dir — the default is a fixed path, not under the release) | `CONTRACTS_DIR` or `/var/www/shared-contracts`, created by the first upload; **not web-served** (outside `public/`), only via `/api/admin/developer-contracts/[id]`; removed contracts land in `trash/` beside it; NOT in `cvp-uploads-backup.sh` yet |
 
 Both apps point `public/uploads` at the same physical directory
 (`/var/www/shared-uploads`, introduced during the Phase 3 retry — see
@@ -406,10 +407,11 @@ hardcoded in the crontab):
 | `*/5 * * * *` | `publish-scheduled` (publishes scheduled content) | production, `Authorization: Bearer $CRON_SECRET` |
 | `30 4 * * *` | `drive-sync` | production, `?key=$CRON_SECRET` — Google-Drive developers only; it skips Dropbox-linked accounts by URL (see `kuutio-sync` below) |
 | `0 3 * * *` | `kuutio-sync` (Kuutio's Dropbox shared-link sync — see src/lib/dropboxAvailabilitySync.ts) | production, `?key=$CRON_SECRET&scheduled=1` — installed 2026-08-26. `scheduled=1` is what lets the developer's own `driveSyncInterval` (weekly for Kuutio) skip a run; without it the route always syncs, which is what a manual `curl` should do. Slot chosen so a ~12-min run overlaps nothing (psi-sync 02:00 ends ~02:21, feed-sync starts 04:00) while still landing inside `action-digest`'s 4h lookback window. Until this entry existed, **no scheduled job was responsible for Dropbox developers at all** — Kuutio's 6 projects / 93 units sat unrefreshed from 2026-08-13 to 2026-08-26 |
+| `45 2 * * *` | `stylianides-sync` (Stylianides Group — one Dropbox link per project on `Development.driveFolderId`, dated PDF price list at each folder root; see src/lib/stylianidesSync.ts) | production, `?key=$CRON_SECRET&scheduled=1` — added 2026-10-30 together with its cron-health entry. Daily: an unchanged price list costs one folder listing and no model call (signatures in `DeveloperAccount.driveFileModified`). `&dry=1` reports without writing, `&force=1` re-reads unchanged lists, `&dev=<id>` limits to one project. A project whose list cannot be read, yields no units or whose references drift is refused and fails the run (Telegram on a failure streak) |
 | `0 4 * * *` | `feed-sync` | production, `?key=$CRON_SECRET` |
 | `30 3 * * *` | `cvp-db-backup.sh` | DB dump, not app-specific |
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |
-| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` |
+| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` — since 2026-10-29 the same call first sends the developer-contract renewal reminders (14 days / 1 day before the end, own CronRunLog job `contract-reminders`, src/lib/developerContractReminders.ts) |
 | `30 5 * * *` | `gsc-sync` (Google Search Console daily sync — see src/lib/gsc/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op ("skipped: not configured") until `GSC_SERVICE_ACCOUNT_KEY_PATH`/`GSC_SITE_PROPERTY` are set, see .env.example |
 | `15 5 * * *` | `mcp-cleanup` (MCP connector: expired OAuth codes/tokens, expired email drafts, stuck-send alert — see docs/CRM-MCP-CONNECTOR.md) | production, `?key=$CRON_SECRET` — to be installed with the Phase 1 deploy |
 | `0 1 * * *` | `cybarco-sync` (website + price-list PDFs → 15 Developments; see src/lib/cybarcoSync.ts) | production, `?key=$CRON_SECRET` — 01:00 keeps a clear hour before psi-sync at 02:00; a first run mirrors several hundred images |
@@ -417,8 +419,33 @@ hardcoded in the crontab):
 | `0 6 * * 0` | `seo-advisor` (weekly Claude-analyzed SEO suggestions, Sundays — see src/lib/seoAdvisor/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op until `ANTHROPIC_API_KEY` is set (it already is) |
 | `2,7,12,17,22,27,32,37,42,47,52,57 * * * *` | `email-inbound` (files matched lead replies into their timeline, read-only IMAP — see src/lib/emailInbound/) | production, `?key=$CRON_SECRET` — installed 2026-07-25; offset from `publish-scheduled`'s `*/5` so the two never fire in the same wall-clock second |
 | `4,9,14,19,24,29,34,39,44,49,54,59 * * * *` | `booking-reminders` (Telegram 1h/10m meeting reminders for confirmed bookings — see src/app/api/cron/booking-reminders/) | production, `?key=$CRON_SECRET` — installed 2026-07-25; offset +4 from `publish-scheduled`'s `*/5` and distinct from `email-inbound`'s +2, so no two of the three ever land on the same wall-clock second |
-| `3,8,13,18,23,28,33,38,43,48,53,58 * * * *` | `social-reminders` (Telegram reminders for planned, unconfirmed Typefully drafts: evening before at 20:00, T-90, T-30, missed at +15 min; quiet hours 22:00–06:30 Cyprus — see src/lib/social/socialReminders.ts) | production, `?key=$CRON_SECRET` — installed 2026-10-09; offset +3, distinct from the +0/+2/+4 five-minute jobs. Times and quiet hours are computed in Cyprus time inside the job, so this entry needs no winter adjustment. Read-only towards Typefully; exactly-once state in `social_reminders_sent` |
+| `3,8,13,18,23,28,33,38,43,48,53,58 * * * *` | `social-reminders` (Telegram reminders for planned, unconfirmed Typefully drafts: evening before at 20:00, T-90, T-30, missed at +15 min; quiet hours 22:00–06:30 Cyprus — see src/lib/social/socialReminders.ts) | production, `?key=$CRON_SECRET` — installed 2026-10-09; offset +3, distinct from the +0/+2/+4 five-minute jobs. Times and quiet hours are computed in Cyprus time inside the job, so this entry needs no winter adjustment. Read-only towards Typefully; exactly-once state in `social_reminders_sent`, outage state in `social_monitor_state` (see "Typefully outage alerts" below) |
 | `1,16,31,46 * * * *` | `meta-leadgen-poll` (Meta Lead Ads safety net: imports every instant-form lead of the last 48 h the webhook missed, idempotent on leadgen_id — see docs/META-LEADGEN.md) | production, `?key=$CRON_SECRET` — added 2026-10-11; one-off catch-up with `&sinceHours=168`. Watched by email-inbound (alert after 45 min without a run). Needs `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `META_PAGE_ACCESS_TOKEN`, `META_PAGE_ID` in shared/.env |
+
+**Typefully outage alerts (2026-10-24, against false alarms).** Each
+`social-reminders` run is one check of Typefully: 20 s timeout, and a timeout,
+network error, 429 or 5xx is retried twice (after 5 s, then 15 s) before the
+check counts as failed. A failed check is only logged — the cron row stays
+`ok=true` with "Typefully check failed N× in a row — logged, no alert yet", so
+cron-health does not turn it into an URGENT item. The Telegram alert "🚨
+Typefully unreachable" goes out once per outage, after **3 failed checks in a
+row spanning at least 15 minutes** (with the 5-minute cron that is the 4th
+check), or after the **first** failed check if a planned draft remembered from
+the last good check is due within 2 hours. From then on the run is `ok=false`,
+and the Action Center item / digest line "Typefully unreachable" appear (below
+the threshold they stay hidden; a missing `TYPEFULLY_API_KEY` is always shown).
+When Typefully answers again, ONE message: "✅ Typefully reachable again —
+social reminders are running." Quiet hours (22:00–06:30 Cyprus) hold both
+until 06:30. Count, first-failure time, alert/recovery flags and the remembered
+draft dates live in the one-row table `social_monitor_state` (id `typefully`),
+so pm2 restarts do not reset them. Admin pages keep their single 5-second
+Typefully request — the retries apply to the cron check only. To see the state:
+`SELECT * FROM social_monitor_state;`. Testbed check:
+`scripts/qa/social-reminders-db-check.mts` (gated by `assert-not-prod-db`).
+**The deploy that introduces this needs `CVP_RUN_MIGRATE=1`** (migration
+`20261024150000_social_monitor_state`): without the table every check fails
+to record, so outage alerts stop working. The reminders themselves keep
+running, because a good check's state write is guarded.
 
 VPS system clock is UTC (confirmed: `Development.syncedAt` rows written by
 `feed-sync`'s `0 4 * * *` entry land at `04:00:xx.xxxZ`) — crontab times above

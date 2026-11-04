@@ -1,5 +1,6 @@
 import React from "react";
 import { localizedHref, localePrefix, LOCALE_LABELS, nonDefaultLocalePattern } from "@/lib/locale";
+import { ALL_GUIDES_SLUGS } from "@/lib/articleSections";
 
 /* Shared nav data + lightweight SVG icons (no icon library) + link resolution.
    Used by the desktop nav links, the language switcher, and the mobile menu.
@@ -18,7 +19,7 @@ const PROJECT_DETAIL_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects/[^/]+$`);
 /* A blog article opens on the same kind of hero: a full-bleed cover photo the
    editor supplied, with the kicker, headline and byline over it. Same treatment
    as a project page, for the same reason (2026-10-04). */
-const BLOG_DETAIL_RE = new RegExp(`^(/(${NON_DEFAULT}))?/blog/[^/]+$`);
+const BLOG_DETAIL_RE = new RegExp(`^(/(${NON_DEFAULT}))?/(blog|${ALL_GUIDES_SLUGS.join("|")})/[^/]+$`);
 
 /* Routes with a dark, full-bleed hero where the nav should stay FULLY transparent
    at the top (signature look): the home page and the /projects listing, in every

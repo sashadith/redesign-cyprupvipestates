@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import BlogEditForm from "./BlogEditForm";
 import { utcToZonedInput } from "@/lib/tz";
-import { localizedHref, localeDir } from "@/lib/locale";
+import { localeDir } from "@/lib/locale";
+import { articlePublicHref } from "@/lib/articlePublicUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,8 @@ export default async function EditBlog({ params }: { params: { id: string } }) {
   const b = await prisma.blog.findUnique({ where: { id: params.id } });
   if (!b) notFound();
   const seo = (b.seo as any) ?? {};
+  // Public URL: /blog/<slug>, or the language's guides URL when the article's category is a guide category.
+  const publicHref = await articlePublicHref(b);
   const [authors, categories] = await Promise.all([
     prisma.author.findMany({ where: { language: b.language }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.category.findMany({ where: { language: b.language }, select: { id: true, title: true }, orderBy: { title: "asc" } }),
@@ -21,9 +24,9 @@ export default async function EditBlog({ params }: { params: { id: string } }) {
     <div className="max-w-2xl">
       <Link href="/admin/content/blog" className="text-sm text-[#1B4B43] hover:underline">← Back to blog</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-1">{b.title}</h1>
-      <p className="text-sm text-[#6B7280] mb-6">{b.language.toUpperCase()} · /blog/{b.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
+      <p className="text-sm text-[#6B7280] mb-6">{b.language.toUpperCase()} · {publicHref} <span className="text-[#C29A5E]">(slug editable below)</span></p>
       <TranslationsPanel type="blog" groupId={b.translationGroupId} currentId={b.id} currentLang={b.language} />
-      <a href={`/api/preview?path=${encodeURIComponent(localizedHref(b.language, ["blog", b.slug]))}`} target="_blank" rel="noopener" className="inline-block mb-5 text-sm text-[#1B4B43] hover:underline">Preview draft ↗</a>
+      <a href={`/api/preview?path=${encodeURIComponent(publicHref)}`} target="_blank" rel="noopener" className="inline-block mb-5 text-sm text-[#1B4B43] hover:underline">Preview draft ↗</a>
 
       <BlogEditForm
         blog={{

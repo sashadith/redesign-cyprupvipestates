@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import nestedPageRedirects from "../nestedPageRedirects.json";
 import assert from "node:assert/strict";
-import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, mergedTargetFor, nestedCanonicalFor } from "../../middleware";
+import { DE_LANDING_MERGES, EN_BLOG_RENAMES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES, mergedTargetFor, nestedCanonicalFor } from "../../middleware";
 
 test("mergedTargetFor answers exactly what each locale's merge map says", () => {
   for (const [k, v] of Object.entries(DE_LANDING_MERGES)) assert.equal(mergedTargetFor(`/de/${k}`), v, `de ${k}`);
@@ -10,14 +10,61 @@ test("mergedTargetFor answers exactly what each locale's merge map says", () => 
   for (const [k, v] of Object.entries(EN_LANDING_MERGES)) assert.equal(mergedTargetFor(`/${k}`), v, `en ${k}`);
 });
 
+test("the P01/P02 duplicates redirect to the hub of their own query", () => {
+  assert.equal(mergedTargetFor("/de/immobilien-zypern-kaufen"), "/de/immobilien-auf-zypern");
+  assert.equal(mergedTargetFor("/de/top-100-immobilien-auf-zypern"), "/de/immobilien-auf-zypern");
+  assert.equal(mergedTargetFor("/de/haeuser-in-zypern"), "/de/haeuser-auf-zypern");
+  assert.equal(mergedTargetFor("/de/neubau-haeuser-zypern"), "/de/haeuser-auf-zypern");
+  assert.equal(mergedTargetFor("/de/immobilien-auf-zypern"), null);
+  assert.equal(mergedTargetFor("/de/haeuser-auf-zypern"), null);
+  assert.equal(mergedTargetFor("/de/haeuser-in-zypern-fuer-investoren"), null);
+});
+
+test("the P06/P11/P12/P30 duplicates redirect single-hop to their flagship, nested and flat", () => {
+  for (const from of ["strandvillen-zypern-kaufen", "strandnahe-immobilien-zypern", "haeuser-auf-zypern/strandhaus-auf-zypern", "strandhaus-auf-zypern"]) {
+    assert.equal(mergedTargetFor(`/de/${from}`), "/de/strandvillen-zypern", from);
+  }
+  assert.equal(mergedTargetFor("/de/villen-paphos-investoren-kaufen"), "/de/haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos");
+  for (const from of ["haeuser-zum-verkauf-limassol", "villen-in-limassol-fuer-investoren", "haeuser-auf-zypern/haeuser-in-limassol-kaufen", "haeuser-in-limassol-kaufen"]) {
+    assert.equal(mergedTargetFor(`/de/${from}`), "/de/villen-limassol-kaufen", from);
+  }
+  assert.equal(mergedTargetFor("/de/villen-paphos-mit-privatem-pool"), "/de/haeuser-auf-zypern/haus-mit-pool-auf-zypern");
+  for (const keep of ["strandvillen-zypern", "villen-limassol-kaufen", "haeuser-auf-zypern/haus-mit-pool-auf-zypern", "haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos"]) {
+    assert.equal(mergedTargetFor(`/de/${keep}`), null, keep);
+  }
+});
+
+test("the four school-proximity pages redirect single-hop to the family-villa flagship", () => {
+  for (const city of ["zypern", "limassol", "paphos", "larnaka"]) {
+    assert.equal(mergedTargetFor(`/de/immobilien-nahe-internationalen-schulen-${city}`), "/de/familienvillen-zypern", city);
+  }
+  assert.equal(mergedTargetFor("/de/familienvillen-zypern"), null);
+});
+
 test("retired DE blog articles and non-merged paths", () => {
   assert.equal(
+    mergedTargetFor("/de/blog/auswandern-nach-zypern-aus-deutschland"),
+    // The target is a guide article, so it is the final URL (guides slug), not a /blog URL that would redirect once more.
+    "/de/ratgeber/wie-nach-zypern-auswandern",
+  );
+  assert.equal(
     mergedTargetFor("/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern"),
-    "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+    "/de/ratgeber/steuern-zypern-vs-deutschland-oesterreich-schweiz",
   );
   assert.equal(mergedTargetFor("/de/blog/ratgeber-fuer-deutsche-rentner"), null);
   assert.equal(mergedTargetFor("/blog/anything"), null);
   assert.equal(mergedTargetFor("/"), null);
+});
+
+test("renamed EN blog articles redirect single-hop to their new slug", () => {
+  for (const [k, v] of Object.entries(EN_BLOG_RENAMES)) {
+    assert.equal(mergedTargetFor(`/${k}`), v, k);
+    assert.equal(mergedTargetFor(v), null, `target must not redirect again: ${v}`);
+  }
+  assert.equal(
+    mergedTargetFor("/blog/cyprus-permanent-residency-golden-visa-guide"),
+    "/guides/cyprus-permanent-residency-category-6-2-guide",
+  );
 });
 
 test("nestedCanonicalFor sends a flat leaf to its nested canonical path and leaves everything else alone", () => {

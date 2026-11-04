@@ -117,9 +117,10 @@ export default async function FaqPage({ params }: Props) {
 
         <Form
           lang={lang}
-          title={<>{t.formTitlePlain}<span className="it">{t.formTitleItalic}</span>?</>}
+          title={<>{t.formTitlePlain}<span className="it">{t.formTitleItalic}</span>{t.formTitleTail ?? ""}?</>}
           subtitle={t.formSubtitle}
           showQuestionField
+          className="formsec--faq"
         />
       </main>
       <Footer lang={lang} />

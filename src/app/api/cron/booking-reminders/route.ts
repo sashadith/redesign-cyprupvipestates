@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCronLog } from "@/lib/cronLog";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { leadLabel } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
 import { formatInZone, CYPRUS_TZ } from "@/lib/booking/timezone";
 import type { BookingRequest } from "@prisma/client";
@@ -35,7 +36,6 @@ type SendOutcome = "sent" | "skipped" | "failed";
 // entirely and the caller marked SentAt unconditionally regardless of which
 // of these two cases it was.
 async function sendReminder(booking: ReminderBooking, label: "1h" | "10m", siteUrl: string): Promise<SendOutcome> {
-  const leadName = `${booking.lead.firstName} ${booking.lead.lastName}`.trim();
   const time = formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ);
   const typeLabel = booking.meetingType === "ZOOM" ? "Zoom" : "Phone";
   const whenLabel = label === "1h" ? "in 1 hour" : "in 10 minutes";
@@ -44,7 +44,7 @@ async function sendReminder(booking: ReminderBooking, label: "1h" | "10m", siteU
     : "";
   const msg =
     `<b>⏰ Meeting ${whenLabel}</b>\n` +
-    `${esc(leadName)} — ${time} (Cyprus time) · ${typeLabel}` +
+    `${esc(leadLabel(booking.lead, booking.leadId))} — ${time} (Cyprus time) · ${typeLabel}` +
     zoomNote +
     `\n\n<a href="${siteUrl}/admin/crm/${booking.leadId}">Open in CRM</a>`;
   try {
@@ -64,14 +64,14 @@ async function sendReminder(booking: ReminderBooking, label: "1h" | "10m", siteU
 async function sendFailureAlert(booking: ReminderBooking, label: "1h" | "10m", siteUrl: string): Promise<void> {
   const leadName = `${booking.lead.firstName} ${booking.lead.lastName}`.trim();
   const time = formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ);
-  const text = [
-    `🔴 Meeting reminder (${label}) failed to send — ${leadName}`,
+  const text = (who: string) => [
+    `🔴 Meeting reminder (${label}) failed to send — ${who}`,
     `Meeting at ${time} (Cyprus time). Telegram delivery failed ${MAX_REMINDER_ATTEMPTS} times in a row — giving up, the client was not notified by this system.`,
     `Reach out manually if the meeting is still upcoming.`,
     `${siteUrl}/admin/crm/${booking.leadId}`,
   ].join("\n");
   const subject = `Meeting reminder (${label}) failed — ${leadName}`;
-  await Promise.allSettled([sendTelegramMessage(text), sendEmail({ subject, text })]);
+  await Promise.allSettled([sendTelegramMessage(esc(text(leadLabel(booking.lead, booking.leadId)))), sendEmail({ subject, text: text(leadName) })]);
 }
 
 async function scanAndSendReminders() {

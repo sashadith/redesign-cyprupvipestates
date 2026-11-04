@@ -6,6 +6,7 @@ import { recordInboundLead, normalizeLeadLocale } from "@/lib/leadNotify";
 import { safeUrl, allowedHost, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import { HE_LANGUAGE_NOTE, LOCALES, type Locale } from "@/lib/locale";
 import { stripHtmlToText } from "@/lib/emailSignature/sanitize";
+import { sendLeadToMeta } from "@/lib/metaCapi";
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();
@@ -522,6 +523,8 @@ export async function POST(request: Request) {
       });
       leadId = lead.id;
       await recordInboundLead({ leadId, source: "ROI_CALCULATOR", email: emailNorm, name: nameNorm, phone: phoneNorm, page: currentPageNorm, language: langNorm });
+      // Server copy of the browser's Lead — see /api/leads.
+      void sendLeadToMeta(request, body, { email: emailNorm, phone: phoneNorm, page: currentPageNorm, contentName: "ROI_CALCULATOR" });
     } catch (e) {
       console.error("ROI lead persist error:", e);
     }

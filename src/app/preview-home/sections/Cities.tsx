@@ -4,6 +4,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { homeStrings } from "./homeI18n";
 import { highlightAccents } from "./highlightAccents";
 import type { Locale } from "@/lib/locale";
+import OptImg from "./OptImg";
 
 /* "Properties by Location" — light ivory section: a grid of city tiles
    (image + name), each linking to that location. */
@@ -85,7 +86,7 @@ const Cities: FC<Props> = ({ block, lang = "en" }) => {
               const img = safeUrl(c.image);
               return (
                 <a key={c._key} className="ccard" href={c.link || "#"}>
-                  <div className="ccard__media">{img && <img src={img} alt={c.image?.alt || c.city} />}</div>
+                  <div className="ccard__media">{img && <OptImg src={img} alt={c.image?.alt || c.city} sizes="(max-width: 768px) 100vw, 34vw" />}</div>
                   <div className="ccard__shade" />
                   <div className="ccard__label">
                     <h3 className="ccard__name">{c.city}</h3>

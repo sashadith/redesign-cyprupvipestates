@@ -10,6 +10,9 @@ import {
   FormikHelpers,
   FormikProps,
 } from "formik";
+import { emailInvalidText, isValidLeadEmail, phoneInvalidText } from "@/lib/leads/contactEmail";
+import { isValidLeadPhone } from "@/lib/leads/contactPhone";
+import { ContactPicker } from "@/app/components/leadForm/ContactPicker";
 import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
@@ -22,6 +25,8 @@ import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { consentCopy } from "../consentCopy";
 import { formMinimalCopy } from "./FormMinimalBlockComponent.copy";
+import { newMetaEventId } from "@/lib/metaEventId";
+import { leadIdForServer } from "@/lib/metaPixelGate";
 
 export type FormData = {
   name: string;
@@ -125,12 +130,14 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
           dataForm.validationNameRequired,
       ),
 
-    phone: Yup.string().required(`${dataForm.validationPhoneRequired}`),
+    phone: Yup.string().required(`${dataForm.validationPhoneRequired}`)
+      .test("phone-intl", phoneInvalidText(lang) ?? `${dataForm.validationPhoneRequired}`, (v) => !v || isValidLeadPhone(v)),
 
     email: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
       .email(`${dataForm.validationEmailInvalid}`)
-      .required(`${dataForm.validationEmailRequired}`),
+      .required(`${dataForm.validationEmailRequired}`)
+      .test("email-valid", emailInvalidText(lang) ?? `${dataForm.validationEmailInvalid}`, (v) => !v || isValidLeadEmail(v)),
 
     // Only required while the field is actually shown — a required rule on a
     // field the visitor cannot see would silently block every submission.
@@ -162,6 +169,10 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
+      // One id for the browser Lead and its server copy — see src/lib/metaCapi.ts.
+
+      const metaEventId = newMetaEventId("lead");
+
       const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
@@ -170,6 +181,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         lang,
         ...(guideId ? { guide: guideId } : {}),
         ...getAttribution(),
+        metaEventId: leadIdForServer(metaEventId),
       });
 
       if (
@@ -182,7 +194,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
             form_name: guideId ? `guide_${guideId}` : "form_minimal",
             page_location: currentPage,
             preferred_contact: values.preferredContact,
-          });
+          }, { eventID: metaEventId });
         }
         if (
           typeof window !== "undefined" &&
@@ -408,46 +420,23 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     </div>
                   </div>
 
-                  <fieldset className={`${styles.inputWrapper} min-w-0`}>
-                    <legend className={styles.radioGroupLabel}>
-                      {formMinimalCopy(lang).contactMethodLegend}
-                    </legend>
-
-                    <div className={styles.radioGroupWrapper}>
-                      <label className={styles.radioOption}>
-                        <Field
-                          type="radio"
-                          name="preferredContact"
-                          value="phone"
-                        />
-                        <span>{formMinimalCopy(lang).phoneCallLabel}</span>
-                      </label>
-
-                      <label className={styles.radioOption}>
-                        <Field
-                          type="radio"
-                          name="preferredContact"
-                          value="whatsapp"
-                        />
-                        <span>WhatsApp</span>
-                      </label>
-
-                      <label className={styles.radioOption}>
-                        <Field
-                          type="radio"
-                          name="preferredContact"
-                          value="email"
-                        />
-                        <span>{formMinimalCopy(lang).emailLabel}</span>
-                      </label>
-                    </div>
-
+                  {/* "Contact me by" as the shared segmented row (operator, 2026-11-01);
+                      the rest of this form keeps its own look. */}
+                  <div className={styles.inputWrapper}>
+                    <ContactPicker
+                      name="preferredContact"
+                      value={values.preferredContact}
+                      legend={formMinimalCopy(lang).contactMethodLegend}
+                      labels={{ phone: formMinimalCopy(lang).phoneCallLabel, whatsapp: "WhatsApp", email: formMinimalCopy(lang).emailLabel }}
+                      onChange={(v) => setFieldValue("preferredContact", v)}
+                      onBlur={() => formikRef.current?.setFieldTouched("preferredContact", true, true)}
+                    />
                     <div className={styles.errorSlot}>
                       <ErrorMessage name="preferredContact">
                         {(msg) => <div className={styles.error}>{msg}</div>}
                       </ErrorMessage>
                     </div>
-                  </fieldset>
+                  </div>
 
                   {!hideMessage && (
                     <div className={styles.inputWrapper}>

@@ -7,6 +7,8 @@ import PdfImport from "./PdfImport";
 import AmenitiesField from "./AmenitiesField";
 import DescriptionField from "./DescriptionField";
 import PromoBlocksField from "./PromoBlocksField";
+import ExtraLinksField from "./ExtraLinksField";
+import { parseExtraLinks } from "@/lib/developmentExtraLinks";
 import SaveOverridesButton from "./SaveOverridesButton";
 import BackLink from "../BackLink";
 import UnitsEditor from "./UnitsEditor";
@@ -23,6 +25,7 @@ import { computeAvailability, availabilityContradiction } from "@/lib/developmen
 import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
 import SyncControlPanel from "./SyncControlPanel";
+import ProjectCommission from "./ProjectCommission";
 import { SYNCED_DEVS, FORCE_SYNC_DEVS } from "@/lib/feedSync";
 import { LOCALES } from "@/lib/locale";
 
@@ -46,7 +49,8 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
       override: true,
       _count: { select: { units: true } },
       units: { orderBy: [{ sortIndex: "asc" }] },
-      developerAccount: { select: { driveFolderUrl: true } },
+      developerAccount: { select: { driveFolderUrl: true, name: true, commissionRates: { where: { developmentId: null }, select: { ratePercent: true } } } },
+      commissionRate: { select: { id: true, ratePercent: true } },
     },
   });
   if (!d) notFound();
@@ -227,6 +231,10 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             navigation pair is its own group behind a divider: it leaves the
             admin for another app, the others stay inside the tool. */}
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] pt-3">
+          {/* Cockpit first in the row: it is the read-only overview this page's
+              editing controls are usually opened FROM, so it belongs ahead of
+              them rather than among the sync/navigation actions. */}
+          <Link href={`/admin/developments/${d.id}/cockpit`} className="inline-flex h-9 items-center rounded-md bg-[var(--sea-deep)] px-4 text-sm font-medium text-[#F3EFE6] hover:bg-[#10211D]">Cockpit</Link>
           {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
           {driveViewHref && (
             <a href={driveViewHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center rounded-md border border-[#C7A87A] px-4 text-sm text-[#826238] hover:border-[var(--bronze)] hover:bg-[#FDF3E3]">View in Drive ↗</a>
@@ -286,8 +294,10 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             <label className={label}>Construction stage</label>
             <select name="stage" defaultValue={ov?.stage ?? ""} className={field}>
               <option value="">—</option>
-              {resolvedStage && !["Available", "Under Construction", "Key-Ready", "Sold"].includes(resolvedStage) && <option value={resolvedStage}>{resolvedStage}</option>}
+              {resolvedStage && !["Available", "Off Plan", "Under Construction", "Key-Ready", "Sold"].includes(resolvedStage) && <option value={resolvedStage}>{resolvedStage}</option>}
               <option value="Available">Available</option>
+              {/* "Off Plan" with a space: the spelling most stored rows already use; resolveStageLabel localizes every variant. */}
+              <option value="Off Plan">Off-Plan</option>
               <option value="Under Construction">Under Construction</option>
               <option value="Key-Ready">Key-Ready</option>
               <option value="Sold">Sold</option>
@@ -324,8 +334,19 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             />
           </div>
 
-          <div>
-            <label className={label}>Promotional content <span className="font-normal text-[#9CA3AF]">— rendered between the map and the units list</span></label>
+          {/* Collapsed by default (2026-10-26): the long text takes a lot of room. The
+              editors stay mounted inside the closed <details>, so saving still sends them. */}
+          <details className="rounded-md border border-[#E5E7EB] p-3">
+            <summary className="text-sm font-semibold text-[#111827] cursor-pointer select-none">
+              SEO Content{" "}
+              <span className="font-normal text-[#9CA3AF]">
+                {(() => {
+                  const filled = (["EN", "DE", "PL", "RU", "HE"] as const).filter((l) => ((ov as any)?.[`promoBlocks${l}`] as any[] | undefined)?.length);
+                  return filled.length ? `· ${filled.join(" ")}` : "· empty";
+                })()}
+              </span>
+            </summary>
+            <div className="mt-3">
             <PromoBlocksField
               initial={{
                 en: (ov?.promoBlocksEN as any[]) ?? [],
@@ -335,12 +356,18 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 he: (ov?.promoBlocksHE as any[]) ?? [],
               }}
             />
-          </div>
+            </div>
+          </details>
 
           <div className="grid grid-cols-3 gap-3">
             <div><label className={label}>Completion</label><input name="completion" defaultValue={ov?.completion ?? ""} placeholder={d.completion ?? ""} className={field} /></div>
             <div><label className={label}>Energy</label><input name="energy" defaultValue={ov?.energy ?? ""} placeholder={d.energy ?? ""} className={field} /></div>
             <div><label className={label}>Hero video URL</label><input name="heroVideo" dir="ltr" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
+          </div>
+
+          <div>
+            <label className={label}>Extra links</label>
+            <ExtraLinksField initial={parseExtraLinks(ov?.extraLinks)} />
           </div>
 
           <div>
@@ -385,6 +412,13 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
 
         {/* ── SIDEBAR: publication + feed reference ── */}
         <div className="space-y-5">
+          <ProjectCommission
+            developmentId={d.id}
+            developerAccountId={d.developerAccountId}
+            developerName={d.developerAccount.name}
+            developerRate={d.developerAccount.commissionRates[0]?.ratePercent.toNumber() ?? null}
+            own={d.commissionRate ? { id: d.commissionRate.id, ratePercent: d.commissionRate.ratePercent.toNumber() } : null}
+          />
           <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-3">
             <h2 className="text-sm font-semibold text-[#111827]">Publication</h2>
             <ul className="space-y-1.5 text-sm">

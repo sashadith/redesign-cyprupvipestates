@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead, normalizeLeadLocale } from "@/lib/leadNotify";
+import { sendLeadToMeta } from "@/lib/metaCapi";
 import { ALLOWED_HOSTS, safeUrl, allowedHost, clientIp, escapeHtml, makeRateLimiter } from "@/lib/antispam";
 
 /**
@@ -245,6 +246,8 @@ export async function POST(request: Request) {
       });
       leadId = lead.id;
       await recordInboundLead({ leadId, source: "PARTNER", email: emailNorm, name: `${nameNorm} ${surnameNorm}`.trim(), phone: phoneNorm, page, language: langNorm });
+      // Server copy of the browser's Lead — see /api/leads.
+      void sendLeadToMeta(request, body, { email: emailNorm, phone: phoneNorm, page, contentName: "PARTNER" });
     } catch (e) {
       console.error("Partner lead persist error:", e);
     }

@@ -230,7 +230,7 @@ export type ProjectsSectionBlock = {
   _key: string;
   _type: "projectsSectionBlock";
   title: string;
-  filterCity?: "Paphos" | "Limassol" | "Larnaca";
+  filterCity?: "Paphos" | "Limassol" | "Larnaca" | "Famagusta";
   filterPropertyType?:
     | "Apartment"
     | "Villa"
@@ -281,7 +281,7 @@ export type LandingProjectsBlock = {
   _key: string;
   _type: "landingProjectsBlock";
   title: string;
-  filterCity?: "Paphos" | "Limassol" | "Larnaca";
+  filterCity?: "Paphos" | "Limassol" | "Larnaca" | "Famagusta";
   filterPropertyType?:
     | "Apartment"
     | "Villa"
@@ -441,6 +441,8 @@ export type Blog = {
   seo: Seo;
   publishedAt: string;
   category: Category;
+  /** "guides" when the article's category is a guide category (src/lib/articleSections.ts), else "blog". */
+  section?: "blog" | "guides";
   author: Author;
   previewImage: ImageAlt;
   excerpt: string;

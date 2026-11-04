@@ -7,17 +7,23 @@
 // outside [lang] so it needs its own, like preview-home/preview-projects do).
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getCrmUser } from "@/lib/crm/session";
 import { getDbProjectsByIds } from "@/lib/developmentRender";
 import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCard";
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
 import { SITE_URL, ogLocale } from "@/lib/seo";
 import { hePlaceOrIsolated } from "@/lib/hePlaces";
-import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
+import {
+  PARTNER_SHARE_IMAGE, isPreviewRequest, partnerPresentationAvailable, partnerShareTitle, presentationBranding, savesClientFavorites,
+  tracksClientViews,
+} from "@/lib/partner/presentationBranding";
+import { asPLocale, COPY, PARTNER_COPY, timeOfDayGreeting } from "./copy";
 import { budgetChip } from "./budgetChip";
 import HeroGreeting from "./HeroGreeting";
 import PresentationBody, { type PresentationDevelopmentVM } from "./PresentationBody";
 import ClosingSection from "./ClosingSection";
+import PartnerClosing from "./PartnerClosing";
 import ViewTracker from "./ViewTracker";
 
 export const dynamic = "force-dynamic";
@@ -38,9 +44,29 @@ const PRESENTATION_OG_IMAGE = `${SITE_URL}/og/presentation-1000x1000.jpg`;
 export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
   const row = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
-    select: { locale: true },
+    select: {
+      locale: true, partnerId: true,
+      partner: { select: { status: true, brandName: true, company: true, firstName: true, lastName: true } },
+    },
   });
   const locale = asPLocale(row?.locale);
+  if (row?.partnerId) {
+    // Partner-branded presentations (phase 3e): no Cyprus VIP Estates name or share image. Title is the
+    // localized title plus the partner's brand (ACTIVE partner only); the image a plain district photo.
+    const partnerTitle = partnerShareTitle(PARTNER_COPY[locale].metaTitle, row.partner);
+    const partnerDescription = COPY[locale].metaDescription;
+    return {
+      title: partnerTitle,
+      description: partnerDescription,
+      robots: { index: false, follow: false },
+      openGraph: {
+        title: partnerTitle,
+        description: partnerDescription,
+        locale: ogLocale(locale),
+        images: [{ url: `${SITE_URL}${PARTNER_SHARE_IMAGE.path}`, width: PARTNER_SHARE_IMAGE.width, height: PARTNER_SHARE_IMAGE.height }],
+      },
+    };
+  }
   const title = COPY[locale].metaTitle;
   const description = COPY[locale].metaDescription;
   return {
@@ -87,7 +113,22 @@ function NotAvailable({ locale }: { locale: ReturnType<typeof asPLocale> }) {
   );
 }
 
-export default async function ClientPresentationPage({ params }: { params: { token: string } }) {
+/** Dead end for a PARTNER presentation (phase 3e): no CVE logo, no CVE contact link. */
+function PartnerNotAvailable({ locale }: { locale: ReturnType<typeof asPLocale> }) {
+  return (
+    <main className="cp-gone">
+      <h1>{COPY[locale].notAvailableTitle}</h1>
+      <p>{PARTNER_COPY[locale].notAvailableBody}</p>
+    </main>
+  );
+}
+
+export default async function ClientPresentationPage({
+  params, searchParams,
+}: {
+  params: { token: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const presentation = await prisma.clientPresentation.findUnique({
     where: { token: params.token },
     // Least-data principle: no Lead PII (name/email/phone) — greetingName and
@@ -111,12 +152,48 @@ export default async function ClientPresentationPage({ params }: { params: { tok
   }
 
   const usable = presentation && presentation.status === "active" && !isExpired;
+  if (presentation?.partnerId && !usable) {
+    return <PartnerNotAvailable locale={asPLocale(presentation.locale)} />;
+  }
   if (!presentation || !usable) {
     return <NotAvailable locale={asPLocale(presentation?.locale)} />;
   }
 
   const locale = asPLocale(presentation.locale);
   const c = COPY[locale];
+
+  // Partner branding (phase 3e) — the partner's brand fields are loaded only for a partner presentation;
+  // a presentation without a partnerId is "cve" mode and renders exactly as before.
+  const partnerRow = presentation.partnerId
+    ? await prisma.partner.findUnique({
+        where: { id: presentation.partnerId },
+        select: {
+          status: true, brandName: true, company: true, firstName: true, lastName: true, brandPhone: true, brandEmail: true, brandWebsite: true,
+          brandLogoType: true, brandLogoUpdatedAt: true,
+        },
+      })
+    : null;
+  // A suspended / inactive / missing partner's presentations are not shown (M1); staff presentations never get here.
+  if (presentation.partnerId && !partnerPresentationAvailable(partnerRow)) {
+    return <PartnerNotAvailable locale={locale} />;
+  }
+  // The portal's "Open" link adds ?preview=1 (soft marker, see presentationBranding): the partner's own look
+  // is not recorded as the client's view, and hearts stay local-only. A visitor signed in to the CRM is the
+  // team, never the client: same local-only mode for any presentation (the API routes refuse them too).
+  const staffVisit = !!(await getCrmUser().catch(() => null));
+  const previewCtx = { partnerId: presentation.partnerId, preview: isPreviewRequest(searchParams), staff: staffVisit };
+  const trackViews = tracksClientViews(previewCtx) && savesClientFavorites(previewCtx);
+  const branding = presentationBranding({
+    token: params.token,
+    partnerId: presentation.partnerId,
+    partner: partnerRow
+      ? {
+          brandName: partnerRow.brandName, company: partnerRow.company, firstName: partnerRow.firstName, lastName: partnerRow.lastName,
+          brandPhone: partnerRow.brandPhone, brandEmail: partnerRow.brandEmail, brandWebsite: partnerRow.brandWebsite,
+          hasLogo: !!partnerRow.brandLogoType, logoUpdatedAt: partnerRow.brandLogoUpdatedAt,
+        }
+      : null,
+  });
 
   // Properties added to an already-sent presentation lead the grid (newest
   // addition first), so a returning client sees what's new without hunting for
@@ -248,7 +325,10 @@ export default async function ClientPresentationPage({ params }: { params: { tok
 
   return (
     <>
-      <ViewTracker token={params.token} />
+      {trackViews && <ViewTracker token={params.token} />}
+      {staffVisit && (
+        <div className="cp-staff-note" role="status">Team view: this visit isn&apos;t counted or reported, and hearts aren&apos;t saved.</div>
+      )}
       <main className="cp-page" data-theme="dark">
         <HeroGreeting
           eyebrowTag={c.eyebrowTag}
@@ -258,18 +338,29 @@ export default async function ClientPresentationPage({ params }: { params: { tok
           requirementsTitle={c.requirementsTitle}
           requirementChips={requirementChips}
           note={presentation.personalNote}
-          advisorName={presentation.advisor?.name}
+          advisorName={branding.mode === "partner" ? branding.name || null : presentation.advisor?.name}
           districtImage={districtImage}
           locale={locale}
+          brand={branding.mode === "partner" ? { name: branding.name, logoUrl: branding.logoUrl } : undefined}
         />
-        <PresentationBody token={params.token} items={items} locale={locale} />
-        <ClosingSection
-          advisor={presentation.advisor ? {
-            name: presentation.advisor.name, avatar: presentation.advisor.avatar, photoPng: presentation.advisor.photoPng,
-            whatsappPhone: "35799278285", email: presentation.advisor.email, personalPhone: presentation.advisor.phone,
-          } : null}
+        <PresentationBody
+          token={params.token}
+          items={items}
           locale={locale}
+          trackViews={trackViews}
+          {...(branding.mode === "partner" ? { partnerMode: true } : {})}
         />
+        {branding.mode === "partner" ? (
+          <PartnerClosing brand={branding} locale={locale} />
+        ) : (
+          <ClosingSection
+            advisor={presentation.advisor ? {
+              name: presentation.advisor.name, avatar: presentation.advisor.avatar, photoPng: presentation.advisor.photoPng,
+              whatsappPhone: "35799278285", email: presentation.advisor.email, personalPhone: presentation.advisor.phone,
+            } : null}
+            locale={locale}
+          />
+        )}
       </main>
     </>
   );

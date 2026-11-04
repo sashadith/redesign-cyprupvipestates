@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { uniquePresentationToken } from "@/lib/crm/presentationToken";
-import { WHATSAPP_MSG } from "@/lib/crm/presentationMessages";
-import { waLink } from "@/lib/crm/waFormat";
-import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
-import { isPublicLocale } from "@/lib/locale";
+import { cleanPresentationInput, createPresentation } from "@/lib/crm/presentations/core";
 
 // Deliberately NOT src/lib/seo.ts's SITE_URL — that constant is hardcoded to
 // the production domain, which would make every presentation generated on
@@ -30,8 +25,6 @@ async function requireSession() {
   return session;
 }
 
-type ItemInput = { developmentId: string; unitRefs?: string[] | null; unitIds?: string[] | null; sortIndex?: number; advisorComment?: string | null };
-
 export async function POST(req: NextRequest) {
   const session = await requireSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,75 +33,16 @@ export async function POST(req: NextRequest) {
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const leadId = String(body.leadId ?? "");
-  const items: ItemInput[] = Array.isArray(body.items) ? body.items : [];
-  if (!leadId || items.length === 0) return NextResponse.json({ error: "leadId and at least one item are required" }, { status: 400 });
+  const itemCount = Array.isArray(body.items) ? body.items.length : 0;
+  if (!leadId || itemCount === 0) return NextResponse.json({ error: "leadId and at least one item are required" }, { status: 400 });
 
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, phone: true } });
-  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+  const uid = (session.user as any)?.id ?? null;
+  const cleaned = cleanPresentationInput(body, { defaultAdvisorId: uid });
+  if (!cleaned.ok) return NextResponse.json({ error: cleaned.error }, { status: 400 });
 
-  const locale = isPublicLocale(body.locale) ? body.locale : "en";
-  const greetingName = String(body.greetingName ?? "").trim().slice(0, 120) || "there";
-  const personalNote = String(body.personalNote ?? "").trim().slice(0, 2000) || null;
-  const advisorId = body.advisorId ? String(body.advisorId) : (session.user as any)?.id ?? null;
-  const expiresAt = new Date(Date.now() + 30 * 86_400_000);
-  // Snapshot of the matching-panel filters at generation time — the "your
-  // preferences" chips on the public page render exclusively from `criteria`,
-  // never from the lead's own profile fields. filterBedrooms/filterLocations
-  // are deprecated (superseded by criteria) but still filled in, derived from
-  // the same source, purely for backward-compat with anything still reading them.
-  const criteria = body.criteria && typeof body.criteria === "object" ? JSON.parse(JSON.stringify(body.criteria)) : {};
-  const filterBedrooms: number[] = Array.isArray(criteria.bedrooms) ? criteria.bedrooms.map(Number).filter((n: number) => Number.isFinite(n)) : [];
-  const filterLocations: string[] = (criteria.areas?.length ? criteria.areas : criteria.districts) ?? [];
+  const actor = { id: uid, name: session.user?.name ?? "admin" };
+  const result = await createPresentation(actor, leadId, cleaned.input, requestOrigin(req));
+  if ("error" in result) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
-  const token = await uniquePresentationToken();
-
-  const presentation = await prisma.clientPresentation.create({
-    data: {
-      leadId, token, locale, greetingName, personalNote, advisorId, expiresAt, filterBedrooms, filterLocations, criteria,
-      items: {
-        create: items.map((it, i) => ({
-          developmentId: it.developmentId,
-          unitRefs: it.unitRefs && it.unitRefs.length ? it.unitRefs : undefined,
-          // Only ever populated for units with no ref at all (manual units) —
-          // see PART 1 / src/lib/unitRef.ts. Never written to for anything else.
-          unitIds: it.unitIds && it.unitIds.length ? it.unitIds : undefined,
-          sortIndex: it.sortIndex ?? i,
-          advisorComment: (it.advisorComment ?? "").trim().slice(0, 300) || null,
-        })),
-      },
-    },
-  });
-
-  const presentationCreatedContent = `Presentation created (${items.length} propert${items.length === 1 ? "y" : "ies"})`;
-  await prisma.leadActivity.create({
-    data: {
-      leadId, type: "PRESENTATION_CREATED",
-      content: presentationCreatedContent,
-      createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null,
-    },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId,
-      type: "PRESENTATION_EVENT",
-      channel: "SYSTEM",
-      body: presentationCreatedContent,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-      metadata: { legacyType: "PRESENTATION_CREATED" },
-    },
-  });
-  // A presentation being generated is the "sent" event for the auto-follow-up
-  // cadence (src/lib/crm/followUpCadence.ts) — fires once here, regardless of
-  // which channel(s) it's subsequently shared through (WhatsApp/email/copy
-  // link all just deliver this same already-counted event).
-  await applyFollowUpCadence(leadId, "presentation_sent");
-
-  const url = `${requestOrigin(req)}/c/${token}`;
-  const qrSvg = await QRCode.toString(url, { type: "svg", margin: 1, color: { dark: "#081512", light: "#F5F1E8" } });
-  const whatsappUrl = lead.phone
-    ? waLink(lead.phone, (WHATSAPP_MSG[locale as keyof typeof WHATSAPP_MSG] ?? WHATSAPP_MSG.en)(greetingName, url))
-    : null;
-
-  return NextResponse.json({ ok: true, id: presentation.id, token, url, qrSvg, whatsappUrl });
+  return NextResponse.json({ ok: true, ...result });
 }

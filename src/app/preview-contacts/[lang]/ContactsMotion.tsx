@@ -23,7 +23,7 @@ export default function ContactsMotion() {
       /* ---------------- HERO (on load) ---------------- */
       const headline = document.querySelector<HTMLElement>(".cnt__hero .hero__headline");
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap
           .timeline()
@@ -40,7 +40,7 @@ export default function ContactsMotion() {
         // splitting an element that Form re-renders on state change would
         // strip its own markup, so only split headings we own outright.
         if (el.closest(".formsec")) return;
-        const split = new SplitText(el, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(el, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap.from(split.lines, {
           y: 55,

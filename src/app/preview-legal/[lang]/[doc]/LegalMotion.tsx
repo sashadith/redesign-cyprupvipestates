@@ -24,7 +24,7 @@ export default function LegalMotion() {
     const ctx = gsap.context(() => {
       const headline = document.querySelector<HTMLElement>(".lgl__title");
       if (headline) {
-        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
+        const split = new SplitText(headline, { type: "lines", linesClass: "motion-line", aria: "none" });
         splits.push(split);
         gsap
           .timeline()

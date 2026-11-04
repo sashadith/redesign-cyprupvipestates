@@ -23,6 +23,7 @@ ${item({ product_id: "2", project_id: "72", name_en: "Alfa Residences: Penthouse
 ${item({ product_id: "3", project_id: "72", name_en: "Alfa Residences: Apartment 102", status: "0" }, attr("Bedrooms", "2"))}
 ${item({ product_id: "4", project_id: "70", name_en: "YOO Limassol - Villa 52", price: "4000000.0000", model: "Limassol - Pyrgos", category: "Продажа&gt;Жилая недвижимость&gt;Дома и Виллы" }, attr("Bedrooms", "5") + attr("Swimming pool", "Private"))}
 ${item({ product_id: "5", project_id: "90", name_en: "YOO Limassol - Apartments G402", price: "1655000.0000", label_status: "6", model: "Limassol - Pyrgos" }, attr("Bedrooms", "3"))}
+${item({ product_id: "10", project_id: "63", name_en: "YOO Limassol - Apartments F202", price: "960000.0000", model: "Limassol - Pyrgos" }, attr("Bedrooms", "1"))}
 ${item({ product_id: "6", project_id: "70", name_en: "TEST - Apartments G101", price: "1.0000" })}
 ${item({ product_id: "7", project_id: "88", name_en: "Avenue 15: Office №4", price: "15000.0000", category: "Аренда | Аренда&gt;Аренда Коммерческой недвижимости" })}
 ${item({ product_id: "8", project_id: "107", name_en: "Seven Residential 104" }, attr("Bedrooms", "1") + attr("Area", "63м²"))}
@@ -31,7 +32,7 @@ ${item({ product_id: "9", project_id: "86", name_en: "Majestic Villa - №3", pr
 
 test("only online, for-sale, non-test units are read", async () => {
   const rows = await parsePgXml(XML);
-  assert.deepEqual(rows.map((r) => r.productId).sort(), ["1", "2", "4", "5", "8", "9"]);
+  assert.deepEqual(rows.map((r) => r.productId).sort(), ["1", "10", "2", "4", "5", "8", "9"]);
 });
 
 test("label_status maps to our statuses; unknown values are never available", () => {
@@ -46,7 +47,7 @@ test("split projects merge, names and labels are clean", async () => {
   const projects = groupPgProjects(await parsePgXml(XML));
   const by = Object.fromEntries(projects.map((p) => [p.key, p]));
   assert.ok(by["yoo-limassol"]);
-  assert.equal(by["yoo-limassol"].rows.length, 2); // pids 70 + 90, TEST dropped
+  assert.equal(by["yoo-limassol"].rows.length, 3); // pids 70 + 90 + 63, TEST dropped
   assert.equal(by["yoo-limassol"].name, "YOO Limassol");
   const seven = pgVm(by["107"]);
   assert.equal(seven.publicName, "Seven Residences");

@@ -16,8 +16,11 @@
 import { prisma } from "@/lib/prisma";
 import { applyFollowUpCadence } from "./followUpCadence";
 import type { EmailActor } from "./sendLeadEmail";
+import { bodyRequirement, type LoggableInteractionType } from "./logRule";
 
-export type LoggableInteractionType = "CALL" | "NOTE" | "WHATSAPP_OUT" | "WHATSAPP_IN" | "EMAIL_OUT" | "EMAIL_IN";
+// The type list and bodyRequirement() live in the import-free logRule.ts (the
+// cockpit's client form uses them too); re-exported here for existing callers.
+export { bodyRequirement, type LoggableInteractionType } from "./logRule";
 
 export type InteractionShape = {
   direction: "INBOUND" | "OUTBOUND" | null;
@@ -47,25 +50,8 @@ export type LogInteractionInput = {
   occurredAt?: Date;
   leadReacted?: boolean;
   aiGenerated?: boolean;
-  via?: "mcp" | "mcp-whatsapp";
+  via?: "mcp" | "mcp-whatsapp" | "crm-whatsapp";
 };
-
-// Pure rule for what counts as "enough to log": every type needs a non-empty
-// body, except an email log (EMAIL_OUT/EMAIL_IN) with a subject — the admin's
-// email-log form has always allowed subject-only entries. Returns the
-// trimmed-or-null content/subject alongside whether the combination is
-// loggable at all, so logLeadInteraction and its test share one source of
-// truth instead of duplicating the trim/require logic.
-export function bodyRequirement(
-  type: LoggableInteractionType,
-  body: string | null | undefined,
-  subject: string | null | undefined,
-): { content: string | null; subject: string | null; ok: boolean } {
-  const content = body?.trim() || null;
-  const trimmedSubject = subject?.trim() || null;
-  const ok = !!content || (type.startsWith("EMAIL_") && !!trimmedSubject);
-  return { content, subject: trimmedSubject, ok };
-}
 
 export async function logLeadInteraction(actor: EmailActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {
   const { content, subject, ok } = bodyRequirement(input.type, input.body, input.subject);
@@ -78,6 +64,12 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
     ...(input.aiGenerated ? { aiGenerated: true } : {}),
     ...(input.via ? { via: input.via } : {}),
   };
+  // Sent on the business phone first, logged by hand after: the WhatsApp webhook already filed that
+  // message (with its WhatsApp id, 2026-10-29). A second row would double the timeline AND the cadence.
+  if (input.type === "WHATSAPP_OUT" || input.type === "WHATSAPP_IN") {
+    const twin = await trackedWhatsAppTwin(leadId, input.type, content, when);
+    if (twin) return { interactionId: twin };
+  }
   if (shape.activityRow) {
     // Only NOTE writes an activity row, and `ok` above required a non-empty
     // `content` for NOTE (it doesn't start with "EMAIL_"), so this is never
@@ -106,3 +98,20 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
   if (shape.cadence) await applyFollowUpCadence(leadId, "manual_contact", { leadReacted });
   return { interactionId: row.id };
 }
+
+const TWIN_WINDOW_MS = 30 * 60_000;
+const squash = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
+
+async function trackedWhatsAppTwin(leadId: string, type: "WHATSAPP_OUT" | "WHATSAPP_IN", body: string | null, when: Date): Promise<string | null> {
+  const wanted = squash(body);
+  if (!wanted) return null;
+  const rows = await prisma.leadInteraction.findMany({
+    where: {
+      leadId, type, messageId: { not: null },
+      occurredAt: { gte: new Date(when.getTime() - TWIN_WINDOW_MS), lte: new Date(when.getTime() + TWIN_WINDOW_MS) },
+    },
+    select: { id: true, body: true },
+  });
+  return rows.find((r) => squash(r.body) === wanted)?.id ?? null;
+}
+

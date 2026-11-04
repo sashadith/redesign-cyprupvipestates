@@ -242,20 +242,20 @@ export default async function LeadsListView({ searchParams, bucket }: { searchPa
       {/* MCP writes and other operators land without a manual reload. */}
       <AutoRefresh />
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">{bucket === "partner" ? "CRM / Partner" : "CRM / Leads"} <span className="text-base font-normal text-[#6B7280]">({activeTotal})</span></h1>
+        <h1 className="text-2xl font-semibold">{bucket === "partner" ? "CRM / Partner" : bucket === "guide" ? "CRM / Guide Leads" : "CRM / Leads"} <span className="text-base font-normal text-[#6B7280]">({activeTotal})</span></h1>
         {/* Buttons, not underlined links: these three sit next to a primary
             button and do the same kind of thing (go somewhere / take something
             away), so they read as a set of secondary actions with a visible
             hover and focus state rather than as running text. */}
         <div className="flex items-center gap-2">
-          <Link href={`/admin/crm/export${leadQueryString(searchParams, { page: "", bucket: bucket === "partner" ? "partner" : "" })}`} className={SECONDARY_BTN}>Export CSV ↓</Link>
+          <Link href={`/admin/crm/export${leadQueryString(searchParams, { page: "", bucket: bucket === "leads" ? "" : bucket })}`} className={SECONDARY_BTN}>Export CSV ↓</Link>
           <Link href="/admin/crm/board" className={SECONDARY_BTN}>Pipeline view →</Link>
           <Link href="/admin/crm/calendar" className={SECONDARY_BTN}>Calendar →</Link>
           <Link href="/admin/crm/new" className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 transition-colors hover:bg-[#142E2D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-2">+ New lead</Link>
         </div>
       </div>
 
-      <LeadFilterBar statuses={LEAD_STATUSES} sources={bucket === "partner" ? [] : LEAD_LIST_SOURCES} locales={LEAD_LOCALES} users={users} />
+      <LeadFilterBar statuses={LEAD_STATUSES} sources={bucket === "leads" ? LEAD_LIST_SOURCES : []} locales={LEAD_LOCALES} users={users} />
 
       {/* 2026-08-11 — legend extended with HOT and KEEP CONTACT; the dot's
           meaning was previously only ever visible via hover (title attribute

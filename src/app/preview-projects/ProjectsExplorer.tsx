@@ -369,10 +369,14 @@ export default function ProjectsExplorer({
       {/* ---------- full-width results ---------- */}
       <section className="px__results wrap" aria-label="Project results">
         <div className="px__results-head">
-          <p className="px__count">
-            <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
-            {hasBbox && <span className="px__count-area"> {s.inThisMapArea}</span>}
-          </p>
+          <div className="px__results-title">
+            {/* The page's only <h1>. Visible on purpose; a visually hidden heading is not an option. */}
+            {s.h1 && <h1 className="px__h1">{s.h1}</h1>}
+            <p className="px__count">
+              <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
+              {hasBbox && <span className="px__count-area"> {s.inThisMapArea}</span>}
+            </p>
+          </div>
           {/* Sort lives with the results, not the filters block */}
           {/* The same PxSelect as the filters above (2026-10-06) — the native
               <select> opened the OS's own popup, unlike every other menu on

@@ -5,7 +5,11 @@ import type { Translation } from "@/types/homepage";
 import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Form from "../../preview-home/sections/Form";
-import { getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
+import { getBlogPostsByLangWithPagination, getFormStandardDocumentByLang, getTotalBlogPostsByLang } from "@/sanity/sanity.utils";
+import { prisma } from "@/lib/prisma";
+import { urlFor } from "@/sanity/sanity.client";
+import { GUIDE_CATEGORY_GROUPS, articleHref, sectionSegments } from "@/lib/articleSections";
+import { guidesCountLabel, guidesSectionStrings } from "@/app/[lang]/blog/guidesSectionI18n";
 import GuideGet from "@/app/components/GuideCta/GuideGet";
 import { GUIDE_IDS, GUIDE_UI, getGuideContent, guideMainArticleSlug, guideTeaser, isGuideLang, type GuideId } from "@/lib/guides/registry";
 import { GUIDES_PAGE_SLUG, guidesPagePath, guidesPageTranslations } from "@/lib/guidesPage";
@@ -22,11 +26,16 @@ import { GUIDE_FACTS } from "../facts";
 
 type Props = { params: { lang: GuideLang } };
 
+// The page lists every guide article of the language, so it must refresh when one is published or edited
+// (the admin and the publish cron also revalidate it on demand).
+export const revalidate = 1800;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
   // Not a guide language (a direct hit on /preview-guides/xx): the layout redirects, no metadata to build.
   if (!isGuideLang(lang)) return {};
-  const t = guidesPageCopy(lang);
+  // A language with no guide articles yet keeps the page as it was: free PDF guides only.
+  const t = guidesPageCopy(lang, (await getTotalBlogPostsByLang(lang, "guides")) > 0);
   const { canonical, languages } = languageAlternates({
     lang,
     slug: GUIDES_PAGE_SLUG[lang],
@@ -53,7 +62,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function GuidesPage({ params }: Props) {
   const { lang } = params;
-  const t = guidesPageCopy(lang);
   const ui = GUIDE_UI[lang];
   const form = await getFormStandardDocumentByLang(lang);
 
@@ -61,10 +69,40 @@ export default async function GuidesPage({ params }: Props) {
     .filter((l) => l.id in GUIDES_PAGE_SLUG)
     .map((l) => ({ language: l.id, path: guidesPagePath(l.id) }));
 
+  // Every published guide article of this language (the guides section, see src/lib/articleSections.ts),
+  // grouped by category in the section's own order.
+  const articles = (await getBlogPostsByLangWithPagination(lang, 5000, 0, "guides")) as any[];
+  const byGroup = new Map<string, any[]>();
+  for (const a of articles) {
+    const g = a.category?.groupId;
+    if (!g) continue;
+    byGroup.set(g, [...(byGroup.get(g) ?? []), a]);
+  }
+  const groups = GUIDE_CATEGORY_GROUPS.filter((g) => byGroup.get(g)?.length).map((g) => ({
+    id: g,
+    title: byGroup.get(g)![0].category.title as string,
+    items: byGroup.get(g)!,
+  }));
+  const t = guidesPageCopy(lang, articles.length > 0);
+  const sec = guidesSectionStrings(lang);
+  const imgUrl = (img: unknown) => {
+    try {
+      return urlFor(img as never).url();
+    } catch {
+      return undefined;
+    }
+  };
+  // The article each PDF guide is based on may sit in either section; link to where it lives.
+  const mainSlugs = GUIDE_IDS.map((id) => guideMainArticleSlug(id, lang)).filter((s): s is string => !!s);
+  const mainRows = mainSlugs.length
+    ? await prisma.blog.findMany({ where: { language: lang as any, slug: { in: mainSlugs } }, select: { slug: true, category: { select: { translationGroupId: true } } } })
+    : [];
+  const mainHref = new Map(mainRows.map((r) => [r.slug, articleHref(lang, r.slug, r.category?.translationGroupId)]));
+
   const cards = GUIDE_IDS.map((id: GuideId) => {
     const teaser = guideTeaser(id, lang);
     const article = guideMainArticleSlug(id, lang);
-    return { id, teaser, articleHref: article ? localizedHref(lang, ["blog", article]) : null, cover: GUIDE_COVERS[id][lang], fact: GUIDE_FACTS[id][lang], accent: getGuideContent(id, lang).titleAccent };
+    return { id, teaser, articleHref: article ? mainHref.get(article) ?? localizedHref(lang, ["blog", article]) : null, cover: GUIDE_COVERS[id][lang], fact: GUIDE_FACTS[id][lang], accent: getGuideContent(id, lang).titleAccent };
   });
 
   const jsonLd = {
@@ -98,10 +136,51 @@ export default async function GuidesPage({ params }: Props) {
             <div className="hero__stripe shimmer" aria-hidden />
             <p className="hero__desc">{t.heroLead}</p>
             <div className="hero__cta">
-              <a className="btn btn--glass" href="#guides"><span>{t.heroCta}</span></a>
+              <a className="btn btn--glass" href={groups.length ? "#all-guides" : "#guides"}><span>{t.heroCta}</span></a>
+              {groups.length > 0 && <a className="btn btn--glass" href="#guides"><span>{t.heroCta2}</span></a>}
             </div>
           </div>
         </section>
+
+        {groups.length > 0 && (
+          <section className="section is-light gds__articles" id="all-guides">
+            <div className="wrap">
+              <p className="gds__eyebrow">{sec.allEyebrow}</p>
+              <h2 className="gds__title">{sec.allTitle}</h2>
+              <hr className="shimmer gds__stripe" />
+              <p className="gds__lead">{sec.allLead}</p>
+              <nav className="gds__chips" aria-label={sec.allEyebrow}>
+                {groups.map((g) => (
+                  <a key={g.id} className="gds__chip" href={`#g-${g.id.slice(0, 8)}`}>{g.title} · {g.items.length}</a>
+                ))}
+              </nav>
+              {groups.map((g) => (
+                <div className="gds__group" id={`g-${g.id.slice(0, 8)}`} key={g.id}>
+                  <h3 className="gds__group-title">{g.title}<span className="gds__group-count">{guidesCountLabel(lang, g.items.length)}</span></h3>
+                  <div className="ins__grid">
+                    {g.items.map((a: any) => {
+                      const slug = a.slug?.[lang]?.current ?? "";
+                      const img = imgUrl(a.previewImage);
+                      return (
+                        <a className="icard" href={localizedHref(lang, sectionSegments(lang, slug, a.section))} key={a._id}>
+                          <div className="icard__media">{img ? <img src={img} alt={a.title} loading="lazy" /> : <div className="icard__ph" />}</div>
+                          <div className="icard__body">
+                            <h4 className="icard__title">{a.title}</h4>
+                            {a.excerpt && <p className="icard__excerpt">{a.excerpt}</p>}
+                            {/* No date on a guide card: guides carry no dates. */}
+                            <div className="icard__foot">
+                              <span className="icard__more">{sec.read}</span>
+                            </div>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="section is-light gds__list" id="guides">
           <div className="wrap">

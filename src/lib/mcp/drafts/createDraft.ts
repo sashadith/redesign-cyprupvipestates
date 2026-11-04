@@ -5,6 +5,7 @@ import { sendUserEmail, getUserEmailSettingsRow, EmailSettingsMissingError } fro
 import type { EmailActor } from "@/lib/crm/sendLeadEmail";
 import { adminDateTime } from "@/lib/adminTime";
 import { ToolError } from "../toolWrapper";
+import { assertCanEdit, type LeadScope } from "../leadScope";
 import { generateApprovalCode } from "./approvalCode";
 import { DRAFT_TTL_MS, DRAFTS_PER_LEAD_PER_HOUR, DRAFTS_PER_USER_PER_DAY } from "./draftState";
 import { buildPreviewEmail } from "./previewEmail";
@@ -12,16 +13,27 @@ import { checkCcRecipients, replyAllDefault } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 1. Nothing is written unless the
 // preview email actually left the operator's SMTP.
-export async function createEmailDraft(actor: EmailActor, input: { leadId: string; subject: string; body: string; cc?: string[] }) {
+//
+// origin "crm" (2026-11-03): the operator's own presentation email from the CRM
+// goes through the same code gate — the preview tells them to type the code in
+// the CRM dialog, and the timeline says so instead of "created by Claude".
+export async function createEmailDraft(
+  actor: EmailActor,
+  input: { leadId: string; subject: string; body: string; cc?: string[] },
+  access: LeadScope,
+  opts: { origin?: "mcp" | "crm" } = {},
+) {
+  const origin = opts.origin ?? "mcp";
   const subject = input.subject.trim();
   const body = input.body.trim();
   if (!subject || !body) throw new ToolError("validation", "Subject and body are required.");
 
   const lead = await prisma.lead.findFirst({
-    where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER },
-    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true },
+    where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
+    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true },
   });
   if (!lead) throw new ToolError("not_found", "Lead not found.");
+  assertCanEdit(access.user, lead);
   if (!lead.email) throw new ToolError("validation", "This lead has no email address — a draft cannot be sent to them.");
   // CC: what the caller gave (validated strictly; [] = deliberately none), or
   // — when nothing was given — "reply all": the other participants of the
@@ -65,6 +77,7 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     expiresAtLabel: adminDateTime(expiresAt),
     locale,
     cc,
+    approveIn: origin === "crm" ? "crm" : "chat",
   });
 
   let previewMessageId: string;
@@ -90,7 +103,7 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     await tx.leadInteraction.create({
       data: {
         leadId: lead.id, type: "SYSTEM", channel: "SYSTEM",
-        subject: "Email draft created by Claude (awaiting approval)",
+        subject: origin === "crm" ? "Email awaiting approval code" : "Email draft created by Claude (awaiting approval)",
         body: cc.length ? `Subject: ${subject}\nCC: ${cc.join(", ")}` : `Subject: ${subject}`,
         createdByUserId: actor.userId, createdByName: actor.userName,
         // Tag this SYSTEM row with the preview's own Message-ID so the inbound
@@ -98,7 +111,7 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
         // filed) skips the self-addressed preview instead of turning it into a
         // second, EMAIL_IN timeline entry the model could then read back.
         messageId: previewMessageId,
-        metadata: { via: "mcp", draftId: draft.id },
+        metadata: { via: origin, draftId: draft.id },
       },
     });
     return { draftId: draft.id, supersededDraftId: superseded?.id ?? null };

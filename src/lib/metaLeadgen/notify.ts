@@ -4,9 +4,10 @@
 // successful Telegram call, which is the wrong order for "Telegram is down").
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
-import { BUDGETS, CHANNEL_LABEL, REGION_BY_LANGUAGE, type BudgetKey } from "./mapFields";
+import { BUDGETS, CHANNEL_LABEL, leadRegion, type BudgetKey } from "./mapFields";
 import type { LeadPreferredChannel } from "@prisma/client";
 import { teamWhatsAppChat, telegramHtmlToWhatsApp } from "@/lib/teamWhatsApp";
+import { leadRef } from "@/lib/chatPrivacy";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -15,12 +16,14 @@ export const notifyPrefix = () => (process.env.NOTIFY_PREFIX ? `${process.env.NO
 
 export const adminLeadUrl = (leadId: string) => `${process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239"}/admin/crm/${leadId}`;
 
+/** The stored notification, sent as-is to Telegram, the team WhatsApp group
+ *  and (as buildLeadEmail) the team mailbox. */
 export function buildLeadMessage(o: {
   outcome: "CREATED" | "ATTACHED";
   language: "de" | "en" | null;
-  name: string;
-  email: string | null;
-  phone: string | null;
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
   budget: BudgetKey | null;
   preferredChannel: LeadPreferredChannel | null;
   campaignName: string | null;
@@ -31,14 +34,15 @@ export function buildLeadMessage(o: {
   priorStatus?: string | null; // existing lead's status when it isn't an active one worth stating (e.g. CLOSED)
   reopened?: boolean; // existing lead was LOST and has been set back to NEW
 }): string {
-  const region = o.language ? ` (${REGION_BY_LANGUAGE[o.language]})` : "";
+  const r = leadRegion(o.campaignName, o.language);
+  const region = r ? ` (${esc(r)})` : "";
   const head =
     o.outcome === "CREATED"
       ? `🏛 <b>New Private Collection lead${region}</b>`
       : `🏛 <b>Existing lead submitted the form again${region}</b>`;
   const lines = [
     `${esc(notifyPrefix())}${head}`,
-    `<b>${esc(o.name || "-")}</b>`,
+    `<b>${esc(o.name?.trim() || leadRef(o.leadId))}</b>`,
     `Budget: ${esc(o.budget ? BUDGETS[o.budget].label : "not answered")} · Prefers: ${esc(o.preferredChannel ? CHANNEL_LABEL[o.preferredChannel] : "not answered")}`,
   ];
   if (o.budget === "<2") lines.push("⚠️ below Private Collection threshold");

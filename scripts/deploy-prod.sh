@@ -91,6 +91,14 @@ done
 #   05:10–05:40  gsc-sync 05:30 (~1–2 min)
 # Override (an outage fix can't wait): CVP_DEPLOY_IGNORE_QUIET=1.
 # CVP_DEPLOY_NOW_UTC=HHMM fakes the clock (tests: scripts/qa/__tests__).
+# `producer | head -n N` is avoided throughout this script in favour of
+# `sed -n` : under the `set -o pipefail` above, head closing the pipe after N
+# lines sends the producer SIGPIPE, pipefail turns that into 141 and set -e
+# aborts. It is a race on how fast the producer finishes, so it passes almost
+# always and then fails for no visible reason — measured at 6 in 300 runs on
+# the VPS (2026-10-30), and it killed release cve-20261030054024 at the
+# pre-swap gate after a successful 13-minute build. sed drains its input, so
+# the producer never sees a closed pipe.
 QUIET_WINDOWS="0340-0440:feed-sync 04:00 + drive-sync 04:30 0510-0540:gsc-sync 05:30"
 quiet_window_hit() {
   local now="${CVP_DEPLOY_NOW_UTC:-$(date -u +%H%M)}"
@@ -437,7 +445,7 @@ pm2 reload "$APP" --update-env
 # it. If this ever fails, the symlink IS already pointing at the new release
 # — only pm2 hasn't picked it up.
 sleep 2
-NEW_PID="\$(pm2 pid '$APP' 2>/dev/null | head -1 | tr -d '[:space:]')"
+NEW_PID="\$(pm2 pid '$APP' 2>/dev/null | sed -n 1p | tr -d '[:space:]')"
 if [ -z "\$NEW_PID" ]; then
   echo "✗ pm2 reports no pid for $APP after reload — cannot verify cwd."
   exit 1
@@ -459,7 +467,7 @@ echo "✓ pm2 cwd verified: \$NEW_PID -> \$ACTUAL_CWD"
 # outside the newest-N window).
 echo "· cleaning up old releases (keeping newest $KEEP_RELEASES + the live one)"
 LIVE_REAL="\$(readlink -f "\$DIR")"
-KEEP_LIST="\$(ls -1dt /var/www/releases/cve-* 2>/dev/null | head -n "$KEEP_RELEASES")"
+KEEP_LIST="\$(ls -1dt /var/www/releases/cve-* 2>/dev/null | sed -n "1,${KEEP_RELEASES}p")"
 for d in /var/www/releases/cve-*; do
   [ -d "\$d" ] || continue
   if [ "\$d" = "\$LIVE_REAL" ]; then continue; fi
@@ -532,7 +540,7 @@ if command -v curl >/dev/null 2>&1; then
   echo "   HTTP $code"
   [ "$code" = 200 ] || { echo "⚠️  non-200 on the page itself — verify manually (pm2 logs $APP)."; exit 1; }
 
-  asset="$(echo "$html" | grep -oE '/_next/static/[^"'"'"']+\.(js|css)' | head -1)"
+  asset="$(echo "$html" | grep -oE '/_next/static/[^"'"'"']+\.(js|css)' | sed -n 1p)"
   if [ -n "$asset" ]; then
     origin="$(echo "$HEALTH_URL" | grep -oE '^https?://[^/]+')"
     asset_code="$(curl -s -o /dev/null -w '%{http_code}' "$origin$asset" || echo 000)"

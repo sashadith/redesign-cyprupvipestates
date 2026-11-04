@@ -140,7 +140,18 @@ export function formLanguage(formName: string | null, formLocale?: string | null
   return null;
 }
 
-export const REGION_BY_LANGUAGE: Record<"de" | "en", string> = { de: "DACH", en: "UK" };
+// The notification's "(UK)" / "(ZA)" tag. The campaign name carries the
+// targeted market ("CVE Private Collection — ZA Leads (Instant Form)"); the
+// form language does not — the one EN form runs in the UK, ZA, AE and LB
+// campaigns, which all used to be announced as "(UK)" (fixed 2026-10-25).
+// Language is only a fallback for DE, the one form that is DACH-only.
+const REGION_BY_CAMPAIGN_CODE: Record<string, string> = { DE: "DACH" };
+
+export function leadRegion(campaignName: string | null, language: "de" | "en" | null): string | null {
+  const code = /\b([A-Z]{2,4}) Leads\b/.exec(campaignName ?? "")?.[1];
+  if (code) return REGION_BY_CAMPAIGN_CODE[code] ?? code;
+  return language === "de" ? "DACH" : null;
+}
 
 export type MappedLead = {
   firstName: string;

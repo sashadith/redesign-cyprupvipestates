@@ -2,6 +2,7 @@ import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
 import { PUBLIC_LOCALES } from "@/lib/locale";
+import { articleHref } from "@/lib/articleSections";
 import { pageKey, type PageKey } from "./types";
 
 export type InventoryPage = {
@@ -180,7 +181,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
     }),
     prisma.blog.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { id: true, slug: true, language: true, title: true, publishedAt: true },
+      select: { id: true, slug: true, language: true, title: true, publishedAt: true, category: { select: { translationGroupId: true } } },
     }),
     prisma.singlepage.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
@@ -210,7 +211,8 @@ export async function getInventory(): Promise<InventoryPage[]> {
     out.push({ key: pageKey(p.language, path), locale: p.language, path, kind: "project", title: p.title, publishedAt: p.publishedAt, source: { table: "Project", id: p.id } });
   }
   for (const b of blogs) {
-    const path = localised(b.language, `/blog/${b.slug}`);
+    // /blog/<slug>, or the language's guides URL for an article in a guide category (articleSections.ts).
+    const path = articleHref(b.language, b.slug, b.category?.translationGroupId);
     out.push({ key: pageKey(b.language, path), locale: b.language, path, kind: "blog", title: b.title, publishedAt: b.publishedAt, source: { table: "Blog", id: b.id } });
   }
   const singlesById = new Map(singles.map((s) => [s.sanityId, s]));

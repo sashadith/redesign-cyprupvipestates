@@ -8,9 +8,10 @@ import HeaderNavLinks from "./HeaderNavLinks";
 import HeaderLangSwitch from "./HeaderLangSwitch";
 import HeaderMobileMenu from "./HeaderMobileMenu";
 import HeaderConsultButton from "./HeaderConsultButton";
-import ModalBrochure from "../ModalBrochure/ModalBrochure";
+import ModalBrochureLazy from "../ModalBrochure/ModalBrochureLazy";
 import { getFormStandardDocumentByLang } from "@/sanity/sanity.utils";
 import type { FormStandardDocument } from "@/types/formStandardDocument";
+import OptImg, { optUrl } from "@/app/preview-home/sections/OptImg"; // logos: resized WebP; the hidden one (display:none per breakpoint) is lazy so it is never fetched
 
 /* Global site header — quiet-luxury redesign (migrated from the staging preview).
    Transparent at the top of the page, frosted on scroll. Content (logo + menu)
@@ -65,6 +66,10 @@ const Header = async ({ translations, params }: Props) => {
   const logo = safeUrl(data.logo);
   const logoMobile = safeUrl(data.logoMobile) ?? logo;
   const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(params.lang);
+  // The sheen mask only needs the logo's alpha at header size, not the 17 KB / 48 KB originals, which the browser
+  // fetched at high priority during the first paint; the resized WebP variants are 2-4 KB.
+  const maskFull = logo ? cssUrl(optUrl(logo, 640)) : undefined;
+  const maskMark = logoMobile ? cssUrl(optUrl(logoMobile, 128)) : undefined;
 
   return (
     <header className="nav">
@@ -81,13 +86,13 @@ const Header = async ({ translations, params }: Props) => {
           aria-label="Cyprus VIP Estates — home"
           style={
             {
-              ...(cssUrl(logo) ? { "--logo-full-url": cssUrl(logo) } : {}),
-              ...(cssUrl(logoMobile) ? { "--logo-mark-url": cssUrl(logoMobile) } : {}),
+              ...(maskFull ? { "--logo-full-url": maskFull } : {}),
+              ...(maskMark ? { "--logo-mark-url": maskMark } : {}),
             } as React.CSSProperties
           }
         >
-          {logo && <img className="nav__logo-full" src={logo} alt="Cyprus VIP Estates" />}
-          {logoMobile && <img className="nav__logo-mark" src={logoMobile} alt="Cyprus VIP Estates" />}
+          {logo && <OptImg className="nav__logo-full" src={logo} alt="Cyprus VIP Estates" sizes="300px" widths={[384, 640]} />}
+          {logoMobile && <OptImg className="nav__logo-mark" src={logoMobile} alt="Cyprus VIP Estates" sizes="32px" widths={[64, 96, 128]} />}
         </Link>
 
         <HeaderNavLinks navLinks={data.navLinks} lang={params.lang} />
@@ -98,7 +103,7 @@ const Header = async ({ translations, params }: Props) => {
           <HeaderMobileMenu navLinks={data.navLinks} lang={params.lang} translations={translations} />
         </div>
       </div>
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
+      <ModalBrochureLazy lang={params.lang} formDocument={formDocument} />
     </header>
   );
 };

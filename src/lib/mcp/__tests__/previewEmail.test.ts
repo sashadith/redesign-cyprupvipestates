@@ -26,3 +26,14 @@ test("text version carries the same essentials", () => {
   assert.match(p.text, /max@example\.com/);
   assert.match(p.text, /Dear Max,/);
 });
+
+test("a CRM-origin preview says to enter the code in the CRM, not the chat", () => {
+  const crm = buildPreviewEmail({
+    leadName: "Max", leadEmail: "max@example.com", subject: "Your selection", body: "Dear Max,",
+    signatureHtml: "", approvalCode: "7K3PQ2", expiresAtLabel: "08.09.2026 13:00", approveIn: "crm",
+  });
+  assert.match(crm.html, /Enter this code in the CRM send dialog/);
+  assert.match(crm.text, /Enter this code in the CRM send dialog/);
+  assert.doesNotMatch(crm.html + crm.text, /CVE LEADS chat/);
+  assert.match(crm.html, /Approval code: <strong>7K3PQ2<\/strong>/);
+});

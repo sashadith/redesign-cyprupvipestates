@@ -3,6 +3,7 @@
 import React from "react";
 import styles from "./ButtonModal.module.scss";
 import { useModal } from "@/app/context/ModalContext";
+import { newMetaEventId } from "@/lib/metaEventId";
 
 type Props = {
   children: React.ReactNode;
@@ -19,7 +20,8 @@ export const ButtonModal = ({
 
   const handleClick = () => {
     if (typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "InitiateCheckout", {
+      // Custom FormOpen, not the standard InitiateCheckout — see trackBrochureOpen.ts.
+      window.fbq("trackCustom", "FormOpen", {
         form_name:
           modalType === "roi"
             ? "roi_modal"
@@ -27,7 +29,7 @@ export const ButtonModal = ({
               ? "roi_calculator_modal"
               : "brochure_modal",
         page_location: window.location.href,
-      });
+      }, { eventID: newMetaEventId("fo") });
     }
 
     if (modalType === "roi") {

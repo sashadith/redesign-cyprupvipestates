@@ -117,3 +117,34 @@
   /* A phone-height window just fits the form, so a few px of padding decide whether a scrollbar appears. */
   .cvpm.cvpm--guide .cvpm__panel { padding-block: 16px; }
 }
+
+/* Compact layout (2026-11-01), as in the adviser popup (contactModal.css):
+   48px fields, consent + button in one row, the button as tall as the picked
+   segment of the contact row (40px). The error spacing above stays. */
+.cvpm.cvpm--guide .cvpm__form input[type="text"],
+.cvpm.cvpm--guide .cvpm__form input[type="email"],
+.cvpm.cvpm--guide .cvpm__form input[type="tel"],
+.cvpm.cvpm--guide .cvpm__form .PhoneInput { height: 48px; }
+.cvpm.cvpm--guide .cvpm__form [class*="footerRow"] div:has(> input[type="checkbox"]) { margin-bottom: 0; }
+.cvpm.cvpm--guide .cvpm__form [class*="footerRow"] button[type="submit"] { height: 40px; }
+/* Spacing as on the page form and the adviser popup (operator, 2026-11-01):
+   12px between fields instead of the 22/34px that held room for a floating
+   error. The compact form is short enough that an error may open its own row
+   again (FormStandard's animated slot) and the panel scrolls if it ever has to. */
+.cvpm.cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 12px; }
+.cvpm.cvpm--guide .cvpm__form [class*="errorSlot"] { position: static; display: grid; margin-top: 0; pointer-events: auto; transition: grid-template-rows 0.25s ease-out; }
+.cvpm.cvpm--guide .cvpm__form [class*="errorSlot"] > * { overflow: hidden; }
+.cvpm.cvpm--guide .cvpm__form div:has(> input[type="checkbox"]) { margin-bottom: 0; }
+.cvpm.cvpm--guide .cvpm__form input[type="checkbox"] + div { position: static; width: 100%; order: 2; margin-top: 6px; pointer-events: auto; }
+.cvpm.cvpm--guide .cvpm__lead { margin-bottom: 24px; }
+@media (max-width: 520px) {
+  .cvpm.cvpm--guide .cvpm__form [class*="inputWrapper"] { margin-bottom: 12px; }
+  .cvpm.cvpm--guide .cvpm__form div:has(> input[type="checkbox"]) { margin-bottom: 0; }
+}
+/* Guide popup, desktop (operator, 2026-11-01): twice the air above the eyebrow
+   and below the button (22px → 44px), and 70% more between eyebrow and
+   headline (6px → 10px). Phones keep their tighter 16px. */
+@media (min-width: 521px) {
+  .cvpm.cvpm--guide .cvpm__panel { padding-block: 44px; }
+}
+.cvpm.cvpm--guide .cvpm__guide { margin-bottom: 10px; }

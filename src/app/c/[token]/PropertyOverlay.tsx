@@ -18,7 +18,7 @@ export type OverlayUnit = {
 
 export default function PropertyOverlay({
   open, onClose, publicName, gallery, description, amenities, units, distances, slug, publishStatus,
-  favorited, favoriteBusy, onToggleFavorite, locale,
+  favorited, favoriteBusy, onToggleFavorite, locale, partnerMode = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -41,6 +41,8 @@ export default function PropertyOverlay({
   favoriteBusy: boolean;
   onToggleFavorite: () => void;
   locale: PLocale;
+  /** Partner-branded presentation (phase 3e): the "View on site" link to the CVE project page is hidden. */
+  partnerMode?: boolean;
 }) {
   const c = COPY[locale];
   const isHe = locale === "he";
@@ -98,7 +100,7 @@ export default function PropertyOverlay({
         <div className="cp-overlay__body">
           <div className="cp-overlay__titlerow">
             <h2 className="cp-overlay__title">{publicName}</h2>
-            {publishStatus === "published" && slug && (
+            {!partnerMode && publishStatus === "published" && slug && (
               <a
                 href={`/${locale}/projects/${slug}`}
                 target="_blank"

@@ -1,0 +1,18 @@
+{
+  "_source": "Promotion Agreement between MARINAKIS DEVELOPERS LIMITED (HE 47033, 'Principal') and Cyprus VIP Estates as a project of SecretBrand Solutions LTD (HE450005, 'Promoter'), signed by both parties. Ref. No. 342510/2026, form F-MD-06. The PDF has no text layer, so all figures were read from the rendered pages.",
+  "_term_note": "The agreement runs from the Effective Date (27 Oct 2026) until 31 Dec 2026 and then renews automatically; the renewal period is not stated. termMonths is whole months, and no whole number of months from 27 Oct lands on 31 Dec, so 2 is stored — the first term then shows as ending 26 Dec 2026, five days EARLY rather than late. The exact wording is in the note so the record carries the true date.",
+  "_commission_note": "5% plus VAT on the NET purchase price (excluding VAT), clause 5-I, capped at that percentage. The 35%/65% split in clause 5-IV is NOT a second rate: it only divides the same 5% into two invoices, 35% as introduction commission and 65% as promotional expenses.",
+  "accountSlug": "marinakis",
+  "fileName": "Cyprus_VIP_Estates_as_a_project_of_SecretBrand_Solutions_LTD_-_Promo_Agreement.pdf",
+  "fileKey": "604e2561-097f-4cd4-bec9-b1f8e803c0db.pdf",
+  "fileSize": 2021986,
+  "contract": {
+    "signedAt": "2026-10-27",
+    "termMonths": "2",
+    "autoRenew": "true",
+    "commissionPercent": "5",
+    "note": "Promotion Agreement, Ref. 342510/2026 (F-MD-06). Non-exclusive. First term 27 Oct 2026 to 31 Dec 2026, then renewed automatically; renewal period not stated. Either party may terminate with 45 days written notice. Fee 5% + VAT on the net purchase price; the 35/65 split is invoicing only (35% introduction commission, 65% promotional expenses). Payable once the buyer has completed the purchase AND 40% of the net price has cleared the Principal's account and all refund terms have expired; each invoice within 30 working days. Client registration by e-mail to sales@marinakisproperty.com, confirmed or declined within 4 working days; a confirmed introduction stays on their records 12 months and also covers a second purchase by the same buyer within 1 year. No fee on the part of the price covered by a discount, cash-back or guaranteed rental income. Governed by Cyprus law."
+  },
+  "commissionRatePercent": 5,
+  "commissionRateNote": "Promotion Agreement 27 Oct 2026, clause 5-I: 5% + VAT on the net purchase price."
+}

@@ -25,6 +25,8 @@ export type FaqCopy = {
   categoriesAriaLabel: string;
   formTitlePlain: string;
   formTitleItalic: string;
+  /** Plain text after the gold words and before the "?" (EN: only "have" is gold, operator 2026-11-01). */
+  formTitleTail?: string;
   formSubtitle: string;
 };
 
@@ -43,7 +45,8 @@ const EN: FaqCopy = {
     collapseAll: "Collapse all",
     categoriesAriaLabel: "FAQ categories",
     formTitlePlain: "Still ",
-    formTitleItalic: "have a question",
+    formTitleItalic: "have",
+    formTitleTail: " a question",
     formSubtitle: "Every buyer's situation is a little different. Send us yours and we'll answer it directly.",
 };
 
