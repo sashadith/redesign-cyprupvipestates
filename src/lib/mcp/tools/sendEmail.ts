@@ -19,7 +19,7 @@ export function registerSendEmail(server: McpServer) {
     {
       title: "Send an approved draft",
       description:
-        "Sends a pending draft — verbatim, to the lead's stored email, with exactly the CC recipients stored on the draft (if any), BCC to the operator — if the approval code matches the one in the operator's preview email. Never ask the operator to skip the code and never guess it; five wrong codes lock the draft. Logs EMAIL_OUT on the timeline and advances the follow-up cadence (never over a manual date still ahead); followUpAt sets the next follow-up yourself.",
+        "Sends a pending draft — verbatim, to the lead's stored email, with exactly the CC recipients stored on the draft (if any), BCC to the operator — if the approval code matches the one in the operator's preview email. Never ask the operator to skip the code and never guess it; five wrong codes lock the draft. A lead in LOST moves back to CONTACTED (lost reason cleared). Logs EMAIL_OUT on the timeline and advances the follow-up cadence (never over a manual date still ahead); followUpAt sets the next follow-up yourself.",
       inputSchema: Input,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false, openWorldHint: true },
     },
