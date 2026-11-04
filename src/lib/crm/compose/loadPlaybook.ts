@@ -55,6 +55,7 @@ export function loadPlaybook(state: LeadState, language: string): {
   byState: string;
   byLanguage: string;
   examples: string;
+  privateCollection: string;
 } {
   const byStateFull = readFile("by-state.md");
   const byLanguageFull = readFile("by-language.md");
@@ -68,5 +69,6 @@ export function loadPlaybook(state: LeadState, language: string): {
     byState: extractSection(byStateFull, BY_STATE_HEADING[state]) || byStateFull,
     byLanguage: extractSection(byLanguageFull, BY_LANGUAGE_HEADING[lang]) || byLanguageFull,
     examples: readFile("examples.md"),
+    privateCollection: readFile("private-collection.md"),
   };
 }
