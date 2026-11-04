@@ -59,23 +59,18 @@ export function nameEmailMismatch(lastName: string | null | undefined, email: st
   const rawLocal = (email ?? "").split("@")[0] ?? "";
   const local = fold(rawLocal);
   if (name.length < 4 || local.length < 4 || local.includes(name) || local.includes(foldDe(lastName ?? ""))) return null;
-  let best: { start: number; ratio: number } | null = null;
-  for (let len = name.length - 1; len <= name.length + 2; len++) {
-    for (let i = 0; i + len <= local.length; i++) {
-      const part = local.slice(i, i + len);
+  // A surname sits at the END of a word of the address (ashworth, sueashworth, j.ashworth77): only
+  // such stretches are compared. A nickname that merely starts like it (olidano for Oliva) is not.
+  let best: { word: string; ratio: number } | null = null;
+  for (const word of rawLocal.split(/[^A-Za-z\u00C0-\u024F]+/).map(fold).filter(Boolean)) {
+    for (let len = name.length - 1; len <= Math.min(name.length + 2, word.length); len++) {
+      const part = word.slice(word.length - len);
       if (part.slice(0, 3) !== name.slice(0, 3)) continue;
       const ratio = distance(name, part) / Math.max(name.length, part.length);
-      if (!best || ratio < best.ratio) best = { start: i, ratio };
+      if (!best || ratio < best.ratio) best = { word, ratio };
     }
   }
-  if (!best || best.ratio === 0 || best.ratio > 0.4) return null;
-  // Name the whole word of the address the near-miss sits in ("ashworth", not "ashwor").
-  let pos = 0;
-  for (const word of rawLocal.split(/[^A-Za-z\u00C0-\u024F]+/).map(fold).filter(Boolean)) {
-    if (best.start < pos + word.length) return word;
-    pos += word.length;
-  }
-  return null;
+  return best && best.ratio > 0 && best.ratio <= 0.4 ? best.word : null;
 }
 
 /* Mobile or landline, from the number's national prefix (2026-11-04). A landline (UK 01/02/03, a

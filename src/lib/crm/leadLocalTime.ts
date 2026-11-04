@@ -23,19 +23,23 @@ export function isTimeZone(zone: string | null | undefined): zone is string {
   }
 }
 
+// Countries whose zones really split the population; elsewhere the extra zones are outlying islands
+// (Spain's Canaries, Portugal's Azores) and the first zone is taken.
+const SPLIT_COUNTRIES = new Set(["US", "CA", "RU", "AU", "BR", "MX", "KZ"]);
+
 const NORTH_AMERICA = Array.from(new Set(COUNTRIES.filter((c) => c.dial === "1").flatMap((c) => c.zones)));
 
 export function leadZone(l: { timeZone?: string | null; countryOfResidence?: string | null; phone?: string | null }): LeadZone {
   if (isTimeZone(l.timeZone)) return { zone: l.timeZone, source: "lead", country: countryOf(l.countryOfResidence)?.name ?? null };
   const home = countryOf(l.countryOfResidence);
   if (home) {
-    return home.zones.length === 1
+    return home.zones.length === 1 || !SPLIT_COUNTRIES.has(home.iso)
       ? { zone: home.zones[0], source: "country", country: home.name }
       : { zone: null, reason: "ambiguous", country: home.name, options: home.zones };
   }
   const byPhone = countryOfPhone(l.phone);
   if (byPhone) {
-    return byPhone.zones.length === 1
+    return byPhone.zones.length === 1 || !SPLIT_COUNTRIES.has(byPhone.iso)
       ? { zone: byPhone.zones[0], source: "phone", country: byPhone.name }
       : { zone: null, reason: "ambiguous", country: byPhone.name, options: byPhone.zones };
   }

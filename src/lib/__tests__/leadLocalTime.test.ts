@@ -11,6 +11,8 @@ test("zone: a hand-picked zone wins, then the form country, then the phone's cal
   assert.equal(leadZone({ phone: "+27 82 555 1234" }).zone, "Africa/Johannesburg");
   assert.equal(leadZone({ phone: "+44 7700 900123" }).zone, "Europe/London");
   assert.equal(leadZone({ countryOfResidence: "CY" }).zone, "Asia/Nicosia");
+  assert.equal(leadZone({ countryOfResidence: "ES" }).zone, "Europe/Madrid"); // Canaries only by hand
+  assert.equal(leadZone({ phone: "+34 649 821 400" }).zone, "Europe/Madrid");
   assert.equal(leadZone({ timeZone: "Not/AZone", countryOfResidence: "GB" }).zone, "Europe/London");
 });
 

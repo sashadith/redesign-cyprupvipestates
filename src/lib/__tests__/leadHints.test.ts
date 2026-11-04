@@ -23,6 +23,8 @@ test("name vs email: a clear near-miss of the last name is flagged, everything e
   assert.equal(nameEmailMismatch("Ashford", "info@example.com"), null);
   assert.equal(nameEmailMismatch("Ashford", "bigboss@example.com"), null);
   assert.equal(nameEmailMismatch("Li", "lee@example.com"), null);
+  assert.equal(nameEmailMismatch("Oliva", "olidano@gmail.com"), null); // nickname (Oli + Dan), not a typo
+  assert.equal(nameEmailMismatch("ashford", "Sueashworth567@btinternet.com"), "sueashworth"); // the real case
   assert.equal(nameEmailMismatch("Smith", null), null);
   const h = leadHints({ source: "CONTACT_FORM", countryOfResidence: "GB", lastName: "Ashford", email: "ashworth@example.com" });
   assert.equal(h.nameEmailMismatch, "ashworth");
