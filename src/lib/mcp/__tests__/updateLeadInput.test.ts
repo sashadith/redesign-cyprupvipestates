@@ -14,6 +14,12 @@ test("a field the tool does not know survives parsing, so it can be refused inst
   assert.doesNotMatch(msg, /leadId/);
 });
 
+test("email, owner and bucket are supported fields", () => {
+  const r = UpdateLeadInput.safeParse({ leadId, email: " ann@example.com ", assignedTo: "Sascha Dith", bucket: "partner" });
+  assert.equal(r.success, true);
+  assert.deepEqual(unknownFields(r.success ? r.data : {}), []);
+});
+
 test("an email without a valid shape is refused; empty and null both remove it", () => {
   assert.equal(UpdateLeadInput.safeParse({ leadId, email: "ann@example" }).success, false);
   assert.equal(UpdateLeadInput.safeParse({ leadId, email: "not an email" }).success, false);
@@ -22,4 +28,9 @@ test("an email without a valid shape is refused; empty and null both remove it",
   assert.equal(normalizedEmail(""), null);
   assert.equal(normalizedEmail(null), null);
   assert.equal(normalizedEmail(undefined), undefined);
+});
+
+test("only the Leads and Partner buckets can be set", () => {
+  assert.equal(UpdateLeadInput.safeParse({ leadId, bucket: "newsletter" }).success, false);
+  assert.equal(UpdateLeadInput.safeParse({ leadId, bucket: "leads" }).success, true);
 });

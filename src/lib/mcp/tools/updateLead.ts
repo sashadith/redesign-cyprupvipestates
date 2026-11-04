@@ -9,8 +9,9 @@ import { contextFromAuthInfo } from "../context";
 import { assertCanEdit, loadScope } from "../leadScope";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 import { UpdateLeadInput, normalizedEmail, unknownFields, unknownFieldsMessage } from "./updateLeadInput";
+import { assignOwnerViaMcp, moveBucketViaMcp, resolveOwner } from "./updateLeadOwner";
 
-// Name, phone, owner and bucket stay cockpit-only. Email can be changed here (2026-11-04); any
+// Name and phone stay cockpit-only. Email (2026-11-04), owner and bucket can be changed here; any
 // other key is refused with the list of supported fields instead of being dropped.
 export function registerUpdateLead(server: McpServer) {
   server.registerTool(
@@ -18,7 +19,7 @@ export function registerUpdateLead(server: McpServer) {
     {
       title: "Update a lead",
       description:
-        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing, admin notes or email address. Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Name and phone are changed in the cockpit, not here; an unsupported field is an error. With status LOST, pass lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NOT_INTERESTED, TIMING, INVALID, OTHER).",
+        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing, admin notes, email address, owner (assignedTo: an employee's name or id, admins only) or bucket (leads/partner). Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Name and phone are changed in the cockpit, not here; an unsupported field is an error. With status LOST, pass lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NOT_INTERESTED, TIMING, INVALID, OTHER).",
       inputSchema: UpdateLeadInput,
       annotations: { readOnlyHint: false, idempotentHint: true, destructiveHint: false },
     },
@@ -44,6 +45,7 @@ export function registerUpdateLead(server: McpServer) {
             if (dup && dup.id !== lead.id) throw new ToolError("validation", `Another lead already uses ${email}. Merge or fix that lead first.`);
           }
         }
+        const owner = input.assignedTo !== undefined ? await resolveOwner(user, input.assignedTo) : undefined;
         const actor = { userId: c.userId, userName: c.userName };
         const changed: string[] = [];
 
@@ -88,6 +90,10 @@ export function registerUpdateLead(server: McpServer) {
             },
           });
         }
+        // Owner and bucket go through the same writers as the CRM (their own timeline rows, Telegram for an assignment).
+        if (owner !== undefined && (await assignOwnerViaMcp(user, c, lead, owner))) changed.push("assignedTo");
+        if (input.bucket !== undefined && (await moveBucketViaMcp(c, lead.id, input.bucket))) changed.push("bucket");
+
         if (!changed.length) return { changed: [], note: "Nothing to change — every given value already matched." };
 
         const fresh = await prisma.lead.findUniqueOrThrow({ where: { id: input.leadId }, select: LEAD_ROW_SELECT });

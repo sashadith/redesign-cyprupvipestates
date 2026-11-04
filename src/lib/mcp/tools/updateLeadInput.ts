@@ -11,6 +11,8 @@ import { LOCALES } from "@/lib/locale";
 
 const isoOrNull = z.string().datetime({ offset: true }).nullable().optional().describe("ISO 8601, with or without a UTC offset");
 
+export const UPDATABLE_BUCKETS = ["leads", "partner"] as const;
+
 export const UpdateLeadInput = z
   .object({
     leadId: z.string().uuid(),
@@ -32,6 +34,9 @@ export const UpdateLeadInput = z
       .refine((v) => v === "" || EMAIL_RE.test(v), "Not a valid email address.")
       .nullable().optional()
       .describe("The lead's email address; null or \"\" removes it (only if a phone number stays on file)"),
+    assignedTo: z.string().trim().min(1).max(120).nullable().optional()
+      .describe("Owner: an active employee's full name (e.g. \"Sascha Dith\") or user id; null removes the owner. Admins only"),
+    bucket: z.enum(UPDATABLE_BUCKETS).optional().describe("Move between the Leads and Partner buckets"),
   })
   .passthrough();
 
