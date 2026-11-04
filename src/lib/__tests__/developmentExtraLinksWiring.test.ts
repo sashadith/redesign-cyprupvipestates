@@ -21,6 +21,9 @@ import { join } from "node:path";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const BODY = "src/app/preview-project/ProjectPageBody.tsx";
+// The tiles moved out of the page body into their own client component
+// (8ad27367 / 0f0c6d38, 2026-10-31); the anchor lives there now.
+const TILES = "src/app/preview-project/ExtraLinks.tsx";
 const CSS = "src/app/preview-project/project.css";
 const FIELD = "src/app/admin/(panel)/developments/[id]/ExtraLinksField.tsx";
 const ACTION = "src/app/admin/(panel)/developments/[id]/actions.ts";
@@ -60,8 +63,8 @@ test("the view model parses the column rather than passing it through raw", () =
 });
 
 test("the anchor carries nofollow, noopener and noreferrer", () => {
-  const body = read(BODY);
-  const anchor = body.slice(body.indexOf('className="pp-extra"'));
+  const tiles = read(TILES);
+  const anchor = tiles.slice(tiles.indexOf('className="pp-extra"'));
   const rel = /rel="([^"]+)"/.exec(anchor);
   assert.ok(rel, "the pp-extra anchor has no rel attribute");
   for (const token of ["nofollow", "noopener", "noreferrer"]) {
@@ -75,7 +78,7 @@ test("the buttons render independently of whether a description exists", () => {
   // project can have links before anyone has written copy for it.
   const body = read(BODY);
   const descAt = body.indexOf("{p.description && (");
-  const extrasAt = body.indexOf("{extraLinks.length > 0 && (");
+  const extrasAt = body.indexOf("<ExtraLinks ");
   const mainCloses = body.indexOf('</div>\n        </section>', descAt);
   assert.ok(descAt > -1 && extrasAt > -1, "could not locate the description or extras block");
   assert.ok(extrasAt > descAt, "the extras block no longer follows the description");
