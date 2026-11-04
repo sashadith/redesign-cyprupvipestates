@@ -10,7 +10,7 @@
   "contactInfo": "Patroclos G. Group of Companies Ltd (reg. 187422), 41-43 Spyros Kyprianou Ave., Patroclos Tower, 6th floor, Larnaca 6051, Cyprus. Tel +357 24 632 400, info@patroclos.com.cy. Projects are marketed under the brand \"Carisa\".",
   "developerCloudUrl": null,
   "manualSyncReminderDays": 30,
-  "notes": "SOURCE OF TRUTH: the developer's Google Drive share (link in developerCloudUrl; CONTRACT CLAUSE 5: the link is private and confidential — never give it or any link inside it to a client or third party). One folder per city (Larnaca / Limassol / Nicosia projects, Larnaca Rentals), one subfolder per project with a \"Pricelist - ...\" PDF, brochure, specs, renders. Price lists are per-unit tables with SOLD / RESERVED / HOLD markers; HOLD = not released = treated as reserved. All prices exclude VAT.\n\nSCOPE (operator 2026-11-04: \"ignore Rentals and Sold Out projects\"): imported 11 products. OUT: all \"(SOLD)\" folders (Aria Gardens, Armonia, Estia, Galatea, Iliada, Berengaria, Cleo Court, Actaion 12), Elandra Villas (price list: 9 sold + 1 reserved = nothing available), Larnaca Rentals (Patroclos Tower offices), Drysea Residences and Elnaz Court (empty folders), Roxana Court 303 (single resale, reserved). OPEN, not imported pending operator decision: Victoria Court (Pervolia; price list 30-05-2024, all 10 shown available, not on the developer's website) and Olympic Mansions M8 (no price list, only architecture set + 4 images). Horizon is split into two pages: Horizon Residences (4 residential blocks) and Horizon Business Centre (commercial block, own price list).\n\nWHERE SOURCES DISAGREE THE PRICE LIST WINS (same rule as DTA/Marinakis). The website patroclos.com.cy shows older/looser statuses (e.g. Elandra villa 8 \"available\" vs list RESERVED; Ethera 201-205 \"available\" vs list HOLD; Olivea A18 \"available\" with no price anywhere -> not imported as available).\n\nMONTHLY: re-download the price lists from the Drive share, re-transcribe into scripts/data/patroclos/<date>.json, dry run scripts/patroclos-sync.mjs, then --apply.\n\nCONTRACT: Co-operation Agreement dated 04/11/2026, 12 months, no automatic renewal, 7% of the net (ex-VAT) purchase price, payable within 7 bank days after the developer receives 40% of the contract price, against our invoice. Registration of a client must be confirmed in writing (deemed accepted after 3 working days), valid 6 months; fee due if the purchase contract is signed within 12 months of registration (also spouse/company). Clause 6.1: we may show properties and prices on our website; must remove within 3 days on request. Clause 9.1: promoting Patroclos' name or project names in advertising needs their WRITTEN PRE-APPROVAL. The scanned copy on file is signed by CVE only (Party A signature pending).\n",
+  "notes": "SOURCE OF TRUTH: the developer's Google Drive share (link in developerCloudUrl; CONTRACT CLAUSE 5: the link is private and confidential — never give it or any link inside it to a client or third party). One folder per city (Larnaca / Limassol / Nicosia projects, Larnaca Rentals), one subfolder per project with a \"Pricelist - ...\" PDF, brochure, specs, renders. Price lists are per-unit tables with SOLD / RESERVED / HOLD markers; HOLD = not released = treated as reserved. All prices exclude VAT.\n\nSCOPE (operator 2026-11-04: \"ignore Rentals and Sold Out projects\"): imported 11 products. OUT: all \"(SOLD)\" folders (Aria Gardens, Armonia, Estia, Galatea, Iliada, Berengaria, Cleo Court, Actaion 12), Elandra Villas (price list: 9 sold + 1 reserved = nothing available), Larnaca Rentals (Patroclos Tower offices), Drysea Residences and Elnaz Court (empty folders), Roxana Court 303 (single resale, reserved). OPEN, not imported pending operator decision: Victoria Court (Pervolia; price list 30-05-2024, all 10 shown available; the website page, last edited 2025-08-18, also shows all 10 available off-plan, no prices) and Olympic Mansions M8 (no price list, only architecture set + 4 images; the website has no project page, only a news post of 2026-07-16 about one bespoke villa). Horizon is split into two pages: Horizon Residences (4 residential blocks) and Horizon Business Centre (commercial block, own price list).\n\nWHERE SOURCES DISAGREE THE PRICE LIST WINS (same rule as DTA/Marinakis). The website patroclos.com.cy shows older/looser statuses (e.g. Elandra villa 8 \"available\" vs list RESERVED; Ethera 201-205 \"available\" vs list HOLD; Olivea A18 \"available\" with no price anywhere -> not imported as available).\n\nWEBSITE CHECK 2026-11-04 (WordPress \"modified\" date per project page vs price-list date): where the page is NEWER than the list, its statuses were taken: Amaris 102/103/203, Aliana 203, Horizon C201/C501 reserved -> sold. Where the list is newer (Ethera, Melora, Elysium) the list stands. Celeste conflict: the page (2026-09-14) lists only villas 1-2, as 3-bed 169 m2 SOLD; the list (2026-08-28) has villas 1-3 available as 4-bed 180-182 m2 -> list kept, ask Patroclos. The site shows \"price upon request\" everywhere: no prices from it. Ethera pin from the page's plus code XJ2V+GF2 Livadia.\n\nMONTHLY: re-download the price lists from the Drive share, re-transcribe into scripts/data/patroclos/<date>.json, dry run scripts/patroclos-sync.mjs, then --apply.\n\nCONTRACT: Co-operation Agreement dated 04/11/2026, 12 months, no automatic renewal, 7% of the net (ex-VAT) purchase price, payable within 7 bank days after the developer receives 40% of the contract price, against our invoice. Registration of a client must be confirmed in writing (deemed accepted after 3 working days), valid 6 months; fee due if the purchase contract is signed within 12 months of registration (also spouse/company). Clause 6.1: we may show properties and prices on our website; must remove within 3 days on request. Clause 9.1: promoting Patroclos' name or project names in advertising needs their WRITTEN PRE-APPROVAL. The file on record is the final copy signed and stamped by both parties.\n",
   "_developerCloudUrl": "stored only in the DB (DeveloperAccount.developerCloudUrl) - contract clause 5 makes the link confidential"
  },
  "projects": [
@@ -1103,8 +1103,8 @@
    "district": "Larnaca",
    "town": "Larnaca",
    "area": "Livadia",
-   "latitude": null,
-   "longitude": null,
+   "latitude": 34.9512625,
+   "longitude": 33.6436406,
    "priceListDate": "2026-10-01",
    "units": [
     {
@@ -2265,7 +2265,7 @@
      "terrace": null,
      "parking": 1,
      "storageYes": true,
-     "status": "reserved",
+     "status": "sold",
      "price": null,
      "floor": "2nd floor",
      "label": "Block C, Flat 201",
@@ -2415,7 +2415,7 @@
      "terrace": 120.0,
      "parking": 1,
      "storageYes": true,
-     "status": "reserved",
+     "status": "sold",
      "price": null,
      "floor": "5th floor",
      "label": "Block C, Flat 501",
@@ -4996,7 +4996,7 @@
      "internal": 50.0,
      "veranda": 18.0,
      "parking": 1,
-     "status": "reserved",
+     "status": "sold",
      "price": null,
      "floor": "2nd floor"
     },
@@ -5134,7 +5134,7 @@
      "internal": 76.5,
      "veranda": 17.0,
      "parking": 1,
-     "status": "reserved",
+     "status": "sold",
      "price": null,
      "floor": "1st floor",
      "baths": 2
@@ -5146,7 +5146,7 @@
      "internal": 54.5,
      "veranda": 16.5,
      "parking": 1,
-     "status": "reserved",
+     "status": "sold",
      "price": null,
      "floor": "1st floor",
      "garden": 49.0,
@@ -5183,7 +5183,7 @@
      "internal": 54.5,
      "veranda": 16.5,
      "parking": 1,
-     "status": "reserved",
+     "status": "sold",
      "price": null,
      "floor": "2nd floor",
      "baths": 1
