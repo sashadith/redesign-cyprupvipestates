@@ -36,6 +36,7 @@ export function leadRow(l: LeadRowSource) {
     language: l.languagePreference,
     budget: { min: l.budgetMin, max: l.budgetMax },
     budgetCurrencyUnverified: hints.budgetCurrencyUnverified,
+    nameEmailMismatch: hints.nameEmailMismatch,
     projectInterest: l.projectInterest?.title ?? null,
     // GUIDE_DOWNLOAD leads (2026-10-19): the PDF guide they asked for. Null otherwise.
     guide: l.guideTitle ? { title: l.guideTitle, language: l.guideLanguage } : null,
