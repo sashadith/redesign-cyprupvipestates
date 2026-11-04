@@ -13,6 +13,7 @@ import { alertBoth, buildLeadEmail, buildLeadMessage, buildLeadWhatsApp, leadWha
 import { createOpenWaClient } from "@/lib/openwa/client";
 import { sendEmail } from "@/lib/sendEmail";
 import { redactContactDetails } from "@/lib/chatPrivacy";
+import { metaDefaultOwner } from "./defaultOwner";
 
 // A PROCESSING claim older than this belongs to a run that died mid-way.
 export const STALE_CLAIM_MS = 5 * 60_000;
@@ -240,9 +241,11 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
       const outcome: "CREATED" | "ATTACHED" = existing ? "ATTACHED" : "CREATED";
       let id = existing?.id ?? null;
       if (!id) {
+        const owner = await metaDefaultOwner(tx);
         const created = await tx.lead.create({
           data: {
             source: "META_LEAD_AD",
+            assignedToId: owner?.id ?? null,
             status: "NEW",
             firstName: m.firstName,
             lastName: m.lastName,
@@ -264,6 +267,11 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         });
         id = created.id;
         await tx.leadActivity.create({ data: { leadId: id, type: "INBOUND", content: "Lead received via Meta lead form", createdBy: ACTOR } });
+        if (owner) {
+          await tx.leadInteraction.create({
+            data: { leadId: id, type: "SYSTEM", channel: "SYSTEM", body: `Assigned to ${owner.name} (automatic, Meta lead)`, occurredAt, createdByName: ACTOR, metadata: { assignedToId: owner.id, automatic: true, source: "meta_leadgen" } },
+          });
+        }
       } else if (existing?.status === "LOST") {
         // A lost lead asking again is a live lead again — back to NEW so it
         // shows up in the active lists and the Action Center. CLOSED (a deal
