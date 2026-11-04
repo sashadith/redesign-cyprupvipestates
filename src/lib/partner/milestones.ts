@@ -24,6 +24,7 @@ const LOST_MAP: Record<LostReasonValue, LostCategory> = {
   BUDGET: "budget",
   BOUGHT_ELSEWHERE: "other_choice",
   UNREACHABLE: "unreachable",
+  NO_RESPONSE: "unreachable",
   NOT_INTERESTED: "other",
   TIMING: "timing",
   INVALID: "other",

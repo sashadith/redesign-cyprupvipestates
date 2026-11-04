@@ -118,6 +118,7 @@ enum LostReason {
   TIMING
   INVALID
   OTHER
+  NO_RESPONSE // 2026-11-04 — contacted, never answered (different from UNREACHABLE: the number/address works)
 }
 
 enum LeadSource {

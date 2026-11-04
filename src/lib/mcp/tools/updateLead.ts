@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { applyLeadStatusChange, standaloneLostReason } from "@/lib/crm/updateLeadStatus";
+import { LOST_REASONS } from "@/lib/crm/leadStatus";
 import { findDuplicateLead } from "@/lib/crm/createLead";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
 import { runTool, ToolError } from "../toolWrapper";
@@ -20,7 +21,7 @@ export function registerUpdateLead(server: McpServer) {
     {
       title: "Update a lead",
       description:
-        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing, admin notes, email address, owner (assignedTo: an employee's name or id, admins only) or bucket (leads/partner). Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Name and phone are changed in the cockpit, not here; an unsupported field is an error. With status LOST, pass lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NOT_INTERESTED, TIMING, INVALID, OTHER).",
+        "Changes status (with the same timeline rows as the admin dropdown), follow-up date, hot flag, preferred channel, language, salutation, budget, timeline, financing, admin notes, email address, owner (assignedTo: an employee's name or id, admins only) or bucket (leads/partner). Pass only the fields to change; null clears a nullable field. A status of VIEWING_SCHEDULED requires viewingScheduledAt. Name and phone are changed in the cockpit, not here; an unsupported field is an error. Setting status LOST requires lostReason (BUDGET, BOUGHT_ELSEWHERE, UNREACHABLE, NO_RESPONSE, NOT_INTERESTED, TIMING, INVALID, OTHER); NO_RESPONSE = contacted but never answered.",
       inputSchema: UpdateLeadInput,
       annotations: { readOnlyHint: false, idempotentHint: true, destructiveHint: false },
     },
@@ -34,6 +35,9 @@ export function registerUpdateLead(server: McpServer) {
         assertCanEdit(user, lead);
         if (input.lostReason && input.status !== "LOST") {
           throw new ToolError("validation", "lostReason is only allowed together with status LOST");
+        }
+        if (input.status === "LOST" && input.status !== lead.status && !input.lostReason) {
+          throw new ToolError("validation", `Setting status LOST needs a lostReason (${LOST_REASONS.join(", ")}).`);
         }
         if (input.status === "VIEWING_SCHEDULED" && input.status !== lead.status && !input.viewingScheduledAt) {
           throw new ToolError("validation", "viewingScheduledAt is required when setting status VIEWING_SCHEDULED.");

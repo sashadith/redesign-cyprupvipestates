@@ -41,7 +41,7 @@ export const STATUS_LABEL: Record<LeadStatusValue, string> = {
 };
 
 export const LOST_REASONS = [
-  "BUDGET", "BOUGHT_ELSEWHERE", "UNREACHABLE", "NOT_INTERESTED", "TIMING", "INVALID", "OTHER",
+  "BUDGET", "BOUGHT_ELSEWHERE", "UNREACHABLE", "NOT_INTERESTED", "TIMING", "INVALID", "OTHER", "NO_RESPONSE",
 ] as const;
 export type LostReasonValue = (typeof LOST_REASONS)[number];
 
@@ -49,6 +49,7 @@ export const LOST_REASON_LABEL: Record<LostReasonValue, string> = {
   BUDGET: "Budget does not fit",
   BOUGHT_ELSEWHERE: "Bought elsewhere",
   UNREACHABLE: "Not reachable",
+  NO_RESPONSE: "No response",
   NOT_INTERESTED: "No longer interested",
   TIMING: "Not the right time",
   INVALID: "Invalid or spam",
