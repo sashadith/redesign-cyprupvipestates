@@ -7,6 +7,7 @@ import { adminDateTime } from "@/lib/adminTime";
 import { TemperatureChip } from "./TemperatureDot";
 import type { PublicTemperature } from "@/lib/crm/insights/temperatureWiring";
 import { safeMailto, waDigits } from "@/lib/crm/contactLinks";
+import { LeadZonePicker } from "./LeadZonePicker";
 
 // Lead cockpit header and contact panel (CRM v2, 2026-10-18). Server-rendered.
 // Everything the lead typed (name, message, contact details) is rendered as
@@ -18,6 +19,13 @@ export type CockpitLead = {
   propertyTypes: string[]; message: string | null; notes: string | null; status: string; lostReason: string | null; source: string;
   ownerName: string | null; project: string | null; createdAt: Date;
   attribution: { label: string; value: string }[];
+  /** Soft warnings about the lead's data (leadHints.ts). */
+  hints: string[];
+  /** The lead's local time (leadLocalTime.ts); display only. */
+  localTime:
+    | { kind: "known"; zone: string; text: string; light: "green" | "amber" | "red"; lightLabel: string }
+    | { kind: "ambiguous"; country: string; options: string[] }
+    | { kind: "unknown" };
 };
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
@@ -34,7 +42,7 @@ function budget(min: number | null, max: number | null): string | null {
   return null;
 }
 
-export function CockpitHeader({ lead, now, temperature = null, actions = null }: { lead: CockpitLead; now: Date; temperature?: PublicTemperature | null; actions?: React.ReactNode }) {
+export function CockpitHeader({ lead, now, temperature = null, actions = null, canEdit = false }: { lead: CockpitLead; now: Date; temperature?: PublicTemperature | null; actions?: React.ReactNode; canEdit?: boolean }) {
   const statusLabel = isLeadStatus(lead.status) ? STATUS_LABEL[lead.status] : lead.status;
   const reason = lead.status === "LOST" && lead.lostReason ? LOST_REASON_LABEL[lead.lostReason as LostReasonValue] ?? lead.lostReason : null;
   return (
@@ -50,6 +58,12 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null }:
         <span className={`crm-ck-status s-${lead.status}`}><span className="dot" />{statusLabel}{reason && <span className="crm-muted"> · {reason}</span>}</span>
         <span className={`crm-ck-src${lead.source === "PARTNER" ? " partner" : ""}`}>{SOURCE_LABEL[lead.source] ?? lead.source}</span>
         <span className="crm-muted">{lead.ownerName ? <>Owner <b className="crm-ck-owner">{lead.ownerName}</b></> : "Unassigned"}</span>
+        {lead.localTime.kind === "known" && (
+          <span className={`crm-ck-clock l-${lead.localTime.light}`} title={`${lead.localTime.zone}: ${lead.localTime.lightLabel}`}>
+            <span className="dot" aria-hidden="true" />Local {lead.localTime.text}<span className="sr-only"> ({lead.localTime.lightLabel})</span>
+          </span>
+        )}
+        {lead.localTime.kind === "ambiguous" && <LeadZonePicker leadId={lead.id} country={lead.localTime.country} options={lead.localTime.options} canEdit={canEdit} />}
         <span className="crm-muted">created <time dateTime={lead.createdAt.toISOString()} title={adminDateTime(lead.createdAt)}>{ago(lead.createdAt, now)}</time></span>
       </div>
     </header>
@@ -74,6 +88,11 @@ export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp
   return (
     <section className="crm-panel crm-ck-contact" aria-labelledby="crm-ck-contact-h">
       <h2 id="crm-ck-contact-h">Contact</h2>
+      {lead.hints.length > 0 && (
+        <ul className="crm-ck-hints" aria-label="Check">
+          {lead.hints.map((h) => <li key={h}>{h}</li>)}
+        </ul>
+      )}
       <dl className="crm-ck-facts">
         {lead.phone && (
           <div>

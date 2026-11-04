@@ -11,14 +11,14 @@ import { LOCALES } from "@/lib/locale";
 // Same on-disk read as loadPlaybook.ts (edits to the markdown take effect
 // without a rebuild; see the comment there).
 const PLAYBOOK_DIR = path.join(process.cwd(), "src/lib/crm/compose/playbook");
-const FILES = ["voice.md", "by-language.md", "by-state.md", "call-offer.md", "psychology.md", "anti-slop.md", "examples.md"] as const;
+const FILES = ["voice.md", "by-language.md", "by-state.md", "call-offer.md", "psychology.md", "anti-slop.md", "examples.md", "private-collection.md"] as const;
 
 export function registerPlaybook(server: McpServer) {
   server.registerTool(
     "crm_get_playbook",
     {
       title: "Get the messaging playbook",
-      description: "The house rules for writing to leads: voice, per-language salutation rules (formal DE/PL), per-state guidance, when to offer a call, anti-slop rules and examples — plus the closing lines per language and the real contact phone. Read this before drafting any message.",
+      description: "The house rules for writing to leads: voice, per-language salutation rules (formal DE/PL), per-state guidance, when to offer a call, anti-slop rules, examples and the Private Collection rules (no project names before a PC lead is qualified) — plus the closing lines per language and the real contact phone. Read this before drafting any message.",
       inputSchema: z.object({}),
       annotations: { readOnlyHint: true, idempotentHint: true },
     },

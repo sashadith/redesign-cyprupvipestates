@@ -118,6 +118,7 @@ enum LostReason {
   TIMING
   INVALID
   OTHER
+  NO_RESPONSE // 2026-11-04 — contacted, never answered (different from UNREACHABLE: the number/address works)
 }
 
 enum LeadSource {
@@ -924,6 +925,18 @@ model Lead {
   // responds and later goes quiet again gets a fresh chain of 3, rather than
   // this being a lifetime cap.
   autoFollowUpCount    Int                   @default(0)
+  // 2026-11-04 — nextFollowUpAt was set by a person (cockpit, old admin, Telegram snooze, Claude).
+  // The automatic cadence leaves such a date alone while it lies in the future; its own writes
+  // clear the flag again. See followUpCadence.ts.
+  followUpManual       Boolean               @default(false)
+  // 2026-11-04 — a hard bounce (550 user unknown) for the current email address, read from the
+  // operator's mailbox by the inbound poller (emailInbound/bounceHandler.ts). While set, nothing is
+  // sent to the address; changing the email clears both fields.
+  emailInvalidAt       DateTime?
+  // 2026-11-04 — IANA zone picked by hand (e.g. "America/Toronto") for a country with several zones,
+  // or to correct the derived one. Null = derived from country of residence, then phone (leadLocalTime.ts).
+  timeZone             String?
+  emailInvalidReason   String?
   // Compose batch (2026-07-24) — title form for the DE/PL formal first-contact
   // salutation ("Sehr geehrter Herr [Nachname]" / "Szanowny Panie [Nachname]").
   // Manually maintained (no reliable data source); UNKNOWN falls back to a
@@ -1133,6 +1146,10 @@ model LeadEmailDraft {
   // CC recipients (2026-10-02), fixed at draft time: shown in the operator's
   // preview and sent verbatim by crm_send_email — never edited in between.
   cc                String[]             @default([])
+  // 2026-11-04 — the address the preview showed. A draft is only sent while the lead's email is
+  // still this address: the approval covers one recipient, not whatever the lead row says later.
+  // Null on drafts made before; those keep the old behaviour until they expire (24 h).
+  toEmail           String?
   status            LeadEmailDraftStatus @default(PENDING)
   failedAttempts    Int                  @default(0)
   expiresAt         DateTime

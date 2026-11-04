@@ -9,6 +9,7 @@
 import { cardUrgency, type BoardLeadInput, type CardUrgency } from "./boardModel";
 import { isLeadStatus } from "./leadStatus";
 import { CRM_TZ, dayKey } from "./today";
+import { callWindowFromEnv, followUpLeadTime, leadTimeSummary, weekLabel, type CallWindow } from "./leadLocalTime";
 
 /** Cyprus hours the reminder goes out. */
 export const NAG_HOURS = [10, 18] as const;
@@ -35,9 +36,20 @@ export function nagSlot(now: Date, tz = CRM_TZ): number | null {
 
 export type NagLead = Pick<BoardLeadInput, "id" | "firstName" | "lastName" | "status" | "lastContactAt" | "createdAt" | "nextFollowUpAt" | "viewingScheduledAt" | "lastStatusChangeAt"> & {
   assignedToId: string | null;
+  // For the lead's local time on the reminder line (2026-11-04); optional so callers without them still work.
+  timeZone?: string | null;
+  countryOfResidence?: string | null;
+  phone?: string | null;
 };
 
-export type NagItem = { leadId: string; name: string; urgency: CardUrgency; ownerName: string | null };
+/** "Wed 08:30 in London (good time to call) · follow-up KW 45 (02 - 06 Nov)" — the reminder's local-time line. */
+export type NagItem = { leadId: string; name: string; urgency: CardUrgency; ownerName: string | null; local?: string };
+
+export function nagLocalLine(l: NagLead, now: Date, w: CallWindow = callWindowFromEnv()): string {
+  const t = leadTimeSummary(l, now, w);
+  const follow = l.nextFollowUpAt ? ` · follow-up ${weekLabel(l.nextFollowUpAt)}${t.zone ? `, ${followUpLeadTime(l.nextFollowUpAt, t.zone)}` : ""}` : "";
+  return `${t.text}${follow}`;
+}
 
 const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName} ${l.lastName}`.trim() || "(no name)";
 
@@ -48,7 +60,7 @@ export function nagItems(leads: NagLead[], now: Date, ownerNameOf: (assignedToId
     if (!isLeadStatus(l.status)) continue;
     const u = cardUrgency({ ...l, source: "", languagePreference: null, assignedTo: null, projectLabel: null, deals: [], canEdit: false } as BoardLeadInput, l.status, now);
     // Office reminders name the client (operator, 2026-11-02); contact details and messages stay out (chatPrivacy.ts).
-    if (u) out.push({ leadId: l.id, name: leadName(l), urgency: u, ownerName: ownerNameOf(l.assignedToId) });
+    if (u) out.push({ leadId: l.id, name: leadName(l), urgency: u, ownerName: ownerNameOf(l.assignedToId), local: nagLocalLine(l, now) });
   }
   const rank = (i: NagItem) => (i.urgency.level === "overdue" ? i.urgency.days : -1);
   return out.sort((a, b) => rank(b) - rank(a) || a.name.localeCompare(b.name, "en"));
@@ -96,9 +108,10 @@ export function nagLine(item: NagItem, leadUrl: string): string {
   const u = item.urgency;
   const who = item.ownerName ? ` <i>(${esc(item.ownerName)})</i>` : "";
   const name = `<a href="${esc(leadUrl)}">${esc(item.name)}</a>`;
-  if (u.level === "now") return `🟡 ${name}${who} — ${esc(u.reason)}`;
-  if (u.days >= NAG_ALARM_DAYS) return `🚨 <b>${name} — left alone for ${u.days} days</b>${who}\n      ${esc(u.reason)}`;
-  return `${u.days >= NAG_LOUD_DAYS ? "🔴🔴" : "🔴"} ${name}${who} — <b>Overdue ${u.days}d</b> · ${esc(u.reason)}`;
+  const local = item.local ? `\n      🕐 ${esc(item.local)}` : "";
+  if (u.level === "now") return `🟡 ${name}${who} — ${esc(u.reason)}${local}`;
+  if (u.days >= NAG_ALARM_DAYS) return `🚨 <b>${name} — left alone for ${u.days} days</b>${who}\n      ${esc(u.reason)}${local}`;
+  return `${u.days >= NAG_LOUD_DAYS ? "🔴🔴" : "🔴"} ${name}${who} — <b>Overdue ${u.days}d</b> · ${esc(u.reason)}${local}`;
 }
 
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;

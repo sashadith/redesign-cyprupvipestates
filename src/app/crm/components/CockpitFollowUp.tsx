@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { dayKey } from "@/lib/crm/today";
 import { FOLLOW_UP_QUICK_DAYS, dayPlus, followUpLabel } from "@/lib/crm/followUp";
+import { followUpLeadTime, weekLabel } from "@/lib/crm/leadLocalTime";
 import { setFollowUpAction } from "../leads/actions";
 import { useToast } from "./Toast";
 
@@ -12,7 +13,7 @@ import { useToast } from "./Toast";
 
 const QUICK_LABEL: Record<(typeof FOLLOW_UP_QUICK_DAYS)[number], string> = { 1: "Tomorrow", 3: "+3 days", 7: "+1 week" };
 
-export function CockpitFollowUp({ leadId, at: initial, canEdit }: { leadId: string; at: string | null; canEdit: boolean }) {
+export function CockpitFollowUp({ leadId, at: initial, canEdit, leadZone = null }: { leadId: string; at: string | null; canEdit: boolean; leadZone?: string | null }) {
   const router = useRouter();
   const toast = useToast();
   const [at, setAt] = useState<string | null>(initial);
@@ -50,6 +51,11 @@ export function CockpitFollowUp({ leadId, at: initial, canEdit }: { leadId: stri
         </span>
         {canEdit && current && <button type="button" className="crm-linkbtn" disabled={busy} onClick={() => void save({ clear: true })}>Clear</button>}
       </div>
+      {current && (
+        <p className="crm-muted crm-ck-follow-week">
+          {weekLabel(current)}{leadZone && <> · lead&apos;s time {followUpLeadTime(current, leadZone)}</>}
+        </p>
+      )}
       {canEdit && (
         <form className="crm-ck-follow-row" onSubmit={(e) => { e.preventDefault(); if (day) void save({ day }); }}>
           {FOLLOW_UP_QUICK_DAYS.map((n) => (

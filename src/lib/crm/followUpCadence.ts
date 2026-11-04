@@ -16,8 +16,15 @@
 // A plain manual edit to nextFollowUpAt (updateLeadFollowUp in
 // admin/actions.ts) does NOT touch this counter — only resetFollowUpCadence
 // does.
+//
+// A date a person set (Lead.followUpManual, 2026-11-04) is never overwritten
+// while it lies in the future: the cadence then writes nothing (no date, no
+// count) apart from a leadReacted reset. Once that date has passed, the next
+// trigger schedules as before and clears the flag.
 import { prisma } from "@/lib/prisma";
 import { guideCadenceStep } from "@/lib/guides/leadSource";
+import { keepsManualFollowUp, manualFollowUpData } from "./followUpRule";
+import { followUpLabel } from "./followUp";
 
 export type FollowUpTrigger = "presentation_sent" | "presentation_viewed" | "manual_contact";
 
@@ -71,8 +78,9 @@ export async function applyFollowUpCadence(
   // return without touching the lead, and a contact still happened either way.
   if (trigger === "manual_contact") await promoteNewToContacted(leadId);
 
-  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { autoFollowUpCount: true, source: true, status: true } });
+  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { autoFollowUpCount: true, source: true, status: true, followUpManual: true, nextFollowUpAt: true } });
   if (!lead) return;
+  const keepDate = keepsManualFollowUp(lead, new Date());
 
   // Guide leads (2026-10-19) get their own, shorter chain for logged contacts:
   // two attempts, then KEEP_CONTACT with a 60-day follow-up. Every other
@@ -81,11 +89,12 @@ export async function applyFollowUpCadence(
     const step = guideCadenceStep({ count: lead.autoFollowUpCount, status: lead.status, leadReacted: !!opts?.leadReacted });
     if (step.kind === "silent") return;
     if (step.kind === "schedule") {
-      await prisma.lead.update({ where: { id: leadId }, data: { nextFollowUpAt: new Date(Date.now() + step.days * DAY_MS), autoFollowUpCount: step.count } });
+      if (keepDate) return;
+      await prisma.lead.update({ where: { id: leadId }, data: { nextFollowUpAt: new Date(Date.now() + step.days * DAY_MS), autoFollowUpCount: step.count, followUpManual: false } });
       return;
     }
     if (step.kind === "park") {
-      await parkGuideLead(leadId, step.days, step.count);
+      await parkGuideLead(leadId, step.days, step.count, keepDate);
       return;
     }
     // "regular": the lead reacted or is in a conversation — fall through.
@@ -94,8 +103,8 @@ export async function applyFollowUpCadence(
   let count = lead.autoFollowUpCount;
   if (opts?.leadReacted) count = 0; // fresh chain starts here
 
-  if (count >= MAX_AUTO_FOLLOWUPS) {
-    // Cap reached — automation stays silent. Still persist a leadReacted
+  if (count >= MAX_AUTO_FOLLOWUPS || keepDate) {
+    // Cap reached (or a person's date still ahead) — automation stays silent. Still persist a leadReacted
     // reset even though this particular trigger won't itself set a date,
     // so the NEXT trigger after this one starts the fresh chain instead.
     if (opts?.leadReacted) {
@@ -116,6 +125,7 @@ export async function applyFollowUpCadence(
     data: {
       nextFollowUpAt: new Date(Date.now() + days * DAY_MS),
       autoFollowUpCount: count + 1,
+      followUpManual: false,
     },
   });
 }
@@ -123,11 +133,15 @@ export async function applyFollowUpCadence(
 /* The second unanswered attempt on a guide lead: park it in KEEP_CONTACT and
    come back in 60 days. Same two timeline rows as promoteNewToContacted, so the
    automatic status change is as visible as one a person clicked. */
-async function parkGuideLead(leadId: string, days: number, count: number): Promise<void> {
-  const content = `Status changed to KEEP_CONTACT (guide lead: ${count} attempts without a reply, follow-up in ${days} days)`;
+async function parkGuideLead(leadId: string, days: number, count: number, keepDate: boolean): Promise<void> {
+  const content = keepDate
+    ? `Status changed to KEEP_CONTACT (guide lead: ${count} attempts without a reply, follow-up date kept)`
+    : `Status changed to KEEP_CONTACT (guide lead: ${count} attempts without a reply, follow-up in ${days} days)`;
   await prisma.lead.update({
     where: { id: leadId },
-    data: { status: "KEEP_CONTACT", nextFollowUpAt: new Date(Date.now() + days * DAY_MS), autoFollowUpCount: count },
+    data: keepDate
+      ? { status: "KEEP_CONTACT", autoFollowUpCount: count }
+      : { status: "KEEP_CONTACT", nextFollowUpAt: new Date(Date.now() + days * DAY_MS), autoFollowUpCount: count, followUpManual: false },
   });
   await prisma.leadActivity.create({ data: { leadId, type: "STATUS_CHANGE", content, createdBy: "system" } });
   await prisma.leadInteraction.create({
@@ -147,4 +161,21 @@ async function parkGuideLead(leadId: string, days: number, count: number): Promi
 // currently set while still declaring "give this lead a fresh chain of 3").
 export async function resetFollowUpCadence(leadId: string): Promise<void> {
   await prisma.lead.update({ where: { id: leadId }, data: { autoFollowUpCount: 0 } });
+}
+
+/* A follow-up date a person picked while logging or sending (crm_log_interaction / crm_send_email
+   followUpAt, 2026-11-04). Runs after the contact's own cadence, so it wins, and is written like the
+   cockpit's "Next follow-up" control: flagged manual, with the same SYSTEM row. null clears it. */
+export async function setManualFollowUp(leadId: string, at: Date | null, actor: { userId: string; userName: string }): Promise<void> {
+  const body = at ? `Next follow-up set to ${followUpLabel(at)}` : "Next follow-up cleared";
+  await prisma.$transaction([
+    prisma.lead.update({ where: { id: leadId }, data: manualFollowUpData(at) }),
+    prisma.leadInteraction.create({
+      data: {
+        leadId, type: "SYSTEM", channel: "SYSTEM", direction: null, body,
+        createdByUserId: actor.userId, createdByName: actor.userName,
+        metadata: { kind: "follow_up", nextFollowUpAt: at ? at.toISOString() : null, via: "mcp" },
+      },
+    }),
+  ]);
 }

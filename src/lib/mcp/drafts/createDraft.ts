@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { getSignatureHtml } from "@/lib/emailSignature";
 import { sendUserEmail, getUserEmailSettingsRow, EmailSettingsMissingError } from "@/lib/crm/sendCrmEmail";
-import type { EmailActor } from "@/lib/crm/sendLeadEmail";
+import { emailInvalidMessage, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { adminDateTime } from "@/lib/adminTime";
 import { ToolError } from "../toolWrapper";
 import { assertCanEdit, type LeadScope } from "../leadScope";
@@ -30,11 +30,12 @@ export async function createEmailDraft(
 
   const lead = await prisma.lead.findFirst({
     where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
-    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true },
+    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true, emailInvalidAt: true, emailInvalidReason: true },
   });
   if (!lead) throw new ToolError("not_found", "Lead not found.");
   assertCanEdit(access.user, lead);
   if (!lead.email) throw new ToolError("validation", "This lead has no email address — a draft cannot be sent to them.");
+  if (lead.emailInvalidAt) throw new ToolError("validation", emailInvalidMessage(lead));
   // CC: what the caller gave (validated strictly; [] = deliberately none), or
   // — when nothing was given — "reply all": the other participants of the
   // lead's latest inbound email, e.g. a partner who was in CC. Either way the
@@ -65,7 +66,11 @@ export async function createEmailDraft(
   if (perLead >= DRAFTS_PER_LEAD_PER_HOUR) throw new ToolError("rate_limited", `Loop guard: at most ${DRAFTS_PER_LEAD_PER_HOUR} drafts per lead per hour — the limit resets within the hour.`);
   if (perUser >= DRAFTS_PER_USER_PER_DAY) throw new ToolError("rate_limited", `Loop guard: at most ${DRAFTS_PER_USER_PER_DAY} drafts per day — the limit resets within 24 hours.`);
 
-  const approvalCode = generateApprovalCode();
+  // Unique among the operator's open drafts, so crm_send_email can find the draft by its code alone.
+  const open = await prisma.leadEmailDraft.findMany({ where: { userId: actor.userId, status: "PENDING", expiresAt: { gt: new Date(now) } }, select: { approvalCode: true } });
+  const taken = new Set(open.map((d) => d.approvalCode));
+  let approvalCode = generateApprovalCode();
+  for (let i = 0; i < 20 && taken.has(approvalCode); i++) approvalCode = generateApprovalCode();
   const expiresAt = new Date(now + DRAFT_TTL_MS);
   const locale = lead.languagePreference ?? "en";
   const preview = buildPreviewEmail({
@@ -97,7 +102,7 @@ export async function createEmailDraft(
     const superseded = await tx.leadEmailDraft.findFirst({ where: { leadId: lead.id, status: "PENDING" }, select: { id: true } });
     if (superseded) await tx.leadEmailDraft.update({ where: { id: superseded.id }, data: { status: "SUPERSEDED" } });
     const draft = await tx.leadEmailDraft.create({
-      data: { leadId: lead.id, userId: actor.userId, subject, body, cc, approvalCode, expiresAt, previewMessageId },
+      data: { leadId: lead.id, userId: actor.userId, subject, body, cc, toEmail: lead.email, approvalCode, expiresAt, previewMessageId },
       select: { id: true },
     });
     await tx.leadInteraction.create({

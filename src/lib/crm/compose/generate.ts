@@ -136,6 +136,7 @@ function buildSystemPrompt(
   channel: ComposeChannel,
   openingGreeting: string | null,
   callOfferEligible: boolean,
+  privateCollection = false,
 ): string {
   const pb = loadPlaybook(state, language);
   const lengthRule = channel === "WHATSAPP"
@@ -143,7 +144,7 @@ function buildSystemPrompt(
     : "This is an email: include a subject line, distinct from the body and varied to match this specific lead's state and situation — never default to a generic phrase like 'Following up on your enquiry'. Body length should match a normal, considerate reply — not a brochure, not a one-liner. Do NOT write a closing valediction, your name, or a role line (no 'Best regards, Sascha' etc.) — that closing block plus the real signature are appended automatically by the sending system after your text. End the body naturally after the last substantive sentence, right after the opening greeting's content — do not write the greeting's line itself as a separate concern, see the greeting rule below.";
 
   const greetingRule = openingGreeting
-    ? `Open the message with EXACTLY this text, verbatim, as your first lines — do not rephrase, translate, retranslate, or alter a single word of it, including its one exclamation mark:\n"${openingGreeting}"\nContinue directly after it with the rest of the message (value-first paragraph if applicable, then the three bulleted questions, etc. — see by-state.md).`
+    ? `Open the message with EXACTLY this text, verbatim, as your first lines — do not rephrase, translate, retranslate, or alter a single word of it${openingGreeting.includes("!") ? ", including its one exclamation mark" : ""}:\n"${openingGreeting}"\nContinue directly after it with the rest of the message (value-first paragraph if applicable, then the three bulleted questions, etc. — see by-state.md).`
     : "This is not the first contact — do not use a fixed greeting. Look at how the lead has addressed Sascha in the timeline (first name vs formal title, formality level) and mirror that; if nothing in the timeline gives a clear signal, use the same style as a first-contact greeting would (see by-language.md's Salutation section).";
 
   return [
@@ -161,6 +162,8 @@ function buildSystemPrompt(
     // the reference examples' unconditional phone-number mention instead).
     callOfferEligible ? "\n--- CALL OFFER ---\n" + pb.callOffer : "",
     pb.examples ? "\n--- REFERENCE EXAMPLES ---\n" + pb.examples : "",
+    // Private Collection (2026-11-04): its rules win over the examples above where they differ.
+    privateCollection && pb.privateCollection ? "\n--- PRIVATE COLLECTION LEAD (overrides the examples where they differ) ---\n" + pb.privateCollection : "",
     "\n--- GREETING ---\n" + greetingRule,
     "\n--- FORMAT ---\n" + lengthRule,
     "\n--- HARD RULE, NO EXCEPTIONS ---",
@@ -254,7 +257,11 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
     excerpt: (i.body ?? i.subject ?? "").slice(0, 240),
   }));
 
-  const identifiedProject = await resolveIdentifiedProject(lead.pageSource);
+  // A Private Collection lead hears no project names until qualified (playbook/private-collection.md):
+  // before a real conversation, the model is given neither a project nor matches to name.
+  const privateCollection = lead.source === "PRIVATE_COLLECTION";
+  const pcUnqualified = privateCollection && (lead.status === "NEW" || lead.status === "CONTACTED");
+  const identifiedProject = pcUnqualified ? null : await resolveIdentifiedProject(lead.pageSource);
   const budgetSignal = resolveBudgetSignal(lead, identifiedProject);
   // Both gates computed in code, not left to the model to cross-reference —
   // the model is never shown the computed LeadState as an explicit label, so
@@ -269,7 +276,9 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
       lead.timeline != null ||
       identifiedProject != null);
 
-  const openingGreeting = state === "NEW" ? buildFirstContactOpening(lead, language) : null;
+  const opening = state === "NEW" ? buildFirstContactOpening(lead, language) : null;
+  // Private Collection: no exclamation mark anywhere, the fixed opening included.
+  const openingGreeting = opening && privateCollection ? opening.replace(/!/g, ".") : opening;
 
   const dataPayload = {
     lead: {
@@ -287,10 +296,10 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
     },
     timeline: timelineForPrompt,
     presentation,
-    matchedProperties: usableMatches.map(summarizeMatch),
+    matchedProperties: pcUnqualified ? [] : usableMatches.map(summarizeMatch),
   };
 
-  const systemPrompt = buildSystemPrompt(state, language, channel, openingGreeting, callOfferEligible);
+  const systemPrompt = buildSystemPrompt(state, language, channel, openingGreeting, callOfferEligible, privateCollection);
 
   const tool = {
     name: "compose_reply",

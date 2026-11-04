@@ -6,6 +6,9 @@ import { canAssignLeads, canEditLead, canViewLead } from "@/lib/crm/access";
 import { contactToCheck, createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
 import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
+import { manualFollowUpData } from "@/lib/crm/followUpRule";
+import { emailEditData } from "@/lib/crm/leadHints";
+import { isTimeZone } from "@/lib/crm/leadLocalTime";
 import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { LogInteractionInput } from "@/lib/mcp/tools/logInteractionInput";
@@ -27,10 +30,10 @@ export async function logInteractionAction(leadId: string, raw: unknown): Promis
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid entry." };
   const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
   if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
-  const { type, body, subject, occurredAt, leadReacted } = parsed.data;
+  const { type, body, subject, occurredAt, leadReacted, callOutcome } = parsed.data;
   const when = occurredAt ? new Date(occurredAt) : undefined;
   if (when && when.getTime() > Date.now() + FUTURE_SLACK_MS) return { error: "The date cannot be in the future." };
-  await logLeadInteraction({ userId: user.id, userName: user.name }, leadId, { type, body, subject, occurredAt: when, leadReacted });
+  await logLeadInteraction({ userId: user.id, userName: user.name }, leadId, { type, body, subject, occurredAt: when, leadReacted, callOutcome });
   revalidatePath(`/crm/leads/${leadId}`);
   // A logged contact changes the board card's age / stale flag.
   revalidatePath("/crm/pipeline");
@@ -120,7 +123,7 @@ export async function updateLeadDetailsAction(leadId: string, raw: unknown): Pro
 
   const changed = changeSummary(fields);
   await prisma.$transaction([
-    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "" } }),
+    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "", ...emailEditData(lead.email, data.email) } }),
     prisma.leadActivity.create({ data: { leadId, type: "EDIT", content: `Lead details edited: ${changed}`, createdBy: user.name, createdById: user.id } }),
     prisma.leadInteraction.create({
       data: {
@@ -184,7 +187,7 @@ export async function setFollowUpAction(leadId: string, input: FollowUpInput): P
   if (!r.ok) return { error: r.error };
   const body = r.at ? `Next follow-up set to ${followUpLabel(r.at)}` : "Next follow-up cleared";
   await prisma.$transaction([
-    prisma.lead.update({ where: { id: leadId }, data: { nextFollowUpAt: r.at } }),
+    prisma.lead.update({ where: { id: leadId }, data: manualFollowUpData(r.at) }),
     prisma.leadInteraction.create({
       data: {
         leadId, type: "SYSTEM", channel: "SYSTEM", direction: null, body,
@@ -197,4 +200,17 @@ export async function setFollowUpAction(leadId: string, input: FollowUpInput): P
   revalidatePath("/crm/pipeline");
   revalidatePath("/crm/today");
   return { ok: true, at: r.at ? r.at.toISOString() : null };
+}
+
+// The lead's time zone, picked on the cockpit when its country has several (2026-11-04). null goes
+// back to deriving it from country and phone. Display only.
+export async function setLeadTimeZoneAction(leadId: string, zone: string | null): Promise<{ ok: true } | { error: string }> {
+  const user = await requireCrmUser();
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
+  if (zone !== null && !isTimeZone(zone)) return { error: "Unknown time zone." };
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
+  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  await prisma.lead.update({ where: { id: leadId }, data: { timeZone: zone } });
+  revalidatePath(`/crm/leads/${leadId}`);
+  return { ok: true };
 }

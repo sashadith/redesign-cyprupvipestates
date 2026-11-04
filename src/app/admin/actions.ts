@@ -32,7 +32,10 @@ import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { normalizeProfile } from "@/lib/crm/registration/core";
 import { createOpenWaClient, type WaGroup } from "@/lib/openwa/client";
-import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
+import { bucketOf, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
+import { moveLeadBucket } from "@/lib/crm/moveBucket";
+import { manualFollowUpData } from "@/lib/crm/followUpRule";
+import { emailEditData } from "@/lib/crm/leadHints";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 import { hardDeletableLeadWhere, LEAD_HAS_DEALS_ERROR, emptyTrashMessage } from "@/lib/crm/hardDelete";
 
@@ -781,40 +784,9 @@ export async function moveLeadToBucket(id: string, bucket: string) {
   const session = await requireSession();
   if (!isLeadBucket(bucket)) throw new Error("Invalid bucket");
 
-  const lead = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { source: true } });
-  if (!lead) throw new Error("Lead not found");
-  // Already there: return before writing anything. A no-op must not leave a
-  // timeline entry claiming a change that did not happen.
-  if (bucketOf(lead.source) === bucket) return;
-
-  const fromSource = lead.source;
-  const toSource = sourceForBucket(bucket);
-  await prisma.lead.update({ where: { id }, data: { source: toSource } });
-
-  const content = `Moved to ${BUCKET_LABEL[bucket]} — source changed from ${fromSource} to ${toSource}`;
-  await prisma.leadActivity.create({
-    data: {
-      leadId: id,
-      type: "SOURCE_CHANGE",
-      content,
-      createdBy: session.user?.name ?? "admin",
-      createdById: (session.user as any)?.id ?? null,
-    },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: content,
-      // Structured as well as prose, for the same reason updateLeadStatus writes
-      // metadata.toStatus: a later consumer should not have to parse a sentence
-      // to find out where a lead came from.
-      metadata: { fromSource, toSource, toBucket: bucket },
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  const moved = await moveLeadBucket(id, bucket, { id: (session.user as any)?.id ?? null, name: session.user?.name ?? "admin" });
+  // Already there: nothing written, nothing to refresh.
+  if (!moved) return;
 
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
@@ -932,7 +904,7 @@ export async function addEmailLog(
 export async function updateLeadFollowUp(id: string, dateStr: string) {
   await requireSession();
   const nextFollowUpAt = dateStr ? new Date(`${dateStr}T00:00:00.000Z`) : null;
-  await prisma.lead.update({ where: { id }, data: { nextFollowUpAt } });
+  await prisma.lead.update({ where: { id }, data: manualFollowUpData(nextFollowUpAt) });
   revalidatePath(`/admin/crm/${id}`);
 }
 
@@ -1072,7 +1044,7 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
 // and assignment are managed by their own controls and are intentionally untouched here.
 export async function updateLead(id: string, _prev: any, formData: FormData): Promise<{ error?: string }> {
   const session = await requireSession();
-  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
+  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, email: true } });
   if (!existing) return { error: "Lead not found." };
 
   const firstName = String(formData.get("firstName") ?? "").trim();
@@ -1093,6 +1065,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
       firstName,
       lastName: lastName || "",
       email: email || null,
+      ...emailEditData(existing.email, email || null),
       phone: phone || null,
       nationality: String(formData.get("nationality") ?? "").trim() || null,
       countryOfResidence: String(formData.get("countryOfResidence") ?? "").trim() || null,

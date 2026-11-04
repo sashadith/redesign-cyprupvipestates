@@ -3,7 +3,7 @@ import { sendLeadEmail, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ToolError } from "../toolWrapper";
 import { assertCanEdit, type LeadScope } from "../leadScope";
-import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
+import { draftForCode, evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
 import { checkCcRecipients } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 3. The code is checked by the pure
@@ -17,7 +17,7 @@ export async function sendEmailDraft(
 ) {
   const draft = await prisma.leadEmailDraft.findUnique({
     where: { id: draftId },
-    select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
+    select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, toEmail: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
   });
   if (!draft || draft.userId !== actor.userId) throw new ToolError("not_found", "Draft not found.");
   // The draft is the operator's own, but the lead may have been reassigned
@@ -41,6 +41,11 @@ export async function sendEmailDraft(
 
   const lead = await prisma.lead.findFirst({ where: { id: draft.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { email: true } });
   if (!lead?.email) throw new ToolError("validation", "The lead was deleted or has no email address any more — the draft cannot be sent.");
+  // The operator approved the address the preview showed; if the lead's email changed since, that
+  // approval does not cover the new one.
+  if (draft.toEmail && draft.toEmail.trim().toLowerCase() !== lead.email.trim().toLowerCase()) {
+    throw new ToolError("validation", `The lead's email changed after this draft was approved (preview went to ${draft.toEmail}). Create a new draft.`);
+  }
   // The CC list goes out exactly as stored on the draft (and as the preview
   // showed it) — re-checked only against the lead's CURRENT address, which may
   // have been edited since the draft was made. Never altered here.
@@ -62,5 +67,24 @@ export async function sendEmailDraft(
     where: { id: draft.id, status: "SENDING" },
     data: { status: "SENT", sentAt: new Date(), sentInteractionId: result.interactionId },
   });
-  return { sentTo: result.sentTo, cc: result.cc, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
+  return { leadId: draft.leadId, sentTo: result.sentTo, cc: result.cc, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
+}
+
+/* The draft a code belongs to, when crm_send_email gets no draftId. A code that matches none of the
+   operator's open drafts counts as a wrong attempt on every one of them: without that, leaving out
+   the draftId would allow unlimited guessing. */
+export async function draftIdForCode(actor: EmailActor, approvalCode: string): Promise<string> {
+  const now = new Date();
+  const open = await prisma.leadEmailDraft.findMany({
+    where: { userId: actor.userId, status: "PENDING" },
+    select: { id: true, approvalCode: true, expiresAt: true, failedAttempts: true },
+  });
+  const hit = draftForCode(open, approvalCode, now);
+  if (hit.kind === "one") return hit.id;
+  if (hit.kind === "many") throw new ToolError("validation", "More than one open draft has this code; pass the draftId as well.");
+  const live = open.filter((d) => d.expiresAt.getTime() >= now.getTime()).map((d) => d.id);
+  if (!live.length) throw new ToolError("validation", "No open draft to send — create a draft first.");
+  await prisma.leadEmailDraft.updateMany({ where: { id: { in: live }, status: "PENDING" }, data: { failedAttempts: { increment: 1 } } });
+  await prisma.leadEmailDraft.updateMany({ where: { id: { in: live }, status: "PENDING", failedAttempts: { gte: MAX_CODE_ATTEMPTS } }, data: { status: "LOCKED" } });
+  throw new ToolError("validation", "Approval code not accepted: it matches none of your open drafts. Each wrong code counts against every open draft.");
 }

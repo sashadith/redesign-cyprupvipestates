@@ -11,6 +11,12 @@ import { renderLeadEmail } from "./renderLeadEmail";
 
 export type EmailActor = { userId: string; userName: string };
 
+/** A bounced address (emailInvalidAt) is never written to again until someone changes it. */
+export function emailInvalidMessage(l: { email: string | null; emailInvalidAt: Date | null; emailInvalidReason: string | null }): string {
+  const when = l.emailInvalidAt ? l.emailInvalidAt.toISOString().slice(0, 10) : "";
+  return `${l.email} bounced on ${when}${l.emailInvalidReason ? ` (${l.emailInvalidReason})` : ""}. Fix the email address in the lead before sending.`;
+}
+
 export type SendLeadEmailOpts = {
   subject: string;
   body: string;
@@ -31,8 +37,9 @@ export type SendLeadEmailResult =
   | { ok: false; error: string };
 
 export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: SendLeadEmailOpts): Promise<SendLeadEmailResult> {
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { email: true, languagePreference: true } });
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { email: true, languagePreference: true, status: true, emailInvalidAt: true, emailInvalidReason: true } });
   if (!lead?.email) return { ok: false, error: "This lead has no email address." };
+  if (lead.emailInvalidAt) return { ok: false, error: emailInvalidMessage(lead) };
 
   const subject = opts.subject.trim();
   const body = opts.body.trim();
@@ -86,6 +93,16 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
     console.error(`sendLeadEmail: email sent to lead ${leadId} but the timeline write failed:`, interactionError);
   }
 
+  // Writing to a LOST lead means the operator is working it again (2026-11-04): back to CONTACTED,
+  // lostReason cleared, with the usual status rows. Best-effort like the rest after the send.
+  if (lead.status === "LOST") {
+    try {
+      await reviveLostLead(actor, leadId);
+    } catch (e: any) {
+      console.error(`sendLeadEmail: email sent to lost lead ${leadId} but the status reset failed:`, e?.message || e);
+    }
+  }
+
   // Own try/catch, separate from the interaction write above: a cadence
   // failure must never be reported as "the timeline entry failed" (they're
   // unrelated writes), and interactionError above must keep meaning only
@@ -100,4 +117,22 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
     }
   }
   return { ok: true, sentTo: lead.email, cc: opts.cc ?? [], messageId, interactionId, interactionError, cadenceError };
+}
+
+const REVIVED = "Status changed to CONTACTED (email sent to a lost lead)";
+
+/** LOST → CONTACTED after an email went out. Conditional on the status still being LOST, so a lead
+ *  someone moved meanwhile is left alone. */
+export async function reviveLostLead(actor: EmailActor, leadId: string): Promise<boolean> {
+  const { count } = await prisma.lead.updateMany({ where: { id: leadId, status: "LOST" }, data: { status: "CONTACTED", lostReason: null } });
+  if (!count) return false;
+  await prisma.leadActivity.create({ data: { leadId, type: "STATUS_CHANGE", content: REVIVED, createdBy: actor.userName, createdById: actor.userId } });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId, type: "STATUS_CHANGE", channel: "SYSTEM", body: REVIVED,
+      metadata: { toStatus: "CONTACTED", fromStatus: "LOST", automatic: true, reason: "email_sent" },
+      createdByUserId: actor.userId, createdByName: actor.userName,
+    },
+  });
+  return true;
 }

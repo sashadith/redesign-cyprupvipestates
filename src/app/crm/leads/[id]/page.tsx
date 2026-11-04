@@ -7,6 +7,8 @@ import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
 import { buildCockpitPartnerCard, messagePartnerLabel, type ClaimStateValue } from "@/lib/crm/partnerClaims";
 import { CockpitContact, CockpitHeader, type CockpitLead } from "../../components/CockpitHeader";
+import { leadHints } from "@/lib/crm/leadHints";
+import { callWindowFromEnv, leadZone, localClock, LIGHT_LABEL } from "@/lib/crm/leadLocalTime";
 import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
 import { toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
 import { CockpitStage } from "../../components/CockpitStage";
@@ -46,7 +48,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
-      message: true, notes: true, lastMatchFilters: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
+      message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -119,6 +121,8 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     status: lead.status, lostReason: lead.lostReason, source: lead.source, ownerName: lead.assignedTo?.name ?? null,
     project: lead.projectInterest ? [lead.projectInterest.title, lead.projectInterest.city].filter(Boolean).join(" · ") : null,
     createdAt: lead.createdAt, attribution,
+    hints: leadHints(lead).messages,
+    localTime: cockpitLocalTime(lead, now),
   };
   const temperature = toPublicTemperature(
     (await temperaturesFor([{ id: lead.id, status: lead.status, timeline: lead.timeline, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, createdAt: lead.createdAt }], now)).get(lead.id),
@@ -154,7 +158,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     <ToastProvider>
       <CreatedToast show={searchParams?.created === "1"} />
       <div className="crm-cockpit">
-        <CockpitHeader lead={view} now={now} temperature={temperature} actions={canEdit ? (
+        <CockpitHeader lead={view} now={now} temperature={temperature} canEdit={canEdit} actions={canEdit ? (
           <>
             <EditLeadButton leadId={lead.id} lead={{
               firstName: lead.firstName, lastName: lead.lastName, email: lead.email, phone: lead.phone, salutation: lead.salutation,
@@ -173,7 +177,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
               action={canEdit && (lead.phone || lead.email) ? <CockpitSyncButton leadId={lead.id} /> : null} />
           </div>
           <aside className="crm-ck-aside">
-            <CockpitContact lead={view} followUp={<CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} />} />
+            <CockpitContact lead={view} followUp={<CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} leadZone={view.localTime.kind === "known" ? view.localTime.zone : null} />} />
             <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
             <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
@@ -233,4 +237,14 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
     canMessage: canEdit && built.hasActive,
     canReview,
   };
+}
+
+// The lead's clock for the header chip (2026-11-04): known zone with a call light, or the zones to pick from.
+function cockpitLocalTime(lead: { timeZone: string | null; countryOfResidence: string | null; phone: string | null }, now: Date): CockpitLead["localTime"] {
+  const z = leadZone(lead);
+  if (!("reason" in z)) {
+    const c = localClock(z.zone, now, callWindowFromEnv());
+    return { kind: "known", zone: z.zone, text: `${c.weekday} ${c.time} · ${c.city}`, light: c.light, lightLabel: LIGHT_LABEL[c.light] };
+  }
+  return z.reason === "ambiguous" ? { kind: "ambiguous", country: z.country, options: z.options } : { kind: "unknown" };
 }
