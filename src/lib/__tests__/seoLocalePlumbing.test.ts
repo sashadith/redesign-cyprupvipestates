@@ -206,6 +206,15 @@ const UNION_RE = /["']en["']\s*\|\s*["']de["']\s*\|\s*["']pl["']\s*\|\s*["']ru["
 const OBJECT_RE =
   /\{[ \t]*en[ \t]*:[ \t]*[^\n,}]+,[ \t]*de[ \t]*:[ \t]*[^\n,}]+,[ \t]*pl[ \t]*:[ \t]*[^\n,}]+,[ \t]*ru[ \t]*:[ \t]*[^\n,}]+,?[ \t]*\}/g;
 
+// Files whose four-key object literals are he-less ON PURPOSE, with the reason.
+// Keep this to files that route Hebrew somewhere else explicitly — a file that
+// simply forgot `he` is exactly what this test exists to catch.
+const OBJECT_LITERAL_EXEMPT: Record<string, string> = {
+  // typeLabel() sends `he` to heFeedLabel (heFeedVocab.ts) before the table is
+  // ever read; the TYPES rows are DE/PL/RU display labels only.
+  "src/lib/typeLabels.ts": "he via heFeedLabel",
+};
+
 test("no new hard-coded [\"en\",\"de\",\"pl\",\"ru\"] array, \"en\"|\"de\"|\"pl\"|\"ru\" union, or { en:…, de:…, pl:…, ru:… } object literal outside src/lib/__tests__/", () => {
   const offenders: string[] = [];
   for (const file of walk(SRC_ROOT)) {
@@ -221,6 +230,7 @@ test("no new hard-coded [\"en\",\"de\",\"pl\",\"ru\"] array, \"en\"|\"de\"|\"pl\
       offenders.push(`${rel}: union type ${JSON.stringify(m[0])} not followed by | "he"`);
     }
     for (const m of Array.from(text.matchAll(OBJECT_RE))) {
+      if (OBJECT_LITERAL_EXEMPT[rel.split(path.sep).join("/")]) continue;
       offenders.push(`${rel}: object literal ${JSON.stringify(m[0])} has no "he" key`);
     }
   }
