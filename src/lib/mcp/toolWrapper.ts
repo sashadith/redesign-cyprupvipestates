@@ -6,7 +6,10 @@ import { TOOL_CALLS_PER_MINUTE, toolCallLimited } from "./rateLimit";
 import { toolResultFromOutcome } from "./toolResult";
 import type { McpCallContext } from "./context";
 
-export type ToolErrorCode = "validation" | "not_found" | "rate_limited" | "config" | "internal" | "unauthorized" | "smtp";
+export type ToolErrorCode =
+  | "validation" | "not_found" | "rate_limited" | "config" | "internal" | "unauthorized" | "smtp"
+  // render_instagram_carousel (2026-11-05)
+  | "image_rejected" | "layout_rule" | "render_busy" | "render_timeout" | "renderer_not_installed";
 
 export class ToolError extends Error {
   constructor(public code: ToolErrorCode, message: string) {

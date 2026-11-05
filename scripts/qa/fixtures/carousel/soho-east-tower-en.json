@@ -1,0 +1,94 @@
+{
+ "template": "project",
+ "lang": "en",
+ "slug": "soho-resort-east-tower",
+ "postingDate": "2026-11-16",
+ "data": {
+  "name": [
+   "Soho Resort",
+   "East Tower"
+  ],
+  "location": "Kato Paphos, Cyprus",
+  "heroImage": "@soho",
+  "slide2": {
+   "image": "@8dec98eb2bf60e76",
+   "eyebrow": "What makes it different",
+   "headline": "Even the one-bedroom starts at 117 m².",
+   "markedWords": "117 m²",
+   "body": "That's the size of a family flat in most European cities.",
+   "tiles": [
+    {
+     "image": "@c5cdff4c11fd25a1",
+     "caption": "Living"
+    },
+    {
+     "image": "@bfbd0b4299a059e4",
+     "caption": "Dining"
+    },
+    {
+     "image": "@95a3de0b1eaf9795",
+     "caption": "Interiors"
+    }
+   ]
+  },
+  "slide3": {
+   "image": "@11582fc2e646bd0b",
+   "eyebrow": "The apartments",
+   "headline": "Three layouts, all generous.",
+   "markedWords": "all generous.",
+   "layouts": [
+    {
+     "layout": "1 bedroom",
+     "size": "from 117 m²"
+    },
+    {
+     "layout": "2 bedrooms",
+     "size": "from 176 m²"
+    },
+    {
+     "layout": "3 bedrooms",
+     "size": "up to 271 m²"
+    }
+   ]
+  },
+  "slide4": {
+   "image": "@473f029479227a3d",
+   "eyebrow": "Your evenings",
+   "headline": "Living rooms that open onto the terrace — and the sea.",
+   "markedWords": "the terrace",
+   "facilities": [
+    {
+     "facilityImage": "@af11bf6e8dc835c1",
+     "caption": "Swimming pool"
+    },
+    {
+     "facilityImage": "@573836ed95642045",
+     "caption": "Spa"
+    },
+    {
+     "facilityImage": "@6cf2af96febc5ff2",
+     "caption": "Fitness centre"
+    }
+   ]
+  },
+  "slide5": {
+   "image": "@a1ac0e6288a27a6c",
+   "priceFrom": 850000,
+   "vatNote": "plus",
+   "rows": [
+    {
+     "label": "Completion",
+     "value": "Q4 2027"
+    },
+    {
+     "label": "Demand",
+     "value": "3 in 4 already taken"
+    },
+    {
+     "label": "Walk to",
+     "value": "Beach & harbour"
+    }
+   ]
+  }
+ }
+}

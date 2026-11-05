@@ -1,0 +1,64 @@
+{
+ "template": "cyprus",
+ "lang": "de",
+ "slug": "warum-zypern",
+ "postingDate": "2026-11-16",
+ "data": {
+  "cover": {
+   "image": "@blog-b2",
+   "chip": "Warum Zypern",
+   "title": "Warum ziehen Unternehmer nach Zypern?",
+   "accentWord": "Zypern?",
+   "subtitle": "Drei Zahlen, die es erklären."
+  },
+  "slides": [
+   {
+    "image": "@harbour",
+    "eyebrow": "Steuern",
+    "headline": "Dividenden und Zinsen\n17 Jahre steuerfrei.",
+    "markedWords": "17 Jahre steuerfrei.",
+    "checks": [
+     "Für Non-Dom-Steuerresidenten",
+     "Keine Sonderabgabe auf Dividenden und Zinsen",
+     "Bedingungen vorab prüfen"
+    ],
+    "source": "zyprisches Steuerrecht"
+   },
+   {
+    "image": "@dinner",
+    "eyebrow": "Lebensqualität",
+    "headline": "Platz 6 von 63\nfür ein Leben im Ausland.",
+    "markedWords": "Platz 6 von 63",
+    "checks": [
+     "Nomad Lifestyle Index 2026",
+     "Platz 2 bei Aufenthalt und Zugang",
+     "Bewertet Klima, Steuern, Sicherheit, Alltag"
+    ],
+    "source": "Nomad Capitalist"
+   },
+   {
+    "image": "@blog-b4",
+    "eyebrow": "Aufenthalt",
+    "headline": "Ab 300.000 €\ndauerhaft in der EU leben.",
+    "markedWords": "300.000 €",
+    "checks": [
+     "Neubau, Kaufpreis zzgl. MwSt.",
+     "Gilt auch für Ehepartner und Kinder",
+     "Weitere Voraussetzungen, u. a. Einkommen"
+    ],
+    "source": "Zivilstands- und Migrationsbehörde Zypern"
+   },
+   {
+    "image": "@lounge",
+    "eyebrow": "Was das für Sie bedeutet",
+    "headline": "Starke Gründe — und\nDetails, die zählen.",
+    "markedWords": "Details, die zählen.",
+    "checks": [
+     "Non-Dom-Status hat eigene Bedingungen",
+     "Aufenthalt braucht mehr als den Kauf",
+     "Beides vor der Objektwahl klären"
+    ]
+   }
+  ]
+ }
+}

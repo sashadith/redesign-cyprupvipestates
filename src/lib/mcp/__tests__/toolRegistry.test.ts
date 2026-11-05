@@ -25,9 +25,10 @@ const EXPECTED = [
   "crm_whatsapp_thread",
   "crm_worklist",
   "notify_owner_telegram",
+  "render_instagram_carousel",
 ];
 
-test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the 22 registered tools", () => {
+test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the 23 registered tools", () => {
   const union = [...READ_TOOL_NAMES, ...WRITE_TOOL_NAMES].slice().sort();
   assert.deepEqual(union, EXPECTED);
 });

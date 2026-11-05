@@ -61,8 +61,12 @@ Always `nginx -t` on the VPS before reloading, and `systemctl reload nginx`
   send/read timeouts (2026-09-26). The five-language Claude description (and
   other admin server actions) can run past 60 s; nginx then answered 504 and
   the admin button spun forever. The public site keeps 60 s.
+- `cvp_proxy_mcp.conf` — the same block for `location = /api/mcp` only, with
+  120 s send/read timeouts (2026-11-05): `render_instagram_carousel` waits up to
+  30 s for another render and then has a hard 60 s limit, so a call could
+  outlast 60 s and the connector would see a 504 while the server finished.
 
-Both snippets blank the client's `x-middleware-subrequest` header
+All three snippets blank the client's `x-middleware-subrequest` header
 (CVE-2025-29927: on Next.js < 14.2.25 that header makes the app skip its
 middleware — the gated-locale 404, the merged/retired redirects and any host
 routing). The app is on 14.2.35 since 2026-10-18, so this is defence in depth.

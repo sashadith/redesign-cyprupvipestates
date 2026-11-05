@@ -1,0 +1,94 @@
+{
+ "template": "project",
+ "lang": "de",
+ "slug": "soho-resort-east-tower",
+ "postingDate": "2026-11-16",
+ "data": {
+  "name": [
+   "Soho Resort",
+   "East Tower"
+  ],
+  "location": "Kato Paphos, Zypern",
+  "heroImage": "@soho",
+  "slide2": {
+   "image": "@8dec98eb2bf60e76",
+   "eyebrow": "Was es besonders macht",
+   "headline": "2-Zimmer-Wohnungen schon ab 117 m².",
+   "markedWords": "117 m²",
+   "body": "So groß ist in den meisten europäischen Städten eine Familienwohnung.",
+   "tiles": [
+    {
+     "image": "@c5cdff4c11fd25a1",
+     "caption": "Wohnen"
+    },
+    {
+     "image": "@bfbd0b4299a059e4",
+     "caption": "Essen"
+    },
+    {
+     "image": "@95a3de0b1eaf9795",
+     "caption": "Interieur"
+    }
+   ]
+  },
+  "slide3": {
+   "image": "@11582fc2e646bd0b",
+   "eyebrow": "Die Wohnungen",
+   "headline": "Drei Grundrisse, alle großzügig.",
+   "markedWords": "alle großzügig.",
+   "layouts": [
+    {
+     "layout": "1 Schlafzimmer",
+     "size": "ab 117 m²"
+    },
+    {
+     "layout": "2 Schlafzimmer",
+     "size": "ab 176 m²"
+    },
+    {
+     "layout": "3 Schlafzimmer",
+     "size": "bis 271 m²"
+    }
+   ]
+  },
+  "slide4": {
+   "image": "@473f029479227a3d",
+   "eyebrow": "Ihre Abende",
+   "headline": "Wohnzimmer, die sich zur Terrasse öffnen — und zum Meer.",
+   "markedWords": "Terrasse öffnen",
+   "facilities": [
+    {
+     "facilityImage": "@af11bf6e8dc835c1",
+     "caption": "Pool"
+    },
+    {
+     "facilityImage": "@573836ed95642045",
+     "caption": "Spa"
+    },
+    {
+     "facilityImage": "@6cf2af96febc5ff2",
+     "caption": "Fitnessstudio"
+    }
+   ]
+  },
+  "slide5": {
+   "image": "@a1ac0e6288a27a6c",
+   "priceFrom": 850000,
+   "vatNote": "plus",
+   "rows": [
+    {
+     "label": "Fertigstellung",
+     "value": "Q4 2027"
+    },
+    {
+     "label": "Nachfrage",
+     "value": "3 von 4 bereits vergeben"
+    },
+    {
+     "label": "Zu Fuß zu",
+     "value": "Strand & Hafen"
+    }
+   ]
+  }
+ }
+}

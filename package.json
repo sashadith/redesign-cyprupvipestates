@@ -61,6 +61,7 @@
     "node-html-parser": "^6.1.13",
     "nodemailer": "^6.9.14",
     "pdfjs-dist": "^3.11.174",
+    "playwright-core": "1.64.1",
     "prisma": "^5.22.0",
     "qrcode": "^1.5.4",
     "react": "^18",

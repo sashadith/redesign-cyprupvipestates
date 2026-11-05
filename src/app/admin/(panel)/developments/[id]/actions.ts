@@ -454,6 +454,13 @@ export async function importFromPdfs(formData: FormData) {
   revalidatePath(`/admin/developments/${id}`);
 }
 
+function vatNoteFromForm(v: FormDataEntryValue | null): "plus" | "included" | null {
+  const s = String(v ?? "");
+  if (s === "") return null;
+  if (s === "plus" || s === "included") return s;
+  throw new Error("Invalid VAT note");
+}
+
 const clean = (fd: FormData, k: string) => {
   const v = String(fd.get(k) ?? "").trim();
   return v || null;
@@ -546,6 +553,9 @@ export async function saveOverride(formData: FormData) {
     // (Celestia, 2026-07-17/18). Same protection every other field here already
     // has: sync never writes to this table at all.
     stage: clean(formData, "stage"),
+    // Instagram carousel price note (render_instagram_carousel, 2026-11-05). Only
+    // touched when the form carries the field, so an older open form never wipes it.
+    ...(formData.has("vatNote") ? { vatNote: vatNoteFromForm(formData.get("vatNote")) } : {}),
     amenities,
     seo: seo as any,
     // Empty (no blocks added) stores as null rather than [] — "nothing to

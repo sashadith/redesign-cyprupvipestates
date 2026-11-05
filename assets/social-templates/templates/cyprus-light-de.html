@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><style>
+@font-face { font-family: Fraunces; src: url(../fonts/fraunces-400.ttf); font-weight: 400; }
+@font-face { font-family: Fraunces; src: url(../fonts/fraunces-600.ttf); font-weight: 600; }
+@font-face { font-family: Mulish; src: url(../fonts/mulish-400.ttf); font-weight: 400; }
+@font-face { font-family: Mulish; src: url(../fonts/mulish-700.ttf); font-weight: 700; }
+* { box-sizing:border-box; margin:0; padding:0; }
+:root { --paper:#F5F1E8; --paper2:#EDE7D9; --ivory:#EFE9DB; --surface:#FBF9F3; --ink:#221C15; --muted:#6B6256; --champ:#C29A5E; --bronze:#8E6B3D; --champ-light:#E0C8A7; }
+.slide { position:relative; width:1080px; height:1350px; overflow:hidden; color:var(--ink); font-family:Mulish, sans-serif;
+  background: radial-gradient(70% 45% at 10% 0%, rgba(194,154,94,0.14), rgba(0,0,0,0) 70%), linear-gradient(170deg, #F8F5EE 0%, var(--paper) 50%, var(--paper2) 100%); }
+.slide::after { content:""; position:absolute; inset:36px; border:1px solid rgba(142,107,61,0.35); pointer-events:none; z-index:6; }
+.head { position:absolute; left:96px; right:96px; top:96px; z-index:5; display:flex; justify-content:space-between; align-items:center; }
+.head img { height:34px; }
+.num { font-weight:700; font-size:22px; letter-spacing:0.18em; color:var(--bronze); }
+.on-photo .num { color:#F4DB9E; }
+.rule { position:absolute; left:96px; right:96px; top:156px; height:1px; background:linear-gradient(90deg, var(--bronze), rgba(142,107,61,0)); z-index:5; }
+.eyebrow { font-weight:700; font-size:24px; letter-spacing:0.22em; text-transform:uppercase; color:var(--bronze); }
+h1, h2 { font-family:Fraunces, serif; font-weight:400; line-height:1.08; letter-spacing:-0.01em; }
+h1 { font-size:100px; } h2 { font-size:68px; }
+.mark { white-space:nowrap; -webkit-box-decoration-break:clone; box-decoration-break:clone; background:linear-gradient(180deg, rgba(0,0,0,0) 9%, var(--champ-light) 9%, var(--champ-light) 93%, rgba(0,0,0,0) 93%); padding:0 10px; color:var(--ink); }
+.body { font-size:34px; line-height:1.42; color:var(--muted); }
+.swipe { position:absolute; right:96px; bottom:76px; z-index:5; font-size:22px; letter-spacing:0.2em; color:var(--bronze); text-transform:uppercase; font-weight:700; }
+.cover .swipe { color:#F4DB9E; }
+.src { font-size:22px; color:var(--muted); margin-top:22px; }
+/* cover */
+.cover { background-size:cover; background-position:center; }
+.cover::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, rgba(20,16,10,0.55) 0%, rgba(20,16,10,0.05) 28%, rgba(20,16,10,0.25) 55%, rgba(20,16,10,0.88) 100%); }
+.cover .bottom { position:absolute; left:96px; right:96px; bottom:146px; z-index:3; color:#fff; }
+.chip { display:inline-block; border-radius:999px; padding:14px 30px; border:1px solid rgba(255,255,255,0.35); color:#fff; font-weight:700; font-size:22px; letter-spacing:0.22em; text-transform:uppercase;
+  background:linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.06)); -webkit-backdrop-filter:blur(18px) saturate(160%); backdrop-filter:blur(18px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 10px 30px rgba(0,0,0,0.25); }
+/* split */
+.ph { position:absolute; left:0; right:0; top:0; background-size:cover; background-position:center; z-index:1; }
+.ph::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(20,16,10,0.55) 0%, rgba(20,16,10,0.15) 16%, rgba(20,16,10,0) 30%, rgba(245,241,232,0) 62%, var(--paper) 100%); }
+.txt { position:absolute; left:96px; right:96px; bottom:146px; z-index:3; }
+.card { margin-top:18px; padding:30px 40px; border-radius:30px; border:1px solid rgba(255,255,255,0.6);
+  background:linear-gradient(135deg, rgba(255,255,255,0.62), rgba(255,255,255,0.30)); -webkit-backdrop-filter:blur(22px) saturate(140%); backdrop-filter:blur(22px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 24px 60px rgba(60,45,25,0.18); }
+.big { font-family:Fraunces, serif; font-weight:600; font-size:130px; line-height:1; color:var(--ink); }
+.unit { font-weight:700; font-size:30px; letter-spacing:0.12em; color:var(--bronze); }
+.check { display:flex; align-items:center; gap:22px; padding:20px 0; border-top:1px solid rgba(142,107,61,0.25); font-size:31px; font-weight:700; }
+.check:last-child { border-bottom:1px solid rgba(142,107,61,0.25); }
+.check i { flex:none; width:44px; height:44px; border-radius:50%; background:var(--champ); color:#fff; font-style:normal; font-size:26px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+.glass { border-radius:28px; padding:36px 40px; border:1px solid rgba(255,255,255,0.7); background:linear-gradient(145deg, rgba(255,255,255,0.75), rgba(255,255,255,0.4)); box-shadow: inset 0 1px 0 #fff, 0 24px 60px rgba(60,45,25,0.14); }
+.band { position:absolute; left:0; right:0; bottom:0; height:200px; z-index:4; display:flex; align-items:center; justify-content:space-between; padding:0 96px;
+  background:linear-gradient(180deg, rgba(237,231,217,0), var(--paper2) 30%, #E6DECC); }
+.ph-label { font-weight:700; font-size:22px; letter-spacing:0.22em; text-transform:uppercase; color:var(--muted); }
+.ph-num { margin-top:10px; font-weight:700; font-size:50px; color:var(--bronze); }
+.goldline { position:absolute; left:0; right:0; bottom:0; height:2px; background:linear-gradient(90deg, rgba(194,154,94,0), var(--champ) 25%, #E8CF98 50%, var(--champ) 75%, rgba(194,154,94,0)); }
+
+.checks { margin-top:40px; }
+.src2 { font-size:22px; color:var(--muted); margin-top:20px; }
+</style></head><body>
+<section class="slide cover on-photo" style="background-image:url(../sample-images/blog/b2.jpg)">
+  <div class="head" style="top:84px; align-items:flex-start"><img src="../brand/logo-full.png" style="height:160px"><span class="num" style="margin-top:12px">01 / 06</span></div>
+  <div class="bottom"><span class="chip">Warum Zypern</span>
+    <h1 style="margin-top:34px; color:#fff">Warum ziehen Unternehmer nach <span style="color:#E8CF98">Zypern?</span></h1>
+    <p style="font-size:36px; margin-top:22px; color:#EFE9DB">Drei Zahlen, die es erklären.</p></div>
+  <div class="swipe">Weiter &nbsp;→</div>
+</section>
+<section class="slide split on-photo">
+  <div class="ph" style="background-image:url(../sample-images/harbour.jpg); background-position:center"></div>
+  <div class="head"><img src="../brand/logo-wide.png"><span class="num">02 / 06</span></div>
+  <div class="txt"><div class="eyebrow">Steuern</div>
+    <h2 style="margin-top:26px">Dividenden und Zinsen<br><span class="mark">17 Jahre steuerfrei.</span></h2>
+    <div class="checks"><div class="check"><i>✓</i><span>Für Non-Dom-Steuerresidenten</span></div><div class="check"><i>✓</i><span>Keine Sonderabgabe auf Dividenden und Zinsen</span></div><div class="check"><i>✓</i><span>Bedingungen vorab prüfen</span></div></div><p class="src2">Quelle: zyprisches Steuerrecht</p></div>
+  <div class="swipe">Weiter &nbsp;→</div>
+</section>
+<section class="slide split on-photo">
+  <div class="ph" style="background-image:url(../sample-images/dinner.jpg); background-position:center 40%"></div>
+  <div class="head"><img src="../brand/logo-wide.png"><span class="num">03 / 06</span></div>
+  <div class="txt"><div class="eyebrow">Lebensqualität</div>
+    <h2 style="margin-top:26px"><span class="mark">Platz 6 von 63</span><br>für ein Leben im Ausland.</h2>
+    <div class="checks"><div class="check"><i>✓</i><span>Nomad Lifestyle Index 2026</span></div><div class="check"><i>✓</i><span>Platz 2 bei Aufenthalt und Zugang</span></div><div class="check"><i>✓</i><span>Bewertet Klima, Steuern, Sicherheit, Alltag</span></div></div><p class="src2">Quelle: Nomad Capitalist</p></div>
+  <div class="swipe">Weiter &nbsp;→</div>
+</section>
+<section class="slide split on-photo">
+  <div class="ph" style="background-image:url(../sample-images/blog/b4.jpg); background-position:60% center"></div>
+  <div class="head"><img src="../brand/logo-wide.png"><span class="num">04 / 06</span></div>
+  <div class="txt"><div class="eyebrow">Aufenthalt</div>
+    <h2 style="margin-top:26px">Ab <span class="mark">300.000 €</span><br>dauerhaft in der EU leben.</h2>
+    <div class="checks"><div class="check"><i>✓</i><span>Neubau, Kaufpreis zzgl. MwSt.</span></div><div class="check"><i>✓</i><span>Gilt auch für Ehepartner und Kinder</span></div><div class="check"><i>✓</i><span>Weitere Voraussetzungen, u. a. Einkommen</span></div></div><p class="src2">Quelle: Zivilstands- und Migrationsbehörde Zypern</p></div>
+  <div class="swipe">Weiter &nbsp;→</div>
+</section>
+<section class="slide split on-photo">
+  <div class="ph" style="background-image:url(../sample-images/lounge.jpg); background-position:center"></div>
+  <div class="head"><img src="../brand/logo-wide.png"><span class="num">05 / 06</span></div>
+  <div class="txt"><div class="eyebrow">Was das für Sie bedeutet</div>
+    <h2 style="margin-top:26px">Starke Gründe — und<br><span class="mark">Details, die zählen.</span></h2>
+    <div class="checks"><div class="check"><i>✓</i><span>Non-Dom-Status hat eigene Bedingungen</span></div><div class="check"><i>✓</i><span>Aufenthalt braucht mehr als den Kauf</span></div><div class="check"><i>✓</i><span>Beides vor der Objektwahl klären</span></div></div></div>
+  <div class="swipe">Weiter &nbsp;→</div>
+</section>
+<section class="slide">
+  <div class="head"><img src="../brand/logo-wide.png"><span class="num">06 / 06</span></div><div class="rule"></div>
+  <div style="position:absolute; left:96px; right:96px; top:236px; z-index:3">
+    <h2 style="font-size:76px; line-height:1.1">Mehr in unserem<br><span class="mark">Journal.</span></h2>
+    <div class="eyebrow" style="margin-top:26px; font-size:30px">Link in der Bio</div>
+  </div>
+  <div style="position:absolute; right:40px; bottom:236px; width:372px; height:620px; z-index:4">
+    <div style="position:absolute; inset:60px 0 0; background:radial-gradient(50% 50% at 50% 58%, rgba(194,154,94,0.30), rgba(194,154,94,0) 70%)"></div>
+    <img src="../brand/sascha.png" style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:560px; filter:drop-shadow(0 24px 40px rgba(60,45,25,0.28))"><div class="goldline"></div>
+  </div>
+  <div class="glass" style="position:absolute; left:96px; width:572px; top:540px; z-index:3; padding:32px 34px">
+    <div class="eyebrow" style="margin-bottom:14px">Warum zuerst zu uns</div>
+    <div class="check" style="font-size:26px; gap:18px"><i>✓</i>An keinen Bauträger gebunden</div>
+    <div class="check" style="font-size:26px; gap:18px"><i>✓</i><span>Für Käufer <span style="color:var(--bronze)">kostenlos</span></span></div>
+    <div class="check" style="font-size:26px; gap:18px"><i>✓</i>Verfügbarkeit täglich aktuell</div>
+    <div class="check" style="font-size:26px; gap:18px"><i>✓</i>Beratung auf DE · EN · RU · PL</div>
+  </div>
+  <div class="band" style="height:236px">
+    <div><div class="ph-label">Telefon / WhatsApp</div><div class="ph-num">+357 99 278 285</div></div>
+    <img src="../brand/logo-full.png" style="height:118px; margin-bottom:22px">
+  </div>
+</section>
+<script>
+document.querySelectorAll('section.split').forEach(sec=>{ const t=sec.querySelector('.txt'), ph=sec.querySelector('.ph'); ph.style.height=(t.offsetTop+6)+'px'; });
+</script></body></html>
