@@ -8,8 +8,8 @@ import { activeSince, effectiveClaimState } from "@/lib/partner/claimState";
 import { effectiveStateOf } from "@/lib/partner/claimFacts";
 import { messagesWhere, visibleName } from "@/lib/partner/clientDto";
 import { myClientPresentations, type MyPresentation } from "@/lib/partner/scope";
-import { claimEligible, partnerMayAct } from "./rules";
-import { partnerTimeline, type TimelineEntry } from "./timeline";
+import { claimEligible, ourTeamOf, partnerMayAct } from "./rules";
+import { partnerTimeline, scopeTimeline, type TimelineEntry } from "./timeline";
 
 // The partner's own pipeline, read side (partner pipeline, 2026-11-05): the list of
 // his ACTIVE FIX clients and one client's detail. Everything is scoped to the
@@ -33,6 +33,8 @@ export type PipelineCard = {
   localTime: LeadTimeSummary;
   /** The lead is no longer partner-worked (staff took over, or it is not his): read-only. */
   handedOver: boolean;
+  /** Read-only without a handover of his: our team worked it from the start (or took it over), so "Worked by our team". */
+  ourTeam: boolean;
   /** Still partner-worked, but the claim's protection has lapsed: the partner may not act on it any more. */
   expired: boolean;
   /** The newest entry written by one of this partner's users, or null. */
@@ -62,6 +64,8 @@ export type PipelineClient = {
   presentations: MyPresentation[];
   timeline: TimelineEntry[];
   handedOver: boolean;
+  /** See PipelineCard.ourTeam. */
+  ourTeam: boolean;
   expired: boolean;
   /** The partner may act now (partnerMayAct: his ACTIVE FIX claim, effectively active, lead partner-worked). */
   canWork: boolean;
@@ -98,7 +102,7 @@ export async function listPipeline(partnerId: string, now: Date): Promise<Pipeli
   });
   if (!claims.length) return [];
   const leadIds = claims.map((c) => c.leadId);
-  const [leads, deals, contacts, entries] = await Promise.all([
+  const [leads, deals, contacts, entries, accepted] = await Promise.all([
     prisma.lead.findMany({
       where: { id: { in: leadIds }, deletedAt: null },
       select: {
@@ -113,7 +117,11 @@ export async function listPipeline(partnerId: string, now: Date): Promise<Pipeli
     prisma.leadInteraction.groupBy({
       by: ["leadId"], where: { leadId: { in: leadIds }, ...ownEntry(partnerId) }, _max: { occurredAt: true },
     }),
+    prisma.partnerHandoverRequest.findMany({
+      where: { partnerId, claimId: { in: claims.map((c) => c.id) }, state: "ACCEPTED" }, select: { claimId: true },
+    }),
   ]);
+  const handedOverClaims = new Set(accepted.map((a) => a.claimId));
   const leadById = new Map(leads.map((l) => [l.id, l]));
   const liveDeals = new Set(deals.map((d) => d.leadId));
   const lastContact = new Map(contacts.map((c) => [c.leadId, c._max.occurredAt ?? null]));
@@ -131,7 +139,8 @@ export async function listPipeline(partnerId: string, now: Date): Promise<Pipeli
     cards.push({
       claimId: c.id, leadId: c.leadId, name: visibleName(c), status: statusOf(lead.status), since: activeSince(c),
       nextFollowUpAt: lead.nextFollowUpAt, overdue: !!lead.nextFollowUpAt && lead.nextFollowUpAt.getTime() < now.getTime(),
-      localTime: leadTimeSummary(lead, now, window), handedOver, expired: !handedOver && effective !== "ACTIVE",
+      localTime: leadTimeSummary(lead, now, window), handedOver, ourTeam: ourTeamOf(handedOver, handedOverClaims.has(c.id)),
+      expired: !handedOver && effective !== "ACTIVE",
       lastEntryAt: lastEntry.get(c.leadId) ?? null,
     });
   }
@@ -156,11 +165,14 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     },
   });
   if (!lead || lead.deletedAt || lead.partnerId !== partnerId) return null;
-  const [effective, rows, messages, presentations, liveDeal, openHandover] = await Promise.all([
+  // The history starts when the claim became active, as everywhere else in the portal (clientDto's scoped()).
+  const since = activeSince(claim);
+  const [effective, rows, messages, presentations, liveDeal, openHandover, ownPresentations, accepted] = await Promise.all([
     effectiveStateOf(prisma, claim, now),
     prisma.leadInteraction.findMany({
       where: {
         leadId: claim.leadId,
+        occurredAt: { gte: since },
         OR: [ownEntry(partnerId), { type: { in: ["STATUS_CHANGE", "PRESENTATION_EVENT"] } }],
       },
       select: {
@@ -171,7 +183,7 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
       take: TIMELINE_ROWS,
     }),
     prisma.partnerMessage.findMany({
-      where: messagesWhere(partnerId, [claim.leadId]),
+      where: { ...messagesWhere(partnerId, [claim.leadId]), createdAt: { gte: since } },
       select: { id: true, leadId: true, partnerId: true, createdAt: true, body: true },
       orderBy: { createdAt: "desc" },
       take: MESSAGE_ROWS,
@@ -182,7 +194,11 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
       where: { leadId: claim.leadId, partnerId, state: "OPEN" },
       select: { id: true, createdAt: true, downgrade: true },
     }),
+    // Presentation events only of the partner's own presentations (any state, also revoked ones).
+    prisma.clientPresentation.findMany({ where: { partnerId, leadId: claim.leadId }, select: { id: true } }),
+    prisma.partnerHandoverRequest.findFirst({ where: { partnerId, claimId: claim.id, state: "ACCEPTED" }, select: { id: true } }),
   ]);
+  const scoped = scopeTimeline(rows, messages, { since, ownPresentationIds: new Set(ownPresentations.map((p) => p.id)) });
   const handedOver = !lead.workedByPartner;
   const { source, emailInvalidAt, emailInvalidReason, status, lostReason, partnerId: _p, workedByPartner: _w, deletedAt: _d, ...fields } = lead;
   const { nextFollowUpAt, viewingScheduledAt, timeZone, ...edit } = fields;
@@ -195,8 +211,9 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     localTime: leadTimeSummary({ timeZone, countryOfResidence: edit.countryOfResidence, phone: edit.phone }, now, callWindowFromEnv()),
     hasLiveDeal: !!liveDeal,
     presentations,
-    timeline: partnerTimeline(rows, messages),
+    timeline: partnerTimeline(scoped.rows, scoped.messages),
     handedOver,
+    ourTeam: ourTeamOf(handedOver, !!accepted),
     expired: !handedOver && effective !== "ACTIVE",
     canWork: partnerMayAct(claim, effective, lead, partnerId),
     openHandover,

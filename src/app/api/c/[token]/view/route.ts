@@ -148,7 +148,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
           type: "PRESENTATION_EVENT",
           channel: "SYSTEM",
           body: viewContent,
-          metadata: { legacyType: "PRESENTATION_VIEWED" },
+          metadata: { legacyType: "PRESENTATION_VIEWED", presentationId: presentation.id },
         },
       }).catch(() => {});
       // "Presentation opened, no reaction yet" cadence trigger — fires on

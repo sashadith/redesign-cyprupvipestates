@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser, type SessionCrmUser } from "@/lib/crm/session";
 import { loadKeepFixView } from "@/lib/crm/handoverReview";
+import { loadTakeOverOffer } from "@/lib/crm/partnerTakeover";
 import { canAssignLeads, canEditLead, canViewLead, canViewPartnerLead, canWorkDeveloperSide, seesAllLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
@@ -211,7 +212,7 @@ type PartnerLeadInput = {
 async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canReview: boolean, now: Date, user: SessionCrmUser): Promise<CockpitPartnerView | null> {
   if (!lead.claims.length) return null;
   const hasDeal = lead.deals.some((d) => d.commissionStatus !== "CANCELLED");
-  const [last, messages, keepFix] = await Promise.all([
+  const [last, messages, keepFix, takeOver] = await Promise.all([
     prisma.leadInteraction.findFirst({
       where: { leadId: lead.id, type: { in: [...REAL_CONTACT_TYPES] } },
       orderBy: { occurredAt: "desc" },
@@ -228,6 +229,8 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
     }),
     // The keep-FIX override: only once a handover request on this lead was accepted.
     loadKeepFixView(user, lead.id, lead.partnerMode, hasDeal),
+    // Partner-worked but the partner can no longer act: the explicit "Take over" (admin, owner, his manager).
+    loadTakeOverOffer(user, lead.id, now),
   ]);
   const built = buildCockpitPartnerCard({
     claims: lead.claims.map((c) => ({ ...c, state: c.state as ClaimStateValue })),
@@ -249,6 +252,7 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
     canMessage: canEdit && built.hasActive,
     canReview,
     keepFix,
+    takeOver,
   };
 }
 

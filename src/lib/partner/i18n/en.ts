@@ -1002,6 +1002,7 @@ export const en = {
       noEntry: "No entry yet",
       expired: "Protection lapsed",
       handedOver: "Handed over",
+      ourTeam: "Worked by our team",
     },
     localTime: "Client's time: {weekday} {time} in {city}",
     zoneUnclear: "Client's time zone unclear ({country})",
@@ -1009,6 +1010,7 @@ export const en = {
     back: "Back to the pipeline",
     since: "In your pipeline since {date}",
     handedOverNotice: "This client has been handed over to our team. You can follow the progress here, but you can no longer change anything.",
+    ourTeamNotice: "Our team works this client. You can follow the progress here, but you cannot change anything.",
     expiredNotice: "The protection of this client has lapsed, so you can no longer work on this client here.",
     hintsTitle: "Please check",
     hint: {
@@ -1114,6 +1116,7 @@ export const en = {
       handoverRequested: "Handover to the manager requested",
       handoverWithdrawn: "Handover request withdrawn",
       handoverAccepted: "Taken over by your manager",
+      takenOver: "Taken over by our team",
       keepFixOn: "Commission set to Fix by your manager",
       keepFixOff: "Commission set to Handover by your manager",
     },

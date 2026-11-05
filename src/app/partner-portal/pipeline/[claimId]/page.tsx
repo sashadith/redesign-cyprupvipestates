@@ -83,7 +83,7 @@ export default async function PipelineClientPage({ params }: { params: { claimId
         </p>
       </section>
 
-      {c.handedOver && <p className="pp-alert pp-alert-neutral" role="status">{P.handedOverNotice}</p>}
+      {c.handedOver && <p className="pp-alert pp-alert-neutral" role="status">{c.ourTeam ? P.ourTeamNotice : P.handedOverNotice}</p>}
       {!c.handedOver && !work && <p className="pp-alert pp-alert-neutral" role="status">{P.expiredNotice}</p>}
       {work && <HintList t={t} hints={c.hints} zoneUnclear={zoneUnclear} />}
 

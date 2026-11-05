@@ -108,7 +108,8 @@ export function editSummary(
 }
 
 // Writes the activity row and its mirrored timeline interaction.
-async function logEvent(actor: Actor, leadId: string, legacyType: string, content: string) {
+// metadata.presentationId lets the partner timeline keep only events of the partner's own presentations.
+async function logEvent(actor: Actor, leadId: string, legacyType: string, content: string, presentationId: string) {
   await prisma.leadActivity.create({
     data: { leadId, type: legacyType, content, createdBy: actor.name, createdById: actor.id },
   });
@@ -120,7 +121,7 @@ async function logEvent(actor: Actor, leadId: string, legacyType: string, conten
       body: content,
       createdByUserId: actor.id,
       createdByName: actor.name,
-      metadata: { legacyType },
+      metadata: { legacyType, presentationId },
     },
   });
 }
@@ -177,7 +178,7 @@ export async function createPresentation(
     },
   });
 
-  await logEvent(actor, leadId, "PRESENTATION_CREATED", `Presentation created (${items.length} propert${items.length === 1 ? "y" : "ies"})`);
+  await logEvent(actor, leadId, "PRESENTATION_CREATED", `Presentation created (${items.length} propert${items.length === 1 ? "y" : "ies"})`, presentation.id);
   // A presentation being generated is the "sent" event for the auto-follow-up
   // cadence (src/lib/crm/followUpCadence.ts) — fires once here, regardless of
   // which channel(s) it's subsequently shared through.
@@ -242,7 +243,7 @@ export async function savePresentationEdit(
     }),
   ]);
 
-  await logEvent(actor, existingPresentation.leadId, "PRESENTATION_EDITED", `Presentation edited (${summary})`);
+  await logEvent(actor, existingPresentation.leadId, "PRESENTATION_EDITED", `Presentation edited (${summary})`, id);
   revalidateLead(existingPresentation.leadId);
 
   const url = `${origin}/c/${existingPresentation.token}`;
@@ -256,7 +257,7 @@ export async function savePresentationEdit(
 export async function revokePresentation(actor: Actor, id: string): Promise<{ leadId: string } | null> {
   const p = await prisma.clientPresentation.update({ where: { id }, data: { status: "revoked" }, select: { leadId: true } }).catch((e) => { if (isRecordNotFound(e)) return null; throw e; });
   if (!p) return null;
-  await logEvent(actor, p.leadId, "PRESENTATION_REVOKED", "Presentation revoked");
+  await logEvent(actor, p.leadId, "PRESENTATION_REVOKED", "Presentation revoked", id);
   revalidateLead(p.leadId);
   return { leadId: p.leadId };
 }
@@ -267,7 +268,7 @@ export async function extendPresentation(actor: Actor, id: string, days: number)
   const base = current.expiresAt && current.expiresAt > new Date() ? current.expiresAt : new Date();
   const expiresAt = new Date(base.getTime() + days * DAY_MS);
   await prisma.clientPresentation.update({ where: { id }, data: { expiresAt, status: "active" } });
-  await logEvent(actor, current.leadId, "PRESENTATION_EXTENDED", `Presentation extended by ${days} days`);
+  await logEvent(actor, current.leadId, "PRESENTATION_EXTENDED", `Presentation extended by ${days} days`, id);
   revalidateLead(current.leadId);
   return { leadId: current.leadId };
 }
@@ -276,7 +277,7 @@ export async function extendPresentation(actor: Actor, id: string, days: number)
 export async function deletePresentation(actor: Actor, id: string): Promise<{ leadId: string } | null> {
   const p = await prisma.clientPresentation.delete({ where: { id }, select: { leadId: true } }).catch((e) => { if (isRecordNotFound(e)) return null; throw e; });
   if (!p) return null;
-  await logEvent(actor, p.leadId, "PRESENTATION_DELETED", "Presentation deleted");
+  await logEvent(actor, p.leadId, "PRESENTATION_DELETED", "Presentation deleted", id);
   revalidateLead(p.leadId);
   return { leadId: p.leadId };
 }

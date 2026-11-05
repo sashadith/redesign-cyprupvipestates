@@ -53,7 +53,7 @@ export function PipelineCardItem({ t, locale, c, now }: { t: PartnerDict; locale
       <Link href={`/pipeline/${encodeURIComponent(c.claimId)}`} className="pp-pcard-name">{c.name || "—"}</Link>
       <span className="pp-pcard-stage"><StageChip t={t} status={c.status} /></span>
       {c.handedOver ? (
-        <span className="pp-pcard-line pp-muted">{K.handedOver}</span>
+        <span className="pp-pcard-line pp-muted">{c.ourTeam ? K.ourTeam : K.handedOver}</span>
       ) : (
         <>
           {c.expired && <span className="pp-pcard-line"><Chip label={K.expired} tone="lost" /></span>}
@@ -111,6 +111,7 @@ function entryLabel(t: PartnerDict, e: TimelineEntry, dt: Intl.DateTimeFormat): 
       if (e.event === "handover_requested") return E.handoverRequested;
       if (e.event === "handover_withdrawn") return E.handoverWithdrawn;
       if (e.event === "handover_accepted") return E.handoverAccepted;
+      if (e.event === "partner_lead_taken_over") return E.takenOver;
       if (e.event === "keep_fix_on") return E.keepFixOn;
       if (e.event === "keep_fix_off") return E.keepFixOff;
       return E.system;

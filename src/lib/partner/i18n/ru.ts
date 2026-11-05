@@ -1004,6 +1004,7 @@ export const ru: PartnerDict = {
       noEntry: "Записей пока нет",
       expired: "Защита истекла",
       handedOver: "Передан",
+      ourTeam: "Ведёт наша команда",
     },
     localTime: "Время клиента: {weekday} {time}, {city}",
     zoneUnclear: "Часовой пояс клиента неясен ({country})",
@@ -1011,6 +1012,7 @@ export const ru: PartnerDict = {
     back: "Назад к воронке",
     since: "В Вашей воронке с {date}",
     handedOverNotice: "Этот клиент передан нашей команде. Вы можете следить за ходом работы, но больше ничего не можете изменить.",
+    ourTeamNotice: "С этим клиентом работает наша команда. Вы можете следить за ходом работы, но не можете ничего изменить.",
     expiredNotice: "Защита этого клиента истекла, поэтому Вы больше не можете вести его здесь.",
     hintsTitle: "Пожалуйста, проверьте",
     hint: {
@@ -1116,6 +1118,7 @@ export const ru: PartnerDict = {
       handoverRequested: "Запрошена передача менеджеру",
       handoverWithdrawn: "Запрос на передачу отозван",
       handoverAccepted: "Принят Вашим менеджером",
+      takenOver: "Принят нашей командой",
       keepFixOn: "Менеджер установил ставку Fix",
       keepFixOff: "Менеджер установил ставку Handover",
     },

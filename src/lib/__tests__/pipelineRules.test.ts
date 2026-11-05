@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { workedByPartnerOnAccept, partnerMayWork } from "../partner/pipeline/rules";
+import { ourTeamOf, workedByPartnerOnAccept, partnerMayWork } from "../partner/pipeline/rules";
 
 test("an accepted FIX claim on an unassigned lead is worked by the partner", () => {
   assert.equal(workedByPartnerOnAccept("FIX", null), true);
@@ -22,4 +22,10 @@ test("partnerMayWork needs own, partner-worked, live lead", () => {
   assert.equal(partnerMayWork({ ...base, partnerId: null }, "p1"), false);
   assert.equal(partnerMayWork({ ...base, workedByPartner: false }, "p1"), false);
   assert.equal(partnerMayWork({ ...base, deletedAt: new Date() }, "p1"), false);
+});
+
+test("ourTeamOf: read only without a handover of his reads as worked by our team", () => {
+  assert.equal(ourTeamOf(true, false), true, "FIX accepted on a lead we already work, or taken over");
+  assert.equal(ourTeamOf(true, true), false, "a real handover");
+  assert.equal(ourTeamOf(false, false), false, "still his");
 });

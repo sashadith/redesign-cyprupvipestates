@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { partnerLeadLight, thresholdsFromEnv, type LightThresholds } from "@/lib/crm/partnerPipelines";
+import { partnerLeadLight, splitPartnerCards, stageAgeText, stageSinceOf, thresholdsFromEnv, type LightThresholds } from "@/lib/crm/partnerPipelines";
 
 const DAY = 86_400_000;
 const now = new Date("2026-11-05T12:00:00Z");
@@ -37,4 +37,25 @@ test("thresholdsFromEnv: defaults and overrides", () => {
     { amberOverdueDays: 2, amberQuietDays: 5, redOverdueDays: 4, redQuietDays: 10 });
   // red must not be below amber
   assert.deepEqual(thresholdsFromEnv({ PARTNER_PIPELINE_AMBER: "5,20", PARTNER_PIPELINE_RED: "3,14" }), def);
+});
+
+test("splitPartnerCards: lapsed or inactive-partner cards go to the flagged group, handed-over ones nowhere", () => {
+  const cards = [
+    { id: "work", handedOver: false, expired: false },
+    { id: "lapsed", handedOver: false, expired: true },
+    { id: "handed", handedOver: true, expired: false },
+  ];
+  const active = splitPartnerCards(cards, "ACTIVE");
+  assert.deepEqual(active.working.map((c) => c.id), ["work"]);
+  assert.deepEqual(active.stuck.map((c) => [c.id, c.stuckReason]), [["lapsed", "protection_lapsed"]]);
+  const suspended = splitPartnerCards(cards, "SUSPENDED");
+  assert.deepEqual(suspended.working, []);
+  assert.deepEqual(suspended.stuck.map((c) => [c.id, c.stuckReason]), [["work", "partner_inactive"], ["lapsed", "partner_inactive"]]);
+});
+
+test("stage age: from the newest status move, else the claim; whole days", () => {
+  assert.equal(stageSinceOf(ago(5), ago(20)).getTime(), ago(5).getTime());
+  assert.equal(stageSinceOf(null, ago(20)).getTime(), ago(20).getTime());
+  assert.equal(stageAgeText(ago(5.4), now), "in stage 5 d");
+  assert.equal(stageAgeText(ago(0.3), now), "in stage < 1 d");
 });

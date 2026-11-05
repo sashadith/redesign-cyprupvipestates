@@ -32,6 +32,29 @@ export function acceptOwnerId(actorId: string, manager: { id: string; isActive: 
   return manager && manager.isActive ? manager.id : actorId;
 }
 
+export type TakeOverReason = "partner_inactive" | "protection_lapsed";
+
+/**
+ * Why the partner can no longer work his FIX client, or null when he still can: his account is not ACTIVE
+ * (suspended, pending), or his claim is not effectively ACTIVE (protection lapsed, gone). The partner status
+ * is checked first: it is the reason staff can act on, whatever the protection says.
+ */
+export function takeOverReason(p: { claimEffective: string | null; partnerStatus: string | null }): TakeOverReason | null {
+  if (p.partnerStatus !== "ACTIVE") return "partner_inactive";
+  if (p.claimEffective !== "ACTIVE") return "protection_lapsed";
+  return null;
+}
+
+/** A partner-worked lead nobody could otherwise work: staff may take it over explicitly. */
+export function partnerCannotAct(p: { claimEffective: string | null; partnerStatus: string | null }): boolean {
+  return takeOverReason(p) !== null;
+}
+
+export const TAKE_OVER_REASON_LABEL: Record<TakeOverReason, string> = {
+  partner_inactive: "Partner account not active",
+  protection_lapsed: "Partner protection lapsed",
+};
+
 /** The lead's partnerMode after acceptance; null leaves it as it is. keepFix only ever undoes a downgrade. */
 export function acceptOutcome(p: { downgrade: boolean; keepFix: boolean }): PartnerModeValue | null {
   return p.downgrade && !p.keepFix ? "HANDOVER" : null;

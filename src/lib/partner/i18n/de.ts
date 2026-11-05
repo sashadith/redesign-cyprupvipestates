@@ -1004,6 +1004,7 @@ export const de: PartnerDict = {
       noEntry: "Noch kein Eintrag",
       expired: "Schutz abgelaufen",
       handedOver: "Übergeben",
+      ourTeam: "Betreut von unserem Team",
     },
     localTime: "Zeit beim Kunden: {weekday} {time} in {city}",
     zoneUnclear: "Zeitzone des Kunden unklar ({country})",
@@ -1011,6 +1012,7 @@ export const de: PartnerDict = {
     back: "Zurück zur Pipeline",
     since: "In Ihrer Pipeline seit {date}",
     handedOverNotice: "Dieser Kunde wurde an unser Team übergeben. Sie können den Fortschritt hier verfolgen, aber nichts mehr ändern.",
+    ourTeamNotice: "Unser Team betreut diesen Kunden. Sie können den Fortschritt hier verfolgen, aber nichts ändern.",
     expiredNotice: "Der Schutz dieses Kunden ist abgelaufen. Sie können den Kunden hier daher nicht mehr bearbeiten.",
     hintsTitle: "Bitte prüfen",
     hint: {
@@ -1116,6 +1118,7 @@ export const de: PartnerDict = {
       handoverRequested: "Übergabe an den Manager angefragt",
       handoverWithdrawn: "Übergabe-Anfrage zurückgezogen",
       handoverAccepted: "Von Ihrem Manager übernommen",
+      takenOver: "Von unserem Team übernommen",
       keepFixOn: "Provision von Ihrem Manager auf Fix gestellt",
       keepFixOff: "Provision von Ihrem Manager auf Handover gestellt",
     },

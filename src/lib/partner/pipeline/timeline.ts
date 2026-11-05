@@ -38,7 +38,7 @@ export type TimelineEntry = {
    * What a system row records, for the portal's own wording (the stored text is staff English):
    * a partner SYSTEM row's metadata.kind (follow_up, lead_edit, viewing_date, handover_requested,
    * handover_withdrawn), the manager's handover_accepted / keep_fix_on / keep_fix_off (from a staff row
-   * whose metadata.kind is handover_accepted or keep_fix_changed) or a presentation row's metadata.legacyType
+   * whose metadata.kind is handover_accepted or keep_fix_changed), staff's partner_lead_taken_over or a presentation row's metadata.legacyType
    * (PRESENTATION_VIEWED, PRESENTATION_FAVORITE, …). Null otherwise.
    */
   event: string | null;
@@ -94,10 +94,11 @@ function fromRow(r: TimelineRow): TimelineEntry | null {
     return { ...base, event, text: favorite, by: partnerAuthored ? clean(r.createdByName) : null };
   }
   const m = meta(r.metadata);
-  // The manager took the client over or changed the keep-FIX override: the partner sees the event, never who.
+  // The manager took the client over (handover or explicit take-over) or changed the keep-FIX override: the partner sees the event, never who.
   if (r.type === "SYSTEM" && !partnerAuthored) {
     if (m.kind === "handover_accepted") return { ...base, event: "handover_accepted" };
     if (m.kind === "keep_fix_changed") return { ...base, event: m.keepFix === true ? "keep_fix_on" : "keep_fix_off" };
+    if (m.kind === "partner_lead_taken_over") return { ...base, event: "partner_lead_taken_over" };
     return null;
   }
   if (!partnerAuthored) return null;
@@ -115,6 +116,34 @@ function fromRow(r: TimelineRow): TimelineEntry | null {
     text: outcome && text === CALL_OUTCOME_LABEL[outcome] ? null : text,
     subject: clean(r.subject), callOutcome: outcome, by: clean(r.createdByName),
   };
+}
+
+/**
+ * What of the lead's history belongs to this claim (privacy, final review 2026-11-05): only rows from the
+ * moment the claim became active (activeSince, as everywhere else in the portal), messages likewise, and
+ * presentation events of the partner's own presentations only. A presentation row names its presentation
+ * in metadata.presentationId; an older row without it is kept (it is after activeSince) but loses its
+ * text, so a favourite of someone else's presentation never shows its project name.
+ */
+export function scopeTimeline<R extends TimelineRow, M extends { createdAt: Date }>(
+  rows: R[], messages: M[], scope: { since: Date; ownPresentationIds: ReadonlySet<string> },
+): { rows: R[]; messages: M[] } {
+  const since = scope.since.getTime();
+  const kept: R[] = [];
+  for (const r of rows) {
+    if (r.occurredAt.getTime() < since) continue;
+    if (r.type === "PRESENTATION_EVENT") {
+      const id = str(meta(r.metadata).presentationId);
+      if (id) {
+        if (!scope.ownPresentationIds.has(id)) continue;
+      } else {
+        kept.push({ ...r, body: null });
+        continue;
+      }
+    }
+    kept.push(r);
+  }
+  return { rows: kept, messages: messages.filter((m) => m.createdAt.getTime() >= since) };
 }
 
 export function partnerTimeline(rows: TimelineRow[], messages: (RawMessage & { id?: string })[]): TimelineEntry[] {

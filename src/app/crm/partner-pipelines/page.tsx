@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
-import { loadPartnerPipelines, managesPartners, type Light, type PartnerPipelineGroup } from "@/lib/crm/partnerPipelines";
+import { loadPartnerPipelines, managesPartners, stageAgeText, type Light, type PartnerPipelineGroup } from "@/lib/crm/partnerPipelines";
+import { TAKE_OVER_REASON_LABEL } from "@/lib/crm/handoverReviewRules";
+import { TakeOverButton } from "../components/TakeOverButton";
 import HintForm from "./HintForm";
 import { FUNNEL_STATUSES, SIDE_STATUSES, STATUS_LABEL } from "@/lib/crm/leadStatus";
 
@@ -21,6 +23,7 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
   const total = groups.reduce((n, g) => n + g.cards.length, 0);
   const red = groups.reduce((n, g) => n + g.cards.filter((c) => c.light === "red").length, 0);
   const amber = groups.reduce((n, g) => n + g.cards.filter((c) => c.light === "amber").length, 0);
+  const stuck = groups.reduce((n, g) => n + g.stuck.length, 0);
 
   // Admins see every partner, sorted under their manager ("No manager" last); a manager sees only his own.
   const byManager = new Map<string, PartnerPipelineGroup[]>();
@@ -40,6 +43,7 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
             {total} {total === 1 ? "client" : "clients"} worked by partners
             {red > 0 && <> · <span className="crm-urgcount overdue">{red} overdue</span></>}
             {amber > 0 && <> · <span className="crm-urgcount now">{amber} need attention</span></>}
+            {stuck > 0 && <> · <span className="crm-urgcount overdue">{stuck} the partner can no longer act on</span></>}
           </p>
         </div>
         {partnerId && <Link href="/crm/partner-pipelines" className="crm-chip">All partners</Link>}
@@ -55,9 +59,9 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
               <div key={g.partner.id} className="crm-pp-partner">
                 <h3 className="crm-pp-ph">
                   <Link href={`/crm/partner-pipelines?partner=${g.partner.id}`}>{g.partner.name}</Link>
-                  <span>{g.cards.length}</span>
+                  <span>{g.cards.length + g.stuck.length}</span>
                 </h3>
-                <div className="crm-pp-scroll">
+                {g.cards.length > 0 && <div className="crm-pp-scroll">
                   <div className="crm-pp-cols" style={{ gridTemplateColumns: `repeat(${cols.length}, minmax(190px, 1fr))` }}>
                     {cols.map((st) => {
                       const cards = g.cards.filter((c) => c.status === st).sort((a, b) => LIGHT_ORDER[a.light] - LIGHT_ORDER[b.light]);
@@ -70,6 +74,7 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
                               <span className={`crm-pp-light ${c.light}`}><i aria-hidden="true" />{LIGHT_TEXT[c.light]}</span>
                               <b>{c.name}</b>
                               <small>{c.localTime.text}</small>
+                              <small>{stageAgeText(c.stageSince, now)}</small>
                               <small>
                                 {c.nextFollowUpAt ? `Follow-up ${NICOSIA.format(c.nextFollowUpAt)}${c.overdue ? " (overdue)" : ""}` : "No follow-up set"}
                               </small>
@@ -81,14 +86,33 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
                                 </small>
                               )}
                             </Link>
-                            <HintForm leadId={c.leadId} />
+                            <HintForm leadId={c.leadId} partnerLanguage={g.partner.language} />
                             </div>
                           ))}
                         </div>
                       );
                     })}
                   </div>
-                </div>
+                </div>}
+                {g.stuck.length > 0 && (
+                  <div className="crm-pp-stuck">
+                    <h4>Partner can no longer act <span>{g.stuck.length}</span></h4>
+                    <p className="crm-muted">Still marked as worked by the partner, so read only for staff and missing from work lists. Take the client over to work it.</p>
+                    <ul>
+                      {g.stuck.map((c) => (
+                        <li key={c.claimId} className="crm-pp-item">
+                          <Link href={`/crm/leads/${c.leadId}`} className="crm-pp-card">
+                            <span className="crm-pp-light red"><i aria-hidden="true" />{TAKE_OVER_REASON_LABEL[c.stuckReason]}</span>
+                            <b>{c.name}</b>
+                            <small>{STATUS_LABEL[c.status]}, {stageAgeText(c.stageSince, now)}</small>
+                            <small>{c.lastEntryAt ? `Last entry ${NICOSIA.format(c.lastEntryAt)}` : "No entry yet"}</small>
+                          </Link>
+                          <TakeOverButton leadId={c.leadId} client={c.name || "The client"} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })}

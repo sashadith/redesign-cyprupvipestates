@@ -61,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         type: "PRESENTATION_EVENT",
         channel: "SYSTEM",
         body: `Favorited: ${publicName}`,
-        metadata: { legacyType: "PRESENTATION_FAVORITE" },
+        metadata: { legacyType: "PRESENTATION_FAVORITE", presentationId: presentation.id },
       },
     }).catch(() => {});
     try {

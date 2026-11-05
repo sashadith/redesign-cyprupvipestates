@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HINT_TEMPLATES, managerDigest, mayHintPartner } from "@/lib/crm/partnerPipelineDigest";
+import { HINT_LOCALES, HINT_TEMPLATES, hintLocale, managerDigest, mayHintPartner } from "@/lib/crm/partnerPipelineDigest";
+import { PARTNER_LOCALES } from "@/lib/partner/i18n";
 
 const editor = { id: "u1", isOwner: false, role: "EDITOR" };
 
@@ -14,7 +15,7 @@ test("mayHintPartner: the manager and admins, not another editor", () => {
 });
 
 test("hint templates are the agreed texts", () => {
-  assert.deepEqual([...HINT_TEMPLATES], [
+  assert.deepEqual([...HINT_TEMPLATES.en], [
     "Your follow-up with this client is overdue.",
     "The client opened your selection — a good moment to call.",
   ]);
@@ -35,4 +36,23 @@ test("managerDigest: one line per partner with all three counts", () => {
 test("managerDigest: null when everything is green with no events", () => {
   assert.equal(managerDigest([card("A"), card("B", { light: "amber" })]), null);
   assert.equal(managerDigest([]), null);
+});
+
+test("hint templates exist in every partner language, two each, without exclamation marks", () => {
+  assert.deepEqual([...HINT_LOCALES].sort(), [...PARTNER_LOCALES].sort());
+  for (const l of HINT_LOCALES) {
+    assert.equal(HINT_TEMPLATES[l].length, 2, l);
+    for (const t of HINT_TEMPLATES[l]) assert.ok(t.trim() && !t.includes("!"), `${l}: ${t}`);
+  }
+  assert.ok(HINT_TEMPLATES.de.every((t) => !/\bdu\b|\bdein/i.test(t)), "de uses Sie");
+  assert.ok(HINT_TEMPLATES.pl.every((t) => t.includes("Państw") || !/\bTwój|\bTwoj/.test(t)));
+  assert.ok(HINT_TEMPLATES.ru.some((t) => t.includes("Ваш")), "ru uses Вы");
+});
+
+test("hintLocale: the partner's language, English for anything else", () => {
+  assert.equal(hintLocale("de"), "de");
+  assert.equal(hintLocale("ru"), "ru");
+  assert.equal(hintLocale("he"), "en");
+  assert.equal(hintLocale(null), "en");
+  assert.equal(hintLocale("xx"), "en");
 });

@@ -5,6 +5,8 @@ import { PARTNER_MESSAGE_MAX } from "@/lib/crm/partnerClaims";
 import { sendPartnerMessageAction } from "../partners/claimActions";
 import { setKeepFixAction } from "../partners/handoverActions";
 import type { KeepFixView } from "@/lib/crm/handoverReview";
+import { TAKE_OVER_REASON_LABEL, type TakeOverReason } from "@/lib/crm/handoverReviewRules";
+import { TakeOverButton } from "./TakeOverButton";
 import { adminDate as date, adminDateTime as when } from "@/lib/adminTime";
 import { useToast } from "./Toast";
 
@@ -24,6 +26,8 @@ export type CockpitPartnerView = {
   canReview: boolean;
   /** Set once a partner's handover request on this lead was accepted (partner pipeline, 2026-11-05). */
   keepFix: KeepFixView | null;
+  /** Partner-worked, but the partner can no longer act (and the viewer may take it over): why. */
+  takeOver: TakeOverReason | null;
 };
 
 // Keep FIX after a handover: on an early handover the client became Handover; the manager may
@@ -150,6 +154,13 @@ export function CockpitPartner({ view }: { view: CockpitPartnerView }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      {view.takeOver && (
+        <div className="crm-ckp-review">
+          <h3>Partner can no longer act</h3>
+          <p className="crm-muted">{TAKE_OVER_REASON_LABEL[view.takeOver]}. The client stays read only until someone takes it over.</p>
+          <TakeOverButton leadId={view.leadId} client="The client" />
         </div>
       )}
       {view.keepFix && <KeepFix leadId={view.leadId} v={view.keepFix} />}

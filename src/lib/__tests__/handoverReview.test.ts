@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
-  DEAL_FIXED_ERROR, acceptOutcome, acceptOwnerId, effectiveDowngrade, escalationDue, handoverEscalationHtml, keepFixChange, mayAcceptHandover,
+  DEAL_FIXED_ERROR, TAKE_OVER_REASON_LABEL, acceptOutcome, acceptOwnerId, effectiveDowngrade, escalationDue, partnerCannotAct, takeOverReason, handoverEscalationHtml, keepFixChange, mayAcceptHandover,
 } from "@/lib/crm/handoverReviewRules";
 import { partnerTimeline, type TimelineRow } from "@/lib/partner/pipeline/timeline";
 import { buildHandoverEmail, handoverNoticeOf } from "@/lib/partner/notify";
@@ -126,4 +128,29 @@ test("the handover notice renders in every partner language, without exclamation
   assert.ok(en(notices[0]).includes("Your manager took over Jo.") && en(notices[0]).includes("The client is now Handover."));
   assert.ok(en(notices[1]).includes("Your commission stays at Fix."));
   assert.ok(!en(notices[2]).includes("Fix") && !en(notices[2]).includes("now Handover"));
+});
+
+test("partnerCannotAct / takeOverReason: the lapsed claim or the inactive partner, nothing else", () => {
+  assert.equal(partnerCannotAct({ claimEffective: "ACTIVE", partnerStatus: "ACTIVE" }), false);
+  assert.equal(partnerCannotAct({ claimEffective: "EXPIRED", partnerStatus: "ACTIVE" }), true);
+  assert.equal(partnerCannotAct({ claimEffective: null, partnerStatus: "ACTIVE" }), true, "no ACTIVE FIX claim at all");
+  assert.equal(partnerCannotAct({ claimEffective: "ACTIVE", partnerStatus: "SUSPENDED" }), true);
+  assert.equal(partnerCannotAct({ claimEffective: "ACTIVE", partnerStatus: null }), true);
+  assert.equal(takeOverReason({ claimEffective: "EXPIRED", partnerStatus: "SUSPENDED" }), "partner_inactive");
+  assert.equal(takeOverReason({ claimEffective: "NOT_PROCEEDING", partnerStatus: "ACTIVE" }), "protection_lapsed");
+  assert.equal(takeOverReason({ claimEffective: "ACTIVE", partnerStatus: "ACTIVE" }), null);
+  for (const v of Object.values(TAKE_OVER_REASON_LABEL)) assert.ok(v && !v.includes("!"));
+});
+
+test("takeOverPartnerLead: under the lead lock, only a still partner-worked lead, withdraws an open request, SYSTEM + audit", () => {
+  const src = readFileSync(join(process.cwd(), "src/lib/crm/partnerTakeover.ts"), "utf8");
+  assert.match(src, /SELECT id FROM leads WHERE id = \$\{leadId\} FOR UPDATE/);
+  assert.match(src, /mayAcceptHandover\(actor, lead\.partner\.managerUserId\)/);
+  assert.match(src, /if \(!reason\) throw new Abort\(STILL_ACTIVE\)/);
+  assert.match(src, /where: \{ id: lead\.id, workedByPartner: true \}, data: \{ workedByPartner: false, assignedToId: ownerId \}/);
+  assert.match(src, /state: "OPEN" \},\s*data: \{ state: "WITHDRAWN", withdrawnAt: now \}/);
+  assert.match(src, /Taken over by \$\{actor\.name\}: partner can no longer work this client/);
+  assert.match(src, /kind: "partner_lead_taken_over"/);
+  assert.match(src, /writeAudit\(actor, "partner_lead_take_over"/);
+  assert.ok(!/partnerMode:\s*(?:"|target)/.test(src.split("writeAudit")[0]), "partnerMode is not written");
 });

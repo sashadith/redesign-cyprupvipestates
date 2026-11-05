@@ -1004,6 +1004,7 @@ export const pl: PartnerDict = {
       noEntry: "Brak wpisów",
       expired: "Ochrona wygasła",
       handedOver: "Przekazany",
+      ourTeam: "Prowadzony przez nasz zespół",
     },
     localTime: "Czas klienta: {weekday} {time}, {city}",
     zoneUnclear: "Strefa czasowa klienta niejasna ({country})",
@@ -1011,6 +1012,7 @@ export const pl: PartnerDict = {
     back: "Powrót do lejka",
     since: "W Państwa lejku od {date}",
     handedOverNotice: "Ten klient został przekazany naszemu zespołowi. Mogą Państwo śledzić postępy, ale nie mogą już niczego zmieniać.",
+    ourTeamNotice: "Tym klientem zajmuje się nasz zespół. Mogą Państwo śledzić postępy, ale nie mogą niczego zmieniać.",
     expiredNotice: "Ochrona tego klienta wygasła, dlatego nie mogą Państwo już go tutaj prowadzić.",
     hintsTitle: "Prosimy sprawdzić",
     hint: {
@@ -1116,6 +1118,7 @@ export const pl: PartnerDict = {
       handoverRequested: "Prośba o przekazanie menedżerowi",
       handoverWithdrawn: "Prośba o przekazanie wycofana",
       handoverAccepted: "Przejęty przez Państwa menedżera",
+      takenOver: "Przejęty przez nasz zespół",
       keepFixOn: "Menedżer ustawił prowizję Fix",
       keepFixOff: "Menedżer ustawił prowizję Handover",
     },

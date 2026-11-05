@@ -33,3 +33,10 @@ export function partnerMayAct(
 ): boolean {
   return claimEligible(claim, partnerId) && effective === "ACTIVE" && !!lead && partnerMayWork(lead, partnerId);
 }
+
+// A read-only client that never went through a handover of his (no ACCEPTED request on this claim):
+// our team worked it from the start (FIX accepted on a lead we already work) or took it over.
+// The portal says "Worked by our team" then, not "Handed over".
+export function ourTeamOf(handedOver: boolean, hasAcceptedHandover: boolean): boolean {
+  return handedOver && !hasAcceptedHandover;
+}

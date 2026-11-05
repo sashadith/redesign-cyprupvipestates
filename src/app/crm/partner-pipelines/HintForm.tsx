@@ -1,13 +1,17 @@
 "use client";
 import { useState } from "react";
 import { PARTNER_MESSAGE_MAX } from "@/lib/crm/partnerClaims";
-import { HINT_TEMPLATES } from "@/lib/crm/partnerPipelineDigest";
+import { HINT_LOCALES, HINT_TEMPLATES, hintLocale, type HintLocale } from "@/lib/crm/partnerPipelineDigest";
 import { sendPartnerMessageAction } from "../partners/claimActions";
 
-// "Hint to partner" under a card of the partner pipelines view: a template fills the text, which stays
-// editable and is sent as written. The server action checks that the viewer is an admin or the partner's manager.
+// "Hint to partner" under a card of the partner pipelines view: a template (in the language picked, the
+// partner's own preselected) fills the text, which stays editable and is sent as written. The server action checks that the viewer is an admin or the partner's manager.
 
-export default function HintForm({ leadId }: { leadId: string }) {
+const LANGUAGE_NAMES = new Intl.DisplayNames(["en"], { type: "language" });
+const languageLabel = (l: HintLocale) => LANGUAGE_NAMES.of(l) ?? l;
+
+export default function HintForm({ leadId, partnerLanguage }: { leadId: string; partnerLanguage: string | null }) {
+  const [lang, setLang] = useState<HintLocale>(hintLocale(partnerLanguage));
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
@@ -37,9 +41,12 @@ export default function HintForm({ leadId }: { leadId: string }) {
       <summary>Hint to partner</summary>
       <form onSubmit={submit}>
         <fieldset disabled={busy}>
+          <select aria-label="Template language" value={lang} onChange={(e) => setLang(hintLocale(e.target.value))}>
+            {HINT_LOCALES.map((l) => <option key={l} value={l}>{languageLabel(l)}</option>)}
+          </select>
           <select aria-label="Hint template" value="" onChange={(e) => { if (e.target.value) setText(e.target.value); }}>
             <option value="">Choose a template</option>
-            {HINT_TEMPLATES.map((t) => <option key={t} value={t}>{t}</option>)}
+            {HINT_TEMPLATES[lang].map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
           <textarea aria-label="Hint text" rows={3} value={text} maxLength={PARTNER_MESSAGE_MAX} onChange={(e) => setText(e.target.value)} />
           <button type="submit" className="crm-btn primary" disabled={!ready}>{busy ? "Sending…" : "Send hint"}</button>

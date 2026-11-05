@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { partnerTimeline, type TimelineRow } from "@/lib/partner/pipeline/timeline";
+import { partnerTimeline, scopeTimeline, type TimelineRow } from "@/lib/partner/pipeline/timeline";
 
 const at = (m: number) => new Date(Date.UTC(2026, 10, 5, 10, m));
 const row = (id: string, type: string, m: number, extra: Partial<TimelineRow> = {}): TimelineRow => ({ id, type, occurredAt: at(m), ...extra });
@@ -82,4 +82,40 @@ test("partnerTimeline carries the partner's handover request and withdrawal by k
     ["req", "system", "handover_requested", null, "Paul"],
     ["wd", "system", "handover_withdrawn", null, "Paul"],
   ]);
+});
+
+test("scopeTimeline: nothing from before the claim became active, presentation events of own presentations only", () => {
+  const since = at(10);
+  const scoped = scopeTimeline([
+    row("old-status", "STATUS_CHANGE", 5, { metadata: { toStatus: "CONTACTED" } }),
+    row("new-status", "STATUS_CHANGE", 12, { metadata: { toStatus: "OFFER" } }),
+    row("old-pres", "PRESENTATION_EVENT", 6, { body: "Favorited: Old Tower", metadata: { legacyType: "PRESENTATION_FAVORITE", presentationId: "mine" } }),
+    row("own-fav", "PRESENTATION_EVENT", 13, { body: "Favorited: Sea View", metadata: { legacyType: "PRESENTATION_FAVORITE", presentationId: "mine" } }),
+    row("staff-fav", "PRESENTATION_EVENT", 14, { body: "Favorited: Staff Pick", metadata: { legacyType: "PRESENTATION_FAVORITE", presentationId: "staff" } }),
+    row("legacy-fav", "PRESENTATION_EVENT", 15, { body: "Favorited: Unknown Pick", metadata: { legacyType: "PRESENTATION_FAVORITE" } }),
+    row("at-since", "STATUS_CHANGE", 10, { metadata: { toStatus: "NEW" } }),
+  ], [
+    { id: "m-old", leadId: "l", partnerId: "p", createdAt: at(9), body: "earlier claim" },
+    { id: "m-new", leadId: "l", partnerId: "p", createdAt: at(11), body: "this claim" },
+  ], { since, ownPresentationIds: new Set(["mine"]) });
+  assert.deepEqual(scoped.rows.map((r) => r.id), ["new-status", "own-fav", "legacy-fav", "at-since"]);
+  assert.deepEqual(scoped.messages.map((m) => m.id), ["m-new"]);
+  const out = partnerTimeline(scoped.rows, scoped.messages);
+  assert.equal(out.find((e) => e.id === "own-fav")!.text, "Sea View");
+  const legacy = out.find((e) => e.id === "legacy-fav")!;
+  assert.equal(legacy.event, "PRESENTATION_FAVORITE");
+  assert.equal(legacy.text, null, "a row without a presentation reference never shows a project name");
+  const json = JSON.stringify(out);
+  assert.ok(!json.includes("Staff Pick") && !json.includes("Unknown Pick") && !json.includes("Old Tower") && !json.includes("earlier claim"));
+});
+
+test("partnerTimeline words a staff take-over without the staff name", () => {
+  const out = partnerTimeline([
+    row("take", "SYSTEM", 1, {
+      createdByUserId: "u1", createdByName: "Anna", body: "Taken over by Anna: partner can no longer work this client",
+      metadata: { kind: "partner_lead_taken_over", reason: "protection_lapsed" },
+    }),
+  ], []);
+  assert.deepEqual(out.map((e) => [e.id, e.event, e.by, e.text]), [["take", "partner_lead_taken_over", null, null]]);
+  assert.ok(!JSON.stringify(out).includes("Anna"));
 });
