@@ -166,6 +166,18 @@ export const ru: PartnerDict = {
       intro: "Свежие новости по Вашему клиенту {client}: {stage}.",
       button: "Открыть карточку клиента",
     },
+    // Partner pipeline (2026-11-05): the manager accepted a handover / changed the keep-FIX override.
+    handover: {
+      subject: "Ваш менеджер принял клиента {client}",
+      subjectChange: "Изменение комиссии по Вашему клиенту {client}",
+      greeting: "Здравствуйте, {name},",
+      accepted: "Ваш менеджер принял клиента {client}.",
+      keptFix: "Ваша комиссия остаётся по ставке Fix.",
+      downgraded: "Теперь клиент переведён в Handover.",
+      keepFixOn: "Ваш менеджер вернул клиента {client} на Fix. Для этого клиента действует Ваша ставка Fix.",
+      keepFixOff: "Клиент {client} теперь переведён в Handover. Для этого клиента действует Ваша ставка Handover.",
+      button: "Открыть карточку клиента",
+    },
     message: {
       subject: "Новое сообщение по Вашему клиенту {client}",
       greeting: "Здравствуйте, {name}!",
@@ -1095,6 +1107,9 @@ export const ru: PartnerDict = {
       system: "Запись",
       handoverRequested: "Запрошена передача менеджеру",
       handoverWithdrawn: "Запрос на передачу отозван",
+      handoverAccepted: "Принят Вашим менеджером",
+      keepFixOn: "Менеджер установил ставку Fix",
+      keepFixOff: "Менеджер установил ставку Handover",
     },
     err: {
       generic: "Не получилось. Пожалуйста, обновите страницу и попробуйте ещё раз.",

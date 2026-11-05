@@ -37,7 +37,9 @@ export type TimelineEntry = {
   /**
    * What a system row records, for the portal's own wording (the stored text is staff English):
    * a partner SYSTEM row's metadata.kind (follow_up, lead_edit, viewing_date, handover_requested,
-   * handover_withdrawn) or a presentation row's metadata.legacyType (PRESENTATION_VIEWED, PRESENTATION_FAVORITE, …). Null otherwise.
+   * handover_withdrawn), the manager's handover_accepted / keep_fix_on / keep_fix_off (from a staff row
+   * whose metadata.kind is handover_accepted or keep_fix_changed) or a presentation row's metadata.legacyType
+   * (PRESENTATION_VIEWED, PRESENTATION_FAVORITE, …). Null otherwise.
    */
   event: string | null;
   /** The date a follow_up / viewing_date row set (null when it cleared it or for anything else). */
@@ -91,8 +93,14 @@ function fromRow(r: TimelineRow): TimelineEntry | null {
     const favorite = event === "PRESENTATION_FAVORITE" && body?.startsWith(FAVORITE_PREFIX) ? clean(body.slice(FAVORITE_PREFIX.length)) : null;
     return { ...base, event, text: favorite, by: partnerAuthored ? clean(r.createdByName) : null };
   }
-  if (!partnerAuthored) return null;
   const m = meta(r.metadata);
+  // The manager took the client over or changed the keep-FIX override: the partner sees the event, never who.
+  if (r.type === "SYSTEM" && !partnerAuthored) {
+    if (m.kind === "handover_accepted") return { ...base, event: "handover_accepted" };
+    if (m.kind === "keep_fix_changed") return { ...base, event: m.keepFix === true ? "keep_fix_on" : "keep_fix_off" };
+    return null;
+  }
+  if (!partnerAuthored) return null;
   if (r.type === "SYSTEM") {
     // follow_up / lead_edit / viewing_date / handover_*: the stored text is staff English, so only the kind and date pass.
     const event = str(m.kind);

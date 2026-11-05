@@ -20,7 +20,7 @@ import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
   INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail, buildFollowUpDueEmail, followUpLeadTime, followUpWhen, pipelineLink,
-  buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
+  buildHandoverEmail, buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail, handoverNoticeOf,
   buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
   isUnchangedStage, partnerDate, projectNewsLines, projectsLink, watchChangeLabels,
   stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
@@ -194,17 +194,23 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
   // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
   switch (row.kind) {
     case "STAGE": {
+      // The manager accepted a handover or changed the keep-FIX override: its own wording, never the stage text.
+      const notice = handoverNoticeOf(row.payload);
+      if (notice) return deliver(buildHandoverEmail(locale, { ...common, notice }, theme), { ...tgCommon, kind: "STAGE", handover: notice });
       const toStatus = obj(row.payload).toStatus;
       const stageKey = stageKeyFor(toStatus);
       if (!stageKey) return { skip: "invalid status" };
-      const lastMailed = await prisma.partnerNotification.findFirst({
+      // The last mailed stage move; handover rows carry no stage and are passed over.
+      const mailed = await prisma.partnerNotification.findMany({
         where: {
           claimId: own.id, kind: "STAGE", sentAt: { not: null }, id: { not: row.id },
           OR: [{ error: null }, { error: { startsWith: PARTIAL_PREFIX } }],
         },
         orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
+        take: 10,
         select: { payload: true },
       });
+      const lastMailed = mailed.find((m) => !handoverNoticeOf(m.payload));
       if (!tgOnly && lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
       const extra = await stageExtras(locale, toStatus, own.leadId, now);
       return deliver(buildStageEmail(locale, { ...common, stageKey, extra }, theme), { ...tgCommon, kind: "STAGE", stageKey, extra });

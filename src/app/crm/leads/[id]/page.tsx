@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireCrmUser } from "@/lib/crm/session";
+import { requireCrmUser, type SessionCrmUser } from "@/lib/crm/session";
+import { loadKeepFixView } from "@/lib/crm/handoverReview";
 import { canAssignLeads, canEditLead, canViewLead, canWorkDeveloperSide, seesAllLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
@@ -49,7 +50,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
       message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
-      workedByPartner: true, partner: { select: { company: true, firstName: true, lastName: true } },
+      workedByPartner: true, partnerMode: true, partner: { select: { company: true, firstName: true, lastName: true } },
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -115,7 +116,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   const advisors = canEdit
     ? (staff.length ? staff.map((u) => ({ id: u.id, name: u.name })) : await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }))
     : [];
-  const partnerView = await loadPartnerView(lead, canEdit, canAssign, now);
+  const partnerView = await loadPartnerView(lead, canEdit, canAssign, now, user);
   const name = `${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead";
   const attributionRows: [string, string | null][] = [
     ["Partner ref", lead.attributionRef], ["UTM source", lead.utmSource], ["UTM medium", lead.utmMedium], ["UTM campaign", lead.utmCampaign],
@@ -200,16 +201,17 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
 }
 
 type PartnerLeadInput = {
-  id: string; status: string; contactRepName: string | null; contactRepPhone: string | null;
+  id: string; status: string; partnerMode: string | null; contactRepName: string | null; contactRepPhone: string | null;
   deals: { commissionStatus: string }[];
   claims: Parameters<typeof buildCockpitPartnerCard>[0]["claims"];
 };
 
 // Partner card data (phase 3b): only for leads that carry a claim; the two extra
 // queries run only then, so leads without partners render exactly as before.
-async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canReview: boolean, now: Date): Promise<CockpitPartnerView | null> {
+async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canReview: boolean, now: Date, user: SessionCrmUser): Promise<CockpitPartnerView | null> {
   if (!lead.claims.length) return null;
-  const [last, messages] = await Promise.all([
+  const hasDeal = lead.deals.some((d) => d.commissionStatus !== "CANCELLED");
+  const [last, messages, keepFix] = await Promise.all([
     prisma.leadInteraction.findFirst({
       where: { leadId: lead.id, type: { in: [...REAL_CONTACT_TYPES] } },
       orderBy: { occurredAt: "desc" },
@@ -224,11 +226,13 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
         partner: { select: { company: true, firstName: true, lastName: true } },
       },
     }),
+    // The keep-FIX override: only once a handover request on this lead was accepted.
+    loadKeepFixView(user, lead.id, lead.partnerMode, hasDeal),
   ]);
   const built = buildCockpitPartnerCard({
     claims: lead.claims.map((c) => ({ ...c, state: c.state as ClaimStateValue })),
     lead: {
-      status: lead.status, hasDeal: lead.deals.some((d) => d.commissionStatus !== "CANCELLED"),
+      status: lead.status, hasDeal,
       lastRealContactAt: last?.occurredAt ?? null, contactRepName: lead.contactRepName, contactRepPhone: lead.contactRepPhone,
     },
     now,
@@ -244,6 +248,7 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
     })),
     canMessage: canEdit && built.hasActive,
     canReview,
+    keepFix,
   };
 }
 

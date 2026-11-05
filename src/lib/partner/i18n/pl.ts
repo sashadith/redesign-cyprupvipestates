@@ -166,6 +166,18 @@ export const pl: PartnerDict = {
       intro: "oto najnowsze informacje o Państwa kliencie {client}: {stage}.",
       button: "Zobacz klienta",
     },
+    // Partner pipeline (2026-11-05): the manager accepted a handover / changed the keep-FIX override.
+    handover: {
+      subject: "Państwa menedżer przejął klienta {client}",
+      subjectChange: "Zmiana prowizji dla Państwa klienta {client}",
+      greeting: "Szanowni Państwo,",
+      accepted: "Państwa menedżer przejął klienta {client}.",
+      keptFix: "Państwa prowizja pozostaje na poziomie Fix.",
+      downgraded: "Klient ma teraz status Handover.",
+      keepFixOn: "Państwa menedżer przywrócił dla klienta {client} status Fix. Dla tego klienta obowiązuje Państwa stawka Fix.",
+      keepFixOff: "Klient {client} ma teraz status Handover. Dla tego klienta obowiązuje Państwa stawka Handover.",
+      button: "Zobacz klienta",
+    },
     message: {
       subject: "Nowa wiadomość dotycząca Państwa klienta {client}",
       greeting: "Szanowni Państwo,",
@@ -1095,6 +1107,9 @@ export const pl: PartnerDict = {
       system: "Wpis",
       handoverRequested: "Prośba o przekazanie menedżerowi",
       handoverWithdrawn: "Prośba o przekazanie wycofana",
+      handoverAccepted: "Przejęty przez Państwa menedżera",
+      keepFixOn: "Menedżer ustawił prowizję Fix",
+      keepFixOff: "Menedżer ustawił prowizję Handover",
     },
     err: {
       generic: "To się nie udało. Prosimy odświeżyć stronę i spróbować ponownie.",

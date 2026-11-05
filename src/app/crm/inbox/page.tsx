@@ -8,6 +8,8 @@ import { suggestOwner, type Candidate } from "@/lib/crm/suggestOwner";
 import { listClaimsForReview } from "@/lib/crm/claimReview";
 import { InboxList, type InboxItem } from "../components/InboxList";
 import { ClaimReview } from "../components/ClaimReview";
+import { listHandoverRequests } from "@/lib/crm/handoverReview";
+import { HandoverRequests } from "../components/HandoverRequests";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,7 @@ export default async function InboxPage() {
   const user = await requireCrmUser();
   if (!canAssignLeads(user)) redirect("/crm/pipeline");
 
-  const [leads, total, staff, loads, claims] = await Promise.all([
+  const [leads, total, staff, loads, claims, handovers] = await Promise.all([
     prisma.lead.findMany({
       where: inboxWhere(),
       orderBy: { createdAt: "asc" },
@@ -30,6 +32,7 @@ export default async function InboxPage() {
     prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, isActive: true, acceptsLeads: true, languages: true, specialties: true } }),
     prisma.lead.groupBy({ by: ["assignedToId"], where: { deletedAt: null, assignedToId: { not: null }, status: { in: [...ACTIVE_LEAD_STATUSES] } }, _count: { _all: true } }),
     listClaimsForReview(),
+    listHandoverRequests(user),
   ]);
 
   const loadOf = new Map(loads.map((l) => [l.assignedToId, l._count._all]));
@@ -57,6 +60,7 @@ export default async function InboxPage() {
           <p>{total === 0 ? "Every lead has an owner." : total > INBOX_CAP ? `${total} unassigned, showing the oldest ${INBOX_CAP}` : `${total} unassigned`}</p>
         </div>
       </div>
+      <HandoverRequests items={handovers.cards} total={handovers.total} />
       <ClaimReview cards={claims.cards} total={claims.total} />
       <InboxList items={items} staff={staff.map((s) => ({ id: s.id, name: s.name, acceptsLeads: s.acceptsLeads }))} />
     </>

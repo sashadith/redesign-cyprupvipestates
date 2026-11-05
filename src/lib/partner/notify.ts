@@ -39,6 +39,42 @@ export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: s
   }, theme);
 }
 
+/** A STAGE row about a handover (partner pipeline, 2026-11-05) instead of a stage move. */
+export type HandoverNotice = { kind: "accepted" | "keepFix"; keepFix: boolean; downgraded: boolean };
+
+/** The handover notice a STAGE payload carries, or null for an ordinary stage row ({ toStatus }). */
+export function handoverNoticeOf(payload: unknown): HandoverNotice | null {
+  const p = payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : null;
+  if (!p || (p.handover !== "accepted" && p.handover !== "keepFix")) return null;
+  return { kind: p.handover, keepFix: p.keepFix === true, downgraded: p.handover === "accepted" && p.downgraded === true };
+}
+
+/** The headline and the follow-up lines of a handover notice, already filled in (plain text). */
+export function handoverNoticeLines(locale: PartnerLocale, clientName: string, n: HandoverNotice): { subject: string; headline: string; lines: string[] } {
+  const t = dict(locale).mail.handover;
+  const vars = { client: client(clientName) };
+  if (n.kind === "keepFix") {
+    return { subject: fmt(t.subjectChange, vars), headline: fmt(n.keepFix ? t.keepFixOn : t.keepFixOff, vars), lines: [] };
+  }
+  const lines = [...(n.keepFix ? [t.keptFix] : []), ...(n.downgraded ? [t.downgraded] : [])];
+  return { subject: fmt(t.subject, vars), headline: fmt(t.accepted, vars), lines };
+}
+
+export function buildHandoverEmail(locale: PartnerLocale, p: Common & { notice: HandoverNotice }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+  const t = dict(locale).mail.handover;
+  const n = handoverNoticeLines(locale, p.clientName, p.notice);
+  return renderPartnerEmail({
+    subject: n.subject,
+    greeting: greet(t.greeting, p.partnerFirstName),
+    intro: n.headline,
+    button: t.button,
+    link: p.link,
+    notes: n.lines,
+    signature: dict(locale).mail.signature,
+    footer: partnerFooter(locale),
+  }, theme);
+}
+
 export function buildMessageEmail(locale: PartnerLocale, p: Common & { body: string; authorFirstName?: string | null }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   const author = (p.authorFirstName ?? "").trim();

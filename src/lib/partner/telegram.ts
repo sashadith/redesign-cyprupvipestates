@@ -5,7 +5,7 @@
 import { randomInt } from "node:crypto";
 import { dict, fmt, lookup, type PartnerLocale } from "./i18n";
 import { escapeHtml } from "./mail";
-import { formatShare, unhandledKind, type NotificationKind } from "./notify";
+import { formatShare, handoverNoticeLines, unhandledKind, type HandoverNotice, type NotificationKind } from "./notify";
 import { makeThrottle } from "./throttle";
 import { hashToken } from "./tokens";
 
@@ -190,6 +190,8 @@ export type TelegramNotificationInput = {
   tierName?: string | null;
   handoverShare?: number | null;
   fixShare?: number | null;
+  /** STAGE (2026-11-05): a handover notice instead of a stage move (handoverNoticeOf). */
+  handover?: HandoverNotice | null;
   /** STAGE (v2): extra lines under the headline (viewing date, expected commission), plain text. */
   extra?: string[];
   /** PROJECT_NEWS / WATCH: the projects, prices and rates pre-formatted. */
@@ -214,6 +216,11 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
   let out: string;
   switch (input.kind) {
     case "STAGE": {
+      if (input.handover) {
+        const n = handoverNoticeLines(locale, (input.clientName ?? "").trim().slice(0, 120), input.handover);
+        out = `<b>${esc(n.headline)}</b>${n.lines.length ? `\n${n.lines.map(esc).join("\n")}` : ""}\n\n${open}`;
+        break;
+      }
       const stage = lookup(locale, input.stageKey ?? "") ?? lookup(locale, "stages.onHold")!;
       const extra = (input.extra ?? []).filter((x) => x.trim()).map((x) => text(x, 120));
       out = `<b>${line(t.stage, { client, stage: esc(stage) })}</b>${extra.length ? `\n${extra.join("\n")}` : ""}\n\n${open}`;

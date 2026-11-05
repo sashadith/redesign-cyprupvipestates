@@ -110,6 +110,9 @@ function entryLabel(t: PartnerDict, e: TimelineEntry, dt: Intl.DateTimeFormat): 
       if (e.event === "lead_edit") return E.leadEdit;
       if (e.event === "handover_requested") return E.handoverRequested;
       if (e.event === "handover_withdrawn") return E.handoverWithdrawn;
+      if (e.event === "handover_accepted") return E.handoverAccepted;
+      if (e.event === "keep_fix_on") return E.keepFixOn;
+      if (e.event === "keep_fix_off") return E.keepFixOff;
       return E.system;
   }
 }

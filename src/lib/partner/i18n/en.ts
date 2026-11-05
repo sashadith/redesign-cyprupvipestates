@@ -164,6 +164,18 @@ export const en = {
       intro: "Here is the latest on your client {client}: {stage}.",
       button: "View client",
     },
+    // Partner pipeline (2026-11-05): the manager accepted a handover / changed the keep-FIX override.
+    handover: {
+      subject: "Your manager took over {client}",
+      subjectChange: "Commission update for your client {client}",
+      greeting: "Dear {name},",
+      accepted: "Your manager took over {client}.",
+      keptFix: "Your commission stays at Fix.",
+      downgraded: "The client is now Handover.",
+      keepFixOn: "Your manager set {client} back to Fix. Your Fix share applies to this client.",
+      keepFixOff: "{client} is now Handover. Your Handover share applies to this client.",
+      button: "View client",
+    },
     message: {
       subject: "New message about your client {client}",
       greeting: "Dear {name},",
@@ -1093,6 +1105,9 @@ export const en = {
       system: "Entry",
       handoverRequested: "Handover to the manager requested",
       handoverWithdrawn: "Handover request withdrawn",
+      handoverAccepted: "Taken over by your manager",
+      keepFixOn: "Commission set to Fix by your manager",
+      keepFixOff: "Commission set to Handover by your manager",
     },
     err: {
       generic: "That did not work. Please reload the page and try again.",

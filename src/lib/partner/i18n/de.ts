@@ -166,6 +166,18 @@ export const de: PartnerDict = {
       intro: "hier ist der neueste Stand zu Ihrem Kunden {client}: {stage}.",
       button: "Kunden ansehen",
     },
+    // Partner pipeline (2026-11-05): the manager accepted a handover / changed the keep-FIX override.
+    handover: {
+      subject: "Ihr Manager hat {client} übernommen",
+      subjectChange: "Provision für Ihren Kunden {client} geändert",
+      greeting: "Guten Tag {name},",
+      accepted: "Ihr Manager hat {client} übernommen.",
+      keptFix: "Ihre Provision bleibt beim Fix-Satz.",
+      downgraded: "Der Kunde ist jetzt ein Handover-Kunde.",
+      keepFixOn: "Ihr Manager hat {client} wieder auf Fix gestellt. Für diesen Kunden gilt Ihr Fix-Satz.",
+      keepFixOff: "{client} ist jetzt ein Handover-Kunde. Für diesen Kunden gilt Ihr Handover-Satz.",
+      button: "Kunden ansehen",
+    },
     message: {
       subject: "Neue Nachricht zu Ihrem Kunden {client}",
       greeting: "Guten Tag {name},",
@@ -1095,6 +1107,9 @@ export const de: PartnerDict = {
       system: "Eintrag",
       handoverRequested: "Übergabe an den Manager angefragt",
       handoverWithdrawn: "Übergabe-Anfrage zurückgezogen",
+      handoverAccepted: "Von Ihrem Manager übernommen",
+      keepFixOn: "Provision von Ihrem Manager auf Fix gestellt",
+      keepFixOff: "Provision von Ihrem Manager auf Handover gestellt",
     },
     err: {
       generic: "Das hat nicht geklappt. Bitte laden Sie die Seite neu und versuchen Sie es noch einmal.",
