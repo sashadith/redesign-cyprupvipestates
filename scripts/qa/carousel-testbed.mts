@@ -133,7 +133,13 @@ for (const s of SETS) {
     const heat = path.join(OUT, `${s.fixture}-heat-${i}.jpg`);
     const px = await compareImages(path.join(T, "reference-renders", `${s.ref}-0${i}.jpg`), path.join(folder, `0${i}.jpg`), heat);
     const geo = compareGeometry(stageA[s.ref][i - 1] as any, (r.geometry as any)[i - 1], 3);
-    slides.push({ slide: i, ...r.report[i - 1], meanDiff: px.meanDiff, hotBlocks: px.hotBlocks, regions: px.regions.slice(0, 6), geometryOver3px: geo });
+    // Accepted by the operator (2026-11-05): rule 2 is exactly 44 px on every slide, while the
+    // approved templates keep 39–43 px. Moving the eyebrow block up by exactly that difference
+    // (eyebrow / "Prices from", its glass panel, and the photo that follows the text) is intended.
+    const rule2Shift = r.report[i - 1].eyebrowGap !== null ? r.report[i - 1].eyebrowGap! - (r.report[i - 1].templateEyebrowGap ?? 44) : 0;
+    const RULE2_MOVES = ["div.eyebrow", "div.h-from", "div.j-glass", "div.ph"];
+    const accepted = geo.length > 0 && rule2Shift > 0 && geo.every((g: any) => g.delta && RULE2_MOVES.includes(g.k) && g.delta.x === 0 && Math.abs(g.delta.w) <= 0.5 && (g.k === "div.ph" ? Math.abs(g.delta.h) <= rule2Shift + 1 : -g.delta.y <= rule2Shift + 1));
+    slides.push({ slide: i, ...r.report[i - 1], meanDiff: px.meanDiff, hotBlocks: px.hotBlocks, regions: px.regions.slice(0, 6), geometryOver3px: geo, acceptedRule2: accepted ? rule2Shift : null });
     // ref | render | heatmap, half size
     const tiles = await Promise.all([path.join(T, "reference-renders", `${s.ref}-0${i}.jpg`), path.join(folder, `0${i}.jpg`), heat].map((f) => sharp(f).resize(540, 675).toBuffer()));
     const sheet = path.join(OUT, `${s.fixture}-0${i}-compare.jpg`);
@@ -141,7 +147,11 @@ for (const s of SETS) {
     sheets.push(sheet);
   }
   (report.stageB ??= {} as any)[s.fixture] = { seconds: secs, urls: r.slides, preview: r.preview, folder: r.folder, slides };
-  for (const x of slides) check(x.geometryOver3px.length === 0, `${s.fixture} slide ${x.slide}: every element within 3 px of the approved layout${x.geometryOver3px.length ? " — " + x.geometryOver3px.map((g: any) => `${g.k} ${JSON.stringify(g.delta ?? g.detail)}`).join("; ") : ""}`);
+  for (const x of slides) {
+    const detail = x.geometryOver3px.map((g: any) => `${g.k} ${JSON.stringify(g.delta ?? g.detail)}`).join("; ");
+    if (x.acceptedRule2 !== null) console.log(`✓ ${s.fixture} slide ${x.slide}: ACCEPTED rule-2 shift of ${x.acceptedRule2} px (template ${x.templateEyebrowGap} px → 44 px) — ${detail}`);
+    else check(x.geometryOver3px.length === 0, `${s.fixture} slide ${x.slide}: every element within 3 px of the approved layout${detail ? " — " + detail : ""}`);
+  }
   check(ours() === "", `${s.fixture}: no Chromium left after the render`);
   console.log(`stage B ${s.fixture}: ${secs.toFixed(1)} s, mean ${slides.map((x) => x.meanDiff).join(" / ")}`);
 }

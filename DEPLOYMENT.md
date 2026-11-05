@@ -1021,10 +1021,15 @@ libraries and stay.
 - JPGs are written only when all six slides pass every layout rule, into a temp
   folder that then replaces the old set.
 
-**Proxy limit:** `/api/` (and with it `/api/mcp`) has `proxy_read_timeout 60s`
-(`snippets/cvp_proxy.conf`). A render takes ~20 s on this VPS. A call that first
-waits for the lock and then hits the 60 s render limit can outlast the proxy: the
-client then sees a 504 while the server finishes or stops the render on its own.
+**Proxy timeout (nginx, 2026-11-05):** `/api/` keeps `proxy_read_timeout 60s`
+(`snippets/cvp_proxy.conf`), but the MCP endpoint has its own exact location,
+`location = /api/mcp { include /etc/nginx/snippets/cvp_proxy_mcp.conf; }`, with
+120 s send/read timeouts: a call can wait up to 30 s for another render and then
+run up to 60 s. Applied on the VPS on 2026-11-05 (`nginx -t` clean, reload; backup
+of the previous files in `/root/nginx-backup-20261105113847/`). Repo copies:
+`ops/nginx/cyprusvipestates.conf`, `ops/nginx/snippets/cvp_proxy_mcp.conf`.
+`src/app/api/mcp/route.ts` declares `maxDuration = 60`, which only matters on
+Vercel; the self-hosted Next server does not enforce it.
 
 **The deploy that introduces this needs `CVP_RUN_MIGRATE=1`** (migration
 `20261105100000_development_vat_note`: `development_overrides.vatNote`) **and
