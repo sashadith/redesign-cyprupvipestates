@@ -25,15 +25,16 @@ import Bdi from "@/app/components/Bdi";
 
 const cyprusBounds = () => new maplibregl.LngLatBounds(CYPRUS_BOUNDS[0], CYPRUS_BOUNDS[1]);
 
-/** Turn-by-turn links for the map card. Both open the app on a phone and the
- *  web planner on a desktop; coordinates are the project's pin. */
-export const googleNavUrl = (lat: number, lng: number) =>
-  `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-export const wazeNavUrl = (lat: number, lng: number) =>
-  `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+/** Location links for the map card: they open the project's pin in the app on
+ *  a phone (the web map on a desktop) without starting navigation, which the
+ *  visitor can start in the app (Sascha, 2026-11-05). */
+export const googleMapsUrl = (lat: number, lng: number) =>
+  `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+export const wazeMapUrl = (lat: number, lng: number) =>
+  `https://waze.com/ul?ll=${lat},${lng}`;
 
 /** The card inside a map popup: image, price, title, place, plus the G/W
- *  navigation shortcuts. Shared by the projects explorer, the developer page
+ *  map shortcuts. Shared by the projects explorer, the developer page
  *  and the single-project map. Without `href` (the project's own page) the card
  *  is not a link, since it would only point back at the page it sits on.
  *  Distances are deliberately not shown here (Sascha, 2026-10-13). */
@@ -70,8 +71,8 @@ export function MapCard({
       {/* Siblings of the card link, not inside it: a link inside a link is
           invalid HTML and browsers split the outer one apart. */}
       <span className="px-pop__nav">
-        <a href={googleNavUrl(lat, lng)} target="_blank" rel="noopener noreferrer" aria-label="Google Maps" title="Google Maps">G</a>
-        <a href={wazeNavUrl(lat, lng)} target="_blank" rel="noopener noreferrer" aria-label="Waze" title="Waze">W</a>
+        <a href={googleMapsUrl(lat, lng)} target="_blank" rel="noopener noreferrer" aria-label="Google Maps" title="Google Maps">G</a>
+        <a href={wazeMapUrl(lat, lng)} target="_blank" rel="noopener noreferrer" aria-label="Waze" title="Waze">W</a>
       </span>
     </>
   );

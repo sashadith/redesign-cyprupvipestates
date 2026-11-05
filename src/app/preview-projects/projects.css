@@ -671,7 +671,7 @@
 .px-pop__price { display: block; font-family: var(--font-display), serif; font-weight: 500; font-size: 1.1rem; color: var(--champagne); }
 .px-pop__title { display: block; margin-top: 2px; font-family: var(--font-display), serif; font-weight: 400; font-size: 0.92rem; line-height: 1.2; color: var(--ivory); }
 .px-pop__city { display: block; margin-top: 3px; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--text-soft); }
-/* Navigation shortcuts (G = Google Maps, W = Waze), pinned to the card's bottom
+/* Location shortcuts (G = Google Maps, W = Waze), pinned to the card's bottom
    corner. They sit beside the card link, not inside it, so the last line of the
    card keeps clear of them. */
 .px-pop--nav .px-pop__body > :last-child { padding-inline-end: 46px; }
