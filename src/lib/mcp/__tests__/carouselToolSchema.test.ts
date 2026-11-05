@@ -22,5 +22,7 @@ test("render_instagram_carousel lists with a usable JSON schema", async () => {
   assert.deepEqual(schema.properties.template.enum, ["project", "cyprus"]);
   assert.ok(JSON.stringify(schema.properties.data).includes("markedWords"));
   assert.equal(t!.annotations?.readOnlyHint, false);
+  // claude.ai's connector drops a tool whose schema uses these (seen 2026-11-05).
+  for (const kw of ["prefixItems", "exclusiveMinimum", "exclusiveMaximum", "$ref", "$defs"]) assert.ok(!JSON.stringify(schema).includes(`"${kw}"`), `schema must not use ${kw}`);
   await client.close();
 });
