@@ -134,7 +134,7 @@ async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
     take: POINTS_CLAIM_CAP + 1,
     select: {
       id: true, partnerId: true, leadId: true, state: true, mode: true, createdAt: true, reviewedAt: true,
-      lead: { select: { status: true, deletedAt: true, lostReason: true } },
+      lead: { select: { status: true, deletedAt: true, lostReason: true, partnerMode: true } },
     },
   });
   const truncated = rows.length > POINTS_CLAIM_CAP;
@@ -175,11 +175,11 @@ async function revokePoints(season: SeasonRow, now: Date): Promise<number> {
   const events = await prisma.partnerPointEvent.findMany({ where: { seasonId: season.id }, select: { refKey: true } });
   const claimIds = Array.from(new Set(events.map((e) => claimIdFromRefKey(e.refKey)).filter((id): id is string => !!id)));
   if (!claimIds.length) return 0;
-  const claims = new Map<string, { state: string; mode: "HANDOVER" | "FIX"; lead: { deletedAt: Date | null; status: string; lostReason: string | null } | null }>();
+  const claims = new Map<string, Parameters<typeof isRevokedClaim>[0]>();
   for (const part of chunk(claimIds, ID_CHUNK)) {
     const rows = await prisma.partnerClaim.findMany({
       where: { id: { in: part } },
-      select: { id: true, state: true, mode: true, lead: { select: { deletedAt: true, status: true, lostReason: true } } },
+      select: { id: true, state: true, mode: true, lead: { select: { deletedAt: true, status: true, lostReason: true, partnerMode: true } } },
     });
     for (const r of rows) claims.set(r.id, r);
   }
