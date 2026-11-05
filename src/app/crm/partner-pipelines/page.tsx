@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
 import { loadPartnerPipelines, managesPartners, type Light, type PartnerPipelineGroup } from "@/lib/crm/partnerPipelines";
+import HintForm from "./HintForm";
 import { FUNNEL_STATUSES, SIDE_STATUSES, STATUS_LABEL } from "@/lib/crm/leadStatus";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +65,8 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
                         <div key={st} className="crm-pp-col">
                           <div className="crm-pp-colh">{STATUS_LABEL[st]} <span>{cards.length}</span></div>
                           {cards.map((c) => (
-                            <Link key={c.claimId} href={`/crm/leads/${c.leadId}`} className="crm-pp-card">
+                            <div key={c.claimId} className="crm-pp-item">
+                            <Link href={`/crm/leads/${c.leadId}`} className="crm-pp-card">
                               <span className={`crm-pp-light ${c.light}`}><i aria-hidden="true" />{LIGHT_TEXT[c.light]}</span>
                               <b>{c.name}</b>
                               <small>{c.localTime.text}</small>
@@ -79,6 +81,8 @@ export default async function PartnerPipelinesPage({ searchParams }: { searchPar
                                 </small>
                               )}
                             </Link>
+                            <HintForm leadId={c.leadId} />
+                            </div>
                           ))}
                         </div>
                       );

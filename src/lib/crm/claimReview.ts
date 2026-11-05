@@ -7,7 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
 import { workedByPartnerOnAccept } from "@/lib/partner/pipeline/rules";
 import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
-import { leadEditError } from "./access";
+import { canEditLead, leadEditError } from "./access";
+import { mayHintPartner } from "./partnerPipelineDigest";
 import { writeAudit } from "./audit";
 import {
   MESSAGE_NO_ACTIVE_ERROR, PROTECTION_ACTIVE_ERROR, REVIEW_CAP, acceptDecision, buildReviewCard, claimOutcomeRefKey, messageRefKey, normaliseOutcomeNote,
@@ -182,7 +183,11 @@ export async function rejectClaim(actor: SessionCrmUser, claimId: string, rawNot
   }
 }
 
-/** Staff → partner message on a lead with an EFFECTIVELY active claim; the partner reads it in the portal and by email. */
+/**
+ * Staff → partner message on a lead with an EFFECTIVELY active claim; the partner reads it in the portal and by email.
+ * Allowed for whoever may edit the lead, and on a partner-worked lead (read-only for staff) for the partner's
+ * manager and admins: the "hint to partner".
+ */
 export async function sendPartnerMessage(actor: SessionCrmUser, leadId: string, rawBody: unknown): Promise<ReviewResult> {
   const v = validatePartnerMessage(rawBody);
   if (!v.ok) return { error: v.error };
@@ -190,12 +195,12 @@ export async function sendPartnerMessage(actor: SessionCrmUser, leadId: string, 
     await prisma.$transaction(async (tx) => {
       const lead = await tx.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true, workedByPartner: true } });
       if (!lead) throw new Abort("Lead not found.");
-      const denied = leadEditError(actor, lead);
-      if (denied) throw new Abort(denied);
       const claim = await tx.partnerClaim.findFirst({
         where: { leadId: lead.id, state: "ACTIVE" },
-        select: { id: true, partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true },
+        select: { id: true, partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true, partner: { select: { managerUserId: true } } },
       });
+      const mayHint = lead.workedByPartner && !!claim && mayHintPartner(actor, claim.partner);
+      if (!canEditLead(actor, lead) && !mayHint) throw new Abort(leadEditError(actor, lead) ?? "Lead not found.");
       // A claim whose protection ran out is no longer the partner's client: no messages to it.
       if (!claim || (await effectiveStateOf(tx, claim, new Date())) !== "ACTIVE") throw new Abort(MESSAGE_NO_ACTIVE_ERROR);
       const msg = await tx.partnerMessage.create({

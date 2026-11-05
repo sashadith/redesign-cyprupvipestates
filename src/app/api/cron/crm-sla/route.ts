@@ -11,6 +11,8 @@
 // And: partner handover requests nobody accepted (handoverReview.ts), a reminder to the
 // partner's manager (fallback: owner) after 24 h and to every admin after 48 h, each once,
 // stamped on the request (remindedAt / escalatedAt). Independent of CRM_SLA_START.
+// And: Mondays from 09:00 Nicosia, each manager with a linked chat gets a summary of his partners'
+// pipelines (overdue / handed over / new), once per ISO week (partnerPipelineDigestRun.ts).
 // Idempotent: every sent notice writes a SYSTEM "SLA reminder: <rule>" row with
 // metadata.sla, written only after the send succeeded, so a failed or
 // unconfigured channel is retried on the next run and a sent one never repeats.
@@ -37,6 +39,7 @@ import {
 import { loadUnconfirmedRegistrations, sendRegistrationReminders } from "@/lib/crm/registration/reminders";
 import { loadRegistrationDue, markDueReminded, sendDueReminders } from "@/lib/crm/registration/due";
 import { runHandoverEscalations, type HandoverEscalationResult } from "@/lib/crm/handoverReview";
+import { runPartnerMondayDigests, type PartnerDigestResult } from "@/lib/crm/partnerPipelineDigestRun";
 import { officeBotConfig, sendOfficeMessage } from "@/lib/crm/officeBot";
 import { managerChatId } from "@/lib/partner/pipeline/managerChat";
 
@@ -52,7 +55,7 @@ type SlaResult =
   | ({ ok: true } & SlaSendResult);
 type RegistrationResult = { reminded: number; errors: string[] };
 type DueResult = { reminded: number; skipped?: string; error?: string };
-type CronResult = { sla: SlaResult; registrations: RegistrationResult; due: DueResult; handovers: HandoverEscalationResult };
+type CronResult = { sla: SlaResult; registrations: RegistrationResult; due: DueResult; handovers: HandoverEscalationResult; partnerDigest: PartnerDigestResult };
 
 async function markSent(leads: SlaLead[], rule: SlaRule) {
   await prisma.leadInteraction.createMany({
@@ -164,8 +167,17 @@ async function runAll(): Promise<CronResult> {
     return { reminded: 0, escalated: 0, errors: [e instanceof Error ? e.message : String(e)] };
   });
   if (handovers.errors.length) console.error("[crm-sla] handover escalations", handovers.errors);
+  // Mondays from 09:00 Nicosia: each manager's partner summary, once per ISO week (partnerPipelineDigestRun.ts).
+  const partnerDigest = !officeBotConfig() ? { sent: 0, errors: [], skipped: "office bot not configured" } : await runPartnerMondayDigests({
+    now: new Date(),
+    send: (chatId, html) => sendOfficeMessage(chatId, html).then((r) => (r.ok ? { ok: true } : { ok: false, description: r.description })),
+  }).catch((e): PartnerDigestResult => {
+    console.error("[crm-sla] partner digest failed", e);
+    return { sent: 0, errors: [e instanceof Error ? e.message : String(e)] };
+  });
+  if (partnerDigest.errors.length) console.error("[crm-sla] partner digest", partnerDigest.errors);
   const sla = await runSlaNotices();
-  return { sla, registrations, due, handovers };
+  return { sla, registrations, due, handovers, partnerDigest };
 }
 
 const summarizeSla = (r: SlaResult) =>
@@ -173,8 +185,9 @@ const summarizeSla = (r: SlaResult) =>
     : `sent U${r.sent.UNASSIGNED}/C${r.sent.UNCONTACTED}/E${r.sent.ESCALATE}${r.skipped.length ? `, ${r.skipped.length} skipped` : ""}${r.errors.length ? `, ${r.errors.length} error(s)` : ""}`;
 const summarize = (r: CronResult) =>
   `${summarizeSla(r.sla)}; registrations reminded ${r.registrations.reminded}${r.registrations.errors.length ? `, ${r.registrations.errors.length} error(s)` : ""}; due reminded ${r.due.reminded}${r.due.error ? " (error)" : ""}`
-  + `; handovers reminded ${r.handovers.reminded}/escalated ${r.handovers.escalated}${r.handovers.errors.length ? `, ${r.handovers.errors.length} error(s)` : ""}`;
-const okFrom = (r: CronResult) => (!("ok" in r.sla) || r.sla.errors.length === 0) && r.registrations.errors.length === 0 && !r.due.error && r.handovers.errors.length === 0;
+  + `; handovers reminded ${r.handovers.reminded}/escalated ${r.handovers.escalated}${r.handovers.errors.length ? `, ${r.handovers.errors.length} error(s)` : ""}`
+  + `; partner digest sent ${r.partnerDigest.sent}${r.partnerDigest.errors.length ? `, ${r.partnerDigest.errors.length} error(s)` : ""}`;
+const okFrom = (r: CronResult) => (!("ok" in r.sla) || r.sla.errors.length === 0) && r.registrations.errors.length === 0 && !r.due.error && r.handovers.errors.length === 0 && r.partnerDigest.errors.length === 0;
 
 export async function GET(req: NextRequest) {
   const key = req.nextUrl.searchParams.get("key");
