@@ -8,22 +8,22 @@ const user = (over: Partial<CrmUser> = {}): CrmUser => ({
 });
 
 test("restricted employee on a colleague's lead gets not found", () => {
-  assert.equal(presentationGuard(user(), { assignedToId: "u2" }, "edit"), "Lead not found.");
+  assert.equal(presentationGuard(user(), { assignedToId: "u2", workedByPartner: false }, "edit"), "Lead not found.");
 });
 test("missing lead gets not found", () => {
   assert.equal(presentationGuard(user(), null, "edit"), "Lead not found.");
 });
 test("assignee may edit", () => {
-  assert.equal(presentationGuard(user(), { assignedToId: "u1" }, "edit"), null);
+  assert.equal(presentationGuard(user(), { assignedToId: "u1", workedByPartner: false }, "edit"), null);
 });
 test("assignee may not delete", () => {
-  assert.equal(presentationGuard(user(), { assignedToId: "u1" }, "delete"), "Only the owner can delete a selection.");
+  assert.equal(presentationGuard(user(), { assignedToId: "u1", workedByPartner: false }, "delete"), "Only the owner can delete a selection.");
 });
 test("owner may delete", () => {
-  assert.equal(presentationGuard(user({ isOwner: true }), { assignedToId: "u2" }, "delete"), null);
+  assert.equal(presentationGuard(user({ isOwner: true }), { assignedToId: "u2", workedByPartner: false }, "delete"), null);
 });
 test("inactive user gets not found", () => {
-  assert.equal(presentationGuard(user({ isActive: false, isOwner: true }), { assignedToId: "u1" }, "edit"), "Lead not found.");
+  assert.equal(presentationGuard(user({ isActive: false, isOwner: true }), { assignedToId: "u1", workedByPartner: false }, "edit"), "Lead not found.");
 });
 
 // Soft-deleted leads are mapped to a null lead by the actions before the guard.

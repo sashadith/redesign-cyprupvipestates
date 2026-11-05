@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
-import { canAssignLeads, canEditLead, canViewLead } from "@/lib/crm/access";
+import { canAssignLeads, canViewLead, leadEditError } from "@/lib/crm/access";
 import { contactToCheck, createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
 import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
@@ -28,8 +28,10 @@ export async function logInteractionAction(leadId: string, raw: unknown): Promis
   const user = await requireCrmUser();
   const parsed = LogInteractionInput.safeParse({ ...(raw && typeof raw === "object" ? raw : {}), leadId });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid entry." };
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
-  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true, workedByPartner: true } });
+  if (!lead) return { error: "Lead not found." };
+  const denied = leadEditError(user, lead);
+  if (denied) return { error: denied };
   const { type, body, subject, occurredAt, leadReacted, callOutcome } = parsed.data;
   const when = occurredAt ? new Date(occurredAt) : undefined;
   if (when && when.getTime() > Date.now() + FUTURE_SLACK_MS) return { error: "The date cannot be in the future." };
@@ -99,15 +101,17 @@ export async function updateLeadDetailsAction(leadId: string, raw: unknown): Pro
   const lead = await prisma.lead.findFirst({
     where: { id: leadId, deletedAt: null },
     select: {
-      assignedToId: true, firstName: true, lastName: true, email: true, phone: true, salutation: true, languagePreference: true,
+      assignedToId: true, workedByPartner: true, firstName: true, lastName: true, email: true, phone: true, salutation: true, languagePreference: true,
       budgetMin: true, budgetMax: true, timeline: true, financing: true, nationality: true, countryOfResidence: true, message: true, notes: true,
     },
   });
-  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  if (!lead) return { error: "Lead not found." };
+  const denied = leadEditError(user, lead);
+  if (denied) return { error: denied };
   const parsed = validateLeadEdit(raw, lead.languagePreference);
   if (!parsed.ok) return { error: parsed.error, ...(parsed.field ? { field: parsed.field } : {}) };
   const data = parsed.data;
-  const { assignedToId: _owner, ...before } = lead;
+  const { assignedToId: _owner, workedByPartner: _partner, ...before } = lead;
   const fields = changedFields(before, data);
   if (fields.length === 0) return { ok: true, changed: "" };
 
@@ -181,8 +185,10 @@ export async function intakeFromTextAction(text: string): Promise<IntakeResult> 
 export async function setFollowUpAction(leadId: string, input: FollowUpInput): Promise<{ ok: true; at: string | null } | { error: string }> {
   const user = await requireCrmUser();
   if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
-  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true, workedByPartner: true } });
+  if (!lead) return { error: "Lead not found." };
+  const denied = leadEditError(user, lead);
+  if (denied) return { error: denied };
   const r = resolveFollowUp(input && typeof input === "object" ? input : {}, new Date());
   if (!r.ok) return { error: r.error };
   const body = r.at ? `Next follow-up set to ${followUpLabel(r.at)}` : "Next follow-up cleared";
@@ -208,8 +214,10 @@ export async function setLeadTimeZoneAction(leadId: string, zone: string | null)
   const user = await requireCrmUser();
   if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
   if (zone !== null && !isTimeZone(zone)) return { error: "Unknown time zone." };
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true } });
-  if (!lead || !canEditLead(user, lead)) return { error: "Lead not found." };
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { assignedToId: true, workedByPartner: true } });
+  if (!lead) return { error: "Lead not found." };
+  const denied = leadEditError(user, lead);
+  if (denied) return { error: denied };
   await prisma.lead.update({ where: { id: leadId }, data: { timeZone: zone } });
   revalidatePath(`/crm/leads/${leadId}`);
   return { ok: true };

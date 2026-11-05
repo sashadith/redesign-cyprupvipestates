@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { applyLeadStatusChange, standaloneLostReason } from "./updateLeadStatus";
-import { canEditLead } from "./access";
+import { leadEditError } from "./access";
 import { planMove, type DealLite } from "./movePlan";
 import { resolveRate, computeDealAmounts, type RateRow } from "./commission";
 import { dealPartnerShare } from "./partnerClaims";
@@ -29,9 +29,11 @@ export async function moveLead(
       await tx.$queryRaw`SELECT id FROM leads WHERE id = ${leadId} FOR UPDATE`;
       const lead = await tx.lead.findFirst({
         where: { id: leadId, deletedAt: null },
-        select: { id: true, status: true, assignedToId: true, partnerId: true, partnerMode: true, deals: { select: { id: true, commissionStatus: true } } },
+        select: { id: true, status: true, assignedToId: true, workedByPartner: true, partnerId: true, partnerMode: true, deals: { select: { id: true, commissionStatus: true } } },
       });
-      if (!lead || !canEditLead(actor, lead)) return { error: "Lead not found." };
+      if (!lead) return { error: "Lead not found." };
+      const denied = leadEditError(actor, lead);
+      if (denied) return { error: denied };
 
       const plan = planMove(lead.status as LeadStatusValue, to, lead.deals as DealLite[]);
       if (plan.kind === "blocked") return { error: plan.reason };

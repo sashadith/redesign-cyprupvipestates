@@ -278,10 +278,13 @@ export async function processLeadgen(opts: { leadgenId: string; formId?: string 
         // A lost lead asking again is a live lead again — back to NEW so it
         // shows up in the active lists and the Action Center. CLOSED (a deal
         // done) is left alone; the Telegram names the status instead.
-        await tx.lead.update({ where: { id }, data: { status: "NEW", lostReason: null } });
-        await tx.leadInteraction.create({
-          data: { leadId: id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (submitted the Meta lead form again)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "meta_leadgen", leadgenId } },
-        });
+        // Not while a partner works the client (workedByPartner): his status stands.
+        const revived = await tx.lead.updateMany({ where: { id, workedByPartner: false }, data: { status: "NEW", lostReason: null } });
+        if (revived.count) {
+          await tx.leadInteraction.create({
+            data: { leadId: id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (submitted the Meta lead form again)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "meta_leadgen", leadgenId } },
+          });
+        }
       }
       const body = timelineBody(lead, formName, m, outcome);
       const metadata = { ...metaBase, outcome };

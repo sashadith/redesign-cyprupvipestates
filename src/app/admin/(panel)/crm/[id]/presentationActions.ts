@@ -2,7 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { revokePresentation, extendPresentation, deletePresentation } from "@/lib/crm/presentations/core";
+import { revokePresentation, extendPresentation, deletePresentation, presentationLeadId } from "@/lib/crm/presentations/core";
+import { PARTNER_WORKED_READONLY } from "@/lib/crm/access";
 import { listPresentationLocationOptions, type LocationOptions } from "@/lib/crm/presentations/locations";
 import { matchDevelopmentsForLead, type MatchFilters, type DevelopmentMatch } from "@/lib/crm/matching";
 
@@ -34,7 +35,8 @@ export async function matchLeadAction(leadId: string, filters: MatchFilters): Pr
 // revalidating would refetch server data mid-edit.
 export async function saveMatchFiltersAction(leadId: string, filters: MatchFilters) {
   await requireSession();
-  await prisma.lead.update({ where: { id: leadId }, data: { lastMatchFilters: JSON.parse(JSON.stringify(filters)) } });
+  // A partner-worked lead is read only: the filters are simply not remembered.
+  await prisma.lead.updateMany({ where: { id: leadId, workedByPartner: false }, data: { lastMatchFilters: JSON.parse(JSON.stringify(filters)) } });
 }
 
 export type { LocationOptions };
@@ -44,12 +46,18 @@ export async function listPresentationLocations(): Promise<LocationOptions> {
   return listPresentationLocationOptions();
 }
 
+// Selections of a partner-worked lead are not changed by staff.
+async function assertPresentationEditable(id: string) {
+  if ((await presentationLeadId(id))?.workedByPartner) throw new Error(PARTNER_WORKED_READONLY);
+}
+
 function actorOf(session: Awaited<ReturnType<typeof requireSession>>) {
   return { id: (session.user as any)?.id ?? null, name: session.user?.name ?? "admin" };
 }
 
 export async function revokePresentationAction(id: string) {
   const session = await requireSession();
+  await assertPresentationEditable(id);
   await revokePresentation(actorOf(session), id);
 }
 
@@ -58,10 +66,12 @@ export async function revokePresentationAction(id: string) {
 // this ever gets called; there's no soft-delete/undo here.
 export async function deletePresentationAction(id: string) {
   const session = await requireSession();
+  await assertPresentationEditable(id);
   await deletePresentation(actorOf(session), id);
 }
 
 export async function extendPresentationAction(id: string, days: number) {
   const session = await requireSession();
+  await assertPresentationEditable(id);
   await extendPresentation(actorOf(session), id, days);
 }

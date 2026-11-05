@@ -18,6 +18,8 @@ export type CockpitLead = {
   lang: string | null; budgetMin: number | null; budgetMax: number | null; timeline: string | null; financing: string | null;
   propertyTypes: string[]; message: string | null; notes: string | null; status: string; lostReason: string | null; source: string;
   ownerName: string | null; project: string | null; createdAt: Date;
+  /** Set while a partner works this FIX client (Lead.workedByPartner): the cockpit is read only. */
+  workedByPartnerName?: string | null;
   attribution: { label: string; value: string }[];
   /** Soft warnings about the lead's data (leadHints.ts). */
   hints: string[];
@@ -66,6 +68,7 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null, c
         {lead.localTime.kind === "ambiguous" && <LeadZonePicker leadId={lead.id} country={lead.localTime.country} options={lead.localTime.options} canEdit={canEdit} />}
         <span className="crm-muted">created <time dateTime={lead.createdAt.toISOString()} title={adminDateTime(lead.createdAt)}>{ago(lead.createdAt, now)}</time></span>
       </div>
+      {lead.workedByPartnerName && <p className="crm-ck-partner-lock" role="status">Worked by partner {lead.workedByPartnerName} — read only</p>}
     </header>
   );
 }

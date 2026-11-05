@@ -22,7 +22,7 @@ export function registerLogInteraction(server: McpServer) {
     async (input, ctx) =>
       runTool("crm_log_interaction", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
         const { user, where: scope } = await loadScope(c);
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, assignedToId: true } });
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, assignedToId: true, workedByPartner: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
         assertCanEdit(user, lead);
         const occurredAt = input.occurredAt ? new Date(input.occurredAt) : undefined;

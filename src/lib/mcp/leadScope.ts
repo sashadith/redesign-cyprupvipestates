@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import { canEditLead, leadAccessWhere, type CrmUser } from "@/lib/crm/access";
+import { canEditLead, leadAccessWhere, PARTNER_WORKED_READONLY, type CrmUser } from "@/lib/crm/access";
 import { loadCrmUser } from "@/lib/crm/accessUser";
 import type { McpCallContext } from "./context";
 import { ToolError } from "./toolWrapper";
@@ -27,6 +27,9 @@ export async function loadScope(ctx: McpCallContext): Promise<LeadScope> {
   return { user, where: scopeFor(user) };
 }
 
-export function assertCanEdit(user: CrmUser, lead: { assignedToId: string | null }): void {
+// Callers have already found the lead inside the user's scope, so naming the
+// partner lock reveals nothing.
+export function assertCanEdit(user: CrmUser, lead: { assignedToId: string | null; workedByPartner: boolean }): void {
+  if (lead.workedByPartner) throw new ToolError("unauthorized", PARTNER_WORKED_READONLY);
   if (!canEditLead(user, lead)) throw new ToolError("unauthorized", "You can view this lead but not change it");
 }

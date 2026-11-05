@@ -8,6 +8,7 @@ import { getSignatureHtml } from "@/lib/emailSignature";
 import { sendUserEmail, getUserEmailSettingsRow } from "./sendCrmEmail";
 import { applyFollowUpCadence } from "./followUpCadence";
 import { renderLeadEmail } from "./renderLeadEmail";
+import { PARTNER_WORKED_READONLY } from "./access";
 
 export type EmailActor = { userId: string; userName: string };
 
@@ -37,7 +38,9 @@ export type SendLeadEmailResult =
   | { ok: false; error: string };
 
 export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: SendLeadEmailOpts): Promise<SendLeadEmailResult> {
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { email: true, languagePreference: true, status: true, emailInvalidAt: true, emailInvalidReason: true } });
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { email: true, languagePreference: true, status: true, emailInvalidAt: true, emailInvalidReason: true, workedByPartner: true } });
+  // The system never writes to a partner's client (partner FIX pipeline, 2026-11-05).
+  if (lead?.workedByPartner) return { ok: false, error: PARTNER_WORKED_READONLY };
   if (!lead?.email) return { ok: false, error: "This lead has no email address." };
   if (lead.emailInvalidAt) return { ok: false, error: emailInvalidMessage(lead) };
 

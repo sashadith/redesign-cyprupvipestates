@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
 import { workedByPartnerOnAccept } from "@/lib/partner/pipeline/rules";
 import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
-import { canEditLead } from "./access";
+import { leadEditError } from "./access";
 import { writeAudit } from "./audit";
 import {
   MESSAGE_NO_ACTIVE_ERROR, PROTECTION_ACTIVE_ERROR, REVIEW_CAP, acceptDecision, buildReviewCard, claimOutcomeRefKey, messageRefKey, normaliseOutcomeNote,
@@ -188,8 +188,10 @@ export async function sendPartnerMessage(actor: SessionCrmUser, leadId: string, 
   if (!v.ok) return { error: v.error };
   try {
     await prisma.$transaction(async (tx) => {
-      const lead = await tx.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true } });
-      if (!lead || !canEditLead(actor, lead)) throw new Abort("Lead not found.");
+      const lead = await tx.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true, workedByPartner: true } });
+      if (!lead) throw new Abort("Lead not found.");
+      const denied = leadEditError(actor, lead);
+      if (denied) throw new Abort(denied);
       const claim = await tx.partnerClaim.findFirst({
         where: { leadId: lead.id, state: "ACTIVE" },
         select: { id: true, partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true },

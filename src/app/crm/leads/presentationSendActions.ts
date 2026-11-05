@@ -39,7 +39,7 @@ async function guarded(leadId: unknown) {
   const user = await getCrmUser();
   if (!user) return { error: NOT_SIGNED_IN } as const;
   const lead = validId(leadId)
-    ? await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true } })
+    ? await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true, workedByPartner: true } })
     : null;
   const error = presentationGuard(user, lead, "edit");
   if (error || !lead) return { error: error ?? NOT_FOUND } as const;

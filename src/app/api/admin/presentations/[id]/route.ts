@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { cleanPresentationInput, presentationLeadId, savePresentationEdit } from "@/lib/crm/presentations/core";
+import { PARTNER_WORKED_READONLY } from "@/lib/crm/access";
 
 // Same reasoning as the create-flow route (src/app/api/admin/presentations/route.ts):
 // build the origin from the actual request, not a hardcoded production URL.
@@ -28,7 +29,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   // 404 before validation, as before.
-  if (!(await presentationLeadId(params.id))) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const owner = await presentationLeadId(params.id);
+  if (!owner) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (owner.workedByPartner) return NextResponse.json({ error: PARTNER_WORKED_READONLY }, { status: 409 });
 
   const cleaned = cleanPresentationInput(body, { defaultAdvisorId: null });
   if (!cleaned.ok) return NextResponse.json({ error: cleaned.error }, { status: 400 });

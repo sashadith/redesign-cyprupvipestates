@@ -1,4 +1,4 @@
-import { canAssignLeads, canEditLead, type CrmUser } from "./access";
+import { canAssignLeads, leadEditError, type CrmUser } from "./access";
 import { SOURCE_LABEL } from "./boardModel";
 import { STATUS_LABEL, isLeadStatus } from "./leadStatus";
 
@@ -19,9 +19,10 @@ export function normalizeTrashReason(raw: unknown): { ok: true; reason: string |
 
 export type TrashDecision = { allowed: true } | { allowed: false; error: string };
 
-export function canTrashLead(user: CrmUser, lead: { assignedToId: string | null } | null): TrashDecision {
+export function canTrashLead(user: CrmUser, lead: { assignedToId: string | null; workedByPartner: boolean } | null): TrashDecision {
   if (!lead) return { allowed: false, error: "Lead not found." };
-  if (!canEditLead(user, lead)) return { allowed: false, error: "You may not edit this lead." };
+  const denied = leadEditError(user, lead, "You may not edit this lead.");
+  if (denied) return { allowed: false, error: denied };
   return { allowed: true };
 }
 

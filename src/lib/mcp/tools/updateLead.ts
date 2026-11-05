@@ -31,7 +31,7 @@ export function registerUpdateLead(server: McpServer) {
         const unknown = unknownFields(input);
         if (unknown.length) throw new ToolError("validation", unknownFieldsMessage(unknown));
         const { user, where: scope } = await loadScope(c);
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, status: true, hotAt: true, assignedToId: true, email: true, phone: true } });
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, status: true, hotAt: true, assignedToId: true, workedByPartner: true, email: true, phone: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
         assertCanEdit(user, lead);
         if (input.lostReason && input.status !== "LOST") {

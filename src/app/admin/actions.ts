@@ -34,6 +34,8 @@ import { normalizeProfile } from "@/lib/crm/registration/core";
 import { createOpenWaClient, type WaGroup } from "@/lib/openwa/client";
 import { bucketOf, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 import { moveLeadBucket } from "@/lib/crm/moveBucket";
+import { assertNotPartnerWorked, isPartnerWorked } from "@/lib/crm/partnerWorkedGuard";
+import { PARTNER_WORKED_READONLY } from "@/lib/crm/access";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
 import { emailEditData } from "@/lib/crm/leadHints";
 import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
@@ -767,6 +769,7 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
 export async function updateLeadStatus(id: string, status: string) {
   const session = await requireSession();
   if (!(LEAD_STATUSES as readonly string[]).includes(status)) throw new Error("Invalid status");
+  await assertNotPartnerWorked(id);
   await applyLeadStatusChange(actorOf(session), id, status as LeadStatusValue);
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
@@ -783,6 +786,7 @@ export async function updateLeadStatus(id: string, status: string) {
 export async function moveLeadToBucket(id: string, bucket: string) {
   const session = await requireSession();
   if (!isLeadBucket(bucket)) throw new Error("Invalid bucket");
+  await assertNotPartnerWorked(id);
 
   const moved = await moveLeadBucket(id, bucket, { id: (session.user as any)?.id ?? null, name: session.user?.name ?? "admin" });
   // Already there: nothing written, nothing to refresh.
@@ -810,6 +814,7 @@ export async function logStatusChangeContact(
   viewingScheduledAt?: Date | null,
 ) {
   await requireSession();
+  await assertNotPartnerWorked(id);
   if (status === "VIEWING_SCHEDULED") {
     await prisma.lead.update({ where: { id }, data: { viewingScheduledAt: viewingScheduledAt ?? null } });
   }
@@ -837,8 +842,8 @@ export async function logStatusChangeContact(
 export async function toggleLeadHotAction(formData: FormData) {
   const id = String(formData.get("id"));
   await requireSession();
-  const lead = await prisma.lead.findUnique({ where: { id }, select: { hotAt: true } });
-  if (!lead) return;
+  const lead = await prisma.lead.findUnique({ where: { id }, select: { hotAt: true, workedByPartner: true } });
+  if (!lead || lead.workedByPartner) return;
   await prisma.lead.update({ where: { id }, data: { hotAt: lead.hotAt ? null : new Date() } });
   revalidatePath("/admin/crm");
   revalidatePath(`/admin/crm/${id}`);
@@ -862,6 +867,7 @@ export async function toggleLeadHotAction(formData: FormData) {
 export async function addLeadNote(id: string, note: string, occurredAt?: Date) {
   const session = await requireSession();
   if (!note.trim()) return;
+  await assertNotPartnerWorked(id);
   await logLeadInteraction(actorOf(session), id, { type: "NOTE", body: note, occurredAt });
   revalidatePath(`/admin/crm/${id}`);
 }
@@ -887,6 +893,7 @@ export async function addEmailLog(
   // as addLeadNote/addCallLog below rather than surfacing logLeadInteraction's
   // "Message is required." throw to the form.
   if (!opts.subject?.trim() && !opts.body?.trim()) return;
+  await assertNotPartnerWorked(id);
   await logLeadInteraction(actorOf(session), id, {
     type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
     body: opts.body,
@@ -903,6 +910,7 @@ export async function addEmailLog(
 // (the Cockpit's dedicated "Reset" control) does that.
 export async function updateLeadFollowUp(id: string, dateStr: string) {
   await requireSession();
+  await assertNotPartnerWorked(id);
   const nextFollowUpAt = dateStr ? new Date(`${dateStr}T00:00:00.000Z`) : null;
   await prisma.lead.update({ where: { id }, data: manualFollowUpData(nextFollowUpAt) });
   revalidatePath(`/admin/crm/${id}`);
@@ -912,6 +920,7 @@ export async function updateLeadFollowUp(id: string, dateStr: string) {
 // fresh auto-follow-up chain of 3 without touching nextFollowUpAt itself.
 export async function resetLeadFollowUpCadenceAction(id: string) {
   await requireSession();
+  await assertNotPartnerWorked(id);
   await resetFollowUpCadence(id);
   revalidatePath(`/admin/crm/${id}`);
 }
@@ -921,6 +930,7 @@ export async function resetLeadFollowUpCadenceAction(id: string) {
 export async function addCallLog(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
   const session = await requireSession();
   if (!note.trim()) return;
+  await assertNotPartnerWorked(id);
   await logLeadInteraction(actorOf(session), id, { type: "CALL", body: note, occurredAt, leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
@@ -939,6 +949,7 @@ export async function deleteLeadInteraction(interactionId: string) {
   if (!isManualInteractionType(row.type)) {
     throw new Error("This entry was system-generated and can't be deleted.");
   }
+  await assertNotPartnerWorked(row.leadId);
   await prisma.leadInteraction.delete({ where: { id: interactionId } });
   const actor = session.user as any;
   await prisma.adminAuditLog.create({
@@ -954,6 +965,7 @@ export async function deleteLeadInteraction(interactionId: string) {
 // Assign a lead to a team member (or unassign with an empty value).
 export async function assignLead(id: string, userId: string) {
   const session = await requireSession();
+  await assertNotPartnerWorked(id);
   const assignedToId = userId || null;
   let label = "Unassigned";
   if (assignedToId) {
@@ -1044,8 +1056,9 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
 // and assignment are managed by their own controls and are intentionally untouched here.
 export async function updateLead(id: string, _prev: any, formData: FormData): Promise<{ error?: string }> {
   const session = await requireSession();
-  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, email: true } });
+  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true, email: true, workedByPartner: true } });
   if (!existing) return { error: "Lead not found." };
+  if (existing.workedByPartner) return { error: PARTNER_WORKED_READONLY };
 
   const firstName = String(formData.get("firstName") ?? "").trim();
   const lastName = String(formData.get("lastName") ?? "").trim();
@@ -1103,6 +1116,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
 export async function mergeLeads(targetId: string, sourceId: string) {
   const session = await requireSession();
   if (!targetId || !sourceId || targetId === sourceId) throw new Error("Invalid merge");
+  await assertNotPartnerWorked(targetId, sourceId);
   const [target, source] = await Promise.all([
     prisma.lead.findFirst({ where: { id: targetId, deletedAt: null }, select: { id: true, source: true } }),
     prisma.lead.findFirst({ where: { id: sourceId, deletedAt: null } }),
@@ -1186,6 +1200,7 @@ export async function mergeLeads(targetId: string, sourceId: string) {
 // permanently deletable by an ADMIN from /admin/crm/trash.
 export async function softDeleteLeadAction(id: string, redirectTo?: string) {
   const session = await requireSession();
+  await assertNotPartnerWorked(id);
   // Rows written by src/lib/crm/trashLead.ts (shared with the MCP connector's crm_delete_lead).
   await trashLead(actorOf(session), id);
   revalidatePath("/admin/crm");
@@ -1211,6 +1226,7 @@ export async function permanentlyDeleteLeadAction(id: string): Promise<{ error?:
   const session = await requireSession();
   if ((session.user as any)?.role !== "ADMIN") throw new Error("Forbidden");
   if (await prisma.deal.count({ where: { leadId: id } })) return { error: LEAD_HAS_DEALS_ERROR };
+  if (await isPartnerWorked(id)) return { error: PARTNER_WORKED_READONLY };
   await prisma.lead.delete({ where: { id } });
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
@@ -2477,9 +2493,10 @@ export async function updateLeadQualificationAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const before = await prisma.lead.findFirst({
     where: { id, deletedAt: null },
-    select: { id: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true },
+    select: { id: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true, workedByPartner: true },
   });
   if (!before) return;
+  if (before.workedByPartner) throw new Error(PARTNER_WORKED_READONLY);
 
   const budgetKey = String(formData.get("budget") ?? "");
   // "manual" = amounts typed in rather than a bracket picked. Read as numbers

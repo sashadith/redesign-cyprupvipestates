@@ -49,6 +49,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
       message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
+      workedByPartner: true, partner: { select: { company: true, firstName: true, lastName: true } },
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -78,8 +79,12 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   });
   if (!lead || !canViewLead(user, lead)) notFound();
 
+  // A partner-worked lead is read only for everyone here (canEditLead says no),
+  // and its owner is not reassigned either until the partner hands it over.
+  // Claim review and deal payouts stay with managers as before.
   const canEdit = canEditLead(user, lead);
   const canAssign = canAssignLeads(user);
+  const canReassign = canAssign && !lead.workedByPartner;
   const staff = canAssign
     ? await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, acceptsLeads: true } })
     : [];
@@ -121,6 +126,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     status: lead.status, lostReason: lead.lostReason, source: lead.source, ownerName: lead.assignedTo?.name ?? null,
     project: lead.projectInterest ? [lead.projectInterest.title, lead.projectInterest.city].filter(Boolean).join(" · ") : null,
     createdAt: lead.createdAt, attribution,
+    workedByPartnerName: lead.workedByPartner ? (lead.partner ? messagePartnerLabel(lead.partner) : "Partner") : null,
     hints: leadHints(lead).messages,
     localTime: cockpitLocalTime(lead, now),
   };
@@ -183,7 +189,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
-            {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
+            {canReassign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
           </aside>
         </div>
       </div>

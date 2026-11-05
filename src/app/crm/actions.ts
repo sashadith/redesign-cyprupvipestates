@@ -109,7 +109,7 @@ export async function trashLeadAction(leadId: string, reason: string | null): Pr
   const r = normalizeTrashReason(reason);
   if (!r.ok) return { error: r.error };
   const lead = typeof leadId === "string" && leadId
-    ? await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true } })
+    ? await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, assignedToId: true, workedByPartner: true } })
     : null;
   const ok = canTrashLead(user, lead);
   if (!ok.allowed || !lead) return { error: ok.allowed ? "Lead not found." : ok.error };

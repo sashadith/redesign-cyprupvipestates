@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { leadLabel } from "@/lib/chatPrivacy";
 import { sendEmail } from "@/lib/sendEmail";
-import { canAssignLeads } from "./access";
+import { canAssignLeads, PARTNER_WORKED_READONLY } from "./access";
 import { EXCLUDE_NEWSLETTER } from "./leadBucket";
 import type { SessionCrmUser } from "./session";
 import type { AssignResult } from "./assignMessage";
@@ -18,10 +18,12 @@ export async function assignLead(actor: SessionCrmUser, leadId: string, userId: 
   if (!canAssignLeads(actor)) return { error: "Only admins can assign leads." };
   const [lead, owner] = await Promise.all([
     // Deleted and newsletter leads never appear in the inbox; refuse them here too.
-    prisma.lead.findFirst({ where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { id: true, firstName: true, lastName: true, assignedToId: true, source: true } }),
+    prisma.lead.findFirst({ where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { id: true, firstName: true, lastName: true, assignedToId: true, workedByPartner: true, source: true } }),
     prisma.user.findFirst({ where: { id: userId, isActive: true }, select: { id: true, name: true, email: true } }),
   ]);
   if (!lead) return { error: "Lead not found." };
+  // The partner works this client until the handover: no new owner meanwhile.
+  if (lead.workedByPartner) return { error: PARTNER_WORKED_READONLY };
   if (!owner) return { error: "That employee is not active." };
   if (lead.assignedToId === owner.id) return { ok: true, notified: { telegram: false, email: false }, changed: false };
 

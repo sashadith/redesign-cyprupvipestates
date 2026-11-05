@@ -23,7 +23,7 @@ export function registerRestoreLead(server: McpServer) {
     async (input, ctx) =>
       runTool("crm_restore_lead", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
         const { user, where: scope } = await loadScope(c);
-        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: { not: null }, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, assignedToId: true } });
+        const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: { not: null }, ...EXCLUDE_NEWSLETTER, ...scope }, select: { id: true, assignedToId: true, workedByPartner: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
         assertCanEdit(user, lead);
         await restoreLead({ userId: c.userId, userName: c.userName }, lead.id, { via: "mcp" });

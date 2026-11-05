@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { cleanPresentationInput, createPresentation } from "@/lib/crm/presentations/core";
+import { PARTNER_WORKED_READONLY } from "@/lib/crm/access";
 
 // Deliberately NOT src/lib/seo.ts's SITE_URL — that constant is hardcoded to
 // the production domain, which would make every presentation generated on
@@ -35,6 +36,9 @@ export async function POST(req: NextRequest) {
   const leadId = String(body.leadId ?? "");
   const itemCount = Array.isArray(body.items) ? body.items.length : 0;
   if (!leadId || itemCount === 0) return NextResponse.json({ error: "leadId and at least one item are required" }, { status: 400 });
+
+  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { workedByPartner: true } });
+  if (lead?.workedByPartner) return NextResponse.json({ error: PARTNER_WORKED_READONLY }, { status: 409 });
 
   const uid = (session.user as any)?.id ?? null;
   const cleaned = cleanPresentationInput(body, { defaultAdvisorId: uid });

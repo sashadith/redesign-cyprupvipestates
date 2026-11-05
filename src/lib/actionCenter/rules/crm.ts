@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, bucketOf } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED, bucketOf } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
 import { isUnconfirmed, loadUnconfirmedRegistrations, reminderDate } from "@/lib/crm/registration/reminders";
 import { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES, STATUS_LABEL as CENTRAL_STATUS_LABEL } from "@/lib/crm/leadStatus";
@@ -158,7 +158,7 @@ const STATUS_LABEL: Record<string, string> = CENTRAL_STATUS_LABEL;
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
-    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY] },
+    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED] },
     select: {
       id: true, firstName: true, lastName: true, createdAt: true, status: true, viewingScheduledAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
@@ -283,7 +283,8 @@ async function noFollowUp(): Promise<ActionItem[]> {
 // Telegram alert already tracks (src/app/api/c/[token]/view/route.ts).
 async function engagedNoFollowUp(): Promise<ActionItem[]> {
   const presentations = await prisma.clientPresentation.findMany({
-    where: { status: "active" },
+    // Leads a partner works are his to follow up, not the team's.
+    where: { status: "active", lead: EXCLUDE_PARTNER_WORKED },
     select: {
       id: true, leadId: true,
       lead: { select: { firstName: true, lastName: true, status: true, deletedAt: true, source: true, activities: { select: { createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 } } },
@@ -316,7 +317,7 @@ async function expiringSoon(): Promise<ActionItem[]> {
   const now = new Date();
   const horizon = new Date(now.getTime() + EXPIRING_SOON_DAYS * DAY);
   const presentations = await prisma.clientPresentation.findMany({
-    where: { status: "active", expiresAt: { gte: now, lte: horizon } },
+    where: { status: "active", expiresAt: { gte: now, lte: horizon }, lead: EXCLUDE_PARTNER_WORKED },
     select: { id: true, leadId: true, expiresAt: true, lead: { select: { firstName: true, lastName: true, status: true, deletedAt: true, source: true } } },
   });
   return presentations

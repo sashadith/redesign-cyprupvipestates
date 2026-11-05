@@ -74,6 +74,11 @@ export async function applyFollowUpCadence(
   trigger: FollowUpTrigger,
   opts?: { leadReacted?: boolean },
 ): Promise<void> {
+  // A lead the partner works (Lead.workedByPartner, 2026-11-05) keeps the status
+  // and follow-up date the partner set: no automatic move, no automatic date.
+  const flag = await prisma.lead.findUnique({ where: { id: leadId }, select: { workedByPartner: true } });
+  if (!flag || flag.workedByPartner) return;
+
   // Before the early returns below: the cap and the leadReacted branches both
   // return without touching the lead, and a contact still happened either way.
   if (trigger === "manual_contact") await promoteNewToContacted(leadId);

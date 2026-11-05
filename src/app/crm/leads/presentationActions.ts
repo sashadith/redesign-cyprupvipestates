@@ -40,7 +40,7 @@ async function guardedLead(leadId: unknown, op: "edit" | "delete" = "edit") {
   const lead = validId(leadId)
     ? await prisma.lead.findFirst({
         where: { id: leadId, deletedAt: null },
-        select: { id: true, assignedToId: true, budgetMin: true, budgetMax: true, propertyTypeInterest: true },
+        select: { id: true, assignedToId: true, workedByPartner: true, budgetMin: true, budgetMax: true, propertyTypeInterest: true },
       })
     : null;
   return { user, lead, error: presentationGuard(user, lead, op) };
@@ -52,7 +52,7 @@ async function guardedPresentation(id: unknown, op: "edit" | "delete") {
   const found = validId(id) ? await presentationLeadId(id) : null;
   // A soft-deleted lead's selections are as gone as the lead itself.
   const owner = found && !found.leadDeleted ? found : null;
-  const lead = owner ? { assignedToId: owner.assignedToId } : null;
+  const lead = owner ? { assignedToId: owner.assignedToId, workedByPartner: owner.workedByPartner } : null;
   return { user, owner, error: presentationGuard(user, lead, op) };
 }
 

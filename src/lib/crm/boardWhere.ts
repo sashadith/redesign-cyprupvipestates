@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { leadAccessWhere, type CrmUser } from "./access";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY } from "./leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED } from "./leadBucket";
 import { FUNNEL_STATUSES, SIDE_STATUSES } from "./leadStatus";
 import { CLOSED_WINDOW_DAYS, STALE_DAYS, type BoardFilter } from "./boardModel";
 
@@ -11,6 +11,7 @@ export function boardWhere(user: CrmUser, filter: BoardFilter, now: Date): Prism
     leadAccessWhere(user),
     EXCLUDE_NEWSLETTER,
     EXCLUDE_PARTNER_ENQUIRY,
+    EXCLUDE_PARTNER_WORKED,
     // No owner condition: leadAccessWhere already limits restricted users to
     // their own leads, and those who see everyone also see unassigned leads.
     { deletedAt: null, status: { in: [...FUNNEL_STATUSES] } },
@@ -30,13 +31,14 @@ export function boardWhere(user: CrmUser, filter: BoardFilter, now: Date): Prism
 }
 
 // Keep contact and Lost sit outside the funnel columns, listed under the board.
-// Same scope as the board (access, newsletter, partner enquiries, "mine"); no
+// Same scope as the board (access, newsletter, partner enquiries and partner-worked leads, "mine"); no
 // time window, the newest updates come first and the page caps the rows.
 export function sideWhere(user: CrmUser, filter: BoardFilter): Prisma.LeadWhereInput {
   const and: Prisma.LeadWhereInput[] = [
     leadAccessWhere(user),
     EXCLUDE_NEWSLETTER,
     EXCLUDE_PARTNER_ENQUIRY,
+    EXCLUDE_PARTNER_WORKED,
     { deletedAt: null, status: { in: [...SIDE_STATUSES] } },
   ];
   if (filter === "mine") and.push({ assignedToId: user.id });
