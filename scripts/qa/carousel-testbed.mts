@@ -228,6 +228,7 @@ for (const [label, url] of [["external", "https://images.example.com/a.jpg"], ["
 }
 {
   // The 60 s hard limit with a real Chromium hanging (test hook, NODE_ENV != production).
+  const tmpBefore = new Set(tmpLeft());
   process.env.CAROUSEL_TEST_HANG = "1";
   const input = RenderInput.parse(fixture("zypern-warum-de")) as any;
   input.slug = "qa-timeout";
@@ -243,7 +244,8 @@ for (const [label, url] of [["external", "https://images.example.com/a.jpg"], ["
   const left = ours();
   failure.timeoutLeftovers = left;
   check(left === "", "no Chromium left after the timeout");
-  check(tmpLeft().length === 0, `no temp files left after the timeout${tmpLeft().length ? ": " + tmpLeft().join(", ") : ""}`);
+  const newTmp = tmpLeft().filter((f) => !tmpBefore.has(f));
+  check(newTmp.length === 0, `no temp files left after the timeout${newTmp.length ? ": " + newTmp.join(", ") : ""}`);
   check(!fs.existsSync(path.join(ROOT, "social", "2026-w47", "qa-timeout-de")), "nothing saved for the timed-out render");
 }
 report.failure = failure;
