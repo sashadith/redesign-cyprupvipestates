@@ -100,6 +100,11 @@ test("image policy: resolves real images only, never outside the root", async ()
     await sharp({ create: { width: 4, height: 4, channels: 3, background: "#888" } }).jpeg().toFile(path.join(outside, "secret.jpg"));
     await fs.symlink(path.join(outside, "secret.jpg"), path.join(root, "qa", "link.jpg"));
     assert.match(await resolveImage("https://cyprusvipestates.com/uploads/qa/ok.jpg", root), /^file:\/\/.*\/qa\/ok\.jpg$/);
+    await fs.mkdir(path.join(root, "social", "2026-w46", "x-de"), { recursive: true });
+    await fs.copyFile(path.join(root, "qa", "ok.jpg"), path.join(root, "social", "2026-w46", "x-de", "01.jpg"));
+    await assert.rejects(resolveImage("https://cyprusvipestates.com/uploads//social/2026-w46/x-de/01.jpg", root), /rendered slides/);
+    await fs.symlink(path.join(root, "social", "2026-w46", "x-de", "01.jpg"), path.join(root, "qa", "via-link.jpg"));
+    await assert.rejects(resolveImage("https://cyprusvipestates.com/uploads/qa/via-link.jpg", root), /rendered slides/);
     await assert.rejects(resolveImage("https://cyprusvipestates.com/uploads/qa/missing.jpg", root), /not found/);
     await assert.rejects(resolveImage("https://cyprusvipestates.com/uploads/qa/fake.jpg", root), /not a readable image/);
     await assert.rejects(resolveImage("https://cyprusvipestates.com/uploads/qa/link.jpg", root), /outside/);
@@ -171,6 +176,19 @@ test("the hard timeout kills the worker's process group and saves nothing", asyn
     assert.throws(() => process.kill(pid, 0), "the grandchild was killed with the group");
     await assert.rejects(fs.stat(path.join(dir, "uploads", "social")), "nothing written");
     await assert.rejects(fs.stat(path.join(dir, "lock")), "lock released");
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("the worker's temp files live in the render's work folder and go with it", async () => {
+  const dir = await sandbox(`import fs from "node:fs"; import os from "node:os"; import path from "node:path"; fs.writeFileSync(path.join(path.dirname(process.argv[1]), "tmpdir.txt"), os.tmpdir()); fs.mkdirSync(path.join(os.tmpdir(), "playwright-artifacts-x")); process.exit(3);`);
+  try {
+    const input = RenderInput.parse(withImages(await fixture("zypern-warum-de"))) as any;
+    await assert.rejects(renderCarousel(input, opts(dir)));
+    const tmp = await fs.readFile(path.join(dir, "tmpdir.txt"), "utf8");
+    assert.match(path.basename(tmp), /^cve-carousel-/, "TMPDIR is the work folder");
+    await assert.rejects(fs.stat(tmp), "work folder (with Playwright's temp files) removed");
   } finally {
     await fs.rm(dir, { recursive: true, force: true });
   }

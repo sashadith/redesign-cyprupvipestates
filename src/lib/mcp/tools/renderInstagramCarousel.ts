@@ -33,6 +33,11 @@ export function registerRenderInstagramCarousel(server: McpServer) {
           if (args.template === "project") {
             const dev = await prisma.development.findFirst({ where: { slug: args.slug, publishStatus: "published" }, select: { id: true } });
             if (!dev) throw new ToolError("not_found", `No published project with slug "${args.slug}".`);
+          } else {
+            // Both templates share /uploads/social/<week>/<slug>-<lang>/: a topic slug that equals a
+            // project slug would replace that project's carousel of the same week.
+            const clash = await prisma.development.findFirst({ where: { slug: args.slug }, select: { id: true } });
+            if (clash) throw new ToolError("validation", `"${args.slug}" is a project slug; give the cyprus carousel its own name.`);
           }
           try {
             return await renderCarousel(args);

@@ -77,6 +77,22 @@ const alive = (pid: number) => {
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Remove a lock only if it is still the one judged stale. Two waiters can judge the same
+ *  stale lock; a plain rm by the slower one would delete the faster one's fresh lock. The
+ *  file is moved aside first (rename is atomic: one winner), and put back via link (which
+ *  never overwrites) when what was moved turns out to be someone else's lock. */
+async function clearIfStill(file: string, staleContent: string): Promise<void> {
+  const aside = `${file}.stale-${randomBytes(4).toString("hex")}`;
+  try {
+    await fs.rename(file, aside);
+  } catch {
+    return; // someone else moved or released it
+  }
+  const moved = await fs.readFile(aside, "utf8").catch(() => "");
+  if (moved !== staleContent) await fs.link(aside, file).catch(() => {});
+  await fs.rm(aside, { force: true });
+}
+
 /** Cross-process lock: O_EXCL create; a lock whose owner is gone or that is older than 2 min is cleared. */
 async function acquireLock(file: string, token: string): Promise<() => Promise<void>> {
   const deadline = Date.now() + LOCK_WAIT_MS;
@@ -90,16 +106,18 @@ async function acquireLock(file: string, token: string): Promise<() => Promise<v
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
     }
+    const raw = await fs.readFile(file, "utf8").catch(() => null);
+    if (raw === null) continue; // released meanwhile
     try {
-      const held = JSON.parse(await fs.readFile(file, "utf8")) as { pid: number; at: number };
+      const held = JSON.parse(raw) as { pid: number; at: number };
       if (Date.now() - held.at > LOCK_STALE_MS || !alive(held.pid)) {
-        await fs.rm(file, { force: true });
+        await clearIfStill(file, raw);
         continue;
       }
     } catch {
       // Unreadable: either being written this instant or garbage. Only clear it once it is old.
       const st = await fs.stat(file).catch(() => null);
-      if (st && Date.now() - st.mtimeMs > 5_000) await fs.rm(file, { force: true });
+      if (st && Date.now() - st.mtimeMs > 5_000) await clearIfStill(file, raw);
     }
     if (Date.now() > deadline) throw new RenderError("render_busy", "Another carousel is being rendered. Try again in a minute.");
     await sleep(500);
@@ -122,9 +140,11 @@ export async function sweepChromium(renderId: string): Promise<void> {
   }
 }
 
-function runWorker(workerPath: string, jobFile: string, timeoutMs: number): Promise<{ stdout: string; timedOut: boolean }> {
+function runWorker(workerPath: string, jobFile: string, workDir: string, timeoutMs: number): Promise<{ stdout: string; timedOut: boolean }> {
   return new Promise((resolve, reject) => {
-    const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, NODE_ENV: process.env.NODE_ENV };
+    // TMPDIR = the render's own work folder: Playwright's artifacts and Chromium's profile
+    // land there and go with it, also when the worker is killed before browser.close().
+    const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: workDir, NODE_ENV: process.env.NODE_ENV };
     for (const k of ["PLAYWRIGHT_BROWSERS_PATH", "CAROUSEL_TEST_HANG"]) if (process.env[k]) env[k] = process.env[k];
     const child = spawn(process.execPath, [workerPath, jobFile], { detached: true, stdio: ["ignore", "pipe", "pipe"], env });
     let stdout = "";
@@ -180,6 +200,10 @@ async function writeSet(finalDir: string, renderId: string, pngs: Buffer[]): Pro
     if (hadOld) await fs.rm(oldDir, { recursive: true, force: true });
   } catch (e) {
     await fs.rm(tmpDir, { recursive: true, force: true });
+    // The old set was already moved aside but the new one never arrived: put the old one back.
+    const oldThere = await fs.stat(oldDir).then(() => true, () => false);
+    const finalThere = await fs.stat(finalDir).then(() => true, () => false);
+    if (oldThere && !finalThere) await fs.rename(oldDir, finalDir).catch(() => {});
     throw e;
   }
 }
@@ -193,7 +217,8 @@ export async function renderCarousel(input: RenderInput, opts: RenderOptions = {
   const slides = input.template === "project" ? await buildProjectSlides(input.data, input.lang, img) : await buildCyprusSlides(input.data, input.lang, img);
 
   const renderId = `${Date.now().toString(36)}${randomBytes(4).toString("hex")}`;
-  const release = await acquireLock(opts.lockFile ?? path.join(os.tmpdir(), "cve-carousel.lock"), renderId);
+  // CAROUSEL_LOCK_FILE: the testbed shares the VPS with production and must not hold production's lock.
+  const release = await acquireLock(opts.lockFile ?? process.env.CAROUSEL_LOCK_FILE ?? path.join(os.tmpdir(), "cve-carousel.lock"), renderId);
   const work = path.join(os.tmpdir(), `cve-carousel-${renderId}`);
   try {
     await fs.mkdir(work, { recursive: true });
@@ -207,7 +232,7 @@ export async function renderCarousel(input: RenderInput, opts: RenderOptions = {
     const jobFile = path.join(work, "job.json");
     await fs.writeFile(jobFile, JSON.stringify({ renderId, dir: work, slides: jobSlides }));
     const workerPath = opts.workerPath ?? process.env.CAROUSEL_WORKER ?? path.join(process.cwd(), "scripts", "social", "carousel-worker.mjs");
-    const { stdout, timedOut } = await runWorker(workerPath, jobFile, opts.timeoutMs ?? RENDER_TIMEOUT_MS);
+    const { stdout, timedOut } = await runWorker(workerPath, jobFile, work, opts.timeoutMs ?? RENDER_TIMEOUT_MS);
     if (timedOut) throw new RenderError("render_timeout", `Rendering took longer than ${Math.round((opts.timeoutMs ?? RENDER_TIMEOUT_MS) / 1000)} s and was stopped. Nothing was saved.`);
     let res: { ok: boolean; error?: string; slide?: number; rule?: number; detail?: string; slides?: WorkerSlide[] };
     try {

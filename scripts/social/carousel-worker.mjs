@@ -13,6 +13,7 @@
 // started with a --cve-carousel-run=<renderId> marker so the parent can sweep
 // it by name if this worker is killed. browser.close() runs in finally.
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import sharp from "sharp";
 
@@ -28,6 +29,18 @@ const MIN_FACTOR = 0.72; // rule 6
 const INK = 38; // a pixel is ink when a channel differs from the flat background by more than this
 
 const job = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+// Own deadline, independent of the parent: if the Next process dies mid-render nobody
+// kills this worker, so after 65 s it removes its Chromium (by marker, with its process
+// group — Playwright starts the browser detached), its work folder, and itself.
+setTimeout(() => {
+  try {
+    const pids = execFileSync("sh", ["-c", `pgrep -f 'cve-carousel-run=${job.renderId}' || true`], { encoding: "utf8" }).split(/\s+/).filter(Boolean).map(Number);
+    for (const pid of pids) for (const t of [-pid, pid]) { try { process.kill(t, "SIGKILL"); } catch {} }
+    fs.rmSync(job.dir, { recursive: true, force: true });
+  } finally {
+    process.exit(1);
+  }
+}, 65_000).unref();
 const out = (o) => process.stdout.write(JSON.stringify(o) + "\n");
 class RuleError extends Error {
   constructor(slide, rule, detail) { super(detail); this.slide = slide; this.rule = rule; this.detail = detail; }

@@ -36,6 +36,9 @@ for (const p of [OUT, ROOT]) if (path.resolve(p).startsWith("/var/www")) throw n
 const SHARED = "/var/www/shared-uploads";
 const T = path.join(process.cwd(), "assets", "social-templates");
 const POSTING = "2026-11-16"; // ISO week 47 — a folder no real post uses yet
+// The testbed shares the VPS with production: its own lock, so it never blocks a real render.
+process.env.CAROUSEL_LOCK_FILE ??= path.join(path.dirname(path.resolve(OUT)), "cve-carousel.lock");
+const LOCK = process.env.CAROUSEL_LOCK_FILE;
 fs.mkdirSync(OUT, { recursive: true });
 fs.mkdirSync(ROOT, { recursive: true });
 
@@ -43,7 +46,9 @@ const report: Record<string, unknown> = { startedAt: new Date().toISOString(), c
 const failures: string[] = [];
 const check = (ok: boolean, what: string) => { if (!ok) failures.push(what); console.log(`${ok ? "✓" : "✗"} ${what}`); };
 // The bracket keeps pgrep from matching this very shell, whose command line holds the pattern.
-const ours = () => execFileSync("sh", ["-c", "pgrep -fa 'cve-carousel-ru[n]=|chrome-headless-shel[l]' || true"], { encoding: "utf8" }).trim();
+// (A production render running at the same moment would show up here too.)
+const ours = () => execFileSync("sh", ["-c", "pgrep -fa 'cve-carousel-ru[n]=' || true"], { encoding: "utf8" }).trim();
+const tmpLeft = () => fs.readdirSync(os.tmpdir()).filter((f) => /^cve-carousel-|^playwright[-_]/.test(f));
 // tsx can load a module once as ESM and once as CJS, so instanceof is unreliable here; the class name is not.
 const isErr = (e: unknown, name: string, code?: string) => (e as any)?.constructor?.name === name && (code === undefined || (e as any).code === code);
 
@@ -207,7 +212,7 @@ for (const [label, mutate] of [
   check(JSON.stringify(before) === JSON.stringify(snapshot()), `${label}: the earlier set is untouched`);
   check(fs.readdirSync(path.dirname(folder)).every((f) => !/\.(tmp|old)-/.test(f)), `${label}: no temp/old folders left behind`);
   check(ours() === "", `${label}: no Chromium left`);
-  check(!fs.existsSync(path.join(os.tmpdir(), "cve-carousel.lock")), `${label}: lock released`);
+  check(!fs.existsSync(LOCK), `${label}: lock released`);
 }
 {
   const tooLong = fixture("soho-east-tower-en");
@@ -238,6 +243,7 @@ for (const [label, url] of [["external", "https://images.example.com/a.jpg"], ["
   const left = ours();
   failure.timeoutLeftovers = left;
   check(left === "", "no Chromium left after the timeout");
+  check(tmpLeft().length === 0, `no temp files left after the timeout${tmpLeft().length ? ": " + tmpLeft().join(", ") : ""}`);
   check(!fs.existsSync(path.join(ROOT, "social", "2026-w47", "qa-timeout-de")), "nothing saved for the timed-out render");
 }
 report.failure = failure;

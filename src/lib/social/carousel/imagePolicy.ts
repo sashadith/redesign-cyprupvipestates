@@ -53,6 +53,8 @@ export async function resolveImage(raw: string, root = uploadsRoot()): Promise<s
     throw new ImageRejected(`image not found on this server: ${raw.slice(0, 120)}`);
   }
   if (!real.startsWith(realRoot + path.sep)) throw new ImageRejected(`image resolves outside /uploads: ${raw.slice(0, 120)}`);
+  // Checked again on the real path: "//social/…" or a symlink must not reach earlier output either.
+  if (real.startsWith(path.join(realRoot, "social") + path.sep)) throw new ImageRejected(`rendered slides cannot be used as images: ${raw.slice(0, 120)}`);
   try {
     const meta = await sharp(real).metadata();
     if (!meta.width || !meta.height) throw new Error("no size");
