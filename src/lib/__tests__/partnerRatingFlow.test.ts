@@ -334,14 +334,14 @@ test("claim_accepted anti-farming: awarded only at the first outbound contact at
 
 test("revocation: REJECTED claim, trashed/missing lead, LOST as INVALID/UNREACHABLE; only while the season can change", () => {
   const lead = (o: Partial<{ deletedAt: Date | null; status: string; lostReason: string | null }> = {}) => ({ deletedAt: null, status: "QUALIFIED", lostReason: null, ...o });
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead() }), false);
-  assert.equal(isRevokedClaim({ state: "REJECTED", lead: lead() }), true);
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ deletedAt: D("2026-10-10T00:00:00Z") }) }), true);
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "INVALID" }) }), true);
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "UNREACHABLE" }) }), true);
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "BUDGET" }) }), false, "a genuine lost client keeps the points");
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: lead({ status: "QUALIFIED", lostReason: "INVALID" }) }), false, "stale reason on a live lead");
-  assert.equal(isRevokedClaim({ state: "ACTIVE", lead: null }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: lead() }), false);
+  assert.equal(isRevokedClaim({ state: "REJECTED", mode: "HANDOVER", lead: lead() }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: lead({ deletedAt: D("2026-10-10T00:00:00Z") }) }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: lead({ status: "LOST", lostReason: "INVALID" }) }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: lead({ status: "LOST", lostReason: "UNREACHABLE" }) }), true);
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: lead({ status: "LOST", lostReason: "BUDGET" }) }), false, "a genuine lost client keeps the points");
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: lead({ status: "QUALIFIED", lostReason: "INVALID" }) }), false, "stale reason on a live lead");
+  assert.equal(isRevokedClaim({ state: "ACTIVE", mode: "HANDOVER", lead: null }), true);
   assert.equal(isRevokedClaim(null), true);
 
   assert.equal(claimIdFromRefKey("viewing:c1:s1"), "c1");
@@ -351,9 +351,9 @@ test("revocation: REJECTED claim, trashed/missing lead, LOST as INVALID/UNREACHA
     { refKey: "claim_accepted:c3:s1" }, { refKey: "claim_accepted:gone:s1" }, { refKey: "odd" },
   ];
   const claims = new Map([
-    ["c1", { state: "ACTIVE", lead: lead({ status: "LOST", lostReason: "INVALID" }) }],
-    ["c2", { state: "ACTIVE", lead: lead() }],
-    ["c3", { state: "REJECTED", lead: lead() }],
+    ["c1", { state: "ACTIVE", mode: "HANDOVER" as const, lead: lead({ status: "LOST", lostReason: "INVALID" }) }],
+    ["c2", { state: "ACTIVE", mode: "HANDOVER" as const, lead: lead() }],
+    ["c3", { state: "REJECTED", mode: "HANDOVER" as const, lead: lead() }],
   ]);
   assert.deepEqual(refKeysToRevoke(events, claims), ["claim_accepted:c1:s1", "viewing:c1:s1", "claim_accepted:c3:s1", "claim_accepted:gone:s1"]);
 
@@ -369,6 +369,34 @@ test("revocation: REJECTED claim, trashed/missing lead, LOST as INVALID/UNREACHA
   // Revoked claims never earn new points either
   assert.match(store, /\.filter\(\(c\) => !isRevokedClaim\(c\)\)/);
   assert.match(store, /lostReason: true/);
+});
+
+test("LOST FIX client nets 0 for every lost reason; HANDOVER keeps its rule; revival grants again", () => {
+  const lead = (status: string, lostReason: string | null = null) => ({ deletedAt: null, status, lostReason });
+  const c = (mode: "HANDOVER" | "FIX", status: string, lostReason: string | null = null) => ({ state: "ACTIVE", mode, lead: lead(status, lostReason) });
+  assert.equal(isRevokedClaim(c("FIX", "LOST", "NO_RESPONSE")), true);
+  assert.equal(isRevokedClaim(c("FIX", "LOST", "BUDGET")), true);
+  assert.equal(isRevokedClaim(c("HANDOVER", "LOST", "NO_RESPONSE")), false);
+  assert.equal(isRevokedClaim(c("HANDOVER", "LOST", "UNREACHABLE")), true);
+  assert.equal(isRevokedClaim(c("FIX", "CONTACTED")), false);
+  // refKeysToRevoke follows the same rule
+  const claims = new Map([["f1", c("FIX", "LOST", "BUDGET")], ["h1", c("HANDOVER", "LOST", "BUDGET")]]);
+  assert.deepEqual(refKeysToRevoke([{ refKey: "claim_accepted:f1:s1" }, { refKey: "claim_accepted:h1:s1" }], claims), ["claim_accepted:f1:s1"]);
+
+  // Revival: the grant pass filters with isRevokedClaim, then plans events; nothing remembers revoked refKeys.
+  const claim = { id: "f1", partnerId: "p1", leadId: "L1", createdAt: D("2026-10-05T00:00:00Z"), reviewedAt: null };
+  const contacts = contactsByLead([{ leadId: "L1", occurredAt: D("2026-10-07T00:00:00Z") }]);
+  const plan = (status: string, reason: string | null) =>
+    [{ ...claim, ...c("FIX", status, reason) }].filter((x) => !isRevokedClaim(x))
+      .flatMap((x) => pointEventsFor(claimPointFacts([x], new Map(), contacts), SEASON_W));
+  assert.deepEqual(plan("LOST", "BUDGET"), [], "while LOST: no events");
+  const back = plan("CONTACTED", null);
+  assert.deepEqual(back.map((e) => e.kind), ["claim_accepted"], "active again: granted again");
+  assert.equal(back[0].refKey, "claim_accepted:f1:s1");
+  // The insert is skipDuplicates and revocation deleted the old rows, so the same refKey is free again
+  const store = src("src/lib/partner/ratingStore.ts");
+  assert.match(store, /skipDuplicates: true/);
+  assert.match(store, /mode: true/);
 });
 
 test("seasonLockError: with point events, dates and point rules are frozen; name and prizes stay editable", () => {
