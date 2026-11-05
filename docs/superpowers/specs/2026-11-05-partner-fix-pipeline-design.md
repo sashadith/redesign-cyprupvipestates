@@ -51,9 +51,12 @@ Begriff: Es gibt keinen „Mentor“. Die Rolle heißt **Manager** **(entschiede
   - Der Manager bekommt sofort eine Nachricht und prüft den Deal.
   - Die Auszahlung läuft unverändert über den bestehenden Freigabeweg (`commissionStatus`). Eine Stufe des Partners löst keine Auszahlung aus.
 - **LOST setzt der Partner selbst, mit Pflichtgrund (entschieden).** Es gelten dieselben Gründe wie intern.
-- **Ein verlorener FIX-Kunde kostet den Partner keine Punkte, egal mit welchem Grund (entschieden 2026-11-05).**
-  - `REVOKING_LOST_REASONS` (INVALID, UNREACHABLE) gilt für FIX-Kunden nicht, solange der Partner den Grund gesetzt hat.
-  - **(Annahme)** Setzt unser Team später INVALID, weil sich der Kunde als Fake herausstellt, werden die Punkte wie heute entzogen. Das schützt vor erfundenen FIX-Einreichungen.
+- **Punkte bei Verlust (entschieden 2026-11-05):** Ein verlorener FIX-Kunde bringt dem Partner insgesamt **0 Punkte**.
+  - Die Punkte, die er bei der Annahme der Einreichung für diesen Kunden bekommen hat, werden wieder abgezogen, und zwar bei jedem Verlustgrund, auch NO_RESPONSE.
+  - Wer LOST setzt, ob Partner oder unser Team, spielt keine Rolle.
+  - Für FIX-Kunden wird die Prüfung `REVOKING_LOST_REASONS` also zu „jeder Verlust“.
+  - Bei Handover-Kunden bleibt die Regel unverändert: Nur INVALID und UNREACHABLE entziehen Punkte, NO_RESPONSE nicht (Entscheidung 2026-11-04).
+  - **(Annahme)** Wird ein verlorener Kunde wieder aktiv, z. B. durch eine Antwort, die ihn von LOST auf CONTACTED setzt, bekommt der Partner die Punkte zurück. Der Builder prüft, ob `ratingStore.ts` (Vergabe filtert entzogene Claims, `revokePoints` löscht) das schon so macht, und ergänzt es, falls nicht.
 - Die Ansicht ist ein Kanban mit einer Spalte pro Stufe, auf dem Handy als Liste mit Stufenfilter **(Annahme)**.
 
 ### 3.3 Werkzeuge am Kunden
