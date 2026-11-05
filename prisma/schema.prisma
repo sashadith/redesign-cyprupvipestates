@@ -857,7 +857,10 @@ model Lead {
   contactRepName   String?
   contactRepPhone  String?
   claims           PartnerClaim[]
+  // 2026-11-05: the partner works this FIX client themselves in the portal pipeline.
+  workedByPartner  Boolean        @default(false)
   @@index([partnerId])
+  @@index([partnerId, workedByPartner])
   id                   String                @id @default(uuid())
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -1012,6 +1015,8 @@ model LeadInteraction {
   createdByUserId  String?
   createdByUser    User?                     @relation(fields: [createdByUserId], references: [id])
   createdByName    String? // display-name snapshot, same convention as LeadActivity.createdBy — survives user deletion
+  createdByPartnerUserId String?
+  createdByPartnerUser   PartnerUser?              @relation("PartnerAuthoredInteractions", fields: [createdByPartnerUserId], references: [id], onDelete: SetNull)
   metadata         Json?
   legacyActivityId String?                   @unique // set only on rows copy-migrated from LeadActivity; makes the migration script safe to re-run
   // Phase 4 (2026-07-25, email inbound) — the RFC 5322 Message-ID, reused for
@@ -2210,6 +2215,8 @@ model Deal {
   cancelledAt            DateTime?
   createdById            String?
   createdBy              User?            @relation("DealsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByPartnerUserId String?
+  createdByPartnerUser   PartnerUser?     @relation("PartnerCreatedDeals", fields: [createdByPartnerUserId], references: [id], onDelete: SetNull)
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
   creditNote             CreditNote?
@@ -2360,6 +2367,8 @@ model PartnerUser {
   updatedAt       DateTime       @updatedAt
   sessions        PartnerSession[]
   tokens          PartnerToken[]
+  authoredInteractions LeadInteraction[] @relation("PartnerAuthoredInteractions")
+  createdDeals         Deal[]            @relation("PartnerCreatedDeals")
   @@map("partner_users")
 }
 
@@ -2495,6 +2504,7 @@ enum PartnerNotificationKind {
   CLIENT_QUIET
   BANK_MISSING
   TIER_NEAR
+  FOLLOW_UP_DUE
 }
 
 enum PartnerNotifyChannel {

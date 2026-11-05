@@ -325,7 +325,7 @@ export const bankLink = (base: string) => `${base}/profile#bank`;
 
 export const NOTIFICATION_KINDS = [
   "STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP",
-  "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR",
+  "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR", "FOLLOW_UP_DUE",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 

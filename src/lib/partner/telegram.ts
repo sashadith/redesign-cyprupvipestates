@@ -281,6 +281,10 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
     case "TIER_NEAR":
       out = `<b>${line(t.tierNear, { tier: text(input.tierName, 40) })}</b>\n\n${open}`;
       break;
+    case "FOLLOW_UP_DUE":
+      // Placeholder until the sender is implemented (it skips this kind for now).
+      out = `<b>${esc(client)}</b>\n\n${open}`;
+      break;
     default:
       return unhandledKind(input.kind);
   }

@@ -371,6 +371,9 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         { kind: "TIER_NEAR", tierName, handoverShare, fixShare, url: link, portalUrl: base },
       );
     }
+    case "FOLLOW_UP_DUE":
+      // Enum value added in the schema step of the partner FIX pipeline; planner and sender follow in a later task.
+      return { skip: "no sender yet" };
     default:
       return unhandledKind(row.kind);
   }
