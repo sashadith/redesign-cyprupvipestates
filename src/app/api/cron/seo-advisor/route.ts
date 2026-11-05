@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { runSeoAdvisor } from "@/lib/seoAdvisor/run";
 import { aiConfigured } from "@/lib/ai/anthropic";
+import { isToolEnabled } from "@/lib/toolSwitches";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 async function run() {
+  // Admin switch (2026-11-05): checked before anything else, so OFF costs no Claude call.
+  if (!(await isToolEnabled("seo_advisor"))) {
+    return { skipped: true as const, reason: "switched off in the admin" };
+  }
   if (!aiConfigured()) {
     return { skipped: true as const, reason: "ANTHROPIC_API_KEY not configured" };
   }

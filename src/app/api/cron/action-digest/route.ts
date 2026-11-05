@@ -22,6 +22,8 @@ import { classifyForDigest, chunkLines, REMINDER_THROTTLE_DAYS } from "@/lib/act
 import { CONTRACT_ITEM_PREFIX } from "@/lib/actionCenter/rules/contracts";
 import { sendDueContractReminders } from "@/lib/developerContractReminders";
 import { loadSocialDigestLines } from "@/lib/social/load";
+import { isToolEnabled } from "@/lib/toolSwitches";
+
 
 // Piggybacks on this existing daily cron, same pattern as feed-sync's
 // purgeOldTrash/purgeOldCronLogs — best-effort, never blocks the digest.
@@ -52,6 +54,8 @@ function escapeHtml(s: string) {
 // idempotent: a run's summary goes out exactly once, on whichever digest
 // first sees it un-sent, however many days it stays open after that.
 async function maybeAppendAdvisorSummary(): Promise<string[]> {
+  // Switched off in the admin: no summary. A run left unsent stays unsent.
+  if (!(await isToolEnabled("seo_advisor"))) return [];
   const latest = await prisma.advisorRun.findFirst({ orderBy: { runDate: "desc" } });
   if (!latest || latest.telegramSentAt) return [];
   const suggestions = (latest.suggestions as unknown as StoredSuggestion[]) ?? [];

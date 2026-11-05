@@ -14,31 +14,18 @@
 // keeping the rows lets the admin Analytics page show an honest "X excluded today"
 // count instead of the classification being invisible. See PageView in schema.prisma.
 import { NextRequest, NextResponse } from "next/server";
-import { isbot } from "isbot";
 import { prisma } from "@/lib/prisma";
 import { dailyVisitorHash } from "@/lib/visitorHash";
 import { detectDeviceType } from "@/lib/deviceType";
 import { lookupCountry } from "@/lib/geoCountry";
 import { extractUtm, hasUtm, utmFromBody } from "@/lib/analytics/pageViewUtm";
 import { analyticsConsentFrom } from "@/lib/attribution";
+import { isBotTraffic } from "@/lib/analytics/botTraffic";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Defense-in-depth on top of the maintained `isbot` pattern list: named crawlers we
-// specifically care about catching (some already covered by isbot, kept explicit so a
-// isbot version bump can't silently drop coverage we depend on) plus older headless-
-// browser/Lighthouse self-identifications. Modern PageSpeed Insights' Lighthouse run
-// does NOT reliably include any of these strings in its UA (confirmed empirically,
-// 2026-07-20 — see the isPrefetch/backfill note below for how that traffic is actually
-// caught) — this list is for crawlers that DO self-identify honestly.
-const EXTRA_BOT_RE =
-  /googlebot|bingbot|ahrefsbot|semrushbot|gptbot|claudebot|perplexitybot|bytespider|facebookexternalhit|chrome-lighthouse|headlesschrome/i;
-
-function isBotUA(ua: string): boolean {
-  if (!ua) return false;
-  return isbot(ua) || EXTRA_BOT_RE.test(ua);
-}
+// Bot detection (user agent + crawler networks) lives in src/lib/analytics/botTraffic.ts.
 
 // Chrome/Google Search's privacy-preserving prerender fetches a page speculatively,
 // server-side, executing real JS (so this beacon fires) — but the visit may never
@@ -107,7 +94,7 @@ export async function POST(req: NextRequest) {
         utmSource: utm.utmSource, utmMedium: utm.utmMedium, utmCampaign: utm.utmCampaign,
         deviceType: detectDeviceType(ua),
         country: lookupCountry(ip),
-        isBot: isBotUA(ua),
+        isBot: isBotTraffic(ua, ip),
         isPrefetch: isPrefetchRequest(req),
         isTest,
         analyticsConsent,

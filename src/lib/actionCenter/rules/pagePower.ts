@@ -5,6 +5,7 @@ import { templateClassLabel } from "@/lib/seo/templateClass";
 import type { PageDiagnosis } from "@/lib/seo/pagePower/types";
 import { pagesInSuppressionWindow } from "@/lib/seo/titleSweepLog";
 import { REMEASURE_WINDOW_DAYS } from "@/lib/seo/titleSweepRemeasure";
+import { isToolEnabled } from "@/lib/toolSwitches";
 
 // One item per DIAGNOSIS, not per page. On 2026-08-23 the buried pile alone
 // held 78 pages; seventy-eight items would drown every other rule in the panel.
@@ -102,6 +103,8 @@ function pileBand(n: number): number {
 }
 
 export async function pagePowerRules(): Promise<ActionItem[]> {
+  // Switched off in the admin (src/lib/toolSwitches.ts): no items, no computation.
+  if (!(await isToolEnabled("page_power"))) return [];
   // Matched on `path` rather than on the `locale::path` key: the sweep log
   // records paths exactly as served — English prefix-less, de/pl/ru prefixed —
   // which is the shape PageVerdict.path carries too (see the PageKey comment in
