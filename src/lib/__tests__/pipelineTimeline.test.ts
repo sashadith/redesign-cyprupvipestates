@@ -72,3 +72,14 @@ test("partnerTimeline drops the auto text of a call logged with an outcome only"
   assert.equal(out[0].callOutcome, "NO_ANSWER");
   assert.equal(out[1].text, "talked about Paphos");
 });
+
+test("partnerTimeline carries the partner's handover request and withdrawal by kind, not by text", () => {
+  const out = partnerTimeline([
+    row("req", "SYSTEM", 2, { createdByPartnerUserId: "pu1", createdByName: "Paul", body: "Handover requested by partner Paul", metadata: { kind: "handover_requested", requestId: "r1", downgrade: true } }),
+    row("wd", "SYSTEM", 1, { createdByPartnerUserId: "pu1", createdByName: "Paul", body: "Handover request withdrawn by partner Paul", metadata: { kind: "handover_withdrawn", requestId: "r1", downgrade: true } }),
+  ], []);
+  assert.deepEqual(out.map((e) => [e.id, e.kind, e.event, e.text, e.by]), [
+    ["req", "system", "handover_requested", null, "Paul"],
+    ["wd", "system", "handover_withdrawn", null, "Paul"],
+  ]);
+});

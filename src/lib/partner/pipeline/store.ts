@@ -65,6 +65,8 @@ export type PipelineClient = {
   expired: boolean;
   /** The partner may act now (partnerMayAct: his ACTIVE FIX claim, effectively active, lead partner-worked). */
   canWork: boolean;
+  /** The partner's handover request waiting for the manager, or null. */
+  openHandover: { id: string; createdAt: Date; downgrade: boolean } | null;
 };
 
 export type PartnerHints = Omit<LeadHints, "messages">;
@@ -154,7 +156,7 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     },
   });
   if (!lead || lead.deletedAt || lead.partnerId !== partnerId) return null;
-  const [effective, rows, messages, presentations, liveDeal] = await Promise.all([
+  const [effective, rows, messages, presentations, liveDeal, openHandover] = await Promise.all([
     effectiveStateOf(prisma, claim, now),
     prisma.leadInteraction.findMany({
       where: {
@@ -176,6 +178,10 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     }),
     myClientPresentations(partnerId, claimId),
     prisma.deal.findFirst({ where: { leadId: claim.leadId, commissionStatus: { not: "CANCELLED" } }, select: { id: true } }),
+    prisma.partnerHandoverRequest.findFirst({
+      where: { leadId: claim.leadId, partnerId, state: "OPEN" },
+      select: { id: true, createdAt: true, downgrade: true },
+    }),
   ]);
   const handedOver = !lead.workedByPartner;
   const { source, emailInvalidAt, emailInvalidReason, status, lostReason, partnerId: _p, workedByPartner: _w, deletedAt: _d, ...fields } = lead;
@@ -193,5 +199,6 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     handedOver,
     expired: !handedOver && effective !== "ACTIVE",
     canWork: partnerMayAct(claim, effective, lead, partnerId),
+    openHandover,
   };
 }

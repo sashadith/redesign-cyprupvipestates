@@ -3,12 +3,15 @@ import { notFound } from "next/navigation";
 import { utcToZonedInput } from "@/lib/tz";
 import { fmt, type PartnerDict, type PartnerLocale } from "@/lib/partner/i18n";
 import { PORTAL_TZ } from "@/lib/partner/pipeline/forms";
+import { handoverAllowed } from "@/lib/partner/pipeline/handoverRules";
 import { getPipelineClient, type PipelineClient } from "@/lib/partner/pipeline/store";
 import { clientClock, waMeLink } from "@/lib/partner/pipeline/view";
 import { myProjects } from "@/lib/partner/scope";
 import { requirePartner } from "@/lib/partner/session";
 import { HintList, LocalTime, PipelineTimeline, StageChip, dateTimeFmt, weekText } from "../../components/pipelineBits";
-import { ClientDataForm, FollowUpForm, LogForm, StageForm, ViewingForm } from "../../components/pipelineForms";
+import {
+  ClientDataForm, FollowUpForm, HandoverForm, HandoverWithdrawForm, LogForm, StageForm, ViewingForm,
+} from "../../components/pipelineForms";
 import { PresentationTable } from "../../components/presentationBits";
 import { dateFmt, eurFmt } from "../../components/portalBits";
 import { portalContext } from "../../portalContext";
@@ -52,7 +55,7 @@ function ClientDetails({ t, locale, c }: { t: PartnerDict; locale: PartnerLocale
   );
 }
 
-/** Partner pipeline (2026-11-05): one FIX client — stage, follow-up, log, selections, history and details. */
+/** Partner pipeline (2026-11-05): one FIX client — stage, follow-up, log, handover, selections, history and details. */
 export default async function PipelineClientPage({ params }: { params: { claimId: string } }) {
   const me = await requirePartner({ active: true });
   const { t, locale } = await portalContext();
@@ -122,6 +125,27 @@ export default async function PipelineClientPage({ params }: { params: { claimId
         <section className="pp-panel" aria-labelledby="pl-log">
           <h2 className="pp-h3" id="pl-log">{P.logTitle}</h2>
           <LogForm t={t} claimId={c.claimId} />
+        </section>
+      )}
+
+      {!c.handedOver && ((work && handoverAllowed(c.status)) || c.openHandover) && (
+        <section className="pp-panel" aria-labelledby="pl-handover">
+          <h2 className="pp-h3" id="pl-handover">{P.handover.title}</h2>
+          {c.openHandover ? (
+            <>
+              {/* The partner keeps working the client until the manager accepts: only the waiting state shows here. */}
+              <p className="pp-alert pp-alert-neutral" role="status">
+                {fmt(P.handover.waiting, { date: dt.format(c.openHandover.createdAt) })}
+                {c.openHandover.downgrade && <> {P.handover.waitingDowngrade}</>}
+              </p>
+              <HandoverWithdrawForm t={t} claimId={c.claimId} requestId={c.openHandover.id} />
+            </>
+          ) : (
+            <>
+              <p className="pp-small">{P.handover.intro}</p>
+              <HandoverForm t={t} locale={locale} claimId={c.claimId} />
+            </>
+          )}
         </section>
       )}
 

@@ -1,7 +1,7 @@
 "use server";
 /**
  * Partner pipeline (2026-11-05): the partner works his own FIX client — stage, log, follow-up,
- * viewing date and client details. Every action guards itself with requirePartner({ active: true })
+ * viewing date and client details — and asks his manager to take it over (or withdraws that). Every action guards itself with requirePartner({ active: true })
  * and builds the actor from the session; the claim id from the form is only a pointer, checked by
  * the pipeline actions (src/lib/partner/pipeline/actions.ts). Errors come back as pipeline.err.* keys.
  */
@@ -17,6 +17,7 @@ import {
 import { DEAL_ALERT_STAGES } from "@/lib/partner/pipeline/dealAlert";
 import { sendDealAlert } from "@/lib/partner/pipeline/dealAlertSend";
 import { pipelineErrorKey } from "@/lib/partner/pipeline/errors";
+import { HANDOVER_NOTE_MAX, requestHandover, withdrawHandover } from "@/lib/partner/pipeline/handover";
 import { editRawFromForm, inPartnerDateWindow, portalDateTime, wholeEuros } from "@/lib/partner/pipeline/forms";
 import { requirePartner, type PartnerSessionInfo } from "@/lib/partner/session";
 import type { PipelineState } from "./formState";
@@ -161,4 +162,29 @@ export async function editPipelineClientAction(_prev: PipelineState, fd: FormDat
   if ("error" in res) return fail(res.error, "field" in res ? res.field : undefined);
   refresh(g.claimId);
   return { ok: true, ...(res.changed ? {} : { unchanged: true }) };
+}
+
+// Hand over to the manager. An early handover (before the viewing) first comes back with
+// need: "confirmDowngrade" and the partner's shares; the form resubmits with confirmedDowngrade=1.
+export async function requestHandoverAction(_prev: PipelineState, fd: FormData): Promise<PipelineState> {
+  const g = await begin(fd);
+  if ("error" in g) return g.error;
+  const res = await requestHandover(g.actor, g.claimId, str(fd.get("note")).slice(0, HANDOVER_NOTE_MAX) || null, str(fd.get("confirmedDowngrade")) === "1");
+  if ("error" in res) {
+    if (res.need === "confirmDowngrade" && res.fixShare != null && res.handoverShare != null) {
+      return { error: pipelineErrorKey(res.error), need: "confirmDowngrade", shares: { fix: res.fixShare, handover: res.handoverShare } };
+    }
+    return fail(res.error);
+  }
+  refresh(g.claimId);
+  return { ok: true };
+}
+
+export async function withdrawHandoverAction(_prev: PipelineState, fd: FormData): Promise<PipelineState> {
+  const g = await begin(fd);
+  if ("error" in g) return g.error;
+  const res = await withdrawHandover(g.actor, str(fd.get("requestId")));
+  if ("error" in res) return fail(res.error);
+  refresh(g.claimId);
+  return { ok: true };
 }

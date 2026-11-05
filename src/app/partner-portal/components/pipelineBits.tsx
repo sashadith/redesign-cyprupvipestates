@@ -108,6 +108,8 @@ function entryLabel(t: PartnerDict, e: TimelineEntry, dt: Intl.DateTimeFormat): 
       if (e.event === "follow_up") return e.eventAt ? fmt(E.followUp, { date: dt.format(e.eventAt) }) : E.followUpCleared;
       if (e.event === "viewing_date" && e.eventAt) return fmt(E.viewing, { date: dt.format(e.eventAt) });
       if (e.event === "lead_edit") return E.leadEdit;
+      if (e.event === "handover_requested") return E.handoverRequested;
+      if (e.event === "handover_withdrawn") return E.handoverWithdrawn;
       return E.system;
   }
 }

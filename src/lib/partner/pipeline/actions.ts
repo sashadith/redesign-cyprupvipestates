@@ -27,7 +27,7 @@ const FUTURE_SLACK_MS = 5 * 60_000;
 const CLAIM_SELECT = { partnerId: true, mode: true, state: true, leadId: true, createdAt: true, reviewedAt: true } as const;
 
 // The lead id of a stored ACTIVE FIX claim of this partner, or null (pre-check).
-async function claimLeadId(actor: PartnerActor, claimId: string): Promise<string | null> {
+export async function claimLeadId(actor: PartnerActor, claimId: string): Promise<string | null> {
   const claim = await prisma.partnerClaim.findUnique({ where: { id: claimId }, select: { partnerId: true, mode: true, state: true, leadId: true } });
   return claim && claimEligible(claim, actor.partnerId) ? claim.leadId : null;
 }
@@ -35,7 +35,7 @@ async function claimLeadId(actor: PartnerActor, claimId: string): Promise<string
 // Whether the partner may act on this claim's lead now: the stored claim, its
 // EFFECTIVE state (the judgement moveLead uses for the deal's partner share, so a
 // lapsed protection is never worked on) and the lead. Pass tx to judge under a lock.
-async function mayAct(db: Prisma.TransactionClient | PrismaClient, actor: PartnerActor, claimId: string, leadId: string): Promise<boolean> {
+export async function mayAct(db: Prisma.TransactionClient | PrismaClient, actor: PartnerActor, claimId: string, leadId: string): Promise<boolean> {
   const claim = await db.partnerClaim.findUnique({ where: { id: claimId }, select: CLAIM_SELECT });
   if (!claim || claim.leadId !== leadId || !claimEligible(claim, actor.partnerId)) return false;
   const [effective, lead] = await Promise.all([

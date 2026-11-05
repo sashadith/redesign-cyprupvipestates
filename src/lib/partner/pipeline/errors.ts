@@ -10,6 +10,11 @@ const KEYS: Record<string, string> = {
   NOT_IN_PIPELINE: NOT_IN_PIPELINE_KEY,
   DUPLICATE_CONTACT: "pipeline.err.duplicateContact",
   NOT_VIEWING_SCHEDULED: "pipeline.err.notViewing",
+  // requestHandover / withdrawHandover
+  HANDOVER_NOT_ALLOWED: "pipeline.err.handoverNotAllowed",
+  HANDOVER_OPEN: "pipeline.err.handoverOpen",
+  HANDOVER_NOT_OPEN: "pipeline.err.handoverNotOpen",
+  CONFIRM_DOWNGRADE: "pipeline.err.confirmDowngrade",
   // moveLeadCore / planMove
   "Enter the deal: project, unit and price.": "pipeline.err.dealMissing",
   "Enter a valid price in whole euros.": "pipeline.err.price",

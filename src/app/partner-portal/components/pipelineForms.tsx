@@ -1,5 +1,5 @@
 "use client";
-/** Partner pipeline (2026-11-05): the forms on a FIX client — stage, viewing date, log, follow-up and details. */
+/** Partner pipeline (2026-11-05): the forms on a FIX client — stage, viewing date, log, follow-up, details and handover. */
 import { useEffect, useState } from "react";
 import { useFormState } from "react-dom";
 import { LEAD_STATUSES, LOST_REASONS, type LeadStatusValue } from "@/lib/crm/leadStatus";
@@ -10,8 +10,10 @@ import { SALUTATIONS } from "@/lib/crm/editLead";
 import type { PartnerDict, PartnerLocale } from "@/lib/partner/i18n";
 import { EDIT_FIELDS, portalDateTime } from "@/lib/partner/pipeline/forms";
 import { clientClock, weekRange } from "@/lib/partner/pipeline/view";
+import { handoverWarning } from "@/lib/partner/pipeline/handoverCopy";
 import {
-  editPipelineClientAction, followUpPipelineAction, logPipelineAction, movePipelineAction, viewingPipelineAction,
+  editPipelineClientAction, followUpPipelineAction, logPipelineAction, movePipelineAction, requestHandoverAction,
+  viewingPipelineAction, withdrawHandoverAction,
 } from "../pipelineActions";
 import { isErr, type PipelineState } from "../formState";
 import { Field, FormError, LANG_OPTIONS, Submit, fill } from "./forms";
@@ -317,6 +319,64 @@ export function ClientDataForm({ t, claimId, values }: { t: PartnerDict; claimId
       <div className="pp-actions">
         <Submit wide={false}>{P.dataSave}</Submit>
         <Saved state={state} text={P.dataSaved} unchangedText={P.dataUnchanged} />
+      </div>
+    </form>
+  );
+}
+
+// ─── Handover to the manager ─────────────────────────────────────────────────
+
+// The request, then (before the viewing stage) the downgrade warning with the partner's real
+// shares and a confirm that resubmits with confirmedDowngrade=1. "Not now" starts the form over
+// (new key) and keeps the typed note.
+export function HandoverForm({ t, locale, claimId }: { t: PartnerDict; locale: PartnerLocale; claimId: string }) {
+  const [round, setRound] = useState(0);
+  const [note, setNote] = useState("");
+  return (
+    <HandoverFormInner key={round} t={t} locale={locale} claimId={claimId} note={note} setNote={setNote} onCancel={() => setRound((r) => r + 1)} />
+  );
+}
+
+function HandoverFormInner({ t, locale, claimId, note, setNote, onCancel }: {
+  t: PartnerDict; locale: PartnerLocale; claimId: string; note: string; setNote: (v: string) => void; onCancel: () => void;
+}) {
+  const H = t.pipeline.handover;
+  const [state, action] = useFormState<PipelineState, FormData>(requestHandoverAction, null);
+  const confirm = isErr(state) && state.need === "confirmDowngrade" && state.shares ? state.shares : null;
+  return (
+    <form action={action} className="pp-form" noValidate>
+      <input type="hidden" name="claimId" value={claimId} />
+      {!confirm && <FormError t={t} state={state} fields={[]} />}
+      <Field t={t} state={state} name="note" label={H.note} hint={H.noteHint}>
+        {(a) => <textarea {...a} name="note" rows={3} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} />}
+      </Field>
+      {confirm ? (
+        <>
+          <p className="pp-alert pp-alert-info" role="alert">{handoverWarning(locale, confirm.fix, confirm.handover)}</p>
+          <input type="hidden" name="confirmedDowngrade" value="1" />
+          <div className="pp-actions">
+            <Submit wide={false}>{H.confirm}</Submit>
+            <button type="button" className="pp-btn pp-btn-ghost" onClick={onCancel}>{H.cancel}</button>
+          </div>
+        </>
+      ) : (
+        <div className="pp-actions">
+          <Submit wide={false}>{H.request}</Submit>
+        </div>
+      )}
+    </form>
+  );
+}
+
+export function HandoverWithdrawForm({ t, claimId, requestId }: { t: PartnerDict; claimId: string; requestId: string }) {
+  const [state, action] = useFormState<PipelineState, FormData>(withdrawHandoverAction, null);
+  return (
+    <form action={action} className="pp-form" noValidate>
+      <input type="hidden" name="claimId" value={claimId} />
+      <input type="hidden" name="requestId" value={requestId} />
+      <FormError t={t} state={state} fields={[]} />
+      <div className="pp-actions">
+        <Submit wide={false}>{t.pipeline.handover.withdraw}</Submit>
       </div>
     </form>
   );

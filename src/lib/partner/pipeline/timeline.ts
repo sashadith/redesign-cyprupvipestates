@@ -36,8 +36,8 @@ export type TimelineEntry = {
   callOutcome: CallOutcome | null;
   /**
    * What a system row records, for the portal's own wording (the stored text is staff English):
-   * a partner SYSTEM row's metadata.kind (follow_up, lead_edit, viewing_date) or a presentation
-   * row's metadata.legacyType (PRESENTATION_VIEWED, PRESENTATION_FAVORITE, …). Null otherwise.
+   * a partner SYSTEM row's metadata.kind (follow_up, lead_edit, viewing_date, handover_requested,
+   * handover_withdrawn) or a presentation row's metadata.legacyType (PRESENTATION_VIEWED, PRESENTATION_FAVORITE, …). Null otherwise.
    */
   event: string | null;
   /** The date a follow_up / viewing_date row set (null when it cleared it or for anything else). */
@@ -94,7 +94,7 @@ function fromRow(r: TimelineRow): TimelineEntry | null {
   if (!partnerAuthored) return null;
   const m = meta(r.metadata);
   if (r.type === "SYSTEM") {
-    // follow_up / lead_edit / viewing_date: the stored text is staff English, so only the kind and date pass.
+    // follow_up / lead_edit / viewing_date / handover_*: the stored text is staff English, so only the kind and date pass.
     const event = str(m.kind);
     const eventAt = event === "follow_up" ? dateOf(m.nextFollowUpAt) : event === "viewing_date" ? dateOf(m.viewingScheduledAt) : null;
     return { ...base, event, eventAt, by: clean(r.createdByName) };

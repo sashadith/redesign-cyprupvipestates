@@ -39,7 +39,13 @@ export type LogoState = { ok: true; removed?: boolean } | FormErr | null;
 export type PresentationOk = { ok: true; url: string };
 export type PresentationState = PresentationOk | FormErr | null;
 
-/** Partner pipeline forms: `need` asks the stage form for more (deal, reason, cancel confirmation). */
+/**
+ * Partner pipeline forms: `need` asks the form for more (deal, reason, cancel confirmation, or the
+ * handover's downgrade confirmation, which carries the partner's real shares in `shares`).
+ */
 export type PipelineOk = { ok: true; unchanged?: boolean };
-export type PipelineErr = FormErr & { need?: "deal" | "lostReason" | "confirmCancel" };
+export type PipelineErr = FormErr & {
+  need?: "deal" | "lostReason" | "confirmCancel" | "confirmDowngrade";
+  shares?: { fix: number; handover: number };
+};
 export type PipelineState = PipelineOk | PipelineErr | null;
