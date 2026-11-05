@@ -38,3 +38,8 @@ export type LogoState = { ok: true; removed?: boolean } | FormErr | null;
 /** New presentation (phase 3e): the public link comes back for the copy button. */
 export type PresentationOk = { ok: true; url: string };
 export type PresentationState = PresentationOk | FormErr | null;
+
+/** Partner pipeline forms: `need` asks the stage form for more (deal, reason, cancel confirmation). */
+export type PipelineOk = { ok: true; unchanged?: boolean };
+export type PipelineErr = FormErr & { need?: "deal" | "lostReason" | "confirmCancel" };
+export type PipelineState = PipelineOk | PipelineErr | null;

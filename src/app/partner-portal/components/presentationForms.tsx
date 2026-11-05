@@ -88,29 +88,35 @@ export type PresentationProjectOption = { id: string; name: string; town: string
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const FIELDS = ["claimId", "projectIds", "greetingName", "personalNote", "locale"];
 
-export function PresentationForm({ t, clients, projects, defaultLocale }: {
+/** `initialClaimId` (partner pipeline "New selection"): the client to start with, when he is one of `clients`. */
+export function PresentationForm({ t, clients, projects, defaultLocale, initialClaimId }: {
   t: PartnerDict;
   clients: PresentationClientOption[];
   projects: PresentationProjectOption[];
   defaultLocale: PartnerLocale;
+  initialClaimId?: string;
 }) {
   const [round, setRound] = useState(0);
-  return <PresentationFormInner key={round} t={t} clients={clients} projects={projects} defaultLocale={defaultLocale} onAgain={() => setRound((r) => r + 1)} />;
+  return (
+    <PresentationFormInner key={round} t={t} clients={clients} projects={projects} defaultLocale={defaultLocale}
+      initial={round === 0 ? clients.find((c) => c.claimId === initialClaimId) : undefined} onAgain={() => setRound((r) => r + 1)} />
+  );
 }
 
-function PresentationFormInner({ t, clients, projects, defaultLocale, onAgain }: {
+function PresentationFormInner({ t, clients, projects, defaultLocale, initial, onAgain }: {
   t: PartnerDict;
   clients: PresentationClientOption[];
   projects: PresentationProjectOption[];
   defaultLocale: PartnerLocale;
+  initial?: PresentationClientOption;
   onAgain: () => void;
 }) {
   const P = t.presentations;
   const S = t.submit;
   const [state, action] = useFormState<PresentationState, FormData>(createPresentationAction, null);
-  const [claimId, setClaimId] = useState("");
-  const [greeting, setGreeting] = useState("");
-  const [locale, setLocale] = useState<string>(defaultLocale);
+  const [claimId, setClaimId] = useState(initial?.claimId ?? "");
+  const [greeting, setGreeting] = useState(initial ? initial.firstName.slice(0, GREETING_MAX) : "");
+  const [locale, setLocale] = useState<string>(initial?.locale ?? defaultLocale);
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const byId = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);

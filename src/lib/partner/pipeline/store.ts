@@ -54,8 +54,11 @@ export type PipelineClient = {
     languagePreference: string | null; budgetMin: number | null; budgetMax: number | null; timeline: string | null;
     financing: string | null; nationality: string | null; countryOfResidence: string | null; message: string | null;
   };
-  hints: LeadHints;
+  /** The hint flags only: the English `messages` (and the raw bounce reason inside them) never reach the portal. */
+  hints: PartnerHints;
   localTime: LeadTimeSummary;
+  /** The lead has a deal that is not cancelled (a move to RESERVED/CLOSED then needs no new deal). */
+  hasLiveDeal: boolean;
   presentations: MyPresentation[];
   timeline: TimelineEntry[];
   handedOver: boolean;
@@ -64,10 +67,24 @@ export type PipelineClient = {
   canWork: boolean;
 };
 
+export type PartnerHints = Omit<LeadHints, "messages">;
+
 const statusOf = (s: string): LeadStatusValue => (isLeadStatus(s) ? s : "NEW");
+
+// The hint flags without the English messages (they also carry the raw bounce reason).
+function partnerHints(l: Parameters<typeof leadHints>[0]): PartnerHints {
+  const { messages: _m, ...flags } = leadHints(l);
+  return flags;
+}
 
 // Partner-authored rows of this partner's own users only.
 const ownEntry = (partnerId: string) => ({ createdByPartnerUser: { partnerId } });
+
+/** Whether the partner has at least one ACTIVE FIX claim (the portal shows "Pipeline" then). */
+export async function hasPipeline(partnerId: string): Promise<boolean> {
+  const one = await prisma.partnerClaim.findFirst({ where: { partnerId, mode: "FIX", state: "ACTIVE" }, select: { id: true } });
+  return !!one;
+}
 
 /** ACTIVE FIX claims of the partner (stored state), newest first, at most PIPELINE_CAP. */
 export async function listPipeline(partnerId: string, now: Date): Promise<PipelineCard[]> {
@@ -137,7 +154,7 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     },
   });
   if (!lead || lead.deletedAt || lead.partnerId !== partnerId) return null;
-  const [effective, rows, messages, presentations] = await Promise.all([
+  const [effective, rows, messages, presentations, liveDeal] = await Promise.all([
     effectiveStateOf(prisma, claim, now),
     prisma.leadInteraction.findMany({
       where: {
@@ -158,6 +175,7 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
       take: MESSAGE_ROWS,
     }),
     myClientPresentations(partnerId, claimId),
+    prisma.deal.findFirst({ where: { leadId: claim.leadId, commissionStatus: { not: "CANCELLED" } }, select: { id: true } }),
   ]);
   const handedOver = !lead.workedByPartner;
   const { source, emailInvalidAt, emailInvalidReason, status, lostReason, partnerId: _p, workedByPartner: _w, deletedAt: _d, ...fields } = lead;
@@ -167,8 +185,9 @@ export async function getPipelineClient(partnerId: string, claimId: string, now:
     lostReason: (lostReason ?? null) as LostReasonValue | null, since: activeSince(claim),
     nextFollowUpAt, overdue: !!nextFollowUpAt && nextFollowUpAt.getTime() < now.getTime(), viewingScheduledAt,
     lead: edit,
-    hints: leadHints({ source, emailInvalidAt, emailInvalidReason, countryOfResidence: edit.countryOfResidence, lastName: edit.lastName, email: edit.email, phone: edit.phone, budgetMin: edit.budgetMin, budgetMax: edit.budgetMax }),
+    hints: partnerHints({ source, emailInvalidAt, emailInvalidReason, countryOfResidence: edit.countryOfResidence, lastName: edit.lastName, email: edit.email, phone: edit.phone, budgetMin: edit.budgetMin, budgetMax: edit.budgetMax }),
     localTime: leadTimeSummary({ timeZone, countryOfResidence: edit.countryOfResidence, phone: edit.phone }, now, callWindowFromEnv()),
+    hasLiveDeal: !!liveDeal,
     presentations,
     timeline: partnerTimeline(rows, messages),
     handedOver,

@@ -4,7 +4,7 @@ import { logLeadInteraction, bodyRequirement, type LogInteractionInput } from "@
 import { setManualFollowUp } from "@/lib/crm/followUpCadence";
 import { validateLeadEdit } from "@/lib/crm/editLead";
 import { applyLeadEdit } from "@/lib/crm/applyLeadEdit";
-import type { PartnerActor } from "@/lib/crm/leadActor";
+import { authorColumns, type PartnerActor } from "@/lib/crm/leadActor";
 import type { LeadStatusValue, LostReasonValue } from "@/lib/crm/leadStatus";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { effectiveStateOf } from "@/lib/partner/claimFacts";
@@ -87,6 +87,34 @@ export async function setPartnerFollowUp(actor: PartnerActor, claimId: string, a
   if (!leadId) return denied;
   await setManualFollowUp(leadId, at, actor);
   return { ok: true };
+}
+
+export const NOT_VIEWING_SCHEDULED = "NOT_VIEWING_SCHEDULED";
+
+// A new date for a viewing that is already scheduled (moveLeadCore leaves
+// VIEWING_SCHEDULED → VIEWING_SCHEDULED alone). Only while the lead is still in
+// VIEWING_SCHEDULED, checked in the write itself; the timeline row is the partner's,
+// with the date in metadata so the portal can word it.
+export async function setPartnerViewingDate(
+  actor: PartnerActor,
+  claimId: string,
+  at: Date,
+): Promise<{ ok: true } | Denied | { error: typeof NOT_VIEWING_SCHEDULED }> {
+  const leadId = await workableLeadId(actor, claimId);
+  if (!leadId) return denied;
+  const iso = at.toISOString();
+  const done = await prisma.$transaction(async (tx) => {
+    const r = await tx.lead.updateMany({ where: { id: leadId, status: "VIEWING_SCHEDULED", deletedAt: null }, data: { viewingScheduledAt: at } });
+    if (!r.count) return false;
+    await tx.leadInteraction.create({
+      data: {
+        leadId, type: "SYSTEM", channel: "SYSTEM", direction: null, body: `Viewing date set to ${iso}`,
+        ...authorColumns(actor), metadata: { kind: "viewing_date", viewingScheduledAt: iso, via: "partner" },
+      },
+    });
+    return true;
+  });
+  return done ? { ok: true } : { error: NOT_VIEWING_SCHEDULED };
 }
 
 export type PartnerEditResult =

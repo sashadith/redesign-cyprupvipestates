@@ -7,10 +7,13 @@ import type { ThemeOption } from "@/lib/design/options";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
-/** `active`: the partner is approved (ACTIVE) — pending partners keep the 3a home/profile navigation. */
-type Props = { locale: PartnerLocale; t: PartnerDict; loggedIn: boolean; active?: boolean; newsUnread?: number; themes?: { options: ThemeOption[]; choiceId: string | null }; children: React.ReactNode };
+/**
+ * `active`: the partner is approved (ACTIVE) — pending partners keep the 3a home/profile navigation.
+ * `pipeline`: the partner has at least one ACTIVE FIX claim, so "Pipeline" is shown.
+ */
+type Props = { locale: PartnerLocale; t: PartnerDict; loggedIn: boolean; active?: boolean; pipeline?: boolean; newsUnread?: number; themes?: { options: ThemeOption[]; choiceId: string | null }; children: React.ReactNode };
 
-export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 0, themes, children }: Props) {
+export function PortalShell({ locale, t, loggedIn, active = false, pipeline = false, newsUnread = 0, themes, children }: Props) {
   return (
     <>
       <header className="pp-top">
@@ -36,6 +39,7 @@ export function PortalShell({ locale, t, loggedIn, active = false, newsUnread = 
                   <Link href="/home">{t.nav.overview}</Link>
                   <Link href="/submit">{t.nav.submit}</Link>
                   <Link href="/clients">{t.nav.clients}</Link>
+                  {pipeline && <Link href="/pipeline">{t.nav.pipeline}</Link>}
                   <Link href="/presentations">{t.nav.presentations}</Link>
                   <Link href="/commissions">{t.nav.commissions}</Link>
                   <Link href="/rating">{t.nav.rating}</Link>
