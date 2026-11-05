@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/sendEmail";
 import { effectiveStateOf, leadClaimFacts } from "./claimFacts";
-import { cyDate, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
+import { FOLLOW_UP_FINISHED_STATUSES, cyDate, followUpReminderEligible, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
 import { lastClientActivity } from "./alertsSend";
 import { loadTiers } from "./tierStore";
 import { leadZone } from "@/lib/crm/leadLocalTime";
@@ -381,12 +381,14 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         prisma.partnerClaim.findUnique({ where: { id: own.id }, select: { mode: true } }),
         prisma.lead.findUnique({
           where: { id: own.leadId },
-          select: { workedByPartner: true, nextFollowUpAt: true, timeZone: true, countryOfResidence: true, phone: true },
+          select: { status: true, workedByPartner: true, nextFollowUpAt: true, timeZone: true, countryOfResidence: true, phone: true },
         }),
       ]);
       if (fixClaim?.mode !== "FIX" || !lead?.workedByPartner) return { skip: "not worked by partner" };
       if (!lead.nextFollowUpAt) return { skip: "no follow-up" };
       if (lead.nextFollowUpAt.getTime() > now.getTime()) return { skip: "rescheduled" };
+      if ((FOLLOW_UP_FINISHED_STATUSES as readonly string[]).includes(lead.status)) return { skip: "lead finished" };
+      if (!followUpReminderEligible(lead, now)) return { skip: "overdue too long" };
       const zone = leadZone(lead).zone;
       const link = pipelineLink(base, own.id);
       const when = followUpWhen(locale, lead.nextFollowUpAt);

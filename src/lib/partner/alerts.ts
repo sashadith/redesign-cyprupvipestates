@@ -190,15 +190,34 @@ export function planQuietClients(input: { claims: QuietClaim[]; now: Date }): Pl
 
 // ── 6: follow-up due (partner-worked FIX clients) ───────────────────────────
 
+/** A follow-up more than this many days overdue is dropped: no more reminders for it. */
+export const FOLLOW_UP_REMINDER_MAX_DAYS = 14;
+/** Lead statuses with nothing left to follow up. RESERVED and KEEP_CONTACT stay: the partner may still follow up. */
+export const FOLLOW_UP_FINISHED_STATUSES = ["LOST", "CLOSED"] as const;
+
+/** Due now and not stale: nextFollowUpAt in [now - 14 days, now]. */
+export function followUpInWindow(at: Date, now: Date): boolean {
+  const late = now.getTime() - at.getTime();
+  return late >= 0 && late <= FOLLOW_UP_REMINDER_MAX_DAYS * DAY;
+}
+
+/** Whether a worked client's follow-up may still be reminded: worked by the partner, not finished, due and not stale. Planner and sender share it. */
+export function followUpReminderEligible(
+  l: { status: string | null | undefined; workedByPartner: boolean; nextFollowUpAt: Date | null | undefined },
+  now: Date,
+): boolean {
+  return l.workedByPartner && !!l.nextFollowUpAt && !(FOLLOW_UP_FINISHED_STATUSES as readonly string[]).includes(l.status ?? "") && followUpInWindow(l.nextFollowUpAt, now);
+}
+
 export type DueFollowUp = { claimId: string; partnerId: string; leadId: string; nextFollowUpAt: Date };
 
 /**
- * One FOLLOW_UP_DUE row per client per Cyprus day once the follow-up time has come. The refKey has no
+ * One FOLLOW_UP_DUE row per client per Cyprus day once the follow-up time has come (and until it is 14 days overdue). The refKey has no
  * time in it: a follow-up moved to another time the same day is not told twice.
  */
 export function planFollowUpDue(input: { leads: DueFollowUp[]; now: Date }): PlannedAlert[] {
   return input.leads
-    .filter((f) => f.nextFollowUpAt.getTime() <= input.now.getTime())
+    .filter((f) => followUpInWindow(f.nextFollowUpAt, input.now))
     .map((f) => ({
       kind: "FOLLOW_UP_DUE" as const,
       refKey: `followup:${f.leadId}:${cyDate(input.now)}`,

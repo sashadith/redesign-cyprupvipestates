@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  NEWS_MAX_PROJECTS, alertsStartFromEnv, cyDate, planBankMissing, planFollowUpDue, planProjectNews, planProtectionReminders, planQuietClients, planTierNear,
+  NEWS_MAX_PROJECTS, alertsStartFromEnv, cyDate, planBankMissing, planFollowUpDue, followUpReminderEligible, FOLLOW_UP_REMINDER_MAX_DAYS, planProjectNews, planProtectionReminders, planQuietClients, planTierNear,
   planWatch, protectionEnd, readNewsPayload, readWatchPayload, watchChangeOf, type WatchEvent,
 } from "@/lib/partner/alerts";
 import {
@@ -113,6 +113,22 @@ test("follow-up due: past or now only, one row per client per Cyprus day", () =>
   assert.equal(twice[0].refKey, twice[1].refKey);
   // The next day is a new row.
   assert.notEqual(planFollowUpDue({ leads: [f("2026-11-02T01:00:00Z")], now: new Date(NOW.getTime() + DAY) })[0].refKey, twice[0].refKey);
+});
+
+test("follow-up reminder eligibility: worked, not LOST/CLOSED, due, at most 14 days overdue", () => {
+  const ok = { status: "VIEWING_SCHEDULED", workedByPartner: true, nextFollowUpAt: new Date(NOW.getTime() - 3600_000) };
+  assert.equal(FOLLOW_UP_REMINDER_MAX_DAYS, 14);
+  assert.equal(followUpReminderEligible(ok, NOW), true);
+  for (const status of ["RESERVED", "KEEP_CONTACT"]) assert.equal(followUpReminderEligible({ ...ok, status }, NOW), true, status);
+  for (const status of ["LOST", "CLOSED"]) assert.equal(followUpReminderEligible({ ...ok, status }, NOW), false, status);
+  assert.equal(followUpReminderEligible({ ...ok, workedByPartner: false }, NOW), false);
+  assert.equal(followUpReminderEligible({ ...ok, nextFollowUpAt: null }, NOW), false);
+  assert.equal(followUpReminderEligible({ ...ok, nextFollowUpAt: new Date(NOW.getTime() + 1) }, NOW), false, "future");
+  assert.equal(followUpReminderEligible({ ...ok, nextFollowUpAt: new Date(NOW.getTime() - 14 * DAY) }, NOW), true, "exactly 14 days");
+  assert.equal(followUpReminderEligible({ ...ok, nextFollowUpAt: new Date(NOW.getTime() - 14 * DAY - 1) }, NOW), false, "over 14 days");
+  const f = (at: Date) => ({ claimId: "c", partnerId: "p", leadId: "l", nextFollowUpAt: at });
+  assert.equal(planFollowUpDue({ leads: [f(new Date(NOW.getTime() - 14 * DAY))], now: NOW }).length, 1);
+  assert.equal(planFollowUpDue({ leads: [f(new Date(NOW.getTime() - 14 * DAY - 1))], now: NOW }).length, 0);
 });
 
 test("follow-up due: e-mail and Telegram carry the client, the Cyprus time, the lead's time and the pipeline link", () => {

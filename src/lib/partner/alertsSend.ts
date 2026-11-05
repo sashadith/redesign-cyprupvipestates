@@ -15,7 +15,7 @@ import { projectRates } from "./scope";
 import { closedDealCounts, loadTiers } from "./tierStore";
 import { tierProgress } from "./tiers";
 import {
-  NEWS_MAX_PROJECTS, cyDate, planBankMissing, planFollowUpDue, planProjectNews, planProtectionReminders, planQuietClients, planTierNear, planWatch, protectionEnd,
+  FOLLOW_UP_FINISHED_STATUSES, FOLLOW_UP_REMINDER_MAX_DAYS, NEWS_MAX_PROJECTS, cyDate, followUpReminderEligible, planBankMissing, planFollowUpDue, planProjectNews, planProtectionReminders, planQuietClients, planTierNear, planWatch, protectionEnd,
   type DueFollowUp, type NewsBlurbs, type PlannedAlert, type WatchEvent,
 } from "./alerts";
 
@@ -121,7 +121,10 @@ async function loadDueFollowUps(now: Date, partnerIds: string[]): Promise<DueFol
   const rows = await prisma.partnerClaim.findMany({
     where: {
       state: "ACTIVE", mode: "FIX", partnerId: { in: partnerIds },
-      lead: { deletedAt: null, workedByPartner: true, nextFollowUpAt: { not: null, lte: now } },
+      lead: {
+        deletedAt: null, workedByPartner: true, status: { notIn: [...FOLLOW_UP_FINISHED_STATUSES] },
+        nextFollowUpAt: { gte: new Date(now.getTime() - FOLLOW_UP_REMINDER_MAX_DAYS * DAY), lte: now },
+      },
     },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     take: CLAIM_CAP,
@@ -137,7 +140,7 @@ async function loadDueFollowUps(now: Date, partnerIds: string[]): Promise<DueFol
   const contactAt = new Map(contacts.map((c) => [c.leadId, c._max.occurredAt ?? null]));
   return rows.flatMap((r) => {
     const at = r.lead.nextFollowUpAt;
-    if (!at) return [];
+    if (!at || !followUpReminderEligible({ status: r.lead.status, workedByPartner: true, nextFollowUpAt: at }, now)) return [];
     const state = effectiveClaimState({
       state: r.state as ClaimStateValue, activeSince: activeSince(r), lastRealContactAt: contactAt.get(r.leadId) ?? null, now,
       leadDeleted: !!r.lead.deletedAt, leadStatus: r.lead.status, hasLiveDeal: live.has(r.leadId),
