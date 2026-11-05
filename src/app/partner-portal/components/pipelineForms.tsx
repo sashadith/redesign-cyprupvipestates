@@ -8,7 +8,7 @@ import { FINANCINGS, TIMELINES } from "@/lib/crm/newLeadForm";
 import { SALUTATIONS } from "@/lib/crm/editLead";
 // Type-only: the four dictionaries stay out of the client bundle (t comes from the server).
 import type { PartnerDict, PartnerLocale } from "@/lib/partner/i18n";
-import { portalDateTime } from "@/lib/partner/pipeline/forms";
+import { EDIT_FIELDS, portalDateTime } from "@/lib/partner/pipeline/forms";
 import { clientClock, weekRange } from "@/lib/partner/pipeline/view";
 import {
   editPipelineClientAction, followUpPipelineAction, logPipelineAction, movePipelineAction, viewingPipelineAction,
@@ -230,10 +230,7 @@ export type ClientValues = {
   financing: string | null; nationality: string | null; countryOfResidence: string | null; message: string | null;
 };
 
-const EDIT_FIELD_NAMES = [
-  "salutation", "firstName", "lastName", "email", "phone", "languagePreference", "budgetMin", "budgetMax",
-  "timeline", "financing", "nationality", "countryOfResidence", "message",
-];
+const EDIT_FIELD_NAMES: string[] = [...EDIT_FIELDS];
 
 export function ClientDataForm({ t, claimId, values }: { t: PartnerDict; claimId: string; values: ClientValues }) {
   const P = t.pipeline;

@@ -1104,7 +1104,7 @@ export const de: PartnerDict = {
       country: "Bitte geben Sie ein gültiges Wohnsitzland an (bis 80 Zeichen).",
       stage: "Bitte wählen Sie eine Stufe.",
       date: "Bitte geben Sie ein gültiges Datum mit Uhrzeit an.",
-      followUpRange: "Die Wiedervorlage muss zwischen heute und zwei Jahren in der Zukunft liegen.",
+      dateRange: "Das Datum muss zwischen gestern und zwei Jahren in der Zukunft liegen.",
       rateLimited: "Zu viele Änderungen in kurzer Zeit. Bitte warten Sie einen Moment.",
     },
   },

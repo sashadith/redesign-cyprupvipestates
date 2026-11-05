@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { clientClock, waMeLink, weekRange } from "@/lib/partner/pipeline/view";
-import { editRawFromForm, portalDateTime, wholeEuros } from "@/lib/partner/pipeline/forms";
+import { editRawFromForm, inPartnerDateWindow, parseWholeEuros, portalDateTime, wholeEuros } from "@/lib/partner/pipeline/forms";
+import { isoWeek, weekLabel } from "@/lib/crm/leadLocalTime";
 import { validateLeadEdit } from "@/lib/crm/editLead";
 
 test("weekRange gives the Cyprus ISO week with its Monday and Friday", () => {
@@ -34,12 +35,31 @@ test("portalDateTime reads Cyprus wall time", () => {
   assert.equal(portalDateTime("tomorrow"), null);
 });
 
-test("wholeEuros accepts grouped whole numbers only", () => {
-  assert.equal(wholeEuros("350 000"), 350000);
-  assert.equal(wholeEuros("350.000"), 350000);
-  assert.equal(wholeEuros("350,000"), 350000);
-  assert.ok(Number.isNaN(wholeEuros("abc")));
-  assert.ok(Number.isNaN(wholeEuros("")));
+test("wholeEuros accepts plain or thousands-grouped whole numbers and refuses everything else", () => {
+  for (const [s, n] of [["350000", 350000], ["350 000", 350000], ["350.000", 350000], ["350,000", 350000], ["1.250.000", 1250000], ["350\u00a0000 €", 350000], ["€ 350,000", 350000]] as const) {
+    assert.equal(wholeEuros(s), n, s);
+    assert.equal(parseWholeEuros(s), n, s);
+  }
+  for (const s of ["350000.00", "1.5", "1,5", "12.34.5", "1.250,000", "35,00", "abc", ""]) {
+    assert.ok(Number.isNaN(wholeEuros(s)), s);
+    assert.equal(parseWholeEuros(s), null, s);
+  }
+});
+
+test("inPartnerDateWindow: from a day back to 730 days ahead", () => {
+  const now = new Date("2026-11-05T10:00:00Z");
+  const day = 86_400_000;
+  assert.ok(inPartnerDateWindow(new Date(now.getTime() - day + 1000), now));
+  assert.ok(!inPartnerDateWindow(new Date(now.getTime() - day - 1000), now));
+  assert.ok(inPartnerDateWindow(new Date(now.getTime() + 730 * day), now));
+  assert.ok(!inPartnerDateWindow(new Date(now.getTime() + 731 * day), now));
+});
+
+test("isoWeek agrees with weekLabel", () => {
+  for (const iso of ["2026-11-05T10:00:00Z", "2026-12-31T12:00:00Z", "2027-01-01T12:00:00Z", "2026-11-08T23:30:00Z"]) {
+    const at = new Date(iso);
+    assert.ok(weekLabel(at).startsWith(`KW ${isoWeek(at).week} (`), iso);
+  }
 });
 
 test("editRawFromForm builds what validateLeadEdit takes, without notes", () => {
@@ -52,6 +72,7 @@ test("editRawFromForm builds what validateLeadEdit takes, without notes", () => 
   assert.ok(!("notes" in raw));
   const v = validateLeadEdit({ ...raw, notes: null }, null);
   assert.ok(v.ok, JSON.stringify(v));
+  assert.equal(editRawFromForm((k) => (k === "budgetMax" ? "1.5" : null)).budgetMax, "1.5"); // refused by validateLeadEdit, not guessed
   const bad = validateLeadEdit({ ...editRawFromForm((k) => (k === "firstName" ? "A" : k === "phone" ? "+357 99 123456" : k === "budgetMin" ? "lots" : null)), notes: null }, null);
   assert.deepEqual(bad.ok ? null : [bad.error, bad.field], ["Budget must be a whole number, 0 or more.", "budgetMin"]);
 });

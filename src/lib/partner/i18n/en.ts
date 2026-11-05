@@ -1102,7 +1102,7 @@ export const en = {
       country: "Please enter a valid country of residence (up to 80 characters).",
       stage: "Please choose a stage.",
       date: "Please enter a valid date and time.",
-      followUpRange: "The follow-up must lie between today and two years ahead.",
+      dateRange: "The date must lie between yesterday and two years ahead.",
       rateLimited: "Too many changes in a short time. Please wait a moment.",
     },
   },

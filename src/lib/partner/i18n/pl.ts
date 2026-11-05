@@ -1104,7 +1104,7 @@ export const pl: PartnerDict = {
       country: "Prosimy podać prawidłowy kraj zamieszkania (do 80 znaków).",
       stage: "Prosimy wybrać etap.",
       date: "Prosimy podać prawidłową datę i godzinę.",
-      followUpRange: "Przypomnienie musi przypadać między dniem dzisiejszym a dwoma latami naprzód.",
+      dateRange: "Data musi przypadać między wczorajszym dniem a dwoma latami naprzód.",
       rateLimited: "Zbyt wiele zmian w krótkim czasie. Prosimy chwilę odczekać.",
     },
   },

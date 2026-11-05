@@ -1,23 +1,13 @@
-import { weekLabel, zoneCity } from "@/lib/crm/leadLocalTime";
+import { isoWeek, zoneCity } from "@/lib/crm/leadLocalTime";
+import { CRM_TZ } from "@/lib/crm/today";
 
 // Display helpers for the partner pipeline (partner pipeline, 2026-11-05). Pure and
 // client-safe. leadLocalTime words its clock and week in English; the portal formats
 // the same instants in the partner's language.
 
-const DAY_MS = 86_400_000;
-const CY_TZ = "Asia/Nicosia";
-
-/** The ISO week of `at` in Cyprus (weekLabel's week) and its Monday and Friday, as UTC-noon dates. */
+/** The ISO week of `at` in Cyprus and its Monday and Friday (UTC-midnight dates: format them with timeZone UTC). */
 export function weekRange(at: Date): { week: number; monday: Date; friday: Date } {
-  const week = Number(/KW (\d+)/.exec(weekLabel(at, CY_TZ))?.[1] ?? 0);
-  const p = Object.fromEntries(
-    new Intl.DateTimeFormat("en-GB", { timeZone: CY_TZ, weekday: "short", year: "numeric", month: "2-digit", day: "2-digit" })
-      .formatToParts(at).map((x) => [x.type, x.value]),
-  );
-  const wd = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.weekday as string);
-  const noon = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), 12);
-  const monday = new Date(noon - wd * DAY_MS);
-  return { week, monday, friday: new Date(monday.getTime() + 4 * DAY_MS) };
+  return isoWeek(at, CRM_TZ);
 }
 
 /** The lead's clock at `at` in the partner's locale: weekday, time, city. */

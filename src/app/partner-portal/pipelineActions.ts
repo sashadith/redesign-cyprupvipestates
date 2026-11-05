@@ -17,12 +17,9 @@ import {
 import { DEAL_ALERT_STAGES } from "@/lib/partner/pipeline/dealAlert";
 import { sendDealAlert } from "@/lib/partner/pipeline/dealAlertSend";
 import { pipelineErrorKey } from "@/lib/partner/pipeline/errors";
-import { editRawFromForm, portalDateTime, wholeEuros } from "@/lib/partner/pipeline/forms";
+import { editRawFromForm, inPartnerDateWindow, portalDateTime, wholeEuros } from "@/lib/partner/pipeline/forms";
 import { requirePartner, type PartnerSessionInfo } from "@/lib/partner/session";
 import type { PipelineState } from "./formState";
-
-const DAY_MS = 86_400_000;
-const FOLLOW_UP_MAX_DAYS = 730;
 
 // The partner user has no name of his own: the partner's name is what the timeline shows.
 function actorOf(me: PartnerSessionInfo): PartnerActor {
@@ -69,6 +66,7 @@ export async function movePipelineAction(_prev: PipelineState, fd: FormData): Pr
   }
   if (to === "VIEWING_SCHEDULED") {
     const at = portalDateTime(fd.get("viewingAt"));
+    if (at && !inPartnerDateWindow(at, new Date())) return { error: "pipeline.err.dateRange", field: "viewingAt" };
     if (at) input.viewingScheduledAt = at;
   }
   if ((DEAL_ALERT_STAGES as readonly string[]).includes(to)) {
@@ -108,6 +106,7 @@ export async function viewingPipelineAction(_prev: PipelineState, fd: FormData):
   if ("error" in g) return g.error;
   const at = portalDateTime(fd.get("viewingAt"));
   if (!at) return { error: "pipeline.err.date", field: "viewingAt" };
+  if (!inPartnerDateWindow(at, new Date())) return { error: "pipeline.err.dateRange", field: "viewingAt" };
   const res = await setPartnerViewingDate(g.actor, g.claimId, at);
   if ("error" in res) return fail(res.error);
   refresh(g.claimId);
@@ -146,9 +145,7 @@ export async function followUpPipelineAction(_prev: PipelineState, fd: FormData)
   if (str(fd.get("clear")) !== "1") {
     at = portalDateTime(fd.get("at"));
     if (!at) return { error: "pipeline.err.date", field: "at" };
-    const now = Date.now();
-    // From a day back (a time earlier today is fine: "call back this morning") up to two years ahead.
-    if (at.getTime() < now - DAY_MS || at.getTime() > now + FOLLOW_UP_MAX_DAYS * DAY_MS) return { error: "pipeline.err.followUpRange", field: "at" };
+    if (!inPartnerDateWindow(at, new Date())) return { error: "pipeline.err.dateRange", field: "at" };
   }
   const res = await setPartnerFollowUp(g.actor, g.claimId, at);
   if ("error" in res) return fail(res.error);
