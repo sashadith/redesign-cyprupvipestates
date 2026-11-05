@@ -1,0 +1,126 @@
+{
+  "source": "PDOM Developers' own SharePoint share (link in DeveloperAccount.developerCloudUrl, never in this repo) plus www.pdomdevelopers.com. Price lists AZUR and NOVA both dated 05/11/2026.",
+  "account": {
+    "slug": "pdom",
+    "name": "PDOM Developers",
+    "website": "https://www.pdomdevelopers.com",
+    "phone": "+357 99 108 623",
+    "email": "office@pdomdevelopers.com",
+    "contactPerson": null,
+    "contactInfo": "PDOM Developers, 20 Charalambou Mouskou, ABC Business Centre office 309, Paphos. From Cyprus 77777 088, from abroad +357 99 108 623, WhatsApp +357 99 171 138, office@pdomdevelopers.com.",
+    "developerCloudUrl": null,
+    "manualSyncReminderDays": 30,
+    "notes": "SOURCE OF TRUTH: the developer's own SharePoint share, one folder per project. The link is a\nbearer credential (anonymous 'anyone with the link' access, no sign-in) and is therefore kept\nONLY in DeveloperAccount.developerCloudUrl, never in this repo — same rule as Korantina and\nPatroclos. Pass it once via PDOM_CLOUD_URL when running the sync, or set it in the admin.\n\nSCOPE. The share covers only the three Universal, Paphos projects: AZUR, NOVA and THE MEADOWS.\nAZUR and NOVA have real per-unit price lists (both dated 05/11/2026) and get real units.\n\nTHE MEADOWS is imported WITHOUT units on purpose. The only document that exists for it is an\narchitectural design concept by DMSTAR/TAD dated 08/12/2025 — no price list, no availability.\nThat document also records that the plots allow a MAXIMUM OF 2 FLOORS / 10 m while the client\nasked for 4, and lists the planning-permission refusal as an open risk. The website meanwhile\nshows THE MEADOWS as 'Under Construction'. Those two cannot both be current; stage is set to\nthe defensible 'Off Plan' until the developer confirms. Unit mix in the facts is the CONCEPT's\nplan (24 apartments + 4 townhouses + a beauty salon), not a sold product.\n\nNOT IMPORTED, and why:\n  - Nerida Residences, Chloraka — 7 villas, marked COMPLETED on the developer's own 'Our Work'\n    page and built together with AGG Luxury Homes (who already have a developer page with us).\n    No folder in the share, no availability, no prices. Ask before importing: a completed joint\n    project may be all sold, and it must not end up duplicated under two developers.\n  - Villa in Tala 1 and Villa in Tala 2 — one-off private houses built for a client, shown as\n    reference work. Villa in Tala 2 has no text on the website at all. Not sellable products.\n\nNAME COLLISIONS, flagged 2026-11-05: we already carry 'Nova' (Reiwa Development, Tombs of the\nKings, slug 'nova'), so PDOM's NOVA Residence must not take that slug. We also carry 'Azure\nBeachfront Villas' (Aristo) and 'Azure Living' (Medousa), which read almost like AZUR.\n\nAREAS. areaInternal/areaBuilt carry the PURE interior figure. The developer's 'Total built area'\ncolumn is internal + covered terraces + green zone + installations area and goes into attrs, so\nthe page's Covered Area does not double-count it. Roof terraces are NOT inside that total.\nVAT is charged on top of every price; the lists state the prices already include the agent's\ncommission.\n\nMonthly: re-download the two price lists, re-transcribe here (every row must still add up to the\nlist's own total — the script refuses otherwise), dry run, then --apply."
+  },
+  "projects": [
+    {
+      "slug": "azur-residence",
+      "name": "AZUR Residence",
+      "category": "Apartments",
+      "stage": "Under Construction",
+      "completion": "Q1 2027",
+      "energy": null,
+      "district": "Paphos",
+      "town": null,
+      "area": "Universal",
+      "latitude": 34.7640587,
+      "longitude": 32.4287857,
+      "collection": null,
+      "priceListDate": "2026-11-05",
+      "amenities": [
+        "Communal swimming pool of 45 m²",
+        "One private parking space per apartment",
+        "Ground-floor storage room per apartment",
+        "Landscaped green zones",
+        "Lift",
+        "Video intercom high-security entrance doors",
+        "Double-glazed, thermally insulated aluminium windows with provisions for mosquito nets"
+      ],
+      "facts": [
+        "One block of three floors with six two-bedroom apartments, all en-suite.",
+        "Delivery February 2027; price list of 05/11/2026.",
+        "Third-floor apartments add a 45 m² private roof terrace.",
+        "Kitchens and wardrobes by GF Interiors, Italy; white goods are not included.",
+        "Bedroom floors in oak parquet, living and common areas in 1000 × 1000 mm anti-slip ceramic tiles, bathroom walls in 1200 × 600 mm ceramic tiles.",
+        "Internal doors by Garofoli, Italy, 2100 mm high; aluminium windows by Muskita.",
+        "Sanitary ware by Ideal Standard, kitchen sinks and mixers by Franke.",
+        "Prices are quoted plus VAT and already include the agent's commission."
+      ],
+      "units": [
+        { "ref": "101", "beds": 2, "internal": 84, "veranda": 23, "greenZone": 8,    "installations": 9,   "total": 124, "storage": 5, "parking": 1, "view": "Picturesque view",            "status": "sold",      "price": null,   "type": "Apartment", "floor": "1st floor", "ensuite": 2 },
+        { "ref": "102", "beds": 2, "internal": 84, "veranda": 23, "greenZone": 16.5, "installations": 8.5, "total": 132, "storage": 5, "parking": 1, "view": "Picturesque view",            "status": "sold",      "price": null,   "type": "Apartment", "floor": "1st floor", "ensuite": 2 },
+        { "ref": "201", "beds": 2, "internal": 84, "veranda": 23, "greenZone": 8,    "installations": 9,   "total": 124, "storage": 5, "parking": 1, "view": "Picturesque view",            "status": "available", "price": 455000, "type": "Apartment", "floor": "2nd floor", "ensuite": 2 },
+        { "ref": "202", "beds": 2, "internal": 84, "veranda": 23, "greenZone": 16.5, "installations": 8.5, "total": 132, "storage": 5, "parking": 1, "view": "Sea view / picturesque view", "status": "available", "price": 495000, "type": "Apartment", "floor": "2nd floor", "ensuite": 2 },
+        { "ref": "301", "beds": 2, "internal": 84, "veranda": 23, "greenZone": 8,    "installations": 9,   "total": 124, "roofTerrace": 45, "storage": 5, "parking": 1, "view": "Sea view", "status": "available", "price": 505000, "type": "Apartment", "floor": "3rd floor", "ensuite": 2 },
+        { "ref": "302", "beds": 2, "internal": 84, "veranda": 23, "greenZone": 16.5, "installations": 8.5, "total": 132, "roofTerrace": 45, "storage": 5, "parking": 1, "view": "Sea view", "status": "sold",      "price": null,   "type": "Apartment", "floor": "3rd floor", "ensuite": 2 }
+      ]
+    },
+    {
+      "slug": "nova-residence",
+      "name": "NOVA Residence",
+      "category": "Apartments",
+      "stage": "Under Construction",
+      "completion": "Q1 2028",
+      "energy": null,
+      "district": "Paphos",
+      "town": null,
+      "area": "Universal",
+      "latitude": 34.7639418,
+      "longitude": 32.4264145,
+      "collection": null,
+      "priceListDate": "2026-11-05",
+      "amenities": [
+        "Communal swimming pool of 35 m²",
+        "One private parking space per apartment",
+        "Ground-floor storage room per apartment",
+        "Landscaped green zones",
+        "Lift",
+        "Private balconies, and roof terraces on the top floor"
+      ],
+      "facts": [
+        "One block of three floors with six two-bedroom apartments.",
+        "Delivery February 2028; price list of 05/11/2026.",
+        "Both third-floor apartments face the sea and add a private roof terrace of 47–49 m².",
+        "Prices are quoted plus VAT and already include the agent's commission."
+      ],
+      "units": [
+        { "ref": "101", "beds": 2, "internal": 77, "veranda": 20, "greenZone": 12, "installations": 12, "total": 121, "storage": 3, "parking": 1, "status": "available", "price": 390000, "type": "Apartment", "floor": "1st floor" },
+        { "ref": "102", "beds": 2, "internal": 75, "veranda": 22, "greenZone": 15, "installations": 9,  "total": 121, "storage": 3, "parking": 1, "status": "available", "price": 380000, "type": "Apartment", "floor": "1st floor" },
+        { "ref": "201", "beds": 2, "internal": 77, "veranda": 20, "greenZone": 12, "installations": 12, "total": 121, "storage": 3, "parking": 1, "status": "available", "price": 415000, "type": "Apartment", "floor": "2nd floor" },
+        { "ref": "202", "beds": 2, "internal": 75, "veranda": 22, "greenZone": 15, "installations": 9,  "total": 121, "storage": 3, "parking": 1, "status": "available", "price": 425000, "type": "Apartment", "floor": "2nd floor" },
+        { "ref": "301", "beds": 2, "internal": 77, "veranda": 20, "greenZone": 24, "installations": 0,  "total": 121, "roofTerrace": 49, "storage": 4, "parking": 1, "view": "Sea view", "status": "available", "price": 539000, "type": "Apartment", "floor": "3rd floor" },
+        { "ref": "302", "beds": 2, "internal": 75, "veranda": 22, "greenZone": 24, "installations": 0,  "total": 121, "roofTerrace": 47, "storage": 4, "parking": 1, "view": "Sea view", "status": "available", "price": 522500, "type": "Apartment", "floor": "3rd floor" }
+      ]
+    },
+    {
+      "slug": "the-meadows",
+      "name": "THE MEADOWS",
+      "category": "Apartments",
+      "stage": "Off Plan",
+      "completion": null,
+      "energy": null,
+      "district": "Paphos",
+      "town": null,
+      "area": "Universal",
+      "latitude": null,
+      "longitude": null,
+      "collection": null,
+      "priceListDate": null,
+      "amenities": [
+        "Landscaped park within the complex",
+        "Communal swimming pool and children's splash zone",
+        "Open-air lounge area",
+        "Fitness deck and yoga terrace",
+        "Children's playground",
+        "Fireplace area",
+        "Beauty salon on site"
+      ],
+      "facts": [
+        "Planned as two blocks on six adjoining plots of 3,988 m² in total, with a park between them.",
+        "The design concept of 08/12/2025 plans 24 apartments in Block A — one-, two- and three-bedroom — plus four townhouses and a beauty salon in Block B.",
+        "No price list and no availability exist yet; the figures above come from the design concept, not from a sales list."
+      ],
+      "units": []
+    }
+  ]
+}

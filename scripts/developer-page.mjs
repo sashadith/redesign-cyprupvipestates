@@ -46,6 +46,7 @@
  * existing translationGroupId is kept so the account link never has to move. */
 import fs from "node:fs";
 import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../src/lib/prisma.ts";
 import { htmlToPortableText } from "../src/lib/portableText/htmlToPt.mjs";
 import { reactivateDeveloperGroup } from "../src/lib/developerLifecycle.ts";
@@ -68,16 +69,20 @@ try {
 
   for (const lang of LANGS) {
     const l = data.languages[lang];
-    const blocks = htmlToPortableText(l.html);
-    const h2 = blocks.filter((b) => b.style === "h2").length;
+    // An empty html means the long body is deliberately left to whoever writes the SEO copy.
+    // htmlToPortableText("") still returns one empty block, which the page then renders as a
+    // blank paragraph and which someone had to clear by hand after every run — so blank maps
+    // to a real NULL instead.
+    const blocks = (l.html ?? "").trim() ? htmlToPortableText(l.html) : null;
+    const h2 = blocks ? blocks.filter((b) => b.style === "h2").length : 0;
     const row = existing.find((r) => r.language === lang);
     const state = row ? (row.deactivatedAt ? "offline, unchanged" : "live, unchanged") : LIVE ? "LIVE" : "offline";
-    console.log(`  ${lang}: ${row ? "update" : "create"} (${state}) — ${blocks.length} blocks, ${h2} headings, excerpt ${l.excerpt.length} chars`);
+    console.log(`  ${lang}: ${row ? "update" : "create"} (${state}) — ${blocks ? `${blocks.length} blocks, ${h2} headings` : "no long text (left for the SEO copy)"}, excerpt ${l.excerpt.length} chars`);
     if (!APPLY) continue;
     const fields = {
       translationGroupId: groupId, language: lang, slug: data.slug,
       title: data.title, titleFull: l.titleFull, excerpt: l.excerpt,
-      logo: data.logo, description: blocks, seo: l.seo,
+      logo: data.logo, description: blocks ?? Prisma.DbNull, seo: l.seo,
     };
     // deactivatedAt is deliberately absent from `fields`: an update must never move a
     // page between live and offline as a side effect of a copy change.

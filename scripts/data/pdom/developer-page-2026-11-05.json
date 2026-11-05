@@ -1,0 +1,38 @@
+{
+  "_source": "Written 2026-11-05 from the developer's own About, Services, Contact and Our Work pages on www.pdomdevelopers.com and from the AZUR/NOVA price lists and specification PDFs in their SharePoint share. Long body (html) and seo are left EMPTY on purpose: the short description is ours, the SEO copy is Alex's (standing split since 2026-10-31). No HE row — Hebrew is only added on explicit request.",
+  "slug": "pdom-developers",
+  "accountSlug": "pdom",
+  "title": "PDOM Developers",
+  "logo": {
+    "_type": "image",
+    "alt": "PDOM Developers logo",
+    "asset": { "_type": "reference", "_ref": "image-0f5818a48b4f239977d155105a88a03e88227722-593x200-png" }
+  },
+  "logoFile": "uploaded to the VPS at /var/www/shared-uploads/images/0f5818a48b4f239977d155105a88a03e88227722-593x200.png (served 200). Supplied by the operator; NOT recoloured, because the gold artwork reads as light ink (mean opaque luminance 166) and both surfaces it lands on are dark — the #142E2D signboard on the developer page and the translucent plate on the developers index.",
+  "languages": {
+    "en": {
+      "titleFull": "PDOM Developers – Apartments for Sale in Paphos, Cyprus",
+      "excerpt": "PDOM Developers is an investment and development company founded in Cyprus in 2018 and based in Paphos. It builds in small volumes rather than large schemes: AZUR Residence and NOVA Residence are each a single three-storey block of six two-bedroom apartments in the Universal area of Paphos, both with a communal pool, a parking space and a storage room for every apartment. A larger scheme of apartments, townhouses and a landscaped park, THE MEADOWS, is planned in the same area.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    },
+    "de": {
+      "titleFull": "PDOM Developers – Wohnungen zum Verkauf in Paphos, Zypern",
+      "excerpt": "PDOM Developers ist eine 2018 auf Zypern gegründete Investment- und Projektentwicklungsgesellschaft mit Sitz in Paphos. Gebaut wird bewusst kleinteilig statt in großen Anlagen: AZUR Residence und NOVA Residence sind jeweils ein dreigeschossiges Haus mit sechs Wohnungen mit zwei Schlafzimmern im Viertel Universal in Paphos, beide mit Gemeinschaftspool sowie einem Stellplatz und einem Abstellraum je Wohnung. In derselben Gegend ist mit THE MEADOWS eine größere Anlage aus Wohnungen, Reihenhäusern und einem Park geplant.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    },
+    "pl": {
+      "titleFull": "PDOM Developers – mieszkania na sprzedaż w Pafos na Cyprze",
+      "excerpt": "PDOM Developers to spółka inwestycyjno-deweloperska założona na Cyprze w 2018 roku, z siedzibą w Pafos. Buduje w małej skali, a nie duże osiedla: AZUR Residence i NOVA Residence to po jednym trzykondygnacyjnym budynku z sześcioma mieszkaniami z dwiema sypialniami w dzielnicy Universal w Pafos, oba ze wspólnym basenem oraz miejscem postojowym i komórką lokatorską do każdego mieszkania. W tej samej okolicy planowana jest większa inwestycja THE MEADOWS — mieszkania, domy szeregowe i urządzony park.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    },
+    "ru": {
+      "titleFull": "PDOM Developers — квартиры на продажу в Пафосе, Кипр",
+      "excerpt": "PDOM Developers — инвестиционно-девелоперская компания, основанная на Кипре в 2018 году, с офисом в Пафосе. Строит небольшими объёмами, а не крупными комплексами: AZUR Residence и NOVA Residence — это по одному трёхэтажному дому на шесть квартир с двумя спальнями в районе Universal в Пафосе, в каждом общий бассейн, а к каждой квартире — парковочное место и кладовая. В том же районе планируется более крупный проект THE MEADOWS: квартиры, таунхаусы и благоустроенный парк.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    }
+  }
+}
