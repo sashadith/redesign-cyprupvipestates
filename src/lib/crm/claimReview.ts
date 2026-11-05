@@ -5,6 +5,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
+import { workedByPartnerOnAccept } from "@/lib/partner/pipeline/rules";
 import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
 import { canEditLead } from "./access";
 import { writeAudit } from "./audit";
@@ -83,7 +84,7 @@ export async function acceptClaim(actor: SessionCrmUser, claimId: string): Promi
       await tx.$queryRaw`SELECT id FROM leads WHERE id = ${claim.leadId} FOR UPDATE`;
       const lead = await tx.lead.findFirst({
         where: { id: claim.leadId, deletedAt: null },
-        select: { id: true, status: true, partnerId: true, deals: { where: { commissionStatus: { not: "CANCELLED" } }, select: { id: true }, take: 1 } },
+        select: { id: true, status: true, partnerId: true, assignedToId: true, deals: { where: { commissionStatus: { not: "CANCELLED" } }, select: { id: true }, take: 1 } },
       });
       if (!lead) throw new Abort("The lead is in the trash or no longer exists.");
 
@@ -120,16 +121,17 @@ export async function acceptClaim(actor: SessionCrmUser, claimId: string): Promi
       if (r.count !== 1) throw new Abort(HANDLED);
 
       const sub = readSubmission(claim.submission);
+      const workedByPartner = workedByPartnerOnAccept(claim.mode, lead.assignedToId);
       await tx.lead.update({
         where: { id: lead.id },
-        data: { partnerId: claim.partnerId, partnerMode: claim.mode, contactMode: claim.contactMode, contactRepName: sub.repName, contactRepPhone: sub.repPhone },
+        data: { partnerId: claim.partnerId, partnerMode: claim.mode, workedByPartner, contactMode: claim.contactMode, contactRepName: sub.repName, contactRepPhone: sub.repPhone },
       });
       const who = partnerName(claim.partner);
       await tx.leadInteraction.create({
         data: {
           leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", body: `Partner claim accepted: ${who}`,
           createdByUserId: actor.id, createdByName: actor.name, occurredAt: now,
-          metadata: { via: "claim-review", claimId: claim.id, partnerId: claim.partnerId, ...(other && decision.kind === "EXPIRE_OTHER_THEN_ACCEPT" ? { expiredClaimId: other.id } : {}) },
+          metadata: { via: "claim-review", claimId: claim.id, partnerId: claim.partnerId, workedByPartner, ...(other && decision.kind === "EXPIRE_OTHER_THEN_ACCEPT" ? { expiredClaimId: other.id } : {}) },
         },
       });
       await writeAudit(actor, "partner_claim_accept", "partner_claim", claim.id, {
