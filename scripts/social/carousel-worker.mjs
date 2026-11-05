@@ -43,6 +43,9 @@ window.__cve = (() => {
     "html.__iso body *{visibility:hidden!important;text-shadow:none!important;filter:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important}",
     "html.__iso .__on, html.__iso .__on *{visibility:visible!important;color:#000!important}",
     "html.__iso body{background:var(--iso-bg,#fff)!important}",
+    // Rule 4 (and the price line, rule 3): markings, price and VAT never wrap. Switched
+    // on after the approved photo script has run, exactly as the DE template has it.
+    "html.__nowrap .mark-word, html.__nowrap .mark, html.__nowrap .h-num, html.__nowrap .vat{white-space:nowrap}",
     // Text-only mode: every glyph black on white, every box, image and overlay gone.
     "html.__txt body *{background:transparent!important;border-color:transparent!important;outline:none!important;box-shadow:none!important;text-shadow:none!important;filter:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;color:#000!important}",
     "html.__txt body *::before, html.__txt body *::after{display:none!important}",
@@ -224,7 +227,7 @@ async function portraitOverlap(page) {
   return n;
 }
 
-async function loadPage(context, file) {
+async function loadPage(context, file, raw = false) {
   const page = await context.newPage();
   page.setDefaultTimeout(20_000);
   await page.route("**/*", (r) => (r.request().url().startsWith("file:") ? r.continue() : r.abort()));
@@ -248,11 +251,12 @@ async function loadPage(context, file) {
     await Promise.all([...document.images].map((i) => (i.complete ? Promise.resolve() : new Promise((r) => (i.onload = i.onerror = r)))));
   });
   await page.addScriptTag({ content: PAGE_HELPERS });
+  if (!raw) await page.evaluate(() => document.documentElement.classList.add("__nowrap"));
   return page;
 }
 
 async function renderSlide(context, s, n) {
-  const page = await loadPage(context, s.file);
+  const page = await loadPage(context, s.file, !!s.raw);
   try {
     if (s.raw) {
       // An approved original, as delivered: no fit, its own scripts already ran.

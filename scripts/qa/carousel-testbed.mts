@@ -26,8 +26,7 @@ import sharp from "sharp";
 import { compareGeometry, compareImages } from "./carousel-compare.mjs";
 import { getProjectData } from "@/lib/mcp/tools/getProject";
 import { RenderInput } from "@/lib/social/carousel/schema";
-import { renderCarousel, RenderError } from "@/lib/social/carousel/render";
-import { ImageRejected } from "@/lib/social/carousel/imagePolicy";
+import { renderCarousel } from "@/lib/social/carousel/render";
 import { prisma } from "@/lib/prisma";
 
 const OUT = process.argv[2];
@@ -43,7 +42,10 @@ fs.mkdirSync(ROOT, { recursive: true });
 const report: Record<string, unknown> = { startedAt: new Date().toISOString(), chromium: null };
 const failures: string[] = [];
 const check = (ok: boolean, what: string) => { if (!ok) failures.push(what); console.log(`${ok ? "✓" : "✗"} ${what}`); };
-const ours = () => execFileSync("sh", ["-c", "pgrep -fa 'cve-carousel-run=' || true"], { encoding: "utf8" }).trim();
+// The bracket keeps pgrep from matching this very shell, whose command line holds the pattern.
+const ours = () => execFileSync("sh", ["-c", "pgrep -fa 'cve-carousel-ru[n]=|chrome-headless-shel[l]' || true"], { encoding: "utf8" }).trim();
+// tsx can load a module once as ESM and once as CJS, so instanceof is unreliable here; the class name is not.
+const isErr = (e: unknown, name: string, code?: string) => (e as any)?.constructor?.name === name && (code === undefined || (e as any).code === code);
 
 // ---------------------------------------------------------------- 1. crm_get_project
 const soho = (await getProjectData({ slug: "soho-resort-east-tower" })) as any;
@@ -146,31 +148,53 @@ for (const s of SETS) {
 
 // ---------------------------------------------------------------- 4. failure paths
 const failure: Record<string, unknown> = {};
+const LONG_HEADLINE = "Even the smallest one-bedroom apartment starts at 117 m², with a terrace facing the sea and a kitchen that opens onto the living room.";
 {
-  // Too-long headline on slide 3: must fail naming the slide and the rule; the set rendered above stays.
+  // Rule 6 at work: a 140-character headline (the schema maximum) still fits slide 2 by shrinking.
   const input = RenderInput.parse(fixture("soho-east-tower-en")) as any;
-  input.data.slide3.headline = "Three generous layouts with sea views from every single room, private terraces on all floors and space for the whole family to live, work and rest.";
-  input.data.slide3.markedWords = "sea views";
+  input.slug = "qa-shrink";
+  input.data.slide2.headline = LONG_HEADLINE;
+  const r = await renderCarousel(input);
+  failure.shrink = r.report[1];
+  check(r.report[1].reduced && r.report[1].headingPx! >= Math.ceil(68 * 0.72), `140-character headline fits slide 2 at ${r.report[1].headingPx} px (template 68 px)`);
+  const folder = path.join(ROOT, r.folder.replace(/^\/uploads\//, ""));
+  const sheet = path.join(OUT, "qa-shrink-02.jpg");
+  await sharp(path.join(folder, "02.jpg")).resize(540, 675).jpeg({ quality: 85 }).toFile(sheet);
+  sheets.push(sheet);
+}
+for (const [label, mutate] of [
+  ["too-long headline + long body (slide 2)", (d: any) => { d.slide2.headline = LONG_HEADLINE; d.slide2.body = "That's the size of a family flat in most European cities — and every apartment comes with covered parking, storage and a share of the resort gardens."; }],
+  ["unbreakable marked compound (slide 2)", (d: any) => { d.slide2.headline = "Every apartment comes with a Meerblick-Penthouse-Dachterrassenlandschaft."; d.slide2.markedWords = "Meerblick-Penthouse-Dachterrassenlandschaft"; }],
+] as const) {
+  // Must fail naming the slide and the rule; the set rendered in stage B stays exactly as it was.
+  const input = RenderInput.parse(fixture("soho-east-tower-en")) as any;
+  mutate(input.data);
   const folder = path.join(ROOT, "social", "2026-w47", "soho-resort-east-tower-en");
-  const before = fs.readdirSync(folder).map((f) => [f, fs.statSync(path.join(folder, f)).mtimeMs]);
+  const snapshot = () => fs.readdirSync(folder).map((f) => [f, fs.statSync(path.join(folder, f)).mtimeMs, fs.statSync(path.join(folder, f)).size]);
+  const before = snapshot();
   try {
     await renderCarousel(input);
-    check(false, "too-long headline is refused");
+    check(false, `${label} is refused`);
   } catch (e) {
-    failure.tooLong = { code: (e as any).code, message: (e as Error).message };
-    check(e instanceof RenderError && e.code === "layout_rule" && /Slide 3, rule \d/.test(e.message), `too-long headline → "${(e as Error).message}"`);
+    (failure.refused ??= [] as any[]).push({ label, code: (e as any).code, message: (e as Error).message });
+    check(isErr(e, "RenderError", "layout_rule") && /^Slide 2, rule \d/.test((e as Error).message), `${label} → "${(e as Error).message}"`);
   }
-  const after = fs.readdirSync(folder).map((f) => [f, fs.statSync(path.join(folder, f)).mtimeMs]);
-  check(JSON.stringify(before) === JSON.stringify(after), "the earlier set is untouched after the refused render");
-  check(fs.readdirSync(path.dirname(folder)).every((f) => !/\.(tmp|old)-/.test(f)), "no temp/old folders left behind");
-  check(ours() === "", "no Chromium left after the refused render");
-  check(!fs.existsSync(path.join(os.tmpdir(), "cve-carousel.lock")), "lock released");
+  check(JSON.stringify(before) === JSON.stringify(snapshot()), `${label}: the earlier set is untouched`);
+  check(fs.readdirSync(path.dirname(folder)).every((f) => !/\.(tmp|old)-/.test(f)), `${label}: no temp/old folders left behind`);
+  check(ours() === "", `${label}: no Chromium left`);
+  check(!fs.existsSync(path.join(os.tmpdir(), "cve-carousel.lock")), `${label}: lock released`);
+}
+{
+  const tooLong = fixture("soho-east-tower-en");
+  tooLong.data.slide2.headline = LONG_HEADLINE + " And a second sentence that takes it past the limit.";
+  const p = RenderInput.safeParse(tooLong);
+  check(!p.success, `a headline over 140 characters is refused by the schema${p.success ? "" : ": " + p.error.issues[0].message}`);
 }
 for (const [label, url] of [["external", "https://images.example.com/a.jpg"], ["traversal", "https://cyprusvipestates.com/uploads/../../etc/passwd"], ["own output", "https://cyprusvipestates.com/uploads/social/2026-w47/soho-resort-east-tower-en/01.jpg"]]) {
   const input = RenderInput.parse(fixture("zypern-warum-de")) as any;
   input.data.cover.image = url;
   try { await renderCarousel(input); check(false, `${label} image is refused`); }
-  catch (e) { check(e instanceof ImageRejected, `${label} image refused: ${(e as Error).message}`); }
+  catch (e) { check(isErr(e, "ImageRejected"), `${label} image refused: ${(e as Error).message}`); }
 }
 {
   // The 60 s hard limit with a real Chromium hanging (test hook, NODE_ENV != production).
@@ -182,7 +206,7 @@ for (const [label, url] of [["external", "https://images.example.com/a.jpg"], ["
   catch (e) {
     const secs = (Date.now() - t0) / 1000;
     failure.timeout = { code: (e as any).code, message: (e as Error).message, seconds: secs };
-    check(e instanceof RenderError && e.code === "render_timeout" && secs < 63, `hanging render stopped after ${secs.toFixed(1)} s: "${(e as Error).message}"`);
+    check(isErr(e, "RenderError", "render_timeout") && secs < 63, `hanging render stopped after ${secs.toFixed(1)} s: "${(e as Error).message}"`);
   }
   delete process.env.CAROUSEL_TEST_HANG;
   await new Promise((r) => setTimeout(r, 500));

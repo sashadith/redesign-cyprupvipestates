@@ -117,10 +117,13 @@ export type Resolved = (inputUrl: string) => string;
 const head = (n: number) => `<div class="head"><img src="../brand/logo-wide.png"><span class="num">0${n} / 06</span></div>`;
 
 export async function buildProjectSlides(d: ProjectData, lang: Lang, img: Resolved): Promise<SlideJob[]> {
-  // The DE file's style = the EN style plus `.mark-word, .h-num, .vat { white-space:nowrap }`,
-  // which rule 4 requires in both languages.
-  const css = await styleOf("project-dark-de.html");
-  const js = await scriptsOf("project-dark-de.html");
+  // Each language uses its own approved file: the photo-height script runs while the
+  // page is parsed, so the EN render must see the EN style exactly (the DE file adds
+  // `white-space:nowrap`, which changes how lines break in that moment). Rule 4's
+  // nowrap for both languages is applied by the worker after the page has loaded.
+  const file = lang === "de" ? "project-dark-de.html" : "project-dark-en.html";
+  const css = await styleOf(file);
+  const js = await scriptsOf(file);
   const t = P[lang];
   const swipe = `<div class="swipe">${t.swipe} &nbsp;→</div>`;
   const tile = (image: string, caption: string) =>
