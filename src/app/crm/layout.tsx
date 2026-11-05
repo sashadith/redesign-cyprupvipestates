@@ -8,6 +8,7 @@ import "./crm.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import { getCrmUser } from "@/lib/crm/session";
 import { canAssignLeads } from "@/lib/crm/access";
+import { managesPartners } from "@/lib/crm/partnerPipelines";
 import { mayUseOldCrm } from "@/lib/crm/oldCrmGate";
 import { prisma } from "@/lib/prisma";
 import { inboxWhere } from "@/lib/crm/inboxWhere";
@@ -65,7 +66,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
       </head>
       <body className={`crm-app antialiased ${fontVars}${isDarkSet(design.values) ? " ds-dark" : ""}`}>
         <Shell
-          user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner }}
+          user={{ name: user.name, canAssign, inboxCount: canAssign ? await countInbox() : 0, oldCrm: mayUseOldCrm(user), isOwner: user.isOwner, partnerPipelines: await managesPartnersSafe(user) }}
           themes={{ options: design.options, choiceId: design.choiceId }}
           nag={await nagCountsFor(user, new Date())}
         >
@@ -86,3 +87,13 @@ async function countInbox(): Promise<number> {
   }
 }
 
+
+// Same rule: a failed lookup only hides the nav link.
+async function managesPartnersSafe(user: NonNullable<Awaited<ReturnType<typeof getCrmUser>>>): Promise<boolean> {
+  try {
+    return await managesPartners(user);
+  } catch (err) {
+    console.error("[crm partner pipelines nav]", err);
+    return false;
+  }
+}

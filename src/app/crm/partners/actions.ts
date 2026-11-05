@@ -30,7 +30,7 @@ export async function approvePartnerAction(id: string): Promise<Result> {
   const partner = await prisma.partner.findUnique({
     where: { id },
     select: {
-      id: true, status: true, firstName: true, lastName: true, company: true, language: true, refCode: true,
+      id: true, status: true, firstName: true, lastName: true, company: true, language: true, refCode: true, managerUserId: true,
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true, emailVerifiedAt: true } },
     },
   });
@@ -41,6 +41,8 @@ export async function approvePartnerAction(id: string): Promise<Result> {
   if (!pu) return { error: "Partner has no login user." };
   if (!pu.emailVerifiedAt) return { error: "Email not verified yet" };
 
+  // A partner without a manager gets the approving user; the terms editor can change it later.
+  const managerUserId = partner.managerUserId ?? actor.id;
   let committed = false;
   for (let attempt = 0; attempt < 5 && !committed; attempt++) {
     const refCode = partner.refCode ?? newRefCode({ company: partner.company, lastName: partner.lastName }, randomSuffix);
@@ -49,12 +51,12 @@ export async function approvePartnerAction(id: string): Promise<Result> {
         const now = new Date();
         const r = await tx.partner.updateMany({
           where: { id, status: "PENDING" },
-          data: { status: "ACTIVE", approvedAt: now, approvedById: actor.id, suspendedAt: null, refCode },
+          data: { status: "ACTIVE", approvedAt: now, approvedById: actor.id, suspendedAt: null, refCode, managerUserId },
         });
         if (r.count !== 1) return false;
         await writeAudit(actor, "partner_approve", "partner", id, {
-          before: { status: "PENDING", refCode: partner.refCode },
-          after: { status: "ACTIVE", refCode, approvedById: actor.id },
+          before: { status: "PENDING", refCode: partner.refCode, managerUserId: partner.managerUserId },
+          after: { status: "ACTIVE", refCode, approvedById: actor.id, managerUserId },
         }, tx);
         return true;
       });
