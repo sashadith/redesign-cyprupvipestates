@@ -12,6 +12,12 @@ const text = (max: number) => z.string().trim().min(1).max(max).refine((s) => !C
 const multiline = (max: number) => z.string().trim().min(1).max(max).refine((s) => !CTRL.test(s), "plain text");
 const image = z.string().trim().min(1).max(500).describe("https://cyprusvipestates.com/uploads/… — e.g. a crm_get_project gallery URL");
 
+// Fixed-length lists are arrays with minItems = maxItems, not zod tuples: tuples become
+// JSON Schema "prefixItems", which claude.ai's connector does not accept — the tool was
+// silently dropped from the tool list (2026-11-05). Same for "exclusiveMinimum", so
+// lower bounds use min(1).
+const exactly = <T extends z.ZodType>(item: T, n: number) => z.array(item).length(n);
+
 const countOccurrences = (hay: string, needle: string) => (needle ? hay.split(needle).length - 1 : 0);
 
 /** Headline with exactly one marked phrase (rule 4: one marking per slide). */
@@ -27,18 +33,18 @@ const Row = z.object({ label: text(24), value: text(32) }).strict();
 
 export const ProjectData = z
   .object({
-    name: z.tuple([text(32), text(32)]).describe("Two lines; the second is set in gold."),
+    name: exactly(text(32), 2).describe("Two lines; the second is set in gold."),
     location: text(60),
     heroImage: image,
     // slide2/slide3.image: the large photo at the top of those slides in the approved
     // design (not in the original field list; added 2026-11-05 so it is never guessed).
-    slide2: z.object({ image, eyebrow: text(40), ...marked, body: text(160), tiles: z.tuple([Tile, Tile, Tile]) }).strict(),
-    slide3: z.object({ image, eyebrow: text(40), ...marked, layouts: z.tuple([Layout, Layout, Layout]) }).strict(),
-    slide4: z.object({ eyebrow: text(40), ...marked, image, facilities: z.tuple([Facility, Facility, Facility]) }).strict(),
+    slide2: z.object({ image, eyebrow: text(40), ...marked, body: text(160), tiles: exactly(Tile, 3) }).strict(),
+    slide3: z.object({ image, eyebrow: text(40), ...marked, layouts: exactly(Layout, 3) }).strict(),
+    slide4: z.object({ eyebrow: text(40), ...marked, image, facilities: exactly(Facility, 3) }).strict(),
     slide5: z
       .object({
         image,
-        priceFrom: z.number().int().positive().max(1_000_000_000),
+        priceFrom: z.number().int().min(1).max(1_000_000_000),
         vatNote: z.enum(["plus", "included"]).nullable(),
         rows: z.array(Row).max(3),
       })
@@ -47,13 +53,13 @@ export const ProjectData = z
   .strict();
 
 const CyprusSlide = z
-  .object({ image, eyebrow: text(40), ...marked, checks: z.tuple([text(60), text(60), text(60)]), source: text(80).optional() })
+  .object({ image, eyebrow: text(40), ...marked, checks: exactly(text(60), 3), source: text(80).optional() })
   .strict();
 
 export const CyprusData = z
   .object({
     cover: z.object({ image, chip: text(24), title: multiline(90), accentWord: text(30), subtitle: text(90) }).strict(),
-    slides: z.tuple([CyprusSlide, CyprusSlide, CyprusSlide, CyprusSlide]).describe("Slides 2–5."),
+    slides: exactly(CyprusSlide, 4).describe("Slides 2–5."),
   })
   .strict();
 
