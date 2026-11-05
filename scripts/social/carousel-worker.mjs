@@ -317,7 +317,9 @@ let browser = null;
 try {
   const { chromium } = await import("playwright-core");
   try {
-    browser = await chromium.launch({ headless: true, args: [`--cve-carousel-run=${job.renderId}`] });
+    // --font-render-hinting=none: the approved renders were made without font hinting;
+    // with Linux's default hinting the glyph advances drift 2–4 px by the end of a line.
+    browser = await chromium.launch({ headless: true, args: [`--cve-carousel-run=${job.renderId}`, "--font-render-hinting=none"] });
   } catch (e) {
     const msg = String(e && e.message || e);
     if (/Executable doesn't exist|browserType\.launch: .*not found/i.test(msg)) { out({ ok: false, error: "renderer_not_installed", detail: msg.split("\n")[0] }); process.exitCode = 1; }
