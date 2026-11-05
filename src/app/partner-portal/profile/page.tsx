@@ -11,7 +11,7 @@ import { vatIdMissing } from "@/lib/partner/vat";
 import { partnerBotConfigured } from "@/lib/partner/telegramApi";
 import { brandDisplayName } from "@/lib/partner/presentationBranding";
 import { BankForm, PasswordForm, ProfileForm, SettingsForm, TelegramCard } from "../components/forms";
-import { BrandForm, LogoForm } from "../components/presentationForms";
+import { BrandForm, LogoForm, PhotoForm } from "../components/presentationForms";
 import { dateFmt } from "../components/portalBits";
 import { portalContext } from "../portalContext";
 
@@ -23,7 +23,7 @@ export default async function PartnerProfile() {
     select: { firstName: true, lastName: true, company: true, vatId: true, country: true, language: true, phone: true, type: true, emailNotifications: true, digestOptIn: true,
       notifyClients: true, notifyNewProjects: true, notifyProjectUpdates: true, notifyReminders: true, quietFrom: true, quietTo: true,
       notifyChannel: true, telegramChatId: true, telegramLinkedAt: true,
-      brandName: true, brandPhone: true, brandEmail: true, brandWebsite: true, brandLogoType: true, brandLogoUpdatedAt: true, designThemeId: true },
+      brandName: true, brandPhone: true, brandEmail: true, brandWebsite: true, brandLogoType: true, brandLogoUpdatedAt: true, brandPhotoType: true, brandPhotoUpdatedAt: true, designThemeId: true },
   });
   if (!p) return null;
   const P = t.profile;
@@ -105,6 +105,7 @@ export default async function PartnerProfile() {
             fallbackName={brandDisplayName({ brandName: null, company: p.company, firstName: p.firstName, lastName: p.lastName })}
           />
           <LogoForm t={t} logoSrc={p.brandLogoType ? `/profile/logo?v=${p.brandLogoUpdatedAt?.getTime() ?? 0}` : null} />
+          <PhotoForm t={t} photoSrc={p.brandPhotoType ? `/profile/photo?v=${p.brandPhotoUpdatedAt?.getTime() ?? 0}` : null} />
         </section>
       )}
       {active && (

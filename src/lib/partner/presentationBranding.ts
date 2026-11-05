@@ -16,6 +16,10 @@ export type PresentationBrandPartner = {
   hasLogo: boolean;
   /** Cache-busting version for the logo URL (brandLogoUpdatedAt). */
   logoUpdatedAt?: Date | null;
+  /** A profile photo is stored (brandPhotoType and brandPhoto are written and cleared together). */
+  hasPhoto?: boolean;
+  /** Cache-busting version for the photo URL (brandPhotoUpdatedAt). */
+  photoUpdatedAt?: Date | null;
 };
 
 export type PresentationBranding =
@@ -29,6 +33,10 @@ export type PresentationBranding =
       email: string | null;
       website: string | null;
       logoUrl: string | null;
+      /** `/c/{token}/photo?v=…` when a photo is stored, else null (the closing shows `initials`). */
+      photoUrl: string | null;
+      /** Two letters from the shown name, for the photo fallback. */
+      initials: string;
     };
 
 const clean = (v: string | null | undefined): string | null => {
@@ -39,6 +47,14 @@ const clean = (v: string | null | undefined): string | null => {
 /** Shown name: brandName, else company, else first + last name. */
 export function brandDisplayName(p: Pick<PresentationBrandPartner, "brandName" | "company" | "firstName" | "lastName">): string {
   return clean(p.brandName) ?? clean(p.company) ?? `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim();
+}
+
+/** Two letters from the shown name: first letters of the first two words, or the first two letters of a single word. */
+export function brandInitials(p: Pick<PresentationBrandPartner, "brandName" | "company" | "firstName" | "lastName">): string {
+  const words = brandDisplayName(p).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "";
+  const letters = words.length > 1 ? [words[0], words[1]].map((w) => Array.from(w)[0]).join("") : Array.from(words[0]).slice(0, 2).join("");
+  return letters.toUpperCase();
 }
 
 /** Digits of a phone number for wa.me links; null when fewer than 6 digits remain. */
@@ -67,9 +83,10 @@ export function presentationBranding(p: {
   if (!p.partnerId) return { mode: "cve" };
   // A partner presentation never falls back to CVE contact data, even if the partner row is missing.
   const partner = p.partner ?? null;
-  if (!partner) return { mode: "partner", name: "", phone: null, whatsapp: null, email: null, website: null, logoUrl: null };
+  if (!partner) return { mode: "partner", name: "", phone: null, whatsapp: null, email: null, website: null, logoUrl: null, photoUrl: null, initials: "" };
   const phone = clean(partner.brandPhone);
   const version = partner.logoUpdatedAt ? `?v=${partner.logoUpdatedAt.getTime()}` : "";
+  const photoVersion = partner.photoUpdatedAt ? `?v=${partner.photoUpdatedAt.getTime()}` : "";
   return {
     mode: "partner",
     name: brandDisplayName(partner),
@@ -78,6 +95,8 @@ export function presentationBranding(p: {
     email: clean(partner.brandEmail),
     website: safeWebsite(partner.brandWebsite),
     logoUrl: partner.hasLogo ? `/c/${encodeURIComponent(p.token)}/logo${version}` : null,
+    photoUrl: partner.hasPhoto ? `/c/${encodeURIComponent(p.token)}/photo${photoVersion}` : null,
+    initials: brandInitials(partner),
   };
 }
 
@@ -178,6 +197,24 @@ export function logoDecision(row: LogoRow, now: Date): { ok: true; bytes: Uint8A
 
 /** Private, short cache: a suspension, revocation or logo change must not be outlived by shared caches. */
 export const LOGO_HEADERS = { "Cache-Control": "private, max-age=300", "X-Content-Type-Options": "nosniff" } as const;
+
+// ── Photo route ─────────────────────────────────────────────────────────────
+
+export type PhotoRow = {
+  status: string;
+  expiresAt: Date | null;
+  partnerId: string | null;
+  partner: { status: string; brandPhoto: Uint8Array | null; brandPhotoType: string | null } | null;
+} | null;
+
+/** Same rules as logoDecision, for the partner's photo. */
+export function photoDecision(row: PhotoRow, now: Date): { ok: true; bytes: Uint8Array; type: string } | { ok: false } {
+  if (!row) return { ok: false };
+  return logoDecision(
+    { status: row.status, expiresAt: row.expiresAt, partnerId: row.partnerId, partner: row.partner && { status: row.partner.status, brandLogo: row.partner.brandPhoto, brandLogoType: row.partner.brandPhotoType } },
+    now,
+  );
+}
 
 // ── View route: PRESENTATION_OPENED producer and the office Telegram prefix ─
 

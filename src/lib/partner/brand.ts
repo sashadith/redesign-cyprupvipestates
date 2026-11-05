@@ -10,7 +10,7 @@ export type BrandResult = { ok: true; data: BrandInput } | { ok: false; field: s
 
 /** Every `code` validateBrand / the logo upload can return (dotted keys into the partner dictionary). */
 export const BRAND_ERROR_CODES = [
-  "err.invalid", "err.unknownField", "err.brandName", "err.phone", "err.email", "err.website", "err.logoType", "err.logoSize",
+  "err.invalid", "err.unknownField", "err.brandName", "err.phone", "err.email", "err.website", "err.logoType", "err.logoSize", "err.photoType", "err.photoSize",
 ] as const;
 
 const ALLOWED = new Set(["brandName", "brandPhone", "brandEmail", "brandWebsite"]);

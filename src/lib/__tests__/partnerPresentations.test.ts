@@ -13,7 +13,7 @@ import {
   mergePresentationStats, presentationStatusOf, presentationUrl, type PresentationClaimRow,
 } from "@/lib/partner/partnerPresentations";
 import {
-  LOGO_HEADERS, PARTNER_SHARE_IMAGE, PREVIEW_PARAM, brandDisplayName, isPreviewRequest, logoDecision, officeAlertPrefix,
+  LOGO_HEADERS, PARTNER_SHARE_IMAGE, brandInitials, photoDecision, PREVIEW_PARAM, brandDisplayName, isPreviewRequest, logoDecision, officeAlertPrefix,
   partnerPresentationAvailable, partnerShareTitle, presentationBranding, presentationOpenedRow, presentationPreviewUrl, savesClientFavorites,
   tracksClientViews,
   whatsappDigits,
@@ -49,7 +49,44 @@ test("partner mode: brand name, contact, wa.me digits and a versioned logo URL",
     email: "anna@sunhomes.de",
     website: "https://sunhomes.de",
     logoUrl: `/c/abc_DEF-123/logo?v=${PARTNER.logoUpdatedAt.getTime()}`,
+    photoUrl: null,
+    initials: "SH",
   });
+});
+
+test("partner photo: brandInitials, versioned photoUrl only when a photo is stored", () => {
+  assert.equal(brandInitials({ brandName: "Anna Muster", company: null, firstName: "A", lastName: "B" }), "AM");
+  assert.equal(brandInitials({ brandName: null, company: "Sun Homes GmbH", firstName: "A", lastName: "B" }), "SH");
+  assert.equal(brandInitials({ brandName: "sunhomes", company: null, firstName: "A", lastName: "B" }), "SU");
+  assert.equal(brandInitials({ brandName: null, company: null, firstName: "", lastName: "" }), "");
+  const at = new Date("2026-11-07T10:00:00Z");
+  const withPhoto = presentationBranding({ token: "t k", partnerId: "p1", partner: { ...PARTNER, hasPhoto: true, photoUpdatedAt: at } });
+  assert.ok(withPhoto.mode === "partner" && withPhoto.photoUrl === `/c/t%20k/photo?v=${at.getTime()}`);
+  const none = presentationBranding({ token: "t", partnerId: "p1", partner: { ...PARTNER, hasPhoto: false, photoUpdatedAt: at } });
+  assert.ok(none.mode === "partner" && none.photoUrl === null);
+  const cve = presentationBranding({ token: "t", partnerId: null, partner: { ...PARTNER, hasPhoto: true } });
+  assert.deepEqual(cve, { mode: "cve" });
+});
+
+test("photo route decision: same rules as the logo, own bytes and type", () => {
+  const ok = { status: "active", expiresAt: null, partnerId: "p1", partner: { status: "ACTIVE", brandPhoto: new Uint8Array([1]), brandPhotoType: "image/jpeg" } };
+  assert.deepEqual(photoDecision(ok, new Date()), { ok: true, bytes: ok.partner.brandPhoto, type: "image/jpeg" });
+  assert.equal(photoDecision({ ...ok, partner: { ...ok.partner, status: "SUSPENDED" } }, new Date()).ok, false);
+  assert.equal(photoDecision({ ...ok, partner: { ...ok.partner, brandPhoto: null } }, new Date()).ok, false);
+  assert.equal(photoDecision({ ...ok, partner: { ...ok.partner, brandPhotoType: "image/svg+xml" } }, new Date()).ok, false);
+  assert.equal(photoDecision({ ...ok, partnerId: null }, new Date()).ok, false);
+  assert.equal(photoDecision(null, new Date()).ok, false);
+});
+
+test("partner closing: photo (alt = brand name) or initials circle, before the name", () => {
+  const b = presentationBranding({ token: "t", partnerId: "p1", partner: { ...PARTNER, hasPhoto: true, photoUpdatedAt: new Date(5) } });
+  assert.ok(b.mode === "partner");
+  if (b.mode !== "partner") return;
+  const withPhoto = renderToStaticMarkup(React.createElement(PartnerClosing, { brand: b, locale: "en" }));
+  assert.ok(withPhoto.includes('class="cp-closing__avatar" src="/c/t/photo?v=5" alt="Sun Homes"'));
+  assert.ok(withPhoto.indexOf("cp-closing__avatar") < withPhoto.indexOf("cp-closing__name"));
+  const noPhoto = renderToStaticMarkup(React.createElement(PartnerClosing, { brand: { ...b, photoUrl: null }, locale: "de" }));
+  assert.ok(noPhoto.includes("cp-closing__avatar--initials") && noPhoto.includes(">SH<") && !noPhoto.includes("/photo"));
 });
 
 test("partner mode: name falls back to company, then first + last; no logo, no phone, unsafe website dropped", () => {
@@ -69,7 +106,7 @@ test("partner mode: name falls back to company, then first + last; no logo, no p
 
 test("partner mode never falls back to CVE contact data, even when the partner row is missing", () => {
   assert.deepEqual(presentationBranding({ token: "t", partnerId: "p1", partner: null }), {
-    mode: "partner", name: "", phone: null, whatsapp: null, email: null, website: null, logoUrl: null,
+    mode: "partner", name: "", phone: null, whatsapp: null, email: null, website: null, logoUrl: null, photoUrl: null, initials: "",
   });
 });
 
@@ -275,8 +312,8 @@ test("logo upload check: magic bytes decide, size capped, the claimed MIME type 
   assert.ok(!actions.includes("file.type"), "never trusts the browser's MIME type");
   assert.ok(actions.includes("brandLogo: Buffer.from(bytes), brandLogoType: check.type, brandLogoUpdatedAt: new Date()"));
   assert.ok(actions.includes("data: { brandLogo: null, brandLogoType: null, brandLogoUpdatedAt: new Date() }"));
-  assert.equal((actions.match(/= await requirePartner\(\{ active: true \}\)/g) ?? []).length, 3);
-  assert.equal((actions.match(/L\.brand\.hit\(me\.partner\.id\)/g) ?? []).length, 3);
+  assert.equal((actions.match(/= await requirePartner\(\{ active: true \}\)/g) ?? []).length, 5);
+  assert.equal((actions.match(/L\.brand\.hit\(me\.partner\.id\)/g) ?? []).length, 5);
   assert.ok(!actions.includes("@/auth"));
 });
 

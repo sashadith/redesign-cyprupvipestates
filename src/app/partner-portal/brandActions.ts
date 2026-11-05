@@ -1,7 +1,7 @@
 "use server";
 /**
  * Phase 3e: the partner's branding for presentations they send ("Your branding" on the profile). Scoped
- * to the session's own partner (requirePartner({ active: true })) — never an id from the form. The logo
+ * to the session's own partner (requirePartner({ active: true })) — never an id from the form. The logo/photo
  * type comes from the file's magic bytes, never from the browser's claimed MIME type.
  */
 import { revalidatePath } from "next/cache";
@@ -64,6 +64,41 @@ export async function removeBrandLogoAction(_prev: LogoState, _fd: FormData): Pr
     select: { id: true },
   });
   await writePartnerAudit(me.partner, me.user, "partner_brand_logo_removed", {});
+  revalidatePath("/partner-portal/profile");
+  return { ok: true, removed: true };
+}
+
+// The photo follows the logo rules exactly (same size limit, magic-byte type check); only the error keys differ.
+const PHOTO_CODE = { "err.logoType": "err.photoType", "err.logoSize": "err.photoSize" } as const;
+
+export async function uploadBrandPhotoAction(_prev: LogoState, fd: FormData): Promise<LogoState> {
+  const me = await requirePartner({ active: true });
+  if (!L.brand.hit(me.partner.id)) return { error: "err.rateLimited" };
+  const file = fd.get("photo");
+  if (!file || typeof file === "string") return { error: "err.photoType", field: "photo" };
+  if (file.size > BRAND_LOGO_MAX_BYTES) return { error: "err.photoSize", field: "photo" };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const check = checkBrandLogo(bytes);
+  if (!check.ok) return { error: PHOTO_CODE[check.code], field: "photo" };
+  await prisma.partner.update({
+    where: { id: me.partner.id },
+    data: { brandPhoto: Buffer.from(bytes), brandPhotoType: check.type, brandPhotoUpdatedAt: new Date() },
+    select: { id: true },
+  });
+  await writePartnerAudit(me.partner, me.user, "partner_brand_photo_updated", { type: check.type, bytes: bytes.length });
+  revalidatePath("/partner-portal/profile");
+  return { ok: true };
+}
+
+export async function removeBrandPhotoAction(_prev: LogoState, _fd: FormData): Promise<LogoState> {
+  const me = await requirePartner({ active: true });
+  if (!L.brand.hit(me.partner.id)) return { error: "err.rateLimited" };
+  await prisma.partner.update({
+    where: { id: me.partner.id },
+    data: { brandPhoto: null, brandPhotoType: null, brandPhotoUpdatedAt: new Date() },
+    select: { id: true },
+  });
+  await writePartnerAudit(me.partner, me.user, "partner_brand_photo_removed", {});
   revalidatePath("/partner-portal/profile");
   return { ok: true, removed: true };
 }

@@ -169,7 +169,7 @@ export default async function ClientPresentationPage({
         where: { id: presentation.partnerId },
         select: {
           status: true, brandName: true, company: true, firstName: true, lastName: true, brandPhone: true, brandEmail: true, brandWebsite: true,
-          brandLogoType: true, brandLogoUpdatedAt: true,
+          brandLogoType: true, brandLogoUpdatedAt: true, brandPhotoType: true, brandPhotoUpdatedAt: true,
         },
       })
     : null;
@@ -191,6 +191,7 @@ export default async function ClientPresentationPage({
           brandName: partnerRow.brandName, company: partnerRow.company, firstName: partnerRow.firstName, lastName: partnerRow.lastName,
           brandPhone: partnerRow.brandPhone, brandEmail: partnerRow.brandEmail, brandWebsite: partnerRow.brandWebsite,
           hasLogo: !!partnerRow.brandLogoType, logoUpdatedAt: partnerRow.brandLogoUpdatedAt,
+          hasPhoto: !!partnerRow.brandPhotoType, photoUpdatedAt: partnerRow.brandPhotoUpdatedAt,
         }
       : null,
   });

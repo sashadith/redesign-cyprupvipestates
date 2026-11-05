@@ -33,7 +33,7 @@ function GlobeIcon() {
 export default function PartnerClosing({
   brand, locale,
 }: {
-  brand: { name: string; phone: string | null; whatsapp: string | null; email: string | null; website: string | null; logoUrl: string | null };
+  brand: { name: string; phone: string | null; whatsapp: string | null; email: string | null; website: string | null; logoUrl: string | null; photoUrl: string | null; initials: string };
   locale: PLocale;
 }) {
   const c = COPY[locale];
@@ -48,6 +48,11 @@ export default function PartnerClosing({
         <div className="cp-closing__textcol cp-closing__solo">
           {brand.logoUrl && <img src={brand.logoUrl} alt={brand.name} className="cp-closing__partnerlogo" />}
           <p className="eyebrow cp-closing__eyebrow">{pc.contactEyebrow}</p>
+          {brand.photoUrl ? (
+            <img className="cp-closing__avatar" src={brand.photoUrl} alt={brand.name} width={96} height={96} />
+          ) : brand.initials ? (
+            <span className="cp-closing__avatar cp-closing__avatar--initials" aria-hidden="true">{brand.initials}</span>
+          ) : null}
           {brand.name && <p className="cp-closing__name">{brand.name}</p>}
           {hasContact && <p className="cp-closing__trust">{pc.contactTrust}</p>}
           {(waHref || telHref || mailHref) && (

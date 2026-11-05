@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useFormState } from "react-dom";
 import type { PartnerDict, PartnerLocale } from "@/lib/partner/i18n";
 import { presentationPreviewUrl } from "@/lib/partner/presentationBranding";
-import { removeBrandLogoAction, saveBrandAction, uploadBrandLogoAction } from "../brandActions";
+import { removeBrandLogoAction, removeBrandPhotoAction, saveBrandAction, uploadBrandLogoAction, uploadBrandPhotoAction } from "../brandActions";
 import { createPresentationAction, revokePresentationAction } from "../presentationActions";
 import { isErr, type BrandState, type LogoState, type PresentationState } from "../formState";
 import { CopyLink, Field, FormError, LANG_OPTIONS, Submit, fill, say } from "./forms";
@@ -74,6 +74,38 @@ export function LogoForm({ t, logoSrc }: { t: PartnerDict; logoSrc: string | nul
       {logoSrc && (
         <form action={remove}>
           <button type="submit" className="pp-btn pp-btn-ghost">{B.logoRemove}</button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+/** `photoSrc`: the partner's own photo (portal route), or null when none is stored. Shown in the footer of their presentations. */
+export function PhotoForm({ t, photoSrc }: { t: PartnerDict; photoSrc: string | null }) {
+  const B = t.branding;
+  const [upState, upload] = useFormState<LogoState, FormData>(uploadBrandPhotoAction, null);
+  const [rmState, remove] = useFormState<LogoState, FormData>(removeBrandPhotoAction, null);
+  const err = isErr(upState) ? upState : isErr(rmState) ? rmState : null;
+  return (
+    <div className="pp-brandlogo">
+      <p className="pp-brandlogo-label">{B.photo}</p>
+      {photoSrc ? (
+        <img className="pp-brandphoto-img" src={photoSrc} alt="" width={96} height={96} />
+      ) : (
+        <p className="pp-muted">{B.noPhoto}</p>
+      )}
+      {err && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, err.error), err.vars ?? {})}</p>}
+      <form action={upload} className="pp-form pp-brandlogo-form">
+        <input type="file" name="photo" accept="image/png,image/jpeg,image/webp" aria-label={B.photo} aria-describedby="brand-photo-hint" required />
+        <small id="brand-photo-hint" className="pp-hint">{B.photoHint}</small>
+        <div className="pp-actions">
+          <Submit wide={false}>{photoSrc ? B.photoReplace : B.photoUpload}</Submit>
+          {upState && "ok" in upState && <span className="pp-saved" role="status">{B.saved}</span>}
+        </div>
+      </form>
+      {photoSrc && (
+        <form action={remove}>
+          <button type="submit" className="pp-btn pp-btn-ghost">{B.photoRemove}</button>
         </form>
       )}
     </div>

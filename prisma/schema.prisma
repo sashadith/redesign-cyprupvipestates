@@ -2343,6 +2343,9 @@ model Partner {
   brandLogo            Bytes?
   brandLogoType        String?
   brandLogoUpdatedAt   DateTime?
+  brandPhoto           Bytes?
+  brandPhotoType       String?
+  brandPhotoUpdatedAt  DateTime?
   telegramCodes        PartnerTelegramCode[]
   presentations        ClientPresentation[]
   // Phase 4b: tier (commission shares are copied from the tier on promotion), news read marker.
