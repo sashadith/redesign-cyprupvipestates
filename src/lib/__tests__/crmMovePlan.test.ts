@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planMove, type DealLite } from "@/lib/crm/movePlan";
+import { planMove, viewingDateMissing, type DealLite } from "@/lib/crm/movePlan";
 
 const expected: DealLite = { id: "d1", commissionStatus: "EXPECTED" };
 const earned: DealLite = { id: "d2", commissionStatus: "EARNED" };
@@ -63,4 +63,12 @@ test("a PAID_OUT deal blocks leaving too", () => {
 test("Reserved with only settled deals does not ask for a new deal", () => {
   const p = planMove("CLOSED", "RESERVED", [paid]);
   assert.equal(p.kind === "ok" && p.needsDeal, false);
+});
+
+test("VIEWING_SCHEDULED needs a date only when the status changes to it", () => {
+  const at = new Date("2026-11-10T10:00:00Z");
+  assert.equal(viewingDateMissing("CONTACTED", "VIEWING_SCHEDULED", undefined), true);
+  assert.equal(viewingDateMissing("CONTACTED", "VIEWING_SCHEDULED", at), false);
+  assert.equal(viewingDateMissing("VIEWING_SCHEDULED", "VIEWING_SCHEDULED", undefined), false);
+  assert.equal(viewingDateMissing("CONTACTED", "OFFER", undefined), false);
 });

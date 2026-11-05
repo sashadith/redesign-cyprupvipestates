@@ -2,12 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { moveLeadCore, type DealInput, type MoveResult } from "@/lib/crm/moveLead";
 import { logLeadInteraction, bodyRequirement, type LogInteractionInput } from "@/lib/crm/logInteraction";
 import { setManualFollowUp } from "@/lib/crm/followUpCadence";
-import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
-import { emailEditData } from "@/lib/crm/leadHints";
-import { contactToCheck, findDuplicateLead } from "@/lib/crm/createLead";
-import { authorColumns, type PartnerActor } from "@/lib/crm/leadActor";
+import { validateLeadEdit } from "@/lib/crm/editLead";
+import { applyLeadEdit } from "@/lib/crm/applyLeadEdit";
+import type { PartnerActor } from "@/lib/crm/leadActor";
 import type { LeadStatusValue, LostReasonValue } from "@/lib/crm/leadStatus";
-import { claimEligible, partnerMayWork } from "./rules";
+import type { Prisma, PrismaClient } from "@prisma/client";
+import { effectiveStateOf } from "@/lib/partner/claimFacts";
+import { claimEligible, partnerMayAct } from "./rules";
 
 // The partner's own work on his FIX client (partner pipeline, 2026-11-05): move,
 // log, follow-up date and client details. The actor comes from the partner
@@ -23,18 +24,31 @@ const denied: Denied = { error: NOT_IN_PIPELINE };
 // A few minutes of slack for a clock that runs ahead of the server's (as the cockpit).
 const FUTURE_SLACK_MS = 5 * 60_000;
 
-// The lead id of an ACTIVE FIX claim of this partner, or null.
+const CLAIM_SELECT = { partnerId: true, mode: true, state: true, leadId: true, createdAt: true, reviewedAt: true } as const;
+
+// The lead id of a stored ACTIVE FIX claim of this partner, or null (pre-check).
 async function claimLeadId(actor: PartnerActor, claimId: string): Promise<string | null> {
   const claim = await prisma.partnerClaim.findUnique({ where: { id: claimId }, select: { partnerId: true, mode: true, state: true, leadId: true } });
   return claim && claimEligible(claim, actor.partnerId) ? claim.leadId : null;
 }
 
+// Whether the partner may act on this claim's lead now: the stored claim, its
+// EFFECTIVE state (the judgement moveLead uses for the deal's partner share, so a
+// lapsed protection is never worked on) and the lead. Pass tx to judge under a lock.
+async function mayAct(db: Prisma.TransactionClient | PrismaClient, actor: PartnerActor, claimId: string, leadId: string): Promise<boolean> {
+  const claim = await db.partnerClaim.findUnique({ where: { id: claimId }, select: CLAIM_SELECT });
+  if (!claim || claim.leadId !== leadId || !claimEligible(claim, actor.partnerId)) return false;
+  const [effective, lead] = await Promise.all([
+    effectiveStateOf(db, claim, new Date()),
+    db.lead.findUnique({ where: { id: leadId }, select: { partnerId: true, workedByPartner: true, deletedAt: true } }),
+  ]);
+  return partnerMayAct(claim, effective, lead, actor.partnerId);
+}
+
 // The claim's lead, when the partner may work it right now.
 async function workableLeadId(actor: PartnerActor, claimId: string): Promise<string | null> {
   const leadId = await claimLeadId(actor, claimId);
-  if (!leadId) return null;
-  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { partnerId: true, workedByPartner: true, deletedAt: true } });
-  return lead && partnerMayWork(lead, actor.partnerId) ? leadId : null;
+  return leadId && (await mayAct(prisma, actor, claimId, leadId)) ? leadId : null;
 }
 
 export async function movePartnerLead(
@@ -45,8 +59,8 @@ export async function movePartnerLead(
 ): Promise<MoveResult> {
   const leadId = await claimLeadId(actor, claimId);
   if (!leadId) return denied;
-  // Authorized again under the row lock, so a handover that lands meanwhile is seen.
-  return moveLeadCore(actor, leadId, to, input, (lead) => partnerMayWork(lead, actor.partnerId), () => NOT_IN_PIPELINE);
+  // Authorized under the row lock, so a handover or a lapsed protection that lands meanwhile is seen.
+  return moveLeadCore(actor, leadId, to, input, (_lead, tx) => mayAct(tx, actor, claimId, leadId), () => NOT_IN_PIPELINE);
 }
 
 // Same entry as the cockpit's log, minus the staff-only extras (Claude drafts, MCP
@@ -79,12 +93,13 @@ export type PartnerEditResult =
   | { ok: true; changed: string }
   | Denied
   | { error: string; field?: string }
-  | { error: "DUPLICATE_CONTACT"; matchedOn: "email" | "phone" };
+  | { error: "DUPLICATE_CONTACT" };
 
-// The cockpit's "Edit" for the partner: the same validation and write, the timeline
-// row authored by the partner (no LeadActivity, staff-only). Owner, bucket and
-// partner fields are not part of the form. Staff's internal notes are not the
-// partner's: they are kept as they are and may not be sent.
+// The cockpit's "Edit" for the partner: the same validation and write (applyLeadEdit),
+// the timeline row authored by the partner (no LeadActivity, staff-only). Owner,
+// bucket and partner fields are not part of the form. Staff's internal notes are not
+// the partner's: they are kept as they are and may not be sent. A contact that
+// belongs to another lead is refused without saying which lead or which field.
 export async function editPartnerClient(actor: PartnerActor, claimId: string, raw: unknown): Promise<PartnerEditResult> {
   const leadId = await workableLeadId(actor, claimId);
   if (!leadId) return denied;
@@ -100,27 +115,7 @@ export async function editPartnerClient(actor: PartnerActor, claimId: string, ra
   if ("notes" in raw) return { error: "Unknown field: notes", field: "notes" };
   const parsed = validateLeadEdit({ ...(raw as Record<string, unknown>), notes: lead.notes }, lead.languagePreference);
   if (!parsed.ok) return { error: parsed.error, ...(parsed.field ? { field: parsed.field } : {}) };
-  const data = parsed.data;
-  const fields = changedFields(lead, data);
-  if (fields.length === 0) return { ok: true, changed: "" };
-
-  // A contact that belongs to another lead is refused as in the cockpit, without
-  // naming that lead (it is not the partner's).
-  const check = contactToCheck(lead, data);
-  if (check.email || check.phone) {
-    const dup = await findDuplicateLead(check.email, check.phone);
-    if (dup && dup.id !== leadId) return { error: "DUPLICATE_CONTACT", matchedOn: dup.matchedOn };
-  }
-
-  const changed = changeSummary(fields);
-  await prisma.$transaction([
-    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "", ...emailEditData(lead.email, data.email) } }),
-    prisma.leadInteraction.create({
-      data: {
-        leadId, type: "SYSTEM", channel: "SYSTEM", body: `Lead details edited: ${changed}`,
-        ...authorColumns(actor), metadata: { kind: "lead_edit", fields, via: "partner" },
-      },
-    }),
-  ]);
-  return { ok: true, changed };
+  const res = await applyLeadEdit(leadId, lead, parsed.data, actor);
+  if (res.kind === "duplicate") return { error: "DUPLICATE_CONTACT" };
+  return { ok: true, changed: res.kind === "ok" ? res.changed : "" };
 }

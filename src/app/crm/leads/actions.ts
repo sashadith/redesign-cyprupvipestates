@@ -3,11 +3,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { canAssignLeads, canViewLead, leadEditError } from "@/lib/crm/access";
-import { contactToCheck, createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
+import { createLeadRecord, findDuplicateLead } from "@/lib/crm/createLead";
 import { decideOwner, validateNewLead } from "@/lib/crm/newLeadForm";
-import { changedFields, changeSummary, validateLeadEdit } from "@/lib/crm/editLead";
+import { validateLeadEdit } from "@/lib/crm/editLead";
+import { applyLeadEdit } from "@/lib/crm/applyLeadEdit";
 import { manualFollowUpData } from "@/lib/crm/followUpRule";
-import { emailEditData } from "@/lib/crm/leadHints";
 import { isTimeZone } from "@/lib/crm/leadLocalTime";
 import { assignLead } from "@/lib/crm/assignLead";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
@@ -110,36 +110,19 @@ export async function updateLeadDetailsAction(leadId: string, raw: unknown): Pro
   if (denied) return { error: denied };
   const parsed = validateLeadEdit(raw, lead.languagePreference);
   if (!parsed.ok) return { error: parsed.error, ...(parsed.field ? { field: parsed.field } : {}) };
-  const data = parsed.data;
   const { assignedToId: _owner, workedByPartner: _partner, ...before } = lead;
-  const fields = changedFields(before, data);
-  if (fields.length === 0) return { ok: true, changed: "" };
-
-  const check = contactToCheck(lead, data);
-  if (check.email || check.phone) {
-    const dup = await findDuplicateLead(check.email, check.phone);
-    if (dup && dup.id !== leadId) {
-      const row = await prisma.lead.findUnique({ where: { id: dup.id }, select: { assignedToId: true } });
-      const visible = !!row && canViewLead(user, row);
-      return { duplicate: { id: visible ? dup.id : null, name: visible ? `${dup.firstName} ${dup.lastName}`.trim() : null, matchedOn: dup.matchedOn } };
-    }
+  const res = await applyLeadEdit(leadId, before, parsed.data, { userId: user.id, userName: user.name });
+  if (res.kind === "unchanged") return { ok: true, changed: "" };
+  if (res.kind === "duplicate") {
+    const dup = res.dup;
+    const row = await prisma.lead.findUnique({ where: { id: dup.id }, select: { assignedToId: true } });
+    const visible = !!row && canViewLead(user, row);
+    return { duplicate: { id: visible ? dup.id : null, name: visible ? `${dup.firstName} ${dup.lastName}`.trim() : null, matchedOn: dup.matchedOn } };
   }
-
-  const changed = changeSummary(fields);
-  await prisma.$transaction([
-    prisma.lead.update({ where: { id: leadId }, data: { ...data, lastName: data.lastName ?? "", ...emailEditData(lead.email, data.email) } }),
-    prisma.leadActivity.create({ data: { leadId, type: "EDIT", content: `Lead details edited: ${changed}`, createdBy: user.name, createdById: user.id } }),
-    prisma.leadInteraction.create({
-      data: {
-        leadId, type: "SYSTEM", channel: "SYSTEM", body: `Lead details edited: ${changed}`,
-        createdByUserId: user.id, createdByName: user.name, metadata: { kind: "lead_edit", fields },
-      },
-    }),
-  ]);
   revalidatePath(`/crm/leads/${leadId}`);
   // Name and budget show on the board card.
   revalidatePath("/crm/pipeline");
-  return { ok: true, changed };
+  return { ok: true, changed: res.changed };
 }
 
 // Claude helpers (Phase 2c). Both are read-only: the summary is only shown, the

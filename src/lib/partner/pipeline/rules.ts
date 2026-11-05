@@ -22,7 +22,14 @@ export function claimEligible(
   return !!claim && claim.partnerId === partnerId && claim.mode === "FIX" && claim.state === "ACTIVE";
 }
 
-// Moving a lead TO VIEWING_SCHEDULED needs the appointment, as crm_update_lead requires.
-export function viewingDateMissing(from: string, to: string, at: Date | null | undefined): boolean {
-  return to === "VIEWING_SCHEDULED" && from !== to && !at;
+// The partner may act on his FIX client only while all three hold: the stored claim
+// is his ACTIVE FIX claim, its protection is EFFECTIVELY active (effectiveStateOf,
+// the same judgement as the deal's partner share), and partnerMayWork holds.
+export function partnerMayAct(
+  claim: Parameters<typeof claimEligible>[0],
+  effective: string | null,
+  lead: Parameters<typeof partnerMayWork>[0] | null,
+  partnerId: string,
+): boolean {
+  return claimEligible(claim, partnerId) && effective === "ACTIVE" && !!lead && partnerMayWork(lead, partnerId);
 }

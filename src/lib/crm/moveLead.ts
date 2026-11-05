@@ -1,9 +1,9 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applyLeadStatusChange, standaloneLostReason } from "./updateLeadStatus";
 import { canEditLead, leadEditError } from "./access";
 import { authorColumns, isPartnerActor, type LeadActor } from "./leadActor";
-import { viewingDateMissing } from "@/lib/partner/pipeline/rules";
-import { planMove, type DealLite } from "./movePlan";
+import { planMove, viewingDateMissing, type DealLite } from "./movePlan";
 import { resolveRate, computeDealAmounts, type RateRow } from "./commission";
 import { dealPartnerShare } from "./partnerClaims";
 import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
@@ -44,15 +44,15 @@ export async function moveLead(
 
 // The move itself, for staff and partner alike. authorize runs inside the
 // transaction after the FOR UPDATE lock, so a concurrent change of who works the
-// lead (a handover) is seen; deniedError is the text returned when it refuses
-// or the lead does not exist (null). A partner move to VIEWING_SCHEDULED needs
+// lead (a handover) is seen; it may read more through tx under that lock.
+// deniedError is the text returned when it refuses or the lead does not exist (null). A partner move to VIEWING_SCHEDULED needs
 // the appointment, as crm_update_lead does.
 export async function moveLeadCore(
   actor: LeadActor,
   leadId: string,
   to: LeadStatusValue,
   input: MoveInput,
-  authorize: (lead: MoveAuthLead) => boolean,
+  authorize: (lead: MoveAuthLead, tx: Prisma.TransactionClient) => boolean | Promise<boolean>,
   deniedError: (lead: MoveAuthLead | null) => string = () => NOT_FOUND,
 ): Promise<MoveResult> {
   const partner = isPartnerActor(actor);
@@ -69,7 +69,7 @@ export async function moveLeadCore(
         select: { id: true, status: true, assignedToId: true, workedByPartner: true, partnerId: true, partnerMode: true, deletedAt: true, deals: { select: { id: true, commissionStatus: true } } },
       });
       if (!lead) return { error: deniedError(null) };
-      if (!authorize(lead)) return { error: deniedError(lead) };
+      if (!(await authorize(lead, tx))) return { error: deniedError(lead) };
       if (partner && viewingDateMissing(lead.status, to, input.viewingScheduledAt)) {
         return { error: "viewingScheduledAt is required when setting status VIEWING_SCHEDULED." };
       }
