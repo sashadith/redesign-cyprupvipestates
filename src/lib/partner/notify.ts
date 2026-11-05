@@ -585,6 +585,8 @@ export type StageRow = {
   partnerId: string;
   /** activeSince(claim): reviewedAt ?? createdAt — changes before the claim became active are not the partner's. */
   claimActiveSince: Date;
+  /** Written by one of this partner's own users (his pipeline move): recorded as done, never mailed to him. */
+  ownMove?: boolean;
 };
 
 export type PlannedStage = {
@@ -611,6 +613,8 @@ export const STAGE_DEBOUNCE_MS = 10 * 60_000;
  *    new it becomes the pending row, and every other not-yet-recorded row is stored as done ("collapsed"),
  *    so it is never reconsidered and never mailed out of order.
  * Rows whose toStatus is not a lead status are stored as done ("invalid status") and never chosen.
+ * A move the partner made himself (ownMove) is stored as done ("own move"), also when it is the newest:
+ * he knows his own stage, and the older rows it supersedes are collapsed as usual.
  */
 export function planStageNotifications(input: {
   rows: StageRow[];
@@ -654,6 +658,8 @@ export function planStageNotifications(input: {
       if (existing.has(stageRefKey(r.interactionId))) continue;
       if (!isLeadStatus(r.toStatus)) {
         out.push(done(r, "invalid status"));
+      } else if (r.ownMove) {
+        out.push(done(r, "own move"));
       } else if (r === newest) {
         out.push({
           kind: "STAGE", refKey: stageRefKey(r.interactionId), partnerId: r.partnerId, leadId: r.leadId, claimId: r.claimId,

@@ -95,6 +95,9 @@ test("quiet clients: after 14 days, once per quiet stretch", () => {
   const [r] = planQuietClients({ claims: [c(14)], now: NOW });
   assert.equal(r.refKey, `quiet:c:${cyDate(c(14).lastActivityAt)}`);
   assert.equal(planQuietClients({ claims: [c(20)], now: NOW })[0].refKey, planQuietClients({ claims: [c(20)], now: new Date(NOW.getTime() + DAY) })[0].refKey);
+  // A FIX client the partner works himself: he is the source of news, no quiet alert.
+  assert.deepEqual(planQuietClients({ claims: [{ ...c(30), workedByPartner: true }], now: NOW }), []);
+  assert.equal(planQuietClients({ claims: [{ ...c(30), workedByPartner: false }], now: NOW }).length, 1);
 });
 
 test("follow-up due: past or now only, one row per client per Cyprus day", () => {

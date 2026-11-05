@@ -72,7 +72,7 @@ export async function lastClientActivity(leadId: string, since: Date): Promise<D
 
 type OpenClaim = {
   claimId: string; partnerId: string; leadId: string; leadStatus: string; activeSince: Date;
-  lastContactAt: Date | null; lastStatusAt: Date | null; lastMessageAt: Date | null;
+  lastContactAt: Date | null; lastStatusAt: Date | null; lastMessageAt: Date | null; workedByPartner: boolean;
 };
 
 /** Effectively ACTIVE, uncommitted claims of reminder-enabled ACTIVE partners, with the lead's activity dates (batch). */
@@ -82,7 +82,7 @@ async function loadOpenClaims(now: Date, partnerIds: string[]): Promise<OpenClai
     where: { state: "ACTIVE", partnerId: { in: partnerIds }, lead: { deletedAt: null } },
     orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     take: CLAIM_CAP,
-    select: { id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, lead: { select: { status: true, deletedAt: true } } },
+    select: { id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, lead: { select: { status: true, deletedAt: true, workedByPartner: true } } },
   });
   if (!rows.length) return [];
   const leadIds = Array.from(new Set(rows.map((r) => r.leadId)));
@@ -108,6 +108,7 @@ async function loadOpenClaims(now: Date, partnerIds: string[]): Promise<OpenClai
     return [{
       claimId: r.id, partnerId: r.partnerId, leadId: r.leadId, leadStatus: r.lead.status, activeSince: since,
       lastContactAt, lastStatusAt: statusAt.get(r.leadId) ?? null, lastMessageAt: messageAt.get(r.leadId) ?? null,
+      workedByPartner: r.lead.workedByPartner,
     }];
   });
 }
@@ -359,7 +360,7 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
       claims: open
         .filter((c) => !(NOT_QUIET_STATUSES as readonly string[]).includes(c.leadStatus))
         .map((c) => ({
-          claimId: c.claimId, partnerId: c.partnerId, leadId: c.leadId,
+          claimId: c.claimId, partnerId: c.partnerId, leadId: c.leadId, workedByPartner: c.workedByPartner,
           lastActivityAt: latest(c.activeSince, c.lastContactAt, c.lastStatusAt, c.lastMessageAt) ?? c.activeSince,
         })),
       now,

@@ -174,12 +174,19 @@ export function protectionEnd(activeSince: Date, lastRealContactAt: Date | null)
 
 // ── 5: quiet client ─────────────────────────────────────────────────────────
 
-export type QuietClaim = { claimId: string; partnerId: string; leadId: string; lastActivityAt: Date };
+export type QuietClaim = {
+  claimId: string; partnerId: string; leadId: string; lastActivityAt: Date;
+  /** The partner works this FIX client himself: he is the source of news there, so no "quiet" alert. */
+  workedByPartner?: boolean;
+};
 
-/** One CLIENT_QUIET row per quiet stretch: keyed by the last activity's date, so it is told once until something happens. */
+/**
+ * One CLIENT_QUIET row per quiet stretch: keyed by the last activity's date, so it is told once until something happens.
+ * Partner-worked clients are skipped (their follow-ups have FOLLOW_UP_DUE).
+ */
 export function planQuietClients(input: { claims: QuietClaim[]; now: Date }): PlannedAlert[] {
   return input.claims
-    .filter((c) => input.now.getTime() - c.lastActivityAt.getTime() >= QUIET_DAYS * DAY)
+    .filter((c) => !c.workedByPartner && input.now.getTime() - c.lastActivityAt.getTime() >= QUIET_DAYS * DAY)
     .map((c) => ({
       kind: "CLIENT_QUIET" as const,
       refKey: `quiet:${c.claimId}:${cyDate(c.lastActivityAt)}`,

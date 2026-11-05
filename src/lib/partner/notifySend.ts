@@ -59,7 +59,7 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
     where: { type: "STATUS_CHANGE", leadId: { in: Array.from(claimByLead.keys()) }, occurredAt: { gte: since } },
     orderBy: { occurredAt: "desc" }, // the cap drops the oldest, never the newest
     take: INTERACTION_CAP,
-    select: { id: true, leadId: true, occurredAt: true, metadata: true },
+    select: { id: true, leadId: true, occurredAt: true, metadata: true, createdByPartnerUser: { select: { partnerId: true } } },
   });
   if (interactions.length === 0) return { scanned: 0, pending: 0, collapsed: 0, settlingLeads: 0, inserted: 0 };
 
@@ -70,6 +70,8 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
     return [{
       interactionId: i.id, leadId: i.leadId, occurredAt: i.occurredAt, toStatus: meta.toStatus,
       claimId: c.id, partnerId: c.partnerId, claimActiveSince: activeSince(c),
+      // His own pipeline move: recorded as handled, never mailed back to him.
+      ownMove: i.createdByPartnerUser?.partnerId === c.partnerId,
     }];
   });
   const existing = await prisma.partnerNotification.findMany({
@@ -342,8 +344,10 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     case "CLIENT_QUIET": {
       const since = payloadDate(row.payload, "since");
       if (!since) return { skip: "invalid payload" };
-      const lead = await prisma.lead.findUnique({ where: { id: own.leadId }, select: { status: true } });
+      const lead = await prisma.lead.findUnique({ where: { id: own.leadId }, select: { status: true, workedByPartner: true } });
       if (!lead || ["KEEP_CONTACT", "LOST", "CLOSED", "RESERVED"].includes(lead.status)) return { skip: "not quiet" };
+      // Queued before the partner started working the client himself: he is the source of news there.
+      if (lead.workedByPartner) return { skip: "partner-worked" };
       const last = await lastClientActivity(own.leadId, activeSince(own));
       if (last.getTime() > since.getTime()) return { skip: "superseded" };
       return deliver(buildClientQuietEmail(locale, common, theme), { ...tgCommon, kind: "CLIENT_QUIET" });
