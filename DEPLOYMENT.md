@@ -965,3 +965,74 @@ as a safety net for a few more days while the four affected projects
 in normal day-to-day use, in case anything else from this window surfaces
 later. Safe to `dropdb cyprusvipestates_forensic_before` (and drop role
 `cvp_forensic`) once that's confirmed — don't let it linger indefinitely.
+
+## Instagram carousel renderer — Chromium on the VPS (2026-11-05)
+
+`render_instagram_carousel` (MCP, write tool) renders six 1080×1350 JPG slides plus
+`preview.jpg` from the two approved designs in `assets/social-templates/` and stores
+them under `/uploads/social/<ISO week-year>-w<ww>/<slug>-<lang>/` (on disk
+`/var/www/shared-uploads/social/…`). Re-rendering the same slug, language and week
+replaces the set (decision 2026-11-05). The Next.js process never loads Playwright:
+`src/lib/social/carousel/render.ts` runs `scripts/social/carousel-worker.mjs` as a
+child process.
+
+**Server changes made 2026-11-05 (operator-approved):**
+
+1. Chrome Headless Shell **156.0.8078.4** (playwright `chromium-headless-shell` v1248)
+   and ffmpeg v1013 in **`/opt/ms-playwright`** (278 MB), outside `/var/www`, so it
+   survives releases. Installed with playwright-core 1.64.1 (the version in
+   `package.json`):
+   ```bash
+   cd /opt/cvp-testbed/repo && PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright npx playwright-core install --with-deps chromium-headless-shell
+   ```
+2. `--with-deps` (apt) added **no new packages**. It upgraded 10 already-installed
+   packages to the current Ubuntu 24.04 patch level:
+   `gir1.2-glib-2.0`, `libglib2.0-0t64`, `libglib2.0-bin`, `libglib2.0-data`
+   2.80.0-6ubuntu3.9 → 3.10; `libgbm1`, `libgl1-mesa-dri`, `libglx-mesa0`,
+   `mesa-libgallium` 25.2.8-0ubuntu0.24.04.2 → .4; `xserver-common`, `xvfb`
+   2:21.1.12-1ubuntu1.6 → 1.9. Before/after lists:
+   `/root/dpkg-before-carousel.txt`, `/root/dpkg-after-carousel.txt`.
+3. No pm2 or nginx change. The worker uses `/opt/ms-playwright` when
+   `PLAYWRIGHT_BROWSERS_PATH` is unset.
+
+**Upgrading `playwright-core` needs a new browser:** each version pins a browser
+revision. After bumping it, rerun the install command above with the new version,
+or every render fails with `renderer_not_installed` (no crash, nothing saved).
+Removal: `rm -rf /opt/ms-playwright`. The apt packages are ordinary system
+libraries and stay.
+
+**Runtime guarantees (render.ts / carousel-worker.mjs):**
+- One render at a time across both pm2 instances: lock file
+  `/tmp/cve-carousel.lock`, a waiting call gives up after 30 s (`render_busy`), a
+  lock whose owner died or that is older than 2 min is cleared.
+- Hard limit 60 s per carousel: the worker runs in its own process group and is
+  SIGKILLed as a group. Chromium (which Playwright starts detached) carries
+  `--cve-carousel-run=<renderId>` and is killed with its own group afterwards,
+  also on success and on errors. Check by hand: `pgrep -fa cve-carousel-run`
+  must print nothing when no render is running. Temp files:
+  `/tmp/cve-carousel-<renderId>/`, always removed.
+- Chromium only sees `file://`: every other request is aborted; images are
+  resolved to files under `/uploads` first (anything else is rejected). The worker
+  gets a minimal environment (no `DATABASE_URL`, no secrets).
+- Deterministic text: fonts from `assets/social-templates/fonts/`, the fallback
+  glyphs "→" and "✓" from `assets/social-templates/fonts-fallback/` (DejaVu Sans,
+  Liberation Sans — licences beside them), `--font-render-hinting=none` (the
+  approved renders were made without hinting; with it, line ends drift 2–4 px).
+- JPGs are written only when all six slides pass every layout rule, into a temp
+  folder that then replaces the old set.
+
+**Proxy limit:** `/api/` (and with it `/api/mcp`) has `proxy_read_timeout 60s`
+(`snippets/cvp_proxy.conf`). A render takes ~20 s on this VPS. A call that first
+waits for the lock and then hits the 60 s render limit can outlast the proxy: the
+client then sees a 504 while the server finishes or stops the render on its own.
+
+**The deploy that introduces this needs `CVP_RUN_MIGRATE=1`** (migration
+`20261105100000_development_vat_note`: `development_overrides.vatNote`) **and
+`CVP_RUN_INSTALL=1`** (`playwright-core` is a new dependency; without `npm ci` the
+copied-forward `node_modules` lacks it and every render fails with "internal").
+
+**Testbed check** (the full comparison against `reference-renders/`, failure paths, timeout):
+```bash
+cd /opt/cvp-testbed/repo && set -a && . /opt/cvp-testbed/.env.testbed && set +a && SOCIAL_UPLOADS_ROOT=/opt/cvp-testbed/carousel-qa/uploads node --import tsx scripts/qa/carousel-testbed.mts /opt/cvp-testbed/carousel-qa/out
+```
+

@@ -45,7 +45,8 @@ export type RenderResult = { folder: string; slides: string[]; preview: string; 
 type WorkerSlide = { headingPx: number | null; templatePx: number | null; eyebrowGap: number | null; templateEyebrowGap: number | null; contentSwipeGap: number | null; geometry: unknown };
 
 export const RENDER_TIMEOUT_MS = 60_000;
-const LOCK_WAIT_MS = 75_000;
+// Short enough that waiting plus a full render stays near the 60 s proxy timeout of /api/ (nginx).
+const LOCK_WAIT_MS = 30_000;
 const LOCK_STALE_MS = 120_000;
 
 export type RenderOptions = {

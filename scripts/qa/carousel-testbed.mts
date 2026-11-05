@@ -146,6 +146,21 @@ for (const s of SETS) {
   console.log(`stage B ${s.fixture}: ${secs.toFixed(1)} s, mean ${slides.map((x) => x.meanDiff).join(" / ")}`);
 }
 
+{
+  // Decision D5: "cyprus" in EN has no approved reference — the rules must hold and the
+  // static EN copy must appear. (The slide texts stay the German fixture's.)
+  const input = RenderInput.parse({ ...fixture("zypern-warum-de"), lang: "en", slug: "qa-cyprus-en" }) as any;
+  const r = await renderCarousel(input);
+  report.cyprusEn = { urls: r.slides, report: r.report };
+  check(r.report.every((x) => !x.eyebrowGap || x.eyebrowGap === 44), "cyprus EN: all rules held");
+  const folder = path.join(ROOT, r.folder.replace(/^\/uploads\//, ""));
+  for (const n of ["01", "06"]) {
+    const sheet = path.join(OUT, `qa-cyprus-en-${n}.jpg`);
+    await sharp(path.join(folder, `${n}.jpg`)).resize(540, 675).jpeg({ quality: 85 }).toFile(sheet);
+    sheets.push(sheet);
+  }
+}
+
 // ---------------------------------------------------------------- 4. failure paths
 const failure: Record<string, unknown> = {};
 const LONG_HEADLINE = "Even the smallest one-bedroom apartment starts at 117 m², with a terrace facing the sea and a kitchen that opens onto the living room.";
