@@ -95,14 +95,18 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
       if (!req || req.state !== "OPEN" || req.leadId !== first.leadId) throw new Abort(HANDLED);
       if (!mayAcceptHandover(actor, req.partner.managerUserId)) throw new Abort(DENIED);
       if (!lead) throw new Abort("The lead is in the trash or no longer exists.");
-      if (keepFix && !mayKeepFix(!!deal)) throw new Abort(DEAL_FIXED_ERROR);
+      // Fresh read under the lock: staff may have taken the client meanwhile some other way.
+      if (!lead.workedByPartner) throw new Abort("This client is no longer worked by the partner.");
 
       // The plan on today's data, not the one stored at the request: a deal or a stage move since then counts.
       const current = mode(lead.partnerMode);
       const downgrade = isLeadStatus(lead.status)
         ? handoverPlan({ status: lead.status as LeadStatusValue, partnerMode: current, hasLiveDeal: !!deal }).downgrade
         : false;
-      const target = acceptOutcome({ downgrade, keepFix });
+      // "Keep Fix" only undoes a downgrade: without one it is ignored, never stored or announced.
+      // With a live deal handoverPlan never downgrades, so the fixed share is not touched either.
+      const kept = keepFix && downgrade;
+      const target = acceptOutcome({ downgrade, keepFix: kept });
       const finalMode = target ?? current;
       const now = new Date();
 
@@ -111,7 +115,7 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
         where: { id: req.id, state: "OPEN" },
         data: {
           state: "ACCEPTED", acceptedById: actor.id, acceptedAt: now, downgrade,
-          ...(keepFix ? { keepFix: true, keepFixById: actor.id, keepFixAt: now } : {}),
+          ...(kept ? { keepFix: true, keepFixById: actor.id, keepFixAt: now } : {}),
         },
       });
       if (r.count !== 1) throw new Abort(HANDLED);
@@ -120,25 +124,25 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
         data: { workedByPartner: false, assignedToId: actor.id, ...(target && target !== current ? { partnerMode: target } : {}) },
       });
       const who = partnerName(req.partner);
-      const terms = target === "HANDOVER" ? "now Handover" : keepFix ? "Fix kept" : `stays ${finalMode ?? "unchanged"}`;
+      const terms = target === "HANDOVER" ? "now Handover" : kept ? "Fix kept" : `stays ${finalMode ?? "unchanged"}`;
       // "Assigned to …" so Today's "Newly assigned" and the SLA rules see the new owner like any assignment.
       await tx.leadInteraction.create({
         data: {
           leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", occurredAt: now,
           body: `Assigned to ${actor.name} (handover from partner ${who} accepted, ${terms})`,
           createdByUserId: actor.id, createdByName: actor.name,
-          metadata: { kind: "handover_accepted", requestId: req.id, assignedToId: actor.id, downgrade, keepFix, partnerMode: finalMode },
+          metadata: { kind: "handover_accepted", requestId: req.id, assignedToId: actor.id, downgrade, keepFix: kept, partnerMode: finalMode },
         },
       });
       await writeAudit(actor, "partner_handover_accept", "partner_handover_request", req.id, {
         before: { state: "OPEN", partnerMode: current, workedByPartner: lead.workedByPartner, assignedToId: lead.assignedToId },
         after: { state: "ACCEPTED", partnerMode: finalMode, workedByPartner: false, assignedToId: actor.id },
-        leadId: lead.id, downgrade, storedDowngrade: req.downgrade, keepFix,
+        leadId: lead.id, downgrade, storedDowngrade: req.downgrade, keepFix: kept,
       }, tx);
       await tx.partnerNotification.create({
         data: {
           kind: "STAGE", refKey: `handover:${req.id}:accepted`, partnerId: req.partnerId, claimId: req.claimId, leadId: lead.id,
-          payload: { handover: "accepted", keepFix, downgraded: target === "HANDOVER" },
+          payload: { handover: "accepted", keepFix: kept, downgraded: target === "HANDOVER" },
         },
       });
       return lead.id;
@@ -254,8 +258,13 @@ export async function runHandoverEscalations(deps: {
   for (const r of rows) {
     const due = escalationDue(r, now);
     if (!due) continue;
-    const stamp = (v: Date | null) => (due === "remind" ? { remindedAt: v } : { escalatedAt: v });
-    const claimed = await prisma.partnerHandoverRequest.updateMany({ where: { id: r.id, state: "OPEN", ...stamp(null) }, data: stamp(now) });
+    // An escalation also stamps a reminder that was still due, so the manager gets no stale reminder after it.
+    const withReminder = due === "escalate" && !r.remindedAt;
+    const stamp = (v: Date | null) => (due === "remind" ? { remindedAt: v } : { escalatedAt: v, ...(withReminder ? { remindedAt: v } : {}) });
+    const claimed = await prisma.partnerHandoverRequest.updateMany({
+      where: { id: r.id, state: "OPEN", ...(due === "remind" ? { remindedAt: null } : { escalatedAt: null }) },
+      data: stamp(now),
+    });
     if (claimed.count !== 1) continue;
     let chats: string[];
     if (due === "remind") {

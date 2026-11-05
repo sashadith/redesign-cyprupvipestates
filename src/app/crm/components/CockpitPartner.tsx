@@ -34,8 +34,8 @@ function KeepFix({ leadId, v }: { leadId: string; v: KeepFixView }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isFix = v.partnerMode === "FIX";
-  // Keep is offered while the client is not FIX; un-keep only after an early handover (the downgrade it undoes).
-  const action: boolean | null = !isFix ? true : v.downgrade ? false : null;
+  // Only after an early handover: keep undoes the downgrade, un-keep restores it. Without one there is nothing to toggle.
+  const action: boolean | null = v.downgrade ? !isFix : null;
 
   async function run(keep: boolean) {
     if (busy) return;

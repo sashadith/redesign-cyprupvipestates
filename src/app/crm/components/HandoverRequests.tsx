@@ -50,7 +50,7 @@ function Card({ r, onDone }: { r: HandoverRequestView; onDone: (id: string, mess
         {r.hasLiveDeal && <p className="crm-muted">A deal exists: the commission share is fixed and stays as it is.</p>}
         {error && <p className="crm-ck-error" role="alert">{error}</p>}
         <div className="crm-cr-buttons">
-          {!r.hasLiveDeal && <button type="button" className="crm-btn" disabled={busy} onClick={() => void run(true)}>Accept and keep Fix</button>}
+          {r.downgrade && !r.hasLiveDeal && <button type="button" className="crm-btn" disabled={busy} onClick={() => void run(true)}>Accept and keep Fix</button>}
           <button type="button" className="crm-btn primary" disabled={busy} onClick={() => void run(false)}>Accept</button>
         </div>
       </div>

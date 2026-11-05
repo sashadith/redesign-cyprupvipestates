@@ -20,14 +20,15 @@ test("escalationDue: nothing before 24 h, a reminder after, all admins after 48 
   assert.equal(escalationDue(req(), plus(49)), "escalate");
   assert.equal(escalationDue(req(plus(25)), plus(49)), "escalate");
   assert.equal(escalationDue(req(plus(25), plus(48.5)), plus(49)), null);
-  // Escalated before the reminder ran (the cron was down): the manager is still reminded once.
-  assert.equal(escalationDue(req(null, plus(48.5)), plus(49)), "remind");
+  // Escalated before the reminder ran (the cron was down): the runner stamped the reminder with it, and none follows.
+  assert.equal(escalationDue(req(null, plus(48.5)), plus(49)), null);
 });
 
 test("acceptOutcome: only an early handover without keep-FIX becomes HANDOVER", () => {
   assert.equal(acceptOutcome({ downgrade: true, keepFix: false }), "HANDOVER");
-  assert.equal(acceptOutcome({ downgrade: true, keepFix: true }), "FIX");
-  assert.equal(acceptOutcome({ downgrade: false, keepFix: true }), "FIX");
+  assert.equal(acceptOutcome({ downgrade: true, keepFix: true }), null);
+  // Without a downgrade "keep Fix" is ignored: never an upgrade.
+  assert.equal(acceptOutcome({ downgrade: false, keepFix: true }), null);
   assert.equal(acceptOutcome({ downgrade: false, keepFix: false }), null);
 });
 
@@ -37,6 +38,9 @@ test("keepFixChange: keep goes to FIX, un-keep back to HANDOVER only after a dow
   assert.equal(keepFixChange({ keep: false, currentMode: "FIX", downgrade: true }), "HANDOVER");
   assert.equal(keepFixChange({ keep: false, currentMode: "FIX", downgrade: false }), null);
   assert.equal(keepFixChange({ keep: false, currentMode: "HANDOVER", downgrade: true }), null);
+  // No downgrade, nothing to undo: keep never upgrades a lead to FIX.
+  assert.equal(keepFixChange({ keep: true, currentMode: "HANDOVER", downgrade: false }), null);
+  assert.equal(keepFixChange({ keep: true, currentMode: null, downgrade: false }), null);
 });
 
 test("mayAcceptHandover: admins and owners always, the partner's manager, nobody else", () => {

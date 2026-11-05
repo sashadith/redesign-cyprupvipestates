@@ -32,7 +32,7 @@ export default async function InboxPage() {
     prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, isActive: true, acceptsLeads: true, languages: true, specialties: true } }),
     prisma.lead.groupBy({ by: ["assignedToId"], where: { deletedAt: null, assignedToId: { not: null }, status: { in: [...ACTIVE_LEAD_STATUSES] } }, _count: { _all: true } }),
     listClaimsForReview(),
-    listHandoverRequests(user),
+    listHandoverRequests(user).catch((e) => { console.error("Handover requests failed:", e instanceof Error ? e.name : "error"); return { cards: [], total: 0 }; }),
   ]);
 
   const loadOf = new Map(loads.map((l) => [l.assignedToId, l._count._all]));

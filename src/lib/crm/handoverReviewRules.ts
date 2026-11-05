@@ -18,21 +18,25 @@ export function mayAcceptHandover(u: Pick<CrmUser, "id" | "role" | "isOwner" | "
   return !!managerUserId && u.id === managerUserId;
 }
 
-/** The lead's partnerMode after acceptance; null leaves it as it is. */
+/** The lead's partnerMode after acceptance; null leaves it as it is. keepFix only ever undoes a downgrade. */
 export function acceptOutcome(p: { downgrade: boolean; keepFix: boolean }): PartnerModeValue | null {
-  if (p.keepFix) return "FIX";
-  return p.downgrade ? "HANDOVER" : null;
+  return p.downgrade && !p.keepFix ? "HANDOVER" : null;
 }
 
-/** The partnerMode a keep-FIX toggle sets; null when nothing would change. Un-keep returns to HANDOVER only after an early handover. */
+/**
+ * The partnerMode a keep-FIX toggle sets; null when nothing would change. Both directions exist only after an
+ * early handover (downgrade): keep undoes the downgrade, un-keep restores it. Never an upgrade to FIX otherwise.
+ */
 export function keepFixChange(p: { keep: boolean; currentMode: PartnerModeValue | null; downgrade: boolean }): PartnerModeValue | null {
+  if (!p.downgrade) return null;
   if (p.keep) return p.currentMode === "FIX" ? null : "FIX";
-  return p.downgrade && p.currentMode !== "HANDOVER" ? "HANDOVER" : null;
+  return p.currentMode === "HANDOVER" ? null : "HANDOVER";
 }
 
 /**
  * An OPEN request nobody answered: "remind" (the manager) from 24 h, "escalate" (every admin) from 48 h.
- * Each fires once, stamped on the row; the escalation goes first when both are due.
+ * Each fires once, stamped on the row. When both are due in one run (the 24 h run was missed) only the
+ * escalation fires and the runner stamps the reminder with it, so no stale reminder follows.
  */
 export function escalationDue(
   req: { createdAt: Date; remindedAt: Date | null; escalatedAt: Date | null },
@@ -40,7 +44,7 @@ export function escalationDue(
 ): "remind" | "escalate" | null {
   const age = now.getTime() - req.createdAt.getTime();
   if (age >= HANDOVER_ESCALATE_MS && !req.escalatedAt) return "escalate";
-  if (age >= HANDOVER_REMIND_MS && !req.remindedAt) return "remind";
+  if (age >= HANDOVER_REMIND_MS && !req.remindedAt && !req.escalatedAt) return "remind";
   return null;
 }
 
