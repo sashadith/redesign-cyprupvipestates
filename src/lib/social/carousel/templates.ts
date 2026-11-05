@@ -69,7 +69,10 @@ async function scriptsOf(file: string): Promise<string> {
 // from DejaVu Sans. Pinned here from local files (assets/social-templates/
 // fonts-fallback; Bitstream Vera and SIL OFL licences) so the glyphs never depend
 // on what a host has installed. Declared after the template CSS, so for these
-// code points these faces are tried before Mulish's own.
+// code points these faces are tried before Mulish's own. The sheet starts disabled
+// (media="not all") and the worker enables it once the approved photo script has
+// run: declared from the start, these faces change which system font stands in
+// while the page is parsed, and with it the photo heights that script measures.
 const ARROWS = "U+2190-21FF", CHECKS = "U+2713-2714";
 const face = (family: string, file: string, weight: number, range?: string) =>
   `@font-face { font-family: ${family}; src: url(../fonts-fallback/${file}); font-weight: ${weight};${range ? ` unicode-range: ${range};` : ""} }`;
@@ -87,7 +90,7 @@ const FALLBACK_CSS = {
 function doc(kind: "project" | "cyprus", lang: Lang, css: string, section: string, scripts = ""): string {
   // <base> = the templates folder, so ../fonts and ../brand resolve exactly as in the approved files.
   const base = pathToFileURL(path.join(assetsDir(), "templates") + path.sep).href;
-  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><base href="${base}"><style>${css}</style><style>${FALLBACK_CSS[kind]}</style></head><body>${section}${scripts}</body></html>`;
+  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><base href="${base}"><style>${css}</style><style id="cve-fallback" media="not all">${FALLBACK_CSS[kind]}</style></head><body>${section}${scripts}</body></html>`;
 }
 
 // ---------------------------------------------------------------- project (dark)

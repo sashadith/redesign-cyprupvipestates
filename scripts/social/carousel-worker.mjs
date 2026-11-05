@@ -232,6 +232,9 @@ async function loadPage(context, file, raw = false) {
   page.setDefaultTimeout(20_000);
   await page.route("**/*", (r) => (r.request().url().startsWith("file:") ? r.continue() : r.abort()));
   await page.goto(pathToFileURL(file).href, { waitUntil: "load" });
+  // The pinned fallback glyph faces (templates.ts) switch on only now, after the
+  // approved photo script measured the page as it was parsed.
+  await page.evaluate(() => document.getElementById("cve-fallback")?.setAttribute("media", "all"));
   // Every declared face must load from the local files — no silent fallback font.
   const fonts = await page.evaluate(async () => {
     try { await Promise.all([...document.fonts].map((f) => f.load())); } catch (e) { return { ok: false, detail: String(e) }; }
