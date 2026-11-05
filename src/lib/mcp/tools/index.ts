@@ -21,6 +21,7 @@ import { registerDeleteLead } from "./deleteLead";
 import { registerRestoreLead } from "./restoreLead";
 import { registerWhatsappSend } from "./whatsappSend";
 import { registerNotifyOwnerTelegram } from "./notifyOwnerTelegram";
+import { registerRenderInstagramCarousel } from "./renderInstagramCarousel";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -53,4 +54,6 @@ export function registerWriteTools(server: McpServer): void {
   registerWhatsappSend(server);
   // Owner notification (2026-10-09): plain text to the fixed owner chat, 10/hour.
   registerNotifyOwnerTelegram(server);
+  // Instagram carousel (2026-11-05): writes six JPGs under /uploads/social/, one render at a time.
+  registerRenderInstagramCarousel(server);
 }

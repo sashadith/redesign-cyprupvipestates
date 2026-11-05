@@ -367,6 +367,15 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           </div>
 
           <div>
+            <label className={label}>Instagram carousel: VAT note on the price slide</label>
+            <select name="vatNote" defaultValue={ov?.vatNote ?? ""} className={field}>
+              <option value="">Not shown (only &quot;Prices from&quot;)</option>
+              <option value="plus">Plus VAT (+ VAT / zzgl. MwSt.)</option>
+              <option value="included">VAT included (incl. VAT / inkl. MwSt.)</option>
+            </select>
+          </div>
+
+          <div>
             <label className={label}>Extra links</label>
             <ExtraLinksField initial={parseExtraLinks(ov?.extraLinks)} />
           </div>

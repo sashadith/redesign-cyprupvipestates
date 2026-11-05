@@ -1841,6 +1841,10 @@ model DevelopmentOverride {
   promoBlocksHE Json?
   amenities     Json? // admin-checked amenities merged with feed ones
   vatApplies    Boolean? // null = follow feed; true/false = admin decision (e.g. renovated no-VAT)
+  // Price note on the Instagram carousel's price slide (2026-11-05): "plus" (+ VAT /
+  // zzgl. MwSt.), "included" (incl. VAT / inkl. MwSt.) or null (only "Prices from").
+  // Set once per project by an admin; read by crm_get_project. CHECK in the migration.
+  vatNote       String?
   completion    String?
   energy        String?
   // Construction-stage override (Available | Under Construction | Key-Ready | Sold).

@@ -13,6 +13,7 @@ import Benefits from "@/app/preview-project/Benefits";
 import ExtraLinks from "@/app/preview-project/ExtraLinks";
 import { atSize } from "@/app/preview-project/imageSize";
 import { isDistanceClaim } from "@/lib/distanceClaims";
+import { pageBenefits } from "@/lib/developmentPageFacts";
 import areaLibrary from "@/app/preview-project/areas.json";
 import PlanGrid from "@/app/preview-project/PlanGrid";
 import PropertyMapBlock from "@/app/preview-project/PropertyMapBlock";
@@ -136,7 +137,8 @@ export default async function ProjectPageBody({
   const locationLabel = lang === "he" ? hePlaceList(p.location) : p.location;
   // Distance claims ("300 meters from the beach", "5 min to A6 Highway") are left
   // to the Distances strip above the map — see src/lib/distanceClaims.ts.
-  const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter((b) => b && !isDistanceClaim(b));
+  // The same list crm_get_project returns as `amenities` (src/lib/developmentPageFacts.ts).
+  const benefits = pageBenefits(p.amenities ?? [], p.units.map((u) => u.features));
   // Neighbourhood text: prefer the APPROVED area description from the DB in the
   // page's language (English fallback); otherwise the static demo library.
   const slugOfArea = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
