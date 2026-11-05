@@ -74,10 +74,12 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null, c
 }
 
 // followUp renders inside the panel, under the enquiry (operator, 2026-11-01).
+// A partner-worked lead shows its contact details as text only: staff do not contact the partner's client.
 export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp?: ReactNode }) {
-  const wa = waDigits(lead.phone);
-  const mailto = safeMailto(lead.email);
-  const tel = lead.phone ? lead.phone.replace(/[^\d+]/g, "") : "";
+  const locked = !!lead.workedByPartnerName;
+  const wa = locked ? null : waDigits(lead.phone);
+  const mailto = locked ? null : safeMailto(lead.email);
+  const tel = !locked && lead.phone ? lead.phone.replace(/[^\d+]/g, "") : "";
   const facts: [string, string | null][] = [
     ["Interested in", lead.project],
     ["Budget", budget(lead.budgetMin, lead.budgetMax)],
@@ -102,10 +104,12 @@ export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp
             <dt>Phone</dt>
             <dd>
               <span className="crm-ck-copy">{lead.phone}</span>
-              <span className="crm-ck-links">
-                {tel && <a href={`tel:${tel}`}>Call</a>}
-                {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
-              </span>
+              {(tel || wa) && (
+                <span className="crm-ck-links">
+                  {tel && <a href={`tel:${tel}`}>Call</a>}
+                  {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
+                </span>
+              )}
             </dd>
           </div>
         )}

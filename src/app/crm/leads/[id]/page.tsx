@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
-import { canAssignLeads, canEditLead, canViewLead, seesAllLeads } from "@/lib/crm/access";
+import { canAssignLeads, canEditLead, canViewLead, canWorkDeveloperSide, seesAllLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
@@ -85,6 +85,8 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   const canEdit = canEditLead(user, lead);
   const canAssign = canAssignLeads(user);
   const canReassign = canAssign && !lead.workedByPartner;
+  // Developer registration stays open on a partner-worked lead (CVE handles the developer side).
+  const canRegister = canWorkDeveloperSide(user, lead);
   const staff = canAssign
     ? await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, acceptsLeads: true } })
     : [];
@@ -184,7 +186,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} followUp={<CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} leadZone={view.localTime.kind === "known" ? view.localTime.zone : null} />} />
-            <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
+            <CockpitRegistrations leadId={lead.id} canEdit={canRegister} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
             <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
             {partnerView && <CockpitPartner view={partnerView} />}

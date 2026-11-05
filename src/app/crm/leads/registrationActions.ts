@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
-import { leadEditError } from "@/lib/crm/access";
+import { canWorkDeveloperSide } from "@/lib/crm/access";
 import { checkManualRegistration, isRegistrable, maskPhone, type RegChannel, type RegMark } from "@/lib/crm/registration/core";
 import {
   prepareRegistration, realRegisterDeps, registerLead,
@@ -13,7 +13,8 @@ import { cleanSkipReason } from "@/lib/crm/registration/due";
 
 // Developer client registration from the lead cockpit (spec 2026-10-27 §7.1,
 // §8, §9). Middleware does not protect server actions: every export checks the
-// session and canEditLead itself; Fixed and its undo additionally need the owner.
+// session and canWorkDeveloperSide itself; Fixed and its undo additionally need the owner.
+// A partner-worked FIX lead stays registrable: CVE handles the developer, not the client.
 
 export type RegistrationOptions = {
   developers: { id: string; name: string; channel: RegChannel; registrable: boolean; alreadyRegistered: boolean }[];
@@ -25,16 +26,14 @@ export type RegistrationOptions = {
 const NOT_FOUND = "Lead not found.";
 const MAX_PICKS = 40;
 
-// error is NOT_FOUND, or PARTNER_WORKED_READONLY on a partner-worked lead the user may see.
 async function editableLead(leadId: unknown) {
   const user = await requireCrmUser();
   if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { user, lead: null, error: NOT_FOUND };
   const lead = await prisma.lead.findFirst({
     where: { id: leadId, deletedAt: null },
-    select: { id: true, assignedToId: true, workedByPartner: true, phone: true, budgetMin: true, budgetMax: true },
+    select: { id: true, assignedToId: true, phone: true, budgetMin: true, budgetMax: true },
   });
-  const error = lead ? leadEditError(user, lead, NOT_FOUND) : NOT_FOUND;
-  return { user, lead: lead && !error ? lead : null, error: error ?? NOT_FOUND };
+  return { user, lead: lead && canWorkDeveloperSide(user, lead) ? lead : null, error: NOT_FOUND };
 }
 
 // Only plain ids survive; anything else from the client is dropped.

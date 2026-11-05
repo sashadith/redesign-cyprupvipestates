@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canEditLead, canViewLead, leadEditError, PARTNER_WORKED_READONLY, type CrmUser } from "@/lib/crm/access";
+import { canEditLead, canViewLead, canWorkDeveloperSide, leadEditError, PARTNER_WORKED_READONLY, type CrmUser } from "@/lib/crm/access";
 import { EXCLUDE_PARTNER_WORKED } from "@/lib/crm/leadBucket";
 import { presentationGuard } from "@/lib/crm/presentations/guard";
 import { canTrashLead } from "@/lib/crm/trashView";
@@ -57,4 +57,14 @@ test("presentations, trash and MCP writes refuse a partner-worked lead with the 
   assert.deepEqual(canTrashLead(admin, lead), { allowed: false, error: PARTNER_WORKED_READONLY });
   assert.throws(() => assertCanEdit(admin, lead), (e: Error) => e.message === PARTNER_WORKED_READONLY);
   assert.doesNotThrow(() => assertCanEdit(admin, { ...lead, workedByPartner: false }));
+});
+
+test("developer registration stays open on a partner-worked lead, with the usual owner rules", () => {
+  // The lead row's workedByPartner is irrelevant here: only assignedToId is read.
+  const worked = { assignedToId: owner.id, workedByPartner: true };
+  assert.equal(canWorkDeveloperSide(owner, worked), true);
+  assert.equal(canWorkDeveloperSide(admin, worked), true);
+  assert.equal(canWorkDeveloperSide(boss, { assignedToId: null }), true);
+  assert.equal(canWorkDeveloperSide(owner, { assignedToId: "u2" }), false);
+  assert.equal(canWorkDeveloperSide({ ...admin, isActive: false }, worked), false);
 });

@@ -97,13 +97,13 @@ export async function handleNagSnooze(input: {
     prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null }, select: { id: true, firstName: true, lastName: true, assignedToId: true, workedByPartner: true } }),
     prisma.user.findUnique({ where: { telegramChatId: input.chatId }, select: { id: true, name: true, isOwner: true, isActive: true, telegramChatId: true } }),
   ]);
-  // An old reminder button on a lead the partner now works: read only, nothing moves.
-  if (lead?.workedByPartner) {
-    await answerOfficeCallback(input.callbackId, PARTNER_WORKED_READONLY);
-    return;
-  }
   if (!lead || !maySnooze({ chatId: input.chatId, officeChatId: cfg?.officeChatId ?? null, chatUser, leadAssignedToId: lead.assignedToId })) {
     await answerOfficeCallback(input.callbackId, "Not possible for this lead.");
+    return;
+  }
+  // An old reminder button on a lead the partner now works: read only, nothing moves.
+  if (lead.workedByPartner) {
+    await answerOfficeCallback(input.callbackId, PARTNER_WORKED_READONLY);
     return;
   }
   const until = snoozeUntil(input.now, input.days);

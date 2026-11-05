@@ -45,6 +45,13 @@ export function canEditLead(u: CrmUser, lead: LeadOwner): boolean {
   return u.canSeeColleagues && u.canEditColleagues;
 }
 
+// Developer side of a lead (developer registration): under the FIX agreement CVE
+// handles the developer and never touches the client, so this ignores
+// workedByPartner on purpose. Otherwise the same rule as canEditLead.
+export function canWorkDeveloperSide(u: CrmUser, lead: { assignedToId: string | null }): boolean {
+  return canEditLead(u, { assignedToId: lead.assignedToId, workedByPartner: false });
+}
+
 // Why an edit is refused, or null when it is allowed. A partner-worked lead the
 // user may see gets PARTNER_WORKED_READONLY; anything else the caller's own
 // "not found" text, so a lead the user cannot see is never revealed.
