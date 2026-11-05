@@ -25,6 +25,7 @@ import { prisma } from "@/lib/prisma";
 import { guideCadenceStep } from "@/lib/guides/leadSource";
 import { keepsManualFollowUp, manualFollowUpData } from "./followUpRule";
 import { followUpLabel } from "./followUp";
+import { authorColumns, isPartnerActor, type LeadActor } from "./leadActor";
 
 export type FollowUpTrigger = "presentation_sent" | "presentation_viewed" | "manual_contact";
 
@@ -170,16 +171,17 @@ export async function resetFollowUpCadence(leadId: string): Promise<void> {
 
 /* A follow-up date a person picked while logging or sending (crm_log_interaction / crm_send_email
    followUpAt, 2026-11-04). Runs after the contact's own cadence, so it wins, and is written like the
-   cockpit's "Next follow-up" control: flagged manual, with the same SYSTEM row. null clears it. */
-export async function setManualFollowUp(leadId: string, at: Date | null, actor: { userId: string; userName: string }): Promise<void> {
+   cockpit's "Next follow-up" control: flagged manual, with the same SYSTEM row. null clears it.
+   A partner sets his FIX client's date the same way (via "partner"). */
+export async function setManualFollowUp(leadId: string, at: Date | null, actor: LeadActor): Promise<void> {
   const body = at ? `Next follow-up set to ${followUpLabel(at)}` : "Next follow-up cleared";
   await prisma.$transaction([
     prisma.lead.update({ where: { id: leadId }, data: manualFollowUpData(at) }),
     prisma.leadInteraction.create({
       data: {
         leadId, type: "SYSTEM", channel: "SYSTEM", direction: null, body,
-        createdByUserId: actor.userId, createdByName: actor.userName,
-        metadata: { kind: "follow_up", nextFollowUpAt: at ? at.toISOString() : null, via: "mcp" },
+        ...authorColumns(actor),
+        metadata: { kind: "follow_up", nextFollowUpAt: at ? at.toISOString() : null, via: isPartnerActor(actor) ? "partner" : "mcp" },
       },
     }),
   ]);

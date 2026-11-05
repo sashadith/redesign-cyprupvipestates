@@ -13,3 +13,16 @@ export function partnerMayWork(
 ): boolean {
   return lead.partnerId === partnerId && lead.workedByPartner && lead.deletedAt === null;
 }
+
+// A claim opens the partner's pipeline only when it is his, FIX, and ACTIVE.
+export function claimEligible(
+  claim: { partnerId: string; mode: "HANDOVER" | "FIX"; state: "ACTIVE" | "IN_REVIEW" | "REJECTED" | "EXPIRED" } | null,
+  partnerId: string,
+): boolean {
+  return !!claim && claim.partnerId === partnerId && claim.mode === "FIX" && claim.state === "ACTIVE";
+}
+
+// Moving a lead TO VIEWING_SCHEDULED needs the appointment, as crm_update_lead requires.
+export function viewingDateMissing(from: string, to: string, at: Date | null | undefined): boolean {
+  return to === "VIEWING_SCHEDULED" && from !== to && !at;
+}
