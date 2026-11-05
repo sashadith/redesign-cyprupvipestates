@@ -727,6 +727,8 @@ model MediaFolder {
 
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
+  handoverAccepted PartnerHandoverRequest[] @relation("HandoverAcceptedBy")
+  handoverKeepFix  PartnerHandoverRequest[] @relation("HandoverKeepFixBy")
   advisorNotes AdvisorProjectNote[]
   dealsCreated Deal[] @relation("DealsCreated")
   managedPartners Partner[] @relation("PartnerManager")
@@ -857,6 +859,7 @@ model Lead {
   contactRepName   String?
   contactRepPhone  String?
   claims           PartnerClaim[]
+  handoverRequests PartnerHandoverRequest[]
   // 2026-11-05: the partner works this FIX client themselves in the portal pipeline.
   workedByPartner  Boolean        @default(false)
   @@index([partnerId])
@@ -2302,6 +2305,7 @@ model Partner {
   acceptances    PartnerAgreementAcceptance[]
   leads          Lead[]
   claims         PartnerClaim[]
+  handoverRequests PartnerHandoverRequest[]
   messages       PartnerMessage[]
   notifications  PartnerNotification[]
   bankDetailsEnc       String?
@@ -2369,6 +2373,7 @@ model PartnerUser {
   tokens          PartnerToken[]
   authoredInteractions LeadInteraction[] @relation("PartnerAuthoredInteractions")
   createdDeals         Deal[]            @relation("PartnerCreatedDeals")
+  handoverRequests     PartnerHandoverRequest[]
   @@map("partner_users")
 }
 
@@ -2426,8 +2431,49 @@ model PartnerClaim {
   reviewedAt   DateTime?
   reviewedById String?
   @@index([leadId])
+  handoverRequests PartnerHandoverRequest[]
   @@index([partnerId, state])
   @@map("partner_claims")
+}
+
+enum HandoverState {
+  OPEN
+  ACCEPTED
+  WITHDRAWN
+}
+
+// A partner asks the office to take over a FIX lead they work themselves (2026-11-06, migration 20261106090000).
+// One OPEN request per lead is enforced by a partial unique index that exists only in SQL
+// ("partner_handover_requests_one_open_per_lead" ON ("leadId") WHERE "state" = 'OPEN') — Prisma cannot express it.
+model PartnerHandoverRequest {
+  id             String        @id @default(uuid())
+  leadId         String
+  lead           Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  claimId        String
+  claim          PartnerClaim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  partnerId      String
+  partner        Partner       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  partnerUserId  String?
+  partnerUser    PartnerUser?  @relation(fields: [partnerUserId], references: [id], onDelete: SetNull)
+  state          HandoverState @default(OPEN)
+  note           String?
+  stageAtRequest LeadStatus
+  downgrade      Boolean
+  keepFix        Boolean       @default(false)
+  keepFixById    String?
+  keepFixBy      User?         @relation("HandoverKeepFixBy", fields: [keepFixById], references: [id], onDelete: SetNull)
+  keepFixAt      DateTime?
+  acceptedById   String?
+  acceptedBy     User?         @relation("HandoverAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+  acceptedAt     DateTime?
+  withdrawnAt    DateTime?
+  remindedAt     DateTime?
+  escalatedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  @@index([leadId])
+  @@index([partnerId, state])
+  @@index([state, createdAt])
+  @@map("partner_handover_requests")
 }
 
 // Phase 4b: partner tiers, tier-promotion proposals and the points rating. Hand-written migration 20261020100000.
