@@ -8,7 +8,7 @@ import type { HandoverRequestCard } from "@/lib/crm/handoverReview";
 
 // "Handover requests" on /crm/today and /crm/inbox (partner pipeline, 2026-11-05): a partner
 // asks the manager to take over a FIX client he works himself. Accept makes the client ours
-// (owner = whoever accepts); "Accept and keep Fix" also keeps the partner's Fix share on an
+// (owner = the partner's active manager, else whoever accepts); "Accept and keep Fix" also keeps the partner's Fix share on an
 // early handover. Admins see every open request, a manager only his partners'.
 
 export type HandoverRequestView = HandoverRequestCard;
@@ -21,7 +21,7 @@ function Card({ r, onDone }: { r: HandoverRequestView; onDone: (id: string, mess
     if (busy) return;
     setBusy(true);
     setError(null);
-    let res: { ok: true } | { error: string };
+    let res: { ok: true; ownerName?: string; mine?: boolean } | { error: string };
     try {
       res = await acceptHandoverAction(r.id, keepFix);
     } catch {
@@ -30,7 +30,8 @@ function Card({ r, onDone }: { r: HandoverRequestView; onDone: (id: string, mess
       setBusy(false);
     }
     if ("error" in res) { setError(res.error); return; }
-    onDone(r.id, keepFix ? `${r.client} is yours — the partner keeps the Fix share` : `${r.client} is yours now`);
+    const who = res.mine === false && res.ownerName ? `now with ${res.ownerName}` : "yours";
+    onDone(r.id, keepFix ? `${r.client} is ${who} — the partner keeps the Fix share` : `${r.client} is ${who} now`);
   }
 
   return (

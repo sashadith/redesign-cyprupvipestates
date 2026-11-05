@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEAL_FIXED_ERROR, acceptOutcome, escalationDue, handoverEscalationHtml, keepFixChange, mayAcceptHandover,
+  DEAL_FIXED_ERROR, acceptOutcome, acceptOwnerId, effectiveDowngrade, escalationDue, handoverEscalationHtml, keepFixChange, mayAcceptHandover,
 } from "@/lib/crm/handoverReviewRules";
 import { partnerTimeline, type TimelineRow } from "@/lib/partner/pipeline/timeline";
 import { buildHandoverEmail, handoverNoticeOf } from "@/lib/partner/notify";
@@ -30,6 +30,22 @@ test("acceptOutcome: only an early handover without keep-FIX becomes HANDOVER", 
   // Without a downgrade "keep Fix" is ignored: never an upgrade.
   assert.equal(acceptOutcome({ downgrade: false, keepFix: true }), null);
   assert.equal(acceptOutcome({ downgrade: false, keepFix: false }), null);
+});
+
+test("effectiveDowngrade: fresh data may cancel a confirmed downgrade, never create an unwarned one", () => {
+  assert.equal(effectiveDowngrade(true, true), true);
+  assert.equal(effectiveDowngrade(true, false), false, "a deal or a move to a viewing since the request cancels it");
+  // Requested at VIEWING_SCHEDULED (no warning shown), moved back to CONTACTED before acceptance: no downgrade.
+  assert.equal(effectiveDowngrade(false, true), false);
+  assert.equal(effectiveDowngrade(false, false), false);
+  assert.equal(acceptOutcome({ downgrade: effectiveDowngrade(false, true), keepFix: false }), null);
+});
+
+test("acceptOwnerId: the partner's active manager owns the client, else the accepting user", () => {
+  assert.equal(acceptOwnerId("admin", { id: "m", isActive: true }), "m");
+  assert.equal(acceptOwnerId("admin", { id: "m", isActive: false }), "admin");
+  assert.equal(acceptOwnerId("admin", null), "admin");
+  assert.equal(acceptOwnerId("m", { id: "m", isActive: true }), "m");
 });
 
 test("keepFixChange: keep goes to FIX, un-keep back to HANDOVER only after a downgrade", () => {

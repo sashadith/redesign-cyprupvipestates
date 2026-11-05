@@ -13,7 +13,7 @@ import { handoverPlan, mayKeepFix } from "@/lib/partner/pipeline/handoverRules";
 import { writeAudit } from "./audit";
 import { partnerName } from "./partnerClaims";
 import {
-  DEAL_FIXED_ERROR, NOTHING_TO_CHANGE, acceptOutcome, escalationDue, handoverEscalationHtml, keepFixChange, mayAcceptHandover,
+  DEAL_FIXED_ERROR, NOTHING_TO_CHANGE, acceptOutcome, acceptOwnerId, effectiveDowngrade, escalationDue, handoverEscalationHtml, keepFixChange, mayAcceptHandover,
   type PartnerModeValue,
 } from "./handoverReviewRules";
 import type { ReviewResult } from "./claimReview";
@@ -44,7 +44,7 @@ export function handoverVisibleWhere(u: SessionCrmUser): Prisma.PartnerHandoverR
   return u.isOwner || u.role === "ADMIN" ? base : { ...base, partner: { managerUserId: u.id } };
 }
 
-/** OPEN requests visible to the user, oldest first. The downgrade marker is the rule on today's data. */
+/** OPEN requests visible to the user, oldest first. The downgrade marker: confirmed at the request and still due on today's data. */
 export async function listHandoverRequests(u: SessionCrmUser, now = new Date()): Promise<{ cards: HandoverRequestCard[]; total: number }> {
   const where = handoverVisibleWhere(u);
   const [rows, total] = await Promise.all([
@@ -66,7 +66,7 @@ export async function listHandoverRequests(u: SessionCrmUser, now = new Date()):
   const cards = rows.map((r) => {
     const hasLiveDeal = r.lead.deals.length > 0;
     const status = r.lead.status;
-    const downgrade = isLeadStatus(status) ? handoverPlan({ status, partnerMode: mode(r.lead.partnerMode), hasLiveDeal }).downgrade : r.downgrade;
+    const downgrade = effectiveDowngrade(r.downgrade, isLeadStatus(status) ? handoverPlan({ status, partnerMode: mode(r.lead.partnerMode), hasLiveDeal }).downgrade : true);
     return {
       id: r.id, leadId: r.leadId, client: `${r.lead.firstName} ${r.lead.lastName}`.trim() || "Unnamed client",
       partner: partnerName(r.partner), stage: isLeadStatus(status) ? STATUS_LABEL[status] : status, note: r.note,
@@ -76,9 +76,11 @@ export async function listHandoverRequests(u: SessionCrmUser, now = new Date()):
   return { cards, total };
 }
 
-export async function acceptHandover(actor: SessionCrmUser, requestId: string, keepFix: boolean): Promise<ReviewResult & { leadId?: string }> {
+export async function acceptHandover(
+  actor: SessionCrmUser, requestId: string, keepFix: boolean,
+): Promise<({ ok: true; leadId: string; ownerId: string; ownerName: string }) | { error: string }> {
   try {
-    const leadId = await prisma.$transaction(async (tx) => {
+    const done = await prisma.$transaction(async (tx) => {
       const first = await tx.partnerHandoverRequest.findUnique({ where: { id: requestId }, select: { leadId: true, state: true, partner: { select: { managerUserId: true } } } });
       if (!first || first.state !== "OPEN") throw new Abort(HANDLED);
       if (!mayAcceptHandover(actor, first.partner.managerUserId)) throw new Abort(DENIED);
@@ -87,7 +89,10 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
       const [req, lead, deal] = await Promise.all([
         tx.partnerHandoverRequest.findUnique({
           where: { id: requestId },
-          select: { id: true, state: true, leadId: true, claimId: true, partnerId: true, downgrade: true, partner: { select: PARTNER_SELECT } },
+          select: {
+            id: true, state: true, leadId: true, claimId: true, partnerId: true, downgrade: true,
+            partner: { select: { ...PARTNER_SELECT, manager: { select: { id: true, name: true, isActive: true } } } },
+          },
         }),
         tx.lead.findFirst({ where: { id: first.leadId, deletedAt: null }, select: { id: true, status: true, partnerMode: true, workedByPartner: true, assignedToId: true } }),
         liveDeal(tx, first.leadId),
@@ -98,17 +103,22 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
       // Fresh read under the lock: staff may have taken the client meanwhile some other way.
       if (!lead.workedByPartner) throw new Abort("This client is no longer worked by the partner.");
 
-      // The plan on today's data, not the one stored at the request: a deal or a stage move since then counts.
+      // The downgrade the partner confirmed at the request, and only while today's data still calls for it:
+      // a deal or a move to VIEWING_SCHEDULED since then cancels it, a move back never creates one unwarned.
       const current = mode(lead.partnerMode);
-      const downgrade = isLeadStatus(lead.status)
+      const fresh = isLeadStatus(lead.status)
         ? handoverPlan({ status: lead.status as LeadStatusValue, partnerMode: current, hasLiveDeal: !!deal }).downgrade
         : false;
+      const downgrade = effectiveDowngrade(req.downgrade, fresh);
       // "Keep Fix" only undoes a downgrade: without one it is ignored, never stored or announced.
       // With a live deal handoverPlan never downgrades, so the fixed share is not touched either.
       const kept = keepFix && downgrade;
       const target = acceptOutcome({ downgrade, keepFix: kept });
       const finalMode = target ?? current;
       const now = new Date();
+      // The partner's manager owns the client from now on (he is the one who knows the partner); the accepting user otherwise.
+      const ownerId = acceptOwnerId(actor.id, req.partner.manager);
+      const ownerName = ownerId === actor.id ? actor.name : req.partner.manager?.name ?? actor.name;
 
       // Conditional write: a withdrawal that landed first wins and this aborts.
       const r = await tx.partnerHandoverRequest.updateMany({
@@ -121,7 +131,7 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
       if (r.count !== 1) throw new Abort(HANDLED);
       await tx.lead.update({
         where: { id: lead.id },
-        data: { workedByPartner: false, assignedToId: actor.id, ...(target && target !== current ? { partnerMode: target } : {}) },
+        data: { workedByPartner: false, assignedToId: ownerId, ...(target && target !== current ? { partnerMode: target } : {}) },
       });
       const who = partnerName(req.partner);
       const terms = target === "HANDOVER" ? "now Handover" : kept ? "Fix kept" : `stays ${finalMode ?? "unchanged"}`;
@@ -129,14 +139,16 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
       await tx.leadInteraction.create({
         data: {
           leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", occurredAt: now,
-          body: `Assigned to ${actor.name} (handover from partner ${who} accepted, ${terms})`,
+          body: ownerId === actor.id
+            ? `Assigned to ${ownerName} (handover from partner ${who} accepted, ${terms})`
+            : `Assigned to ${ownerName} (handover from partner ${who} accepted by ${actor.name}, ${terms})`,
           createdByUserId: actor.id, createdByName: actor.name,
-          metadata: { kind: "handover_accepted", requestId: req.id, assignedToId: actor.id, downgrade, keepFix: kept, partnerMode: finalMode },
+          metadata: { kind: "handover_accepted", requestId: req.id, assignedToId: ownerId, downgrade, keepFix: kept, partnerMode: finalMode },
         },
       });
       await writeAudit(actor, "partner_handover_accept", "partner_handover_request", req.id, {
         before: { state: "OPEN", partnerMode: current, workedByPartner: lead.workedByPartner, assignedToId: lead.assignedToId },
-        after: { state: "ACCEPTED", partnerMode: finalMode, workedByPartner: false, assignedToId: actor.id },
+        after: { state: "ACCEPTED", partnerMode: finalMode, workedByPartner: false, assignedToId: ownerId },
         leadId: lead.id, downgrade, storedDowngrade: req.downgrade, keepFix: kept,
       }, tx);
       await tx.partnerNotification.create({
@@ -145,9 +157,9 @@ export async function acceptHandover(actor: SessionCrmUser, requestId: string, k
           payload: { handover: "accepted", keepFix: kept, downgraded: target === "HANDOVER" },
         },
       });
-      return lead.id;
+      return { leadId: lead.id, ownerId, ownerName };
     });
-    return { ok: true, leadId };
+    return { ok: true, ...done };
   } catch (e) {
     if (e instanceof Abort) return { error: e.message };
     throw e;

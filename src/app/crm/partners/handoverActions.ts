@@ -11,14 +11,14 @@ import type { ReviewResult } from "@/lib/crm/claimReview";
 
 const idOk = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 64;
 
-export async function acceptHandoverAction(requestId: string, keepFix: boolean): Promise<ReviewResult> {
+export async function acceptHandoverAction(requestId: string, keepFix: boolean): Promise<{ ok: true; ownerName?: string; mine?: boolean } | { error: string }> {
   const actor = await requireCrmUser();
   if (!idOk(requestId)) return { error: "Handover request not found." };
   const res = await acceptHandover(actor, requestId, keepFix === true);
   revalidatePath("/crm/today");
   revalidatePath("/crm/inbox");
   if ("ok" in res && res.leadId) revalidatePath(`/crm/leads/${res.leadId}`);
-  return "ok" in res ? { ok: true } : res;
+  return "ok" in res ? { ok: true, ownerName: res.ownerName, mine: res.ownerId === actor.id } : res;
 }
 
 export async function setKeepFixAction(leadId: string, keep: boolean): Promise<ReviewResult> {

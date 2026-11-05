@@ -18,6 +18,20 @@ export function mayAcceptHandover(u: Pick<CrmUser, "id" | "role" | "isOwner" | "
   return !!managerUserId && u.id === managerUserId;
 }
 
+/**
+ * The downgrade acceptance applies: only one the partner confirmed at the request (stored), and only while
+ * today's data still calls for it (a deal or a move to VIEWING_SCHEDULED since cancels it). Fresh data never
+ * creates a downgrade the partner was not warned about.
+ */
+export function effectiveDowngrade(stored: boolean, fresh: boolean): boolean {
+  return stored && fresh;
+}
+
+/** Who owns the lead after acceptance: the partner's manager while that user is active, else the accepting user. */
+export function acceptOwnerId(actorId: string, manager: { id: string; isActive: boolean } | null): string {
+  return manager && manager.isActive ? manager.id : actorId;
+}
+
 /** The lead's partnerMode after acceptance; null leaves it as it is. keepFix only ever undoes a downgrade. */
 export function acceptOutcome(p: { downgrade: boolean; keepFix: boolean }): PartnerModeValue | null {
   return p.downgrade && !p.keepFix ? "HANDOVER" : null;
