@@ -242,6 +242,13 @@ export const pl: PartnerDict = {
       note: "Jeśli mają Państwo wiadomości od klienta, prosimy o wiadomość w portalu, abyśmy mogli się z nim skontaktować.",
       button: "Zobacz klienta",
     },
+    followUpDue: {
+      subject: "Czas na kontakt z klientem: {client}",
+      greeting: "Szanowni Państwo,",
+      intro: "Nadszedł termin kontaktu z klientem {client}. Zaplanowano go na {when}.",
+      leadTime: "Czas lokalny klienta: {time}",
+      button: "Otwórz klienta",
+    },
     bankMissing: {
       subject: "Potrzebujemy Państwa danych bankowych",
       greeting: "Szanowni Państwo,",
@@ -772,6 +779,9 @@ export const pl: PartnerDict = {
       protectionNote: "Każdy rzeczywisty kontakt z klientem ją przedłuża. Jeśli klient nadal jest zainteresowany, prosimy o wiadomość w portalu.",
       clientQuiet: "{client}: od 14 dni brak nowości.",
       clientQuietNote: "Jeśli mają Państwo wiadomości od klienta, prosimy o wiadomość w portalu.",
+      followUpDue: "Czas na kontakt z klientem: {client}.",
+      followUpPlanned: "Zaplanowano na {when}.",
+      followUpLeadTime: "Czas lokalny klienta: {time}.",
       bankMissing: "Aby wypłacić Państwa prowizję za klienta {client}, potrzebujemy Państwa danych bankowych.",
       bankMissingDevPaid: "Deweloper zapłacił prowizję za klienta {client}. Prosimy o uzupełnienie danych bankowych, abyśmy mogli przelać Państwa udział.",
       addBank: "Dodaj dane bankowe",

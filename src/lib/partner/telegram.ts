@@ -282,8 +282,11 @@ export function buildTelegramNotification(locale: PartnerLocale, input: Telegram
       out = `<b>${line(t.tierNear, { tier: text(input.tierName, 40) })}</b>\n\n${open}`;
       break;
     case "FOLLOW_UP_DUE":
-      // Placeholder until the sender is implemented (it skips this kind for now).
-      out = `<b>${esc(client)}</b>\n\n${open}`;
+      out = [
+        `<b>${line(t.followUpDue, { client })}</b>`,
+        ...(input.date ? [line(t.followUpPlanned, { when: text(input.date, 60) })] : []),
+        ...(input.extra ?? []).filter((x) => x.trim()).map((x) => text(x, 120)),
+      ].join("\n") + `\n\n${open}`;
       break;
     default:
       return unhandledKind(input.kind);

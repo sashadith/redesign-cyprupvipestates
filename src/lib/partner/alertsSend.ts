@@ -15,8 +15,8 @@ import { projectRates } from "./scope";
 import { closedDealCounts, loadTiers } from "./tierStore";
 import { tierProgress } from "./tiers";
 import {
-  NEWS_MAX_PROJECTS, cyDate, planBankMissing, planProjectNews, planProtectionReminders, planQuietClients, planTierNear, planWatch, protectionEnd,
-  type NewsBlurbs, type PlannedAlert, type WatchEvent,
+  NEWS_MAX_PROJECTS, cyDate, planBankMissing, planFollowUpDue, planProjectNews, planProtectionReminders, planQuietClients, planTierNear, planWatch, protectionEnd,
+  type DueFollowUp, type NewsBlurbs, type PlannedAlert, type WatchEvent,
 } from "./alerts";
 
 export { alertsStartFromEnv } from "./alerts";
@@ -109,6 +109,40 @@ async function loadOpenClaims(now: Date, partnerIds: string[]): Promise<OpenClai
       claimId: r.id, partnerId: r.partnerId, leadId: r.leadId, leadStatus: r.lead.status, activeSince: since,
       lastContactAt, lastStatusAt: statusAt.get(r.leadId) ?? null, lastMessageAt: messageAt.get(r.leadId) ?? null,
     }];
+  });
+}
+
+/**
+ * FIX clients the partner works whose follow-up time has come, on effectively ACTIVE claims (batch). Committed
+ * clients (live deal, RESERVED/CLOSED) stay in: the partner may keep working them.
+ */
+async function loadDueFollowUps(now: Date, partnerIds: string[]): Promise<DueFollowUp[]> {
+  if (!partnerIds.length) return [];
+  const rows = await prisma.partnerClaim.findMany({
+    where: {
+      state: "ACTIVE", mode: "FIX", partnerId: { in: partnerIds },
+      lead: { deletedAt: null, workedByPartner: true, nextFollowUpAt: { not: null, lte: now } },
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: CLAIM_CAP,
+    select: { id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true, lead: { select: { status: true, deletedAt: true, nextFollowUpAt: true } } },
+  });
+  if (!rows.length) return [];
+  const leadIds = Array.from(new Set(rows.map((r) => r.leadId)));
+  const [liveDeals, contacts] = await Promise.all([
+    prisma.deal.groupBy({ by: ["leadId"], where: { leadId: { in: leadIds }, commissionStatus: { not: "CANCELLED" } }, _count: { _all: true } }),
+    prisma.leadInteraction.groupBy({ by: ["leadId"], where: { leadId: { in: leadIds }, type: { in: [...REAL_CONTACT_TYPES] } }, _max: { occurredAt: true } }),
+  ]);
+  const live = new Set(liveDeals.map((d) => d.leadId));
+  const contactAt = new Map(contacts.map((c) => [c.leadId, c._max.occurredAt ?? null]));
+  return rows.flatMap((r) => {
+    const at = r.lead.nextFollowUpAt;
+    if (!at) return [];
+    const state = effectiveClaimState({
+      state: r.state as ClaimStateValue, activeSince: activeSince(r), lastRealContactAt: contactAt.get(r.leadId) ?? null, now,
+      leadDeleted: !!r.lead.deletedAt, leadStatus: r.lead.status, hasLiveDeal: live.has(r.leadId),
+    });
+    return state === "ACTIVE" ? [{ claimId: r.id, partnerId: r.partnerId, leadId: r.leadId, nextFollowUpAt: at }] : [];
   });
 }
 
@@ -327,6 +361,9 @@ export async function runPartnerAlerts(now: Date, start: Date): Promise<AlertsRu
         })),
       now,
     }));
+
+  // 6 — follow-ups the partner set on the FIX clients they work (one row per client per Cyprus day).
+  await step("followup", async () => planFollowUpDue({ leads: await loadDueFollowUps(now, reminded.map((p) => p.id)), now }));
 
   // 8 — live deals of partners without bank details.
   await step("bank", async () => {

@@ -240,6 +240,13 @@ export const en = {
       note: "If you have heard from your client, send us a message in the portal so we can follow up.",
       button: "View client",
     },
+    followUpDue: {
+      subject: "Follow-up due: {client}",
+      greeting: "Dear {name},",
+      intro: "Your follow-up with {client} is due. It was planned for {when}.",
+      leadTime: "Client's local time: {time}",
+      button: "Open client",
+    },
     bankMissing: {
       subject: "We need your bank details",
       greeting: "Dear {name},",
@@ -770,6 +777,9 @@ export const en = {
       protectionNote: "Every real contact with the client extends it. If your client is still interested, let us know in the portal.",
       clientQuiet: "{client}: no news for 14 days.",
       clientQuietNote: "If you have heard from your client, send us a message in the portal.",
+      followUpDue: "Follow-up due: {client}.",
+      followUpPlanned: "Planned for {when}.",
+      followUpLeadTime: "Client's local time: {time}.",
       bankMissing: "To pay your commission for {client}, we need your bank details.",
       bankMissingDevPaid: "The developer has paid the commission for {client}. Please add your bank details so we can transfer your share.",
       addBank: "Add bank details",

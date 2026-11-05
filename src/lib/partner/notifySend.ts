@@ -6,6 +6,7 @@ import { effectiveStateOf, leadClaimFacts } from "./claimFacts";
 import { cyDate, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
 import { lastClientActivity } from "./alertsSend";
 import { loadTiers } from "./tierStore";
+import { leadZone } from "@/lib/crm/leadLocalTime";
 import { quietEndsAt, quietWindow, switchGate } from "./notifyPrefs";
 import { activeSince, isCommitted } from "./claimState";
 import { visibleName } from "./clientDto";
@@ -18,7 +19,7 @@ import { buildTelegramNotification, buildTelegramProjectNews, routeNotification,
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
-  INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail,
+  INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail, buildFollowUpDueEmail, followUpLeadTime, followUpWhen, pipelineLink,
   buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
   buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
   isUnchangedStage, partnerDate, projectNewsLines, projectsLink, watchChangeLabels,
@@ -371,16 +372,40 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         { kind: "TIER_NEAR", tierName, handoverShare, fixShare, url: link, portalUrl: base },
       );
     }
-    case "FOLLOW_UP_DUE":
-      // Enum value added in the schema step of the partner FIX pipeline; planner and sender follow in a later task.
-      return { skip: "no sender yet" };
+    case "FOLLOW_UP_DUE": {
+      // Gated above: the claim is still effectively ACTIVE. Re-check against the lead as it is now: still a FIX
+      // client the partner works, and the follow-up still set and due (cleared or moved on → nothing to tell).
+      const planned = payloadDate(row.payload, "nextFollowUpAt");
+      if (!planned) return { skip: "invalid payload" };
+      const [fixClaim, lead] = await Promise.all([
+        prisma.partnerClaim.findUnique({ where: { id: own.id }, select: { mode: true } }),
+        prisma.lead.findUnique({
+          where: { id: own.leadId },
+          select: { workedByPartner: true, nextFollowUpAt: true, timeZone: true, countryOfResidence: true, phone: true },
+        }),
+      ]);
+      if (fixClaim?.mode !== "FIX" || !lead?.workedByPartner) return { skip: "not worked by partner" };
+      if (!lead.nextFollowUpAt) return { skip: "no follow-up" };
+      if (lead.nextFollowUpAt.getTime() > now.getTime()) return { skip: "rescheduled" };
+      const zone = leadZone(lead).zone;
+      const link = pipelineLink(base, own.id);
+      const when = followUpWhen(locale, lead.nextFollowUpAt);
+      const leadTime = followUpLeadTime(locale, lead.nextFollowUpAt, zone);
+      return deliver(
+        buildFollowUpDueEmail(locale, { ...common, link, when, leadTime }, theme),
+        {
+          ...tgCommon, kind: "FOLLOW_UP_DUE", url: link, date: when,
+          extra: leadTime ? [fmtLine(locale, "followUpLeadTime", { time: leadTime })] : [],
+        },
+      );
+    }
     default:
       return unhandledKind(row.kind);
   }
 }
 
 /** A telegram.notify line in the partner's language with {vars} filled (plain text; escaped by the builders). */
-function fmtLine(locale: PartnerLocale, key: "priceFrom" | "projectRate" | "viewingOn" | "expectedCommission", vars: Record<string, string>): string {
+function fmtLine(locale: PartnerLocale, key: "priceFrom" | "projectRate" | "viewingOn" | "expectedCommission" | "followUpLeadTime", vars: Record<string, string>): string {
   return fmt(dict(locale).telegram.notify[key], vars);
 }
 

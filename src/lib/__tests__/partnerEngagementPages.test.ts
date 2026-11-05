@@ -25,7 +25,7 @@ test("optOutGate: claim decisions and payouts always go out", () => {
     "TIER_NEAR", "TIER_UP", "WATCH",
   ]);
   // The v2 kinds are not behind the e-mail switch (their own switches are switchGate's).
-  for (const kind of ["PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR"] as const) assert.equal(optOutGate(kind, false), null);
+  for (const kind of ["PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR", "FOLLOW_UP_DUE"] as const) assert.equal(optOutGate(kind, false), null);
 });
 
 test("brochure links: main-site project pages only, en without prefix, slug encoded", () => {

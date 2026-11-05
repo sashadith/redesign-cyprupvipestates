@@ -2,11 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  NEWS_MAX_PROJECTS, alertsStartFromEnv, cyDate, planBankMissing, planProjectNews, planProtectionReminders, planQuietClients, planTierNear,
+  NEWS_MAX_PROJECTS, alertsStartFromEnv, cyDate, planBankMissing, planFollowUpDue, planProjectNews, planProtectionReminders, planQuietClients, planTierNear,
   planWatch, protectionEnd, readNewsPayload, readWatchPayload, watchChangeOf, type WatchEvent,
 } from "@/lib/partner/alerts";
 import {
-  PARTNER_ONLY_KINDS, buildBankMissingEmail, buildClientQuietEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail, buildTierNearEmail,
+  PARTNER_ONLY_KINDS, buildBankMissingEmail, buildClientQuietEmail, buildFollowUpDueEmail, followUpLeadTime, followUpWhen, pipelineLink, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail, buildTierNearEmail,
   buildWatchEmail, notificationGate, watchChangeLabels,
 } from "@/lib/partner/notify";
 import { switchGate } from "@/lib/partner/notifyPrefs";
@@ -97,6 +97,48 @@ test("quiet clients: after 14 days, once per quiet stretch", () => {
   assert.equal(planQuietClients({ claims: [c(20)], now: NOW })[0].refKey, planQuietClients({ claims: [c(20)], now: new Date(NOW.getTime() + DAY) })[0].refKey);
 });
 
+test("follow-up due: past or now only, one row per client per Cyprus day", () => {
+  const f = (at: string, leadId = "l") => ({ claimId: "c", partnerId: "p", leadId, nextFollowUpAt: new Date(at) });
+  const [r] = planFollowUpDue({ leads: [f("2026-11-02T04:00:00Z")], now: NOW });
+  assert.equal(r.kind, "FOLLOW_UP_DUE");
+  assert.equal(r.refKey, `followup:l:${cyDate(NOW)}`);
+  assert.equal(r.partnerId, "p");
+  assert.equal(r.claimId, "c");
+  assert.equal(r.leadId, "l");
+  assert.deepEqual(r.payload, { nextFollowUpAt: "2026-11-02T04:00:00.000Z" });
+  assert.equal(planFollowUpDue({ leads: [f(NOW.toISOString())], now: NOW }).length, 1, "due exactly now");
+  assert.deepEqual(planFollowUpDue({ leads: [f("2026-11-02T05:30:01Z")], now: NOW }), []);
+  // Same lead twice on one day (rescheduled): the same refKey, so the outbox keeps one.
+  const twice = planFollowUpDue({ leads: [f("2026-11-02T01:00:00Z"), f("2026-11-02T03:00:00Z")], now: NOW });
+  assert.equal(twice[0].refKey, twice[1].refKey);
+  // The next day is a new row.
+  assert.notEqual(planFollowUpDue({ leads: [f("2026-11-02T01:00:00Z")], now: new Date(NOW.getTime() + DAY) })[0].refKey, twice[0].refKey);
+});
+
+test("follow-up due: e-mail and Telegram carry the client, the Cyprus time, the lead's time and the pipeline link", () => {
+  const at = new Date("2026-11-05T12:30:00Z"); // 14:30 in Cyprus
+  assert.equal(pipelineLink("https://p.example/partner-portal", "c 1"), "https://p.example/partner-portal/pipeline/c%201");
+  assert.ok(followUpWhen("en", at).includes("14:30"));
+  assert.ok(followUpLeadTime("en", at, "Europe/Berlin")!.includes("13:30") && followUpLeadTime("en", at, "Europe/Berlin")!.includes("Berlin"));
+  assert.equal(followUpLeadTime("en", at, "Asia/Nicosia"), null, "same clock as Cyprus: nothing to add");
+  const link = pipelineLink("https://p.example", "c1");
+  for (const l of PARTNER_LOCALES) {
+    const mail = buildFollowUpDueEmail(l, { partnerFirstName: "Eva", clientName: "Anna", link, when: followUpWhen(l, at), leadTime: followUpLeadTime(l, at, "Europe/London") });
+    assert.ok(mail.subject.includes("Anna") && mail.text.includes(link) && mail.text.includes("London"), l);
+    assert.ok(!mail.subject.includes("!") && !mail.text.includes("!"), `${l} no exclamation mark`);
+    const noLead = buildFollowUpDueEmail(l, { partnerFirstName: "Eva", clientName: "Anna", link, when: followUpWhen(l, at), leadTime: null });
+    assert.ok(!noLead.text.includes("London"));
+    const tg = buildTelegramNotification(l, { kind: "FOLLOW_UP_DUE", clientName: "Anna <x>", url: link, portalUrl: "https://p.example", date: followUpWhen(l, at), extra: ["lead time"] });
+    assert.ok(tg.includes("Anna &lt;x&gt;") && tg.includes(link) && tg.includes("lead time") && !tg.includes("!"), l);
+  }
+});
+
+test("follow-up due: claim gate wants an effectively ACTIVE claim of the partner", () => {
+  assert.equal(notificationGate({ kind: "FOLLOW_UP_DUE", accepted: false, claim: { ownedByPartner: true, effective: "ACTIVE" } }), null);
+  assert.equal(notificationGate({ kind: "FOLLOW_UP_DUE", accepted: false, claim: { ownedByPartner: true, effective: "NOT_PROCEEDING" } }), "lead trashed");
+  assert.equal(notificationGate({ kind: "FOLLOW_UP_DUE", accepted: false, claim: null }), "claim inactive");
+});
+
 test("bank missing: created, then devpaid once the developer paid (never both in one run)", () => {
   const base = { dealId: "d", partnerId: "p", leadId: "l", claimId: "c" };
   assert.deepEqual(planBankMissing({ deals: [{ ...base, developerPaid: false }] }).map((r) => r.refKey), ["bank:d:created"]);
@@ -134,7 +176,7 @@ test("PARTNER_ALERTS_START gate", () => {
 
 test("switches: each group gates only its own kinds; decisions, money and tier always go out", () => {
   const all = (v: boolean) => ({ notifyClients: v, notifyNewProjects: v, notifyProjectUpdates: v, notifyReminders: v });
-  for (const k of ["STAGE", "MESSAGE", "MATCH", "PRESENTATION_OPENED", "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET"] as const) {
+  for (const k of ["STAGE", "MESSAGE", "MATCH", "PRESENTATION_OPENED", "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "FOLLOW_UP_DUE"] as const) {
     assert.equal(switchGate(k, all(false)), "switched off", k);
     assert.equal(switchGate(k, all(true)), null, k);
   }
@@ -158,7 +200,7 @@ test("claim gate: partner-wide kinds need no claim; bank rows need the partner's
 
 test("every v2 text exists in every partner language", () => {
   const notifyKeys = ["viewingOn", "expectedCommission", "projectNews", "projectRate", "watch", "unitsLeft", "protectionEnding", "protectionNote", "clientQuiet",
-    "clientQuietNote", "bankMissing", "bankMissingDevPaid", "addBank", "tierNear", "digestTitle", "openProjects"] as const;
+    "clientQuietNote", "followUpDue", "followUpPlanned", "followUpLeadTime", "bankMissing", "bankMissingDevPaid", "addBank", "tierNear", "digestTitle", "openProjects"] as const;
   for (const l of PARTNER_LOCALES) {
     const d = dict(l);
     for (const k of notifyKeys) assert.ok(d.telegram.notify[k]?.trim(), `${l} telegram.notify.${k}`);
@@ -169,7 +211,7 @@ test("every v2 text exists in every partner language", () => {
     for (const k of ["quiet", "quietHint", "quietOff", "alwaysOn"] as const) assert.ok(d.profileSettings[k]?.trim(), `${l} ${k}`);
     for (const [k, v] of Object.entries(d.telegram.menu)) assert.ok(String(v).trim(), `${l} telegram.menu.${k}`);
     assert.deepEqual(Object.keys(d.telegram.menu).sort(), Object.keys(dict("en").telegram.menu).sort(), `${l} menu keys`);
-    for (const k of ["projectNews", "watch", "protectionEnding", "clientQuiet", "bankMissing", "tierNear"] as const) assert.ok(d.mail[k].subject.trim(), `${l} mail.${k}`);
+    for (const k of ["projectNews", "watch", "protectionEnding", "clientQuiet", "followUpDue", "bankMissing", "tierNear"] as const) assert.ok(d.mail[k].subject.trim(), `${l} mail.${k}`);
     assert.ok(d.mail.approved.nextStep.includes("{url}"), `${l} approved.nextStep`);
   }
 });

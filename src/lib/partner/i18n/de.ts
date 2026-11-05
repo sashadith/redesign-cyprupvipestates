@@ -242,6 +242,13 @@ export const de: PartnerDict = {
       note: "Wenn Sie etwas von Ihrem Kunden gehört haben, schreiben Sie uns im Portal, damit wir nachfassen können.",
       button: "Kunden ansehen",
     },
+    followUpDue: {
+      subject: "Nachfassen fällig: {client}",
+      greeting: "Guten Tag {name},",
+      intro: "Das Nachfassen bei {client} ist fällig. Geplant war es für {when}.",
+      leadTime: "Ortszeit des Kunden: {time}",
+      button: "Kunden öffnen",
+    },
     bankMissing: {
       subject: "Wir benötigen Ihre Bankverbindung",
       greeting: "Guten Tag {name},",
@@ -772,6 +779,9 @@ export const de: PartnerDict = {
       protectionNote: "Jeder echte Kontakt mit dem Kunden verlängert ihn. Wenn Ihr Kunde weiterhin Interesse hat, schreiben Sie uns im Portal.",
       clientQuiet: "{client}: seit 14 Tagen keine Neuigkeiten.",
       clientQuietNote: "Wenn Sie etwas von Ihrem Kunden gehört haben, schreiben Sie uns im Portal.",
+      followUpDue: "Nachfassen fällig: {client}.",
+      followUpPlanned: "Geplant für {when}.",
+      followUpLeadTime: "Ortszeit des Kunden: {time}.",
       bankMissing: "Um Ihre Provision für {client} auszuzahlen, benötigen wir Ihre Bankverbindung.",
       bankMissingDevPaid: "Der Bauträger hat die Provision für {client} bezahlt. Bitte hinterlegen Sie Ihre Bankverbindung, damit wir Ihren Anteil überweisen können.",
       addBank: "Bankverbindung hinterlegen",

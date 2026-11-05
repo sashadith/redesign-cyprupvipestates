@@ -1,7 +1,7 @@
 // Daily partner alerts (partner notifications v2, 2026-10-30). ENGLISH (internal).
 // Plans the partner-wide and reminder notifications into the partner outbox: new projects of the last 24 h
 // (PROJECT_NEWS), changes on projects from the partner's own presentations (WATCH), client protection
-// ending in 30 / 7 days (PROTECTION_ENDING), clients without news for 14 days (CLIENT_QUIET), live deals of
+// ending in 30 / 7 days (PROTECTION_ENDING), clients without news for 14 days (CLIENT_QUIET), follow-ups that have come due on clients the partner works (FOLLOW_UP_DUE), live deals of
 // partners without bank details (BANK_MISSING) and one closed deal to the next tier (TIER_NEAR). Rows only:
 // the partner-notify cron delivers them by e-mail and/or Telegram and re-checks each one at send time.
 // One run at a time (advisory lock); refKeys are unique, so a rerun the same day adds nothing.

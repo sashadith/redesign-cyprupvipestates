@@ -293,6 +293,41 @@ export function buildClientQuietEmail(locale: PartnerLocale, p: Common, theme: E
   }, theme);
 }
 
+const CY_TZ = "Europe/Nicosia";
+
+/** Follow-up date and time in Cyprus time ("5 November 2026 at 14:30"). */
+export function followUpWhen(locale: PartnerLocale, at: Date): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: CY_TZ }).format(at);
+}
+
+/** The follow-up time on the client's clock ("13:30, Berlin"), or null when the zone is unknown or shows the same time as Cyprus. */
+export function followUpLeadTime(locale: PartnerLocale, at: Date, zone: string | null | undefined): string | null {
+  if (!zone) return null;
+  const hm = (tz: string) => new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: tz }).format(at);
+  try {
+    if (hm(zone) === hm(CY_TZ) && new Intl.DateTimeFormat("en-CA", { timeZone: zone }).format(at) === new Intl.DateTimeFormat("en-CA", { timeZone: CY_TZ }).format(at)) return null;
+    const time = new Intl.DateTimeFormat(locale, { timeStyle: "short", hourCycle: "h23", timeZone: zone }).format(at);
+    return `${time}, ${(zone.split("/").pop() ?? zone).replace(/_/g, " ")}`;
+  } catch {
+    return null;
+  }
+}
+
+/** A follow-up the partner set on a client is due (FOLLOW_UP_DUE). `when` = followUpWhen, `leadTime` = followUpLeadTime. */
+export function buildFollowUpDueEmail(
+  locale: PartnerLocale,
+  p: Common & { when: string; leadTime: string | null },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
+): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.followUpDue;
+  const vars = { client: client(p.clientName), when: p.when };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
+    button: t.button, link: p.link, notes: p.leadTime ? [fmt(t.leadTime, { time: p.leadTime })] : [], signature: d.mail.signature, footer: partnerFooter(locale),
+  }, theme);
+}
+
 /** Bank details missing for a deal (BANK_MISSING); `developerPaid` picks the second, more urgent wording. Link = the bank page. */
 export function buildBankMissingEmail(locale: PartnerLocale, p: Common & { developerPaid: boolean }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const d = dict(locale);
@@ -320,6 +355,7 @@ export function buildTierNearEmail(
 }
 
 /** Portal paths of the v2 notifications. */
+export const pipelineLink = (base: string, claimId: string) => `${base}/pipeline/${encodeURIComponent(claimId)}`;
 export const projectsLink = (base: string) => `${base}/projects`;
 export const bankLink = (base: string) => `${base}/profile#bank`;
 

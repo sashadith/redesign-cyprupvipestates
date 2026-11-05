@@ -188,6 +188,25 @@ export function planQuietClients(input: { claims: QuietClaim[]; now: Date }): Pl
     }));
 }
 
+// ── 6: follow-up due (partner-worked FIX clients) ───────────────────────────
+
+export type DueFollowUp = { claimId: string; partnerId: string; leadId: string; nextFollowUpAt: Date };
+
+/**
+ * One FOLLOW_UP_DUE row per client per Cyprus day once the follow-up time has come. The refKey has no
+ * time in it: a follow-up moved to another time the same day is not told twice.
+ */
+export function planFollowUpDue(input: { leads: DueFollowUp[]; now: Date }): PlannedAlert[] {
+  return input.leads
+    .filter((f) => f.nextFollowUpAt.getTime() <= input.now.getTime())
+    .map((f) => ({
+      kind: "FOLLOW_UP_DUE" as const,
+      refKey: `followup:${f.leadId}:${cyDate(input.now)}`,
+      partnerId: f.partnerId, leadId: f.leadId, claimId: f.claimId,
+      payload: { nextFollowUpAt: f.nextFollowUpAt.toISOString() },
+    }));
+}
+
 // ── 8: bank details missing ─────────────────────────────────────────────────
 
 export type BankDeal = { dealId: string; partnerId: string; leadId: string; claimId: string; developerPaid: boolean };
