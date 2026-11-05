@@ -37,6 +37,12 @@ export function canViewLead(u: CrmUser, lead: { assignedToId: string | null }): 
   return seesAllLeads(u) || lead.assignedToId === u.id;
 }
 
+// The partner's manager may open the partner's leads read-only (partner pipelines, 2026-11-05),
+// even without canSeeColleagues. View only: canEditLead is unchanged and leadAccessWhere (lists, search) too.
+export function canViewPartnerLead(u: CrmUser, lead: { partnerManagerId: string | null | undefined }): boolean {
+  return u.isActive && !!lead.partnerManagerId && lead.partnerManagerId === u.id;
+}
+
 export function canEditLead(u: CrmUser, lead: LeadOwner): boolean {
   if (!u.isActive) return false;
   if (lead.workedByPartner) return false;

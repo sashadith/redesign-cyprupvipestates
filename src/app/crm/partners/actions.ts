@@ -41,8 +41,6 @@ export async function approvePartnerAction(id: string): Promise<Result> {
   if (!pu) return { error: "Partner has no login user." };
   if (!pu.emailVerifiedAt) return { error: "Email not verified yet" };
 
-  // A partner without a manager gets the approving user; the terms editor can change it later.
-  const managerUserId = partner.managerUserId ?? actor.id;
   let committed = false;
   for (let attempt = 0; attempt < 5 && !committed; attempt++) {
     const refCode = partner.refCode ?? newRefCode({ company: partner.company, lastName: partner.lastName }, randomSuffix);
@@ -51,9 +49,13 @@ export async function approvePartnerAction(id: string): Promise<Result> {
         const now = new Date();
         const r = await tx.partner.updateMany({
           where: { id, status: "PENDING" },
-          data: { status: "ACTIVE", approvedAt: now, approvedById: actor.id, suspendedAt: null, refCode, managerUserId },
+          data: { status: "ACTIVE", approvedAt: now, approvedById: actor.id, suspendedAt: null, refCode },
         });
         if (r.count !== 1) return false;
+        // A partner without a manager gets the approving user; written only while still null, so a
+        // manager set meanwhile (terms editor) is never overwritten. The terms editor can change it later.
+        const set = await tx.partner.updateMany({ where: { id, managerUserId: null }, data: { managerUserId: actor.id } });
+        const managerUserId = set.count === 1 ? actor.id : (await tx.partner.findUnique({ where: { id }, select: { managerUserId: true } }))?.managerUserId ?? null;
         await writeAudit(actor, "partner_approve", "partner", id, {
           before: { status: "PENDING", refCode: partner.refCode, managerUserId: partner.managerUserId },
           after: { status: "ACTIVE", refCode, approvedById: actor.id, managerUserId },

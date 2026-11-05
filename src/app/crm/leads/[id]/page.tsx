@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser, type SessionCrmUser } from "@/lib/crm/session";
 import { loadKeepFixView } from "@/lib/crm/handoverReview";
-import { canAssignLeads, canEditLead, canViewLead, canWorkDeveloperSide, seesAllLeads } from "@/lib/crm/access";
+import { canAssignLeads, canEditLead, canViewLead, canViewPartnerLead, canWorkDeveloperSide, seesAllLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
@@ -50,7 +50,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
       message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
-      workedByPartner: true, partnerMode: true, partner: { select: { company: true, firstName: true, lastName: true } },
+      workedByPartner: true, partnerMode: true, partner: { select: { company: true, firstName: true, lastName: true, managerUserId: true } },
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -78,7 +78,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       },
     },
   });
-  if (!lead || !canViewLead(user, lead)) notFound();
+  if (!lead || !(canViewLead(user, lead) || canViewPartnerLead(user, { partnerManagerId: lead.partner?.managerUserId }))) notFound();
 
   // A partner-worked lead is read only for everyone here (canEditLead says no),
   // and its owner is not reassigned either until the partner hands it over.
