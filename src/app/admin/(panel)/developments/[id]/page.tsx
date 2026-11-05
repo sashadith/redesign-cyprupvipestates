@@ -241,30 +241,31 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           )}
           <a href={previewHref} target="_blank" className="inline-flex h-9 items-center rounded-md border border-[#C7A87A] px-4 text-sm text-[#826238] hover:border-[var(--bronze)] hover:bg-[#FDF3E3]">View page ↗</a>
 
-          {/* Turn-by-turn navigation to the project. Both are https universal
-              links, not waze:// or comgooglemaps:// — those dead-end when the
-              app is missing, while these open the app when it is installed and
-              the web version otherwise (which is all a desktop admin can do). */}
+          {/* The project's pin in Waze / Google Maps — the location only, no
+              navigation (start that in the app), same as the public map cards
+              (Sascha, 2026-11-05). Both are https universal links, not waze://
+              or comgooglemaps:// — those dead-end when the app is missing, while
+              these open the app when it is installed and the web map otherwise. */}
           {lat != null && lng != null && (
             <>
               <span aria-hidden className="mx-1 hidden h-5 w-px bg-[#E5E7EB] sm:block" />
               <a
-                href={`https://waze.com/ul?ll=${lat}%2C${lng}&navigate=yes`}
+                href={`https://waze.com/ul?ll=${lat}%2C${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={`Navigate to ${lat}, ${lng} with Waze`}
+                title={`Show ${lat}, ${lng} in Waze`}
                 className="inline-flex h-9 items-center rounded-md bg-[#33CCFF] px-4 text-xs font-semibold tracking-wide text-[#04264A] hover:bg-[#12BEEF]"
               >
-                WAZE ROUTE ↗
+                WAZE ↗
               </a>
               <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${lat}%2C${lng}&travelmode=driving`}
+                href={`https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={`Navigate to ${lat}, ${lng} with Google Maps`}
+                title={`Show ${lat}, ${lng} in Google Maps`}
                 className="inline-flex h-9 items-center rounded-md bg-[#4285F4] px-4 text-xs font-semibold tracking-wide text-white hover:bg-[#3367D6]"
               >
-                GOOGLE ROUTE ↗
+                GOOGLE MAPS ↗
               </a>
             </>
           )}
