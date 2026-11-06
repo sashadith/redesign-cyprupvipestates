@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { sendLeadEmail } from "@/lib/crm/sendLeadEmail";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
+import { isPartnerWorked } from "@/lib/crm/partnerWorkedGuard";
+import { PARTNER_WORKED_READONLY } from "@/lib/crm/access";
 
 // Local, self-contained (mirrors src/app/admin/actions.ts's requireSession —
 // not imported from there since exporting it from that "use server" file
@@ -50,6 +52,7 @@ export async function logWhatsAppSentAction(
 ): Promise<{ ok?: string; error?: string }> {
   const session = await requireSession();
   if (!opts.body.trim()) return { error: "Message is required." };
+  if (await isPartnerWorked(leadId)) return { error: PARTNER_WORKED_READONLY };
   await logLeadInteraction({ userId: (session.user as any).id as string, userName: session.user?.name ?? "admin" }, leadId, {
     type: "WHATSAPP_OUT", body: opts.body, occurredAt: opts.occurredAt, leadReacted: opts.leadReacted, aiGenerated: opts.aiGenerated,
   });

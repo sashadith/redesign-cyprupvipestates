@@ -3,9 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/sendEmail";
 import { effectiveStateOf, leadClaimFacts } from "./claimFacts";
-import { cyDate, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
+import { FOLLOW_UP_FINISHED_STATUSES, cyDate, followUpReminderEligible, payloadDate, protectionEnd, readNewsPayload, readWatchPayload } from "./alerts";
 import { lastClientActivity } from "./alertsSend";
 import { loadTiers } from "./tierStore";
+import { leadZone } from "@/lib/crm/leadLocalTime";
 import { quietEndsAt, quietWindow, switchGate } from "./notifyPrefs";
 import { activeSince, isCommitted } from "./claimState";
 import { visibleName } from "./clientDto";
@@ -18,8 +19,8 @@ import { buildTelegramNotification, buildTelegramProjectNews, routeNotification,
 import { partnerBotConfigured, sendPartnerTelegram } from "./telegramApi";
 import { PARTIAL_PREFIX, deliveryOutcome, permanentFallbackToEmail, telegramFailureResult, type ChannelResult, type DeliveryOutcome } from "./telegramBot";
 import {
-  INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail,
-  buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail,
+  INTERRUPTED_ERROR, PARTNER_ONLY_KINDS, SENDING_MARK, TransportStreak, bankLink, beforeStart, buildBankMissingEmail, buildClaimOutcomeEmail, buildClientQuietEmail, buildFollowUpDueEmail, followUpLeadTime, followUpWhen, pipelineLink,
+  buildHandoverEmail, buildMatchEmail, buildMessageEmail, buildPayoutEmail, buildPresentationOpenedEmail, buildProjectNewsEmail, buildProtectionEndingEmail, buildStageEmail, handoverNoticeOf,
   buildTierNearEmail, buildTierUpEmail, buildWatchEmail, clientLink, commissionsLink, deadWhere, dueWhere, firstNameOf, formatPayoutAmount, formatShare,
   isUnchangedStage, partnerDate, projectNewsLines, projectsLink, watchChangeLabels,
   stuckSendingWhere, messageIdFromRefKey, notificationGate, notifyStartFromEnv, optOutGate, partnerStatusGate, payoutDealIdFromRefKey,
@@ -58,7 +59,7 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
     where: { type: "STATUS_CHANGE", leadId: { in: Array.from(claimByLead.keys()) }, occurredAt: { gte: since } },
     orderBy: { occurredAt: "desc" }, // the cap drops the oldest, never the newest
     take: INTERACTION_CAP,
-    select: { id: true, leadId: true, occurredAt: true, metadata: true },
+    select: { id: true, leadId: true, occurredAt: true, metadata: true, createdByPartnerUser: { select: { partnerId: true } } },
   });
   if (interactions.length === 0) return { scanned: 0, pending: 0, collapsed: 0, settlingLeads: 0, inserted: 0 };
 
@@ -69,6 +70,8 @@ export async function collectStageEvents(now: Date, start: Date): Promise<Collec
     return [{
       interactionId: i.id, leadId: i.leadId, occurredAt: i.occurredAt, toStatus: meta.toStatus,
       claimId: c.id, partnerId: c.partnerId, claimActiveSince: activeSince(c),
+      // His own pipeline move: recorded as handled, never mailed back to him.
+      ownMove: i.createdByPartnerUser?.partnerId === c.partnerId,
     }];
   });
   const existing = await prisma.partnerNotification.findMany({
@@ -193,17 +196,23 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
   // Explicit per kind: a kind without a case is a compile error (unhandledKind), never another kind's mail.
   switch (row.kind) {
     case "STAGE": {
+      // The manager accepted a handover or changed the keep-FIX override: its own wording, never the stage text.
+      const notice = handoverNoticeOf(row.payload);
+      if (notice) return deliver(buildHandoverEmail(locale, { ...common, notice }, theme), { ...tgCommon, kind: "STAGE", handover: notice });
       const toStatus = obj(row.payload).toStatus;
       const stageKey = stageKeyFor(toStatus);
       if (!stageKey) return { skip: "invalid status" };
-      const lastMailed = await prisma.partnerNotification.findFirst({
+      // The last mailed stage move; handover rows carry no stage and are passed over.
+      const mailed = await prisma.partnerNotification.findMany({
         where: {
           claimId: own.id, kind: "STAGE", sentAt: { not: null }, id: { not: row.id },
           OR: [{ error: null }, { error: { startsWith: PARTIAL_PREFIX } }],
         },
         orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }],
+        take: 10,
         select: { payload: true },
       });
+      const lastMailed = mailed.find((m) => !handoverNoticeOf(m.payload));
       if (!tgOnly && lastMailed && isUnchangedStage(toStatus, obj(lastMailed.payload).toStatus)) return { skip: "unchanged" };
       const extra = await stageExtras(locale, toStatus, own.leadId, now);
       return deliver(buildStageEmail(locale, { ...common, stageKey, extra }, theme), { ...tgCommon, kind: "STAGE", stageKey, extra });
@@ -335,8 +344,10 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
     case "CLIENT_QUIET": {
       const since = payloadDate(row.payload, "since");
       if (!since) return { skip: "invalid payload" };
-      const lead = await prisma.lead.findUnique({ where: { id: own.leadId }, select: { status: true } });
+      const lead = await prisma.lead.findUnique({ where: { id: own.leadId }, select: { status: true, workedByPartner: true } });
       if (!lead || ["KEEP_CONTACT", "LOST", "CLOSED", "RESERVED"].includes(lead.status)) return { skip: "not quiet" };
+      // Queued before the partner started working the client himself: he is the source of news there.
+      if (lead.workedByPartner) return { skip: "partner-worked" };
       const last = await lastClientActivity(own.leadId, activeSince(own));
       if (last.getTime() > since.getTime()) return { skip: "superseded" };
       return deliver(buildClientQuietEmail(locale, common, theme), { ...tgCommon, kind: "CLIENT_QUIET" });
@@ -371,13 +382,42 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         { kind: "TIER_NEAR", tierName, handoverShare, fixShare, url: link, portalUrl: base },
       );
     }
+    case "FOLLOW_UP_DUE": {
+      // Gated above: the claim is still effectively ACTIVE. Re-check against the lead as it is now: still a FIX
+      // client the partner works, and the follow-up still set and due (cleared or moved on → nothing to tell).
+      const planned = payloadDate(row.payload, "nextFollowUpAt");
+      if (!planned) return { skip: "invalid payload" };
+      const [fixClaim, lead] = await Promise.all([
+        prisma.partnerClaim.findUnique({ where: { id: own.id }, select: { mode: true } }),
+        prisma.lead.findUnique({
+          where: { id: own.leadId },
+          select: { status: true, workedByPartner: true, nextFollowUpAt: true, timeZone: true, countryOfResidence: true, phone: true },
+        }),
+      ]);
+      if (fixClaim?.mode !== "FIX" || !lead?.workedByPartner) return { skip: "not worked by partner" };
+      if (!lead.nextFollowUpAt) return { skip: "no follow-up" };
+      if (lead.nextFollowUpAt.getTime() > now.getTime()) return { skip: "rescheduled" };
+      if ((FOLLOW_UP_FINISHED_STATUSES as readonly string[]).includes(lead.status)) return { skip: "lead finished" };
+      if (!followUpReminderEligible(lead, now)) return { skip: "overdue too long" };
+      const zone = leadZone(lead).zone;
+      const link = pipelineLink(base, own.id);
+      const when = followUpWhen(locale, lead.nextFollowUpAt);
+      const leadTime = followUpLeadTime(locale, lead.nextFollowUpAt, zone);
+      return deliver(
+        buildFollowUpDueEmail(locale, { ...common, link, when, leadTime }, theme),
+        {
+          ...tgCommon, kind: "FOLLOW_UP_DUE", url: link, date: when,
+          extra: leadTime ? [fmtLine(locale, "followUpLeadTime", { time: leadTime })] : [],
+        },
+      );
+    }
     default:
       return unhandledKind(row.kind);
   }
 }
 
 /** A telegram.notify line in the partner's language with {vars} filled (plain text; escaped by the builders). */
-function fmtLine(locale: PartnerLocale, key: "priceFrom" | "projectRate" | "viewingOn" | "expectedCommission", vars: Record<string, string>): string {
+function fmtLine(locale: PartnerLocale, key: "priceFrom" | "projectRate" | "viewingOn" | "expectedCommission" | "followUpLeadTime", vars: Record<string, string>): string {
   return fmt(dict(locale).telegram.notify[key], vars);
 }
 

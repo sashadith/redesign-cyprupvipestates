@@ -92,3 +92,9 @@ export const EXCLUDE_PARTNER_ENQUIRY: Prisma.LeadWhereInput = { NOT: PARTNER_ENQ
 // stay on the pipeline board and in the Action Center's follow-up rules.
 export const EXCLUDE_GUIDE: Prisma.LeadWhereInput = { source: { not: "GUIDE_DOWNLOAD" } };
 export const ONLY_GUIDE: Prisma.LeadWhereInput = { source: "GUIDE_DOWNLOAD" };
+
+// Partner-worked FIX clients (2026-11-05): while the partner works the lead in his
+// portal pipeline (Lead.workedByPartner), the staff work lists (board, side lists,
+// inbox, Today, nags, SLA, Action Center, MCP worklist) leave it out. It stays
+// findable by search and opens read only in the cockpit.
+export const EXCLUDE_PARTNER_WORKED: Prisma.LeadWhereInput = { workedByPartner: false };

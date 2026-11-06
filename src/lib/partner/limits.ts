@@ -28,6 +28,8 @@ export const partnerLimits = {
   brand: makeThrottle(20, HOUR),
   /** Presentation create / revoke (phase 3e): per partner. */
   presentation: makeThrottle(30, HOUR),
+  /** Partner pipeline writes (move, log, follow-up, viewing date, client edit): per partner. */
+  pipeline: makeThrottle(200, HOUR),
 };
 
 /** Throttle key for a request without a usable client IP (all such requests share one bucket). */

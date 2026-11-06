@@ -39,6 +39,42 @@ export function buildStageEmail(locale: PartnerLocale, p: Common & { stageKey: s
   }, theme);
 }
 
+/** A STAGE row about a handover (partner pipeline, 2026-11-05) instead of a stage move. */
+export type HandoverNotice = { kind: "accepted" | "keepFix"; keepFix: boolean; downgraded: boolean };
+
+/** The handover notice a STAGE payload carries, or null for an ordinary stage row ({ toStatus }). */
+export function handoverNoticeOf(payload: unknown): HandoverNotice | null {
+  const p = payload && typeof payload === "object" && !Array.isArray(payload) ? (payload as Record<string, unknown>) : null;
+  if (!p || (p.handover !== "accepted" && p.handover !== "keepFix")) return null;
+  return { kind: p.handover, keepFix: p.keepFix === true, downgraded: p.handover === "accepted" && p.downgraded === true };
+}
+
+/** The headline and the follow-up lines of a handover notice, already filled in (plain text). */
+export function handoverNoticeLines(locale: PartnerLocale, clientName: string, n: HandoverNotice): { subject: string; headline: string; lines: string[] } {
+  const t = dict(locale).mail.handover;
+  const vars = { client: client(clientName) };
+  if (n.kind === "keepFix") {
+    return { subject: fmt(t.subjectChange, vars), headline: fmt(n.keepFix ? t.keepFixOn : t.keepFixOff, vars), lines: [] };
+  }
+  const lines = [...(n.keepFix ? [t.keptFix] : []), ...(n.downgraded ? [t.downgraded] : [])];
+  return { subject: fmt(t.subject, vars), headline: fmt(t.accepted, vars), lines };
+}
+
+export function buildHandoverEmail(locale: PartnerLocale, p: Common & { notice: HandoverNotice }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
+  const t = dict(locale).mail.handover;
+  const n = handoverNoticeLines(locale, p.clientName, p.notice);
+  return renderPartnerEmail({
+    subject: n.subject,
+    greeting: greet(t.greeting, p.partnerFirstName),
+    intro: n.headline,
+    button: t.button,
+    link: p.link,
+    notes: n.lines,
+    signature: dict(locale).mail.signature,
+    footer: partnerFooter(locale),
+  }, theme);
+}
+
 export function buildMessageEmail(locale: PartnerLocale, p: Common & { body: string; authorFirstName?: string | null }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const t = dict(locale).mail;
   const author = (p.authorFirstName ?? "").trim();
@@ -293,6 +329,41 @@ export function buildClientQuietEmail(locale: PartnerLocale, p: Common, theme: E
   }, theme);
 }
 
+const CY_TZ = "Europe/Nicosia";
+
+/** Follow-up date and time in Cyprus time ("5 November 2026 at 14:30"). */
+export function followUpWhen(locale: PartnerLocale, at: Date): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: CY_TZ }).format(at);
+}
+
+/** The follow-up time on the client's clock ("13:30, Berlin"), or null when the zone is unknown or shows the same time as Cyprus. */
+export function followUpLeadTime(locale: PartnerLocale, at: Date, zone: string | null | undefined): string | null {
+  if (!zone) return null;
+  const hm = (tz: string) => new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: tz }).format(at);
+  try {
+    if (hm(zone) === hm(CY_TZ) && new Intl.DateTimeFormat("en-CA", { timeZone: zone }).format(at) === new Intl.DateTimeFormat("en-CA", { timeZone: CY_TZ }).format(at)) return null;
+    const time = new Intl.DateTimeFormat(locale, { timeStyle: "short", hourCycle: "h23", timeZone: zone }).format(at);
+    return `${time}, ${(zone.split("/").pop() ?? zone).replace(/_/g, " ")}`;
+  } catch {
+    return null;
+  }
+}
+
+/** A follow-up the partner set on a client is due (FOLLOW_UP_DUE). `when` = followUpWhen, `leadTime` = followUpLeadTime. */
+export function buildFollowUpDueEmail(
+  locale: PartnerLocale,
+  p: Common & { when: string; leadTime: string | null },
+  theme: EmailTheme = CLASSIC_EMAIL_THEME,
+): BuiltEmail {
+  const d = dict(locale);
+  const t = d.mail.followUpDue;
+  const vars = { client: client(p.clientName), when: p.when };
+  return renderPartnerEmail({
+    subject: fmt(t.subject, vars), greeting: greet(t.greeting, p.partnerFirstName), intro: fmt(t.intro, vars),
+    button: t.button, link: p.link, notes: p.leadTime ? [fmt(t.leadTime, { time: p.leadTime })] : [], signature: d.mail.signature, footer: partnerFooter(locale),
+  }, theme);
+}
+
 /** Bank details missing for a deal (BANK_MISSING); `developerPaid` picks the second, more urgent wording. Link = the bank page. */
 export function buildBankMissingEmail(locale: PartnerLocale, p: Common & { developerPaid: boolean }, theme: EmailTheme = CLASSIC_EMAIL_THEME): BuiltEmail {
   const d = dict(locale);
@@ -320,12 +391,13 @@ export function buildTierNearEmail(
 }
 
 /** Portal paths of the v2 notifications. */
+export const pipelineLink = (base: string, claimId: string) => `${base}/pipeline/${encodeURIComponent(claimId)}`;
 export const projectsLink = (base: string) => `${base}/projects`;
 export const bankLink = (base: string) => `${base}/profile#bank`;
 
 export const NOTIFICATION_KINDS = [
   "STAGE", "MESSAGE", "CLAIM_OUTCOME", "PAYOUT", "MATCH", "PRESENTATION_OPENED", "TIER_UP",
-  "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR",
+  "PROJECT_NEWS", "WATCH", "PROTECTION_ENDING", "CLIENT_QUIET", "BANK_MISSING", "TIER_NEAR", "FOLLOW_UP_DUE",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -513,6 +585,8 @@ export type StageRow = {
   partnerId: string;
   /** activeSince(claim): reviewedAt ?? createdAt — changes before the claim became active are not the partner's. */
   claimActiveSince: Date;
+  /** Written by one of this partner's own users (his pipeline move): recorded as done, never mailed to him. */
+  ownMove?: boolean;
 };
 
 export type PlannedStage = {
@@ -539,6 +613,8 @@ export const STAGE_DEBOUNCE_MS = 10 * 60_000;
  *    new it becomes the pending row, and every other not-yet-recorded row is stored as done ("collapsed"),
  *    so it is never reconsidered and never mailed out of order.
  * Rows whose toStatus is not a lead status are stored as done ("invalid status") and never chosen.
+ * A move the partner made himself (ownMove) is stored as done ("own move"), also when it is the newest:
+ * he knows his own stage, and the older rows it supersedes are collapsed as usual.
  */
 export function planStageNotifications(input: {
   rows: StageRow[];
@@ -582,6 +658,8 @@ export function planStageNotifications(input: {
       if (existing.has(stageRefKey(r.interactionId))) continue;
       if (!isLeadStatus(r.toStatus)) {
         out.push(done(r, "invalid status"));
+      } else if (r.ownMove) {
+        out.push(done(r, "own move"));
       } else if (r === newest) {
         out.push({
           kind: "STAGE", refKey: stageRefKey(r.interactionId), partnerId: r.partnerId, leadId: r.leadId, claimId: r.claimId,

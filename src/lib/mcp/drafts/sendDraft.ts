@@ -23,7 +23,7 @@ export async function sendEmailDraft(
   // The draft is the operator's own, but the lead may have been reassigned
   // since it was made: re-check access before the code is even looked at.
   // No deletedAt filter here — a trashed lead keeps its own message below.
-  const owner = await prisma.lead.findFirst({ where: { id: draft.leadId, ...access.where }, select: { assignedToId: true } });
+  const owner = await prisma.lead.findFirst({ where: { id: draft.leadId, ...access.where }, select: { assignedToId: true, workedByPartner: true } });
   if (!owner) throw new ToolError("not_found", "Draft not found.");
   assertCanEdit(access.user, owner);
 

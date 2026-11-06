@@ -341,3 +341,20 @@ test("stuck rows: only rows still at 'sending' and claimed over an hour ago are 
   assert.deepEqual(stuckSendingWhere(now), { error: SENDING_MARK, sentAt: { lt: new Date("2026-10-20T11:00:00Z") } });
   assert.equal(SENDING_MARK, "sending");
 });
+
+test("planner: the partner's own pipeline moves are recorded as handled, never mailed to him", () => {
+  const own = plan([row("i1", 30, "OFFER", { ownMove: true })]);
+  assert.equal(own.pending, 0);
+  assert.deepEqual(own.rows.map((r) => [r.refKey, r.sentAt?.toISOString() ?? null, r.error]), [["stage:i1", NOW.toISOString(), "own move"]]);
+  // His newest move supersedes an older staff move: nothing is mailed, both are recorded so they are not rescanned.
+  const mixed = plan([row("s1", 90, "CONTACTED"), row("o1", 20, "VIEWING_SCHEDULED", { ownMove: true })]);
+  assert.equal(mixed.pending, 0);
+  assert.deepEqual(mixed.rows.map((r) => [r.refKey, r.error]).sort(), [["stage:o1", "own move"], ["stage:s1", "collapsed"]]);
+  // A staff move after his own one is still mailed.
+  const later = plan([row("o2", 90, "OFFER", { ownMove: true }), row("s2", 20, "RESERVED")]);
+  assert.equal(later.pending, 1);
+  assert.deepEqual(later.rows.find((r) => r.sentAt === null)?.refKey, "stage:s2");
+  assert.equal(later.rows.find((r) => r.refKey === "stage:o2")?.error, "own move");
+  // Already recorded: not touched again.
+  assert.deepEqual(plan([row("o3", 30, "OFFER", { ownMove: true })], ["stage:o3"]).rows, []);
+});

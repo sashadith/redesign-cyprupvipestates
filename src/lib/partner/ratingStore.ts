@@ -124,7 +124,7 @@ export type PointsRunResult = { seasons: PointsSeasonResult[]; skipped: string |
 /**
  * The claims that may earn points in a season: ACTIVE, created by the season end, on a lead that is not
  * trashed and had activity since the season start (pointsCandidateQuery, newest activity first, capped),
- * not revoked (LOST as INVALID / UNREACHABLE), and effectively ACTIVE now (committed, or protection not run out).
+ * not revoked (LOST: any reason for FIX, INVALID / UNREACHABLE for HANDOVER), and effectively ACTIVE now (committed, or protection not run out).
  */
 async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
   const q = pointsCandidateQuery(season);
@@ -133,8 +133,8 @@ async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
     orderBy: q.orderBy,
     take: POINTS_CLAIM_CAP + 1,
     select: {
-      id: true, partnerId: true, leadId: true, state: true, createdAt: true, reviewedAt: true,
-      lead: { select: { status: true, deletedAt: true, lostReason: true } },
+      id: true, partnerId: true, leadId: true, state: true, mode: true, createdAt: true, reviewedAt: true,
+      lead: { select: { status: true, deletedAt: true, lostReason: true, partnerMode: true, partnerId: true } },
     },
   });
   const truncated = rows.length > POINTS_CLAIM_CAP;
@@ -167,7 +167,7 @@ async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
 }
 
 /**
- * Takes back the points of revoked claims (REJECTED, lead trashed or gone, lead LOST as INVALID / UNREACHABLE)
+ * Takes back the points of revoked claims (REJECTED, lead trashed or gone, lead LOST: any reason for FIX, INVALID / UNREACHABLE for HANDOVER)
  * while the season can still change (until LATE_DATA_DAYS after its end). Returns the number of deleted events.
  */
 async function revokePoints(season: SeasonRow, now: Date): Promise<number> {
@@ -175,11 +175,11 @@ async function revokePoints(season: SeasonRow, now: Date): Promise<number> {
   const events = await prisma.partnerPointEvent.findMany({ where: { seasonId: season.id }, select: { refKey: true } });
   const claimIds = Array.from(new Set(events.map((e) => claimIdFromRefKey(e.refKey)).filter((id): id is string => !!id)));
   if (!claimIds.length) return 0;
-  const claims = new Map<string, { state: string; lead: { deletedAt: Date | null; status: string; lostReason: string | null } | null }>();
+  const claims = new Map<string, Parameters<typeof isRevokedClaim>[0]>();
   for (const part of chunk(claimIds, ID_CHUNK)) {
     const rows = await prisma.partnerClaim.findMany({
       where: { id: { in: part } },
-      select: { id: true, state: true, lead: { select: { deletedAt: true, status: true, lostReason: true } } },
+      select: { id: true, partnerId: true, state: true, mode: true, lead: { select: { deletedAt: true, status: true, lostReason: true, partnerMode: true, partnerId: true } } },
     });
     for (const r of rows) claims.set(r.id, r);
   }

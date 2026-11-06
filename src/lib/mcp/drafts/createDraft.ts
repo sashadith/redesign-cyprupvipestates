@@ -30,7 +30,7 @@ export async function createEmailDraft(
 
   const lead = await prisma.lead.findFirst({
     where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
-    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true, emailInvalidAt: true, emailInvalidReason: true },
+    select: { id: true, email: true, firstName: true, lastName: true, languagePreference: true, assignedToId: true, workedByPartner: true, emailInvalidAt: true, emailInvalidReason: true },
   });
   if (!lead) throw new ToolError("not_found", "Lead not found.");
   assertCanEdit(access.user, lead);

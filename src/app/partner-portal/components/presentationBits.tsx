@@ -6,9 +6,14 @@ import { CopyLink } from "./forms";
 import { Chip, dateFmt } from "./portalBits";
 import { RevokeButton } from "./presentationForms";
 
-/** Phase 3e: the partner's own presentations (list page and client detail). */
-export function PresentationTable({ t, locale, items, showClient = true }: {
+/**
+ * Phase 3e: the partner's own presentations (list page and client detail). `whatsapp` (partner
+ * pipeline) adds an "Open WhatsApp" link per active presentation: a wa.me link the partner opens on
+ * his own device, nothing is sent by us.
+ */
+export function PresentationTable({ t, locale, items, showClient = true, whatsapp }: {
   t: PartnerDict; locale: PartnerLocale; items: MyPresentation[]; showClient?: boolean;
+  whatsapp?: { label: string; href: (url: string) => string };
 }) {
   const P = t.presentations;
   const date = dateFmt(locale);
@@ -43,6 +48,7 @@ export function PresentationTable({ t, locale, items, showClient = true }: {
               {p.status === "active" && (
                 <span className="pp-pres-actions">
                   <a href={presentationPreviewUrl(p.url)} target="_blank" rel="noopener noreferrer" className="pp-linkbtn">{P.open}</a>
+                  {whatsapp && <a href={whatsapp.href(p.url)} target="_blank" rel="noopener noreferrer" className="pp-linkbtn">{whatsapp.label}</a>}
                   <RevokeButton id={p.id} label={P.revoke} confirmText={P.revokeConfirm} />
                 </span>
               )}

@@ -111,6 +111,9 @@ test("leadDataFromSubmission maps to a PARTNER lead, unassigned, NEW", () => {
   assert.equal(d.contactRepName, "Bob");
   assert.equal(d.contactRepPhone, "+357991234");
   assert.equal(d.message, "Hi\n\nProjects: Aria");
+  assert.equal(d.workedByPartner, true, "a new FIX client lands in the partner's pipeline");
+  const h = leadDataFromSubmission(input({ mode: "HANDOVER" }), { id: "partner-1" }, []);
+  assert.equal(h.workedByPartner, false, "a HANDOVER client is worked by staff");
 });
 test("claimSubmissionJson keeps what the partner typed plus project names", () => {
   const j = claimSubmissionJson(input({ projectIds: [P1, P2], projectsText: "sea view" }), [{ id: P1, name: "Aria" }, { id: P2, name: "Bay" }]);

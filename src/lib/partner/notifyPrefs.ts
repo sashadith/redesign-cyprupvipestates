@@ -17,6 +17,7 @@ const SWITCH_OF: Partial<Record<NotificationKind, NotifySwitch>> = {
   WATCH: "notifyProjectUpdates",
   PROTECTION_ENDING: "notifyReminders",
   CLIENT_QUIET: "notifyReminders",
+  FOLLOW_UP_DUE: "notifyReminders",
 };
 
 /** The switch that governs a kind, or null when the kind is always sent. */

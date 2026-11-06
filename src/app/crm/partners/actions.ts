@@ -30,7 +30,7 @@ export async function approvePartnerAction(id: string): Promise<Result> {
   const partner = await prisma.partner.findUnique({
     where: { id },
     select: {
-      id: true, status: true, firstName: true, lastName: true, company: true, language: true, refCode: true,
+      id: true, status: true, firstName: true, lastName: true, company: true, language: true, refCode: true, managerUserId: true,
       users: { orderBy: { createdAt: "asc" }, take: 1, select: { email: true, emailVerifiedAt: true } },
     },
   });
@@ -52,9 +52,13 @@ export async function approvePartnerAction(id: string): Promise<Result> {
           data: { status: "ACTIVE", approvedAt: now, approvedById: actor.id, suspendedAt: null, refCode },
         });
         if (r.count !== 1) return false;
+        // A partner without a manager gets the approving user; written only while still null, so a
+        // manager set meanwhile (terms editor) is never overwritten. The terms editor can change it later.
+        const set = await tx.partner.updateMany({ where: { id, managerUserId: null }, data: { managerUserId: actor.id } });
+        const managerUserId = set.count === 1 ? actor.id : (await tx.partner.findUnique({ where: { id }, select: { managerUserId: true } }))?.managerUserId ?? null;
         await writeAudit(actor, "partner_approve", "partner", id, {
-          before: { status: "PENDING", refCode: partner.refCode },
-          after: { status: "ACTIVE", refCode, approvedById: actor.id },
+          before: { status: "PENDING", refCode: partner.refCode, managerUserId: partner.managerUserId },
+          after: { status: "ACTIVE", refCode, approvedById: actor.id, managerUserId },
         }, tx);
         return true;
       });

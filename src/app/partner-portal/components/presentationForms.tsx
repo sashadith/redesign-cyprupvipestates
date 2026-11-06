@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useFormState } from "react-dom";
 import type { PartnerDict, PartnerLocale } from "@/lib/partner/i18n";
 import { presentationPreviewUrl } from "@/lib/partner/presentationBranding";
-import { removeBrandLogoAction, saveBrandAction, uploadBrandLogoAction } from "../brandActions";
+import { removeBrandLogoAction, removeBrandPhotoAction, saveBrandAction, uploadBrandLogoAction, uploadBrandPhotoAction } from "../brandActions";
 import { createPresentationAction, revokePresentationAction } from "../presentationActions";
 import { isErr, type BrandState, type LogoState, type PresentationState } from "../formState";
 import { CopyLink, Field, FormError, LANG_OPTIONS, Submit, fill, say } from "./forms";
@@ -80,6 +80,38 @@ export function LogoForm({ t, logoSrc }: { t: PartnerDict; logoSrc: string | nul
   );
 }
 
+/** `photoSrc`: the partner's own photo (portal route), or null when none is stored. Shown in the footer of their presentations. */
+export function PhotoForm({ t, photoSrc }: { t: PartnerDict; photoSrc: string | null }) {
+  const B = t.branding;
+  const [upState, upload] = useFormState<LogoState, FormData>(uploadBrandPhotoAction, null);
+  const [rmState, remove] = useFormState<LogoState, FormData>(removeBrandPhotoAction, null);
+  const err = isErr(upState) ? upState : isErr(rmState) ? rmState : null;
+  return (
+    <div className="pp-brandlogo">
+      <p className="pp-brandlogo-label">{B.photo}</p>
+      {photoSrc ? (
+        <img className="pp-brandphoto-img" src={photoSrc} alt="" width={96} height={96} />
+      ) : (
+        <p className="pp-muted">{B.noPhoto}</p>
+      )}
+      {err && <p className="pp-alert pp-alert-error" role="alert">{fill(say(t, err.error), err.vars ?? {})}</p>}
+      <form action={upload} className="pp-form pp-brandlogo-form">
+        <input type="file" name="photo" accept="image/png,image/jpeg,image/webp" aria-label={B.photo} aria-describedby="brand-photo-hint" required />
+        <small id="brand-photo-hint" className="pp-hint">{B.photoHint}</small>
+        <div className="pp-actions">
+          <Submit wide={false}>{photoSrc ? B.photoReplace : B.photoUpload}</Submit>
+          {upState && "ok" in upState && <span className="pp-saved" role="status">{B.saved}</span>}
+        </div>
+      </form>
+      {photoSrc && (
+        <form action={remove}>
+          <button type="submit" className="pp-btn pp-btn-ghost">{B.photoRemove}</button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 // ─── New presentation ────────────────────────────────────────────────────────
 
 export type PresentationClientOption = { claimId: string; name: string; firstName: string; locale: PartnerLocale };
@@ -88,29 +120,35 @@ export type PresentationProjectOption = { id: string; name: string; town: string
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const FIELDS = ["claimId", "projectIds", "greetingName", "personalNote", "locale"];
 
-export function PresentationForm({ t, clients, projects, defaultLocale }: {
+/** `initialClaimId` (partner pipeline "New selection"): the client to start with, when he is one of `clients`. */
+export function PresentationForm({ t, clients, projects, defaultLocale, initialClaimId }: {
   t: PartnerDict;
   clients: PresentationClientOption[];
   projects: PresentationProjectOption[];
   defaultLocale: PartnerLocale;
+  initialClaimId?: string;
 }) {
   const [round, setRound] = useState(0);
-  return <PresentationFormInner key={round} t={t} clients={clients} projects={projects} defaultLocale={defaultLocale} onAgain={() => setRound((r) => r + 1)} />;
+  return (
+    <PresentationFormInner key={round} t={t} clients={clients} projects={projects} defaultLocale={defaultLocale}
+      initial={round === 0 ? clients.find((c) => c.claimId === initialClaimId) : undefined} onAgain={() => setRound((r) => r + 1)} />
+  );
 }
 
-function PresentationFormInner({ t, clients, projects, defaultLocale, onAgain }: {
+function PresentationFormInner({ t, clients, projects, defaultLocale, initial, onAgain }: {
   t: PartnerDict;
   clients: PresentationClientOption[];
   projects: PresentationProjectOption[];
   defaultLocale: PartnerLocale;
+  initial?: PresentationClientOption;
   onAgain: () => void;
 }) {
   const P = t.presentations;
   const S = t.submit;
   const [state, action] = useFormState<PresentationState, FormData>(createPresentationAction, null);
-  const [claimId, setClaimId] = useState("");
-  const [greeting, setGreeting] = useState("");
-  const [locale, setLocale] = useState<string>(defaultLocale);
+  const [claimId, setClaimId] = useState(initial?.claimId ?? "");
+  const [greeting, setGreeting] = useState(initial ? initial.firstName.slice(0, GREETING_MAX) : "");
+  const [locale, setLocale] = useState<string>(initial?.locale ?? defaultLocale);
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const byId = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);

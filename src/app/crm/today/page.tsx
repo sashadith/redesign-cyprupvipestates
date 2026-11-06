@@ -3,7 +3,7 @@ import { lastManualStatusChanges } from "@/lib/crm/statusTouch";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED } from "@/lib/crm/leadBucket";
 import { ACTIVE_LEAD_STATUSES, STATUS_LABEL, isLeadStatus } from "@/lib/crm/leadStatus";
 import { temperaturesFor } from "@/lib/crm/insights/temperatureQuery";
 import { sortByTemperature, toPublicTemperature } from "@/lib/crm/insights/temperatureWiring";
@@ -13,6 +13,8 @@ import { loadRegistrationDue } from "@/lib/crm/registration/due";
 import { loadHotSelections } from "@/lib/crm/presentations/hot";
 import { ago } from "@/lib/crm/timeline";
 import { ExtendSelectionButton } from "../components/ExtendSelectionButton";
+import { listHandoverRequests } from "@/lib/crm/handoverReview";
+import { HandoverRequests } from "../components/HandoverRequests";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,7 @@ export default async function TodayPage() {
         { assignedToId: user.id, deletedAt: null },
         EXCLUDE_NEWSLETTER,
         EXCLUDE_PARTNER_ENQUIRY,
+        EXCLUDE_PARTNER_WORKED,
         // Viewings are shown for any status; a day of slack on the lower bound
         // keeps the Cyprus midnight edge safe, buildToday does the exact cut.
         { OR: [{ status: { in: [...ACTIVE_LEAD_STATUSES] } }, { viewingScheduledAt: { gte: new Date(now.getTime() - 86_400_000) } }] },
@@ -71,6 +74,8 @@ export default async function TodayPage() {
   const regDue = (await loadRegistrationDue(null, now)).filter((l) => l.due.length > 0 && (user.isOwner || l.ownerId === user.id));
   const hot = await loadHotSelections(user, now).catch((e) => { console.error("Hot selections failed:", e instanceof Error ? e.name : "error"); return []; });
   const hotCount = hot.filter((h) => h.kind === "hot").length;
+  // Open partner handover requests: admins all, a manager his partners' (empty for everyone else).
+  const handovers = await listHandoverRequests(user, now).catch((e) => { console.error("Handover requests failed:", e instanceof Error ? e.name : "error"); return { cards: [], total: 0 }; });
   // Hot leads first only in the two lists with no time order (Newly assigned, Going quiet); Overdue, Due today and Viewings keep their time order.
   const hotFirst = (rs: TodayLead[]) => sortByTemperature(rs, (l) => l.temperature);
   const t = { ...built, fresh: hotFirst(built.fresh), stale: hotFirst(built.stale) };
@@ -82,8 +87,9 @@ export default async function TodayPage() {
     { key: "fresh", title: "Newly assigned to you", empty: "Nothing newly assigned in the last 48 hours", rows: t.fresh, when: (l) => `assigned ${dateTime.format(l.assignedAt!)}` },
     { key: "stale", title: "Going quiet", empty: "No leads quiet for 7+ days", rows: t.stale, when: (l) => (l.lastContactAt ? `last contact ${dateOnly.format(l.lastContactAt)}` : `no contact since ${dateOnly.format(l.createdAt)}`) },
   ];
-  const total = regDue.length + t.overdue.length + t.dueToday.length + t.viewings.length + t.fresh.length;
+  const total = handovers.total + regDue.length + t.overdue.length + t.dueToday.length + t.viewings.length + t.fresh.length;
   const summary = [
+    ...(handovers.total ? [`${handovers.total} handover${handovers.total === 1 ? "" : "s"}`] : []),
     ...(regDue.length ? [`${regDue.length} to register`] : []),
     ...(hotCount ? [`${hotCount} hot`] : []),
     `${t.overdue.length} overdue`, `${t.dueToday.length} due today`, `${t.viewings.length} viewing${t.viewings.length === 1 ? "" : "s"}`, `${t.fresh.length} new`, `${t.stale.length} quiet`,
@@ -98,6 +104,7 @@ export default async function TodayPage() {
         </div>
       </div>
       {leads.length >= LEAD_CAP && <p className="crm-notice" role="status">This list may be incomplete — showing {LEAD_CAP} leads.</p>}
+      <HandoverRequests items={handovers.cards} total={handovers.total} />
       <div className="crm-today">
         <section className="crm-panel crm-today-sec crm-today-due" aria-labelledby="today-regdue">
           <h2 id="today-regdue">Register with developers <span className="cnt">{regDue.length}</span></h2>

@@ -38,3 +38,8 @@ export function planMove(from: LeadStatusValue, to: LeadStatusValue, deals: Deal
   plan.needsDeal = live.length === 0;
   return plan;
 }
+
+// Moving a lead TO VIEWING_SCHEDULED needs the appointment, as crm_update_lead requires.
+export function viewingDateMissing(from: string, to: string, at: Date | null | undefined): boolean {
+  return to === "VIEWING_SCHEDULED" && from !== to && !at;
+}

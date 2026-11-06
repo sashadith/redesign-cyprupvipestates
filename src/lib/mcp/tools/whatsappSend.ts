@@ -61,7 +61,7 @@ export function realSendDeps(access: LeadScope): SendDeps {
     findLead: async (leadId) => {
       const lead = await prisma.lead.findFirst({
         where: { id: leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...access.where },
-        select: { id: true, phone: true, assignedToId: true },
+        select: { id: true, phone: true, assignedToId: true, workedByPartner: true },
       });
       if (!lead) return null;
       assertCanEdit(access.user, lead);

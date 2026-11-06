@@ -6,7 +6,7 @@ import { PresentationForm } from "../components/presentationForms";
 import { portalContext } from "../portalContext";
 
 /** Phase 3e: partner-branded presentations — the partner's own list plus the "New presentation" form. */
-export default async function PartnerPresentations() {
+export default async function PartnerPresentations({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const me = await requirePartner({ active: true });
   const { t, locale } = await portalContext();
   const P = t.presentations;
@@ -32,7 +32,7 @@ export default async function PartnerPresentations() {
       )}
       <section className="pp-panel" aria-labelledby="pres-new-title">
         <h2 className="pp-h3" id="pres-new-title">{P.newTitle}</h2>
-        <PresentationForm t={t} clients={options} projects={projects} defaultLocale={locale} />
+        <PresentationForm t={t} clients={options} projects={projects} defaultLocale={locale} initialClaimId={typeof searchParams?.client === "string" ? searchParams.client : undefined} />
       </section>
     </div>
   );

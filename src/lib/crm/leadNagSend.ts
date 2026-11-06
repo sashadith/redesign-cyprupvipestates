@@ -7,7 +7,8 @@ import { logCronRun } from "@/lib/cronLog";
 import { CONTACT_TYPES } from "@/lib/mcp/leadRow";
 import { hashToken, newToken } from "@/lib/partner/tokens";
 import { ACTIVE_LEAD_STATUSES } from "./leadStatus";
-import { EXCLUDE_PARTNER_ENQUIRY } from "./leadBucket";
+import { EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED } from "./leadBucket";
+import { PARTNER_WORKED_READONLY } from "./access";
 import { lastManualStatusChanges } from "./statusTouch";
 import { dayKey } from "./today";
 import { manualFollowUpData } from "./followUpRule";
@@ -27,7 +28,7 @@ const crmBase = () => (process.env.NEXT_PUBLIC_SITE_URL || "https://cyprusvipest
 async function loadNagLeads(where: { assignedToId?: string | null | { in: string[] } } | { OR: object[] } = {}): Promise<NagLead[]> {
   const rows = await prisma.lead.findMany({
     // Partner applications (PARTNER without partnerId) are not buyers: the pipeline leaves them out, so do the bar and the reminders.
-    where: { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, source: { notIn: [...NAG_EXCLUDED_SOURCES] }, ...EXCLUDE_PARTNER_ENQUIRY, ...where },
+    where: { deletedAt: null, status: { in: [...ACTIVE_LEAD_STATUSES] }, source: { notIn: [...NAG_EXCLUDED_SOURCES] }, ...EXCLUDE_PARTNER_ENQUIRY, ...EXCLUDE_PARTNER_WORKED, ...where },
     take: LEAD_CAP,
     orderBy: { updatedAt: "desc" },
     select: {
@@ -93,11 +94,16 @@ export async function handleNagSnooze(input: {
 }): Promise<void> {
   const cfg = officeBotConfig();
   const [lead, chatUser] = await Promise.all([
-    prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null }, select: { id: true, firstName: true, lastName: true, assignedToId: true } }),
+    prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null }, select: { id: true, firstName: true, lastName: true, assignedToId: true, workedByPartner: true } }),
     prisma.user.findUnique({ where: { telegramChatId: input.chatId }, select: { id: true, name: true, isOwner: true, isActive: true, telegramChatId: true } }),
   ]);
   if (!lead || !maySnooze({ chatId: input.chatId, officeChatId: cfg?.officeChatId ?? null, chatUser, leadAssignedToId: lead.assignedToId })) {
     await answerOfficeCallback(input.callbackId, "Not possible for this lead.");
+    return;
+  }
+  // An old reminder button on a lead the partner now works: read only, nothing moves.
+  if (lead.workedByPartner) {
+    await answerOfficeCallback(input.callbackId, PARTNER_WORKED_READONLY);
     return;
   }
   const until = snoozeUntil(input.now, input.days);

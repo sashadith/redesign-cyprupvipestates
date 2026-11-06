@@ -16,8 +16,8 @@ test("a restricted employee is scoped to own leads", () => {
 test("viewing a colleague's lead is fine, changing it is refused", () => {
   const viewer = { ...editor, canSeeColleagues: true };
   assert.deepEqual(scopeFor(viewer), {});
-  assert.throws(() => assertCanEdit(viewer, { assignedToId: "u2" }), /view this lead but not change it/);
-  assert.doesNotThrow(() => assertCanEdit(viewer, { assignedToId: "u1" }));
+  assert.throws(() => assertCanEdit(viewer, { assignedToId: "u2", workedByPartner: false }), /view this lead but not change it/);
+  assert.doesNotThrow(() => assertCanEdit(viewer, { assignedToId: "u1", workedByPartner: false }));
 });
 
 test("withScope ANDs the scope in, so an OR-shaped scope cannot replace the query's OR", () => {

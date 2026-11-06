@@ -13,7 +13,7 @@ export const BOARD_CAP = 1500;
 export const SIDE_CAP = 400;
 
 const BOARD_SELECT = {
-  id: true, firstName: true, lastName: true, status: true, source: true, languagePreference: true, createdAt: true, assignedToId: true,
+  id: true, firstName: true, lastName: true, status: true, source: true, languagePreference: true, createdAt: true, assignedToId: true, workedByPartner: true,
   timeline: true, budgetMin: true, budgetMax: true, nextFollowUpAt: true, viewingScheduledAt: true,
   assignedTo: { select: { id: true, name: true } },
   projectInterest: { select: { title: true } },
@@ -31,7 +31,7 @@ async function toInputs(user: CrmUser, rows: BoardRow[], now: Date): Promise<Boa
     projectLabel: r.projectInterest?.title ?? null,
     lastContactAt: r.interactions[0]?.occurredAt ?? null,
     deals: r.deals,
-    canEdit: canEditLead(user, { assignedToId: r.assignedToId }),
+    canEdit: canEditLead(user, { assignedToId: r.assignedToId, workedByPartner: r.workedByPartner }),
     temperature: toPublicTemperature(temps.get(r.id)),
     nextFollowUpAt: r.nextFollowUpAt, viewingScheduledAt: r.viewingScheduledAt,
     lastStatusChangeAt: moved.get(r.id) ?? null,

@@ -6,6 +6,7 @@ import { escapeHtml } from "./mail";
 import { parseBudgetField } from "./budgetField";
 import type { SubmissionInput, SubmissionMode } from "./submission";
 import { leadRef } from "@/lib/chatPrivacy";
+import { workedByPartnerOnAccept } from "./pipeline/rules";
 
 export { parseBudgetField };
 
@@ -86,6 +87,8 @@ export function leadDataFromSubmission(
     assignedToId: null,
     partnerId: partner.id,
     partnerMode: input.mode,
+    // A new client arrives with its claim already ACTIVE: a FIX client goes straight into the partner's pipeline.
+    workedByPartner: workedByPartnerOnAccept(input.mode, null),
     contactMode: input.contactMode,
     contactRepName: input.repName,
     contactRepPhone: input.repPhone,

@@ -18,11 +18,11 @@ test("reason: 300 chars pass, 301 refused, non-strings refused", () => {
 });
 
 test("trash: owner of the lead, managers yes; foreign lead and missing lead no", () => {
-  assert.equal(canTrashLead(u(), { assignedToId: "u1" }).allowed, true);
-  assert.equal(canTrashLead(u(), { assignedToId: "u2" }).allowed, false);
-  assert.equal(canTrashLead(u({ role: "ADMIN" }), { assignedToId: "u2" }).allowed, true);
-  assert.equal(canTrashLead(u({ canSeeColleagues: true, canEditColleagues: true }), { assignedToId: null }).allowed, true);
-  assert.equal(canTrashLead(u({ isActive: false }), { assignedToId: "u1" }).allowed, false);
+  assert.equal(canTrashLead(u(), { assignedToId: "u1", workedByPartner: false }).allowed, true);
+  assert.equal(canTrashLead(u(), { assignedToId: "u2", workedByPartner: false }).allowed, false);
+  assert.equal(canTrashLead(u({ role: "ADMIN" }), { assignedToId: "u2", workedByPartner: false }).allowed, true);
+  assert.equal(canTrashLead(u({ canSeeColleagues: true, canEditColleagues: true }), { assignedToId: null, workedByPartner: false }).allowed, true);
+  assert.equal(canTrashLead(u({ isActive: false }), { assignedToId: "u1", workedByPartner: false }).allowed, false);
   assert.equal(canTrashLead(u(), null).allowed, false);
 });
 

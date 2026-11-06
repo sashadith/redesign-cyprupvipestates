@@ -132,16 +132,21 @@ const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "O
 const DAY_MS = 86_400_000;
 const dd = (n: number) => String(n).padStart(2, "0");
 
-/** "KW 45 (02 - 06 Nov)": ISO week of the date in `tz` (the CRM's Nicosia by default), Monday to Friday. */
-export function weekLabel(at: Date, tz = "Asia/Nicosia"): string {
+/** ISO week of the date in `tz` (the CRM's Nicosia by default), with its Monday and Friday as UTC-midnight dates of that calendar day. */
+export function isoWeek(at: Date, tz = "Asia/Nicosia"): { week: number; monday: Date; friday: Date } {
   const p = parts(at, tz);
   const day = Date.UTC(p.y, p.m - 1, p.d);
   const wd = WEEKDAY[p.weekday];
   const thursday = new Date(day + (4 - wd) * DAY_MS);
   const jan1 = Date.UTC(thursday.getUTCFullYear(), 0, 1);
   const week = Math.ceil(((thursday.getTime() - jan1) / DAY_MS + 1) / 7);
-  const mon = new Date(day - (wd - 1) * DAY_MS);
-  const fri = new Date(mon.getTime() + 4 * DAY_MS);
+  const monday = new Date(day - (wd - 1) * DAY_MS);
+  return { week, monday, friday: new Date(monday.getTime() + 4 * DAY_MS) };
+}
+
+/** "KW 45 (02 - 06 Nov)": ISO week of the date in `tz` (the CRM's Nicosia by default), Monday to Friday. */
+export function weekLabel(at: Date, tz = "Asia/Nicosia"): string {
+  const { week, monday: mon, friday: fri } = isoWeek(at, tz);
   const range = mon.getUTCMonth() === fri.getUTCMonth()
     ? `${dd(mon.getUTCDate())} - ${dd(fri.getUTCDate())} ${MONTH[fri.getUTCMonth()]}`
     : `${dd(mon.getUTCDate())} ${MONTH[mon.getUTCMonth()]} - ${dd(fri.getUTCDate())} ${MONTH[fri.getUTCMonth()]}`;

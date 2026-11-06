@@ -15,7 +15,7 @@
 // place that rule lives; both logLeadInteraction and its test call it.
 import { prisma } from "@/lib/prisma";
 import { applyFollowUpCadence } from "./followUpCadence";
-import type { EmailActor } from "./sendLeadEmail";
+import { authorColumns, isPartnerActor, type LeadActor } from "./leadActor";
 import { bodyRequirement, type CallOutcome, type LoggableInteractionType } from "./logRule";
 
 // The type list and bodyRequirement() live in the import-free logRule.ts (the
@@ -54,7 +54,7 @@ export type LogInteractionInput = {
   callOutcome?: CallOutcome;
 };
 
-export async function logLeadInteraction(actor: EmailActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {
+export async function logLeadInteraction(actor: LeadActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {
   const callOutcome = input.type === "CALL" ? input.callOutcome : undefined;
   const { content, subject, ok } = bodyRequirement(input.type, input.body, input.subject, callOutcome);
   if (!ok) throw new Error("Message is required.");
@@ -73,7 +73,8 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
     const twin = await trackedWhatsAppTwin(leadId, input.type, content, when);
     if (twin) return { interactionId: twin };
   }
-  if (shape.activityRow) {
+  // LeadActivity is staff-only: a partner's NOTE writes the interaction row alone.
+  if (shape.activityRow && !isPartnerActor(actor)) {
     // Only NOTE writes an activity row, and `ok` above required a non-empty
     // `content` for NOTE (it doesn't start with "EMAIL_"), so this is never
     // the empty-string fallback in practice — the `?? subject ?? ""` just
@@ -92,8 +93,7 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
       subject,
       body: content,
       occurredAt: when,
-      createdByUserId: actor.userId,
-      createdByName: actor.userName,
+      ...authorColumns(actor),
       ...(Object.keys(metadata).length ? { metadata } : {}),
     },
     select: { id: true },

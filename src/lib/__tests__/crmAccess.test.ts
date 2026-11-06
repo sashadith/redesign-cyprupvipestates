@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { leadAccessWhere, canViewLead, canEditLead, canAssignLeads, seesAllLeads, type CrmUser } from "@/lib/crm/access";
 
 const base: CrmUser = { id: "u1", role: "EDITOR", isOwner: false, isActive: true, canSeeColleagues: false, canEditColleagues: false };
-const own = { assignedToId: "u1" };
-const colleague = { assignedToId: "u2" };
-const unassigned = { assignedToId: null };
+const own = { assignedToId: "u1", workedByPartner: false };
+const colleague = { assignedToId: "u2", workedByPartner: false };
+const unassigned = { assignedToId: null, workedByPartner: false };
 
 test("an employee without rights sees and edits only own leads", () => {
   assert.deepEqual(leadAccessWhere(base), { assignedToId: "u1" });

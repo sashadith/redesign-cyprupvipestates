@@ -14,7 +14,7 @@ import { LogoFull, LogoMark } from "@/app/partner-portal/components/Brand";
 // nag: the user's overdue / due-today leads (lead reminders, 2026-10-31) — a red bar over every CRM page and the
 // count in the tab title, refreshed every NAG_POLL_MS so a tab left open keeps nagging.
 type NagCounts = { overdue: number; now: number };
-type Props = { user: { name: string; canAssign: boolean; inboxCount: number; oldCrm: boolean; isOwner: boolean }; themes?: { options: ThemeOption[]; choiceId: string | null }; nag?: NagCounts; children: React.ReactNode };
+type Props = { user: { name: string; canAssign: boolean; inboxCount: number; oldCrm: boolean; isOwner: boolean; partnerPipelines?: boolean }; themes?: { options: ThemeOption[]; choiceId: string | null }; nag?: NagCounts; children: React.ReactNode };
 
 const NAG_POLL_MS = 5 * 60_000;
 const BASE_TITLE = "CVE Office";
@@ -81,6 +81,7 @@ export function Shell({ user, themes = { options: [], choiceId: null }, nag: nag
             </Link>
           )}
           {user.canAssign && <Link href="/crm/partners" className={on("/crm/partners")}>Partners</Link>}
+          {user.partnerPipelines && <Link href="/crm/partner-pipelines" className={on("/crm/partner-pipelines")}>Partner pipelines</Link>}
           {user.canAssign && <Link href="/crm/team" className={on("/crm/team")}>Team</Link>}
           {user.canAssign && <Link href="/crm/commissions" className={on("/crm/commissions")}>Commissions</Link>}
           {user.canAssign && <Link href="/crm/insights" className={on("/crm/insights")}>Insights</Link>}

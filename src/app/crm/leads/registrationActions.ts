@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
-import { canEditLead } from "@/lib/crm/access";
+import { canWorkDeveloperSide } from "@/lib/crm/access";
 import { checkManualRegistration, isRegistrable, maskPhone, type RegChannel, type RegMark } from "@/lib/crm/registration/core";
 import {
   prepareRegistration, realRegisterDeps, registerLead,
@@ -13,7 +13,8 @@ import { cleanSkipReason } from "@/lib/crm/registration/due";
 
 // Developer client registration from the lead cockpit (spec 2026-10-27 §7.1,
 // §8, §9). Middleware does not protect server actions: every export checks the
-// session and canEditLead itself; Fixed and its undo additionally need the owner.
+// session and canWorkDeveloperSide itself; Fixed and its undo additionally need the owner.
+// A partner-worked FIX lead stays registrable: CVE handles the developer, not the client.
 
 export type RegistrationOptions = {
   developers: { id: string; name: string; channel: RegChannel; registrable: boolean; alreadyRegistered: boolean }[];
@@ -27,12 +28,12 @@ const MAX_PICKS = 40;
 
 async function editableLead(leadId: unknown) {
   const user = await requireCrmUser();
-  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { user, lead: null };
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { user, lead: null, error: NOT_FOUND };
   const lead = await prisma.lead.findFirst({
     where: { id: leadId, deletedAt: null },
     select: { id: true, assignedToId: true, phone: true, budgetMin: true, budgetMax: true },
   });
-  return { user, lead: lead && canEditLead(user, lead) ? lead : null };
+  return { user, lead: lead && canWorkDeveloperSide(user, lead) ? lead : null, error: NOT_FOUND };
 }
 
 // Only plain ids survive; anything else from the client is dropped.
@@ -63,8 +64,8 @@ function cleanTextMap(raw: unknown, picks: RegisterPick[]): Record<string, strin
 }
 
 export async function registrationOptionsAction(leadId: string): Promise<RegistrationOptions | { error: string }> {
-  const { lead } = await editableLead(leadId);
-  if (!lead) return { error: NOT_FOUND };
+  const { lead, error } = await editableLead(leadId);
+  if (!lead) return { error };
   const [devs, projects, existing] = await Promise.all([
     prisma.developerAccount.findMany({
       orderBy: { name: "asc" },
@@ -85,8 +86,8 @@ export async function registrationOptionsAction(leadId: string): Promise<Registr
 }
 
 export async function previewRegistrationAction(leadId: string, picks: unknown, budgetMin: unknown, budgetMax: unknown): Promise<{ ok: true; plans: PlannedMessage[] } | { ok: false; error: string }> {
-  const { user, lead } = await editableLead(leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(leadId);
+  if (!lead) return { ok: false, error };
   const clean = cleanPicks(picks);
   if (!clean) return { ok: false, error: "Pick at least one developer or project." };
   const r = await prepareRegistration(realRegisterDeps(), { leadId: lead.id, picks: clean, budgetMin, budgetMax, staffName: user.name });
@@ -95,8 +96,8 @@ export async function previewRegistrationAction(leadId: string, picks: unknown, 
 
 // texts: edited message per developer id (only for picked developers; checked in registerLead).
 export async function registerLeadAction(leadId: string, picks: unknown, budgetMin: unknown, budgetMax: unknown, texts?: unknown): Promise<RegisterResult> {
-  const { user, lead } = await editableLead(leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(leadId);
+  if (!lead) return { ok: false, error };
   const clean = cleanPicks(picks);
   if (!clean) return { ok: false, error: "Pick at least one developer or project." };
   const cleanTexts = cleanTextMap(texts, clean);
@@ -111,8 +112,8 @@ export async function resendRegistrationAction(registrationId: string): Promise<
   if (typeof registrationId !== "string" || !registrationId || registrationId.length > 64) return { ok: false, error: "Registration not found." };
   const reg = await prisma.developerRegistration.findUnique({ where: { id: registrationId }, select: { leadId: true, developerAccountId: true, developmentIds: true, status: true } });
   if (!reg) return { ok: false, error: "Registration not found." };
-  const { user, lead } = await editableLead(reg.leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(reg.leadId);
+  if (!lead) return { ok: false, error };
   if (reg.status !== "FAILED" && reg.status !== "REJECTED") return { ok: false, error: "Only a failed or rejected registration can be resent." };
   // Projects deleted since the first send are dropped rather than blocking the resend.
   const still = await prisma.development.findMany({ where: { id: { in: reg.developmentIds }, developerAccountId: reg.developerAccountId }, select: { id: true } });
@@ -131,8 +132,8 @@ export async function markRegistrationAction(registrationId: string, action: str
   if (!(ACTIONS as readonly string[]).includes(action)) return { ok: false, error: "Unknown action." };
   const reg = await prisma.developerRegistration.findUnique({ where: { id: registrationId }, select: { leadId: true } });
   if (!reg) return { ok: false, error: "Registration not found." };
-  const { user, lead } = await editableLead(reg.leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(reg.leadId);
+  if (!lead) return { ok: false, error };
   const r = await markRegistration(realMarkDeps(), {
     registrationId, action: action as RegMark | "UNDO", source: "manual",
     actor: { userId: user.id, userName: user.name }, isOwner: user.isOwner,
@@ -144,8 +145,8 @@ export async function markRegistrationAction(registrationId: string, action: str
 // "Developers from personal selections": skip a developer on purpose (with a
 // reason, kept on the timeline) or take the skip back.
 export async function skipRegistrationDueAction(leadId: string, developerAccountId: string, reason: unknown): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { user, lead } = await editableLead(leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(leadId);
+  if (!lead) return { ok: false, error };
   if (typeof developerAccountId !== "string" || !developerAccountId || developerAccountId.length > 64) return { ok: false, error: "Developer not found." };
   const r = cleanSkipReason(reason);
   if (!r.ok) return r;
@@ -172,8 +173,8 @@ export async function skipRegistrationDueAction(leadId: string, developerAccount
 }
 
 export async function unskipRegistrationDueAction(leadId: string, developerAccountId: string): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { user, lead } = await editableLead(leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(leadId);
+  if (!lead) return { ok: false, error };
   if (typeof developerAccountId !== "string" || !developerAccountId || developerAccountId.length > 64) return { ok: false, error: "Developer not found." };
   const fu = await prisma.registrationFollowUp.findUnique({
     where: { leadId_developerAccountId: { leadId: lead.id, developerAccountId } },
@@ -203,8 +204,8 @@ const MANUAL_STATUS_LABEL = { SENT: "sent, waiting for confirmation", PRELIMINAR
 export async function recordManualRegistrationAction(
   leadId: string, developerAccountId: unknown, developmentIds: unknown, status: unknown, date: unknown, note: unknown,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { user, lead } = await editableLead(leadId);
-  if (!lead) return { ok: false, error: NOT_FOUND };
+  const { user, lead, error } = await editableLead(leadId);
+  if (!lead) return { ok: false, error };
   if (typeof developerAccountId !== "string" || !developerAccountId || developerAccountId.length > 64) return { ok: false, error: "Pick a developer." };
   const picks = cleanPicks([{ developerAccountId, developmentIds }]);
   if (!picks) return { ok: false, error: "The projects could not be read — reopen the form." };

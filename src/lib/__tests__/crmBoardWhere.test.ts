@@ -65,3 +65,10 @@ test("side lists hold only Keep contact and Lost, scoped like the board", async 
   const m = (sideWhere(user, "mine") as { AND: unknown[] }).AND;
   assert.ok(m.some((x) => JSON.stringify(x) === JSON.stringify({ assignedToId: "u1" })));
 });
+
+test("leads a partner works (workedByPartner) stay off the board and the side lists", async () => {
+  const { sideWhere } = await import("@/lib/crm/boardWhere");
+  const { EXCLUDE_PARTNER_WORKED } = await import("@/lib/crm/leadBucket");
+  for (const f of ["all", "mine", "stale"] as const) assert.ok(ands(f).includes(EXCLUDE_PARTNER_WORKED));
+  assert.ok((sideWhere(user, "all") as { AND: unknown[] }).AND.includes(EXCLUDE_PARTNER_WORKED));
+});

@@ -18,6 +18,8 @@ export type CockpitLead = {
   lang: string | null; budgetMin: number | null; budgetMax: number | null; timeline: string | null; financing: string | null;
   propertyTypes: string[]; message: string | null; notes: string | null; status: string; lostReason: string | null; source: string;
   ownerName: string | null; project: string | null; createdAt: Date;
+  /** Set while a partner works this FIX client (Lead.workedByPartner): the cockpit is read only. */
+  workedByPartnerName?: string | null;
   attribution: { label: string; value: string }[];
   /** Soft warnings about the lead's data (leadHints.ts). */
   hints: string[];
@@ -66,15 +68,18 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null, c
         {lead.localTime.kind === "ambiguous" && <LeadZonePicker leadId={lead.id} country={lead.localTime.country} options={lead.localTime.options} canEdit={canEdit} />}
         <span className="crm-muted">created <time dateTime={lead.createdAt.toISOString()} title={adminDateTime(lead.createdAt)}>{ago(lead.createdAt, now)}</time></span>
       </div>
+      {lead.workedByPartnerName && <p className="crm-ck-partner-lock" role="status">Worked by partner {lead.workedByPartnerName} — read only</p>}
     </header>
   );
 }
 
 // followUp renders inside the panel, under the enquiry (operator, 2026-11-01).
+// A partner-worked lead shows its contact details as text only: staff do not contact the partner's client.
 export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp?: ReactNode }) {
-  const wa = waDigits(lead.phone);
-  const mailto = safeMailto(lead.email);
-  const tel = lead.phone ? lead.phone.replace(/[^\d+]/g, "") : "";
+  const locked = !!lead.workedByPartnerName;
+  const wa = locked ? null : waDigits(lead.phone);
+  const mailto = locked ? null : safeMailto(lead.email);
+  const tel = !locked && lead.phone ? lead.phone.replace(/[^\d+]/g, "") : "";
   const facts: [string, string | null][] = [
     ["Interested in", lead.project],
     ["Budget", budget(lead.budgetMin, lead.budgetMax)],
@@ -99,10 +104,12 @@ export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp
             <dt>Phone</dt>
             <dd>
               <span className="crm-ck-copy">{lead.phone}</span>
-              <span className="crm-ck-links">
-                {tel && <a href={`tel:${tel}`}>Call</a>}
-                {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
-              </span>
+              {(tel || wa) && (
+                <span className="crm-ck-links">
+                  {tel && <a href={`tel:${tel}`}>Call</a>}
+                  {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
+                </span>
+              )}
             </dd>
           </div>
         )}

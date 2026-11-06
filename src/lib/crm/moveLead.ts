@@ -1,7 +1,9 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applyLeadStatusChange, standaloneLostReason } from "./updateLeadStatus";
-import { canEditLead } from "./access";
-import { planMove, type DealLite } from "./movePlan";
+import { canEditLead, leadEditError } from "./access";
+import { authorColumns, isPartnerActor, type LeadActor } from "./leadActor";
+import { planMove, viewingDateMissing, type DealLite } from "./movePlan";
 import { resolveRate, computeDealAmounts, type RateRow } from "./commission";
 import { dealPartnerShare } from "./partnerClaims";
 import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
@@ -14,12 +16,47 @@ export type MoveResult = { ok: true } | { error: string; need?: "deal" | "lostRe
 const STALE = "The deals changed meanwhile — reload and try again.";
 class StaleDealsError extends Error {}
 
+// The lead fields an authorize callback decides on, read under the row lock.
+export type MoveAuthLead = { partnerId: string | null; assignedToId: string | null; workedByPartner: boolean; deletedAt: Date | null };
+
+export type MoveInput = { deal?: DealInput; lostReason?: LostReasonValue; confirmCancel?: boolean; viewingScheduledAt?: Date };
+
+const NOT_FOUND = "Lead not found.";
+
+// The staff board's move. Same checks and texts as before the partner pipeline:
+// a lead in the trash or out of reach is "Lead not found.", a partner-worked one
+// the user can see is PARTNER_WORKED_READONLY.
 export async function moveLead(
   actor: SessionCrmUser,
   leadId: string,
   to: LeadStatusValue,
   input: { deal?: DealInput; lostReason?: LostReasonValue; confirmCancel?: boolean },
 ): Promise<MoveResult> {
+  return moveLeadCore(
+    { userId: actor.id, userName: actor.name },
+    leadId,
+    to,
+    input,
+    (lead) => lead.deletedAt === null && canEditLead(actor, lead),
+    (lead) => (lead && lead.deletedAt === null ? leadEditError(actor, lead) ?? NOT_FOUND : NOT_FOUND),
+  );
+}
+
+// The move itself, for staff and partner alike. authorize runs inside the
+// transaction after the FOR UPDATE lock, so a concurrent change of who works the
+// lead (a handover) is seen; it may read more through tx under that lock.
+// deniedError is the text returned when it refuses or the lead does not exist (null). A partner move to VIEWING_SCHEDULED needs
+// the appointment, as crm_update_lead does.
+export async function moveLeadCore(
+  actor: LeadActor,
+  leadId: string,
+  to: LeadStatusValue,
+  input: MoveInput,
+  authorize: (lead: MoveAuthLead, tx: Prisma.TransactionClient) => boolean | Promise<boolean>,
+  deniedError: (lead: MoveAuthLead | null) => string = () => NOT_FOUND,
+): Promise<MoveResult> {
+  const partner = isPartnerActor(actor);
+  const author = authorColumns(actor);
   // Everything that decides and writes the deals runs in one interactive
   // transaction with the lead row locked, so a double-submit waits for the first
   // move and then re-plans on fresh data (no second deal, no stale cancel).
@@ -28,10 +65,14 @@ export async function moveLead(
     const res = await prisma.$transaction(async (tx): Promise<MoveResult & { previousStatus?: string }> => {
       await tx.$queryRaw`SELECT id FROM leads WHERE id = ${leadId} FOR UPDATE`;
       const lead = await tx.lead.findFirst({
-        where: { id: leadId, deletedAt: null },
-        select: { id: true, status: true, assignedToId: true, partnerId: true, partnerMode: true, deals: { select: { id: true, commissionStatus: true } } },
+        where: { id: leadId },
+        select: { id: true, status: true, assignedToId: true, workedByPartner: true, partnerId: true, partnerMode: true, deletedAt: true, deals: { select: { id: true, commissionStatus: true } } },
       });
-      if (!lead || !canEditLead(actor, lead)) return { error: "Lead not found." };
+      if (!lead) return { error: deniedError(null) };
+      if (!(await authorize(lead, tx))) return { error: deniedError(lead) };
+      if (partner && viewingDateMissing(lead.status, to, input.viewingScheduledAt)) {
+        return { error: "viewingScheduledAt is required when setting status VIEWING_SCHEDULED." };
+      }
 
       const plan = planMove(lead.status as LeadStatusValue, to, lead.deals as DealLite[]);
       if (plan.kind === "blocked") return { error: plan.reason };
@@ -84,7 +125,8 @@ export async function moveLead(
             leadId, developmentId: dev.id, unitLabel: d.unitLabel?.trim() || null, price: d.price,
             ourRatePercent: rate.ratePercent, rateSource: rate.source, ourCommission: amounts.ourCommission,
             partnerSharePercent, partnerCommission: amounts.partnerCommission,
-            commissionStatus: earnNow ? "EARNED" : "EXPECTED", earnedAt: earnNow ? now : null, createdById: actor.id,
+            commissionStatus: earnNow ? "EARNED" : "EXPECTED", earnedAt: earnNow ? now : null,
+            createdById: author.createdByUserId, createdByPartnerUserId: author.createdByPartnerUserId,
           },
         });
       }
@@ -112,7 +154,10 @@ export async function moveLead(
   // transaction, so it runs AFTER it: if it throws, the move is reported failed
   // with the deals already updated, and a retry is safe (planMove is idempotent).
   if (previousStatus !== to) {
-    await applyLeadStatusChange({ userId: actor.id, userName: actor.name }, leadId, to, { lostReason: to === "LOST" ? input.lostReason : undefined });
+    await applyLeadStatusChange(actor, leadId, to, {
+      lostReason: to === "LOST" ? input.lostReason : undefined,
+      ...(input.viewingScheduledAt !== undefined ? { viewingScheduledAt: input.viewingScheduledAt } : {}),
+    });
   } else {
     const reason = standaloneLostReason(previousStatus, to, input.lostReason);
     if (reason) await prisma.lead.update({ where: { id: leadId }, data: { lostReason: reason } });

@@ -7,6 +7,7 @@ import "@/app/fonts/vendored.css";
 import "./portal.css";
 import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import { partnerNewsUnread } from "@/lib/partner/newsStore";
+import { hasPipeline } from "@/lib/partner/pipeline/store";
 import { DsStyle } from "@/lib/design/DsStyle";
 import { designForPartner } from "@/lib/design/store";
 import { toOptions, effectiveChoice, type ThemeOption } from "@/lib/design/options";
@@ -49,7 +50,7 @@ const fontVars = `${frauncesFontDisplay.variable} ${mulishFontBody.variable} ${p
 export default async function PartnerPortalLayout({ children }: { children: React.ReactNode }) {
   const { me, locale, t } = await portalContext();
   const active = me?.partner.status === "ACTIVE";
-  const newsUnread = me && active ? await partnerNewsUnread(me.partner.id) : 0;
+  const [newsUnread, pipeline] = me && active ? await Promise.all([partnerNewsUnread(me.partner.id), hasPipeline(me.partner.id)]) : [0, false];
   const design = await viewerDesign();
   const dark = isDarkSet(design.values) ? " ds-dark" : "";
   return (
@@ -58,7 +59,7 @@ export default async function PartnerPortalLayout({ children }: { children: Reac
         <DsStyle scope="portal" vars={cssVars(design.values, design.global)} />
       </head>
       <body className={`pp-app antialiased ${fontVars}${dark}`}>
-        <PortalShell locale={locale} t={t} loggedIn={!!me} active={active} newsUnread={newsUnread} themes={me && active ? { options: design.options, choiceId: design.choiceId } : undefined}>{children}</PortalShell>
+        <PortalShell locale={locale} t={t} loggedIn={!!me} active={active} pipeline={pipeline} newsUnread={newsUnread} themes={me && active ? { options: design.options, choiceId: design.choiceId } : undefined}>{children}</PortalShell>
       </body>
     </html>
   );

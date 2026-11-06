@@ -3,6 +3,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PARTNER_MESSAGE_MAX } from "@/lib/crm/partnerClaims";
 import { sendPartnerMessageAction } from "../partners/claimActions";
+import { setKeepFixAction } from "../partners/handoverActions";
+import type { KeepFixView } from "@/lib/crm/handoverReview";
+import { TAKE_OVER_REASON_LABEL, type TakeOverReason } from "@/lib/crm/handoverReviewRules";
+import { TakeOverButton } from "./TakeOverButton";
 import { adminDate as date, adminDateTime as when } from "@/lib/adminTime";
 import { useToast } from "./Toast";
 
@@ -20,7 +24,61 @@ export type CockpitPartnerView = {
   canMessage: boolean;
   /** Managers only (canAssignLeads): the inbox review is theirs. */
   canReview: boolean;
+  /** Set once a partner's handover request on this lead was accepted (partner pipeline, 2026-11-05). */
+  keepFix: KeepFixView | null;
+  /** Partner-worked, but the partner can no longer act (and the viewer may take it over): why. */
+  takeOver: TakeOverReason | null;
 };
+
+// Keep FIX after a handover: on an early handover the client became Handover; the manager may
+// give the partner the Fix share back (and take it away again) until a deal exists.
+function KeepFix({ leadId, v }: { leadId: string; v: KeepFixView }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isFix = v.partnerMode === "FIX";
+  // Only after an early handover: keep undoes the downgrade, un-keep restores it. Without one there is nothing to toggle.
+  const action: boolean | null = v.downgrade ? !isFix : null;
+
+  async function run(keep: boolean) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    let res: { ok: true } | { error: string };
+    try {
+      res = await setKeepFixAction(leadId, keep);
+    } catch {
+      res = { error: "Could not save — check your connection and try again." };
+    } finally {
+      setBusy(false);
+    }
+    if ("error" in res) { setError(res.error); return; }
+    toast.show(keep ? "The partner keeps the Fix share — they will be notified" : "Back to Handover — the partner will be notified");
+    router.refresh();
+  }
+
+  return (
+    <div className="crm-ckp-review">
+      <h3>Handover</h3>
+      <p className="crm-muted">
+        Accepted{v.acceptedBy ? ` by ${v.acceptedBy}` : ""}{v.acceptedAt ? ` on ${when(v.acceptedAt)}` : ""}.
+        {" "}Commission: {isFix ? "Fix" : v.partnerMode === "HANDOVER" ? "Handover" : "not set"}
+        {v.keepFix && v.keptBy ? ` (Fix kept by ${v.keptBy}${v.keptAt ? `, ${when(v.keptAt)}` : ""})` : ""}.
+      </p>
+      {v.hasLiveDeal ? (
+        <p className="crm-muted">The deal already exists — its commission share is fixed.</p>
+      ) : v.canChange && action !== null ? (
+        <div className="crm-ckp-row">
+          <span className="crm-muted">{action ? "Give the partner the Fix share for this client." : "Return the client to Handover."}</span>
+          <button type="button" className="crm-btn" disabled={busy} onClick={() => void run(action)}>{action ? "Keep Fix" : "Back to Handover"}</button>
+        </div>
+      ) : null}
+      {error && <p className="crm-ck-error" role="alert">{error}</p>}
+      {toast.node}
+    </div>
+  );
+}
 
 
 function Composer({ leadId }: { leadId: string }) {
@@ -98,6 +156,14 @@ export function CockpitPartner({ view }: { view: CockpitPartnerView }) {
           </ul>
         </div>
       )}
+      {view.takeOver && (
+        <div className="crm-ckp-review">
+          <h3>Partner can no longer act</h3>
+          <p className="crm-muted">{TAKE_OVER_REASON_LABEL[view.takeOver]}. The client stays read only until someone takes it over.</p>
+          <TakeOverButton leadId={view.leadId} client="The client" />
+        </div>
+      )}
+      {view.keepFix && <KeepFix leadId={view.leadId} v={view.keepFix} />}
       {view.canMessage && <Composer leadId={view.leadId} />}
       {view.messages.length > 0 && (
         <div className="crm-ckp-msgs">

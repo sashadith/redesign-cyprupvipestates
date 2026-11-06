@@ -3,7 +3,7 @@
 // exactly the same two timeline rows the dropdown does (the Action Center
 // reads metadata.toStatus from them, see actionCenter/rules/crm.ts).
 import { prisma } from "@/lib/prisma";
-import type { EmailActor } from "./sendLeadEmail";
+import { authorColumns, isPartnerActor, type LeadActor } from "./leadActor";
 
 export { LEAD_STATUSES, type LeadStatusValue } from "@/lib/crm/leadStatus";
 import { LEAD_STATUSES, type LeadStatusValue, type LostReasonValue } from "@/lib/crm/leadStatus";
@@ -35,7 +35,7 @@ export function statusChangeContent(status: string): string {
 }
 
 export async function applyLeadStatusChange(
-  actor: EmailActor,
+  actor: LeadActor,
   leadId: string,
   status: LeadStatusValue,
   opts: { viewingScheduledAt?: Date | null; via?: "mcp"; lostReason?: LostReasonValue | null } = {},
@@ -50,9 +50,12 @@ export async function applyLeadStatusChange(
     },
   });
   const content = statusChangeContent(status);
-  await prisma.leadActivity.create({
-    data: { leadId, type: "STATUS_CHANGE", content, createdBy: actor.userName, createdById: actor.userId },
-  });
+  // LeadActivity is staff-only: a partner's move writes the timeline row alone.
+  if (!isPartnerActor(actor)) {
+    await prisma.leadActivity.create({
+      data: { leadId, type: "STATUS_CHANGE", content, createdBy: actor.userName, createdById: actor.userId },
+    });
+  }
   await prisma.leadInteraction.create({
     data: {
       leadId,
@@ -60,8 +63,7 @@ export async function applyLeadStatusChange(
       channel: "SYSTEM",
       body: content,
       metadata: { toStatus: status, ...(opts.lostReason ? { lostReason: opts.lostReason } : {}), ...(opts.via ? { via: opts.via } : {}) },
-      createdByUserId: actor.userId,
-      createdByName: actor.userName,
+      ...authorColumns(actor),
     },
   });
 }

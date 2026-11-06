@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { PARTNER_WORKED_READONLY } from "@/lib/crm/access";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -63,8 +64,9 @@ export type BookingRequestSummary = {
 // shares the link himself (Compose or manually).
 export async function createOrGetBookingRequestAction(leadId: string, meetingType: MeetingType): Promise<BookingRequestSummary | { error: string }> {
   await requireSession();
-  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true } });
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, deletedAt: null }, select: { id: true, workedByPartner: true } });
   if (!lead) return { error: "Lead not found." };
+  if (lead.workedByPartner) return { error: PARTNER_WORKED_READONLY };
 
   const origin = requestOrigin();
   const existing = await prisma.bookingRequest.findFirst({
@@ -184,9 +186,10 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
 
   const booking = await prisma.bookingRequest.findUnique({
     where: { id: bookingRequestId },
-    include: { lead: { select: { id: true, firstName: true, lastName: true, email: true, languagePreference: true } } },
+    include: { lead: { select: { id: true, firstName: true, lastName: true, email: true, languagePreference: true, workedByPartner: true } } },
   });
   if (!booking) return { error: "Booking request not found." };
+  if (booking.lead.workedByPartner) return { error: PARTNER_WORKED_READONLY };
   if (!booking.lead.email) return { error: "This lead has no email address." };
 
   const confirmedSlotUtc = new Date(confirmedSlotUtcIso);
@@ -287,9 +290,10 @@ export async function cancelBookingAction(bookingRequestId: string): Promise<{ o
 
   const booking = await prisma.bookingRequest.findUnique({
     where: { id: bookingRequestId },
-    include: { lead: { select: { firstName: true, lastName: true, languagePreference: true } } },
+    include: { lead: { select: { firstName: true, lastName: true, languagePreference: true, workedByPartner: true } } },
   });
   if (!booking) return { error: "Booking request not found." };
+  if (booking.lead.workedByPartner) return { error: PARTNER_WORKED_READONLY };
   if (booking.status !== "CONFIRMED" && booking.status !== "PROPOSED") {
     return { error: "Only a confirmed or proposed booking can be cancelled." };
   }

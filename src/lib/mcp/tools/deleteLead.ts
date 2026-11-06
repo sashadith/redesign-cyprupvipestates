@@ -32,7 +32,7 @@ export function registerDeleteLead(server: McpServer) {
         const { user, where: scope } = await loadScope(c);
         const lead = await prisma.lead.findFirst({
           where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
-          select: { id: true, firstName: true, lastName: true, assignedToId: true },
+          select: { id: true, firstName: true, lastName: true, assignedToId: true, workedByPartner: true },
         });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
         assertCanEdit(user, lead);

@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireCrmUser } from "@/lib/crm/session";
-import { canAssignLeads, canEditLead, canViewLead, seesAllLeads } from "@/lib/crm/access";
+import { requireCrmUser, type SessionCrmUser } from "@/lib/crm/session";
+import { loadKeepFixView } from "@/lib/crm/handoverReview";
+import { loadTakeOverOffer } from "@/lib/crm/partnerTakeover";
+import { canAssignLeads, canEditLead, canViewLead, canViewPartnerLead, canWorkDeveloperSide, seesAllLeads } from "@/lib/crm/access";
 import type { CommissionStatusValue } from "@/lib/crm/commission";
 import { toTimeline } from "@/lib/crm/timeline";
 import { REAL_CONTACT_TYPES } from "@/lib/partner/claims";
@@ -49,6 +51,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
       message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
+      workedByPartner: true, partnerMode: true, partner: { select: { company: true, firstName: true, lastName: true, managerUserId: true } },
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
       attributionRef: true, utmSource: true, utmMedium: true, utmCampaign: true,
@@ -76,10 +79,16 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
       },
     },
   });
-  if (!lead || !canViewLead(user, lead)) notFound();
+  if (!lead || !(canViewLead(user, lead) || canViewPartnerLead(user, { partnerManagerId: lead.partner?.managerUserId }))) notFound();
 
+  // A partner-worked lead is read only for everyone here (canEditLead says no),
+  // and its owner is not reassigned either until the partner hands it over.
+  // Claim review and deal payouts stay with managers as before.
   const canEdit = canEditLead(user, lead);
   const canAssign = canAssignLeads(user);
+  const canReassign = canAssign && !lead.workedByPartner;
+  // Developer registration stays open on a partner-worked lead (CVE handles the developer side).
+  const canRegister = canWorkDeveloperSide(user, lead);
   const staff = canAssign
     ? await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true, acceptsLeads: true } })
     : [];
@@ -108,7 +117,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   const advisors = canEdit
     ? (staff.length ? staff.map((u) => ({ id: u.id, name: u.name })) : await prisma.user.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }))
     : [];
-  const partnerView = await loadPartnerView(lead, canEdit, canAssign, now);
+  const partnerView = await loadPartnerView(lead, canEdit, canAssign, now, user);
   const name = `${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead";
   const attributionRows: [string, string | null][] = [
     ["Partner ref", lead.attributionRef], ["UTM source", lead.utmSource], ["UTM medium", lead.utmMedium], ["UTM campaign", lead.utmCampaign],
@@ -121,6 +130,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     status: lead.status, lostReason: lead.lostReason, source: lead.source, ownerName: lead.assignedTo?.name ?? null,
     project: lead.projectInterest ? [lead.projectInterest.title, lead.projectInterest.city].filter(Boolean).join(" · ") : null,
     createdAt: lead.createdAt, attribution,
+    workedByPartnerName: lead.workedByPartner ? (lead.partner ? messagePartnerLabel(lead.partner) : "Partner") : null,
     hints: leadHints(lead).messages,
     localTime: cockpitLocalTime(lead, now),
   };
@@ -170,20 +180,20 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
         ) : null} />
         <div className="crm-ck-grid">
           <div className="crm-ck-main">
-            <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
+            <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} workedByPartner={lead.workedByPartner} />
             <CockpitSummary leadId={lead.id} initialLocale={summaryLocale} />
-            <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
+            <CockpitLogForm leadId={lead.id} canEdit={canEdit} workedByPartner={lead.workedByPartner} />
             <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP}
               action={canEdit && (lead.phone || lead.email) ? <CockpitSyncButton leadId={lead.id} /> : null} />
           </div>
           <aside className="crm-ck-aside">
             <CockpitContact lead={view} followUp={<CockpitFollowUp leadId={lead.id} at={lead.nextFollowUpAt?.toISOString() ?? null} canEdit={canEdit} leadZone={view.localTime.kind === "known" ? view.localTime.zone : null} />} />
-            <CockpitRegistrations leadId={lead.id} canEdit={canEdit} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
+            <CockpitRegistrations leadId={lead.id} canEdit={canRegister} isOwner={user.isOwner} rows={registrations} due={due} isAdmin={seesAllLeads(user)} autoRegister={searchParams?.register === "due"} />
             <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
-            {canAssign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
+            {canReassign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
           </aside>
         </div>
       </div>
@@ -192,16 +202,17 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
 }
 
 type PartnerLeadInput = {
-  id: string; status: string; contactRepName: string | null; contactRepPhone: string | null;
+  id: string; status: string; partnerMode: string | null; contactRepName: string | null; contactRepPhone: string | null;
   deals: { commissionStatus: string }[];
   claims: Parameters<typeof buildCockpitPartnerCard>[0]["claims"];
 };
 
 // Partner card data (phase 3b): only for leads that carry a claim; the two extra
 // queries run only then, so leads without partners render exactly as before.
-async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canReview: boolean, now: Date): Promise<CockpitPartnerView | null> {
+async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canReview: boolean, now: Date, user: SessionCrmUser): Promise<CockpitPartnerView | null> {
   if (!lead.claims.length) return null;
-  const [last, messages] = await Promise.all([
+  const hasDeal = lead.deals.some((d) => d.commissionStatus !== "CANCELLED");
+  const [last, messages, keepFix, takeOver] = await Promise.all([
     prisma.leadInteraction.findFirst({
       where: { leadId: lead.id, type: { in: [...REAL_CONTACT_TYPES] } },
       orderBy: { occurredAt: "desc" },
@@ -216,11 +227,15 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
         partner: { select: { company: true, firstName: true, lastName: true } },
       },
     }),
+    // The keep-FIX override: only once a handover request on this lead was accepted.
+    loadKeepFixView(user, lead.id, lead.partnerMode, hasDeal),
+    // Partner-worked but the partner can no longer act: the explicit "Take over" (admin, owner, his manager).
+    loadTakeOverOffer(user, lead.id, now),
   ]);
   const built = buildCockpitPartnerCard({
     claims: lead.claims.map((c) => ({ ...c, state: c.state as ClaimStateValue })),
     lead: {
-      status: lead.status, hasDeal: lead.deals.some((d) => d.commissionStatus !== "CANCELLED"),
+      status: lead.status, hasDeal,
       lastRealContactAt: last?.occurredAt ?? null, contactRepName: lead.contactRepName, contactRepPhone: lead.contactRepPhone,
     },
     now,
@@ -236,6 +251,8 @@ async function loadPartnerView(lead: PartnerLeadInput, canEdit: boolean, canRevi
     })),
     canMessage: canEdit && built.hasActive,
     canReview,
+    keepFix,
+    takeOver,
   };
 }
 

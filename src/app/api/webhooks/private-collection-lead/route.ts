@@ -52,10 +52,13 @@ export async function POST(req: NextRequest) {
       const occurredAt = new Date();
       if (dup) {
         if (dup.status === "LOST" && !briefing) {
-          await tx.lead.update({ where: { id: dup.id }, data: { status: "NEW", lostReason: null } });
-          await tx.leadInteraction.create({
-            data: { leadId: dup.id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "private_collection" } },
-          });
+          // Not while a partner works the client (workedByPartner): his status stands.
+          const revived = await tx.lead.updateMany({ where: { id: dup.id, workedByPartner: false }, data: { status: "NEW", lostReason: null } });
+          if (revived.count) {
+            await tx.leadInteraction.create({
+              data: { leadId: dup.id, type: "STATUS_CHANGE", channel: "SYSTEM", body: "Status LOST → NEW (sent the Private Collection enquiry form)", occurredAt, createdByName: ACTOR, metadata: { from: "LOST", to: "NEW", source: "private_collection" } },
+            });
+          }
         }
         // A briefing reader who then sends the enquiry is a buyer now: the guide
         // lead moves out of the Guide Leads list and gets the enquiry's answers

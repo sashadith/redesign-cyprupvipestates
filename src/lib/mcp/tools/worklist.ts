@@ -4,7 +4,7 @@ import type { LeadInteractionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { crmRules } from "@/lib/actionCenter/rules/crm";
 import { filterSnoozed } from "@/lib/actionCenter/snooze";
-import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_WORKED, bucketOf } from "@/lib/crm/leadBucket";
 import { seesAllLeads } from "@/lib/crm/access";
 import { LAST_CONTACT_TYPES } from "@/app/admin/(panel)/crm/leadListShared";
 import { runTool } from "../toolWrapper";
@@ -39,7 +39,7 @@ export function registerWorklist(server: McpServer) {
         const presentationIds = presentationItems.map((p) => p.presentationId);
         const [leads, presentations, newLeadsLast7Days, dueFollowUps] = await Promise.all([
           prisma.lead.findMany({
-            where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope },
+            where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER, ...EXCLUDE_PARTNER_WORKED, ...scope },
             select: {
               id: true, firstName: true, lastName: true, status: true, source: true, hotAt: true, nextFollowUpAt: true, languagePreference: true,
               timeZone: true, countryOfResidence: true, phone: true,
@@ -47,14 +47,14 @@ export function registerWorklist(server: McpServer) {
             },
           }),
           prisma.clientPresentation.findMany({
-            where: { id: { in: presentationIds }, lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER, ...scope } },
+            where: { id: { in: presentationIds }, lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER, ...EXCLUDE_PARTNER_WORKED, ...scope } },
             select: { id: true, leadId: true, createdAt: true, expiresAt: true, lead: { select: { firstName: true, lastName: true } }, _count: { select: { views: true } } },
             orderBy: { createdAt: "desc" },
             take: limit,
           }),
           prisma.lead.count({ where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } }, scope) }),
           prisma.lead.findMany({
-            where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } }, scope),
+            where: withScope({ deletedAt: null, ...EXCLUDE_NEWSLETTER, ...EXCLUDE_PARTNER_WORKED, nextFollowUpAt: { lte: new Date() }, status: { notIn: ["CLOSED", "LOST"] } }, scope),
             select: { id: true, firstName: true, lastName: true, status: true, source: true, nextFollowUpAt: true, timeZone: true, countryOfResidence: true, phone: true },
             orderBy: { nextFollowUpAt: "asc" },
             take: limit,
