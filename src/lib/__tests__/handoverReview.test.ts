@@ -149,7 +149,7 @@ test("takeOverPartnerLead: under the lead lock, only a still partner-worked lead
   assert.match(src, /if \(!reason\) throw new Abort\(STILL_ACTIVE\)/);
   assert.match(src, /where: \{ id: lead\.id, workedByPartner: true \}, data: \{ workedByPartner: false, assignedToId: ownerId \}/);
   assert.match(src, /state: "OPEN" \},\s*data: \{ state: "WITHDRAWN", withdrawnAt: now \}/);
-  assert.match(src, /Taken over by \$\{actor\.name\}: partner can no longer work this client/);
+  assert.match(src, /body: `Assigned to \$\{ownerName\} \(taken over from partner \$\{partnerName\(lead\.partner\)\} by \$\{actor\.name\}: partner can no longer work this client\)`/);
   assert.match(src, /kind: "partner_lead_taken_over"/);
   assert.match(src, /writeAudit\(actor, "partner_lead_take_over"/);
   assert.ok(!/partnerMode:\s*(?:"|target)/.test(src.split("writeAudit")[0]), "partnerMode is not written");

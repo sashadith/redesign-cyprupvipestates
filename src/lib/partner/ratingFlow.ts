@@ -260,17 +260,20 @@ export const REVOKING_LOST_REASONS = ["INVALID", "UNREACHABLE"] as const;
 /**
  * A claim whose points are taken back (and which never earns new ones): the claim was REJECTED, its lead is
  * trashed or gone, or the lead is LOST. A LOST FIX client nets 0 for every lost reason; a LOST HANDOVER client
- * only for INVALID / UNREACHABLE. FIX / HANDOVER is the lead's current partnerMode when set, else the claim's mode. Nothing is remembered: when the lead is active again the next grant pass
+ * only for INVALID / UNREACHABLE. FIX / HANDOVER is the lead's current partnerMode when set and the lead still belongs
+ * to this claim's partner, else the claim's mode. Nothing is remembered: when the lead is active again the next grant pass
  * plans (and inserts) the events anew.
  */
 export function isRevokedClaim(c: {
-  state: string; mode: "HANDOVER" | "FIX";
-  lead: { deletedAt: Date | null; status: string; lostReason: string | null; partnerMode?: string | null } | null;
+  state: string; mode: "HANDOVER" | "FIX"; partnerId?: string;
+  lead: { deletedAt: Date | null; status: string; lostReason: string | null; partnerMode?: string | null; partnerId?: string | null } | null;
 } | null): boolean {
   if (!c || c.state === "REJECTED" || !c.lead || c.lead.deletedAt) return true;
   if (c.lead.status !== "LOST") return false;
   // The lead's current mode wins (an early handover downgrades FIX to HANDOVER on the lead, not on the claim).
-  const mode = c.lead.partnerMode === "FIX" || c.lead.partnerMode === "HANDOVER" ? c.lead.partnerMode : c.mode;
+  // Another partner's later claim on the same lead does not rewrite this partner's mode.
+  const ours = c.partnerId === undefined || c.lead.partnerId === undefined || c.lead.partnerId === c.partnerId;
+  const mode = ours && (c.lead.partnerMode === "FIX" || c.lead.partnerMode === "HANDOVER") ? c.lead.partnerMode : c.mode;
   if (mode === "FIX") return true;
   return (REVOKING_LOST_REASONS as readonly string[]).includes(c.lead.lostReason ?? "");
 }

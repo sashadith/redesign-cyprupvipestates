@@ -386,6 +386,13 @@ test("LOST FIX client nets 0 for every lost reason; HANDOVER keeps its rule; rev
   assert.equal(isRevokedClaim(withMode("FIX", "HANDOVER", "INVALID")), true);
   assert.equal(isRevokedClaim(withMode("FIX", null, "NO_RESPONSE")), true, "no lead mode: the claim's mode");
   assert.equal(isRevokedClaim(withMode("HANDOVER", "FIX", "NO_RESPONSE")), true, "keep-FIX lead: FIX rule");
+  // The lead's mode only counts while the lead belongs to this claim's partner.
+  const other = (mode: "HANDOVER" | "FIX", partnerMode: string, leadPartner: string | null) =>
+    ({ state: "ACTIVE", mode, partnerId: "p1", lead: { deletedAt: null, status: "LOST", lostReason: "NO_RESPONSE", partnerMode, partnerId: leadPartner } });
+  assert.equal(isRevokedClaim(other("HANDOVER", "FIX", "p2")), false, "another partner's FIX does not revoke an earlier HANDOVER claim");
+  assert.equal(isRevokedClaim(other("FIX", "HANDOVER", "p2")), true, "another partner's HANDOVER does not soften an earlier FIX claim");
+  assert.equal(isRevokedClaim(other("HANDOVER", "FIX", null)), false, "lead no longer with any partner: the claim's mode");
+  assert.equal(isRevokedClaim(other("HANDOVER", "FIX", "p1")), true, "own lead: the lead's mode");
   // refKeysToRevoke follows the same rule
   const claims = new Map([["f1", c("FIX", "LOST", "BUDGET")], ["h1", c("HANDOVER", "LOST", "BUDGET")]]);
   assert.deepEqual(refKeysToRevoke([{ refKey: "claim_accepted:f1:s1" }, { refKey: "claim_accepted:h1:s1" }], claims), ["claim_accepted:f1:s1"]);

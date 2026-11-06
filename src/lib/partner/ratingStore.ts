@@ -134,7 +134,7 @@ async function effectivelyActiveClaims(season: SeasonRow, now: Date) {
     take: POINTS_CLAIM_CAP + 1,
     select: {
       id: true, partnerId: true, leadId: true, state: true, mode: true, createdAt: true, reviewedAt: true,
-      lead: { select: { status: true, deletedAt: true, lostReason: true, partnerMode: true } },
+      lead: { select: { status: true, deletedAt: true, lostReason: true, partnerMode: true, partnerId: true } },
     },
   });
   const truncated = rows.length > POINTS_CLAIM_CAP;
@@ -179,7 +179,7 @@ async function revokePoints(season: SeasonRow, now: Date): Promise<number> {
   for (const part of chunk(claimIds, ID_CHUNK)) {
     const rows = await prisma.partnerClaim.findMany({
       where: { id: { in: part } },
-      select: { id: true, state: true, mode: true, lead: { select: { deletedAt: true, status: true, lostReason: true, partnerMode: true } } },
+      select: { id: true, partnerId: true, state: true, mode: true, lead: { select: { deletedAt: true, status: true, lostReason: true, partnerMode: true, partnerId: true } } },
     });
     for (const r of rows) claims.set(r.id, r);
   }

@@ -112,7 +112,7 @@ test("scopeTimeline: nothing from before the claim became active, presentation e
 test("partnerTimeline words a staff take-over without the staff name", () => {
   const out = partnerTimeline([
     row("take", "SYSTEM", 1, {
-      createdByUserId: "u1", createdByName: "Anna", body: "Taken over by Anna: partner can no longer work this client",
+      createdByUserId: "u1", createdByName: "Anna", body: "Assigned to Anna (taken over from partner Ola Kowalska by Anna: partner can no longer work this client)",
       metadata: { kind: "partner_lead_taken_over", reason: "protection_lapsed" },
     }),
   ], []);

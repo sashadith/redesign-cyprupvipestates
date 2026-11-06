@@ -81,7 +81,8 @@ export async function takeOverPartnerLead(
       await tx.leadInteraction.create({
         data: {
           leadId: lead.id, type: "SYSTEM", channel: "SYSTEM", occurredAt: now,
-          body: `Taken over by ${actor.name}: partner can no longer work this client`,
+          // "Assigned to …" so Today's "Newly assigned" and the SLA rules see the new owner like any assignment.
+          body: `Assigned to ${ownerName} (taken over from partner ${partnerName(lead.partner)} by ${actor.name}: partner can no longer work this client)`,
           createdByUserId: actor.id, createdByName: actor.name,
           metadata: { kind: "partner_lead_taken_over", reason, assignedToId: ownerId, partnerId: lead.partnerId, claimEffective: effective },
         },
