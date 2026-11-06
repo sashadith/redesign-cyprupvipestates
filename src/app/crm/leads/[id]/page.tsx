@@ -180,9 +180,9 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
         ) : null} />
         <div className="crm-ck-grid">
           <div className="crm-ck-main">
-            <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} />
+            <CockpitStage leadId={lead.id} leadName={name} status={lead.status} canEdit={canEdit} workedByPartner={lead.workedByPartner} />
             <CockpitSummary leadId={lead.id} initialLocale={summaryLocale} />
-            <CockpitLogForm leadId={lead.id} canEdit={canEdit} />
+            <CockpitLogForm leadId={lead.id} canEdit={canEdit} workedByPartner={lead.workedByPartner} />
             <CockpitTimeline items={timeline} now={now} truncated={lead.interactions.length > TIMELINE_CAP}
               action={canEdit && (lead.phone || lead.email) ? <CockpitSyncButton leadId={lead.id} /> : null} />
           </div>

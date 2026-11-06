@@ -8,7 +8,7 @@ import { useToast } from "./Toast";
 // Stage control of the lead cockpit (CRM v2, 2026-10-18): the funnel as a
 // stepper plus Keep contact / Lost. Same move rules and dialogs as the board.
 
-export function CockpitStage({ leadId, leadName, status: initial, canEdit }: { leadId: string; leadName: string; status: string; canEdit: boolean }) {
+export function CockpitStage({ leadId, leadName, status: initial, canEdit, workedByPartner = false }: { leadId: string; leadName: string; status: string; canEdit: boolean; workedByPartner?: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [status, setStatus] = useState(initial);
@@ -45,7 +45,7 @@ export function CockpitStage({ leadId, leadName, status: initial, canEdit }: { l
     <section className="crm-panel crm-ck-stage" aria-labelledby="crm-ck-stage-h">
       <div className="crm-ck-sechead">
         <h2 id="crm-ck-stage-h">Stage</h2>
-        {!canEdit && <span className="crm-muted">Only the owner or a manager can move this lead.</span>}
+        {!canEdit && <span className="crm-muted">{workedByPartner ? "The partner works this client; only they can move it." : "Only the owner or a manager can move this lead."}</span>}
       </div>
       <ol className="crm-ck-steps">
         {FUNNEL_STATUSES.map((s, i) => (

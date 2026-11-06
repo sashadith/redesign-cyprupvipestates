@@ -15,7 +15,7 @@ const TYPE_LABEL: Record<LoggableInteractionType, string> = {
 // <input type="datetime-local"> works in the browser's local time, without a zone.
 const localInputValue = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 
-export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: boolean }) {
+export function CockpitLogForm({ leadId, canEdit, workedByPartner = false }: { leadId: string; canEdit: boolean; workedByPartner?: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [type, setType] = useState<LoggableInteractionType>("CALL");
@@ -75,7 +75,7 @@ export function CockpitLogForm({ leadId, canEdit }: { leadId: string; canEdit: b
   return (
     <section className="crm-panel crm-ck-log" aria-labelledby="crm-ck-log-h">
       <h2 id="crm-ck-log-h">Log</h2>
-      {!canEdit && <p className="crm-muted">Only the owner or a manager can log on this lead.</p>}
+      {!canEdit && <p className="crm-muted">{workedByPartner ? "The partner works this client; only they can log on it." : "Only the owner or a manager can log on this lead."}</p>}
       <form onSubmit={submit}>
         <fieldset disabled={!canEdit || busy}>
           <div className="crm-ck-types" role="radiogroup" aria-label="What happened">
