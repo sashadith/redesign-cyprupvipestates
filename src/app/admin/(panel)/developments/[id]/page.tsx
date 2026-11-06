@@ -514,6 +514,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           photos: arr(u.photos),
           plans: arr(u.plans),
           attrs: (Array.isArray(u.attrs) ? u.attrs : []) as { name: string; value: string }[],
+          pinnedFields: u.pinnedFields ?? [],
         }))}
       />
     </div>

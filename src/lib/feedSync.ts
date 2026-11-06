@@ -6,6 +6,7 @@ import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { openShare, listFolder, downloadFile, isFolder } from "@/lib/sharepoint";
 import { parsePgXml, groupPgProjects, pgVm, pickNewestXml, pgIsPlanImage, type PgProject } from "@/lib/propertyGallery";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
+import { isUnitFieldPinned, stripPinnedUnitFields } from "@/lib/unitPins";
 
 /* Feed sync (Phase 1). Pulls every development of a developer from its feed
    (reusing the feeds.ts adapters → canonical ProjectVM) and upserts into
@@ -323,7 +324,7 @@ async function syncFeedUnitsPreservingUnlisted(
 ): Promise<{ written: number; created: { ref: string; label: string }[]; unlisted: { ref: string; label: string }[] }> {
   const existing = await prisma.developmentUnit.findMany({
     where: { developmentId, source: "feed" },
-    select: { id: true, ref: true, status: true, label: true, name: true },
+    select: { id: true, ref: true, status: true, label: true, name: true, pinnedFields: true },
   });
   const existingByRef = new Map<string, (typeof existing)[number]>();
   for (const u of existing) if (u.ref) existingByRef.set(u.ref, u);
@@ -346,7 +347,11 @@ async function syncFeedUnitsPreservingUnlisted(
       // genuinely NEW unit (no match) always gets the full row below,
       // photos/plans included — "new units get their photos once" holds.
       const data = opts.freezeExistingUnitMedia ? (({ photos, plans, ...rest }) => rest)(row) : row;
-      await prisma.developmentUnit.update({ where: { id: match.id }, data });
+      // A pinned column belongs to the developer's price list, not to their
+      // feed (src/lib/unitPins.ts) — dropped from the update rather than
+      // written, the same way the media keys are above and
+      // FROZEN_WHEN_PUBLISHED works on the Development row itself.
+      await prisma.developmentUnit.update({ where: { id: match.id }, data: stripPinnedUnitFields(data, match.pinnedFields) });
     } else {
       await prisma.developmentUnit.create({ data: row });
       // Collected, not just counted: the nightly digest names each new unit so
@@ -360,6 +365,11 @@ async function syncFeedUnitsPreservingUnlisted(
   for (const old of existing) {
     if (!old.ref || freshRefs.has(old.ref)) continue; // no stable key to diff, or still present
     if (old.status === "sold" || old.status === "unlisted") continue; // hard rule / already flagged
+    // A pinned status is ours, and "gone from today's feed" is precisely the
+    // claim the pin exists to overrule. Island Blue drops a reserved unit out
+    // of their units document altogether, so flipping it to "unlisted" would
+    // hide the very unit their own price list still offers.
+    if (isUnitFieldPinned(old.pinnedFields, "status")) continue;
     await prisma.developmentUnit.update({ where: { id: old.id }, data: { status: "unlisted" } });
     unlisted.push({ ref: old.ref, label: old.label || old.name || old.ref });
   }
@@ -661,7 +671,14 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [] };
   }
   let unitsWritten: number, unitsCreated = 0, unitsCreatedLines: { ref: string; label: string }[] = [], unitsUnlisted: { ref: string; label: string }[] = [];
-  if (development.publishStatus === "published") {
+  // Pins live on individual unit rows, so the delete+recreate path below would
+  // throw them away along with the row they protect. A single pin anywhere in
+  // the project moves it onto the preserving path instead — which is the safer
+  // of the two in every respect (nothing is deleted, a unit absent from the
+  // feed flips to "unlisted"), just more expensive, so it stays reserved for
+  // projects that have something to protect.
+  const pinnedUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, pinnedFields: { isEmpty: false } } });
+  if (development.publishStatus === "published" || pinnedUnits > 0) {
     const diff = await syncFeedUnitsPreservingUnlisted(development.id, vm.units, { freezeExistingUnitMedia: freezeMirror });
     unitsWritten = diff.written; unitsCreated = diff.created.length; unitsCreatedLines = diff.created; unitsUnlisted = diff.unlisted;
   } else {
@@ -1400,9 +1417,14 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
 
       const manualUnits = await prisma.developmentUnit.findMany({
         where: { developmentId: development.id, source: "manual" },
-        select: { id: true, ref: true, feedRef: true, status: true },
+        select: { id: true, ref: true, feedRef: true, status: true, pinnedFields: true },
       });
       for (const unit of manualUnits) {
+        // The price list owns this unit's status (src/lib/unitPins.ts), so
+        // neither the feed's value nor its absence may touch it. Counted as a
+        // skip, which is what that number has always meant here: we looked at
+        // the unit and deliberately left it alone.
+        if (isUnitFieldPinned(unit.pinnedFields, "status")) { skipped++; continue; }
         const feedStatus = unit.feedRef ? feedStatusByRef.get(unit.feedRef) : undefined;
         if (feedStatus == null) {
           // Unit not found in today's (successfully-fetched) feed response —
