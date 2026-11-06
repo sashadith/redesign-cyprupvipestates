@@ -8,6 +8,7 @@ import type { InventoryPage } from "@/lib/seo/pagePower/inventory";
 import { resolveTarget, readTargetSeo, isSeoTable, type SeoTable } from "@/lib/ai/pageImprover/target";
 import { APPLY_ENABLED, type CurrentSeo, type ImprovementProposal } from "@/lib/ai/pageImprover/types";
 import ImprovePanel, { type PanelDraft, type PanelHistoryRow } from "./ImprovePanel";
+import { isToolEnabled } from "@/lib/toolSwitches";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,13 @@ export default async function ImprovePage({ searchParams }: { searchParams?: { k
   // The pageKey is `locale::path` and a path contains slashes, so it travels as
   // a query param rather than a route segment. Next has already decoded it.
   const pageKey = searchParams?.key ?? "";
+  // Improve runs on Page Power's verdicts, so it goes off with the switch.
+  if (!(await isToolEnabled("page_power")))
+    return (
+      <Shell>
+        <Card><p className="text-sm text-[#6B7280]">Page Power is switched off. Switch it on at the top of the Page Power screen to use Improve.</p></Card>
+      </Shell>
+    );
   if (!pageKey)
     return (
       <Shell>

@@ -17,6 +17,7 @@ import { loadSweepEntries, pagesInSuppressionWindow } from "@/lib/seo/titleSweep
 import { computeTitleSweepComparison, sweepVerdictLine, REMEASURE_WINDOW_DAYS } from "@/lib/seo/titleSweepRemeasure";
 import { getRecentChangelogEntries, type ChangelogEntry } from "@/lib/seo/siteChangelog";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
+import { isToolEnabled } from "@/lib/toolSwitches";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
 import { MIN_COMPARISON_SESSIONS, MIN_IMPRESSIONS_BURIED, MIN_IMPRESSIONS_CTR, WINDOW_DAYS as PAGE_POWER_WINDOW_DAYS, type PageDiagnosis, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 
@@ -205,7 +206,7 @@ export type AdvisorPayload = {
      *  simply did not appear would be read as certified. */
     classes: { templateClass: TemplateClass; diagnosis: ClassDiagnosis; reason: string }[];
     notes: string[];
-  };
+  } | null; // null = Page Power switched off in the admin (src/lib/toolSwitches.ts)
   // Routing/content changes (last 60 days) that can shift GSC metrics for
   // reasons unrelated to ranking quality — see docs/SITE-CHANGELOG.md. The
   // ANALYZE step is instructed to attribute an overlapping metric shift to
@@ -328,7 +329,7 @@ async function gatherTitleSweep(): Promise<{ titleSweep: AdvisorPayload["titleSw
   };
 }
 
-async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
+async function gatherPagePower(): Promise<NonNullable<AdvisorPayload["pagePower"]>> {
   // Matched on `path`, the shape the sweep log records and PageVerdict carries
   // (see the PageKey comment in pagePower/types.ts) — the same join
   // pagePowerRules() makes, checked against production there on 2026-08-23 with
@@ -424,7 +425,7 @@ export async function gatherAdvisorPayload(): Promise<AdvisorPayload> {
     gatherCwvSummary(),
     gatherPlatformStats(),
     gatherTitleSweep(),
-    gatherPagePower(),
+    isToolEnabled("page_power").then((on) => (on ? gatherPagePower() : null)),
   ]);
 
   return {

@@ -7,6 +7,7 @@ import { gatherImprovementInput } from "@/lib/ai/pageImprover/gather";
 import { generateProposal } from "@/lib/ai/pageImprover/generate";
 import { isSeoTable, readTargetSeo, writeTargetSeo } from "@/lib/ai/pageImprover/target";
 import { APPLY_ENABLED, type CurrentSeo, type ImprovementProposal } from "@/lib/ai/pageImprover/types";
+import { isToolEnabled } from "@/lib/toolSwitches";
 
 async function requireActiveUser(): Promise<string> {
   const session = await auth();
@@ -31,6 +32,7 @@ const IMPROVE_PATH = "/admin/analytics/seo/power/improve";
 
 export async function generateImprovementAction(pageKey: string): Promise<{ error?: string }> {
   await requireActiveUser();
+  if (!(await isToolEnabled("page_power"))) return { error: "Page Power is switched off." };
   try {
     const input = await gatherImprovementInput(pageKey);
     if (input.page.kind === "development")

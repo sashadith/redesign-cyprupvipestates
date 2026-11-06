@@ -2720,3 +2720,17 @@ model AdvisorProjectNote {
   @@id([userId, developmentId])
   @@map("advisor_project_notes")
 }
+
+// Admin on/off switches for optional internal tools (2026-11-05): "seo_advisor"
+// (weekly LLM run, its Telegram summary and Action Center items) and "page_power"
+// (its Action Center items, its block in the advisor payload, the admin screen).
+// A missing row means ON — both tools ran unconditionally before this table
+// existed. Who flipped a switch is also written to admin_audit_logs.
+model ToolSwitch {
+  key           String   @id
+  enabled       Boolean
+  updatedAt     DateTime @updatedAt
+  updatedByName String?
+
+  @@map("tool_switches")
+}

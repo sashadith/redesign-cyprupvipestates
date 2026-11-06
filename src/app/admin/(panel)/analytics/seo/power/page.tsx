@@ -4,6 +4,8 @@ import { getClassVerdicts, classWindow } from "@/lib/seo/pagePower/classVerdicts
 import { templateClassLabel } from "@/lib/seo/templateClass";
 import { COMPARISON_PROJECT_PAGES, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 import PagePowerTable, { type Row } from "./PagePowerTable";
+import { getToolSwitch } from "@/lib/toolSwitches";
+import ToolSwitchCard from "../ToolSwitchCard";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,19 @@ const CLASS_DIAGNOSIS_COLOR: Record<ClassDiagnosis, string> = {
 const day = (d: Date): string => d.toISOString().slice(0, 10);
 
 export default async function PagePowerPage() {
+  // Switched off in the admin: show only the switch, compute nothing.
+  const toolSwitch = await getToolSwitch("page_power");
+  if (!toolSwitch.enabled)
+    return (
+      <div>
+        <div className="flex items-baseline justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-semibold">Page Power</h1>
+          <Link href="/admin/analytics/seo" className="text-sm text-[#1B4B43] hover:underline shrink-0">← Back to SEO</Link>
+        </div>
+        <ToolSwitchCard toolKey="page_power" state={toolSwitch} />
+      </div>
+    );
+
   // One `now` for both layers. Two `new Date()` calls either side of a slow
   // query can straddle UTC midnight, and this page would then print two windows
   // derived from two different "todays" — the one mismatch a reader has no way
@@ -77,6 +92,8 @@ export default async function PagePowerPage() {
         </div>
         <Link href="/admin/analytics/seo" className="text-sm text-[#1B4B43] hover:underline shrink-0">← Back to SEO</Link>
       </div>
+
+      <ToolSwitchCard toolKey="page_power" state={toolSwitch} />
 
       <Card className="mb-6">
         <PagePowerTable rows={rows} />

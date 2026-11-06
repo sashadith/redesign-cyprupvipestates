@@ -5,11 +5,14 @@ import SuggestionCard from "./SuggestionCard";
 import RunHistoryItem from "./RunHistoryItem";
 import { sortSuggestions } from "./sortSuggestions";
 import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
+import { getToolSwitch } from "@/lib/toolSwitches";
+import ToolSwitchCard from "../ToolSwitchCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function SeoAdvisorPage() {
   const configured = aiConfigured();
+  const toolSwitch = await getToolSwitch("seo_advisor");
   const runs = configured
     ? await prisma.advisorRun.findMany({ orderBy: { runDate: "desc" }, take: 25 })
     : [];
@@ -27,6 +30,8 @@ export default async function SeoAdvisorPage() {
         </div>
         <Link href="/admin/analytics/seo" className="text-sm text-[#1B4B43] hover:underline">← Back to SEO</Link>
       </div>
+
+      <ToolSwitchCard toolKey="seo_advisor" state={toolSwitch} />
 
       {!configured ? (
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">

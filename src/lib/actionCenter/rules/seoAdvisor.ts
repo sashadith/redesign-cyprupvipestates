@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import type { ActionItem } from "../types";
 import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
+import { isToolEnabled } from "@/lib/toolSwitches";
 
 // Reads the LATEST weekly run's suggestions — only "open" ones become items.
 // Dismissing/approving a suggestion (see the advisor detail page's server
 // actions) flips its status directly, which is enough to remove it here; no
 // separate snooze needed for this category.
 export async function seoAdvisorRules(): Promise<ActionItem[]> {
+  if (!(await isToolEnabled("seo_advisor"))) return [];
   const latest = await prisma.advisorRun.findFirst({ orderBy: { runDate: "desc" } });
   if (!latest) return [];
   const suggestions = (latest.suggestions as unknown as StoredSuggestion[]) ?? [];
