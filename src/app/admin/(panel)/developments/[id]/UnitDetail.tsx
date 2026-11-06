@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { UNIT_AMENITY_CATALOG } from "@/lib/unitAmenityCatalog";
 import UnitImages, { thumb, large } from "./UnitImages";
+import { pinUnitPriceListValues, releaseUnitPin } from "./actions";
 import type { UnitRow } from "./UnitsEditor";
 
 const inp = "w-full rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-sm focus:border-[#1B4B43] focus:outline-none";
@@ -35,6 +38,84 @@ function YesNo({ label, value, onChange, disabled }: { label: string; value: str
         <option value="yes">Yes</option>
         <option value="no">No</option>
       </select>
+    </div>
+  );
+}
+
+
+/* The developer's price list against their own feed, one unit at a time.
+
+   This panel exists because the unit editor above is read-only for a
+   feed-managed development, and deliberately so — but the price list a
+   developer emails is regularly ahead of the feed they publish, and for
+   Island Blue it contradicts it outright: a unit their feed still offers is
+   Reserved on the list, at a price €15,000 lower. Correcting such a unit
+   anywhere else lasts until 04:00 (src/lib/unitPins.ts has the full story),
+   so the correction and the pin that protects it are made here, together. */
+function PriceListPin({ unit }: { unit: UnitRow }) {
+  const router = useRouter();
+  const pinned = unit.pinnedFields || [];
+  const [status, setStatus] = useState(unit.status || "available");
+  const [price, setPrice] = useState(unit.price || "");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = async (what: string, fn: () => Promise<{ ok: boolean; error?: string }>) => {
+    setBusy(what);
+    setError(null);
+    const r = await fn();
+    setBusy(null);
+    if (!r.ok) setError(r.error || "Could not save");
+    else router.refresh();
+  };
+
+  const Row = ({ field, label, control, dirty }: { field: "status" | "price"; label: string; control: React.ReactNode; dirty: boolean }) => {
+    const isPinned = pinned.includes(field);
+    return (
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <label className={lbl}>{label}</label>
+          {control}
+        </div>
+        <button type="button" disabled={!!busy || (isPinned && !dirty)}
+          onClick={() => run(field, () => pinUnitPriceListValues(unit.id!, field === "status" ? { status } : { price }))}
+          className="rounded-md bg-[#1B4B43] text-white text-xs font-medium px-3 py-1.5 hover:bg-[#142E2D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed whitespace-nowrap">
+          {busy === field ? "Saving…" : isPinned ? "Update pin" : "Pin from price list"}
+        </button>
+        {isPinned && (
+          <button type="button" disabled={!!busy} onClick={() => run(field + ":release", () => releaseUnitPin(unit.id!, field))}
+            className="text-xs text-[#6B7280] hover:text-[#111827] hover:underline disabled:text-[#D1D5DB] disabled:no-underline whitespace-nowrap">
+            {busy === field + ":release" ? "…" : "Release"}
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 space-y-3">
+      <div>
+        <div className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Price list</div>
+        <p className="text-[11px] text-[#6B7280] mt-0.5">
+          {pinned.length > 0
+            ? `Pinned to the price list: ${pinned.map((f) => (f === "status" ? "status" : "price")).join(" and ")}. The sync leaves ${pinned.length === 1 ? "it" : "them"} alone until released.`
+            : "Set a value here when the developer's price list contradicts their feed. A pinned value survives every sync; everything else on this unit keeps following the feed."}
+        </p>
+      </div>
+      <Row field="status" label="Status" dirty={status !== (unit.status || "available")}
+        control={
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={inp}>
+            <option value="available">Available</option>
+            <option value="reserved">Reserved</option>
+            <option value="sold">Sold</option>
+          </select>
+        } />
+      <Row field="price" label="Price (EUR)" dirty={price !== (unit.price || "")}
+        control={<input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 285000" className={inp} />} />
+      {error && <p className="text-[11px] text-[#B91C1C]">{error}</p>}
+      <p className="text-[11px] text-[#9CA3AF]">
+        Releasing a pin hands the column back to the feed — the next sync writes the feed&rsquo;s own value over it.
+      </p>
     </div>
   );
 }
@@ -81,6 +162,10 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
           <YesNo label="Guest W/C" value={unit.guestWc} onChange={(v) => onPatch("guestWc", v)} disabled={readOnly} />
         </div>
       </div>
+
+      {/* Only for a unit that already exists — a pin is written straight to the
+          row by its own action, so there has to be a row. */}
+      {unit.id && <PriceListPin unit={unit} />}
 
       {unit.attrs.length > 0 && (
         <div>

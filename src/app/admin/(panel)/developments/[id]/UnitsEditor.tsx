@@ -48,11 +48,16 @@ export type UnitRow = {
   // database and on the public page but was invisible here.
   plans: string[];
   attrs: { name: string; value: string }[];
+  // Columns the developer's price list owns ("status" | "price") — the sync
+  // leaves them alone (src/lib/unitPins.ts). Set and released from the unit
+  // detail panel by their own server actions, never through this form, so
+  // saveUnits() preserves them by key like feedRef.
+  pinnedFields: string[];
 };
 
 const blank = (): UnitRow => ({
   label: "", ref: "", feedRef: "", source: "manual", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
-  floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], plans: [], attrs: [],
+  floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], plans: [], attrs: [], pinnedFields: [],
 });
 
 const cell = "w-full rounded-md border border-[#E5E7EB] bg-white hover:border-[#D1D5DB] focus:border-[#1B4B43] focus:ring-1 focus:ring-[#1B4B43]/20 focus:outline-none px-2 py-1.5 text-sm transition-colors";
