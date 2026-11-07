@@ -961,6 +961,10 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-pres-checks label { display: flex; align-items: center; gap: 6px; font-size: calc(13px * var(--ds-crm-scale)); font-weight: 500; color: var(--ink); cursor: pointer; }
 .crm-pres-checks input { width: 16px; height: 16px; padding: 0; accent-color: var(--accent); }
 .crm-pres-status { margin-left: auto; font-size: calc(12px * var(--ds-crm-scale)); color: var(--muted); }
+/* Results order (operator, 2026-11-07); the presentation keeps its own order. */
+.crm-pres-checks label.crm-pres-sort { margin-left: auto; color: var(--muted); font-weight: 600; cursor: default; }
+.crm-pres-sort select { font: inherit; font-weight: 600; color: var(--ink); padding: 4px 8px; border: 1px solid var(--line-strong); border-radius: calc(8px * var(--ds-radius-scale)); background: var(--panel); }
+.crm-pres-sort + .crm-pres-status { margin-left: 0; }
 .crm-pres-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 1000px) { .crm-pres-grid.has-map { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } .crm-pres-map { position: sticky; top: 0; } }
 .crm-pres-map { display: grid; gap: 6px; min-width: 0; }

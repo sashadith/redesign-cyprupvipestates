@@ -3,6 +3,7 @@ import { effectiveRatesFor } from "./rateLookup";
 import type { EffectiveRate } from "./rateFormat";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { resolveRelativeCompletion } from "@/lib/completionDate";
+import { placeKey } from "./placeNames";
 
 /* Scores every published Development against a lead's criteria for the Client
    Presentation system (see prisma/schema.prisma ClientPresentation models and
@@ -158,10 +159,13 @@ export function locationMatch(
   areas: string[],
 ): { districtMatches: boolean; areaMatches: boolean } {
   if (districts.length === 0) return { districtMatches: false, areaMatches: false };
-  const devDistrictKey = (dev.district || dev.town || "").toLowerCase();
-  const devAreaKey = (dev.area || "").toLowerCase();
-  const districtMatches = !!devDistrictKey && districts.some((sel) => devDistrictKey.includes(sel) || sel.includes(devDistrictKey));
-  const areaMatches = districtMatches && areas.length > 0 && !!devAreaKey && areas.some((sel) => devAreaKey.includes(sel) || sel.includes(devAreaKey));
+  // placeKey: one key per place whatever the spelling ("Tombs Of The Kings" = "Tombs of the Kings").
+  const devDistrictKey = placeKey(dev.district || dev.town);
+  const devAreaKey = placeKey(dev.area);
+  const dKeys = districts.map(placeKey).filter(Boolean);
+  const aKeys = areas.map(placeKey).filter(Boolean);
+  const districtMatches = !!devDistrictKey && dKeys.some((sel) => devDistrictKey.includes(sel) || sel.includes(devDistrictKey));
+  const areaMatches = districtMatches && aKeys.length > 0 && !!devAreaKey && aKeys.some((sel) => devAreaKey.includes(sel) || sel.includes(devAreaKey));
   return { districtMatches, areaMatches };
 }
 

@@ -1,9 +1,11 @@
 // Pure state helpers for the presentation modal (no React, no Prisma), so the
 // close guard and the item snapshots of both create and edit are testable.
-import type { DevelopmentMatch } from "@/lib/crm/matching";
+import type { DevelopmentMatch, MatchedUnit } from "@/lib/crm/matching";
 import type { PresentationItemInput } from "@/lib/crm/presentations/core";
 import type { EditorItem, EditorUnit } from "@/lib/crm/presentations/editorItems";
 import { normalizeRef } from "@/lib/unitRef";
+import { completionSortKey } from "@/lib/completionDate";
+import { placeKey } from "@/lib/crm/placeNames";
 
 /** What the operator would lose by closing. Auto-checked 100 % matches and the
  *  filters (auto-saved on the lead) are not picks, so they are not in here. */
@@ -101,6 +103,62 @@ export function buildItems(
     }
     return { developmentId, unitRefs, unitIds, sortIndex: i, advisorComment: comments.get(developmentId) ?? "" };
   });
+}
+
+/** The selected projects' matches: the current results, then the last match seen for a
+ *  hand pick the filters no longer show, so it is still sent with its units (2026-11-07). */
+export function selectionMatches(
+  selectedDevIds: string[], results: DevelopmentMatch[], known: ReadonlyMap<string, DevelopmentMatch>,
+): DevelopmentMatch[] {
+  const shown = new Set(results.map((r) => r.development.id));
+  const extra = selectedDevIds.filter((id) => !shown.has(id)).map((id) => known.get(id)).filter((m): m is DevelopmentMatch => !!m);
+  return results.concat(extra);
+}
+
+/** Units listed for a project: the exact matches (or every available unit with "show all"),
+ *  plus any unit picked by hand that the current filter no longer matches. */
+export function unitsToList(m: DevelopmentMatch, showAll: boolean, override: ReadonlySet<string> | undefined): MatchedUnit[] {
+  if (showAll) return m.allAvailableUnits;
+  const listed = new Set(m.matchedUnits.map((u) => u.id));
+  const kept = m.allAvailableUnits.filter((u) => !listed.has(u.id) && override?.has(u.id));
+  if (!kept.length) return m.matchedUnits;
+  return m.matchedUnits.concat(kept).sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+}
+
+export type ResultSort = "match" | "delivery" | "price" | "district" | "area";
+export const RESULT_SORTS: { value: ResultSort; label: string }[] = [
+  { value: "match", label: "Best match" },
+  { value: "delivery", label: "Delivery (soonest)" },
+  { value: "price", label: "Price (lowest)" },
+  { value: "district", label: "District" },
+  { value: "area", label: "Area" },
+];
+
+/** "From" price as the row shows it: the cheapest selected unit, else the project's own figure. */
+export function shownPriceFrom(m: DevelopmentMatch, override: ReadonlySet<string> | undefined): number | null {
+  const ids = override ?? new Set(m.matchedUnits.filter((u) => u.status === "available").map((u) => u.id));
+  const prices = m.allAvailableUnits.filter((u) => ids.has(u.id)).map((u) => u.price).filter((p): p is number => p != null);
+  return prices.length ? Math.min(...prices) : m.development.priceFrom;
+}
+
+/** Results in the chosen order; ties (and "match") keep the matcher's best-first order. Missing values go last. */
+export function sortResults(results: DevelopmentMatch[], sort: ResultSort, unitOverrides: Overrides): DevelopmentMatch[] {
+  if (sort === "match") return results;
+  const text = (v: string | null | undefined) => placeKey(v) || null;
+  const keyOf = (m: DevelopmentMatch): number | string | null => {
+    const d = m.development;
+    if (sort === "delivery") return completionSortKey(d.completion);
+    if (sort === "price") return shownPriceFrom(m, unitOverrides.get(d.id));
+    if (sort === "district") return text(d.district || d.town);
+    return text(d.area);
+  };
+  const rows = results.map((m, i) => ({ m, i, k: keyOf(m), a: sort === "district" ? text(m.development.area) : null }));
+  const cmp = (x: number | string | null, y: number | string | null) => {
+    if (x == null || y == null) return x == null && y == null ? 0 : x == null ? 1 : -1;
+    return typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y));
+  };
+  rows.sort((x, y) => cmp(x.k, y.k) || cmp(x.a, y.a) || x.i - y.i);
+  return rows.map((r) => r.m);
 }
 
 /** Map<string, Set<string>> → plain record for snapshots. */
