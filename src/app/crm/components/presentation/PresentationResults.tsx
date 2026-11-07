@@ -2,6 +2,7 @@
 import type { DevelopmentMatch } from "@/lib/crm/matching";
 import { fmtRate, RATE_SOURCE_SHORT } from "@/lib/crm/rateFormat";
 import { sentLabel, type SentInfo } from "@/lib/crm/presentations/sentHistory";
+import { unitsToList } from "../presentationModalState";
 
 // Matched projects with their units, as in the old matching table: tick a
 // project, open it to narrow its units (or add near-misses via "show all"),
@@ -46,8 +47,9 @@ export function PresentationResults({
         const defaultCheckedIds = m.matchedUnits.filter((u) => u.status === "available").map((u) => u.id);
         const checkedUnits = unitOverrides.get(d.id);
         const showingAll = showAll.has(d.id);
-        const unitsToShow = showingAll ? m.allAvailableUnits : m.matchedUnits;
-        const extraCount = m.allAvailableUnits.length - m.matchedUnits.length;
+        // Hand-picked units stay listed after the filter moved on (operator, 2026-11-07).
+        const unitsToShow = unitsToList(m, showingAll, checkedUnits);
+        const extraCount = m.allAvailableUnits.length - unitsToList(m, false, checkedUnits).length;
         // "Price from" follows the selected units, not the stored project field.
         const unitById = new Map(m.allAvailableUnits.map((u) => [u.id, u] as const));
         const selectedIds = checkedUnits ?? new Set(defaultCheckedIds);
@@ -134,7 +136,7 @@ export function PresentationResults({
                         </tbody>
                       </table>
                     </div>
-                    {extraCount > 0 && (
+                    {(showingAll || extraCount > 0) && (
                       <button type="button" className="crm-linkbtn" onClick={() => onToggleShowAll(d.id)}>
                         {showingAll ? "Show only matching units" : `Show all units (${extraCount} more)`}
                       </button>

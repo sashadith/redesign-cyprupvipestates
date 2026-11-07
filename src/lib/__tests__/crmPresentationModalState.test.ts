@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   buildItems, confirmDiscard, droppedSelections, editPayloadItems, editorItemFromMatch, editSnapshot, emptyEditItems,
-  hiddenSelections, isDirty, isEditDirty, removeItemConfirm, type ModalSnapshot,
+  hiddenSelections, isDirty, isEditDirty, removeItemConfirm, selectionMatches, shownPriceFrom, sortResults, unitsToList, type ModalSnapshot,
 } from "../../app/crm/components/presentationModalState";
 import type { EditorItem, EditorUnit } from "../crm/presentations/editorItems";
 import type { DevelopmentMatch, MatchedUnit } from "../crm/matching";
@@ -155,4 +155,53 @@ test("removeItemConfirm: asks only for favorited projects, with the client-facin
   msg = "";
   assert.equal(removeItemConfirm(eitem("d2", [], []), fav, ask), true);
   assert.equal(msg, "", "not favorited: no question");
+});
+
+// ---- Sort, unit memory, hand picks outside the results (2026-11-07) ----
+
+const priced = (id: string, price: number | null): MatchedUnit => ({ ...unit(id, null), price });
+const dev = (id: string, d: Partial<DevelopmentMatch["development"]>, units: MatchedUnit[] = []): DevelopmentMatch => ({
+  ...match(id, id, units, units), development: { id, publicName: id, priceFrom: null, completion: null, district: null, town: null, area: null, ...d } as DevelopmentMatch["development"],
+});
+
+test("sortResults: delivery soonest first, ready before quarters, unknown last; ties keep match order", () => {
+  const rs = [dev("a", { completion: "Q4 2028" }), dev("b", { completion: null }), dev("c", { completion: "Ready" }), dev("d", { completion: "Q2 2027" }), dev("e", { completion: "Q2 2027" })];
+  assert.deepEqual(sortResults(rs, "delivery", new Map()).map((m) => m.development.id), ["c", "d", "e", "a", "b"]);
+  assert.equal(sortResults(rs, "match", new Map()), rs, "best match = the matcher's order");
+});
+
+test("sortResults: price follows the selected units, else the project figure", () => {
+  const a = dev("a", { priceFrom: 900 }, [priced("a1", 500), priced("a2", 300)]);
+  const b = dev("b", { priceFrom: 400 });
+  const c = dev("c", { priceFrom: null });
+  assert.deepEqual(sortResults([a, b, c], "price", new Map()).map((m) => m.development.id), ["a", "b", "c"]);
+  // a narrowed to its 500 unit: now dearer than b.
+  assert.deepEqual(sortResults([a, b, c], "price", new Map([["a", new Set(["a1"])]])).map((m) => m.development.id), ["b", "a", "c"]);
+  assert.equal(shownPriceFrom(a, new Set(["a1"])), 500);
+});
+
+test("sortResults: district then area, spellings folded; area alone", () => {
+  const rs = [
+    dev("p2", { district: "Paphos", area: "Tombs of the Kings" }), dev("l1", { district: "Limassol", area: "Germasogeia" }),
+    dev("p1", { district: "Paphos", area: "Chloraka" }), dev("t", { district: null, town: "Larnaca", area: null }),
+  ];
+  assert.deepEqual(sortResults(rs, "district", new Map()).map((m) => m.development.id), ["t", "l1", "p1", "p2"]);
+  assert.deepEqual(sortResults(rs, "area", new Map()).map((m) => m.development.id), ["p1", "l1", "p2", "t"]);
+});
+
+test("unitsToList: a hand-picked unit stays listed when the filter no longer matches it", () => {
+  const cheap = priced("u1", 100); const dear = priced("u2", 900);
+  const m = match("d", "D", [cheap], [cheap, dear]);
+  assert.deepEqual(unitsToList(m, false, undefined).map((u) => u.id), ["u1"]);
+  assert.deepEqual(unitsToList(m, false, new Set(["u2"])).map((u) => u.id), ["u1", "u2"]);
+  assert.deepEqual(unitsToList(m, true, undefined).map((u) => u.id), ["u1", "u2"]);
+});
+
+test("selectionMatches: a hand pick outside the results is sent with its last match and units", () => {
+  const shown = match("d1", "One", [unit("a", "A1")], [unit("a", "A1")]);
+  const gone = match("d2", "Two", [unit("b", "B1")], [unit("b", "B1"), unit("c", "C1")]);
+  const all = selectionMatches(["d1", "d2"], [shown], new Map([["d2", gone]]));
+  assert.deepEqual(all.map((m) => m.development.id), ["d1", "d2"]);
+  const items = buildItems(["d1", "d2"], new Map([["d2", new Set(["c"])]]), new Map(), all);
+  assert.deepEqual(items.map((i) => i.unitRefs), [[normalizeRef("A1", "One")], [normalizeRef("C1", "Two")]]);
 });

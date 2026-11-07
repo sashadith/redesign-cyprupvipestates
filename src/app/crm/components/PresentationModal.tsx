@@ -16,7 +16,8 @@ import {
 } from "../leads/presentationActions";
 import {
   buildItems, confirmDiscard, droppedSelections, editorItemFromMatch, editPayloadItems, editSnapshot, emptyEditItems,
-  hiddenSelections, isDirty, isEditDirty, mapRecord, overridesRecord, removeItemConfirm, type EditSnapshot, type ModalSnapshot,
+  hiddenSelections, isDirty, isEditDirty, mapRecord, overridesRecord, removeItemConfirm, RESULT_SORTS, selectionMatches, sortResults,
+  type EditSnapshot, type ModalSnapshot, type ResultSort,
 } from "./presentationModalState";
 import { PresentationFilters } from "./presentation/PresentationFilters";
 import { PresentationResults } from "./presentation/PresentationResults";
@@ -79,8 +80,9 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   const [matchError, setMatchError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selectedDevs, setSelectedDevs] = useState<Set<string>>(() => new Set(preselect));
-  // Unticked by hand this search: a 100 % match must not re-tick itself.
-  // Cleared on filter change, since a new search is a fresh start.
+  // Unticked by hand: a 100 % match must not re-tick itself. Kept across
+  // filter changes (operator, 2026-11-07): changing the budget or adding an
+  // area must not undo the picks already made.
   const [manuallyUnchecked, setManuallyUnchecked] = useState<Set<string>>(new Set());
   // Ticked by the auto-check (not by hand), so a later score drop can untick
   // exactly those. Survives filter changes so the next results run sees it.
@@ -189,8 +191,8 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   // Names of every project seen in results, for selections that later drop out
   // (seeded with the favorites' names, which may never show up in results).
   const knownNames = useRef(new Map<string, string>(Object.entries(seed?.preselectNames ?? {})));
-  // Edit: the last match seen per project, so a ticked project can still be
-  // added after the filters moved on.
+  // The last match seen per project, so a ticked project can still be added
+  // (edit) or sent with its units (new) after the filters moved on.
   const knownMatches = useRef(new Map<string, DevelopmentMatch>());
   const runMatch = (f: MatchFilters) => {
     const my = ++seq.current;
@@ -208,7 +210,6 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   };
   useEffect(() => {
     if (!ready) return;
-    setManuallyUnchecked(new Set());
     setLoading(true);
     const t = setTimeout(() => {
       runMatch(filters);
@@ -264,6 +265,9 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
     setAutoSelected((prev) => { if (!prev.has(id)) return prev; const s = new Set(prev); s.delete(id); return s; });
   };
   const toggleUnit = (devId: string, unitId: string, allAvailableIds: string[]) => {
+    // Picking units by hand makes the project a hand pick: a later filter that
+    // drops it below 100 % must not untick it (operator, 2026-11-07).
+    setAutoSelected((prev) => { if (!prev.has(devId)) return prev; const s = new Set(prev); s.delete(devId); return s; });
     setUnitOverrides((prev) => {
       const n = new Map(prev);
       const next = new Set(n.get(devId) ?? new Set(allAvailableIds)); // start from "all" so unchecking narrows it
@@ -281,7 +285,15 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   const itemIds = useMemo(() => new Set(items.map((i) => i.developmentId)), [items]);
   const shownResults = useMemo(() => (isEdit ? results.filter((m) => !itemIds.has(m.development.id)) : results), [isEdit, results, itemIds]);
   const pendingCount = isEdit ? selectedIds.filter((id) => !itemIds.has(id)).length : 0;
-  const mapMarkers = useMemo<MatchingMapMarker[]>(() => results
+  // Display order only; the presentation keeps its own order (operator, 2026-11-07).
+  const [sort, setSort] = useState<ResultSort>("match");
+  // "District" only sorts something when more than one district can show.
+  const districtSortable = (filters.districts ?? []).length !== 1;
+  const effectiveSort: ResultSort = sort === "district" && !districtSortable ? "match" : sort;
+  const sortedResults = useMemo(() => sortResults(shownResults, effectiveSort, unitOverrides), [shownResults, effectiveSort, unitOverrides]);
+  // Selected projects incl. hand picks the filters no longer show (last match seen).
+  const picked = useMemo(() => selectionMatches(selectedIds, results, knownMatches.current), [selectedIds, results]);
+  const mapMarkers = useMemo<MatchingMapMarker[]>(() => picked
     .filter((m) => selectedDevs.has(m.development.id) && m.development.lat != null && m.development.lng != null)
     .map((m) => {
       const d = m.development;
@@ -290,17 +302,17 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
         city: [d.area, d.district || d.town].filter(Boolean).join(", ") || null,
         href: d.publishStatus === "published" && d.slug ? `/projects/${d.slug}` : null,
       };
-    }), [results, selectedDevs]);
-  const selectedWithoutPin = results.filter((m) => selectedDevs.has(m.development.id) && (m.development.lat == null || m.development.lng == null)).length;
+    }), [picked, selectedDevs]);
+  const selectedWithoutPin = picked.filter((m) => selectedDevs.has(m.development.id) && (m.development.lat == null || m.development.lng == null)).length;
   const unitCount = useMemo(() => {
     let total = 0;
-    results.forEach((m) => {
+    picked.forEach((m) => {
       if (!selectedDevs.has(m.development.id)) return;
       const ov = unitOverrides.get(m.development.id);
       total += ov ? ov.size : m.development.unitsAvailable;
     });
     return total;
-  }, [results, selectedDevs, unitOverrides]);
+  }, [picked, selectedDevs, unitOverrides]);
 
   // MapLibre sizes its canvas once and fits the pins at mount; inside the
   // dialog the column can still change width afterwards. Mount the map only
@@ -355,10 +367,10 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
   async function generate(force = false) {
     if (generating || loading) return;
     setGenError("");
-    const dropped = droppedSelections(selectedIds, unitOverrides, results);
+    const dropped = droppedSelections(selectedIds, unitOverrides, picked);
     if (dropped.length && !force) { setDropWarning(dropped); return; }
     setDropWarning(null);
-    const items = buildItems(selectedIds, unitOverrides, effectiveComments, results);
+    const items = buildItems(selectedIds, unitOverrides, effectiveComments, picked);
     if (!items.length) { setGenError("Nothing left to send — every selected project has no matching unit."); return; }
     setGenerating(true);
     try {
@@ -524,10 +536,17 @@ export function PresentationModal({ mode, lead, sent, users, currentUser, onClos
               </section>
             )}
             {isEdit && <h3 className="crm-pres-sectionh">Add projects</h3>}
-            <PresentationFilters filters={filters} setFilters={setFilters} locations={locations} locationsError={locationsError} status={status} />
+            <PresentationFilters filters={filters} setFilters={setFilters} locations={locations} locationsError={locationsError} status={status}
+              sort={(
+                <label className="crm-pres-sort">Sort
+                  <select value={effectiveSort} onChange={(e) => setSort(e.target.value as ResultSort)}>
+                    {RESULT_SORTS.filter((o) => o.value !== "district" || districtSortable).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </label>
+              )} />
             <div className={`crm-pres-grid${mapMarkers.length ? " has-map" : ""}`}>
               <PresentationResults
-                results={shownResults} loading={loading} error={matchError} selected={selectedDevs} expanded={expanded} showAll={showAllUnits}
+                results={sortedResults} loading={loading} error={matchError} selected={selectedDevs} expanded={expanded} showAll={showAllUnits}
                 unitOverrides={unitOverrides} comments={effectiveComments} sent={sent} savedNotes={savedNotes} savingNote={savingNote}
                 onToggleDev={toggleDev} onToggleExpand={(id) => setExpanded((p) => toggleIn(p, id))}
                 onToggleShowAll={(id) => setShowAllUnits((p) => toggleIn(p, id))} onToggleUnit={toggleUnit}
