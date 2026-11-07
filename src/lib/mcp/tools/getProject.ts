@@ -1,3 +1,4 @@
+import { resolveRelativeCompletion } from "@/lib/completionDate";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
@@ -51,7 +52,7 @@ export async function getProjectData(input: z.infer<typeof Input>) {
       id: true, publicName: true, developer: true, category: true, status: true, stage: true, completion: true, district: true, town: true, area: true,
       priceFrom: true, priceTo: true, currency: true, slug: true, publishStatus: true, soldOutSince: true, updatedAt: true,
       // Gallery, amenities and vatNote leave only for a published project (see below).
-      gallery: true, amenities: true, override: { select: { mainImage: true, gallery: true, amenities: true, vatNote: true } },
+      gallery: true, amenities: true, override: { select: { mainImage: true, gallery: true, amenities: true, vatNote: true, completion: true } },
       units: {
         orderBy: { sortIndex: "asc" },
         select: { id: true, ref: true, label: true, type: true, status: true, price: true, currency: true, beds: true, baths: true, areaBuilt: true, areaPlot: true, floor: true, amenities: true },
@@ -71,7 +72,8 @@ export async function getProjectData(input: z.infer<typeof Input>) {
     category: d.category,
     status: d.status,
     stage: d.stage,
-    completion: d.completion,
+    // Override wins, as on the page; "N months from signing" counted from today into a quarter.
+    completion: resolveRelativeCompletion(d.override?.completion || d.completion) || null,
     location: { area: d.area, district: d.district, town: d.town },
     priceFrom: d.priceFrom,
     priceTo: d.priceTo,
