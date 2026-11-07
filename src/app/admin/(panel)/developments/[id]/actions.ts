@@ -21,6 +21,7 @@ import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref, PUBLIC_LOCALES, LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
+import { normalizeUnitPins, PINNABLE_UNIT_FIELDS, type PinnableUnitField } from "@/lib/unitPins";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 
@@ -638,7 +639,7 @@ export async function saveUnits(developmentId: string, units: any[]) {
   // and one save gave all ten Plus 70 units Plus 71's feedRef (2026-09-26); the
   // next sync would then have duplicated them on a published page. Same risk
   // for Plus 67-68-69, Plus 75's villas and Plus 92's offices.
-  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { id: true, ref: true, label: true, photos: true, plans: true, attrs: true, feedRef: true, source: true } });
+  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { id: true, ref: true, label: true, photos: true, plans: true, attrs: true, feedRef: true, source: true, pinnedFields: true } });
   type PrevUnit = (typeof prev)[number];
   const prevById = new Map<string, PrevUnit>();
   const byLabel = new Map<string, PrevUnit[]>();
@@ -712,6 +713,12 @@ export async function saveUnits(developmentId: string, units: any[]) {
       feedRef: before?.feedRef ?? null,
       sortIndex: i,
       source: before?.source ?? "manual",
+      // Pins have no form field either (they are set and released by their own
+      // actions below) and must survive this delete+recreate for the same
+      // reason feedRef must: a pin silently blanked by an unrelated save is a
+      // unit that quietly starts following the feed again at 04:00 the next
+      // morning, with nothing on screen to say so.
+      pinnedFields: normalizeUnitPins(before?.pinnedFields),
     };
   }));
   await prisma.developmentUnit.deleteMany({ where: { developmentId } });
@@ -719,6 +726,75 @@ export async function saveUnits(developmentId: string, units: any[]) {
   if (anyNew) scheduleAppRestart();
   await recomputeDevelopmentDerivedState(developmentId);
   revalidatePath(`/admin/developments/${developmentId}`);
+}
+
+/* Take a unit's status and/or price from the developer's price list and pin
+   them, so no sync writes them back (src/lib/unitPins.ts explains why nothing
+   simpler works for a STATUS_SYNC_DEVS developer).
+
+   Value and pin are written together on purpose. A pin on its own freezes
+   whatever the feed last said, which is the figure we are trying to correct;
+   a value on its own lives until the nightly sync, which is the bug that made
+   this necessary — eight Island Blue corrections from their 27.10.2026 price
+   list were gone by 04:00 two nights later. */
+export async function pinUnitPriceListValues(
+  unitId: string,
+  values: { status?: string; price?: string | null },
+): Promise<{ ok: boolean; error?: string }> {
+  await requireActiveUser();
+  const unit = await prisma.developmentUnit.findUnique({
+    where: { id: unitId },
+    select: { developmentId: true, pinnedFields: true },
+  });
+  if (!unit) return { ok: false, error: "Unit not found" };
+
+  const data: { status?: string; price?: number | null } = {};
+  const pins = new Set<PinnableUnitField>(normalizeUnitPins(unit.pinnedFields));
+  if (values.status !== undefined) {
+    const status = String(values.status);
+    // Same three the unit editor itself accepts. "unlisted" is deliberately
+    // not offered: it is the syncs' own word for "no longer in the feed", not
+    // something a price list ever says.
+    if (!["available", "reserved", "sold"].includes(status)) return { ok: false, error: "Unknown status" };
+    data.status = status;
+    pins.add("status");
+  }
+  if (values.price !== undefined) {
+    const digits = String(values.price ?? "").replace(/[^\d]/g, "");
+    data.price = digits ? Number(digits) : null;
+    pins.add("price");
+  }
+  if (!Object.keys(data).length) return { ok: false, error: "Nothing to pin" };
+
+  await prisma.developmentUnit.update({
+    where: { id: unitId },
+    data: { ...data, pinnedFields: Array.from(pins) },
+  });
+  // A pinned status changes what the project has available, and soldOutSince /
+  // returnedToMarketAt are load-bearing (back-in-stock reminders) — every
+  // unit-status write path recomputes them, this one included.
+  await recomputeDevelopmentDerivedState(unit.developmentId);
+  revalidatePath(`/admin/developments/${unit.developmentId}`);
+  return { ok: true };
+}
+
+/* Hand a column back to the feed. The stored value is left exactly as it is —
+   the next sync overwrites it, which is the whole point, and pretending to
+   restore a feed value we do not hold here would be a guess. */
+export async function releaseUnitPin(unitId: string, field: string): Promise<{ ok: boolean; error?: string }> {
+  await requireActiveUser();
+  if (!(PINNABLE_UNIT_FIELDS as readonly string[]).includes(field)) return { ok: false, error: "Not a pinnable field" };
+  const unit = await prisma.developmentUnit.findUnique({
+    where: { id: unitId },
+    select: { developmentId: true, pinnedFields: true },
+  });
+  if (!unit) return { ok: false, error: "Unit not found" };
+  await prisma.developmentUnit.update({
+    where: { id: unitId },
+    data: { pinnedFields: normalizeUnitPins(unit.pinnedFields).filter((f) => f !== field) },
+  });
+  revalidatePath(`/admin/developments/${unit.developmentId}`);
+  return { ok: true };
 }
 
 // Teil 3 (sync control panel): the deliberate manual↔auto toggle — the ONLY

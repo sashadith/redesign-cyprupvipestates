@@ -1796,6 +1796,10 @@ model DevelopmentUnit {
   plans           Json?
   sortIndex       Int      @default(0)
   source          String   @default("feed") // feed | manual — sync only ever wipes/rewrites "feed" units
+  // Columns this unit's own price list owns, and the sync therefore never
+  // writes: "status" | "price" (see src/lib/unitPins.ts for why source:"manual"
+  // is not enough on its own). Empty for every ordinary unit.
+  pinnedFields    String[] @default([])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

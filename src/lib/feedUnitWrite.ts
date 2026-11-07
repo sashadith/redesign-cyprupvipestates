@@ -18,16 +18,30 @@
  * because nothing pinned id stability anywhere: that absence is why the churn
  * went unnoticed for as long as it did.
  *
+ * Per-unit pins (src/lib/unitPins.ts) are honoured here: a column the
+ * developer's price list owns is dropped from the update, and a pinned status
+ * also blocks the "gone from the feed" flip — a feed that stopped listing a
+ * unit is exactly the claim such a pin exists to overrule. feedSync keeps its
+ * own near-copy of this strategy (syncFeedUnitsPreservingUnlisted, which also
+ * has to freeze unit media on a published project); the two must agree on
+ * pins, and this is the side with the tests.
+ *
  * `ref` is the anchor, and it is the right one: it is what cybarcoSync's own
  * keepByRef already matches manual field values on, what
  * ClientPresentationItem.unitRefs pins, and its stability across runs is
  * evidenced by manually corrected unit types surviving Cybarco syncs.
  */
 
+import { isUnitFieldPinned, stripPinnedUnitFields } from "./unitPins";
+
 /** A built unit row, as each sync composes it. Only `ref` is read here. */
 export type FeedUnitRow = Record<string, unknown> & { ref?: string | null };
 
-type StoredUnit = { id: string; ref: string | null; status: string | null; label: string | null; name: string | null };
+type StoredUnit = {
+  id: string; ref: string | null; status: string | null; label: string | null; name: string | null;
+  /** Columns no sync may write — see src/lib/unitPins.ts. */
+  pinnedFields?: string[] | null;
+};
 
 /**
  * The slice of Prisma this needs. Narrow on purpose: a client that can also
@@ -38,7 +52,7 @@ export type FeedUnitWriteClient = {
   developmentUnit: {
     findMany(args: {
       where: { developmentId: string; source: string };
-      select: { id: true; ref: true; status: true; label: true; name: true };
+      select: { id: true; ref: true; status: true; label: true; name: true; pinnedFields: true };
     }): Promise<StoredUnit[]>;
     update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<unknown>;
     create(args: { data: Record<string, unknown> }): Promise<unknown>;
@@ -61,7 +75,7 @@ export async function writeFeedUnitsPreservingIds(
 ): Promise<FeedUnitWriteResult> {
   const existing = await db.developmentUnit.findMany({
     where: { developmentId, source: "feed" },
-    select: { id: true, ref: true, status: true, label: true, name: true },
+    select: { id: true, ref: true, status: true, label: true, name: true, pinnedFields: true },
   });
   const byRef = new Map<string, StoredUnit>();
   for (const u of existing) if (u.ref) byRef.set(u.ref, u);
@@ -80,7 +94,10 @@ export async function writeFeedUnitsPreservingIds(
     const data = { ...r, sortIndex: i };
     const match = r.ref ? byRef.get(String(r.ref)) : undefined;
     if (match) {
-      await db.developmentUnit.update({ where: { id: match.id }, data });
+      // Pinned columns belong to the price list, not the feed. Dropped from
+      // the update rather than written — sortIndex and every other column
+      // still follow the feed, so a pin freezes one value, not the row.
+      await db.developmentUnit.update({ where: { id: match.id }, data: stripPinnedUnitFields(data, match.pinnedFields) });
       updated++;
     } else {
       // Includes a unit with no ref: it cannot be matched, but dropping it
@@ -102,6 +119,10 @@ export async function writeFeedUnitsPreservingIds(
     // merely stopped listing the row; "unlisted" is already done, and
     // re-reporting it would make the nightly digest name it forever.
     if (old.status === "sold" || old.status === "unlisted") continue;
+    // A pinned status outranks the feed's silence as well as its value: Island
+    // Blue drops a reserved unit out of their units document altogether, and
+    // unlisting it would hide the unit their own price list still offers.
+    if (isUnitFieldPinned(old.pinnedFields, "status")) continue;
     await db.developmentUnit.update({ where: { id: old.id }, data: { status: "unlisted" } });
     unlisted.push({ ref: old.ref, label: old.label || old.name || old.ref });
   }
