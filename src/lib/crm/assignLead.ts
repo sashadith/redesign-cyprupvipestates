@@ -7,6 +7,8 @@ import { EXCLUDE_NEWSLETTER } from "./leadBucket";
 import type { SessionCrmUser } from "./session";
 import type { AssignResult } from "./assignMessage";
 
+export const DOWNLOAD_NOT_ASSIGNABLE = "This is a download, not a lead. Use \"Take over as lead\" first (Inbox → Downloads).";
+
 const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!);
 
 // Same base URL as src/lib/leadNotify.ts and metaLeadgen/notify.ts (not
@@ -24,6 +26,8 @@ export async function assignLead(actor: SessionCrmUser, leadId: string, userId: 
   if (!lead) return { error: "Lead not found." };
   // The partner works this client until the handover: no new owner meanwhile.
   if (lead.workedByPartner) return { error: PARTNER_WORKED_READONLY };
+  // Downloads get no owner (operator, 2026-11-07): take one over as a lead first.
+  if (lead.source === "GUIDE_DOWNLOAD") return { error: DOWNLOAD_NOT_ASSIGNABLE };
   if (!owner) return { error: "That employee is not active." };
   if (lead.assignedToId === owner.id) return { ok: true, notified: { telegram: false, email: false }, changed: false };
 
