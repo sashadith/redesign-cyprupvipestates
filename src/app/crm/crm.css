@@ -400,6 +400,8 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-ck-side .crm-btn.on { border-color: var(--sc); box-shadow: inset 0 0 0 1px var(--sc); opacity: 1; }
 @media (max-width: 720px) {
   .crm-ck-title h1 { font-size: calc(26px * var(--ds-crm-scale) * var(--ds-heading-scale)); }
+  /* Edit / Move to trash wrap under the name on phones: left-aligned there (operator, 2026-11-07). */
+  .crm-ck-title .crm-ck-actions { margin-left: 0; flex-basis: 100%; }
 }
 
 .crm-ck-facts { margin: 0; display: grid; gap: 8px; }
