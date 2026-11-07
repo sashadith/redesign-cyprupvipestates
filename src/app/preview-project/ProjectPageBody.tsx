@@ -13,6 +13,7 @@ import Benefits from "@/app/preview-project/Benefits";
 import ExtraLinks from "@/app/preview-project/ExtraLinks";
 import { atSize } from "@/app/preview-project/imageSize";
 import { isDistanceClaim } from "@/lib/distanceClaims";
+import { resolveRelativeCompletion } from "@/lib/completionDate";
 import { pageBenefits } from "@/lib/developmentPageFacts";
 import areaLibrary from "@/app/preview-project/areas.json";
 import PlanGrid from "@/app/preview-project/PlanGrid";
@@ -222,7 +223,10 @@ export default async function ProjectPageBody({
       (f) =>
         !/^\s*total\s+units\s*$/i.test(f.label) &&
         !(p.dev === "leptos" && LEPTOS_FEED_DISTANCES.has(f.label.trim().toLowerCase())) &&
-        !isDistanceClaim(`${f.label}: ${f.value}`),
+        !isDistanceClaim(`${f.label}: ${f.value}`) &&
+        // "Delivery: 14 months from signing" next to "Completion: Q1 2028" (the same
+        // value, already counted from today): the raw phrase goes (operator, 2026-11-07).
+        !(p.completion && resolveRelativeCompletion(f.value) !== f.value.trim()),
     ),
   ].filter(Boolean) as { label: string; value: string }[];
 
