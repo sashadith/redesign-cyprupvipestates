@@ -59,6 +59,8 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null, c
         {temperature && <TemperatureChip temperature={temperature} />}
         <span className={`crm-ck-status s-${lead.status}`}><span className="dot" />{statusLabel}{reason && <span className="crm-muted"> · {reason}</span>}</span>
         <span className={`crm-ck-src${lead.source === "PARTNER" ? " partner" : ""}`}>{SOURCE_LABEL[lead.source] ?? lead.source}</span>
+      </div>
+      <div className="crm-ck-meta">
         <span className="crm-muted">{lead.ownerName ? <>Owner <b className="crm-ck-owner">{lead.ownerName}</b></> : "Unassigned"}</span>
         {lead.localTime.kind === "known" && (
           <span className={`crm-ck-clock l-${lead.localTime.light}`} title={`${lead.localTime.zone}: ${lead.localTime.lightLabel}`}>
