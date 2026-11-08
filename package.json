@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "pretest": "node scripts/prisma-generate-for-tests.mjs",
     "test": "node --import tsx --test src/lib/mcp/__tests__/*.test.ts src/lib/__tests__/*.test.ts scripts/codemods/__tests__/*.test.mjs scripts/qa/__tests__/*.test.mjs"
   },
   "dependencies": {
