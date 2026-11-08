@@ -240,7 +240,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
             where: creditNoteWhere(row.partnerId, creditNoteId),
             select: {
               number: true, totalAmount: true, dealId: true,
-              deal: { select: { leadId: true, unitLabel: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
+              deal: { select: { leadId: true, unitLabel: true, projectName: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
             },
           })
         : null;
@@ -251,7 +251,7 @@ async function prepare(row: OutboxRow, now: Date, start: Date, base: string, the
         buildPayoutEmail(locale, {
           ...common,
           link: commissionsLink(base),
-          project: dev ? dev.override?.alias?.trim() || dev.publicName : null,
+          project: dev ? dev.override?.alias?.trim() || dev.publicName : note.deal.projectName?.trim() || null,
           unit: note.deal.unitLabel,
           amount,
           creditNoteNumber: note.number,

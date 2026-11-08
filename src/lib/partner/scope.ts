@@ -178,14 +178,14 @@ async function loadDeals(leadIds: string[]): Promise<RawDeal[]> {
     select: {
       id: true, leadId: true, createdAt: true, unitLabel: true, price: true, partnerCommission: true, rateSource: true,
       commissionStatus: true, expectedAt: true, earnedAt: true, developerPaidAt: true, paidOutAt: true, cancelledAt: true,
-      development: { select: { publicName: true, override: { select: { alias: true } } } },
+      development: { select: { publicName: true, override: { select: { alias: true } } } }, projectName: true,
     },
     orderBy: { createdAt: "desc" },
     take: 2000,
   });
-  return rows.map(({ development, ...d }) => ({
+  return rows.map(({ development, projectName, ...d }) => ({
     ...d,
-    projectName: development ? development.override?.alias?.trim() || development.publicName : null,
+    projectName: development ? development.override?.alias?.trim() || development.publicName : projectName?.trim() || null,
   }));
 }
 

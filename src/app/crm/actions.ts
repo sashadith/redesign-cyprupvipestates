@@ -16,6 +16,8 @@ import { trashLead, restoreLead } from "@/lib/crm/trashLead";
 import { writeAudit } from "@/lib/crm/audit";
 import { normalizeTrashReason, canTrashLead, canRestoreLead } from "@/lib/crm/trashView";
 import { moveLead, type DealInput, type MoveResult } from "@/lib/crm/moveLead";
+import { normalizeDealInput } from "@/lib/crm/dealInput";
+import { addDeal, type AddDealResult } from "@/lib/crm/addDeal";
 
 export async function moveLeadAction(
   leadId: string,
@@ -27,16 +29,9 @@ export async function moveLeadAction(
   const input = rawInput ?? {};
   let deal: DealInput | undefined;
   if (input.deal != null) {
-    const d = input.deal as Partial<DealInput>;
-    const label = d.unitLabel == null ? null : typeof d.unitLabel === "string" ? d.unitLabel.trim() : undefined;
-    if (
-      typeof d.developmentId !== "string" || !d.developmentId || d.developmentId.length > 64 ||
-      label === undefined || (label !== null && label.length > 40) ||
-      typeof d.price !== "number" || !Number.isInteger(d.price)
-    ) {
-      return { error: "Enter the deal: project, unit and price.", need: "deal" };
-    }
-    deal = { developmentId: d.developmentId, unitLabel: label || null, price: d.price };
+    const d = normalizeDealInput(input.deal);
+    if ("error" in d) return { error: d.error, need: "deal" };
+    deal = d.ok;
   }
   const lostReason = input.lostReason && (LOST_REASONS as readonly string[]).includes(input.lostReason) ? (input.lostReason as LostReasonValue) : undefined;
   const res = await moveLead(user, leadId, to, { deal, lostReason, confirmCancel: input.confirmCancel === true });
@@ -44,22 +39,66 @@ export async function moveLeadAction(
   return res;
 }
 
-export async function searchDevelopmentsAction(q: string): Promise<{ id: string; label: string }[]> {
+export type DealOption = { id: string; label: string; value: string; hint?: string; developer?: { id: string; name: string; rate: string } };
+
+/** Published projects for the deal form, optionally only one developer's; the label carries the rate on file. */
+export async function searchDevelopmentsAction(q: string, developerAccountId?: string | null): Promise<DealOption[]> {
   await requireCrmUser();
-  const term = q.trim();
+  const term = typeof q === "string" ? q.trim().slice(0, 80) : "";
+  const acc = typeof developerAccountId === "string" && developerAccountId.length <= 64 ? developerAccountId : null;
   const rows = await prisma.development.findMany({
-    where: { publishStatus: "published", ...(term ? { publicName: { contains: term, mode: "insensitive" } } : {}) },
+    where: { publishStatus: "published", ...(acc ? { developerAccountId: acc } : {}), ...(term ? { publicName: { contains: term, mode: "insensitive" } } : {}) },
     orderBy: { publicName: "asc" },
     take: 20,
-    select: { id: true, publicName: true, town: true, developerAccountId: true },
+    select: { id: true, publicName: true, town: true, developerAccountId: true, developerAccount: { select: { name: true, commissionRates: { where: { developmentId: null }, select: { ratePercent: true }, take: 1 } } } },
   });
   // The rate the deal will be created with, so it is visible before saving (2026-10-24).
   const rates = await effectiveRatesFor(rows);
   return rows.map((r) => {
     const rate = rates.get(r.id);
-    const pct = rate?.ratePercent != null ? ` · ${fmtRate(rate.ratePercent)}` : " · no rate";
-    return { id: r.id, label: `${r.town ? `${r.publicName} · ${r.town}` : r.publicName}${pct}` };
+    const pct = rate?.ratePercent != null ? fmtRate(rate.ratePercent) : "no rate";
+    return { id: r.id, value: r.publicName, label: r.town ? `${r.publicName} · ${r.town}` : r.publicName, hint: acc ? pct : `${r.developerAccount.name} · ${pct}`, developer: { id: r.developerAccountId, name: r.developerAccount.name, rate: r.developerAccount.commissionRates[0] ? fmtRate(r.developerAccount.commissionRates[0].ratePercent.toNumber()) : "no rate" } };
   });
+}
+
+/** Our developer accounts for the deal form, with the default rate on file. */
+export async function searchDevelopersAction(q: string): Promise<DealOption[]> {
+  await requireCrmUser();
+  const term = typeof q === "string" ? q.trim().slice(0, 80) : "";
+  const rows = await prisma.developerAccount.findMany({
+    where: term ? { name: { contains: term, mode: "insensitive" } } : {},
+    orderBy: { name: "asc" },
+    take: 20,
+    select: { id: true, name: true, commissionRates: { where: { developmentId: null }, select: { ratePercent: true }, take: 1 } },
+  });
+  return rows.map((r) => {
+    const rate = r.commissionRates[0]?.ratePercent;
+    return { id: r.id, value: r.name, label: r.name, hint: rate != null ? fmtRate(rate.toNumber()) : "no rate" };
+  });
+}
+
+/** Names typed on earlier deals, so the same developer or project is not spelled two ways. */
+export async function typedDealNamesAction(kind: "developer" | "project", q: string): Promise<string[]> {
+  await requireCrmUser();
+  const term = typeof q === "string" ? q.trim().slice(0, 80) : "";
+  const match = term ? { contains: term, mode: "insensitive" as const } : { not: null };
+  if (kind === "developer") {
+    const rows = await prisma.deal.findMany({ where: { developerName: match }, select: { developerName: true }, distinct: ["developerName"], orderBy: { developerName: "asc" }, take: 8 });
+    return rows.map((r) => r.developerName).filter((v): v is string => !!v);
+  }
+  const rows = await prisma.deal.findMany({ where: { projectName: match }, select: { projectName: true }, distinct: ["projectName"], orderBy: { projectName: "asc" }, take: 8 });
+  return rows.map((r) => r.projectName).filter((v): v is string => !!v);
+}
+
+/** Cockpit "New deal": admins and the lead's owner; optionally moves the lead to Reserved. */
+export async function addDealAction(leadId: string, rawDeal: unknown, moveToReserved: boolean): Promise<AddDealResult> {
+  const user = await requireCrmUser();
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
+  const d = normalizeDealInput(rawDeal);
+  if ("error" in d) return d;
+  const res = await addDeal(user, leadId, d.ok, moveToReserved === true);
+  if ("ok" in res) { revalidatePath(`/crm/leads/${leadId}`); revalidatePath("/crm/pipeline"); revalidatePath("/crm/commissions"); }
+  return res;
 }
 
 export async function assignLeadAction(leadId: string, userId: string): Promise<AssignResult> {

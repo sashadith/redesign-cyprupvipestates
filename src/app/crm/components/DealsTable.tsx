@@ -10,6 +10,8 @@ import { useToast } from "./Toast";
 
 export type DealRow = {
   id: string; leadId: string; leadName: string; project: string | null; unitLabel: string | null;
+  /** Developer name (ours or typed); typed = developer or project not in our lists (2026-11-08). */
+  developer?: string | null; typed?: { project: boolean; developer: boolean };
   price: number; ourRatePercent: number | null; rateSource: "PROJECT" | "DEVELOPER" | "MANUAL" | "MISSING";
   ourCommission: number | null; partnerCommission: number | null; status: CommissionStatusValue;
   expectedAt: string | null; earnedAt: string | null; developerPaidAt: string | null; paidOutAt: string | null;
@@ -138,7 +140,7 @@ export function DealsTable({ deals, totals, today, truncated }: { deals: DealRow
               {deals.map((d) => (
                 <tr key={d.id}>
                   <td data-label="Lead"><Link href={`/crm/leads/${d.leadId}`}>{d.leadName}</Link></td>
-                  <td data-label="Project / unit"><span>{d.project ?? <span className="crm-muted">No project</span>}{d.unitLabel && <span className="crm-muted"> · {d.unitLabel}</span>}</span></td>
+                  <td data-label="Project / unit"><span>{d.project ?? <span className="crm-muted">No project</span>}{d.typed?.project && <span className="crm-muted"> (typed)</span>}{d.unitLabel && <span className="crm-muted"> · {d.unitLabel}</span>}{d.developer && <span className="crm-muted crm-deal-devline">{d.developer}{d.typed?.developer ? " (typed)" : ""}</span>}</span></td>
                   <td data-label="Price" className="num">{eur(d.price)}</td>
                   <td data-label="Our rate" className="num"><span>
                     {d.rateSource === "MISSING"

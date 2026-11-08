@@ -1,3 +1,4 @@
+import { dealProjectLabel, dealDeveloperLabel } from "@/lib/crm/dealInput";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
@@ -34,7 +35,8 @@ export default async function CommissionsPage() {
         id: true, leadId: true, unitLabel: true, price: true, ourRatePercent: true, rateSource: true, ourCommission: true, partnerCommission: true,
         commissionStatus: true, expectedAt: true, earnedAt: true, developerPaidAt: true, paidOutAt: true,
         lead: { select: { firstName: true, lastName: true } },
-        development: { select: { publicName: true } },
+        development: { select: { publicName: true, developerAccount: { select: { name: true } } } },
+        developerAccount: { select: { name: true } }, developerName: true, projectName: true,
         creditNote: { select: { id: true, number: true } },
       },
     }),
@@ -65,7 +67,9 @@ export default async function CommissionsPage() {
     id: d.id,
     leadId: d.leadId,
     leadName: `${d.lead.firstName} ${d.lead.lastName}`.trim() || "Unnamed lead",
-    project: d.development?.publicName ?? null,
+    project: dealProjectLabel(d),
+    developer: dealDeveloperLabel(d),
+    typed: { project: !d.development && !!d.projectName, developer: !d.development && !d.developerAccount && !!d.developerName },
     unitLabel: d.unitLabel,
     price: d.price,
     ourRatePercent: d.ourRatePercent?.toNumber() ?? null,

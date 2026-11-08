@@ -1,3 +1,4 @@
+import { dealProjectLabel, dealDeveloperLabel } from "@/lib/crm/dealInput";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser, type SessionCrmUser } from "@/lib/crm/session";
@@ -69,7 +70,8 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
         select: {
           id: true, unitLabel: true, price: true, ourRatePercent: true, rateSource: true, ourCommission: true, partnerCommission: true,
           commissionStatus: true, expectedAt: true, earnedAt: true, developerPaidAt: true, paidOutAt: true,
-          development: { select: { publicName: true } },
+          development: { select: { publicName: true, developerAccount: { select: { name: true } } } },
+          developerAccount: { select: { name: true } }, developerName: true, projectName: true,
           creditNote: { select: { id: true, number: true } },
         },
       },
@@ -142,7 +144,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     (await temperaturesFor([{ id: lead.id, status: lead.status, timeline: lead.timeline, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, createdAt: lead.createdAt }], now)).get(lead.id),
   );
   const deals: DealRow[] = lead.deals.map((d) => ({
-    id: d.id, leadId: lead.id, leadName: name, project: d.development?.publicName ?? null, unitLabel: d.unitLabel, price: d.price,
+    id: d.id, leadId: lead.id, leadName: name, project: dealProjectLabel(d), developer: dealDeveloperLabel(d), typed: { project: !d.development && !!d.projectName, developer: !d.development && !d.developerAccount && !!d.developerName }, unitLabel: d.unitLabel, price: d.price,
     ourRatePercent: d.ourRatePercent?.toNumber() ?? null, rateSource: d.rateSource, ourCommission: d.ourCommission, partnerCommission: d.partnerCommission,
     status: d.commissionStatus as CommissionStatusValue,
     expectedAt: day(d.expectedAt), earnedAt: day(d.earnedAt), developerPaidAt: day(d.developerPaidAt), paidOutAt: day(d.paidOutAt),
@@ -196,7 +198,8 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
             <CockpitPresentations leadId={lead.id} rows={presentations} canEdit={canEdit} isOwner={user.isOwner}
               lead={modalLead} sent={sent} users={advisors} currentUser={{ id: user.id, name: user.name }} />
             {partnerView && <CockpitPartner view={partnerView} />}
-            <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
+            <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)}
+              newDeal={canEdit ? { leadId: lead.id, leadName: name, status: lead.status } : null} />
             {canReassign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
             {isDownload && (
               <section className="crm-panel crm-ck-assign" aria-labelledby="crm-ck-dl-h">
