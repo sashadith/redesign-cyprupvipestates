@@ -1,5 +1,6 @@
 import { simpleParser, type ParsedMail } from "mailparser";
 import { prisma } from "@/lib/prisma";
+import type { ImapFlow } from "imapflow";
 import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfiguredError } from "./imapClient";
 import { matchLeadForInboundEmail, canonicalizeEmail, type LeadMatch } from "./matchLead";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
@@ -122,11 +123,26 @@ export type PollResult = { fetched: number; matched: number; ambiguous: number; 
  * (not once at the end of the batch) so a mid-run crash never causes
  * reprocessing of messages already handled this run.
  */
-export async function pollInboundEmailForUser(userId: string): Promise<PollResult> {
-  const creds = await getImapCredentials(userId); // throws ImapNotConfiguredError — let the caller decide that's a no-op, not a failure
-  const settings = await prisma.userEmailSettings.findUniqueOrThrow({ where: { userId }, select: { imapLastUid: true, imapUidValidity: true, fromAddress: true } });
+export type InboxCursor = { imapLastUid: bigint | null; imapUidValidity: bigint | null; fromAddress: string | null };
 
-  return withReadOnlyInbox(creds, async (client, mailbox) => {
+/** The stored UID cursor for this user's inbox. Separate so a caller that already holds an
+    open session can fetch it without the session waiting on a database round trip. */
+export async function loadInboxCursor(userId: string): Promise<InboxCursor> {
+  return prisma.userEmailSettings.findUniqueOrThrow({ where: { userId }, select: { imapLastUid: true, imapUidValidity: true, fromAddress: true } });
+}
+
+/**
+ * The poll itself, against an INBOX that is ALREADY open read-only on `client`.
+ * Split out 2026-11-08 so the five-minute cron can run this and the Sent-folder
+ * poll on ONE connection (see pollUser.ts) instead of opening two.
+ */
+export async function pollInboxOnClient(
+  client: ImapFlow,
+  mailbox: { uidValidity: bigint; uidNext: number },
+  userId: string,
+  settings: InboxCursor,
+): Promise<PollResult> {
+  return (async () => {
     const result = await fetchNewMessages(client, mailbox, settings.imapLastUid, settings.imapUidValidity);
 
     if (result.cursorWasReset) {
@@ -159,7 +175,14 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
     }
 
     return { fetched: result.messages.length, matched, ambiguous, skipped, reset: false };
-  });
+  })();
+}
+
+/** Opens its own session and polls the inbox — the standalone path (cockpit Sync, backfills). */
+export async function pollInboundEmailForUser(userId: string): Promise<PollResult> {
+  const creds = await getImapCredentials(userId); // throws ImapNotConfiguredError — let the caller decide that's a no-op, not a failure
+  const settings = await loadInboxCursor(userId);
+  return withReadOnlyInbox(creds, (client, mailbox) => pollInboxOnClient(client, mailbox, userId, settings));
 }
 
 export { ImapNotConfiguredError };
