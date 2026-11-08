@@ -58,7 +58,7 @@ export async function markPaidOut(
         where: { id: dealId },
         select: {
           leadId: true, createdAt: true, commissionStatus: true, earnedAt: true, developerPaidAt: true, partnerCommission: true, unitLabel: true,
-          development: { select: { publicName: true, override: { select: { alias: true } } } },
+          development: { select: { publicName: true, override: { select: { alias: true } } } }, projectName: true,
           lead: { select: { partnerId: true } },
         },
       });
@@ -137,7 +137,7 @@ export async function markPaidOut(
         issuedAt: now,
         deal: {
           // Same project name as the portal, the CSV and the PAYOUT mail: override alias, else the public name.
-          projectName: (deal.development ? deal.development.override?.alias?.trim() || deal.development.publicName : null) ?? "Property",
+          projectName: (deal.development ? deal.development.override?.alias?.trim() || deal.development.publicName : deal.projectName?.trim() || null) ?? "Property",
           unitLabel: deal.unitLabel ?? "",
         },
         clientInitials: clientInitials(sub.firstName, sub.lastName ?? ""),

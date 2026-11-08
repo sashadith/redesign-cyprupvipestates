@@ -1,6 +1,7 @@
 "use client";
 import { COMMISSION_LABEL, CreditNoteLink, DealDates, RATE_SOURCE_LABEL, StageButtons, useStageSetter, type DealRow } from "./DealsTable";
 import { useToast } from "./Toast";
+import { NewDealButton } from "./NewDealButton";
 
 // Deals of one lead on the cockpit (CRM v2, 2026-10-18). Numbers are the ones
 // stored on the deal (commission.ts computed them); managers get the same
@@ -8,20 +9,28 @@ import { useToast } from "./Toast";
 
 const eur = (n: number) => "€" + n.toLocaleString("en-US");
 
-export function CockpitDeals({ deals, canPayout, today }: { deals: DealRow[]; canPayout: boolean; today: string }) {
+export function CockpitDeals({ deals, canPayout, today, newDeal }: {
+  deals: DealRow[]; canPayout: boolean; today: string;
+  /** Set when the viewer may add a deal by hand (admins and the lead's owner). */
+  newDeal?: { leadId: string; leadName: string; status: string } | null;
+}) {
   const toast = useToast();
   const onSet = useStageSetter(toast);
   return (
     <section className="crm-panel crm-ck-deals" aria-labelledby="crm-ck-deals-h">
-      <h2 id="crm-ck-deals-h">Deals</h2>
+      <div className="crm-ck-sechead">
+        <h2 id="crm-ck-deals-h">Deals</h2>
+        {newDeal && <NewDealButton {...newDeal} onDone={(m) => toast.show(m, "ok")} />}
+      </div>
       {deals.length === 0 ? (
-        <p className="crm-muted">No deal yet. Moving the lead to Reserved asks for one.</p>
+        <p className="crm-muted">No deal yet. Add one with New deal, or move the lead to Reserved.</p>
       ) : (
         <ul>
           {deals.map((d) => (
             <li key={d.id} className={d.status === "CANCELLED" ? "cancelled" : undefined}>
               <div className="crm-ck-dealhead">
-                <b>{d.project ?? "No project"}{d.unitLabel && <span className="crm-muted"> · {d.unitLabel}</span>}</b>
+                <b>{d.project ?? "No project"}{d.typed?.project && <span className="crm-muted crm-ck-typed"> (typed)</span>}{d.unitLabel && <span className="crm-muted"> · {d.unitLabel}</span>}
+                  {d.developer && <span className="crm-ck-dealdev">{d.developer}{d.typed?.developer && <span className="crm-muted"> (typed)</span>}</span>}</b>
                 <span className={`crm-pill c-${d.status}`}>{COMMISSION_LABEL[d.status]}</span>
               </div>
               <dl className="crm-ck-dealnums">

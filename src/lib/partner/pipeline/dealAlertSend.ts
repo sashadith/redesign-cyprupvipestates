@@ -16,14 +16,14 @@ export async function sendDealAlert(actor: PartnerActor, leadId: string, stage: 
       prisma.deal.findFirst({
         where: { leadId, commissionStatus: { not: "CANCELLED" } },
         orderBy: { createdAt: "desc" },
-        select: { price: true, unitLabel: true, development: { select: { publicName: true } } },
+        select: { price: true, unitLabel: true, projectName: true, development: { select: { publicName: true } } },
       }),
     ]);
     if (!chatId) {
       console.warn("[partner deal alert] no manager or owner chat linked; skipped", { leadId });
       return;
     }
-    const project = deal ? [deal.development?.publicName, deal.unitLabel].filter(Boolean).join(" ") || null : null;
+    const project = deal ? [deal.development?.publicName ?? deal.projectName, deal.unitLabel].filter(Boolean).join(" ") || null : null;
     const html = dealAlertHtml({
       partnerName: actor.userName,
       client: `${lead?.firstName ?? ""} ${lead?.lastName ?? ""}`.trim() || "a client",

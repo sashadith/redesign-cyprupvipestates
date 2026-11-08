@@ -1136,3 +1136,15 @@ button.crm-drop { font: inherit; font-weight: 700; font-size: calc(13px * var(--
 .crm-pp-stuck h4 span { font-family: var(--mono); color: var(--muted); }
 .crm-pp-stuck p { margin: 0 0 8px; font-size: calc(12.5px * var(--ds-crm-scale)); }
 .crm-pp-stuck ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+
+/* Manual deals (2026-11-08): "New deal" in the cockpit, typed developer/project. */
+.crm-ck-deals .crm-ck-sechead { align-items: center; margin-bottom: 10px; }
+.crm-ck-deals .crm-ck-sechead h2 { margin: 0; }
+.crm-ck-deals .crm-ck-sechead .crm-btn { padding: 6px 12px; }
+.crm-ck-dealdev { display: block; font-weight: 500; font-size: calc(12.5px * var(--ds-crm-scale)); color: var(--muted); margin-top: 2px; }
+.crm-deal-devline { display: block; font-size: calc(12px * var(--ds-crm-scale)); }
+.crm-dialog.crm-deal-dialog { max-height: calc(100dvh - 32px); overflow: auto; }
+.crm-dialog .crm-deal-typed { margin: 2px 0 0; padding: 0 9px; font-size: calc(12.5px * var(--ds-crm-scale)); color: var(--muted); }
+.crm-dialog .crm-deal-note { margin: 0; font-size: calc(12.5px * var(--ds-crm-scale)); }
+.crm-dialog label.crm-deal-move { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: calc(14px * var(--ds-crm-scale)); font-weight: 600; color: var(--ink); margin-top: 10px; }
+.crm-dialog label.crm-deal-move input { width: 18px; height: 18px; padding: 0; accent-color: var(--accent); }

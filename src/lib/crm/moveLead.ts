@@ -10,7 +10,8 @@ import { effectiveStateOf, lastRealContactAt } from "@/lib/partner/claimFacts";
 import type { LeadStatusValue, LostReasonValue } from "./leadStatus";
 import type { SessionCrmUser } from "./session";
 
-export type DealInput = { developmentId: string; unitLabel: string | null; price: number };
+import { chooseDealRate, type DealInput } from "./dealInput";
+export type { DealInput };
 export type MoveResult = { ok: true } | { error: string; need?: "deal" | "lostReason" | "confirmCancel"; cancelCount?: number };
 
 const STALE = "The deals changed meanwhile — reload and try again.";
@@ -82,53 +83,14 @@ export async function moveLeadCore(
       }
       const now = new Date();
       if (plan.needsDeal) {
-        const d = input.deal;
-        if (!d) return { error: "Enter the deal: project, unit and price.", need: "deal" };
-        if (!Number.isInteger(d.price) || d.price <= 0 || d.price > 100_000_000) return { error: "Enter a valid price in whole euros.", need: "deal" };
-        const dev = await tx.development.findFirst({
-          where: { id: d.developmentId, publishStatus: "published" },
-          select: { id: true, developerAccountId: true },
-        });
-        if (!dev) return { error: "Project not found.", need: "deal" };
-        const rows = await tx.commissionRate.findMany({ where: { developerAccountId: dev.developerAccountId } });
-        const rateRows: RateRow[] = rows.map((r) => ({ developerAccountId: r.developerAccountId, developmentId: r.developmentId, ratePercent: r.ratePercent.toNumber() }));
-        const rate = resolveRate(rateRows, dev.developerAccountId, dev.id);
-        // Partner share (phase 3b, decision 9): only while the lead's partner holds an EFFECTIVELY active
-        // claim, judged on the lead as it is before this move (status and deals not yet changed), under the row lock.
-        const claim = lead.partnerId
-          ? await tx.partnerClaim.findFirst({
-            where: { leadId, partnerId: lead.partnerId, state: "ACTIVE" },
-            select: {
-              partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true,
-              partner: { select: { handoverShare: true, fixShare: true, status: true } },
-            },
-          })
-          : null;
-        const effective = claim
-          ? await effectiveStateOf(tx, claim, now, {
-            leadDeleted: false,
-            leadStatus: lead.status,
-            hasLiveDeal: lead.deals.some((x) => x.commissionStatus !== "CANCELLED"),
-            lastRealContactAt: await lastRealContactAt(tx, leadId),
-          })
-          : null;
-        const partnerSharePercent = dealPartnerShare({
-          partnerId: lead.partnerId,
-          partnerMode: lead.partnerMode,
-          activeClaim: claim && effective ? { partnerId: claim.partnerId, effective } : null,
-          partner: claim ? { handoverShare: claim.partner.handoverShare.toNumber(), fixShare: claim.partner.fixShare.toNumber(), status: claim.partner.status } : null,
-        });
-        const amounts = computeDealAmounts({ price: d.price, ourRatePercent: rate.ratePercent, partnerSharePercent });
-        const earnNow = to === "CLOSED";
-        await tx.deal.create({
-          data: {
-            leadId, developmentId: dev.id, unitLabel: d.unitLabel?.trim() || null, price: d.price,
-            ourRatePercent: rate.ratePercent, rateSource: rate.source, ourCommission: amounts.ourCommission,
-            partnerSharePercent, partnerCommission: amounts.partnerCommission,
-            commissionStatus: earnNow ? "EARNED" : "EXPECTED", earnedAt: earnNow ? now : null,
-            createdById: author.createdByUserId, createdByPartnerUserId: author.createdByPartnerUserId,
-          },
-        });
+        if (!input.deal) return { error: "Enter the deal: project, unit and price.", need: "deal" };
+        // Partners pick a project from our list; typed names and typed rates are staff-only.
+        const deal: DealInput = partner
+          ? { developmentId: input.deal.developmentId ?? "", unitLabel: input.deal.unitLabel, price: input.deal.price }
+          : input.deal;
+        if (partner && !deal.developmentId) return { error: "Project not found.", need: "deal" };
+        const made = await insertDeal(tx, { lead, leadId, deal, earnNow: to === "CLOSED", now, author });
+        if ("error" in made) return { error: made.error, need: "deal" };
       }
       if (plan.earnDealIds.length) {
         const r = await tx.deal.updateMany({ where: { id: { in: plan.earnDealIds }, commissionStatus: "EXPECTED" }, data: { commissionStatus: "EARNED", earnedAt: now } });
@@ -163,4 +125,88 @@ export async function moveLeadCore(
     if (reason) await prisma.lead.update({ where: { id: leadId }, data: { lostReason: reason } });
   }
   return { ok: true };
+}
+
+type DealLead = { status: string; partnerId: string | null; partnerMode: Parameters<typeof dealPartnerShare>[0]["partnerMode"]; deals: { commissionStatus: string }[] };
+
+/**
+ * Writes one deal inside the caller's transaction, with the lead row already
+ * locked. Shared by the pipeline move (Reserved/Closed) and the cockpit's
+ * "New deal" (2026-11-08). The developer and project come from our lists or are
+ * typed in; the rate is the typed one, else the one on file for our developer.
+ */
+export async function insertDeal(
+  tx: Prisma.TransactionClient,
+  a: { lead: DealLead; leadId: string; deal: DealInput; earnNow: boolean; now: Date; author: ReturnType<typeof authorColumns> },
+): Promise<{ ok: true; id: string } | { error: string }> {
+  const d = a.deal;
+  if (!Number.isInteger(d.price) || d.price <= 0 || d.price > 100_000_000) return { error: "Enter a valid price in whole euros." };
+  let developmentId: string | null = null;
+  let developerAccountId: string | null = null;
+  if (d.developmentId) {
+    const dev = await tx.development.findFirst({
+      where: { id: d.developmentId, publishStatus: "published" },
+      select: { id: true, developerAccountId: true },
+    });
+    if (!dev) return { error: "Project not found." };
+    developmentId = dev.id;
+    developerAccountId = dev.developerAccountId;
+  } else if (d.developerAccountId) {
+    const acc = await tx.developerAccount.findFirst({ where: { id: d.developerAccountId }, select: { id: true } });
+    if (!acc) return { error: "Developer not found." };
+    developerAccountId = acc.id;
+  }
+  if (!developmentId && !d.projectName?.trim()) return { error: "Choose a project or type its name." };
+  if (!developerAccountId && !d.developerName?.trim()) return { error: "Choose a developer or type its name." };
+
+  let onFile: ReturnType<typeof resolveRate> | null = null;
+  if (developerAccountId) {
+    const rows = await tx.commissionRate.findMany({ where: { developerAccountId } });
+    const rateRows: RateRow[] = rows.map((r) => ({ developerAccountId: r.developerAccountId, developmentId: r.developmentId, ratePercent: r.ratePercent.toNumber() }));
+    // A typed project has no project rate: "" matches no row, so the developer's default applies.
+    onFile = resolveRate(rateRows, developerAccountId, developmentId ?? "");
+  }
+  const rate = chooseDealRate(d.ratePercent, onFile);
+
+  // Partner share (phase 3b, decision 9): only while the lead's partner holds an EFFECTIVELY active
+  // claim, judged on the lead as it is before this change (status and deals not yet changed), under the row lock.
+  const lead = a.lead;
+  const claim = lead.partnerId
+    ? await tx.partnerClaim.findFirst({
+      where: { leadId: a.leadId, partnerId: lead.partnerId, state: "ACTIVE" },
+      select: {
+        partnerId: true, state: true, createdAt: true, reviewedAt: true, leadId: true,
+        partner: { select: { handoverShare: true, fixShare: true, status: true } },
+      },
+    })
+    : null;
+  const effective = claim
+    ? await effectiveStateOf(tx, claim, a.now, {
+      leadDeleted: false,
+      leadStatus: lead.status,
+      hasLiveDeal: lead.deals.some((x) => x.commissionStatus !== "CANCELLED"),
+      lastRealContactAt: await lastRealContactAt(tx, a.leadId),
+    })
+    : null;
+  const partnerSharePercent = dealPartnerShare({
+    partnerId: lead.partnerId,
+    partnerMode: lead.partnerMode,
+    activeClaim: claim && effective ? { partnerId: claim.partnerId, effective } : null,
+    partner: claim ? { handoverShare: claim.partner.handoverShare.toNumber(), fixShare: claim.partner.fixShare.toNumber(), status: claim.partner.status } : null,
+  });
+  const amounts = computeDealAmounts({ price: d.price, ourRatePercent: rate.ratePercent, partnerSharePercent });
+  const created = await tx.deal.create({
+    data: {
+      leadId: a.leadId, developmentId, developerAccountId,
+      developerName: developerAccountId ? null : d.developerName!.trim(),
+      projectName: developmentId ? null : d.projectName!.trim(),
+      unitLabel: d.unitLabel?.trim() || null, price: d.price,
+      ourRatePercent: rate.ratePercent, rateSource: rate.source, ourCommission: amounts.ourCommission,
+      partnerSharePercent, partnerCommission: amounts.partnerCommission,
+      commissionStatus: a.earnNow ? "EARNED" : "EXPECTED", earnedAt: a.earnNow ? a.now : null,
+      createdById: a.author.createdByUserId, createdByPartnerUserId: a.author.createdByPartnerUserId,
+    },
+    select: { id: true },
+  });
+  return { ok: true, id: created.id };
 }

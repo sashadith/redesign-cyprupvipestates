@@ -1393,6 +1393,7 @@ model AiGenerationQueue {
 
 model DeveloperAccount {
   commissionRates CommissionRate[]
+  deals           Deal[]
   contracts       DeveloperContract[]
   id                String    @id @default(uuid())
   name              String
@@ -2207,6 +2208,14 @@ model Deal {
   lead                   Lead             @relation(fields: [leadId], references: [id], onDelete: Restrict)
   developmentId          String?
   development            Development?     @relation(fields: [developmentId], references: [id], onDelete: SetNull)
+  // Manual deals (2026-11-08): the developer and project may come from our lists
+  // or be typed in. developerAccountId is set whenever the developer is one of
+  // ours (also derived from the project); developerName / projectName hold the
+  // typed text when it is not.
+  developerAccountId     String?
+  developerAccount       DeveloperAccount? @relation(fields: [developerAccountId], references: [id], onDelete: SetNull)
+  developerName          String?
+  projectName            String?
   unitLabel              String?
   price                  Int
   ourRatePercent         Decimal?         @db.Decimal(5, 2)
@@ -2230,6 +2239,7 @@ model Deal {
 
   @@index([leadId])
   @@index([commissionStatus])
+  @@index([developerAccountId])
   @@map("deals")
 }
 

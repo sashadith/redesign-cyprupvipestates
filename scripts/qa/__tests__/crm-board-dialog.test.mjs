@@ -40,8 +40,10 @@ export async function moveLeadAction(id, to, input) {
 export const searches = [];
 export async function searchDevelopmentsAction(q) {
   searches.push(q);
-  return q === "" ? [{ id: "d1", label: "Eden Coast · Paphos" }] : [];
+  return q === "" ? [{ id: "d1", value: "Eden Coast", label: "Eden Coast · Paphos", hint: "Aristo · 5 %", developer: { id: "acc1", name: "Aristo" } }] : [];
 }
+export async function searchDevelopersAction(q) { searches.push("dev:" + q); return []; }
+export async function typedDealNamesAction() { return []; }
 export async function assignLeadAction() { return { error: "not used" }; }
 `);
 
@@ -255,16 +257,19 @@ test("the deal dialog keeps showing the chosen project", async () => {
   assert.ok(dialog()?.hasAttribute("open"));
   const wait = () => act(async () => { await new Promise((r) => setTimeout(r, 300)); });
   await wait();
-  const opt = [...dialog().querySelectorAll('[role="option"]')].find((b) => b.textContent === "Eden Coast · Paphos");
+  const projectList = () => dialog().querySelector('[role="listbox"][aria-label="Project"]');
+  const opt = [...projectList().querySelectorAll('[role="option"]')].find((b) => b.textContent.startsWith("Eden Coast · Paphos"));
   assert.ok(opt, "option listed");
   await click(opt);
   searches.length = 0;
   await wait();
-  const rows = [...dialog().querySelectorAll('[role="option"]')];
+  const rows = [...projectList().querySelectorAll('[role="option"]')];
   assert.equal(rows.length, 1);
   assert.equal(rows[0].className, "on");
-  assert.match(rows[0].textContent, /Eden Coast · Paphos/);
-  assert.deepEqual(searches, [], "no search for the chosen label");
+  assert.match(rows[0].textContent, /Eden Coast/);
+  // The project's developer is filled in from our list.
+  assert.equal(dialog().querySelector("#crm-deal-dev").value, "Aristo");
+  assert.deepEqual(searches, [], "no search for the chosen labels");
   // Price makes the form submittable: the selection survived.
   const price = dialog().querySelector("#crm-price");
   await act(async () => {
