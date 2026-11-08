@@ -91,11 +91,29 @@ export async function findSentMailbox(client: ImapFlow): Promise<string | null> 
   return named ? named.path : null;
 }
 
-/** Same as withReadOnlyInbox for any mailbox `pick` names (EXAMINE, hard read-only assertion, bounded logout). */
-export async function withReadOnlyMailbox<T>(
+/** Names a mailbox on an already-connected client: the \\Sent folder, "INBOX", … */
+export type PickMailbox = (client: ImapFlow) => Promise<string | null>;
+/** Opens a mailbox read-only on the session's client and hands back its status. */
+export type OpenReadOnly = (pick: PickMailbox) => Promise<Awaited<ReturnType<ImapFlow["mailboxOpen"]>>>;
+
+/**
+ * ONE connection, reusable for SEVERAL mailboxes.
+ *
+ * Added 2026-11-08. The five-minute poll used to open a separate connection
+ * for a user's INBOX and another for their Sent folder — two TCP+TLS
+ * handshakes and two LOGINs against the same server, for one run. Every
+ * connection is also a fresh chance to hit connectionTimeout (20 s) or
+ * socketTimeout (60 s), so halving them halves the worst case as well as the
+ * work. Measured from the VPS, a handshake to the mail host is 44-80 ms, so
+ * this is not about those milliseconds — it is about the timeout surface.
+ *
+ * The read-only guarantee is unchanged and still enforced per mailbox: every
+ * open goes through EXAMINE (`readOnly: true`) plus the hard assertion below,
+ * so opening a second mailbox on the same session cannot weaken the first.
+ */
+export async function withImapSession<T>(
   creds: ImapCredentials,
-  pick: (client: ImapFlow) => Promise<string | null>,
-  fn: (client: ImapFlow, mailbox: Awaited<ReturnType<ImapFlow["mailboxOpen"]>>) => Promise<T>,
+  fn: (open: OpenReadOnly, client: ImapFlow) => Promise<T>,
 ): Promise<T> {
   const client = new ImapFlow({
     host: creds.host,
@@ -116,20 +134,23 @@ export async function withReadOnlyMailbox<T>(
   client.on("error", () => {});
   await client.connect();
   try {
-    // The one line that matters: `readOnly: true` sends EXAMINE, not SELECT.
-    const path = await pick(client);
-    if (!path) throw new MailboxNotFoundError("Mailbox not found.");
-    const mailbox = await client.mailboxOpen(path, { readOnly: true });
-    // Hard assertion, not a comment-level promise: if the server (or a
-    // future code change) ever results in a non-read-only mailbox, abort
-    // before touching a single message rather than silently proceeding.
-    // Verified live 2026-07-25 against the real mailbox: an unread test
-    // message stayed unread (both server-side flags and in Apple Mail)
-    // across an open+download+re-check cycle with this guard in place.
-    if (client.mailbox && (client.mailbox as any).readOnly !== true) {
-      throw new Error("IMAP mailbox did not open read-only (EXAMINE) — aborting without processing any message.");
-    }
-    return await fn(client, mailbox);
+    const open: OpenReadOnly = async (pick) => {
+      // The one line that matters: `readOnly: true` sends EXAMINE, not SELECT.
+      const path = await pick(client);
+      if (!path) throw new MailboxNotFoundError("Mailbox not found.");
+      const mailbox = await client.mailboxOpen(path, { readOnly: true });
+      // Hard assertion, not a comment-level promise: if the server (or a
+      // future code change) ever results in a non-read-only mailbox, abort
+      // before touching a single message rather than silently proceeding.
+      // Verified live 2026-07-25 against the real mailbox: an unread test
+      // message stayed unread (both server-side flags and in Apple Mail)
+      // across an open+download+re-check cycle with this guard in place.
+      if (client.mailbox && (client.mailbox as any).readOnly !== true) {
+        throw new Error("IMAP mailbox did not open read-only (EXAMINE) — aborting without processing any message.");
+      }
+      return mailbox;
+    };
+    return await fn(open, client);
   } finally {
     // Bounded and non-throwing: this runs after the real result (or the real
     // error) is already decided, so it may only release the socket — never
@@ -137,6 +158,15 @@ export async function withReadOnlyMailbox<T>(
     await withTimeout(client.logout(), LOGOUT_TIMEOUT_MS, "IMAP logout").catch(() => {});
     client.close();
   }
+}
+
+/** Same as withReadOnlyInbox for any mailbox `pick` names (EXAMINE, hard read-only assertion, bounded logout). */
+export async function withReadOnlyMailbox<T>(
+  creds: ImapCredentials,
+  pick: PickMailbox,
+  fn: (client: ImapFlow, mailbox: Awaited<ReturnType<ImapFlow["mailboxOpen"]>>) => Promise<T>,
+): Promise<T> {
+  return withImapSession(creds, async (open, client) => fn(client, await open(pick)));
 }
 
 export type FetchedMessage = { uid: number; source: Buffer; internalDate: Date | null };

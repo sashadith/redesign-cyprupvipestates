@@ -1,19 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
-import { pollInboundEmailForUser, ImapNotConfiguredError } from "@/lib/emailInbound/processInbound";
+import { ImapNotConfiguredError, type PollResult } from "@/lib/emailInbound/processInbound";
+import { pollUserMailboxes, type PhaseOutcome } from "@/lib/emailInbound/pollUser";
+import { withTimeout } from "@/lib/emailInbound/imapClient";
+import { createDeadline, runIsHealthy, type Deadline } from "@/lib/emailInbound/deadline";
 import { pollOfficeMailbox, type OfficePollResult } from "@/lib/emailInbound/officeInbound";
-import { pollSentForUser } from "@/lib/crm/commSync";
-import { MailboxNotFoundError } from "@/lib/emailInbound/imapClient";
+import { type SentFileResult } from "@/lib/emailInbound/sentMail";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 import { checkCronFreshness } from "@/lib/metaLeadgen/watchdog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-type UserSummary = { userId: string; ok: boolean; fetched?: number; matched?: number; ambiguous?: number; skipped?: number; reset?: boolean; error?: string };
+/* A run must not outlive its own budget (2026-11-08).
 
-async function pollAllConfiguredMailboxes(): Promise<UserSummary[]> {
+   maxDuration above was a declaration, not a limit: nothing enforced it. One
+   run opens a session per user plus the office mailbox, and each session may
+   spend connectionTimeout 20 s or socketTimeout 60 s (imapClient.ts) before
+   giving up — so the arithmetic alone allowed a run far past a minute. On
+   2026-11-08 one took 86 s and then failed, while the next run was already due:
+   this cron fires every five minutes.
+
+   Nothing is lost by deferring. Both pollers advance a UID cursor, so the next
+   run resumes exactly where this one stopped. A deferral is therefore NOT a
+   failure and must never raise the alert — the message says so instead, and
+   `ok` stays true. Anything else would manufacture the weekly false alarm this
+   whole exercise was meant to avoid. */
+const RUN_BUDGET_MS = 55_000;
+/** Don't start a mailbox we cannot plausibly finish — a healthy poll is ~1 s. */
+const MIN_PHASE_MS = 8_000;
+const USER_CAP_MS = 30_000;
+const OFFICE_CAP_MS = 20_000;
+
+type UserSummary = {
+  userId: string;
+  ok: boolean;
+  fetched?: number;
+  matched?: number;
+  ambiguous?: number;
+  skipped?: number;
+  reset?: boolean;
+  error?: string;
+  /** Budget ran out before this mailbox was reached; the next run picks it up. */
+  deferred?: boolean;
+};
+
+const reason = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+function summarizeInbox(userId: string, o: PhaseOutcome<PollResult>): UserSummary {
+  if (!o.ok) return { userId, ok: false, error: o.error };
+  if (!("result" in o)) return { userId, ok: true, skipped: 0, error: o.skipped };
+  return { userId, ok: !o.result.stoppedEarlyOnError, ...o.result };
+}
+
+function summarizeSent(userId: string, o: PhaseOutcome<SentFileResult>): UserSummary {
+  if (!o.ok) return { userId, ok: false, error: o.error };
+  if (!("result" in o)) return { userId, ok: true, skipped: 0, error: o.skipped };
+  return { userId, ok: true, fetched: o.result.scanned, matched: o.result.filed };
+}
+
+async function pollAllConfiguredMailboxes(deadline: Deadline): Promise<UserSummary[]> {
   const rows = await prisma.userEmailSettings.findMany({
     where: { imapHost: { not: null }, imapUser: { not: null }, imapPasswordEnc: { not: null } },
     select: { userId: true, fromAddress: true },
@@ -21,45 +68,54 @@ async function pollAllConfiguredMailboxes(): Promise<UserSummary[]> {
 
   const results: UserSummary[] = [];
   for (const { userId, fromAddress } of rows) {
+    if (!deadline.hasRoomFor(MIN_PHASE_MS)) {
+      results.push({ userId, ok: true, deferred: true });
+      results.push({ userId: `${userId}:sent`, ok: true, deferred: true });
+      continue;
+    }
+    let outcome;
     try {
-      const r = await pollInboundEmailForUser(userId);
-      results.push({ userId, ok: !r.stoppedEarlyOnError, ...r });
+      // Inbox and Sent share ONE session (pollUser.ts) and are bounded together:
+      // whichever is still running when the budget ends is abandoned, and the
+      // next run resumes from the stored UID cursor. The abandoned session
+      // still closes itself — withImapSession's finally runs when its own work
+      // settles, which its socketTimeout guarantees.
+      outcome = await withTimeout(
+        pollUserMailboxes(userId, fromAddress),
+        deadline.budgetFor(USER_CAP_MS),
+        `mailbox poll (${userId})`,
+      );
     } catch (e) {
       // One advisor's mailbox being unreachable (IMAP down, login failure,
       // timeout) must never block another's, and must never crash the whole
       // cron run — log and move on, retry this user again next poll.
       if (e instanceof ImapNotConfiguredError) continue; // not an error — just nothing to do for this user
-      console.error(`email-inbound: poll failed for user ${userId}:`, e);
-      results.push({ userId, ok: false, error: e instanceof Error ? e.message : String(e) });
+      console.error(`email-inbound: session failed for user ${userId}:`, e);
+      // Two entries, as when these were two connections: the aggregate counts
+      // mailboxes, and a session failure genuinely took both of them down.
+      results.push({ userId, ok: false, error: reason(e) });
+      results.push({ userId: `${userId}:sent`, ok: false, error: reason(e) });
+      continue;
     }
-    // Mail the operator sent from their own mail program (2026-10-29, see crm/commSync.ts). Its own
-    // entry: a Sent-folder hiccup must not hide whether the inbox poll worked, and vice versa.
-    try {
-      const sent = await pollSentForUser(userId, fromAddress);
-      results.push({ userId: `${userId}:sent`, ok: true, fetched: sent.scanned, matched: sent.filed });
-    } catch (e) {
-      if (e instanceof ImapNotConfiguredError) continue;
-      // No recognisable Sent folder: nothing to read, not an outage — a failed entry here would keep
-      // the whole job red and mute the streak alert for a real inbox failure.
-      if (e instanceof MailboxNotFoundError) {
-        results.push({ userId: `${userId}:sent`, ok: true, skipped: 0, error: "no sent folder" });
-        continue;
-      }
-      console.error(`email-inbound: sent-folder poll failed for user ${userId}:`, e);
-      results.push({ userId: `${userId}:sent`, ok: false, error: e instanceof Error ? e.message : String(e) });
-    }
+    results.push(summarizeInbox(userId, outcome.inbox));
+    results.push(summarizeSent(`${userId}:sent`, outcome.sent));
   }
+
   // Developer registration replies land in the office mailbox (env credentials,
   // not a UserEmailSettings row). Unconfigured = nothing to do, not an error.
+  if (!deadline.hasRoomFor(MIN_PHASE_MS)) {
+    results.push({ userId: "office", ok: true, deferred: true });
+    return results;
+  }
   try {
-    const r = await pollOfficeMailbox();
+    const r = await withTimeout(pollOfficeMailbox(), deadline.budgetFor(OFFICE_CAP_MS), "office mailbox poll");
     if (!("skipped" in r && r.skipped === "not configured")) {
       const o = r as OfficePollResult;
       results.push({ userId: "office", ok: !o.stoppedEarlyOnError, fetched: o.fetched, matched: o.handled, skipped: o.skipped, reset: o.reset, ...(o.stoppedEarlyOnError ? { error: o.stoppedEarlyOnError } : {}) });
     }
   } catch (e) {
     console.error("email-inbound: office poll failed:", e);
-    results.push({ userId: "office", ok: false, error: e instanceof Error ? e.message : String(e) });
+    results.push({ userId: "office", ok: false, error: reason(e) });
   }
   return results;
 }
@@ -73,17 +129,25 @@ export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET || key !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const okFrom = (results: UserSummary[]) => results.every((r) => r.ok);
+  // Partial deferral is healthy, total deferral is not — see runIsHealthy.
+  const okFrom = (results: UserSummary[]) => runIsHealthy(results);
+  const deadline = createDeadline(RUN_BUDGET_MS);
   try {
     const summaries = await withCronLog(
       "email-inbound",
-      pollAllConfiguredMailboxes,
+      () => pollAllConfiguredMailboxes(deadline),
       (results) => {
         const totals = results.reduce(
-          (acc, r) => ({ matched: acc.matched + (r.matched ?? 0), skipped: acc.skipped + (r.skipped ?? 0), errors: acc.errors + (r.ok ? 0 : 1) }),
-          { matched: 0, skipped: 0, errors: 0 },
+          (acc, r) => ({
+            matched: acc.matched + (r.matched ?? 0),
+            skipped: acc.skipped + (r.skipped ?? 0),
+            errors: acc.errors + (r.ok ? 0 : 1),
+            deferred: acc.deferred + (r.deferred ? 1 : 0),
+          }),
+          { matched: 0, skipped: 0, errors: 0, deferred: 0 },
         );
-        return `${results.length} mailbox(es) polled — ${totals.matched} matched, ${totals.skipped} skipped, ${totals.errors} error(s)`;
+        const deferred = totals.deferred ? `, ${totals.deferred} deferred to the next run` : "";
+        return `${results.length} mailbox(es) polled — ${totals.matched} matched, ${totals.skipped} skipped, ${totals.errors} error(s)${deferred}`;
       },
       // 2026-08-11/12 — same aggregate-blindness fix as drive-sync/feed-sync/
       // booking-reminders/psi-sync (see withCronLog's comment in
@@ -107,7 +171,7 @@ export async function GET(req: NextRequest) {
     await checkCronFreshness("meta-leadgen-poll", 45 * 60_000).catch((e) => console.error("watchdog(meta-leadgen-poll) failed", e));
     return NextResponse.json({ ok: true, results: summaries });
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
+    const message = reason(e);
     if (await shouldNotifyFailureStreak("email-inbound")) {
       const msg = buildCronFailureMessage("email-inbound", message);
       await sendFeedNotification(msg.text, msg.subject);

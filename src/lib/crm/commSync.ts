@@ -6,7 +6,8 @@ import { loadLeadPhoneMatcher } from "@/lib/openwa/matchLead";
 import { realTrackDeps, trackWhatsAppMessage, type TrackDeps, type WaMessage } from "@/lib/openwa/trackMessage";
 import { findSentMailbox, getImapCredentials, withReadOnlyMailbox } from "@/lib/emailInbound/imapClient";
 import { fileInboundEmail } from "@/lib/emailInbound/processInbound";
-import { fileSentMessages, loadLeadEmailIndex, searchUids, type SentFileResult } from "@/lib/emailInbound/sentMail";
+import type { ImapFlow } from "imapflow";
+import { fileSentMessages, loadLeadEmailIndex, searchUids, type LeadEmailIndex, type SentFileResult } from "@/lib/emailInbound/sentMail";
 
 /**
  * Pulling a lead's WhatsApp and email history into the timeline on demand (cockpit "Sync") and for
@@ -96,14 +97,25 @@ export async function syncLeadEmail(email: string | null): Promise<MailSyncResul
   }
 }
 
-/** The live poll's share: mail sent from this user's mailbox in the last LIVE_SENT_DAYS days. */
+/**
+ * The live poll's share, against a Sent folder ALREADY open read-only on `client`.
+ * Split out 2026-11-08 so the five-minute cron can poll this user's inbox and Sent
+ * folder on ONE connection (see emailInbound/pollUser.ts) instead of opening two.
+ */
+export async function pollSentOnClient(
+  client: ImapFlow,
+  fromAddress: string | null,
+  index: LeadEmailIndex,
+): Promise<SentFileResult> {
+  const uids = await searchUids(client, { since: new Date(Date.now() - LIVE_SENT_DAYS * DAY_MS) });
+  return fileSentMessages(client, uids, { live: true, ownAddress: fromAddress, index });
+}
+
+/** Opens its own session for the Sent folder — the standalone path. */
 export async function pollSentForUser(userId: string, fromAddress: string | null): Promise<SentFileResult> {
   const creds = await getImapCredentials(userId);
   const index = await loadLeadEmailIndex();
-  return withReadOnlyMailbox(creds, findSentMailbox, async (client) => {
-    const uids = await searchUids(client, { since: new Date(Date.now() - LIVE_SENT_DAYS * DAY_MS) });
-    return fileSentMessages(client, uids, { live: true, ownAddress: fromAddress, index });
-  });
+  return withReadOnlyMailbox(creds, findSentMailbox, (client) => pollSentOnClient(client, fromAddress, index));
 }
 
 /** Backfill: every configured mailbox's Sent folder for the last `days` days (history only). */

@@ -179,7 +179,10 @@ test("wiring: the webhook tracks both directions live; the cron polls Sent; Sent
   const route = read("src/app/api/webhooks/whatsapp-inbound/route.ts");
   assert.ok(route.includes('trackWhatsAppMessage(msg, { live: true, via: "openwa-webhook" }'));
   assert.ok(route.includes("senderPhone: str(p.senderPhone)"));
-  assert.ok(read("src/app/api/cron/email-inbound/route.ts").includes("await pollSentForUser(userId, fromAddress)"));
+  // Since 2026-11-08 the cron polls inbox + Sent on ONE session (pollUser.ts) instead of
+  // calling pollSentForUser separately; the Sent poll itself is unchanged.
+  assert.ok(read("src/app/api/cron/email-inbound/route.ts").includes("pollUserMailboxes(userId, fromAddress)"));
+  assert.ok(read("src/lib/emailInbound/pollUser.ts").includes("pollSentOnClient(client, fromAddress, index)"));
   const imap = read("src/lib/emailInbound/imapClient.ts");
   assert.ok(imap.includes("const mailbox = await client.mailboxOpen(path, { readOnly: true });"));
   assert.ok(imap.includes('return withReadOnlyMailbox(creds, async () => "INBOX", fn);'));
