@@ -1,11 +1,12 @@
 import type { Prisma } from "@prisma/client";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED } from "./leadBucket";
+import { EXCLUDE_GUIDE, EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED } from "./leadBucket";
 import { ACTIVE_LEAD_STATUSES } from "./leadStatus";
 
 // The one definition of "inbox work" (CRM v2): the nav badge and the inbox page
 // both count through this, so they can never disagree. Closed, lost and
 // keep-contact leads without an owner are not work waiting to be handed out,
-// and neither are partner enquiries (listed on /crm/partners) or leads a partner works.
+// and neither are partner enquiries (listed on /crm/partners), leads a partner works
+// or downloads (guide/briefing readers, listed under Inbox -> Downloads).
 export function inboxWhere(): Prisma.LeadWhereInput {
-  return { AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED, { deletedAt: null, assignedToId: null, status: { in: [...ACTIVE_LEAD_STATUSES] } }] };
+  return { AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED, EXCLUDE_GUIDE, { deletedAt: null, assignedToId: null, status: { in: [...ACTIVE_LEAD_STATUSES] } }] };
 }

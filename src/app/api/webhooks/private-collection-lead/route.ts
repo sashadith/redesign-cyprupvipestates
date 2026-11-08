@@ -127,7 +127,8 @@ export async function POST(req: NextRequest) {
   try {
     if (await sendTelegramMessage(tg)) await prisma.lead.update({ where: { id: result.id }, data: { telegramNotified: true } }).catch(() => {});
   } catch (e) { console.error("private-collection-lead: telegram failed", e); }
-  try {
+  // A briefing download pings Telegram only: no office e-mail, no group message (operator, 2026-11-07).
+  if (!briefing) try {
     await sendEmail({
       subject: result.outcome === "CREATED" ? `New ${subject}: ${name}` : `${subject} (existing lead): ${name}`,
       text: tg.replace(/<a href="([^"]*)">[^<]*<\/a>/g, "$1").replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
     });
     if (result.outcome === "CREATED") await prisma.lead.update({ where: { id: result.id }, data: { emailNotified: true } }).catch(() => {});
   } catch (e) { console.error("private-collection-lead: e-mail failed", e); }
-  await notifyTeamWhatsApp(tg);
+  if (!briefing) await notifyTeamWhatsApp(tg);
 
   return NextResponse.json({ ok: true, leadId: result.id, outcome: result.outcome });
 }

@@ -87,9 +87,11 @@ export const ONLY_PARTNER: Prisma.LeadWhereInput = { source: "PARTNER" };
 export const PARTNER_ENQUIRY: Prisma.LeadWhereInput = { source: "PARTNER", partnerId: null };
 export const EXCLUDE_PARTNER_ENQUIRY: Prisma.LeadWhereInput = { NOT: PARTNER_ENQUIRY };
 
-// Guide leads (2026-10-19): readers who asked for a PDF guide, kept apart from
-// buyer leads in the list views the same way partners are. Like partners they
-// stay on the pipeline board and in the Action Center's follow-up rules.
+// Guide leads (2026-10-19): readers who asked for a PDF guide or the Private
+// Collection briefing. Since 2026-11-07 (operator) they are "Downloads", not work:
+// the /crm work views (inbox, board, Today, nags, SLA, Action Center follow-ups)
+// leave them out, nobody is assigned, and they are listed under Inbox -> Downloads
+// until someone takes one over as a lead (it then gets a buyer source).
 export const EXCLUDE_GUIDE: Prisma.LeadWhereInput = { source: { not: "GUIDE_DOWNLOAD" } };
 export const ONLY_GUIDE: Prisma.LeadWhereInput = { source: "GUIDE_DOWNLOAD" };
 

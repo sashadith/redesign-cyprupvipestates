@@ -210,11 +210,12 @@ export async function POST(request: Request) {
     catch (e) { console.error("Telegram error:", e); }
 
     // Same text to the team WhatsApp group (2026-10-15; non-fatal, independent of Telegram).
-    const waOk = await notifyTeamWhatsApp(tg);
+    // A download (guide request) pings Telegram only: no group message, no office e-mail (operator, 2026-11-07).
+    const waOk = isGuideLead ? false : await notifyTeamWhatsApp(tg);
 
     // Email notification to team (non-fatal)
     let emailOk = false;
-    try {
+    if (!isGuideLead) try {
       await transporter.sendMail({
         from: process.env.EMAIL_USER!,
         to: process.env.EMAIL_TO || "office@cyprusvipestates.com",
@@ -237,7 +238,7 @@ export async function POST(request: Request) {
       await prisma.lead.update({ where: { id: lead.id }, data: { emailNotified: true } });
     } catch (e) { console.error("Email error:", e); }
 
-    if (!tgOk && !emailOk && !waOk) {
+    if (!tgOk && (isGuideLead || (!emailOk && !waOk))) {
       // Every channel failed: the lead is safely stored but no one was pinged. Emit a
       // greppable marker so a log-based monitor can alert on it (audit item L4).
       console.error(`LEAD_NOTIFY_FAILED lead=${lead.id} email=${emailNorm} — Telegram, email AND WhatsApp all failed; lead saved, no notification delivered`);

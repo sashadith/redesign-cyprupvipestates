@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/crm/session";
 import { isLeadStatus, STATUS_LABEL, LOST_REASONS, type LostReasonValue } from "@/lib/crm/leadStatus";
 import { assignLead } from "@/lib/crm/assignLead";
+import { takeOverDownload, type TakeOverDownloadResult } from "@/lib/crm/downloads";
 import type { AssignResult } from "@/lib/crm/assignMessage";
 import { leadAccessWhere } from "@/lib/crm/access";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
@@ -65,6 +66,14 @@ export async function assignLeadAction(leadId: string, userId: string): Promise<
   const user = await requireCrmUser();
   const res = await assignLead(user, leadId, userId);
   if ("ok" in res) { revalidatePath("/crm/inbox"); revalidatePath("/crm/pipeline"); revalidatePath(`/crm/leads/${leadId}`); }
+  return res;
+}
+
+export async function takeOverDownloadAction(leadId: string): Promise<TakeOverDownloadResult> {
+  const user = await requireCrmUser();
+  if (typeof leadId !== "string" || !leadId || leadId.length > 64) return { error: "Lead not found." };
+  const res = await takeOverDownload(user, leadId);
+  if ("ok" in res) { revalidatePath("/crm/inbox"); revalidatePath(`/crm/leads/${leadId}`); }
   return res;
 }
 

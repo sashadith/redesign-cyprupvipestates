@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED, bucketOf } from "@/lib/crm/leadBucket";
+import { EXCLUDE_GUIDE, EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED, bucketOf } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
 import { isUnconfirmed, loadUnconfirmedRegistrations, reminderDate } from "@/lib/crm/registration/reminders";
 import { ACTIVE_LEAD_STATUSES, ELEVATED_NO_CONTACT_STATUSES, STATUS_LABEL as CENTRAL_STATUS_LABEL } from "@/lib/crm/leadStatus";
@@ -158,7 +158,7 @@ const STATUS_LABEL: Record<string, string> = CENTRAL_STATUS_LABEL;
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
-    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED] },
+    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, AND: [EXCLUDE_NEWSLETTER, EXCLUDE_PARTNER_ENQUIRY, EXCLUDE_PARTNER_WORKED, EXCLUDE_GUIDE] },
     select: {
       id: true, firstName: true, lastName: true, createdAt: true, status: true, viewingScheduledAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },

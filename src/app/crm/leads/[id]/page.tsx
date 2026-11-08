@@ -19,6 +19,7 @@ import { CockpitLogForm } from "../../components/CockpitLogForm";
 import { CockpitTimeline } from "../../components/CockpitTimeline";
 import { CockpitSyncButton } from "../../components/CockpitSyncButton";
 import { CockpitAssign } from "../../components/CockpitAssign";
+import { TakeOverDownloadButton } from "../../components/TakeOverDownloadButton";
 import { CockpitFollowUp } from "../../components/CockpitFollowUp";
 import { CockpitSummary } from "../../components/CockpitSummary";
 import { CockpitRegistrations, type DueRow, type RegistrationRow } from "../../components/CockpitRegistrations";
@@ -50,7 +51,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
-      message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
+      message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, guideTitle: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
       workedByPartner: true, partnerMode: true, partner: { select: { company: true, firstName: true, lastName: true, managerUserId: true } },
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
@@ -86,7 +87,9 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
   // Claim review and deal payouts stay with managers as before.
   const canEdit = canEditLead(user, lead);
   const canAssign = canAssignLeads(user);
-  const canReassign = canAssign && !lead.workedByPartner;
+  // A download (guide/briefing reader) gets no owner: it is taken over as a lead first (2026-11-07).
+  const isDownload = lead.source === "GUIDE_DOWNLOAD";
+  const canReassign = canAssign && !lead.workedByPartner && !isDownload;
   // Developer registration stays open on a partner-worked lead (CVE handles the developer side).
   const canRegister = canWorkDeveloperSide(user, lead);
   const staff = canAssign
@@ -194,6 +197,13 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
             {partnerView && <CockpitPartner view={partnerView} />}
             <CockpitDeals deals={deals} canPayout={canAssign} today={now.toISOString().slice(0, 10)} />
             {canReassign && <CockpitAssign leadId={lead.id} ownerId={lead.assignedToId} staff={staff} />}
+            {isDownload && (
+              <section className="crm-panel crm-ck-assign" aria-labelledby="crm-ck-dl-h">
+                <h2 id="crm-ck-dl-h">Download</h2>
+                <p className="crm-muted">Downloaded {lead.guideTitle ?? "a guide"}. Not in the inbox, the pipeline or the reminders, and no owner until someone takes it over as a lead.</p>
+                {canAssign && <div className="crm-ck-assignrow"><TakeOverDownloadButton leadId={lead.id} name={name} /></div>}
+              </section>
+            )}
           </aside>
         </div>
       </div>

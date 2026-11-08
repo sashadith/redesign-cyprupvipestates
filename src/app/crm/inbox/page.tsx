@@ -10,6 +10,9 @@ import { InboxList, type InboxItem } from "../components/InboxList";
 import { ClaimReview } from "../components/ClaimReview";
 import { listHandoverRequests } from "@/lib/crm/handoverReview";
 import { HandoverRequests } from "../components/HandoverRequests";
+import Link from "next/link";
+import { countDownloads, listDownloads, DOWNLOADS_CAP } from "@/lib/crm/downloads";
+import { DownloadsList } from "../components/DownloadsList";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +20,38 @@ const INBOX_CAP = 200;
 
 const SOURCE_LABEL: Record<string, string> = { PARTNER: "Partner", META_LEAD_AD: "Meta ad", CONTACT_FORM: "Website", PROJECT_ENQUIRY: "Website", BLOG_ENQUIRY: "Website", WHATSAPP: "WhatsApp" };
 
-export default async function InboxPage() {
+// Two tabs (operator, 2026-11-07): Leads = work to hand out; Downloads = guide and
+// Private Collection briefing readers, kept out of every work view until taken over.
+function Tabs({ tab, leads, downloads }: { tab: "leads" | "downloads"; leads: number; downloads: number }) {
+  return (
+    <nav className="crm-pt-tabs" aria-label="Inbox">
+      <Link href="/crm/inbox" aria-current={tab === "leads" ? "page" : undefined} className={`crm-chip${tab === "leads" ? " on" : ""}`}>Leads ({leads})</Link>
+      <Link href="/crm/inbox?tab=downloads" aria-current={tab === "downloads" ? "page" : undefined} className={`crm-chip${tab === "downloads" ? " on" : ""}`}>Downloads ({downloads})</Link>
+    </nav>
+  );
+}
+
+export default async function InboxPage({ searchParams }: { searchParams?: { tab?: string } }) {
   const user = await requireCrmUser();
   if (!canAssignLeads(user)) redirect("/crm/pipeline");
 
-  const [leads, total, staff, loads, claims, handovers] = await Promise.all([
+  if (searchParams?.tab === "downloads") {
+    const [rows, downloads, leads] = await Promise.all([listDownloads(), countDownloads(), prisma.lead.count({ where: inboxWhere() })]);
+    return (
+      <>
+        <div className="crm-headrow">
+          <div>
+            <h1>Inbox</h1>
+            <p>{downloads === 0 ? "No downloads." : `${downloads} guide and briefing download${downloads === 1 ? "" : "s"}${downloads > DOWNLOADS_CAP ? `, showing the newest ${DOWNLOADS_CAP}` : ""} · no owner, no reminders until taken over as a lead`}</p>
+          </div>
+        </div>
+        <Tabs tab="downloads" leads={leads} downloads={downloads} />
+        <DownloadsList rows={rows} canTakeOver={canAssignLeads(user)} />
+      </>
+    );
+  }
+
+  const [leads, total, staff, loads, claims, handovers, downloads] = await Promise.all([
     prisma.lead.findMany({
       where: inboxWhere(),
       orderBy: { createdAt: "asc" },
@@ -33,6 +63,7 @@ export default async function InboxPage() {
     prisma.lead.groupBy({ by: ["assignedToId"], where: { deletedAt: null, assignedToId: { not: null }, status: { in: [...ACTIVE_LEAD_STATUSES] } }, _count: { _all: true } }),
     listClaimsForReview(),
     listHandoverRequests(user).catch((e) => { console.error("Handover requests failed:", e instanceof Error ? e.name : "error"); return { cards: [], total: 0 }; }),
+    countDownloads(),
   ]);
 
   const loadOf = new Map(loads.map((l) => [l.assignedToId, l._count._all]));
@@ -60,6 +91,7 @@ export default async function InboxPage() {
           <p>{total === 0 ? "Every lead has an owner." : total > INBOX_CAP ? `${total} unassigned, showing the oldest ${INBOX_CAP}` : `${total} unassigned`}</p>
         </div>
       </div>
+      <Tabs tab="leads" leads={total} downloads={downloads} />
       <HandoverRequests items={handovers.cards} total={handovers.total} />
       <ClaimReview cards={claims.cards} total={claims.total} />
       <InboxList items={items} staff={staff.map((s) => ({ id: s.id, name: s.name, acceptsLeads: s.acceptsLeads }))} />
