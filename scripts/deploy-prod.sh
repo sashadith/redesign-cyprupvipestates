@@ -475,6 +475,33 @@ for d in /var/www/releases/cve-*; do
   echo "  removing old release: \$d"
   rm -rf "\$d"
 done
+
+# Build-only cache in the RETAINED non-live releases (2026-11-08). The
+# copy-forward above hands every release a complete .next/cache — 4.8 GB, of
+# which webpack (~2.7 GB) and eslint (~93 MB) are build-time artefacts that no
+# release ever reads at runtime. With KEEP_RELEASES=$KEEP_RELEASES that is
+# ~8.4 GB held permanently for nothing, and it is why the disk reached 93% on
+# 2026-11-08: a release cost 7.6 GB instead of the ~2.9 GB it needs to serve.
+#
+# cache/images stays — that is next/image optimizer output, and a release we
+# keep as a rollback target should come back with a warm image cache instead of
+# re-optimizing every photo on the first hit.
+#
+# The LIVE release keeps its cache untouched, so the next deploy still copies a
+# full incremental build cache forward and build times are unaffected.
+echo "· trimming build-only cache from retained non-live releases"
+for d in /var/www/releases/cve-*; do
+  [ -d "\$d" ] || continue
+  if [ "\$d" = "\$LIVE_REAL" ]; then continue; fi
+  for sub in webpack eslint; do
+    if [ -d "\$d/.next/cache/\$sub" ]; then
+      # size is for the log only — never let measuring it abort the deploy
+      sz="\$(du -sh "\$d/.next/cache/\$sub" 2>/dev/null | cut -f1 || true)"
+      echo "  trimming \${sz:-?} from \$(basename "\$d")/.next/cache/\$sub"
+      rm -rf "\$d/.next/cache/\$sub"
+    fi
+  done
+done
 REMOTE
 
 scp -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -r "$STAGE/.deploy" "$HOST:/tmp/.cvp-deploy-$RELEASE_TS" >/dev/null
