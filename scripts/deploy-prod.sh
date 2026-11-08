@@ -377,7 +377,12 @@ npx prisma generate
 DB_URL_LINE="\$(grep '^DATABASE_URL=' .env | cut -d= -f2-)"
 DB_URL_LINE="\${DB_URL_LINE%\\"}"
 DB_URL_LINE="\${DB_URL_LINE#\\"}"
-BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
+# Applied exactly once, even though the real .env now carries its own
+# connection_limit/pool_timeout for the SERVING processes (2026-11-08) — a blind
+# append would put each parameter in the URL twice and leave the winner to
+# whichever parser read it. scripts/build-db-url.sh strips, then sets; its cases
+# are pinned in scripts/qa/__tests__/buildDbUrl.test.mjs.
+BUILD_DB_URL="\$(bash scripts/build-db-url.sh "\$DB_URL_LINE" 5 30)"
 
 # nice/ionice: this now runs entirely OUTSIDE the live path, so it's no
 # longer safety-critical the way the in-place build was — but the 2 live
