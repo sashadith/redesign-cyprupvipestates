@@ -80,6 +80,21 @@ export function clientIpFrom(headers: Headers): string | null {
   return (xff ? xff.split(",")[0].trim() : "") || null;
 }
 
+/** What Meta accepts as a click id: the fbclid query value is URL-safe base64-ish.
+ *  Anything else (a hand-edited form body, a mangled cookie copy) is dropped
+ *  rather than sent, because a malformed fbc is worse than none. */
+const FBCLID_RE = /^[A-Za-z0-9_-]{10,500}$/;
+
+/** fbc built from an fbclid, for a lead whose browser has no _fbc cookie.
+ *  Meta's format is fb.<subdomainIndex>.<creationTimeMs>.<fbclid>; the fbclid
+ *  must go in unchanged (never lowercased). The creation time should be when
+ *  the click id was first seen; the attribution store keeps no timestamp, so
+ *  the event time stands in for it. */
+export function fbcFromFbclid(fbclid: unknown, timeMs: number): string | null {
+  const v = String(fbclid ?? "").trim();
+  return FBCLID_RE.test(v) ? `fb.1.${timeMs}.${v}` : null;
+}
+
 export interface CapiConfig { token: string; testEventCode: string | null }
 
 /** Configured only with a token AND the same switch that loads the browser pixel. */
@@ -120,6 +135,13 @@ export interface CapiEventInput {
   phone?: string | null;
   customData?: Record<string, string | number>;
   eventTime?: number;
+  /** The CRM lead's id, raw — hashed in the payload. Lets Meta tie repeat
+   *  enquiries from one person together even when e-mail or phone differ. */
+  externalId?: string | null;
+  /** Ad click id from the form's attribution, used only when the request
+   *  carries no _fbc cookie (the pixel sets that cookie only on the page where
+   *  the fbclid was still in the URL, after consent). */
+  fbclid?: string | null;
 }
 
 /**
@@ -149,14 +171,18 @@ export function buildCapiPayload(input: CapiEventInput, cfg: CapiConfig) {
   const ph = normalizePhone(input.phone);
   if (em) userData.em = [sha256(em)];
   if (ph) userData.ph = [sha256(ph)];
+  const externalId = String(input.externalId ?? "").trim();
+  if (externalId) userData.external_id = [sha256(externalId)];
+  const eventTime = input.eventTime ?? Math.floor(Date.now() / 1000);
   if (input.ctx.fbp) userData.fbp = input.ctx.fbp;
-  if (input.ctx.fbc) userData.fbc = input.ctx.fbc;
+  const fbc = input.ctx.fbc || fbcFromFbclid(input.fbclid, eventTime * 1000);
+  if (fbc) userData.fbc = fbc;
   if (input.ctx.ip) userData.client_ip_address = input.ctx.ip;
   if (input.ctx.userAgent) userData.client_user_agent = input.ctx.userAgent;
   return {
     data: [{
       event_name: input.eventName,
-      event_time: input.eventTime ?? Math.floor(Date.now() / 1000),
+      event_time: eventTime,
       event_id: input.eventId,
       event_source_url: input.eventSourceUrl,
       action_source: "website",
@@ -205,7 +231,7 @@ export async function sendCapiEvent(input: CapiEventInput, cfg: CapiConfig | nul
 /** Lead after a successful save — the shape every lead route shares. Async, so
  *  even a synchronous failure while reading the request becomes a resolved
  *  `false` and can never turn a saved lead into a 500. */
-export async function sendLeadToMeta(req: Request, body: { metaEventId?: unknown }, lead: { email: string; phone: string; page: string; contentName?: string }): Promise<boolean> {
+export async function sendLeadToMeta(req: Request, body: { metaEventId?: unknown; fbclid?: unknown }, lead: { id: string; email: string; phone: string; page: string; contentName?: string }): Promise<boolean> {
   try {
     return await sendCapiEvent({
       eventName: "Lead",
@@ -214,6 +240,8 @@ export async function sendLeadToMeta(req: Request, body: { metaEventId?: unknown
       ctx: capiContextFrom(req),
       email: lead.email,
       phone: lead.phone,
+      externalId: lead.id,
+      fbclid: typeof body.fbclid === "string" ? body.fbclid : null,
       ...(lead.contentName ? { customData: { content_name: lead.contentName } } : {}),
     });
   } catch {
