@@ -12,7 +12,8 @@ import type { SessionCrmUser } from "./session";
 // moveToReserved the lead then moves to Reserved when it is still before it;
 // that move finds the new deal and does not ask for another one.
 
-export type AddDealResult = { ok: true; moved: boolean } | { error: string };
+/** warning: the deal is saved but the follow-up move failed; the dialog must close (a retry would add a second deal). */
+export type AddDealResult = { ok: true; moved: boolean; warning?: string } | { error: string };
 
 export async function addDeal(actor: SessionCrmUser, leadId: string, deal: DealInput, moveToReserved: boolean): Promise<AddDealResult> {
   const author = authorColumns({ userId: actor.id, userName: actor.name });
@@ -38,6 +39,6 @@ export async function addDeal(actor: SessionCrmUser, leadId: string, deal: DealI
   if ("error" in res) return res;
   if (!shouldMoveToReserved(res.status, moveToReserved)) return { ok: true, moved: false };
   const moved = await moveLead(actor, leadId, "RESERVED", {});
-  if ("error" in moved) return { error: `The deal is saved, but the lead could not move to Reserved: ${moved.error}` };
+  if ("error" in moved) return { ok: true, moved: false, warning: `The deal is saved, but the lead could not move to Reserved: ${moved.error}` };
   return { ok: true, moved: true };
 }

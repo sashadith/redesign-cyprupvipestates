@@ -143,3 +143,18 @@ test("nothing is sent without developer, project and price", async () => {
   assert.ok(doc.querySelector(".crm-dialog-error"), "the problem is shown");
   await act(async () => root.unmount());
 });
+
+test("editing the developer after picking a project drops the project's id", async () => {
+  const root = await open("RESERVED");
+  const opt = [...doc.querySelectorAll('[aria-label="Project"] [role="option"]')].find((b) => b.textContent.startsWith("Eden Coast"));
+  await click(opt);
+  await type("#crm-deal-dev", "Other Builder");
+  await type("#crm-price", "300000");
+  await wait();
+  await submit();
+  await wait();
+  assert.equal(calls[0].deal.developmentId, null);
+  assert.equal(calls[0].deal.projectName, "Eden Coast");
+  assert.equal(calls[0].deal.developerName, "Other Builder");
+  await act(async () => root.unmount());
+});

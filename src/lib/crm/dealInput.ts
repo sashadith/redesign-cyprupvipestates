@@ -54,7 +54,7 @@ export function normalizeDealInput(raw: unknown): { ok: DealInput } | { error: s
   let ratePercent: number | null = null;
   if (r.ratePercent != null && r.ratePercent !== "") {
     const n = r.ratePercent;
-    if (typeof n !== "number" || !Number.isFinite(n) || n <= 0 || n > DEAL_RATE_MAX || Math.round(n * 100) !== n * 100) {
+    if (typeof n !== "number" || !Number.isFinite(n) || n <= 0 || n > DEAL_RATE_MAX || Math.abs(n * 100 - Math.round(n * 100)) > 1e-6) {
       return { error: `Rate: a percentage above 0 and up to ${DEAL_RATE_MAX}, at most two decimals.` };
     }
     ratePercent = n;

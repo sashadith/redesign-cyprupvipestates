@@ -94,3 +94,7 @@ test("New deal moves the lead to Reserved only before Reserved and only when tic
   assert.equal(shouldMoveToReserved("CLOSED", true), false);
   assert.equal(shouldMoveToReserved("OFFER", false), false);
 });
+
+test("one- and two-decimal rates that floats cannot hold exactly still pass", () => {
+  for (const r of [4.1, 2.3, 1.1, 4.35, 0.57, 12.99]) assert.equal(ok({ developmentId: "d", price: 1, ratePercent: r }).ratePercent, r, String(r));
+});

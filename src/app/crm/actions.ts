@@ -39,7 +39,7 @@ export async function moveLeadAction(
   return res;
 }
 
-export type DealOption = { id: string; label: string; value: string; hint?: string; developer?: { id: string; name: string } };
+export type DealOption = { id: string; label: string; value: string; hint?: string; developer?: { id: string; name: string; rate: string } };
 
 /** Published projects for the deal form, optionally only one developer's; the label carries the rate on file. */
 export async function searchDevelopmentsAction(q: string, developerAccountId?: string | null): Promise<DealOption[]> {
@@ -50,14 +50,14 @@ export async function searchDevelopmentsAction(q: string, developerAccountId?: s
     where: { publishStatus: "published", ...(acc ? { developerAccountId: acc } : {}), ...(term ? { publicName: { contains: term, mode: "insensitive" } } : {}) },
     orderBy: { publicName: "asc" },
     take: 20,
-    select: { id: true, publicName: true, town: true, developerAccountId: true, developerAccount: { select: { name: true } } },
+    select: { id: true, publicName: true, town: true, developerAccountId: true, developerAccount: { select: { name: true, commissionRates: { where: { developmentId: null }, select: { ratePercent: true }, take: 1 } } } },
   });
   // The rate the deal will be created with, so it is visible before saving (2026-10-24).
   const rates = await effectiveRatesFor(rows);
   return rows.map((r) => {
     const rate = rates.get(r.id);
     const pct = rate?.ratePercent != null ? fmtRate(rate.ratePercent) : "no rate";
-    return { id: r.id, value: r.publicName, label: r.town ? `${r.publicName} · ${r.town}` : r.publicName, hint: acc ? pct : `${r.developerAccount.name} · ${pct}`, developer: { id: r.developerAccountId, name: r.developerAccount.name } };
+    return { id: r.id, value: r.publicName, label: r.town ? `${r.publicName} · ${r.town}` : r.publicName, hint: acc ? pct : `${r.developerAccount.name} · ${pct}`, developer: { id: r.developerAccountId, name: r.developerAccount.name, rate: r.developerAccount.commissionRates[0] ? fmtRate(r.developerAccount.commissionRates[0].ratePercent.toNumber()) : "no rate" } };
   });
 }
 

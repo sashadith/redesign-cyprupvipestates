@@ -20,7 +20,7 @@ export function CockpitDeals({ deals, canPayout, today, newDeal }: {
     <section className="crm-panel crm-ck-deals" aria-labelledby="crm-ck-deals-h">
       <div className="crm-ck-sechead">
         <h2 id="crm-ck-deals-h">Deals</h2>
-        {newDeal && <NewDealButton {...newDeal} onDone={(m) => toast.show(m, "ok")} />}
+        {newDeal && <NewDealButton {...newDeal} onDone={(m, warn) => toast.show(m, warn ? "error" : "ok")} />}
       </div>
       {deals.length === 0 ? (
         <p className="crm-muted">No deal yet. Add one with New deal, or move the lead to Reserved.</p>

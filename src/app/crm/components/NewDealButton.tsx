@@ -10,17 +10,17 @@ import { DealFields } from "./DealFields";
 // lists or typed in, sale price, optional rate. While the lead is still before
 // Reserved, a pre-ticked box moves it there with the deal.
 
-export function NewDealButton({ leadId, leadName, status, onDone }: { leadId: string; leadName: string; status: string; onDone: (msg: string) => void }) {
+export function NewDealButton({ leadId, leadName, status, onDone }: { leadId: string; leadName: string; status: string; onDone: (msg: string, warn?: boolean) => void }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" className="crm-btn" onClick={() => setOpen(true)}>New deal</button>
-      {open && <NewDealDialog leadId={leadId} leadName={leadName} status={status} onClose={() => setOpen(false)} onDone={(m) => { setOpen(false); onDone(m); }} />}
+      {open && <NewDealDialog leadId={leadId} leadName={leadName} status={status} onClose={() => setOpen(false)} onDone={(m, warn) => { setOpen(false); onDone(m, warn); }} />}
     </>
   );
 }
 
-function NewDealDialog({ leadId, leadName, status, onClose, onDone }: { leadId: string; leadName: string; status: string; onClose: () => void; onDone: (msg: string) => void }) {
+function NewDealDialog({ leadId, leadName, status, onClose, onDone }: { leadId: string; leadName: string; status: string; onClose: () => void; onDone: (msg: string, warn?: boolean) => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [deal, setDeal] = useState<DealInput | null>(null);
@@ -42,6 +42,7 @@ function NewDealDialog({ leadId, leadName, status, onClose, onDone }: { leadId: 
       const res = await addDealAction(leadId, deal, canMove && move);
       if ("error" in res) { setError(res.error); return; }
       router.refresh();
+      if (res.warning) { onDone(res.warning, true); return; }
       onDone(res.moved ? "Deal saved, lead moved to Reserved." : "Deal saved.");
     } catch {
       setError("The deal was not saved. Check your connection and try again.");

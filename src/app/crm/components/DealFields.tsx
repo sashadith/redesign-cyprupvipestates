@@ -102,7 +102,8 @@ export function DealFields({ onChange, autoFocus }: { onChange: (deal: DealInput
   return (
     <>
       <Combo id="crm-deal-dev" label="Developer" placeholder="Search our developers or type a name" q={devQ} autoFocus={autoFocus}
-        setQ={(v) => { setDevQ(v); }} picked={dev} options={devOptions}
+        // Editing the developer drops a picked project: it belongs to the developer it was picked with.
+        setQ={(v) => { setDevQ(v); if (proj) setProj(null); }} picked={dev} options={devOptions}
         onPick={(o) => {
           if (o.id) { setDev({ id: o.id, name: o.value }); setDevRate(o.hint ?? null); } else setDev(null);
           setDevQ(o.value);
@@ -115,7 +116,7 @@ export function DealFields({ onChange, autoFocus }: { onChange: (deal: DealInput
           if (o.id) {
             setProj({ id: o.id, name: o.value });
             setProjRate(o.hint?.split(" · ").pop() ?? null);
-            if (o.developer) { setDev(o.developer); setDevQ(o.developer.name); }
+            if (o.developer) { setDev({ id: o.developer.id, name: o.developer.name }); setDevQ(o.developer.name); setDevRate(o.developer.rate); }
           } else setProj(null);
           setProjQ(o.value);
         }} />
