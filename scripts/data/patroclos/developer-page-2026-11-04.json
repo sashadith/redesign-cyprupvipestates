@@ -1,0 +1,41 @@
+{
+ "_source": "Written 2026-11-04 from patroclos.com.cy (About, Services, project pages) and the developer's Drive share. Short description only — the long SEO block (description) and seo meta are Alex's; seo is {} because a null seo 500s the page. Logo: their own white raster logo (Patroclos-logo-white.png, 514x114, from patroclos.com.cy), recoloured navy #1B365D and trimmed to 497x89 — no vector version found. Created OFFLINE: contract clause 9.1 requires Patroclos' written pre-approval before we promote their name.",
+ "slug": "patroclos-group",
+ "accountSlug": "patroclos",
+ "title": "Patroclos Group",
+ "logo": {
+  "_type": "image",
+  "alt": "Patroclos Group logo",
+  "asset": {
+   "_type": "reference",
+   "_ref": "image-d186e909bc1ad83ccd45add2e76ebe5c9a6247ec-497x89-png"
+  }
+ },
+ "logoFile": "public/uploads/images/d186e909bc1ad83ccd45add2e76ebe5c9a6247ec-497x89.png",
+ "languages": {
+  "en": {
+   "titleFull": "Patroclos Group – New Apartments, Villas and Offices for Sale in Cyprus",
+   "excerpt": "Patroclos Group of Companies is a developer and contractor based in Larnaca, founded in 1983. It builds apartment complexes, villas with private pools and commercial buildings in Cyprus, mostly in Livadia and Oroklini on Larnaca Bay, and also in Limassol and Nicosia. The projects below show current prices, floor areas and the homes still for sale.",
+   "seo": {},
+   "html": ""
+  },
+  "de": {
+   "titleFull": "Patroclos Group – Neubauwohnungen, Villen und Büros in Zypern kaufen",
+   "excerpt": "Patroclos Group of Companies ist ein Bauträger und Bauunternehmen aus Larnaka, gegründet 1983. Gebaut werden Wohnanlagen, Villen mit eigenem Pool und Gewerbeobjekte in Zypern, vor allem in Livadia und Oroklini an der Bucht von Larnaka, außerdem in Limassol und Nikosia. Unten stehen aktuelle Preise, Flächen und die noch verfügbaren Objekte.",
+   "seo": {},
+   "html": ""
+  },
+  "pl": {
+   "titleFull": "Patroclos Group – nowe apartamenty, wille i biura na sprzedaż na Cyprze",
+   "excerpt": "Patroclos Group of Companies to deweloper i firma budowlana z Larnaki, działająca od 1983 roku. Buduje osiedla apartamentów, wille z prywatnym basenem i budynki komercyjne na Cyprze, głównie w Livadii i Oroklini nad zatoką Larnaki, a także w Limassol i Nikozji. Poniżej aktualne ceny, metraże i lokale wciąż na sprzedaż.",
+   "seo": {},
+   "html": ""
+  },
+  "ru": {
+   "titleFull": "Patroclos Group – новые квартиры, виллы и офисы на Кипре",
+   "excerpt": "Patroclos Group of Companies — застройщик и строительная компания из Ларнаки, основана в 1983 году. Строит жилые комплексы, виллы с собственным бассейном и коммерческие здания на Кипре: в основном в Ливадии и Ороклини у залива Ларнаки, а также в Лимассоле и Никосии. Ниже — актуальные цены, площади и объекты в продаже.",
+   "seo": {},
+   "html": ""
+  }
+ }
+}
