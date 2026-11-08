@@ -150,7 +150,7 @@ export async function POST(request: Request) {
 
     // Server copy of the browser's Lead (consent-gated, deduplicated by the
     // form's metaEventId). Not awaited: it never throws and must not hold the reply.
-    void sendLeadToMeta(request, body, { email: emailNorm, phone: phoneNorm, page, contentName: source });
+    void sendLeadToMeta(request, body, { id: lead.id, email: emailNorm, phone: phoneNorm, page, contentName: source });
 
     // Top property matches (non-fatal, best-effort) — auto-match against the
     // lead's own data, no admin filters, so this is necessarily a rough first

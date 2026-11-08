@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { newMetaEventId } from "@/lib/metaEventId";
 import { leadIdForServer } from "@/lib/metaPixelGate";
 import {
-  buildCapiPayload, freshEventId, capiConfig, capiContextFrom, capiRefusal, cookieFrom, normalizeEmail, normalizePhone,
+  buildCapiPayload, fbcFromFbclid, freshEventId, capiConfig, capiContextFrom, capiRefusal, cookieFrom, normalizeEmail, normalizePhone,
   sendCapiEvent, validEventId, type CapiEventInput,
 } from "@/lib/metaCapi";
 
@@ -93,6 +93,28 @@ test("the payload hashes email and phone and carries nothing raw", () => {
   assert.ok(!/jane|example\.com|99 ?123456/i.test(json), "a raw email or phone reached the payload");
   assert.ok(!("test_event_code" in body));
   assert.equal((buildCapiPayload(input(), { token: "t", testEventCode: "TEST9" }) as any).test_event_code, "TEST9");
+});
+
+test("external_id is the CRM lead id, hashed; absent when there is none", () => {
+  const ev = buildCapiPayload(input({ externalId: "3f9a2c1e-0000-4000-8000-000000000001" }), CFG).data[0] as any;
+  assert.deepEqual(ev.user_data.external_id, [h("3f9a2c1e-0000-4000-8000-000000000001")]);
+  assert.ok(!JSON.stringify(ev).includes("3f9a2c1e-0000"), "the raw lead id reached the payload");
+  assert.ok(!("external_id" in (buildCapiPayload(input(), CFG).data[0] as any).user_data));
+  assert.ok(!("external_id" in (buildCapiPayload(input({ externalId: "  " }), CFG).data[0] as any).user_data));
+});
+
+test("fbc: the _fbc cookie wins; without it the form's fbclid builds one", () => {
+  const CLICK = "IwAR2xYz_Ab-Cd0123456789";
+  // Cookie present: unchanged, the fbclid is ignored.
+  assert.equal((buildCapiPayload(input({ fbclid: CLICK }), CFG).data[0] as any).user_data.fbc, "fb.1.1700000000000.AbCdEf");
+  // No cookie: fb.1.<event time in ms>.<fbclid>, case preserved.
+  const noCookie = new Request("https://cyprusvipestates.com/api/leads", { method: "POST", headers: { cookie: CONSENT, "user-agent": CHROME } });
+  const ev = buildCapiPayload(input({ ctx: capiContextFrom(noCookie), fbclid: CLICK, eventTime: 1794100000 }), CFG).data[0] as any;
+  assert.equal(ev.user_data.fbc, `fb.1.1794100000000.${CLICK}`);
+  // Neither: no fbc key at all.
+  assert.ok(!("fbc" in (buildCapiPayload(input({ ctx: capiContextFrom(noCookie) }), CFG).data[0] as any).user_data));
+  // A malformed click id is dropped, not sent.
+  for (const bad of ["", "short", "has space in it 12345", "a\"quote1234567", "x".repeat(501), null, 42]) assert.equal(fbcFromFbclid(bad, 1), null, String(bad));
 });
 
 test("Contact carries no email or phone at all", () => {
@@ -183,7 +205,7 @@ test("every browser Lead posts its id, and reuses it for fbq", () => {
 test("every lead route that answers a browser Lead sends the server copy", () => {
   for (const r of ["src/app/api/leads/route.ts", "src/app/api/roi-calculator/route.ts", "src/app/api/email/route.ts"]) {
     const s = readFileSync(join(process.cwd(), r), "utf8");
-    assert.ok(/void sendLeadToMeta\(request, body, \{/.test(s), `${r} no longer sends the Lead to the Conversions API`);
+    assert.ok(/void sendLeadToMeta\(request, body, \{ id: lead\.id, /.test(s), `${r} no longer sends the Lead (with the CRM lead id) to the Conversions API`);
     // After the lead is stored, never before: a server Lead for a lead that
     // failed to save would be a conversion nobody can follow up.
     assert.ok(s.indexOf("sendLeadToMeta(request") > s.indexOf("prisma.lead.create("), `${r} sends before the lead is saved`);
