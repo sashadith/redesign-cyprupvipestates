@@ -51,7 +51,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     select: {
       id: true, firstName: true, lastName: true, email: true, phone: true, nationality: true, countryOfResidence: true,
       languagePreference: true, salutation: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true,
-      message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, status: true, lostReason: true, source: true, guideTitle: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
+      message: true, notes: true, lastMatchFilters: true, emailInvalidAt: true, emailInvalidReason: true, timeZone: true, preferredChannel: true, status: true, lostReason: true, source: true, guideTitle: true, createdAt: true, assignedToId: true, nextFollowUpAt: true,
       workedByPartner: true, partnerMode: true, partner: { select: { company: true, firstName: true, lastName: true, managerUserId: true } },
       assignedTo: { select: { name: true } },
       projectInterest: { select: { title: true, city: true } },
@@ -131,6 +131,7 @@ export default async function LeadCockpitPage({ params, searchParams }: { params
     lang: lead.languagePreference?.toUpperCase() ?? null, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax,
     timeline: lead.timeline, financing: lead.financing, propertyTypes: lead.propertyTypeInterest, message: lead.message, notes: lead.notes,
     status: lead.status, lostReason: lead.lostReason, source: lead.source, ownerName: lead.assignedTo?.name ?? null,
+    preferredChannel: lead.preferredChannel,
     project: lead.projectInterest ? [lead.projectInterest.title, lead.projectInterest.city].filter(Boolean).join(" · ") : null,
     createdAt: lead.createdAt, attribution,
     workedByPartnerName: lead.workedByPartner ? (lead.partner ? messagePartnerLabel(lead.partner) : "Partner") : null,
