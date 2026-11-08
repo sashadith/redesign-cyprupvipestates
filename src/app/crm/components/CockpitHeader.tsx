@@ -18,6 +18,8 @@ export type CockpitLead = {
   lang: string | null; budgetMin: number | null; budgetMax: number | null; timeline: string | null; financing: string | null;
   propertyTypes: string[]; message: string | null; notes: string | null; status: string; lostReason: string | null; source: string;
   ownerName: string | null; project: string | null; createdAt: Date;
+  /** How the lead asked to be contacted (Lead.preferredChannel), shown as "Prefers". */
+  preferredChannel?: string | null;
   /** Set while a partner works this FIX client (Lead.workedByPartner): the cockpit is read only. */
   workedByPartnerName?: string | null;
   attribution: { label: string; value: string }[];
@@ -75,6 +77,9 @@ export function CockpitHeader({ lead, now, temperature = null, actions = null, c
   );
 }
 
+// Lead.preferredChannel, as the old cockpit showed it ("Prefers WhatsApp"); restored 2026-11-08.
+const PREFERRED_LABEL: Record<string, string> = { WHATSAPP: "WhatsApp", PHONE: "Phone call", EMAIL: "Email" };
+
 // followUp renders inside the panel, under the enquiry (operator, 2026-11-01).
 // A partner-worked lead shows its contact details as text only: staff do not contact the partner's client.
 export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp?: ReactNode }) {
@@ -92,6 +97,7 @@ export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp
     ["Lives in", lead.countryOfResidence],
   ];
   const shown = facts.filter(([, v]) => v);
+  const prefers = lead.preferredChannel ? PREFERRED_LABEL[lead.preferredChannel] ?? lead.preferredChannel : null;
   return (
     <section className="crm-panel crm-ck-contact" aria-labelledby="crm-ck-contact-h">
       <h2 id="crm-ck-contact-h">Contact</h2>
@@ -124,6 +130,7 @@ export function CockpitContact({ lead, followUp }: { lead: CockpitLead; followUp
             </dd>
           </div>
         )}
+        {prefers && <div><dt>Prefers</dt><dd><strong>{prefers}</strong></dd></div>}
         {!lead.phone && !lead.email && <div><dt>Contact</dt><dd className="crm-muted">No phone or email on file</dd></div>}
         {shown.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
       </dl>
