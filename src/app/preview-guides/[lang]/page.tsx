@@ -11,6 +11,8 @@ import { urlFor } from "@/sanity/sanity.client";
 import { GUIDE_CATEGORY_GROUPS, articleHref, sectionSegments } from "@/lib/articleSections";
 import { guidesCountLabel, guidesSectionStrings } from "@/app/[lang]/blog/guidesSectionI18n";
 import GuideGet from "@/app/components/GuideCta/GuideGet";
+import LightHeroFlag from "../../preview-insights/LightHeroFlag";
+import InsightsMotion from "../../preview-insights/InsightsMotion";
 import { GUIDE_IDS, GUIDE_UI, getGuideContent, guideMainArticleSlug, guideTeaser, isGuideLang, type GuideId } from "@/lib/guides/registry";
 import { GUIDES_PAGE_SLUG, guidesPagePath, guidesPageTranslations } from "@/lib/guidesPage";
 import { localizedHref } from "@/lib/locale";
@@ -116,34 +118,63 @@ export default async function GuidesPage({ params }: Props) {
     hasPart: cards.map((c) => ({ "@type": "DigitalDocument", name: c.teaser.title, description: c.teaser.subtitle, encodingFormat: "application/pdf", inLanguage: lang })),
   };
 
+  // The tablet in the hero shows the newest guide (cards below are the PDF guides, the fallback in a language with no articles).
+  const heroArticle = articles.find((a: any) => imgUrl(a.previewImage)) ?? articles[0];
+  const deviceImg = heroArticle ? imgUrl(heroArticle.previewImage) : cards[0]?.cover.src;
+  const deviceTitle: string = heroArticle?.title ?? cards[0]?.teaser.title ?? t.heroEyebrow;
+  const deviceKicker: string = heroArticle?.category?.title ?? ui.eyebrow;
+
   return (
     <>
       <Header params={{ lang }} translations={translations} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
-      <main className="gds">
-        <section className="hero gds__hero">
-          <div className="hero__scrim" aria-hidden />
-          <div className="hero__inner wrap">
-            <h1 className="hero__title">
-              <span className="hero__brand">{t.heroEyebrow}</span>
-              <span className="hero__headline">
+      <LightHeroFlag />
+      <InsightsMotion />
+      <main className="ins gds">
+        {/* The same first screen as the blog and the case studies index: light hero, the tablet showing the newest guide,
+            tucked under the dark list below. */}
+        <header className="ins__hero is-light gds__hero">
+          <div className="wrap ins__hero-grid">
+            <div className="ins__hero-text">
+              <p className="ins__eyebrow">{t.heroEyebrow}</p>
+              <h1 className="ins__hero-title gds__hero-title">
                 {t.heroTitle[0]}
                 <span className="it">{t.heroTitle[1]}</span>
                 {t.heroTitle[2]}
-              </span>
-            </h1>
-            <div className="hero__stripe shimmer" aria-hidden />
-            <p className="hero__desc">{t.heroLead}</p>
-            <div className="hero__cta">
-              <a className="btn btn--glass" href={groups.length ? "#all-guides" : "#guides"}><span>{t.heroCta}</span></a>
-              {groups.length > 0 && <a className="btn btn--glass" href="#guides"><span>{t.heroCta2}</span></a>}
+              </h1>
+              <p className="ins__hero-lead">{t.heroLead}</p>
+              {articles.length > 0 && <p className="ins__hero-meta">{guidesCountLabel(lang, articles.length)}</p>}
+              <div className="gds__hero-cta">
+                <a className="btn btn--primary" href={groups.length ? "#all-guides" : "#guides"}><span>{t.heroCta}</span></a>
+                {groups.length > 0 && <a className="btn btn--ghost" href="#guides"><span>{t.heroCta2}</span></a>}
+              </div>
+            </div>
+
+            <div className="ins__hero-art" aria-hidden>
+              <div className="ins__device">
+                <div className="ins__device-screen">
+                  <div className="ins__device-topbar">
+                    <span className="ins__device-brand">Cyprus VIP Estates</span>
+                    <span className="ins__device-dots"><i /><i /><i /></span>
+                  </div>
+                  {deviceImg && <div className="ins__device-cover" style={{ backgroundImage: `url("${deviceImg}")` }} />}
+                  <div className="ins__device-content">
+                    <span className="ins__device-kicker">{deviceKicker}</span>
+                    <p className="ins__device-headline">{deviceTitle}</p>
+                    <span className="ins__device-line" />
+                    <span className="ins__device-line" />
+                    <span className="ins__device-line ins__device-line--short" />
+                    <span className="ins__device-read">{sec.read}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
+        </header>
 
         {groups.length > 0 && (
-          <section className="section is-light gds__articles" id="all-guides">
+          <section className="ins__list gds__articles" id="all-guides">
             <div className="wrap">
               <p className="gds__eyebrow">{sec.allEyebrow}</p>
               <h2 className="gds__title">{sec.allTitle}</h2>

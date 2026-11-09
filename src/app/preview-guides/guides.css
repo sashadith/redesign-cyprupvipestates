@@ -1,12 +1,13 @@
 /* The free guides page. Tokens and the hero/button/stripe classes come from preview-home/tokens.css. */
-.gds__hero { min-height: auto; padding-block: clamp(120px, 14vw, 190px) clamp(56px, 7vw, 96px); background:
-  radial-gradient(90% 80% at 85% 0%, rgba(194, 154, 94, 0.2) 0%, rgba(194, 154, 94, 0) 60%), var(--bg); }
-.gds__hero .hero__inner { position: relative; }
+/* First screen: the shared Insights hero (.ins__hero). The guides title is a full sentence, not a two-word brand name, so it
+   is set smaller than the blog's, and the two buttons sit under the count. */
+.gds__hero-title { font-size: clamp(2.3rem, 1.5rem + 3.2vw, 4.2rem); line-height: 1.04; }
+.gds__hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: var(--s-6); }
 .gds__eyebrow { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
 .gds__title { margin: 10px 0 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; color: var(--text); text-wrap: balance; }
 .gds__title--dark { color: var(--ivory); }
 .gds__stripe { margin: var(--s-5) 0 clamp(32px, 4vw, 56px); max-width: 200px; }
-.gds__list { padding-block: var(--section-y); }
+.gds__list { position: relative; z-index: 2; padding-block: var(--section-y); }
 .gds__grid { display: grid; grid-template-columns: 1fr; gap: clamp(20px, 2.4vw, 32px); }
 @media (min-width: 980px) { .gds__grid { grid-template-columns: 1fr 1fr; } }
 /* The guide card: deep green; text in a column on the left, the button pinned to the bottom of the column (so it sits at the same place on
@@ -47,7 +48,7 @@
 .gds__steptext { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
 
 /* Guide articles listing (all guides of the language, grouped by category), above the free PDF guides. */
-.gds__articles { padding-block: var(--section-y); }
+.gds__articles { padding-block: clamp(56px, 8vw, 104px); }
 .gds__lead { margin: 0 0 var(--s-5); max-width: 62ch; font-family: var(--font-body), sans-serif; color: var(--text); opacity: 0.8; line-height: 1.6; }
 .gds__chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 clamp(28px, 4vw, 48px); }
 .gds__chip { display: inline-block; padding: 8px 14px; border: 1px solid var(--hairline, rgba(0,0,0,.15)); border-radius: 999px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: .04em; color: var(--text); text-decoration: none; }
@@ -56,9 +57,3 @@
 .gds__group:first-of-type { margin-top: 0; }
 .gds__group-title { margin: 0 0 var(--s-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: var(--text-h3, 1.6rem); color: var(--text); }
 .gds__group-count { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-/* The shared .icard styles are made for the dark ground of the blog listing (ivory title, hairline border). The guides list
-   sits on the light ground: dark title that turns accent on hover, no border round the picture. */
-.gds__articles .icard__media { border: 0; }
-.gds__articles .icard__title { color: var(--text); }
-.gds__articles .icard:hover .icard__title,
-.gds__articles .icard:focus-visible .icard__title { color: var(--accent); }
