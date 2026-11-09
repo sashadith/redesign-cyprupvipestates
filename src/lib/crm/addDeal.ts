@@ -4,7 +4,7 @@ import { authorColumns } from "./leadActor";
 import { insertDeal, moveLead } from "./moveLead";
 import { writeAudit } from "./audit";
 import type { DealInput } from "./dealInput";
-import { shouldMoveToReserved } from "./addDealRules";
+import { dealNeedsMove, LOST_NEEDS_MOVE, shouldMoveToReserved } from "./addDealRules";
 import type { SessionCrmUser } from "./session";
 
 // Cockpit "New deal" (operator, 2026-11-08): a deal entered by hand, at any
@@ -25,6 +25,7 @@ export async function addDeal(actor: SessionCrmUser, leadId: string, deal: DealI
     });
     if (!lead || lead.deletedAt) return { error: "Lead not found." };
     if (!canEditLead(actor, lead)) return { error: leadEditError(actor, lead) ?? "Lead not found." };
+    if (dealNeedsMove(lead.status) && !moveToReserved) return { error: LOST_NEEDS_MOVE };
     // A lead already Closed gets the deal as earned, as the move to Closed would.
     const made = await insertDeal(tx, { lead, leadId, deal, earnNow: lead.status === "CLOSED", now: new Date(), author });
     if ("error" in made) return made;
@@ -39,6 +40,13 @@ export async function addDeal(actor: SessionCrmUser, leadId: string, deal: DealI
   if ("error" in res) return res;
   if (!shouldMoveToReserved(res.status, moveToReserved)) return { ok: true, moved: false };
   const moved = await moveLead(actor, leadId, "RESERVED", {});
-  if ("error" in moved) return { ok: true, moved: false, warning: `The deal is saved, but the lead could not move to Reserved: ${moved.error}` };
+  if ("error" in moved) {
+    // A lost lead must not keep the deal: take it back, so a retry starts clean.
+    if (dealNeedsMove(res.status)) {
+      await prisma.deal.delete({ where: { id: res.dealId } }).catch(() => undefined);
+      return { error: `The lead could not move to Reserved, so the deal was not saved: ${moved.error}` };
+    }
+    return { ok: true, moved: false, warning: `The deal is saved, but the lead could not move to Reserved: ${moved.error}` };
+  }
   return { ok: true, moved: true };
 }

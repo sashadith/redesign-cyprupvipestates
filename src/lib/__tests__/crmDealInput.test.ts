@@ -98,3 +98,10 @@ test("New deal moves the lead to Reserved only before Reserved and only when tic
 test("one- and two-decimal rates that floats cannot hold exactly still pass", () => {
   for (const r of [4.1, 2.3, 1.1, 4.35, 0.57, 12.99]) assert.equal(ok({ developmentId: "d", price: 1, ratePercent: r }).ratePercent, r, String(r));
 });
+
+import { dealNeedsMove } from "@/lib/crm/addDealRules";
+
+test("only a lost lead needs the move to Reserved with a new deal", () => {
+  assert.equal(dealNeedsMove("LOST"), true);
+  for (const s of ["NEW", "OFFER", "KEEP_CONTACT", "RESERVED", "CLOSED"]) assert.equal(dealNeedsMove(s), false, s);
+});
