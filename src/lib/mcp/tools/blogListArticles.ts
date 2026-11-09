@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
 import { BLOG_LOCALES, groupArticles, listEntry, type ArticleRow } from "@/lib/blog/articleUrls";
+import { bodyImageUrls, coverImageUrl } from "@/lib/blog/articleImages";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
@@ -24,7 +25,7 @@ export function registerBlogListArticles(server: McpServer) {
     {
       title: "List blog articles",
       description:
-        "Every published blog article (one entry per article across its translations) with, per locale en/de/pl/ru, the title, meta description and the exact public URL the live site serves (English has no prefix; URLs come from the same helper the language switcher uses). A locale without a published translation is the string \"missing\". Newest first. For the body use blog_get_article.",
+        "Every published blog article (one entry per article across its translations) with, per locale en/de/pl/ru, the title, meta description and the exact public URL the live site serves (English has no prefix; URLs come from the same helper the language switcher uses). Each locale also carries `coverImageUrl` (the cover the public page uses as hero and og:image) and `bodyImageUrls` (every body image, in order) — absolute https://cyprusvipestates.com/uploads/… URLs that render_instagram_carousel accepts; null / [] when there is none. A locale without a published translation is the string \"missing\". Newest first. For the body use blog_get_article.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
@@ -42,6 +43,13 @@ export function registerBlogListArticles(server: McpServer) {
         const byLocale = {} as Record<(typeof BLOG_LOCALES)[number], number>;
         for (const l of BLOG_LOCALES) byLocale[l] = entries.filter((e) => e.locales[l] !== "missing").length;
         entries = entries.slice((input.page - 1) * input.limit, input.page * input.limit);
+        // Images only for the rows on this page: bodies are large, the list is not.
+        const wantedRows = entries.flatMap((e) => BLOG_LOCALES.flatMap((l) => (e.locales[l] === "missing" ? [] : [{ language: l, slug: (e.locales[l] as { slug: string }).slug }])));
+        const imageRows = wantedRows.length
+          ? await prisma.blog.findMany({ where: { status: "PUBLISHED", OR: wantedRows }, select: { language: true, slug: true, previewImage: true, contentBlocks: true } })
+          : [];
+        const images = new Map(imageRows.map((r) => [`${r.language}:${r.slug}`, { coverImageUrl: coverImageUrl(r.previewImage), bodyImageUrls: bodyImageUrls(r.contentBlocks) }]));
+        const noImages = { coverImageUrl: null, bodyImageUrls: [] as string[] };
         return {
           total,
           publishedByLocale: byLocale,
@@ -55,7 +63,7 @@ export function registerBlogListArticles(server: McpServer) {
             locales: Object.fromEntries(
               BLOG_LOCALES.map((l) => {
                 const v = e.locales[l];
-                return [l, v === "missing" ? "missing" : { ...v, publishedAt: fmtDate(v.publishedAt), updatedAt: fmtDate(v.updatedAt) }];
+                return [l, v === "missing" ? "missing" : { ...v, publishedAt: fmtDate(v.publishedAt), updatedAt: fmtDate(v.updatedAt), ...(images.get(`${l}:${v.slug}`) ?? noImages) }];
               }),
             ),
           })),

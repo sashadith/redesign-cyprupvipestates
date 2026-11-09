@@ -8,7 +8,8 @@
 // so the tool can report sources with their section.
 
 export type ArticleLink = { text: string; href: string; section: string | null };
-export type MarkdownResult = { markdown: string; links: ArticleLink[]; wordCount: number };
+/** images: every body image, absolute, in order, each once (2026-11-09: blog_get_article bodyImageUrls). */
+export type MarkdownResult = { markdown: string; links: ArticleLink[]; wordCount: number; images: string[] };
 
 const IMAGE_RE = /^image-([a-f0-9]+)-(\d+)x(\d+)-(\w+)$/;
 
@@ -19,7 +20,8 @@ function refToLocalUrl(ref: unknown): string | null {
   return m ? `/uploads/images/${m[1]}-${m[2]}x${m[3]}.${m[4]}` : null;
 }
 
-function imageUrl(img: any): string | null {
+/** Our hosted /uploads/… path of an image value (asset url or Sanity-style ref), else null. */
+export function imagePath(img: any): string | null {
   if (!img) return null;
   return (
     (typeof img?.asset?.url === "string" && img.asset.url.startsWith("/uploads/") ? img.asset.url : null) ??
@@ -27,10 +29,25 @@ function imageUrl(img: any): string | null {
   );
 }
 
+/** An /uploads/… path as the absolute URL the live site serves; anything else -> null. */
+export function absoluteUploadsUrl(p: string | null | undefined): string | null {
+  if (typeof p !== "string" || !p.startsWith("/uploads/")) return null;
+  return `https://${OWN_HOST}${p}`;
+}
+
+function imageUrl(img: any): string | null {
+  return absoluteUploadsUrl(imagePath(img));
+}
+
 const escapeMd = (s: string) => s.replace(/([*_`[\]])/g, "\\$1");
 const collapse = (s: string) => s.replace(/[ \t]+/g, " ").trim();
 
-type Ctx = { lines: string[]; links: ArticleLink[]; section: string | null };
+type Ctx = { lines: string[]; links: ArticleLink[]; section: string | null; images: string[] };
+
+const pushImage = (ctx: Ctx, alt: string, url: string) => {
+  ctx.lines.push(`![${alt}](${url})`, "");
+  if (!ctx.images.includes(url)) ctx.images.push(url);
+};
 
 function spanMd(span: any, markDefs: any[], ctx: Ctx): string {
   let text = escapeMd(String(span?.text ?? ""));
@@ -62,7 +79,7 @@ function portableTextMd(blocks: any[], ctx: Ctx): void {
     if (b._type === "image") {
       endList();
       const url = imageUrl(b);
-      if (url) ctx.lines.push(`![${collapse(String(b.alt ?? ""))}](${url})`, "");
+      if (url) pushImage(ctx, collapse(String(b.alt ?? "")), url);
       continue;
     }
     if (b._type !== "block") { endList(); continue; }
@@ -115,7 +132,7 @@ function faqMd(block: any, ctx: Ctx): void {
 }
 
 export function contentBlocksToMarkdown(blocks: unknown): MarkdownResult {
-  const ctx: Ctx = { lines: [], links: [], section: null };
+  const ctx: Ctx = { lines: [], links: [], section: null, images: [] };
   for (const b of Array.isArray(blocks) ? blocks : []) {
     switch (b?._type) {
       case "textContent": portableTextMd(b.content ?? [], ctx); break;
@@ -124,7 +141,7 @@ export function contentBlocksToMarkdown(blocks: unknown): MarkdownResult {
           if (!cell) continue;
           if (cell.type === "image" && cell.image) {
             const url = imageUrl(cell.image);
-            if (url) ctx.lines.push(`![${collapse(String(cell.image?.alt ?? ""))}](${url})`, "");
+            if (url) pushImage(ctx, collapse(String(cell.image?.alt ?? "")), url);
           } else if (Array.isArray(cell.blockContent?.content)) portableTextMd(cell.blockContent.content, ctx);
         }
         break;
@@ -132,7 +149,7 @@ export function contentBlocksToMarkdown(blocks: unknown): MarkdownResult {
       case "tableBlock": tableMd(b, ctx); break;
       case "imageFullBlock": {
         const url = imageUrl(b.imageMain?.picture);
-        if (url) ctx.lines.push(`![${collapse(String(b.imageMain?.picture?.alt || b.title || ""))}](${url})`, "");
+        if (url) pushImage(ctx, collapse(String(b.imageMain?.picture?.alt || b.title || "")), url);
         break;
       }
       default: break; // buttonBlock, projectsSectionBlock, inlineRelatedArticleBlock, forms — not article text
@@ -141,7 +158,7 @@ export function contentBlocksToMarkdown(blocks: unknown): MarkdownResult {
   const markdown = ctx.lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
   const WORD_RE = new RegExp("[\\p{L}\\p{N}]", "u"); // constructed: the tsconfig target predates the `u` flag
   const wordCount = markdown.replace(/!\[[^\]]*\]\([^)]*\)/g, "").split(/\s+/).filter((w) => WORD_RE.test(w)).length;
-  return { markdown, links: ctx.links, wordCount };
+  return { markdown, links: ctx.links, wordCount, images: ctx.images };
 }
 
 // ---- sources ---------------------------------------------------------------
