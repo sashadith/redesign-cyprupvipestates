@@ -158,3 +158,25 @@ test("editing the developer after picking a project drops the project's id", asy
   assert.equal(calls[0].deal.developerName, "Other Builder");
   await act(async () => root.unmount());
 });
+
+test("a lost lead: the move to Reserved is fixed on, and the deal is sent with it", async () => {
+  const root = await open("LOST");
+  const box = doc.querySelector(".crm-deal-move input");
+  assert.ok(box && box.checked && box.disabled, "move fixed on for a lost lead");
+  assert.match(doc.querySelector(".crm-deal-dialog").textContent, /lost lead cannot hold a deal/);
+  await type("#crm-deal-dev", "Smith Developers");
+  await type("#crm-deal-proj", "Sea View Villas");
+  await type("#crm-price", "500 000");
+  await wait();
+  await submit();
+  await wait();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].move, true);
+  await act(async () => root.unmount());
+});
+
+test("a reserved lead offers no move box", async () => {
+  const root = await open("RESERVED");
+  assert.equal(doc.querySelector(".crm-deal-move"), null);
+  await act(async () => root.unmount());
+});
