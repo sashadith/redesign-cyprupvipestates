@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
 import { BLOG_LOCALES, groupArticles, localeUrls, metaDescriptionOf, type ArticleRow } from "@/lib/blog/articleUrls";
 import { contentBlocksToMarkdown, extractSources } from "@/lib/blog/blocksToMarkdown";
+import { coverImageUrl } from "@/lib/blog/articleImages";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
@@ -19,7 +20,7 @@ export function registerBlogGetArticle(server: McpServer) {
     {
       title: "Get a blog article",
       description:
-        "One published article in the requested locale: title, meta description, the four locale URLs (null where no published translation exists), the full body as clean Markdown (headings, lists, tables, FAQ, images; no HTML), the external links it cites as `sources` (own domain and social profiles excluded, deduplicated), its internal links, word count, author, category and dates.",
+        "One published article in the requested locale: title, meta description, the four locale URLs (null where no published translation exists), the full body as clean Markdown (headings, lists, tables, FAQ, images as absolute URLs; no HTML), `coverImageUrl` (the cover the public page uses as hero and og:image) and `bodyImageUrls` (every body image, in order) — absolute https://cyprusvipestates.com/uploads/… URLs that render_instagram_carousel accepts, null / [] when there is none, the external links it cites as `sources` (own domain and social profiles excluded, deduplicated), its internal links, word count, author, category and dates.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
@@ -27,7 +28,7 @@ export function registerBlogGetArticle(server: McpServer) {
       runTool("blog_get_article", contextFromAuthInfo(ctx.http?.authInfo), null, async () => {
         const row = await prisma.blog.findFirst({
           where: { language: input.locale, slug: input.slug, status: "PUBLISHED" },
-          select: { ...BLOG_ROW_SELECT, excerpt: true, readingTime: true, contentBlocks: true, author: { select: { name: true } } },
+          select: { ...BLOG_ROW_SELECT, previewImage: true, excerpt: true, readingTime: true, contentBlocks: true, author: { select: { name: true } } },
         });
         if (!row) throw new ToolError("not_found", "Article not found.");
         const siblings = row.translationGroupId
@@ -50,6 +51,8 @@ export function registerBlogGetArticle(server: McpServer) {
           urls,
           publishedAt: fmtDate(row.publishedAt),
           updatedAt: fmtDate(row.updatedAt),
+          coverImageUrl: coverImageUrl(row.previewImage),
+          bodyImageUrls: body.images,
           sources,
           internalLinks,
           body: body.markdown,

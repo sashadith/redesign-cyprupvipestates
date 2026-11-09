@@ -30,12 +30,12 @@ test("renders headings, marks, links, lists, quotes, images, tables, FAQ and dou
   assert.ok(markdown.includes("Transfer fees are **set by law** — see [the Land Registry](https://www.moi.gov.cy/dls)."));
   assert.ok(markdown.includes("- First\n- Second\n\n1. Step one"));
   assert.ok(markdown.includes("> A quote"));
-  assert.ok(markdown.includes("![Paphos](/uploads/images/abc123-800x600.jpg)"));
+  assert.ok(markdown.includes("![Paphos](https://cyprusvipestates.com/uploads/images/abc123-800x600.jpg)"));
   assert.ok(markdown.includes("| Price | Fee |\n| --- | --- |\n| €300,000 | 3% |\n| €500,000 \\| more | 5% |"));
   assert.ok(markdown.includes("### Is VAT due?\n\nYes, 19% on new builds; see [PwC](https://www.pwc.com.cy/tax)"));
   assert.ok(markdown.includes("### Left"));
-  assert.ok(markdown.includes("![Right](/uploads/images/x.jpg)"));
-  assert.ok(markdown.includes("![Hero](/uploads/images/def456-1600x900.webp)"));
+  assert.ok(markdown.includes("![Right](https://cyprusvipestates.com/uploads/images/x.jpg)"));
+  assert.ok(markdown.includes("![Hero](https://cyprusvipestates.com/uploads/images/def456-1600x900.webp)"));
   assert.ok(!markdown.includes("Contact us"));
   assert.ok(!/<[a-z]/i.test(markdown), "no HTML tags");
 });
@@ -52,6 +52,6 @@ test("sources are external links only, deduplicated by URL, with text and sectio
 });
 
 test("empty or non-array content yields empty output, not a throw", () => {
-  assert.deepEqual(contentBlocksToMarkdown(null), { markdown: "", links: [], wordCount: 0 });
+  assert.deepEqual(contentBlocksToMarkdown(null), { markdown: "", links: [], wordCount: 0, images: [] });
   assert.deepEqual(contentBlocksToMarkdown([{ _type: "textContent", content: [] }]).markdown, "");
 });
