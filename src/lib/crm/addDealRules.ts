@@ -6,3 +6,10 @@ const BEFORE_RESERVED = new Set(["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_S
 export function shouldMoveToReserved(status: string, moveToReserved: boolean): boolean {
   return moveToReserved && BEFORE_RESERVED.has(status);
 }
+
+/** A lost lead never holds a deal (operator, 2026-11-09): New deal there must reopen it to Reserved. */
+export function dealNeedsMove(status: string): boolean {
+  return status === "LOST";
+}
+
+export const LOST_NEEDS_MOVE = "A lost lead cannot hold a deal. Keep “Move the lead to Reserved” ticked to reopen it with this deal.";
