@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  canEditPartnerPresentation, expiryFromInput, parsePartnerFilters, toPartnerMatch, validatePartnerItems, type DevUnits,
+  canEditPartnerPresentation, expiryFromInput, parsePartnerFilters, partnerImageUrl, toPartnerMatch, validatePartnerItems, type DevUnits,
 } from "@/lib/partner/presentationBuilder";
 import type { DevelopmentMatch } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
@@ -105,4 +105,16 @@ test("expiry: tomorrow up to 90 days ahead, Cyprus calendar", () => {
   assert.equal(expiryFromInput("2027-02-11", now), null);
   assert.equal(expiryFromInput("2026-02-30", now), null);
   assert.equal(expiryFromInput("13.11.2026", now), null);
+});
+
+test("images: site-relative paths point at the public site (partner host blocks /uploads)", () => {
+  const o = "https://cyprusvipestates.com";
+  assert.equal(partnerImageUrl("/uploads/images/a.jpg", o), "https://cyprusvipestates.com/uploads/images/a.jpg");
+  assert.equal(partnerImageUrl("https://cdn.example.com/a.jpg", o), "https://cdn.example.com/a.jpg");
+  assert.equal(partnerImageUrl("//cdn.example.com/a.jpg", o), "//cdn.example.com/a.jpg");
+  assert.equal(partnerImageUrl(null, o), null);
+  assert.equal(partnerImageUrl("", o), null);
+  const m = match("a");
+  m.development.mainImage = "/uploads/mirror/x.webp";
+  assert.equal(toPartnerMatch(m, new Set(["a"]), o)!.development.mainImage, "https://cyprusvipestates.com/uploads/mirror/x.webp");
 });
