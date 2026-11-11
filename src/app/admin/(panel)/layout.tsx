@@ -79,7 +79,27 @@ function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, ac
           label: "Users",
           // Activity (working-hours report on colleagues) is owner-only, not every ADMIN — see users/activity/page.tsx.
           pages: [{ href: "/admin/users", label: "Users" }, ...(isOwner ? [{ href: "/admin/users/activity", label: "Activity" }] : [])],
-        }]
+        },
+        // The two machine channels into this business, side by side under Users
+        // because both are accounts with access to leads — one for Claude, one
+        // for WhatsApp (2026-11-11, operator request).
+        //
+        // MCP: /admin/mcp ("Connected apps") existed since 2026-09-07 and was
+        // linked from ONE place, a sentence on /admin/account. It grants and
+        // revokes an app's right to read the CRM and send mail as you, which is
+        // not something to go looking for.
+        { key: "mcp", label: "MCP", pages: [{ href: "/admin/mcp", label: "Connected apps" }] },
+        // OpenWA: another application on its own host, so this opens a tab (see
+        // `external` in Sidebar.tsx). It earns a place in the rail because when
+        // that gateway loses its pairing EVERY WhatsApp lead alert stops —
+        // website form, guide downloads, partner form, ROI calculator, Meta —
+        // and the only fix is scanning a QR code in that dashboard. It happened
+        // on 2026-10-24 and again on 2026-11-11; the second time the Telegram
+        // alert had been sitting unread for five and a half hours.
+        //
+        // ADMIN-only on purpose: the dashboard takes the gateway's master key,
+        // which editors do not have, so for them the button would be a dead end.
+        { key: "openwa", label: "OpenWA", external: true, pages: [{ href: "https://wa.cyprusvipestates.com", label: "WhatsApp gateway" }] }]
       : []),
   ];
 }

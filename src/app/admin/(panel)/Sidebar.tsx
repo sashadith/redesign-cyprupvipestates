@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { NavIcon, PageIcon } from "./NavIcons";
 import { STATUS_LABEL, type ContractStatusKind } from "@/lib/developerContract";
+import type { OpenWaNavStatus } from "@/lib/openwa/navStatus";
 
 export type NavPage = { href: string; label: string; count?: number; countVariant?: "alert" | "neutral" };
 // A module is one application section. Single-page modules (Dashboard, Analytics)
 // link straight to their page; multi-page modules open a secondary sidebar.
-export type NavModule = { key: string; label: string; pages: NavPage[] };
+// `external` marks a module that is a different application on a different host
+// (OpenWA's dashboard): it opens in a new tab and never takes the active state,
+// because the admin's own nav must keep showing where you are inside the admin.
+export type NavModule = { key: string; label: string; pages: NavPage[]; external?: boolean };
 
 export type DeveloperNavItem = { id: string; name: string; count: number; hasFeed: boolean; contract: ContractStatusKind };
 
@@ -49,6 +53,10 @@ function resolveActive(pathname: string, modules: NavModule[]) {
   let activeModuleKey = modules[0]?.key ?? "";
   let activePage = "";
   for (const m of modules) {
+    // An external module's href is an absolute URL on another host; it can
+    // never be this pathname, and nothing in the admin should look "active"
+    // because a tab to another application is open.
+    if (m.external) continue;
     for (const p of m.pages) {
       const l = matchLen(pathname, p.href);
       if (l > best) {
@@ -63,6 +71,34 @@ function resolveActive(pathname: string, modules: NavModule[]) {
 
 // First page of a module = its landing target when clicked in the rail.
 const landing = (m: NavModule) => m.pages[0]?.href ?? "/admin";
+
+/* One module's clickable surface, in the rail and in the mobile drawer.
+   External modules leave the app, so they get a plain anchor with target and
+   rel rather than a client-side <Link>, and the tooltip says the tab is new. */
+function ModuleLink({ m, className, onClick, active, title, children }: {
+  m: NavModule;
+  className: string;
+  onClick: () => void;
+  active?: boolean;
+  /** Overrides the default tooltip — the OpenWA button appends its gateway state. */
+  title?: string;
+  children: ReactNode;
+}) {
+  const base = title ?? m.label;
+  if (m.external) {
+    return (
+      <a href={landing(m)} target="_blank" rel="noopener noreferrer" onClick={onClick}
+        title={`${base} — opens in a new tab`} className={className}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={landing(m)} onClick={onClick} aria-current={active ? "true" : undefined} title={base} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 // Developer-grouped secondary nav for the Developments module, with a live search
 // filter. Top-level (stable identity) so the search text survives re-renders.
@@ -144,6 +180,51 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
   );
 }
 
+/* OpenWA's session state on its own nav button (2026-11-11, operator request:
+ * "mach den Button ruhig sichtbar, damit er ins auge fällt").
+ *
+ * The gateway lost its pairing on 2026-10-24 and again on 2026-11-11. Both
+ * times the Telegram alert went out at the first bad run and then throttled to
+ * one message per six hours, and both times the admin looked exactly as it does
+ * when everything works — on 11-11 for five and a half hours, during which no
+ * lead from any source raised a WhatsApp alert. This paints that state onto the
+ * button that fixes it. It raises nothing: the alerting stays in the health cron.
+ *
+ * Fetched after mount, like the Action Center count, so it can never delay an
+ * admin page. Re-read every 60 s, skipped while the tab is hidden — a dot that
+ * was true an hour ago is worse than no dot.
+ */
+const STATUS_POLL_MS = 60_000;
+
+function useOpenWaStatus(enabled: boolean): OpenWaNavStatus | undefined {
+  const [status, setStatus] = useState<OpenWaNavStatus | undefined>(undefined);
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    const ac = new AbortController();
+    const load = () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      fetch("/api/admin/openwa-status", { signal: ac.signal, cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (!cancelled && d?.tone) setStatus(d as OpenWaNavStatus); })
+        .catch(() => { /* a failed probe must never break the nav it decorates */ });
+    };
+    load();
+    const id = setInterval(load, STATUS_POLL_MS);
+    return () => { cancelled = true; ac.abort(); clearInterval(id); };
+  }, [enabled]);
+  return status;
+}
+
+/* Colours per tone. `alarm` deliberately takes over the whole button — a 5 px
+   dot in a 104 px rail is exactly what went unnoticed for five hours. */
+const TONE: Record<string, { dot: string; button: string; text: string }> = {
+  ok: { dot: "bg-[#22C55E]", button: "", text: "text-[#15803D]" },
+  warn: { dot: "bg-[#F59E0B]", button: "bg-[#F59E0B]/10 text-[#B45309]", text: "text-[#B45309]" },
+  alarm: { dot: "bg-[#DC2626]", button: "bg-[#DC2626]/10 text-[#B91C1C] font-medium ring-1 ring-[#DC2626]/30", text: "text-[#B91C1C]" },
+  unknown: { dot: "", button: "", text: "" },
+};
+
 /**
  * The Action Center's item count, fetched AFTER the page has rendered.
  *
@@ -181,6 +262,8 @@ function useActionCenterCount(): number | undefined {
 export default function Sidebar({ modules: modulesProp, developersNav, devTotals, user, logoSrc, signOut }: Props) {
   const pathname = usePathname() || "";
   const actionCenterCount = useActionCenterCount();
+  // Only asked for when the OpenWA entry is actually in this user's nav (ADMIN).
+  const openWa = useOpenWaStatus(modulesProp.some((m) => m.key === "openwa"));
   // Injected into the Dashboard entry once it arrives. Kept out of the layout's
   // own render so the number's cost never delays the page.
   const modules = useMemo(
@@ -216,22 +299,39 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
   const devNav = developersNav ?? [];
   const devPanel = <DevelopmentsNavPanel nav={devNav} totals={devTotals} pathname={pathname} onNavigate={() => setOpen(false)} />;
 
+  // The status this module carries on its button, if any. Today only OpenWA has
+  // one; keyed by module so a second gateway would not need new render code.
+  const statusOf = (m: NavModule) => (m.key === "openwa" ? openWa : undefined);
+
   const railItem = (m: NavModule) => {
     const isActive = m.key === activeModuleKey;
+    const st = statusOf(m);
+    const tone = st ? TONE[st.tone] : undefined;
     return (
-      <Link
+      <ModuleLink
         key={m.key}
-        href={landing(m)}
+        m={m}
+        active={isActive}
         onClick={() => setOpen(false)}
-        aria-current={isActive ? "true" : undefined}
-        title={m.label}
-        className={`flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[11px] leading-tight transition-colors ${
-          isActive ? "bg-[#1B4B43]/10 text-[#1B4B43] font-medium" : "text-[#6B7280] hover:bg-[#1B4B43]/8 hover:text-[#1B4B43]"
+        title={st ? `${m.label} — ${st.label}` : undefined}
+        className={`relative flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[11px] leading-tight transition-colors ${
+          tone?.button
+            ? tone.button
+            : isActive
+              ? "bg-[#1B4B43]/10 text-[#1B4B43] font-medium"
+              : "text-[#6B7280] hover:bg-[#1B4B43]/8 hover:text-[#1B4B43]"
         }`}
       >
         <NavIcon k={m.key} />
         <span className="text-center">{m.label}</span>
-      </Link>
+        {st?.short && <span className="text-[9px] font-semibold tracking-wide text-center">{st.short}</span>}
+        {tone?.dot && (
+          <span className="absolute right-2 top-2 flex h-2 w-2">
+            {st!.tone === "alarm" && <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${tone.dot}`} />}
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${tone.dot}`} />
+          </span>
+        )}
+      </ModuleLink>
     );
   };
 
@@ -429,12 +529,23 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
                 const isActive = m.key === activeModuleKey;
                 return (
                   <div key={m.key} className="pt-2 first:pt-0">
-                    <Link href={landing(m)} onClick={() => setOpen(false)}
+                    <ModuleLink m={m} active={isActive} onClick={() => setOpen(false)}
+                      title={statusOf(m) ? `${m.label} — ${statusOf(m)!.label}` : undefined}
                       className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
-                        isActive ? "text-[#1B4B43] font-semibold" : "text-[#111827] hover:bg-[#1B4B43]/8"
+                        statusOf(m) && TONE[statusOf(m)!.tone].button
+                          ? TONE[statusOf(m)!.tone].button
+                          : isActive ? "text-[#1B4B43] font-semibold" : "text-[#111827] hover:bg-[#1B4B43]/8"
                       }`}>
                       <NavIcon k={m.key} /> {m.label}
-                    </Link>
+                      {/* The drawer has room for words, so it says what is wrong
+                          instead of making a colour carry the whole message. */}
+                      {statusOf(m) && TONE[statusOf(m)!.tone].dot && (
+                        <>
+                          <span className={`ml-auto inline-block h-2 w-2 shrink-0 rounded-full ${TONE[statusOf(m)!.tone].dot}`} />
+                          {statusOf(m)!.short && <span className="text-[10px] font-semibold tracking-wide">{statusOf(m)!.short}</span>}
+                        </>
+                      )}
+                    </ModuleLink>
                     {isActive && (m.key === "developments"
                       ? <div className="mt-0.5">{devPanel}</div>
                       : m.pages.length > 1 && (
