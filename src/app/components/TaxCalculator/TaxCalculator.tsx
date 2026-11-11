@@ -1,180 +1,339 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { computeTax, emptyInput, type Exemption, type Status, type TaxInput } from "@/lib/cyprusTax2026";
-import { taxCalcStrings } from "./taxCalculatorI18n";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { computeInvestorTax, emptyInvestorInput, type Exemption, type InvestorInput, type Status } from "@/lib/cyprusTax2026";
+import { taxCalcStrings, type SourceKey } from "./taxCalculatorI18n";
 import styles from "./TaxCalculator.module.css";
 
 /* The Cyprus tax calculator block of the guides (block type "taxCalculatorBlock"). Everything is computed in the
-   browser from src/lib/cyprusTax2026.ts; no value is sent anywhere. */
+   browser from src/lib/cyprusTax2026.ts; no value is sent anywhere. Built for owners of companies and investors:
+   the sources of income come first, salary last. */
 
 type Props = { lang: string; title?: string; guideHref?: string; guideLabel?: string };
-type Period = "year" | "month";
 
 const LOCALE: Record<string, string> = { en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU" };
+const ORDER: SourceKey[] = ["company", "dividends", "interest", "property", "crypto", "pension", "selfEmployed", "employment"];
 
-// Amount fields held as the text the visitor typed, so "1 2" or "12," never jump around while typing.
-type Raw = Record<
-  | "employment" | "selfEmployed" | "foreignPension" | "rent" | "dividends" | "interest"
-  | "spouseIncome" | "homeInterestOrRent" | "disasterInsurance" | "energyOrEv" | "otherDeductions",
-  string
->;
-const EMPTY_RAW: Raw = {
-  employment: "", selfEmployed: "", foreignPension: "", rent: "", dividends: "", interest: "",
-  spouseIncome: "", homeInterestOrRent: "", disasterInsurance: "", energyOrEv: "", otherDeductions: "",
+type Vals = {
+  companyProfit: string; companySalary: string; companyDividend: string;
+  dividends: string; interest: string; propertyGain: string; cryptoGain: string;
+  pension: string; selfEmployed: string; employment: string;
+  spouseIncome: string; homeInterestOrRent: string; disasterInsurance: string; energyOrEv: string; otherDeductions: string;
+};
+const EMPTY_VALS: Vals = {
+  companyProfit: "", companySalary: "", companyDividend: "", dividends: "", interest: "", propertyGain: "", cryptoGain: "",
+  pension: "", selfEmployed: "", employment: "", spouseIncome: "", homeInterestOrRent: "", disasterInsurance: "", energyOrEv: "", otherDeductions: "",
+};
+const NO_SOURCES: Record<SourceKey, boolean> = {
+  company: false, dividends: false, interest: false, property: false, crypto: false, pension: false, selfEmployed: false, employment: false,
 };
 
-const parse = (s: string): number => {
-  const n = Number(s.replace(/[\s  ,€]/g, "").replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : 0;
+type PresetKey = "owner" | "investor" | "pension" | "freelancer" | "employee";
+const PRESETS: Record<PresetKey, { on: SourceKey[]; vals: Partial<Vals> }> = {
+  owner: { on: ["company"], vals: { companyProfit: "250000", companySalary: "30000", companyDividend: "120000" } },
+  investor: { on: ["dividends", "interest", "property"], vals: { dividends: "80000", interest: "20000", propertyGain: "150000" } },
+  pension: { on: ["pension"], vals: { pension: "36000" } },
+  freelancer: { on: ["selfEmployed"], vals: { selfEmployed: "70000" } },
+  employee: { on: ["employment"], vals: { employment: "60000" } },
 };
+
+const num = (s: string): number => {
+  const n = Number(String(s).replace(/[^0-9]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** Animated open/close: the row height transitions with the grid-template-rows trick, no measuring. */
+function Collapse({ open, id, children }: { open: boolean; id?: string; children: React.ReactNode }) {
+  return (
+    <div id={id} className={`${styles.collapse} ${open ? styles.collapseOpen : ""}`} aria-hidden={!open}>
+      <div className={styles.collapseInner}>{children}</div>
+    </div>
+  );
+}
+
+function Chevron() {
+  return (
+    <svg className={styles.chev} width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** A titled section that opens and closes with an animation. */
+function Section({ title, badge, defaultOpen = false, children }: { title: string; badge?: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const id = useRef(`sec-${Math.random().toString(36).slice(2, 9)}`).current;
+  return (
+    <div className={styles.section}>
+      <button type="button" className={styles.sectionHead} aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
+        <span className={styles.sectionTitle}>{badge && <i>{badge}</i>}{title}</span>
+        <Chevron />
+      </button>
+      <Collapse open={open} id={id}>
+        <div className={styles.sectionBody}>{children}</div>
+      </Collapse>
+    </div>
+  );
+}
 
 export default function TaxCalculator({ lang, title, guideHref, guideLabel }: Props) {
   const t = taxCalcStrings(lang);
-  const nf = useMemo(() => new Intl.NumberFormat(LOCALE[lang] ?? "en-GB", { maximumFractionDigits: 0 }), [lang]);
+  const loc = LOCALE[lang] ?? "en-GB";
+  const nf = useMemo(() => new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }), [loc]);
   const eur = (n: number) => `€${nf.format(Math.round(n))}`;
-  const pct = (n: number) => `${(Math.round(n * 1000) / 10).toLocaleString(LOCALE[lang] ?? "en-GB")}%`;
+  const pct = (n: number) => `${(Math.round(n * 1000) / 10).toLocaleString(loc)}%`;
 
-  const [period, setPeriod] = useState<Period>("year");
-  const [raw, setRaw] = useState<Raw>(EMPTY_RAW);
   const [domiciled, setDomiciled] = useState(false);
+  const [on, setOn] = useState<Record<SourceKey, boolean>>(NO_SOURCES);
+  const [vals, setVals] = useState<Vals>(EMPTY_VALS);
+  const [mainHome, setMainHome] = useState(false);
   const [pensionS1, setPensionS1] = useState(false);
   const [exemption, setExemption] = useState<Exemption>("none");
   const [status, setStatus] = useState<Status>("single");
   const [children, setChildren] = useState(0);
+  const [preset, setPreset] = useState<PresetKey | null>(null);
 
-  const mult = period === "month" ? 12 : 1;
-  const input: TaxInput = useMemo(
-    () => ({
-      ...emptyInput(),
-      employment: parse(raw.employment) * mult,
-      selfEmployed: parse(raw.selfEmployed) * mult,
-      foreignPension: parse(raw.foreignPension) * mult,
-      rent: parse(raw.rent) * mult,
-      dividends: parse(raw.dividends) * mult,
-      interest: parse(raw.interest) * mult,
-      spouseIncome: parse(raw.spouseIncome) * mult,
-      // Deductions are yearly amounts whatever the income period is.
-      homeInterestOrRent: parse(raw.homeInterestOrRent),
-      disasterInsurance: parse(raw.disasterInsurance),
-      energyOrEv: parse(raw.energyOrEv),
-      otherDeductions: parse(raw.otherDeductions),
-      domiciled,
-      pensionHasS1: pensionS1,
-      exemption,
-      status,
-      children,
-    }),
-    [raw, mult, domiciled, pensionS1, exemption, status, children],
-  );
-  const res = useMemo(() => computeTax(input), [input]);
-  const has = res.grossIncome > 0;
-
-  const set = (k: keyof Raw) => (e: React.ChangeEvent<HTMLInputElement>) => setRaw((r) => ({ ...r, [k]: e.target.value }));
-  const field = (k: keyof Raw, label: string, hint?: string) => (
-    <label className={styles.field} key={k}>
-      <span className={styles.label}>{label}</span>
-      <span className={styles.inputWrap}>
-        <span className={styles.cur} aria-hidden>€</span>
-        <input
-          className={styles.input}
-          type="text"
-          inputMode="decimal"
-          autoComplete="off"
-          value={raw[k]}
-          onChange={set(k)}
-          placeholder="0"
-          aria-label={label}
-        />
-      </span>
-      {hint && <span className={styles.hint}>{hint}</span>}
-    </label>
-  );
-
-  const reset = () => {
-    setRaw(EMPTY_RAW);
-    setDomiciled(false);
+  const setVal = (k: keyof Vals) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPreset(null);
+    setVals((v) => ({ ...v, [k]: e.target.value.replace(/[^0-9]/g, "") }));
+  };
+  const toggle = (k: SourceKey) => {
+    setPreset(null);
+    setOn((o) => ({ ...o, [k]: !o[k] }));
+  };
+  const applyPreset = (k: PresetKey) => {
+    const p = PRESETS[k];
+    setPreset(k);
+    setOn({ ...NO_SOURCES, ...Object.fromEntries(p.on.map((s) => [s, true])) } as Record<SourceKey, boolean>);
+    setVals({ ...EMPTY_VALS, ...p.vals });
+    setMainHome(false);
+    setPensionS1(false);
+    setExemption("none");
+  };
+  const clearAll = () => {
+    setPreset(null);
+    setOn(NO_SOURCES);
+    setVals(EMPTY_VALS);
+    setMainHome(false);
     setPensionS1(false);
     setExemption("none");
     setStatus("single");
     setChildren(0);
   };
 
-  const burdenShare = has ? res.totalBurden / res.grossIncome : 0;
-  const taxShare = has ? res.incomeTax / res.grossIncome : 0;
-  const contribShare = has ? (res.socialInsurance + res.hrda + res.ghs + res.sdc) / res.grossIncome : 0;
-  const netShare = has ? Math.max(0, res.net / res.grossIncome) : 0;
-  const showHrda = res.hrda > 0;
-  const showSdc = res.sdc > 0;
+  const input: InvestorInput = useMemo(
+    () => ({
+      ...emptyInvestorInput(),
+      domiciled,
+      companyProfit: on.company ? num(vals.companyProfit) : 0,
+      companySalary: on.company ? num(vals.companySalary) : 0,
+      companyDividend: on.company ? num(vals.companyDividend) : 0,
+      dividends: on.dividends ? num(vals.dividends) : 0,
+      interest: on.interest ? num(vals.interest) : 0,
+      propertyGain: on.property ? num(vals.propertyGain) : 0,
+      propertyMainHome: on.property && mainHome,
+      cryptoGain: on.crypto ? num(vals.cryptoGain) : 0,
+      foreignPension: on.pension ? num(vals.pension) : 0,
+      pensionHasS1: on.pension && pensionS1,
+      selfEmployed: on.selfEmployed ? num(vals.selfEmployed) : 0,
+      employment: on.employment ? num(vals.employment) : 0,
+      exemption: on.employment ? exemption : "none",
+      status,
+      spouseIncome: num(vals.spouseIncome),
+      children,
+      homeInterestOrRent: num(vals.homeInterestOrRent),
+      disasterInsurance: num(vals.disasterInsurance),
+      energyOrEv: num(vals.energyOrEv),
+      otherDeductions: num(vals.otherDeductions),
+    }),
+    [domiciled, on, vals, mainHome, pensionS1, exemption, status, children],
+  );
+  const res = useMemo(() => computeInvestorTax(input), [input]);
+  const has = res.pool > 0;
+  const p = res.personal;
+
+  // The mobile summary bar shows while the result is out of view.
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [resultVisible, setResultVisible] = useState(true);
+  useEffect(() => {
+    const el = resultRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setResultVisible(e.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const money = (k: keyof Vals, label: string, hint?: string) => (
+    <label className={styles.field}>
+      <span className={styles.label}>{label}</span>
+      <span className={styles.inputWrap}>
+        <span className={styles.cur} aria-hidden>€</span>
+        <input
+          className={styles.input}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          value={vals[k] ? nf.format(num(vals[k])) : ""}
+          onChange={setVal(k)}
+          placeholder="0"
+        />
+      </span>
+      {hint && <span className={styles.hint}>{hint}</span>}
+    </label>
+  );
+
+  const srcFields = (k: SourceKey): React.ReactNode => {
+    switch (k) {
+      case "company":
+        return (
+          <>
+            {money("companyProfit", t.fields.companyProfit, t.fields.companyProfitHint)}
+            {money("companySalary", t.fields.companySalary, t.fields.companySalaryHint)}
+            {money("companyDividend", t.fields.companyDividend, t.fields.companyDividendHint)}
+          </>
+        );
+      case "dividends": return money("dividends", t.fields.dividends);
+      case "interest": return money("interest", t.fields.interest);
+      case "property":
+        return (
+          <>
+            {money("propertyGain", t.fields.propertyGain, t.fields.propertyGainHint)}
+            <label className={styles.check}>
+              <input type="checkbox" checked={mainHome} onChange={(e) => setMainHome(e.target.checked)} />
+              <span>{t.fields.propertyMainHome}</span>
+            </label>
+          </>
+        );
+      case "crypto": return money("cryptoGain", t.fields.cryptoGain, t.fields.cryptoGainHint);
+      case "pension":
+        return (
+          <>
+            {money("pension", t.fields.pension)}
+            <label className={styles.check}>
+              <input type="checkbox" checked={pensionS1} onChange={(e) => setPensionS1(e.target.checked)} />
+              <span>{t.fields.pensionS1}</span>
+            </label>
+          </>
+        );
+      case "selfEmployed": return money("selfEmployed", t.fields.selfEmployed);
+      case "employment":
+        return (
+          <>
+            {money("employment", t.fields.employment)}
+            <label className={styles.field}>
+              <span className={styles.label}>{t.fields.exemption}</span>
+              <select className={styles.select} value={exemption} onChange={(e) => setExemption(e.target.value as Exemption)}>
+                {(["none", "half", "fifth", "quarter"] as Exemption[]).map((x) => (
+                  <option key={x} value={x}>{t.exemption[x]}</option>
+                ))}
+              </select>
+              <span className={styles.hint}>{t.fields.exemptionHint}</span>
+            </label>
+          </>
+        );
+    }
+  };
+
+  // Result lines that are not zero, in the order a reader follows the money.
+  const lines: { label: string; value: number }[] = [
+    { label: t.lines.corporate, value: res.company.corporateTax },
+    { label: t.lines.employerCharges, value: res.company.employerCharges },
+    { label: t.lines.incomeTax, value: p.incomeTax },
+    { label: t.lines.social, value: p.socialInsurance },
+    { label: t.lines.hrda, value: p.hrda },
+    { label: t.lines.ghs, value: p.ghs },
+    { label: t.lines.sdc, value: p.sdc },
+    { label: t.lines.property, value: res.propertyTax },
+    { label: t.lines.crypto, value: res.cryptoTax },
+  ].filter((l) => l.value > 0.5);
+
+  const insights: string[] = [];
+  if (res.domicileDelta > 0.5) insights.push((domiciled ? t.insights.dom : t.insights.nonDom).replace("{x}", nf.format(Math.round(res.domicileDelta))));
+  if (input.foreignPension > 0) insights.push(p.pension.elected ? t.insights.pensionElected : t.insights.pensionNormal);
+  if (res.company.dividendCapped) insights.push(t.insights.dividendCapped.replace("{x}", nf.format(Math.round(res.company.dividendPaid))));
+  if (input.propertyGain > 0 && res.propertyTax < 0.5) insights.push(t.insights.propertyExempt);
+  const askedFamily = children > 0 || input.homeInterestOrRent > 0 || input.disasterInsurance > 0 || input.energyOrEv > 0;
+  if (askedFamily && !p.familyDeductionsApplied && p.familyIncome > p.familyCeiling) insights.push(t.insights.familyOff);
+  if (p.deductions.otherDisallowed > 0.5) insights.push(t.insights.otherCapped);
+
+  const keptShare = has ? Math.max(0, res.keptPersonally) / res.pool : 0;
+  const retainedShare = has ? Math.max(0, res.retained) / res.pool : 0;
+  const burdenShare = has ? Math.max(0, res.totalBurden) / res.pool : 0;
+  const showCompany = res.company.on;
 
   return (
     <section className={styles.calc} aria-label={title || t.title}>
-      <h2 className={styles.title}>{title || t.title}</h2>
-      <p className={styles.lead}>{t.lead}</p>
+      <header className={styles.head}>
+        <h2 className={styles.title}>{title || t.title}</h2>
+        <p className={styles.lead}>{t.lead}</p>
+      </header>
+
+      <div className={styles.presets} role="group" aria-label={t.startFrom}>
+        <span className={styles.presetsLabel}>{t.startFrom}</span>
+        {(Object.keys(PRESETS) as PresetKey[]).map((k) => (
+          <button key={k} type="button" className={`${styles.chip} ${preset === k ? styles.chipOn : ""}`} aria-pressed={preset === k} onClick={() => applyPreset(k)}>
+            {t.presets[k]}
+          </button>
+        ))}
+        <button type="button" className={styles.linkBtn} onClick={clearAll}>{t.clear}</button>
+      </div>
 
       <div className={styles.grid}>
         <form className={styles.form} onSubmit={(e) => e.preventDefault()} noValidate>
-          <div className={styles.period} role="group" aria-label={t.amountsIn}>
-            <span className={styles.periodLabel}>{t.amountsIn}</span>
-            {(["year", "month"] as Period[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={`${styles.seg} ${period === p ? styles.segOn : ""}`}
-                aria-pressed={period === p}
-                onClick={() => setPeriod(p)}
-              >
-                {p === "year" ? t.perYear : t.perMonth}
-              </button>
-            ))}
+          <div className={styles.block}>
+            <h3 className={styles.blockTitle}><i>1</i>{t.statusHeading}</h3>
+            <div className={styles.statusGrid} role="radiogroup" aria-label={t.statusHeading}>
+              {([false, true] as boolean[]).map((d) => {
+                const o = d ? t.statusOptions.dom : t.statusOptions.nonDom;
+                return (
+                  <button key={String(d)} type="button" role="radio" aria-checked={domiciled === d} className={`${styles.statusCard} ${domiciled === d ? styles.statusOn : ""}`} onClick={() => setDomiciled(d)}>
+                    <span className={styles.statusTitle}>{o.title}</span>
+                    <span className={styles.statusText}>{o.text}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <fieldset className={styles.set}>
-            <legend className={styles.legend}>{t.incomeHeading}</legend>
-            {field("employment", t.employment)}
-            {field("selfEmployed", t.selfEmployed)}
-            {field("foreignPension", t.foreignPension)}
-            {field("rent", t.rent)}
-          </fieldset>
-
-          <details className={styles.more}>
-            <summary>{t.moreIncome}</summary>
-            <div className={styles.moreBody}>
-              {field("dividends", t.dividends)}
-              {field("interest", t.interest)}
-              <label className={styles.check}>
-                <input type="checkbox" checked={domiciled} onChange={(e) => setDomiciled(e.target.checked)} />
-                <span>{t.domiciled}</span>
-              </label>
-              <p className={styles.hint}>{t.domiciledHint}</p>
-              <label className={styles.check}>
-                <input type="checkbox" checked={pensionS1} onChange={(e) => setPensionS1(e.target.checked)} />
-                <span>{t.pensionS1}</span>
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>{t.exemptionHeading}</span>
-                <select className={styles.select} value={exemption} onChange={(e) => setExemption(e.target.value as Exemption)}>
-                  {(["none", "half", "fifth", "quarter"] as Exemption[]).map((k) => (
-                    <option key={k} value={k}>{t.exemption[k]}</option>
-                  ))}
-                </select>
-                <span className={styles.hint}>{t.exemptionHint}</span>
-              </label>
+          <div className={styles.block}>
+            <h3 className={styles.blockTitle}><i>2</i>{t.incomeHeading}</h3>
+            <p className={styles.blockHint}>{t.incomeHint}</p>
+            <div className={styles.sources}>
+              {ORDER.map((k) => {
+                const open = on[k];
+                const id = `src-${k}`;
+                return (
+                  <div key={k} className={`${styles.source} ${open ? styles.sourceOn : ""}`}>
+                    <button type="button" className={styles.sourceHead} role="switch" aria-checked={open} aria-controls={id} onClick={() => toggle(k)}>
+                      <span className={styles.sourceText}>
+                        <span className={styles.sourceTitle}>{t.sources[k].title}</span>
+                        <span className={styles.sourceHint}>{t.sources[k].hint}</span>
+                      </span>
+                      <span className={styles.switch} aria-hidden><span className={styles.knob} /></span>
+                    </button>
+                    <Collapse open={open} id={id}>
+                      <div className={styles.sourceBody}>{srcFields(k)}</div>
+                    </Collapse>
+                  </div>
+                );
+              })}
             </div>
-          </details>
+          </div>
 
-          <details className={styles.more}>
-            <summary>{t.familyHeading}</summary>
-            <div className={styles.moreBody}>
+          <div className={styles.block}>
+            <Section title={t.familyHeading} badge="3">
+              <p className={styles.hint}>{t.familyHint}</p>
               <label className={styles.field}>
                 <span className={styles.label}>{t.statusLabel}</span>
                 <select className={styles.select} value={status} onChange={(e) => setStatus(e.target.value as Status)}>
-                  {(["single", "singleParent", "married"] as Status[]).map((k) => (
-                    <option key={k} value={k}>{t.status[k]}</option>
+                  {(["single", "singleParent", "married"] as Status[]).map((x) => (
+                    <option key={x} value={x}>{t.status[x]}</option>
                   ))}
                 </select>
               </label>
-              {status === "married" && field("spouseIncome", t.spouseIncome)}
+              <Collapse open={status === "married"}>
+                <div className={styles.inner}>{money("spouseIncome", t.spouseIncome)}</div>
+              </Collapse>
               <label className={styles.field}>
                 <span className={styles.label}>{t.children}</span>
                 <select className={styles.select} value={children} onChange={(e) => setChildren(Number(e.target.value))}>
@@ -183,100 +342,143 @@ export default function TaxCalculator({ lang, title, guideHref, guideLabel }: Pr
                   ))}
                 </select>
               </label>
-              {field("homeInterestOrRent", t.homeInterest)}
-              {field("disasterInsurance", t.disasterInsurance)}
-              {field("energyOrEv", t.energyEv)}
-              {field("otherDeductions", t.otherDeductions)}
-              <p className={styles.hint}>{t.familyHint}</p>
-            </div>
-          </details>
-
-          <button type="button" className={styles.reset} onClick={reset}>{t.reset}</button>
+              {money("homeInterestOrRent", t.homeInterest)}
+              {money("disasterInsurance", t.disasterInsurance)}
+              {money("energyOrEv", t.energyEv)}
+              {money("otherDeductions", t.otherDeductions)}
+            </Section>
+          </div>
         </form>
 
-        <div className={styles.result} aria-live="polite">
+        <div className={styles.result} ref={resultRef} aria-live="polite">
           <h3 className={styles.resultTitle}>{t.resultHeading}</h3>
           {!has ? (
-            <p className={styles.empty}>{t.empty}</p>
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>{t.empty}</p>
+              <p className={styles.emptyHint}>{t.emptyHint}</p>
+            </div>
           ) : (
             <>
               <div className={styles.keep}>
-                <div className={styles.keepBig}>{eur(res.net)}</div>
-                <div className={styles.keepLabel}>{t.netYear}</div>
-                <div className={styles.keepMonth}>{eur(res.net / 12)} {t.netMonth}</div>
+                <div className={styles.keepLabel}>{t.keepYear}</div>
+                <div className={styles.keepBig}>{eur(res.keptPersonally)}</div>
+                <div className={styles.keepMonth}>{eur(res.keptPersonally / 12)} {t.keepMonth}</div>
               </div>
 
-              <div className={styles.bar} role="img" aria-label={`${t.barNet} ${pct(netShare)}, ${t.barTax} ${pct(taxShare)}, ${t.barContrib} ${pct(contribShare)}`}>
-                <span className={styles.barNet} style={{ width: `${netShare * 100}%` }} />
-                <span className={styles.barTax} style={{ width: `${taxShare * 100}%` }} />
-                <span className={styles.barContrib} style={{ width: `${contribShare * 100}%` }} />
+              <div className={styles.tiles}>
+                {showCompany && (
+                  <div className={styles.tile}>
+                    <div className={styles.tileLabel}>{t.retainedTitle}</div>
+                    <div className={styles.tileValue}>{eur(res.retained)}</div>
+                  </div>
+                )}
+                <div className={styles.tile}>
+                  <div className={styles.tileLabel}>{t.burdenTitle}</div>
+                  <div className={styles.tileValue}>{eur(res.totalBurden)}</div>
+                  <div className={styles.tileSub}>{pct(res.effectiveRate)} {t.ofPool}</div>
+                </div>
               </div>
-              <ul className={styles.legend2}>
-                <li><i className={styles.dotNet} />{t.barNet} {pct(netShare)}</li>
-                <li><i className={styles.dotTax} />{t.barTax} {pct(taxShare)}</li>
-                <li><i className={styles.dotContrib} />{t.barContrib} {pct(contribShare)}</li>
+
+              <div className={styles.bar} role="img" aria-label={`${t.barKept} ${pct(keptShare)}, ${t.barRetained} ${pct(retainedShare)}, ${t.barBurden} ${pct(burdenShare)}`}>
+                <span className={styles.barKept} style={{ width: `${keptShare * 100}%` }} />
+                {showCompany && <span className={styles.barRetained} style={{ width: `${retainedShare * 100}%` }} />}
+                <span className={styles.barBurden} style={{ width: `${burdenShare * 100}%` }} />
+              </div>
+              <ul className={styles.legend}>
+                <li><i className={styles.dotKept} />{t.barKept} {pct(keptShare)}</li>
+                {showCompany && <li><i className={styles.dotRetained} />{t.barRetained} {pct(retainedShare)}</li>}
+                <li><i className={styles.dotBurden} />{t.barBurden} {pct(burdenShare)}</li>
               </ul>
 
-              <table className={styles.table}>
-                <tbody>
-                  <tr><th scope="row">{t.grossTotal}</th><td>{eur(res.grossIncome)}</td></tr>
-                  {res.exemptAmount > 0 && <tr><th scope="row">{t.lines.exempt}</th><td>{eur(res.exemptAmount)}</td></tr>}
-                  <tr><th scope="row">{t.lines.deductions}</th><td>{eur(res.deductions.socialAndGhs + res.deductions.other + res.deductions.family)}</td></tr>
-                  <tr><th scope="row">{t.lines.chargeable}</th><td>{eur(res.chargeable)}</td></tr>
-                  <tr className={styles.sep}><th scope="row">{t.lines.incomeTax}</th><td>{eur(res.incomeTax)}</td></tr>
-                  <tr><th scope="row">{t.lines.social}</th><td>{eur(res.socialInsurance)}</td></tr>
-                  {showHrda && <tr><th scope="row">{t.lines.hrda}</th><td>{eur(res.hrda)}</td></tr>}
-                  <tr><th scope="row">{t.lines.ghs}</th><td>{eur(res.ghs)}</td></tr>
-                  {showSdc && <tr><th scope="row">{t.lines.sdc}</th><td>{eur(res.sdc)}</td></tr>}
-                  <tr className={styles.total}><th scope="row">{t.burden}</th><td>{eur(res.totalBurden)} <span className={styles.muted}>· {pct(burdenShare)} {t.effective}</span></td></tr>
-                </tbody>
-              </table>
+              {insights.length > 0 && (
+                <ul className={styles.insights}>
+                  {insights.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
+              )}
 
-              {res.bands.some((b) => b.amount > 0) && (
+              {lines.length > 0 && (
                 <>
-                  <h4 className={styles.subTitle}>{t.bandsHeading}</h4>
+                  <h4 className={styles.subTitle}>{t.breakdownHeading}</h4>
                   <table className={styles.table}>
-                    <thead>
-                      <tr><th>{t.bandCols.band}</th><th>{t.bandCols.rate}</th><th>{t.bandCols.income}</th><th>{t.bandCols.tax}</th></tr>
-                    </thead>
                     <tbody>
-                      {res.bands.filter((b) => b.amount > 0).map((b) => (
-                        <tr key={b.from}>
-                          <th scope="row">{Number.isFinite(b.upTo) ? `${eur(b.from)} – ${eur(b.upTo)}` : `${t.above} ${eur(b.from)}`}</th>
-                          <td>{pct(b.rate)}</td>
-                          <td>{eur(b.amount)}</td>
-                          <td>{eur(b.tax)}</td>
-                        </tr>
+                      {lines.map((l) => (
+                        <tr key={l.label}><th scope="row">{l.label}</th><td>{eur(l.value)}</td></tr>
                       ))}
+                      <tr className={styles.total}><th scope="row">{t.burdenTitle}</th><td>{eur(res.totalBurden)}</td></tr>
                     </tbody>
                   </table>
                 </>
               )}
 
-              <ul className={styles.flags}>
-                {input.foreignPension > 0 && (
-                  <li>{res.pension.elected ? t.pensionElected : t.pensionNormal}</li>
-                )}
-                {!res.familyDeductionsApplied && res.familyIncome > res.familyCeiling && <li>{t.familyOff}</li>}
-                {res.deductions.otherDisallowed > 0 && <li>{t.otherCapped}</li>}
-              </ul>
+              {showCompany && (
+                <div className={styles.dark}>
+                  <Section title={t.companyHeading}>
+                    <table className={styles.table}>
+                      <tbody>
+                        <tr><th scope="row">{t.companyLines.profit}</th><td>{eur(res.company.profit)}</td></tr>
+                        <tr><th scope="row">{t.companyLines.salary}</th><td>{eur(res.company.salary)}</td></tr>
+                        <tr><th scope="row">{t.companyLines.charges}</th><td>{eur(res.company.employerCharges)}</td></tr>
+                        <tr><th scope="row">{t.companyLines.corporateTax}</th><td>{eur(res.company.corporateTax)}</td></tr>
+                        <tr><th scope="row">{t.companyLines.afterTax}</th><td>{eur(res.company.afterTax)}</td></tr>
+                        <tr><th scope="row">{t.companyLines.dividend}</th><td>{eur(res.company.dividendPaid)}</td></tr>
+                        <tr className={styles.total}><th scope="row">{t.companyLines.retained}</th><td>{eur(res.company.retained)}</td></tr>
+                      </tbody>
+                    </table>
+                  </Section>
+                </div>
+              )}
+
+              {p.bands.some((b) => b.amount > 0) && (
+                <div className={styles.dark}>
+                  <Section title={t.bandsHeading}>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr><th>{t.bandCols.band}</th><th>{t.bandCols.rate}</th><th>{t.bandCols.income}</th><th>{t.bandCols.tax}</th></tr>
+                      </thead>
+                      <tbody>
+                        {p.bands.filter((b) => b.amount > 0).map((b) => (
+                          <tr key={b.from}>
+                            <th scope="row">{Number.isFinite(b.upTo) ? `${eur(b.from)} – ${eur(b.upTo)}` : `${t.above} ${eur(b.from)}`}</th>
+                            <td>{pct(b.rate)}</td>
+                            <td>{eur(b.amount)}</td>
+                            <td>{eur(b.tax)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Section>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
 
-      <details className={styles.notes}>
-        <summary>{t.notesHeading}</summary>
-        <ul>
-          {t.notes.map((n, i) => <li key={i}>{n}</li>)}
-        </ul>
-      </details>
+      <div className={styles.notes}>
+        <Section title={t.notesHeading}>
+          <ul className={styles.noteList}>
+            {t.notes.map((n, i) => <li key={i}>{n}</li>)}
+          </ul>
+        </Section>
+      </div>
       <p className={styles.disclaimer}>
         {t.disclaimer}
-        {guideHref && (
-          <> {t.guideLead} <a href={guideHref}>{guideLabel || guideHref}</a></>
-        )}
+        {guideHref && (<> {t.guideLead} <a href={guideHref}>{guideLabel || guideHref}</a></>)}
       </p>
+
+      {has && (
+        <button
+          type="button"
+          className={`${styles.sticky} ${!resultVisible ? styles.stickyOn : ""}`}
+          aria-hidden={resultVisible}
+          tabIndex={resultVisible ? -1 : 0}
+          onClick={() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        >
+          <span className={styles.stickyLabel}>{t.keepYear}</span>
+          <span className={styles.stickyValue}>{eur(res.keptPersonally)}</span>
+          <span className={styles.stickyGo}>{t.seeResult}</span>
+        </button>
+      )}
     </section>
   );
 }

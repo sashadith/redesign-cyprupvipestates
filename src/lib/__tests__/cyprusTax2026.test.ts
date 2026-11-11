@@ -120,3 +120,61 @@ test("empty input is all zeros", () => {
   assert.equal(x.totalBurden, 0);
   assert.equal(x.net, 0);
 });
+
+import { computeInvestorTax, employerCharges } from "../cyprusTax2026";
+
+test("owner: company with €250,000 profit, €30,000 salary and €120,000 dividend (non-domiciled)", () => {
+  const x = computeInvestorTax({ companyProfit: 250_000, companySalary: 30_000, companyDividend: 120_000 });
+  // employer charges on €30,000: 8.8% + 1.2% + 0.5% of 30,000 + 2.9% + 2% of 30,000 = 15.4% = 4,620
+  assert.equal(r(employerCharges(30_000)), 4_620);
+  assert.equal(r(x.company.taxableProfit), 215_380);
+  assert.equal(r(x.company.corporateTax), 32_307);
+  assert.equal(r(x.company.afterTax), 183_073);
+  assert.equal(x.company.dividendCapped, false);
+  assert.equal(r(x.company.retained), 63_073);
+  // personal side: salary 30,000 (SI 2,640, GHS 795) + dividend 120,000 (GHS 3,180, no SDC when non-domiciled)
+  assert.equal(r(x.personal.socialInsurance), 2_640);
+  assert.equal(r(x.personal.ghs), 3_975);
+  assert.equal(r(x.personal.sdc), 0);
+  // GHS on the exempt dividend is not deducted: chargeable = 30,000 - 2,640 - 795 = 26,565, tax 913
+  assert.equal(r(x.personal.incomeTax), 913);
+  // the three parts add up to the pool
+  assert.equal(r(x.keptPersonally + x.retained + x.totalBurden), r(x.pool));
+});
+
+test("owner: domiciled pays 5% Special Defence Contribution on the dividend", () => {
+  const x = computeInvestorTax({ companyProfit: 250_000, companySalary: 30_000, companyDividend: 120_000, domiciled: true });
+  assert.equal(r(x.personal.sdc), 6_000);
+  assert.equal(r(x.domicileDelta), 6_000);
+  const nd = computeInvestorTax({ companyProfit: 250_000, companySalary: 30_000, companyDividend: 120_000 });
+  assert.equal(r(nd.domicileDelta), 6_000);
+});
+
+test("owner: a dividend above the profit left after tax is reduced", () => {
+  const x = computeInvestorTax({ companyProfit: 100_000, companySalary: 0, companyDividend: 120_000 });
+  assert.equal(x.company.dividendCapped, true);
+  assert.equal(r(x.company.dividendPaid), 85_000);
+  assert.equal(r(x.retained), 0);
+});
+
+test("investor: dividends, interest and a property gain", () => {
+  const x = computeInvestorTax({ dividends: 80_000, interest: 20_000, propertyGain: 150_000 });
+  assert.equal(r(x.personal.ghs), 2_650); // 2.65% x 100,000
+  assert.equal(r(x.personal.sdc), 0);
+  assert.equal(r(x.propertyTax), 24_000); // 20% x (150,000 - 30,000)
+  const home = computeInvestorTax({ propertyGain: 150_000, propertyMainHome: true });
+  assert.equal(r(home.propertyTax), 0);
+  const dom = computeInvestorTax({ dividends: 80_000, interest: 20_000, domiciled: true });
+  assert.equal(r(dom.personal.sdc), 4_000 + 3_400); // 5% x 80,000 + 17% x 20,000
+});
+
+test("crypto gains are taxed at a flat 8%", () => {
+  assert.equal(r(computeInvestorTax({ cryptoGain: 44_150 }).cryptoTax), 3_532);
+});
+
+test("empty investor input is all zeros", () => {
+  const x = computeInvestorTax({});
+  assert.equal(x.totalBurden, 0);
+  assert.equal(x.keptPersonally, 0);
+  assert.equal(x.domicileDelta, 0);
+});

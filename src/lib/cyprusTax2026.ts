@@ -145,19 +145,21 @@ export function computeTax(raw: Partial<TaxInput>): TaxResult {
   const hrda = HRDA_SELF_RATE * Math.min(selfEmployed, SI_SELF_CEILING);
 
   // GHS: one annual maximum per person, filled in the order the Tax Department lists the income types.
+  // Only the GHS paid on income that is itself taxable (pay, profit, a pension on the normal scale, rent) is deducted
+  // from chargeable income; GHS on dividends and interest, which are exempt from income tax, is not.
   let room = GHS_ANNUAL_MAX_BASE;
   const ghsPart = (base: number, rate: number) => {
     const used = Math.min(base, room);
     room -= used;
     return used * rate;
   };
-  const ghs =
-    ghsPart(employment, GHS_EMPLOYEE_RATE) +
-    ghsPart(selfEmployed, GHS_SELF_RATE) +
-    ghsPart(i.pensionHasS1 ? 0 : pension, GHS_OTHER_RATE) +
-    ghsPart(rent, GHS_OTHER_RATE) +
-    ghsPart(dividends, GHS_OTHER_RATE) +
-    ghsPart(interest, GHS_OTHER_RATE);
+  const ghsEmployment = ghsPart(employment, GHS_EMPLOYEE_RATE);
+  const ghsSelf = ghsPart(selfEmployed, GHS_SELF_RATE);
+  const ghsPension = ghsPart(i.pensionHasS1 ? 0 : pension, GHS_OTHER_RATE);
+  const ghsRent = ghsPart(rent, GHS_OTHER_RATE);
+  const ghsDividends = ghsPart(dividends, GHS_OTHER_RATE);
+  const ghsInterest = ghsPart(interest, GHS_OTHER_RATE);
+  const ghs = ghsEmployment + ghsSelf + ghsPension + ghsRent + ghsDividends + ghsInterest;
 
   const sdc = i.domiciled ? SDC_DIVIDEND_RATE * dividends + SDC_INTEREST_RATE * interest : 0;
 
@@ -184,7 +186,7 @@ export function computeTax(raw: Partial<TaxInput>): TaxResult {
 
   const chargeableFor = (withPension: boolean) => {
     const before = baseNoPension + (withPension ? pension : 0);
-    const sg = socialInsurance + ghs;
+    const sg = socialInsurance + ghsEmployment + ghsSelf + ghsRent + (withPension ? ghsPension : 0);
     const afterSg = Math.max(0, before - sg);
     const otherAllowed = Math.min(pos(i.otherDeductions), afterSg * OTHER_DEDUCTIONS_LIMIT);
     const afterOther = afterSg - otherAllowed;
@@ -236,4 +238,173 @@ export function computeTax(raw: Partial<TaxInput>): TaxResult {
     topRate,
     pension: { elected, taxWithElection: totalElection, taxNormalScale: totalNormal, pensionTax: elected ? pensionFive : 0 },
   };
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Owner and investor view: a Cyprus company that pays its owner a salary and a dividend, plus personal investment
+   income and one-off gains. Built on computeTax() for the personal side. */
+
+export const CORPORATE_TAX_RATE = 0.15; // from 2026
+export const CGT_RATE = 0.2;
+export const CGT_EXEMPT_MAIN_HOME = 150_000;
+export const CGT_EXEMPT_OTHER = 30_000;
+export const CRYPTO_RATE = 0.08;
+
+// Employer-side charges on the owner's salary, deductible for the company (see /guides/cyprus-social-insurance).
+export const EMPLOYER_SI_RATE = 0.088;
+export const EMPLOYER_GHS_RATE = 0.029;
+export const EMPLOYER_REDUNDANCY_RATE = 0.012;
+export const EMPLOYER_HRDA_RATE = 0.005;
+export const EMPLOYER_COHESION_RATE = 0.02;
+
+export type InvestorInput = {
+  domiciled: boolean;
+  // Your Cyprus company
+  companyProfit: number; // before the owner's salary, employer charges and tax
+  companySalary: number;
+  companyDividend: number;
+  // Personal income
+  dividends: number; // other companies and investments
+  interest: number;
+  foreignPension: number;
+  pensionHasS1: boolean;
+  selfEmployed: number;
+  employment: number;
+  exemption: Exemption;
+  // One-off gains
+  propertyGain: number; // taxable gain on a Cyprus property
+  propertyMainHome: boolean;
+  cryptoGain: number;
+  // Family and deductions
+  status: Status;
+  spouseIncome: number;
+  children: number;
+  homeInterestOrRent: number;
+  disasterInsurance: number;
+  energyOrEv: number;
+  otherDeductions: number;
+};
+
+export const emptyInvestorInput = (): InvestorInput => ({
+  domiciled: false,
+  companyProfit: 0, companySalary: 0, companyDividend: 0,
+  dividends: 0, interest: 0, foreignPension: 0, pensionHasS1: false, selfEmployed: 0, employment: 0, exemption: "none",
+  propertyGain: 0, propertyMainHome: false, cryptoGain: 0,
+  status: "single", spouseIncome: 0, children: 0, homeInterestOrRent: 0, disasterInsurance: 0, energyOrEv: 0, otherDeductions: 0,
+});
+
+export type InvestorResult = {
+  personal: TaxResult; // income tax, social insurance, GHS and SDC on the annual income
+  company: {
+    on: boolean;
+    profit: number;
+    salary: number;
+    employerCharges: number;
+    taxableProfit: number;
+    corporateTax: number;
+    afterTax: number;
+    dividendRequested: number;
+    dividendPaid: number;
+    dividendCapped: boolean;
+    retained: number;
+  };
+  propertyTax: number;
+  propertyExemption: number;
+  cryptoTax: number;
+  /** Everything that reaches you personally in the year, before nothing else is taken: net of all personal taxes. */
+  keptPersonally: number;
+  /** Money left inside the company. */
+  retained: number;
+  /** Personal taxes and contributions, corporate tax, employer charges, capital gains tax and crypto tax. */
+  totalBurden: number;
+  /** Profit of the company before the owner's pay, plus personal income and gains: the base of every percentage. */
+  pool: number;
+  effectiveRate: number;
+  gainsTotal: number;
+  /** Tax and contributions that disappear if the person is not domiciled (SDC), shown when domiciled; else what domicile would cost. */
+  domicileDelta: number;
+};
+
+export function employerCharges(salary: number): number {
+  const s = pos(salary);
+  const capped = Math.min(s, SI_EMPLOYEE_CEILING);
+  return (
+    EMPLOYER_SI_RATE * capped +
+    EMPLOYER_REDUNDANCY_RATE * capped +
+    EMPLOYER_HRDA_RATE * capped +
+    EMPLOYER_GHS_RATE * s +
+    EMPLOYER_COHESION_RATE * s
+  );
+}
+
+function computeCore(i: InvestorInput): Omit<InvestorResult, "domicileDelta"> {
+  const profit = pos(i.companyProfit);
+  const salary = pos(i.companySalary);
+  const on = profit > 0 || salary > 0 || pos(i.companyDividend) > 0;
+  const charges = on ? employerCharges(salary) : 0;
+  const taxableProfit = Math.max(0, profit - salary - charges);
+  const corporateTax = taxableProfit * CORPORATE_TAX_RATE;
+  const afterTax = taxableProfit - corporateTax;
+  const dividendRequested = pos(i.companyDividend);
+  const dividendPaid = on ? Math.min(dividendRequested, afterTax) : 0;
+  const retained = on ? afterTax - dividendPaid : 0;
+
+  const personal = computeTax({
+    employment: pos(i.employment) + (on ? salary : 0),
+    selfEmployed: i.selfEmployed,
+    foreignPension: i.foreignPension,
+    rent: 0,
+    dividends: pos(i.dividends) + dividendPaid,
+    interest: i.interest,
+    domiciled: i.domiciled,
+    pensionHasS1: i.pensionHasS1,
+    exemption: i.exemption,
+    status: i.status,
+    spouseIncome: i.spouseIncome,
+    children: i.children,
+    homeInterestOrRent: i.homeInterestOrRent,
+    disasterInsurance: i.disasterInsurance,
+    energyOrEv: i.energyOrEv,
+    otherDeductions: i.otherDeductions,
+  });
+
+  const gain = pos(i.propertyGain);
+  const propertyExemption = i.propertyMainHome ? CGT_EXEMPT_MAIN_HOME : CGT_EXEMPT_OTHER;
+  const propertyTax = CGT_RATE * Math.max(0, gain - propertyExemption);
+  const cryptoTax = CRYPTO_RATE * pos(i.cryptoGain);
+  const gainsTotal = gain + pos(i.cryptoGain);
+
+  // The owner's own pay is part of `personal.grossIncome`; the company's profit before that pay is the pool's company part.
+  const otherPersonal = personal.grossIncome - (on ? salary + dividendPaid : 0);
+  const pool = (on ? profit : 0) + otherPersonal + gainsTotal;
+  const totalBurden = personal.totalBurden + corporateTax + charges + propertyTax + cryptoTax;
+  const keptPersonally = personal.grossIncome + gainsTotal - personal.totalBurden - propertyTax - cryptoTax;
+
+  return {
+    personal,
+    company: {
+      on, profit, salary, employerCharges: charges, taxableProfit, corporateTax, afterTax,
+      dividendRequested, dividendPaid, dividendCapped: on && dividendRequested > afterTax + 0.5, retained,
+    },
+    propertyTax,
+    propertyExemption,
+    cryptoTax,
+    keptPersonally,
+    retained,
+    totalBurden,
+    pool,
+    effectiveRate: pool > 0 ? totalBurden / pool : 0,
+    gainsTotal,
+  };
+}
+
+export function computeInvestorTax(raw: Partial<InvestorInput>): InvestorResult {
+  const i: InvestorInput = { ...emptyInvestorInput(), ...raw };
+  const core = computeCore(i);
+  // What domicile changes: the Special Defence Contribution on dividends and interest.
+  const other = computeCore({ ...i, domiciled: !i.domiciled });
+  const domiciledResult = i.domiciled ? core : other;
+  const nonDomResult = i.domiciled ? other : core;
+  const delta = domiciledResult.totalBurden - nonDomResult.totalBurden;
+  return { ...core, domicileDelta: delta };
 }
