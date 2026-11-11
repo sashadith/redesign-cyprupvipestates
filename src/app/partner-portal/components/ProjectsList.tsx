@@ -25,6 +25,9 @@ const rateNum = (s: string): number | null => {
   return s.trim() && Number.isFinite(v) ? v : null;
 };
 
+/** typeLabel passes English through unchanged, so hand it the capitalized word. */
+const typeName = (ty: string, locale: PartnerLocale) => typeLabel(ty.charAt(0).toUpperCase() + ty.slice(1), locale);
+
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button type="button" className={on ? "pp-fchip on" : "pp-fchip"} aria-pressed={on} onClick={onClick}>{children}</button>;
 }
@@ -106,7 +109,7 @@ export function ProjectsList({ t, locale, projects, trustMode, now: nowIso }: Pr
         {BED_CHIPS.map((n) => <Chip key={n} on={f.beds.includes(n)} onClick={() => set({ beds: toggle(f.beds, n) })}>{bedLabel(n)}</Chip>)}
       </fieldset>
       <fieldset className="pp-fgroup"><legend>{T.type}</legend>
-        {TYPE_CHIPS.map((ty) => <Chip key={ty} on={f.types.includes(ty)} onClick={() => set({ types: toggle(f.types, ty) })}>{typeLabel(ty, locale)}</Chip>)}
+        {TYPE_CHIPS.map((ty) => <Chip key={ty} on={f.types.includes(ty)} onClick={() => set({ types: toggle(f.types, ty) })}>{typeName(ty, locale)}</Chip>)}
       </fieldset>
       <fieldset className="pp-fgroup"><legend>{T.district}</legend>
         {places.districts.map((d) => <Chip key={d} on={f.districts.includes(d)} onClick={() => toggleDistrict(d)}>{d}</Chip>)}
@@ -163,7 +166,7 @@ export function ProjectsList({ t, locale, projects, trustMode, now: nowIso }: Pr
               {shown.map((p) => {
                 const place = [districtOf(p), p.area].filter(Boolean).join(" · ");
                 const beds = p.bedsMin == null ? "—" : p.bedsMin === p.bedsMax ? bedLabel(p.bedsMin) : `${bedLabel(p.bedsMin)}–${bedLabel(p.bedsMax!)}`;
-                const types = p.types.map((ty) => typeLabel(ty, locale)).join(", ");
+                const types = p.types.map((ty) => typeName(ty, locale)).join(", ");
                 return (
                   <tr key={p.id}>
                     <th scope="row">
