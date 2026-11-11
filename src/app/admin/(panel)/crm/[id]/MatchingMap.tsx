@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, useMap, maplibregl } from "@/app/components/map/MapLibre";
 import { MapCard, pinMarkup, POI_CATS, PoiLayers } from "@/app/preview-projects/ProjectsMap";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
+import type { Locale } from "@/lib/locale";
 import "@/app/preview-projects/projects.css";
 
 /* Property matching map (operator, 2026-10-20): ONLY the projects currently
@@ -43,7 +44,7 @@ function FitToMarkers({ markers }: { markers: MatchingMapMarker[] }) {
 }
 
 /** `lang`: the partner portal shows the card and layer labels in the partner's language (CRM: English). */
-export default function MatchingMap({ markers, lang = "en" }: { markers: MatchingMapMarker[]; lang?: "en" | "de" | "pl" | "ru" }) {
+export default function MatchingMap({ markers, lang = "en" }: { markers: MatchingMapMarker[]; lang?: Exclude<Locale, "he"> }) {
   const s = useMemo(() => projectsStrings(lang), [lang]);
   const [poiActive, setPoiActive] = useState<Set<string>>(new Set());
   const [poiState, setPoiState] = useState<"idle" | "loading" | "zoom">("idle");
