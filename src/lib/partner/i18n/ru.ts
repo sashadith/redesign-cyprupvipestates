@@ -915,6 +915,7 @@ export const ru: PartnerDict = {
     visitWebsite: "Сайт",
   },
   presBuilder: {
+    dropWarning: "В этих проектах не выбран ни один объект, они будут пропущены: {names}. Продолжить?",
     chooseClientFirst: "Выберите клиента, чтобы увидеть подходящие проекты.",
     filtersTitle: "Что ищет Ваш клиент",
     budgetMin: "Бюджет от (EUR)",

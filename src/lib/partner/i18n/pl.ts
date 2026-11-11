@@ -915,6 +915,7 @@ export const pl: PartnerDict = {
     visitWebsite: "Strona internetowa",
   },
   presBuilder: {
+    dropWarning: "Te projekty nie mają wybranego lokalu i zostaną pominięte: {names}. Kontynuować?",
     chooseClientFirst: "Proszę wybrać klienta, aby zobaczyć pasujące projekty.",
     filtersTitle: "Czego szuka Państwa klient",
     budgetMin: "Budżet od (EUR)",

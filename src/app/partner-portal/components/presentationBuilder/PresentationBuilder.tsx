@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { MatchingMapMarker } from "@/app/admin/(panel)/crm/[id]/MatchingMap";
 import {
-  buildItems, editPayloadItems, editorItemFromMatch, emptyEditItems, hiddenSelections, selectionMatches, sortResults, type ResultSort,
+  buildItems, droppedSelections, editPayloadItems, editorItemFromMatch, emptyEditItems, hiddenSelections, selectionMatches, sortResults, type ResultSort,
 } from "@/app/crm/components/presentationModalState";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import type { EditorItem } from "@/lib/crm/presentations/editorItems";
@@ -152,6 +152,7 @@ export function PresentationBuilder({ t, locale: uiLocale, clients, mode, projec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode.kind, mode.kind === "new" ? "" : mode.id, loadTry]);
 
+  const pickSeq = useRef(0);
   function pickClient(id: string) {
     if (dirty.current && !window.confirm(B.discard)) return;
     dirty.current = false;
@@ -161,12 +162,15 @@ export function PresentationBuilder({ t, locale: uiLocale, clients, mode, projec
     const client = clients.find((c) => c.claimId === id);
     setGreetingName((client?.firstName ?? "").slice(0, GREETING_MAX));
     setLocale(client?.locale ?? uiLocale);
+    // Newest pick wins: a slow answer for the previous client must not land on this one.
+    const my = ++pickSeq.current;
     partnerBuilderContextAction(id).then((c) => {
+      if (my !== pickSeq.current) return;
       if ("error" in c) { setLoadError(say(t, c.error)); return; }
       setCtx(c);
       setFilters({ ...c.filters, ...(readStored(id) ?? {}) });
       setReady(true);
-    }).catch(() => setLoadError(say(t, "err.generic")));
+    }).catch(() => { if (my === pickSeq.current) setLoadError(say(t, "err.generic")); });
   }
   useEffect(() => {
     if (mode.kind === "new" && mode.claimId && clients.some((c) => c.claimId === mode.claimId)) pickClient(mode.claimId);
@@ -321,7 +325,10 @@ export function PresentationBuilder({ t, locale: uiLocale, clients, mode, projec
     try {
       if (isEdit && editMeta) {
         const all = items.concat(pendingItems());
-        const empty = new Set(emptyEditItems(all).map((e) => e.developmentId));
+        const emptyItems = emptyEditItems(all);
+        // As the CRM: say which projects a save would leave out (and so remove) before doing it.
+        if (emptyItems.length && !window.confirm(fill(B.dropWarning, { names: emptyItems.map((e) => e.aliasName.trim() || e.publicName).join(", ") }))) return;
+        const empty = new Set(emptyItems.map((e) => e.developmentId));
         const kept = all.filter((it) => !empty.has(it.developmentId));
         if (!kept.length) { setError(B.emptySelection); return; }
         const r = await savePartnerPresentationAction(editMeta.id, {
@@ -331,6 +338,8 @@ export function PresentationBuilder({ t, locale: uiLocale, clients, mode, projec
         dirty.current = false;
         setDone({ url: r.url, updated: true, share: r.share });
       } else {
+        const dropped = droppedSelections(selectedIds, unitOverrides, picked);
+        if (dropped.length && !window.confirm(fill(B.dropWarning, { names: dropped.join(", ") }))) return;
         const base = buildItems(selectedIds, unitOverrides, comments, picked);
         if (!base.length) { setError(say(t, "err.presentationUnits")); return; }
         const itemsOut = base.map((it) => ({ ...it, aliasName: aliases.get(it.developmentId) ?? "" }));

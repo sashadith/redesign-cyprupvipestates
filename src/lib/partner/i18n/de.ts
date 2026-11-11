@@ -915,6 +915,7 @@ export const de: PartnerDict = {
     visitWebsite: "Website",
   },
   presBuilder: {
+    dropWarning: "Diese Projekte haben keine gewählte Einheit und werden weggelassen: {names}. Fortfahren?",
     chooseClientFirst: "Wählen Sie einen Kunden, um die passenden Projekte zu sehen.",
     filtersTitle: "Was Ihr Kunde sucht",
     budgetMin: "Budget ab (EUR)",

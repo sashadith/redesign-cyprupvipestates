@@ -913,6 +913,7 @@ export const en = {
     visitWebsite: "Website",
   },
   presBuilder: {
+    dropWarning: "These projects have no unit selected and will be left out: {names}. Continue?",
     chooseClientFirst: "Choose a client to see the matching projects.",
     filtersTitle: "What your client is looking for",
     budgetMin: "Budget from (EUR)",

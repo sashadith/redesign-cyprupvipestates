@@ -53,19 +53,24 @@ const devs = new Map<string, DevUnits>([
 const ctx = { allowed: new Set(["a", "b"]), devs };
 const ref = (r: string, name: string) => normalizeRef(r, name);
 
-test("items: refs and ids resolved against that project's available units", () => {
+test("items: refs and ids resolved against that project's own units; other projects' dropped", () => {
   const r = validatePartnerItems([
     { developmentId: "a", unitRefs: [ref("A101", "Aura"), ref("A102", "Aura"), ref("B1", "Bella")], unitIds: ["u3", "v1"], aliasName: " Sea View ", advisorComment: "Great" },
     { developmentId: "b" },
   ], ctx);
   assert.ok(r.ok);
   if (!r.ok) return;
-  assert.deepEqual(r.items[0], { developmentId: "a", unitRefs: [ref("A101", "Aura")], unitIds: ["u3"], sortIndex: 0, aliasName: "Sea View", advisorComment: "Great" });
+  assert.deepEqual(r.items[0], { developmentId: "a", unitRefs: [ref("A101", "Aura"), ref("A102", "Aura")], unitIds: ["u3"], sortIndex: 0, aliasName: "Sea View", advisorComment: "Great" });
   assert.deepEqual(r.items[1], { developmentId: "b", unitRefs: null, unitIds: null, sortIndex: 1, aliasName: null, advisorComment: null });
 });
 
-test("items: picks that are all gone are refused, not saved empty", () => {
+test("items: a saved pick whose units sold since is kept, not refused (CRM keeps it, shown as sold)", () => {
   const r = validatePartnerItems([{ developmentId: "a", unitRefs: [ref("A102", "Aura")] }], ctx);
+  assert.ok(r.ok && r.items[0].unitRefs?.[0] === ref("A102", "Aura"));
+});
+
+test("items: picks naming only another project's units are refused, not saved empty", () => {
+  const r = validatePartnerItems([{ developmentId: "a", unitRefs: [ref("B1", "Bella")], unitIds: ["v1"] }], ctx);
   assert.deepEqual(r, { ok: false, code: "err.presentationUnits", developmentId: "a" });
 });
 
@@ -94,6 +99,8 @@ test("expiry: tomorrow up to 90 days ahead, Cyprus calendar", () => {
   const now = new Date("2026-11-11T23:30:00Z"); // already 12 Nov in Cyprus
   assert.equal(expiryFromInput("2026-11-12", now), null);
   assert.equal(expiryFromInput("2026-11-13", now)!.toISOString(), "2026-11-13T21:59:59.000Z");
+  // Summer time (UTC+3): still 23:59:59 in Cyprus.
+  assert.equal(expiryFromInput("2027-04-10", new Date("2027-03-01T10:00:00Z"))!.toISOString(), "2027-04-10T20:59:59.000Z");
   assert.ok(expiryFromInput("2027-02-10", now));
   assert.equal(expiryFromInput("2027-02-11", now), null);
   assert.equal(expiryFromInput("2026-02-30", now), null);

@@ -69,9 +69,9 @@ function cleanText(v: unknown, max: number): string | null | undefined {
 }
 
 /**
- * Items from the builder, checked against the partner's own projects and each project's AVAILABLE units.
- * Refs/ids that are not an available unit of that project are dropped; a project whose named picks all
- * dropped is refused (the CRM's "no matching unit"). null/null = whole project (all available units).
+ * Items from the builder, checked against the partner's own projects and each project's own units.
+ * Refs/ids that are not a unit of that project are dropped; a project whose named picks all dropped is
+ * refused (forged or stale input). null/null = whole project (all available units).
  */
 export function validatePartnerItems(raw: unknown, ctx: { allowed: ReadonlySet<string>; devs: ReadonlyMap<string, DevUnits> }): PartnerItemsResult {
   if (!Array.isArray(raw) || raw.length < 1 || raw.length > MAX_PRESENTATION_PROJECTS) return { ok: false, code: "err.presentationProjects" };
@@ -96,12 +96,14 @@ export function validatePartnerItems(raw: unknown, ctx: { allowed: ReadonlySet<s
     let unitRefs: string[] | null = null;
     let unitIds: string[] | null = null;
     if (named) {
-      const available = dev.units.filter((u) => (u.status ?? "available") === "available");
+      // Any unit of THIS project counts, sold ones included: a saved pick whose units sold since stays
+      // as it is (the client page shows them as sold, as the CRM editor keeps them). Refs/ids of other
+      // projects are dropped; the builder only lets partners tick available units.
       const refs = new Set(wantRefs ?? []);
       const ids = new Set(wantIds ?? []);
       const keptRefs: string[] = [];
       const keptIds: string[] = [];
-      for (const u of available) {
+      for (const u of dev.units) {
         if (u.ref && u.ref.trim()) {
           const key = normalizeRef(u.ref, dev.name);
           if (refs.has(key) && !keptRefs.includes(key)) keptRefs.push(key);
@@ -125,8 +127,16 @@ export function canEditPartnerPresentation(
 }
 
 const nicosiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Nicosia", year: "numeric", month: "2-digit", day: "2-digit" });
+const nicosiaOffset = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Nicosia", timeZoneName: "shortOffset" });
 
-/** "YYYY-MM-DD" in [tomorrow, today + 90] (Cyprus calendar) → end of that day in Cyprus; else null. */
+/** Cyprus UTC offset in minutes at that instant (120 in winter, 180 in summer). */
+function offsetMinutes(at: Date): number {
+  const name = nicosiaOffset.formatToParts(at).find((p) => p.type === "timeZoneName")?.value ?? "GMT+2";
+  const m = /GMT([+-])(\d{1,2})(?::(\d{2}))?/.exec(name);
+  return m ? (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] ?? 0)) : 120;
+}
+
+/** "YYYY-MM-DD" in [tomorrow, today + 90] (Cyprus calendar) → 23:59:59 that day in Cyprus; else null. */
 export function expiryFromInput(s: string, now: Date): Date | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
   if (!m) return null;
@@ -138,5 +148,7 @@ export function expiryFromInput(s: string, now: Date): Date | null {
   const today = Date.UTC(ty, tm - 1, td);
   const diff = Math.round((day - today) / 86_400_000);
   if (diff < 1 || diff > EXPIRY_MAX_DAYS) return null;
-  return new Date(Date.UTC(y, mo - 1, d, 21, 59, 59));
+  // 23:59:59 Cyprus time on that day, summer or winter.
+  const local = Date.UTC(y, mo - 1, d, 23, 59, 59);
+  return new Date(local - offsetMinutes(new Date(local - 120 * 60_000)) * 60_000);
 }

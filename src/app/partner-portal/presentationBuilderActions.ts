@@ -288,7 +288,10 @@ export async function savePartnerPresentationAction(id: string, body: unknown): 
   const criteria = parsePartnerFilters(b.criteria);
   const existing = await prisma.clientPresentationItem.findMany({ where: { presentationId: p.id } });
   const byDev = new Map(existing.map((e) => [e.developmentId, e]));
-  const { toRemoveDevIds, summary } = editSummary(existing, v.items);
+  // Items of projects no longer offered to the partner (unpublished since) never reach the editor; they
+  // stay as they are instead of being deleted by a save the partner made for something else.
+  const offered = existing.filter((e) => allowed.has(e.developmentId));
+  const { toRemoveDevIds, summary } = editSummary(offered, v.items);
   const effectiveExpiry = expiresAt ?? p.expiresAt;
   try {
     await prisma.$transaction(async (tx) => {
