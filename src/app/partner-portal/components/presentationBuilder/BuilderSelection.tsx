@@ -4,7 +4,7 @@ import type { EditorItem } from "@/lib/crm/presentations/editorItems";
 import { selectionPriceFrom } from "@/lib/crm/selectionPriceFrom";
 import type { PartnerDict } from "@/lib/partner/i18n";
 import { fill } from "../forms";
-import { UnitTable, type Fmt } from "./BuilderResults";
+import { UnitTable, placeLine, type Fmt } from "./BuilderResults";
 
 export function BuilderSelection({ t, fmt, items, favorited, expanded, onToggleExpand, onMove, onAlias, onComment, onToggleUnit, onRemove }: {
   t: PartnerDict; fmt: Fmt; items: EditorItem[]; favorited: ReadonlySet<string>; expanded: ReadonlySet<string>;
@@ -19,7 +19,7 @@ export function BuilderSelection({ t, fmt, items, favorited, expanded, onToggleE
       {items.map((it, i) => {
         const isOpen = expanded.has(it.developmentId);
         const available = it.units.filter((u) => u.status === "available").length;
-        const place = [it.district || it.town, it.area].filter(Boolean).join(" · ");
+        const place = placeLine(it.district || it.town, it.area);
         return (
           <li key={it.developmentId}>
             <div className="pp-pb-row">

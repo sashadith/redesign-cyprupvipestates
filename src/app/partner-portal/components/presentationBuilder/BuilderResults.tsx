@@ -8,6 +8,10 @@ import { fill } from "../forms";
 
 export type Fmt = { money: (n: number | null) => string; day: (d: Date) => string };
 
+/** "Paphos · Peyia"; a place named like its district ("Paphos · Paphos") once. */
+export const placeLine = (district: string | null, area: string | null) =>
+  [district, area && area.toLowerCase() !== (district ?? "").toLowerCase() ? area : null].filter(Boolean).join(" · ");
+
 const scoreClass = (s: number) => (s >= 80 ? "hi" : s >= 60 ? "mid" : "lo");
 
 export function sentText(t: PartnerDict, fmt: Fmt, s: SentInfo): string {
@@ -61,7 +65,7 @@ export function BuilderResults({
         const picked = checked ?? new Set(defaultIds);
         const prices = Array.from(picked).map((id) => byId.get(id)?.price).filter((p): p is number => p != null);
         const priceFrom = prices.length ? Math.min(...prices) : d.priceFrom;
-        const place = [d.district || d.town, d.area].filter(Boolean).join(" · ");
+        const place = placeLine(d.district || d.town, d.area);
         const s = sent[d.id];
         const url = projectUrl(d.slug);
         return (

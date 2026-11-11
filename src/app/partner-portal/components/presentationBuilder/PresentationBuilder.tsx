@@ -25,6 +25,7 @@ import { BuilderFilters } from "./BuilderFilters";
 import { BuilderResults, type Fmt } from "./BuilderResults";
 import { BuilderSelection } from "./BuilderSelection";
 import { BuilderDone } from "./BuilderDone";
+import { MapBoundary } from "./MapBoundary";
 
 // MapLibre touches window: client-only.
 const MatchingMap = dynamic(() => import("@/app/admin/(panel)/crm/[id]/MatchingMap"), { ssr: false });
@@ -414,7 +415,7 @@ export function PresentationBuilder({ t, locale: uiLocale, clients, mode, projec
               onRetry={() => runMatch(filters)} projectUrl={projectUrl} />
             {hasPins && (
               <div className="pp-pb-map" ref={mapBox} aria-label={B.mapTitle}>
-                {mapWidth > 0 && <MatchingMap key={`w${Math.round(mapWidth / 40)}`} markers={mapMarkers} lang={uiLocale} />}
+                {mapWidth > 0 && <MapBoundary><MatchingMap key={`w${Math.round(mapWidth / 40)}`} markers={mapMarkers} lang={uiLocale} /></MapBoundary>}
                 {withoutPin > 0 && <p className="pp-muted pp-small">{fill(B.mapNoPin, { n: String(withoutPin) })}</p>}
               </div>
             )}
