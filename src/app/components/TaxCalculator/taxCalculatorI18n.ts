@@ -5,7 +5,8 @@ export type TaxCalcStrings = {
   title: string;
   lead: string;
   startFrom: string;
-  presets: { owner: string; investor: string; pension: string; freelancer: string; employee: string; mixed: string };
+  sourcesOn: string;
+  presets: { owner: string; investor: string; pension: string; freelancer: string; employee: string };
   clear: string;
   statusHeading: string;
   statusOptions: { nonDom: { title: string; text: string }; dom: { title: string; text: string } };
@@ -75,8 +76,9 @@ export type TaxCalcStrings = {
 const EN: TaxCalcStrings = {
   title: "Cyprus tax calculator for 2026",
   lead: "Switch on the sources of your income and see what you keep after Cyprus tax, in under a minute. Built for company owners and investors. Nothing you type leaves your browser.",
-  startFrom: "Start from an example",
-  presets: { owner: "Company owner", investor: "Investor", pension: "Pension from abroad", freelancer: "Freelancer", employee: "Employee", mixed: "Owner and investor together" },
+  startFrom: "Who are you? Pick everything that applies",
+  sourcesOn: "{n} sources switched on",
+  presets: { owner: "Company owner", investor: "Investor", pension: "Pension from abroad", freelancer: "Freelancer", employee: "Employee" },
   clear: "Clear all",
   statusHeading: "Your tax status",
   statusOptions: {
@@ -177,7 +179,7 @@ const EN: TaxCalcStrings = {
     propertyExempt: "The gain is inside the exemption, so no capital gains tax is due.",
   },
   empty: "Your result appears here.",
-  emptyHint: "Pick an example above, or switch on a source of income and enter an amount.",
+  emptyHint: "Pick who you are above, or switch on a source of income below and enter an amount.",
   seeResult: "See your result",
   notesHeading: "What this calculator assumes",
   notes: [
@@ -197,8 +199,9 @@ const EN: TaxCalcStrings = {
 const DE: TaxCalcStrings = {
   title: "Steuerrechner Zypern 2026",
   lead: "Schalten Sie Ihre Einkommensquellen ein und sehen Sie in unter einer Minute, was nach zypriotischen Steuern bleibt. Gebaut für Unternehmer und Investoren. Ihre Eingaben verlassen den Browser nicht.",
-  startFrom: "Mit einem Beispiel starten",
-  presets: { owner: "Firmeninhaber", investor: "Investor", pension: "Rente aus dem Ausland", freelancer: "Freiberufler", employee: "Angestellter", mixed: "Inhaber und Investor zugleich" },
+  startFrom: "Wer sind Sie? Wählen Sie alles Zutreffende",
+  sourcesOn: "{n} Quellen aktiv",
+  presets: { owner: "Firmeninhaber", investor: "Investor", pension: "Rente aus dem Ausland", freelancer: "Freiberufler", employee: "Angestellter" },
   clear: "Alles löschen",
   statusHeading: "Ihr Steuerstatus",
   statusOptions: {
@@ -299,7 +302,7 @@ const DE: TaxCalcStrings = {
     propertyExempt: "Der Gewinn liegt innerhalb des Freibetrags, es fällt keine Kapitalgewinnsteuer an.",
   },
   empty: "Hier erscheint Ihr Ergebnis.",
-  emptyHint: "Wählen Sie oben ein Beispiel oder schalten Sie eine Einkommensquelle ein und geben Sie einen Betrag ein.",
+  emptyHint: "Wählen Sie oben, wer Sie sind, oder schalten Sie unten eine Einkommensquelle ein und geben Sie einen Betrag ein.",
   seeResult: "Ergebnis ansehen",
   notesHeading: "Annahmen des Rechners",
   notes: [
@@ -319,8 +322,9 @@ const DE: TaxCalcStrings = {
 const PL: TaxCalcStrings = {
   title: "Kalkulator podatkowy Cypr 2026",
   lead: "Włącz źródła swojego dochodu i zobacz w mniej niż minutę, ile zostaje po cypryjskich podatkach. Stworzony dla właścicieli firm i inwestorów. To, co wpiszesz, nie opuszcza Twojej przeglądarki.",
-  startFrom: "Zacznij od przykładu",
-  presets: { owner: "Właściciel firmy", investor: "Inwestor", pension: "Emerytura z zagranicy", freelancer: "Freelancer", employee: "Pracownik", mixed: "Właściciel i inwestor jednocześnie" },
+  startFrom: "Kim jesteś? Wybierz wszystko, co pasuje",
+  sourcesOn: "Aktywne źródła: {n}",
+  presets: { owner: "Właściciel firmy", investor: "Inwestor", pension: "Emerytura z zagranicy", freelancer: "Freelancer", employee: "Pracownik" },
   clear: "Wyczyść wszystko",
   statusHeading: "Twój status podatkowy",
   statusOptions: {
@@ -421,7 +425,7 @@ const PL: TaxCalcStrings = {
     propertyExempt: "Zysk mieści się w zwolnieniu, więc podatek od zysków kapitałowych nie jest należny.",
   },
   empty: "Tu pojawi się Twój wynik.",
-  emptyHint: "Wybierz przykład powyżej albo włącz źródło dochodu i wpisz kwotę.",
+  emptyHint: "Wybierz powyżej, kim jesteś, albo włącz poniżej źródło dochodu i wpisz kwotę.",
   seeResult: "Zobacz wynik",
   notesHeading: "Założenia kalkulatora",
   notes: [
@@ -441,8 +445,9 @@ const PL: TaxCalcStrings = {
 const RU: TaxCalcStrings = {
   title: "Налоговый калькулятор Кипра на 2026 год",
   lead: "Включите источники своего дохода и меньше чем за минуту узнайте, что остаётся после кипрских налогов. Сделан для владельцев компаний и инвесторов. Введённые данные не покидают ваш браузер.",
-  startFrom: "Начать с примера",
-  presets: { owner: "Владелец компании", investor: "Инвестор", pension: "Пенсия из-за границы", freelancer: "Фрилансер", employee: "Сотрудник", mixed: "Владелец и инвестор вместе" },
+  startFrom: "Кто вы? Выберите всё, что подходит",
+  sourcesOn: "Включено источников: {n}",
+  presets: { owner: "Владелец компании", investor: "Инвестор", pension: "Пенсия из-за границы", freelancer: "Фрилансер", employee: "Сотрудник" },
   clear: "Очистить всё",
   statusHeading: "Ваш налоговый статус",
   statusOptions: {
@@ -543,7 +548,7 @@ const RU: TaxCalcStrings = {
     propertyExempt: "Прибыль укладывается в льготу, налог на прирост капитала не возникает.",
   },
   empty: "Здесь появится ваш результат.",
-  emptyHint: "Выберите пример выше или включите источник дохода и введите сумму.",
+  emptyHint: "Выберите выше, кто вы, или включите ниже источник дохода и введите сумму.",
   seeResult: "Смотреть результат",
   notesHeading: "Допущения калькулятора",
   notes: [

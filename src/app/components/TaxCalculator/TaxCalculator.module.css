@@ -6,13 +6,17 @@
 .title { margin: 0 0 8px; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2.05rem); line-height: 1.12; color: var(--c-ink); text-wrap: balance; }
 .lead { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--c-soft); }
 
-.presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: clamp(16px, 2.2vw, 24px) 0; padding: 12px 14px; border: 1px dashed var(--c-line2); border-radius: 14px; }
-.presetsLabel { font-size: 0.8125rem; font-weight: 600; color: var(--c-ink); margin-inline-end: 4px; }
-.chip { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--c-line2); background: #fff; color: var(--c-ink); font: inherit; font-size: 0.875rem; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s; }
+.presets { display: grid; gap: 10px; margin: clamp(16px, 2.2vw, 24px) 0; padding: 14px 16px; border: 1px solid var(--c-line2); border-radius: 14px; background: #fff; }
+.presetsLabel { font-size: 0.9375rem; font-weight: 600; color: var(--c-ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--c-line2); background: #fff; color: var(--c-ink); font: inherit; font-size: 0.9375rem; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s, padding 0.2s; }
 .chip:hover { border-color: var(--c-acc); }
 .chip:active { transform: scale(0.97); }
-.chipOn { background: var(--c-deep); border-color: var(--c-deep); color: var(--c-ivory); }
-.linkBtn { margin-inline-start: auto; background: none; border: 0; padding: 6px 4px; font: inherit; font-size: 0.8125rem; color: var(--c-faint); text-decoration: underline; cursor: pointer; }
+.chipOn { background: var(--c-deep); border-color: var(--c-deep); color: var(--c-ivory); padding-inline-start: 32px; }
+.chipOn::before { content: ""; position: absolute; inset-inline-start: 13px; top: 50%; width: 5px; height: 9px; border: solid var(--c-gold); border-width: 0 2px 2px 0; transform: translateY(-62%) rotate(45deg); }
+.presetsFoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 20px; }
+.count { font-size: 0.8125rem; color: var(--c-acc); font-weight: 600; }
+.linkBtn { margin-inline-start: auto; background: none; border: 0; padding: 4px; font: inherit; font-size: 0.8125rem; color: var(--c-faint); text-decoration: underline; cursor: pointer; }
 .chip:focus-visible, .linkBtn:focus-visible, .sectionHead:focus-visible, .sourceHead:focus-visible, .statusCard:focus-visible, .sticky:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 2px; }
 
 .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 3vw, 36px); align-items: start; }

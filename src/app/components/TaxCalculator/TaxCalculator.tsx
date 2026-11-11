@@ -28,18 +28,17 @@ const NO_SOURCES: Record<SourceKey, boolean> = {
   company: false, dividends: false, interest: false, property: false, crypto: false, pension: false, selfEmployed: false, employment: false,
 };
 
-type PresetKey = "owner" | "investor" | "pension" | "freelancer" | "employee" | "mixed";
-const PRESETS: Record<PresetKey, { on: SourceKey[]; vals: Partial<Vals> }> = {
-  owner: { on: ["company"], vals: { companyProfit: "250000", companySalary: "30000", companyDividend: "120000" } },
-  investor: { on: ["dividends", "interest", "property"], vals: { dividends: "80000", interest: "20000", propertyGain: "150000" } },
-  pension: { on: ["pension"], vals: { pension: "36000" } },
-  freelancer: { on: ["selfEmployed"], vals: { selfEmployed: "70000" } },
-  employee: { on: ["employment"], vals: { employment: "60000" } },
-  mixed: {
-    on: ["company", "dividends", "interest", "property", "crypto", "pension"],
-    vals: { companyProfit: "250000", companySalary: "30000", companyDividend: "120000", dividends: "60000", interest: "15000", propertyGain: "150000", cryptoGain: "40000", pension: "20000" },
-  },
+type PresetKey = "owner" | "investor" | "pension" | "freelancer" | "employee";
+/* The chips at the top are toggles that can be combined. `main` are the sources a chip switches on (with example amounts
+   where the field is empty), `all` also covers the optional ones that are switched off together with it. */
+const PRESETS: Record<PresetKey, { main: SourceKey[]; all: SourceKey[]; vals: Partial<Vals> }> = {
+  owner: { main: ["company"], all: ["company"], vals: { companyProfit: "250000", companySalary: "30000", companyDividend: "120000" } },
+  investor: { main: ["dividends", "interest", "property"], all: ["dividends", "interest", "property", "crypto"], vals: { dividends: "80000", interest: "20000", propertyGain: "150000" } },
+  pension: { main: ["pension"], all: ["pension"], vals: { pension: "36000" } },
+  freelancer: { main: ["selfEmployed"], all: ["selfEmployed"], vals: { selfEmployed: "70000" } },
+  employee: { main: ["employment"], all: ["employment"], vals: { employment: "60000" } },
 };
+const PRESET_KEYS = Object.keys(PRESETS) as PresetKey[];
 
 const num = (s: string): number => {
   const n = Number(String(s).replace(/[^0-9]/g, ""));
@@ -95,27 +94,29 @@ export default function TaxCalculator({ lang, title, guideHref, guideLabel }: Pr
   const [exemption, setExemption] = useState<Exemption>("none");
   const [status, setStatus] = useState<Status>("single");
   const [children, setChildren] = useState(0);
-  const [preset, setPreset] = useState<PresetKey | null>(null);
 
   const setVal = (k: keyof Vals) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPreset(null);
     setVals((v) => ({ ...v, [k]: e.target.value.replace(/[^0-9]/g, "") }));
   };
   const toggle = (k: SourceKey) => {
-    setPreset(null);
     setOn((o) => ({ ...o, [k]: !o[k] }));
   };
-  const applyPreset = (k: PresetKey) => {
-    const p = PRESETS[k];
-    setPreset(k);
-    setOn({ ...NO_SOURCES, ...Object.fromEntries(p.on.map((s) => [s, true])) } as Record<SourceKey, boolean>);
-    setVals({ ...EMPTY_VALS, ...p.vals });
-    setMainHome(false);
-    setPensionS1(false);
-    setExemption("none");
+  const presetOn = (k: PresetKey) => PRESETS[k].main.every((x) => on[x]);
+  // A chip switches its sources on with example amounts (kept if you already typed something), or off together with their amounts.
+  const togglePreset = (k: PresetKey) => {
+    const g = PRESETS[k];
+    if (presetOn(k)) {
+      setOn((o) => ({ ...o, ...Object.fromEntries(g.all.map((x) => [x, false])) }));
+      return;
+    }
+    setOn((o) => ({ ...o, ...Object.fromEntries(g.main.map((x) => [x, true])) }));
+    setVals((v) => {
+      const next = { ...v };
+      for (const [key, example] of Object.entries(g.vals)) if (!next[key as keyof Vals]) next[key as keyof Vals] = example as string;
+      return next;
+    });
   };
   const clearAll = () => {
-    setPreset(null);
     setOn(NO_SOURCES);
     setVals(EMPTY_VALS);
     setMainHome(false);
@@ -264,6 +265,7 @@ export default function TaxCalculator({ lang, title, guideHref, guideLabel }: Pr
   const retainedShare = has ? Math.max(0, res.retained) / res.pool : 0;
   const burdenShare = has ? Math.max(0, res.totalBurden) / res.pool : 0;
   const showCompany = res.company.on;
+  const activeCount = ORDER.filter((k) => on[k]).length;
 
   return (
     <section className={styles.calc} aria-label={title || t.title}>
@@ -274,12 +276,17 @@ export default function TaxCalculator({ lang, title, guideHref, guideLabel }: Pr
 
       <div className={styles.presets} role="group" aria-label={t.startFrom}>
         <span className={styles.presetsLabel}>{t.startFrom}</span>
-        {(Object.keys(PRESETS) as PresetKey[]).map((k) => (
-          <button key={k} type="button" className={`${styles.chip} ${preset === k ? styles.chipOn : ""}`} aria-pressed={preset === k} onClick={() => applyPreset(k)}>
-            {t.presets[k]}
-          </button>
-        ))}
-        <button type="button" className={styles.linkBtn} onClick={clearAll}>{t.clear}</button>
+        <div className={styles.chips}>
+          {PRESET_KEYS.map((k) => (
+            <button key={k} type="button" className={`${styles.chip} ${presetOn(k) ? styles.chipOn : ""}`} aria-pressed={presetOn(k)} onClick={() => togglePreset(k)}>
+              {t.presets[k]}
+            </button>
+          ))}
+        </div>
+        <div className={styles.presetsFoot}>
+          <span className={styles.count}>{activeCount > 0 ? t.sourcesOn.replace("{n}", String(activeCount)) : ""}</span>
+          <button type="button" className={styles.linkBtn} onClick={clearAll}>{t.clear}</button>
+        </div>
       </div>
 
       <div className={styles.grid}>
