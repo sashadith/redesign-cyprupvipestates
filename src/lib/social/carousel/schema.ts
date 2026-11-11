@@ -10,7 +10,7 @@ import { z } from "zod";
 const CTRL = /[\u0000-\u0009\u000b-\u001f\u007f]/;
 const text = (max: number) => z.string().trim().min(1).max(max).refine((s) => !CTRL.test(s) && !s.includes("\n"), "single line of plain text");
 const multiline = (max: number) => z.string().trim().min(1).max(max).refine((s) => !CTRL.test(s), "plain text");
-const image = z.string().trim().min(1).max(500).describe("https://cyprusvipestates.com/uploads/… — e.g. a crm_get_project gallery URL");
+const image = z.string().trim().min(1).max(500).describe("https://cyprusvipestates.com/uploads/… — e.g. a crm_get_project gallery URL or a blog coverImageUrl / bodyImageUrls entry");
 
 // Fixed-length lists are arrays with minItems = maxItems, not zod tuples: tuples become
 // JSON Schema "prefixItems", which claude.ai's connector does not accept — the tool was

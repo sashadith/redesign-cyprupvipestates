@@ -1,18 +1,11 @@
 "use client";
-/** Phase 3e: branding (profile) and "New presentation" forms, plus the revoke button. */
-import { useMemo, useState } from "react";
+/** Phase 3e: branding (profile) forms and the presentation revoke button (the builder lives in presentationBuilder/). */
 import { useFormState } from "react-dom";
-import type { PartnerDict, PartnerLocale } from "@/lib/partner/i18n";
-import { presentationPreviewUrl } from "@/lib/partner/presentationBranding";
+import type { PartnerDict } from "@/lib/partner/i18n";
 import { removeBrandLogoAction, removeBrandPhotoAction, saveBrandAction, uploadBrandLogoAction, uploadBrandPhotoAction } from "../brandActions";
-import { createPresentationAction, revokePresentationAction } from "../presentationActions";
-import { isErr, type BrandState, type LogoState, type PresentationState } from "../formState";
-import { CopyLink, Field, FormError, LANG_OPTIONS, Submit, fill, say } from "./forms";
-
-// Mirrors MAX_PRESENTATION_PROJECTS / PERSONAL_NOTE_MAX / GREETING_NAME_MAX (the server re-checks all of them).
-const MAX_PROJECTS = 12;
-const NOTE_MAX = 600;
-const GREETING_MAX = 60;
+import { revokePresentationAction } from "../presentationActions";
+import { isErr, type BrandState, type LogoState } from "../formState";
+import { Field, FormError, Submit, fill, say } from "./forms";
 
 // ─── Branding ────────────────────────────────────────────────────────────────
 
@@ -113,157 +106,6 @@ export function PhotoForm({ t, photoSrc }: { t: PartnerDict; photoSrc: string | 
 }
 
 // ─── New presentation ────────────────────────────────────────────────────────
-
-export type PresentationClientOption = { claimId: string; name: string; firstName: string; locale: PartnerLocale };
-export type PresentationProjectOption = { id: string; name: string; town: string | null };
-
-const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-const FIELDS = ["claimId", "projectIds", "greetingName", "personalNote", "locale"];
-
-/** `initialClaimId` (partner pipeline "New selection"): the client to start with, when he is one of `clients`. */
-export function PresentationForm({ t, clients, projects, defaultLocale, initialClaimId }: {
-  t: PartnerDict;
-  clients: PresentationClientOption[];
-  projects: PresentationProjectOption[];
-  defaultLocale: PartnerLocale;
-  initialClaimId?: string;
-}) {
-  const [round, setRound] = useState(0);
-  return (
-    <PresentationFormInner key={round} t={t} clients={clients} projects={projects} defaultLocale={defaultLocale}
-      initial={round === 0 ? clients.find((c) => c.claimId === initialClaimId) : undefined} onAgain={() => setRound((r) => r + 1)} />
-  );
-}
-
-function PresentationFormInner({ t, clients, projects, defaultLocale, initial, onAgain }: {
-  t: PartnerDict;
-  clients: PresentationClientOption[];
-  projects: PresentationProjectOption[];
-  defaultLocale: PartnerLocale;
-  initial?: PresentationClientOption;
-  onAgain: () => void;
-}) {
-  const P = t.presentations;
-  const S = t.submit;
-  const [state, action] = useFormState<PresentationState, FormData>(createPresentationAction, null);
-  const [claimId, setClaimId] = useState(initial?.claimId ?? "");
-  const [greeting, setGreeting] = useState(initial ? initial.firstName.slice(0, GREETING_MAX) : "");
-  const [locale, setLocale] = useState<string>(initial?.locale ?? defaultLocale);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [query, setQuery] = useState("");
-  const byId = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
-  const errOn = (name: string) => (isErr(state) && state.field === name ? say(t, state.error) : null);
-
-  if (state && "ok" in state) {
-    return (
-      <div className="pp-done" role="status">
-        <h2>{P.created}</h2>
-        <CopyLink value={state.url} copyLabel={P.copyLink} copiedLabel={P.copied} />
-        <div className="pp-cta">
-          <a className="pp-btn pp-btn-ghost" href={presentationPreviewUrl(state.url)} target="_blank" rel="noopener noreferrer">{P.open}</a>
-          <button type="button" className="pp-btn pp-btn-ghost" onClick={onAgain}>{P.newTitle}</button>
-        </div>
-      </div>
-    );
-  }
-  if (!clients.length) return <p className="pp-alert pp-alert-neutral">{P.noClients}</p>;
-
-  const pickClient = (id: string) => {
-    setClaimId(id);
-    const c = clients.find((x) => x.claimId === id);
-    if (c) {
-      setGreeting(c.firstName.slice(0, GREETING_MAX));
-      setLocale(c.locale);
-    }
-  };
-  const toggle = (id: string, on: boolean) =>
-    setSelected((s) => (on ? (s.includes(id) || s.length >= MAX_PROJECTS ? s : [...s, id]) : s.filter((x) => x !== id)));
-  const q = norm(query.trim());
-  const visible = projects.filter((p) => !q || selected.includes(p.id) || norm(`${p.name} ${p.town ?? ""}`).includes(q));
-  const projectsErr = errOn("projectIds");
-
-  return (
-    <form action={action} className="pp-form" noValidate>
-      <FormError t={t} state={state} fields={FIELDS} />
-      <Field t={t} state={state} name="claimId" label={P.client}>
-        {(a) => (
-          <select {...a} name="claimId" value={claimId} onChange={(e) => pickClient(e.target.value)} required>
-            <option value="" disabled>{P.clientPlaceholder}</option>
-            {clients.map((c) => <option key={c.claimId} value={c.claimId}>{c.name || "—"}</option>)}
-          </select>
-        )}
-      </Field>
-
-      <fieldset className={projectsErr ? "pp-fieldset pp-field-bad" : "pp-fieldset"} aria-describedby="f-pres-projects-hint">
-        <legend>{P.projects}</legend>
-        <small id="f-pres-projects-hint" className="pp-hint">{P.projectsHint}</small>
-        {/* Selection order is the presentation order: hidden inputs, not the checkboxes, carry the ids. */}
-        {selected.map((id) => <input key={id} type="hidden" name="projectIds" value={id} />)}
-        <input
-          type="search"
-          className="pp-search"
-          placeholder={S.projectsSearch}
-          aria-label={S.projectsSearch}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        {selected.length > 0 && (
-          <div className="pp-chips" aria-live="polite">
-            <span className="pp-chips-count">{fill(S.projectsSelected, { count: String(selected.length) })}</span>
-            {selected.map((id) => {
-              const p = byId.get(id);
-              return p ? (
-                <button key={id} type="button" className="pp-chip" aria-label={fill(S.remove, { name: p.name })} onClick={() => toggle(id, false)}>
-                  {p.name} <span aria-hidden="true">×</span>
-                </button>
-              ) : null;
-            })}
-          </div>
-        )}
-        <ul className="pp-projects">
-          {visible.map((p) => {
-            const on = selected.includes(p.id);
-            return (
-              <li key={p.id}>
-                <label className={on ? "pp-proj pp-proj-on" : "pp-proj"}>
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    disabled={!on && selected.length >= MAX_PROJECTS}
-                    onChange={(e) => toggle(p.id, e.target.checked)}
-                  />
-                  <span className="pp-proj-name">{p.name}{p.town ? <span className="pp-proj-town"> · {p.town}</span> : null}</span>
-                </label>
-              </li>
-            );
-          })}
-          {visible.length === 0 && <li className="pp-muted pp-proj-empty">{S.projectsEmpty}</li>}
-        </ul>
-        {projectsErr && <small className="pp-err" role="alert">{projectsErr}</small>}
-      </fieldset>
-
-      <div className="pp-row">
-        <Field t={t} state={state} name="greetingName" label={P.greetingName} hint={P.greetingNameHint}>
-          {(a) => <input {...a} name="greetingName" maxLength={GREETING_MAX} value={greeting} onChange={(e) => setGreeting(e.target.value)} required />}
-        </Field>
-        <Field t={t} state={state} name="locale" label={P.language}>
-          {(a) => (
-            <select {...a} name="locale" value={locale} onChange={(e) => setLocale(e.target.value)}>
-              {LANG_OPTIONS.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
-            </select>
-          )}
-        </Field>
-      </div>
-      <Field t={t} state={state} name="personalNote" label={P.personalNote} hint={P.personalNoteHint}>
-        {(a) => <textarea {...a} name="personalNote" rows={4} maxLength={NOTE_MAX} />}
-      </Field>
-      <p className="pp-muted pp-small">{P.validity} {P.brandingHint}</p>
-      <div className="pp-actions">
-        <Submit wide={false}>{P.create}</Submit>
-      </div>
-    </form>
-  );
-}
 
 // ─── Revoke ──────────────────────────────────────────────────────────────────
 

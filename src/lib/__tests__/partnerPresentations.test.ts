@@ -202,9 +202,10 @@ test("partner preview: ?preview=1 skips view tracking for partner presentations 
   const bits = src("app/partner-portal/components/presentationBits.tsx");
   assert.ok(bits.includes("href={presentationPreviewUrl(p.url)}"));
   assert.ok(bits.includes("<CopyLink value={p.url}"));
-  const forms = src("app/partner-portal/components/presentationForms.tsx");
-  assert.ok(forms.includes("href={presentationPreviewUrl(state.url)}"));
-  assert.ok(forms.includes("<CopyLink value={state.url}"));
+  // The builder's success screen (2026-11-11) replaced the old form's.
+  const done = src("app/partner-portal/components/presentationBuilder/BuilderDone.tsx");
+  assert.ok(done.includes("href={presentationPreviewUrl(url)}"));
+  assert.ok(done.includes("<CopyLink value={url}"));
 });
 
 test("partner preview: hearts are local-only (no POST to /favorite); staff presentations always save", () => {
@@ -406,12 +407,15 @@ test("create glue: server-built allowed sets reject foreign claims/projects; row
   assert.equal(noNote.presentation.personalNote, null);
   assert.deepEqual(noNote.presentation.criteria, { budgetMin: 1 });
 
+  // Create and edit moved to the builder actions (2026-11-11); the same server-built sets and claim re-check.
+  const builder = src("app/partner-portal/presentationBuilderActions.ts");
+  assert.ok(builder.includes("const [clients, mine] = await Promise.all([myPresentationClients(me.partner.id), myProjects(me.partner.id)]);"));
+  assert.equal((builder.match(/validatePartnerItems\(b\.items, \{ allowed, devs: await devUnits\(itemIds\(b\.items\)\) \}\)/g) ?? []).length, 2);
+  assert.equal((builder.match(/where: \{ id: client\.claimId, partnerId: me\.partner\.id, leadId: client\.leadId, state: "ACTIVE" \}/g) ?? []).length, 2);
+  assert.equal((builder.match(/L\.presentation\.hit\(me\.partner\.id\)/g) ?? []).length, 2);
   const actions = src("app/partner-portal/presentationActions.ts");
-  assert.ok(actions.includes("const [clients, mine] = await Promise.all([myPresentationClients(me.partner.id, now), myProjects(me.partner.id)]);"));
-  assert.ok(actions.includes("validatePresentationDraft(draftFromForm(fd), allowedPresentationSets(clients, mine.projects))"));
-  assert.ok(actions.includes('where: { id: client.claimId, partnerId: me.partner.id, leadId: client.leadId, state: "ACTIVE" }'));
   assert.ok(actions.includes('where: { id, partnerId: me.partner.id, status: { not: "revoked" } },'));
-  assert.equal((actions.match(/L\.presentation\.hit\(me\.partner\.id\)/g) ?? []).length, 2);
+  assert.equal((actions.match(/L\.presentation\.hit\(me\.partner\.id\)/g) ?? []).length, 1);
 });
 
 test("defaults, status and stats helpers", () => {

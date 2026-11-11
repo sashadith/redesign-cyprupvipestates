@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DealInput } from "@/lib/crm/dealInput";
-import { shouldMoveToReserved } from "@/lib/crm/addDealRules";
+import { dealNeedsMove, LOST_NEEDS_MOVE, shouldMoveToReserved } from "@/lib/crm/addDealRules";
 import { addDealAction } from "../actions";
 import { DealFields } from "./DealFields";
 
@@ -27,6 +27,7 @@ function NewDealDialog({ leadId, leadName, status, onClose, onDone }: { leadId: 
   const [problem, setProblem] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
   const canMove = shouldMoveToReserved(status, true);
+  const mustMove = dealNeedsMove(status);
   const [move, setMove] = useState(canMove);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ function NewDealDialog({ leadId, leadName, status, onClose, onDone }: { leadId: 
   async function save() {
     setTried(true);
     if (!deal || busy) return;
+    if (mustMove && !move) { setError(LOST_NEEDS_MOVE); return; }
     setBusy(true);
     setError(null);
     try {
@@ -59,8 +61,11 @@ function NewDealDialog({ leadId, leadName, status, onClose, onDone }: { leadId: 
         <DealFields autoFocus onChange={(d, p) => { setDeal(d); setProblem(p); }} />
         {canMove && (
           <label className="crm-deal-move">
-            <input type="checkbox" checked={move} onChange={(e) => setMove(e.target.checked)} /> Move the lead to Reserved
+            <input type="checkbox" checked={move} disabled={mustMove} onChange={(e) => setMove(e.target.checked)} /> Move the lead to Reserved
           </label>
+        )}
+        {mustMove && (
+          <p className="crm-muted crm-deal-note">This lead is lost. A lost lead cannot hold a deal, so it reopens to Reserved with this deal.</p>
         )}
         {tried && problem && <p className="crm-dialog-error">{problem}</p>}
         <div className="crm-dialog-actions">

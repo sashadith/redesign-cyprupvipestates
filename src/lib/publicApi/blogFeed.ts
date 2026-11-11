@@ -448,6 +448,9 @@ export async function renderArticleBody(contentBlocks: unknown): Promise<Rendere
         }
         break;
       }
+      case "taxCalculatorBlock":
+        // Interactive widget: only on the site, nothing to syndicate.
+        break;
       default:
         if (block?._type) unsupported.add(String(block._type));
     }
