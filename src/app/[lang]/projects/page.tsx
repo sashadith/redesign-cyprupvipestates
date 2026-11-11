@@ -14,9 +14,7 @@ import React from "react";
 import { Metadata } from "next";
 import { permanentRedirect } from "next/navigation";
 import {
-  getFilteredProjects,
-  getFilteredProjectsCount,
-  getFilteredProjectLocationsByLang,
+  getProjectsListing,
   getProjectDistancesByIds,
   getProjectsPageByLang,
 } from "@/sanity/sanity.utils";
@@ -122,12 +120,16 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     west: num(searchParams.west),
   };
 
-  const [rows, total, markersRaw, projectsPage] = await Promise.all([
-    getFilteredProjects(lang, (page - 1) * PAGE_SIZE, PAGE_SIZE, filters),
-    getFilteredProjectsCount(lang, filters),
-    getFilteredProjectLocationsByLang(lang, filters),
+  // Cards, total and map pins come from ONE filtered row set (2026-11-11).
+  // These used to be three separate calls in this Promise.all, and each one
+  // re-ran the full development load: measured 1x 1,472 ms against 3x in
+  // parallel 4,528 ms, which is why a click on Projects took up to 5 seconds.
+  // See getProjectsListing in sanity.utils.ts for the measurements.
+  const [listing, projectsPage] = await Promise.all([
+    getProjectsListing(lang, (page - 1) * PAGE_SIZE, PAGE_SIZE, filters),
     getProjectsPageByLang(lang),
   ]);
+  const { items: rows, total, markers: markersRaw } = listing;
 
   // A page past the last real one (a filter with fewer pages than an old link assumes) is an empty 200,
   // which Google reports as a soft 404: send it to the last real page, keeping the filters.

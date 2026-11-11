@@ -12,7 +12,8 @@ import { mergedTargetFor } from "@/middleware";
 import { articleHref, articleSection, sectionWhere, type ArticleSection } from "@/lib/articleSections";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
-import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
+import { resolveDevelopmentPrice, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances,
+         DEVELOPMENT_CARD_SELECT, mapDevelopmentRowToCard, filterDevelopmentCards, bedroomsMatch } from "@/lib/developmentCard";
 import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
 import { isNewStyleProjectsBlock, projectsBlockHasCriteria } from "@/lib/projectsBlockValidation";
 import { Homepage } from "@/types/homepage";
@@ -1671,16 +1672,8 @@ function sortProjectsStandard(ps: ProjectListItem[], sort: string) {
 
 type ProjectFilters = { city?: string; priceFrom?: number | null; priceTo?: number | null; propertyType?: string; bedrooms?: string; q?: string; sort?: string; north?: number | null; south?: number | null; east?: number | null; west?: number | null };
 
-// Bedrooms are stored as ranges ("1-2", "2-3", "3" ...). A wanted value matches when it
-// falls within the project's range; "5" means 5+.
-function bedroomsMatch(range: string | null | undefined, want: string): boolean {
-  const nums = String(range ?? "").match(/\d+/g)?.map(Number) ?? [];
-  if (!nums.length) return false;
-  const lo = Math.min(...nums), hi = Math.max(...nums);
-  if (want === "5") return hi >= 5;
-  const n = Number(want);
-  return Number.isFinite(n) && lo <= n && n <= hi;
-}
+// bedroomsMatch moved to @/lib/developmentCard (2026-11-11) — it is a pure
+// predicate the extracted card filter needs, and that file opens no Prisma client.
 
 // The unified /projects listing (Part D): a published Development appears here
 // UNLESS it supersedes a legacy Project that's still PUBLISHED — once that legacy
@@ -1702,73 +1695,50 @@ function bedroomsMatch(range: string | null | undefined, want: string): boolean 
 // (resolvePinnedProjects, for the admin-insertable Projects block) can reuse
 // the exact same field derivation instead of re-deriving it — one source of
 // truth for what a Development's listing-card shape looks like.
-export function mapDevelopmentRowToCard(d: any) {
-  const ov = d.override;
-  const town = ov?.town || d.town || "";
-  const district = ov?.district || d.district || "";
-  const area = ov?.area || d.area || "";
-  const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
-  const previewImage = ov?.mainImage || gallery[0] || null;
-  const bedRange = resolveBedRange(d.units);
-  const areaRange = resolveBuildAreaRange(d.units);
-  const { priceFrom: devPriceFrom, priceTo: devPriceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
-  return {
-    sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
-    excerpt: null as string | null, previewImage, images: gallery,
-    keyFeatures: {
-      city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
-      bedrooms: bedRange, coveredArea: areaRange, completionDate: resolveRelativeCompletion(ov?.completion || d.completion), energyEfficiency: ov?.energy || d.energy || "",
-      price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
-    },
-    // KNOWN GAP (2026-07-27, found while diagnosing the ProjectLink null-price
-    // 500s): hardcoded rather than derived from unitsAvailable/unitsTotal
-    // below, so a fully sold-out Development never shows a sold badge on any
-    // card built from this function (ProjectLink's soldBadge, the {!isSold}
-    // price gate). unitsAvailable/unitsTotal ARE set correctly (used by
-    // pushSoldOutLast's isSoldOutItem check, so sold-out devs do at least
-    // sort last) — only this display-facing flag is wrong. Not a crash, just
-    // a missing sold badge; left as-is pending a separate decision.
-    isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
-    createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
-    // For the scarcity banner (src/app/components/ScarcityBanner) — same unit
-    // rows already loaded above, no extra query.
-    unitsAvailable: d.units.filter((u: any) => u.status === "available").length,
-    unitsTotal: d.units.length,
-    // Compact-4 card footer (Beach/School/Golf/Airport) — reuses the
-    // legacy renderer as-is; see toCardDistances for the shape adapter.
-    distances: toCardDistances(d.distances as Record<string, number> | null),
-    _matchLocations: [town, ...districtWithParent(district), area].map((v) => v.toLowerCase()),
-    _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
-    _priceFrom: devPriceFrom, _priceTo: devPriceTo,
-    // Resolved construction stage, override-wins-over-raw-feed-value per the
-    // documented precedence (see DevelopmentOverride.stage) -- for
-    // filterStage matching in fetchFilteredProjectsRaw. Raw/unnormalized;
-    // matching does its own case-insensitive comparison.
-    _stage: (ov?.stage || d.stage || null) as string | null,
-    _source: "development" as const,
-  };
-}
+// mapDevelopmentRowToCard moved to @/lib/developmentCard (2026-11-11) so that it
+// sits next to DEVELOPMENT_CARD_SELECT, the query shape it consumes, and so a
+// test can walk it without importing this module's Prisma client. Re-exported
+// here because developmentAlternatives.ts imports it from this path.
+export { mapDevelopmentRowToCard };
 
-async function queryFilteredDevelopmentRows(f: ProjectFilters) {
-  const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
-  const qActive = q && q.length >= 3 ? q.toLowerCase() : "";
+/* Load every publicly listable Development, as listing cards. ONE query, ONE
+   mapping pass, ONCE per request.
 
+   Both of those words are the fix for the 2026-11-11 /projects slowness, and
+   both matter independently:
+
+   - `cache()`: the load takes no arguments — the `where` never depended on the
+     filters, they were always applied in JS afterwards — so React.cache dedupes
+     it across every caller in the same request. /projects asked for the same
+     433 developments three times (cards, count, map pins); measured 1x 1,472 ms
+     against 3x-in-parallel 4,528 ms. It also covers the OTHER surfaces that
+     reach this data through siteStats.getPublicProjectCount(): the project
+     detail page, /about-us and /partners each paid a full load for a counter.
+
+   - DEVELOPMENT_CARD_SELECT instead of `include: { override: true }`: 1,472 ms
+     and 19.88 MB became 281 ms and 2.06 MB, because the override's five-language
+     promoBlocks/description/seo (9,247 kB of 9,585 kB) never reach a card.
+
+   Postgres executes the SQL in 7 ms either way — EXPLAIN ANALYZE, all
+   shared-buffer hits. The seconds were always Prisma hydrating rows in Node:
+   2,660 ms of CPU on 3,169 ms of wall time for one /projects render.
+
+   Filtering stays OUT of here on purpose (filterDevelopmentCards, a pure
+   function over these cards) so that the cheap per-call work can still differ
+   per caller while the expensive work is shared. */
+const loadDevelopmentCards = cache(async () => {
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
     orderBy: { id: "asc" },
-    include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
+    select: DEVELOPMENT_CARD_SELECT,
   });
-
   return devs
     .filter((d) => !!d.slug) // not yet SEO-slugged (see developmentSeo.ts) → not publicly linkable
-    .map(mapDevelopmentRowToCard)
-    .filter((d) => !city || d._matchLocations.includes(city.toLowerCase()))
-    .filter((d) => !propertyType || matchesPropertyTypeFilter(d.keyFeatures.propertyType, propertyType))
-    .filter((d) => !qActive || d._searchText.includes(qActive))
-    .filter((d) => priceFrom == null || d._priceTo == null || d._priceTo >= priceFrom)
-    .filter((d) => priceTo == null || d._priceFrom == null || d._priceFrom <= priceTo)
-    .filter((d) => !bedrooms || bedroomsMatch(d.keyFeatures.bedrooms, bedrooms))
-    .filter((d) => north == null || south == null || east == null || west == null || (d.latitude != null && d.longitude != null && d.latitude <= north && d.latitude >= south && d.longitude <= east && d.longitude >= west));
+    .map(mapDevelopmentRowToCard);
+});
+
+async function queryFilteredDevelopmentRows(f: ProjectFilters) {
+  return filterDevelopmentCards(await loadDevelopmentCards(), f);
 }
 
 async function queryFilteredRows(lang: string, f: ProjectFilters) {
@@ -1809,12 +1779,12 @@ async function queryFilteredRows(lang: string, f: ProjectFilters) {
   return [...projectRows, ...devRows];
 }
 
-export async function getFilteredProjects(lang: string, skip: number, limit: number, filters: ProjectFilters) {
-  // empty/missing sort → "recommended" (deterministic: featured → priority →
-  // price-segment interleave → stable title tiebreak)
-  const sort = filters.sort || "recommended";
-  const rows = await queryFilteredRows(lang, filters);
-  const items: ProjectListItem[] = rows.map((p) => ({
+/* The row -> card/pin shaping, split out of the three functions below so that
+   one filtered row set can produce all three answers (getProjectsListing).
+   Behaviour is byte-identical to what each function did inline; only the
+   number of times the rows are fetched and filtered changed. */
+function listingItemsFrom(rows: AnyRow[]): ProjectListItem[] {
+  return rows.map((p) => ({
     _id: p.sanityId, _createdAt: p.createdAt?.toISOString?.(), title: p.title, excerpt: p.excerpt ?? undefined,
     slug: { current: p.slug }, previewImage: D(p.previewImage), images: Array.isArray(p.images) ? D((p.images as any[]).slice(0, 5)) : undefined,
     keyFeatures: (p.keyFeatures as any) ?? undefined, isSold: p.isSold, videoId: p.videoId ?? undefined,
@@ -1822,7 +1792,54 @@ export async function getFilteredProjects(lang: string, skip: number, limit: num
     _source: p._source, unitsAvailable: (p as any).unitsAvailable, unitsTotal: (p as any).unitsTotal,
     distances: (p as any).distances,
   }));
-  const sorted = sort === "recommended" ? sortProjectsRecommended(items) : sortProjectsStandard(items, sort);
+}
+
+// empty/missing sort → "recommended" (deterministic: featured → priority →
+// price-segment interleave → stable title tiebreak)
+function sortListingItems(items: ProjectListItem[], sort: string) {
+  return sort === "recommended" ? sortProjectsRecommended(items) : sortProjectsStandard(items, sort);
+}
+
+function listingMarkersFrom(rows: AnyRow[]) {
+  return rows
+    .filter((p) => p.latitude != null && p.longitude != null)
+    // Sold-out Developments get no map pin at all (Part 2a) — excluded at the
+    // source so every consumer of this query is automatically covered, not
+    // just the current map component. Legacy Project rows have no unit data
+    // (_source !== "development") and are unaffected.
+    .filter((p) => p._source !== "development" || !soldOutFromCounts((p as any).unitsAvailable ?? 0, (p as any).unitsTotal ?? 0))
+    .map((p) => ({
+      _id: p.sanityId, title: p.title, slug: p.slug,
+      location: { lat: p.latitude as number, lng: p.longitude as number },
+      city: (p.keyFeatures as any)?.city, price: (p.keyFeatures as any)?.price,
+      previewUrl: previewUrlOf(p), previewAlt: (p.previewImage as any)?.alt ?? p.title,
+      _source: p._source,
+    }));
+}
+
+/* Cards, total and map pins from ONE filtered row set — what /projects asks for.
+
+   Until 2026-11-11 the page ran getFilteredProjects, getFilteredProjectsCount and
+   getFilteredProjectLocationsByLang in a single Promise.all, and each of the three
+   re-ran queryFilteredRows from scratch. loadDevelopmentCards' cache() now shares
+   the expensive half, but there is still no reason to filter, map and sort the same
+   rows three times per render, so the page asks once and takes all three answers.
+
+   The three functions are still exported and still behave exactly as before —
+   /preview-projects and siteStats.getPublicProjectCount() use them. */
+export async function getProjectsListing(lang: string, skip: number, limit: number, filters: ProjectFilters) {
+  const rows = await queryFilteredRows(lang, filters);
+  const sorted = sortListingItems(listingItemsFrom(rows), filters.sort || "recommended");
+  return {
+    items: sorted.slice(skip, skip + limit),
+    total: rows.length,
+    markers: listingMarkersFrom(rows),
+  };
+}
+
+export async function getFilteredProjects(lang: string, skip: number, limit: number, filters: ProjectFilters) {
+  const rows = await queryFilteredRows(lang, filters);
+  const sorted = sortListingItems(listingItemsFrom(rows), filters.sort || "recommended");
   return sorted.slice(skip, skip + limit);
 }
 
@@ -1833,20 +1850,7 @@ export async function getFilteredProjectsCount(lang: string, filters: ProjectFil
 
 export async function getFilteredProjectLocationsByLang(lang: string, filters: ProjectFilters) {
   if (!isLocale(lang)) return [];
-  const rows = (await queryFilteredRows(lang, { ...filters }))
-    .filter((p) => p.latitude != null && p.longitude != null)
-    // Sold-out Developments get no map pin at all (Part 2a) — excluded at the
-    // source so every consumer of this query is automatically covered, not
-    // just the current map component. Legacy Project rows have no unit data
-    // (_source !== "development") and are unaffected.
-    .filter((p) => p._source !== "development" || !soldOutFromCounts((p as any).unitsAvailable ?? 0, (p as any).unitsTotal ?? 0));
-  return rows.map((p) => ({
-    _id: p.sanityId, title: p.title, slug: p.slug,
-    location: { lat: p.latitude as number, lng: p.longitude as number },
-    city: (p.keyFeatures as any)?.city, price: (p.keyFeatures as any)?.price,
-    previewUrl: previewUrlOf(p), previewAlt: (p.previewImage as any)?.alt ?? p.title,
-    _source: p._source,
-  }));
+  return listingMarkersFrom(await queryFilteredRows(lang, filters));
 }
 
 function previewUrlOf(p: AnyRow): string | undefined {
