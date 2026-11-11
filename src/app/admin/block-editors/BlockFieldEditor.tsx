@@ -252,6 +252,23 @@ export default function BlockFieldEditor({ block, onChange, dir = "ltr" }: { blo
     </label>
   );
 
+  if (type === "taxCalculatorBlock") {
+    return (
+      <div className="space-y-2">
+        <label className="text-xs text-[#6B7280] block">Title <span className="text-[#9CA3AF]">(empty = the built-in title in the page language)</span>
+          <input className={input} value={block.title ?? ""} onChange={(e) => set({ title: e.target.value })} />
+        </label>
+        <label className="text-xs text-[#6B7280] block">Guide link under the calculator <span className="text-[#9CA3AF]">(optional, e.g. /guides/cyprus-tax-for-individuals-2026)</span>
+          <input dir="ltr" className={input} value={block.guideHref ?? ""} onChange={(e) => set({ guideHref: e.target.value })} />
+        </label>
+        <label className="text-xs text-[#6B7280] block">Guide link text
+          <input className={input} value={block.guideLabel ?? ""} onChange={(e) => set({ guideLabel: e.target.value })} />
+        </label>
+        <p className="text-[11px] text-[#9CA3AF]">The calculator itself (2026 rates) lives in code; the labels are translated into en, de, pl and ru automatically.</p>
+      </div>
+    );
+  }
+
   if (type === "bulletsBlock" || type === "howWeWorkBlock") {
     return <div className="space-y-2">{titleRow}{marginRow}</div>;
   }

@@ -101,6 +101,17 @@ export type FormMinimalBlock = {
   marginBottom?: "small" | "medium" | "large";
 };
 
+/** Interactive Cyprus tax calculator (src/app/components/TaxCalculator). Added by the editor with "+ Add tax calculator". */
+export type TaxCalculatorBlock = {
+  _key: string;
+  _type: "taxCalculatorBlock";
+  title?: string;
+  guideHref?: string;
+  guideLabel?: string;
+  marginTop?: "small" | "medium" | "large";
+  marginBottom?: "small" | "medium" | "large";
+};
+
 export type Member = {
   _key: string;
   image: ImageAlt;

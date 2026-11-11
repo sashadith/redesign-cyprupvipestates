@@ -129,6 +129,15 @@ export default function BlockEditor({
       } }];
     });
 
+  // Tax calculator block — the interactive Cyprus tax calculator (TaxCalculatorBlock in src/types/blog.ts).
+  const addTaxCalculator = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "taxCalculatorBlock", block: {
+        _type: "taxCalculatorBlock", _key: key, title: "", guideHref: "", guideLabel: "",
+      } }];
+    });
+
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
       <input type="hidden" name={fieldName} value={serialized} />
@@ -206,6 +215,9 @@ export default function BlockEditor({
             </button>
             <button type="button" onClick={addProjects} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
               + Add projects
+            </button>
+            <button type="button" onClick={addTaxCalculator} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+              + Add tax calculator
             </button>
           </>
         )}
