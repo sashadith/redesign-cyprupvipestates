@@ -87,3 +87,47 @@ test("a rate-limited read waits and retries once; a rate-limited send is never r
   await assert.rejects(client.sendText("1@c.us", "hi"), /HTTP 429/);
   assert.equal(calls.length, 1, "a send is never retried");
 });
+
+/* Next patches the global fetch and, without this option, puts a GET into the
+   Data Cache with revalidate 31536000 — one year. On 2026-11-11 the gateway's
+   session status was cached as "qr_ready" at 14:45 UTC; the operator re-linked
+   WhatsApp at 18:43, curl on the same URL with the same key returned "ready",
+   and the health cron was still alerting "needs the phone" at 19:10 from the
+   cached copy. Cache a `ready` instead and the watch goes blind to a real
+   outage for a year — so this is asserted for EVERY call the client makes, not
+   only the status one. */
+test("every call is uncached — the gateway's answers are live data", async () => {
+  for (const exercise of [
+    (c: ReturnType<typeof createOpenWaClient>) => c.getSession(),
+    (c: ReturnType<typeof createOpenWaClient>) => c.fetchThread("1@c.us", 5),
+    (c: ReturnType<typeof createOpenWaClient>) => c.listGroups(),
+    (c: ReturnType<typeof createOpenWaClient>) => c.sendText("1@c.us", "hi"),
+    (c: ReturnType<typeof createOpenWaClient>) => c.startSession(),
+    (c: ReturnType<typeof createOpenWaClient>) => c.resolvePhone("1@lid"),
+  ]) {
+    const { f, calls } = stub(200, { status: "ready" });
+    await exercise(createOpenWaClient({ fetch: f, env })).catch(() => { /* shape is not the point here */ });
+    assert.ok(calls.length > 0, "the client did not call the gateway at all");
+    for (const c of calls) {
+      assert.equal(c.init?.cache, "no-store", `${c.url} may be served from a cache`);
+    }
+  }
+});
+
+test("the 429 retry is uncached too", async () => {
+  // The retry re-issues the same request; a cached second attempt would defeat
+  // the retry and, worse, store the rate-limited path's answer.
+  const calls: { url: string; init: RequestInit | undefined }[] = [];
+  let n = 0;
+  const f = (async (url: string | URL | Request, init?: RequestInit) => {
+    calls.push({ url: String(url), init });
+    n += 1;
+    return n === 1
+      ? new Response("", { status: 429, headers: { "retry-after": "0" } })
+      : new Response(JSON.stringify({ status: "ready", lastError: null }), { status: 200, headers: { "content-type": "application/json" } });
+  }) as unknown as typeof fetch;
+  const got = await createOpenWaClient({ fetch: f, env }).getSession();
+  assert.equal(got.status, "ready");
+  assert.equal(calls.length, 2, "the 429 should have been retried once");
+  assert.equal(calls[1].init?.cache, "no-store");
+});
