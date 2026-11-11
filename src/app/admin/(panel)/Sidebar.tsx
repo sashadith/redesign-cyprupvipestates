@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { NavIcon, PageIcon } from "./NavIcons";
 import { STATUS_LABEL, type ContractStatusKind } from "@/lib/developerContract";
 
 export type NavPage = { href: string; label: string; count?: number; countVariant?: "alert" | "neutral" };
 // A module is one application section. Single-page modules (Dashboard, Analytics)
 // link straight to their page; multi-page modules open a secondary sidebar.
-export type NavModule = { key: string; label: string; pages: NavPage[] };
+// `external` marks a module that is a different application on a different host
+// (OpenWA's dashboard): it opens in a new tab and never takes the active state,
+// because the admin's own nav must keep showing where you are inside the admin.
+export type NavModule = { key: string; label: string; pages: NavPage[]; external?: boolean };
 
 export type DeveloperNavItem = { id: string; name: string; count: number; hasFeed: boolean; contract: ContractStatusKind };
 
@@ -49,6 +52,10 @@ function resolveActive(pathname: string, modules: NavModule[]) {
   let activeModuleKey = modules[0]?.key ?? "";
   let activePage = "";
   for (const m of modules) {
+    // An external module's href is an absolute URL on another host; it can
+    // never be this pathname, and nothing in the admin should look "active"
+    // because a tab to another application is open.
+    if (m.external) continue;
     for (const p of m.pages) {
       const l = matchLen(pathname, p.href);
       if (l > best) {
@@ -63,6 +70,31 @@ function resolveActive(pathname: string, modules: NavModule[]) {
 
 // First page of a module = its landing target when clicked in the rail.
 const landing = (m: NavModule) => m.pages[0]?.href ?? "/admin";
+
+/* One module's clickable surface, in the rail and in the mobile drawer.
+   External modules leave the app, so they get a plain anchor with target and
+   rel rather than a client-side <Link>, and the tooltip says the tab is new. */
+function ModuleLink({ m, className, onClick, active, children }: {
+  m: NavModule;
+  className: string;
+  onClick: () => void;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  if (m.external) {
+    return (
+      <a href={landing(m)} target="_blank" rel="noopener noreferrer" onClick={onClick}
+        title={`${m.label} — opens in a new tab`} className={className}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={landing(m)} onClick={onClick} aria-current={active ? "true" : undefined} title={m.label} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 // Developer-grouped secondary nav for the Developments module, with a live search
 // filter. Top-level (stable identity) so the search text survives re-renders.
@@ -219,19 +251,18 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
   const railItem = (m: NavModule) => {
     const isActive = m.key === activeModuleKey;
     return (
-      <Link
+      <ModuleLink
         key={m.key}
-        href={landing(m)}
+        m={m}
+        active={isActive}
         onClick={() => setOpen(false)}
-        aria-current={isActive ? "true" : undefined}
-        title={m.label}
         className={`flex flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-[11px] leading-tight transition-colors ${
           isActive ? "bg-[#1B4B43]/10 text-[#1B4B43] font-medium" : "text-[#6B7280] hover:bg-[#1B4B43]/8 hover:text-[#1B4B43]"
         }`}
       >
         <NavIcon k={m.key} />
         <span className="text-center">{m.label}</span>
-      </Link>
+      </ModuleLink>
     );
   };
 
@@ -429,12 +460,12 @@ export default function Sidebar({ modules: modulesProp, developersNav, devTotals
                 const isActive = m.key === activeModuleKey;
                 return (
                   <div key={m.key} className="pt-2 first:pt-0">
-                    <Link href={landing(m)} onClick={() => setOpen(false)}
+                    <ModuleLink m={m} active={isActive} onClick={() => setOpen(false)}
                       className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
                         isActive ? "text-[#1B4B43] font-semibold" : "text-[#111827] hover:bg-[#1B4B43]/8"
                       }`}>
                       <NavIcon k={m.key} /> {m.label}
-                    </Link>
+                    </ModuleLink>
                     {isActive && (m.key === "developments"
                       ? <div className="mt-0.5">{devPanel}</div>
                       : m.pages.length > 1 && (
