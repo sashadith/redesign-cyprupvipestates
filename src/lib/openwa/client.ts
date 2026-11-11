@@ -36,20 +36,38 @@ export function createOpenWaClient(deps: { fetch?: typeof fetch; env?: NodeJS.Pr
   const base = `${cfg.baseUrl}/api/sessions/${encodeURIComponent(cfg.sessionId)}`;
   const headers = { "X-API-Key": cfg.apiKey, "Content-Type": "application/json" };
 
-  // The response body can echo request data; only the status is surfaced.
-  // A gateway that accepts the connection and then hangs (the "bridge never
-  // attached" state can look like that) must not hang the health cron with it.
+  /* `cache: "no-store"` on every call, and it is not optional — 2026-11-11.
+   *
+   * Next patches the global fetch, and a GET without this option goes into the
+   * Data Cache with revalidate 31536000: one year. It happened in production.
+   * The session-status GET was answered once at 14:45 UTC while the gateway was
+   * unpaired and every later read came back "qr_ready" from
+   * .next/cache/fetch-cache (and from the workers' memory, which surviving the
+   * file's deletion is how we know). The operator re-linked WhatsApp at 18:43,
+   * the gateway reported `ready` to curl on the same URL with the same key, and
+   * the health cron still alerted "needs the phone" at 19:10 — a watchdog that
+   * had not asked anything for four and a half hours.
+   *
+   * The inverse is the dangerous one: cache a `ready` and the watch goes blind
+   * to a real outage for a year. The same applies to fetchThread — a lead's
+   * WhatsApp history is live data and a salesperson must never be shown a
+   * frozen copy of it.
+   *
+   * The response body can echo request data; only the status is surfaced.
+   * A gateway that accepts the connection and then hangs (the "bridge never
+   * attached" state can look like that) must not hang the health cron with it.
+   */
   async function call(url: string, init?: RequestInit, timeoutMs = 15_000): Promise<unknown> {
     let res: Response;
     try {
-      res = await doFetch(url, { ...init, headers, signal: AbortSignal.timeout(timeoutMs) });
+      res = await doFetch(url, { ...init, cache: "no-store", headers, signal: AbortSignal.timeout(timeoutMs) });
       // The gateway rate-limits per key (10/s, 100/min, 1000/h by default) and every CRM path shares
       // one key. A GET that hit the limit waits the advertised time (capped) and tries once more;
       // a send is never repeated — a retried POST could deliver a message twice.
       if (res.status === 429 && (init?.method ?? "GET") === "GET") {
         const wait = Math.min(10, Number(res.headers.get("retry-after") ?? res.headers.get("retry-after-short") ?? 2) || 2);
         await new Promise((r) => setTimeout(r, wait * 1000));
-        res = await doFetch(url, { ...init, headers, signal: AbortSignal.timeout(timeoutMs) });
+        res = await doFetch(url, { ...init, cache: "no-store", headers, signal: AbortSignal.timeout(timeoutMs) });
       }
     } catch {
       throw new ToolError("internal", "WhatsApp gateway unreachable.");
