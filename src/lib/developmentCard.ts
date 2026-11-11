@@ -299,3 +299,169 @@ export function toCardDistances(distances: Record<string, number> | null | undef
   }
   return Object.keys(out).length ? out : null;
 }
+
+
+/* ---------------------------------------------------------------------------
+   The /projects listing card: its query shape, its mapper, and its filters.
+
+   Moved here from sanity.utils.ts on 2026-11-11, for two reasons. The select
+   and the mapper that consumes it have to be able to drift apart only loudly,
+   so they live side by side with a test that walks the mapper and asserts every
+   field it reads is selected (projectsListingQuery.test.ts). And this module
+   imports no Prisma client, so that test can run — the repo's local
+   DATABASE_URL points at production, so no test may open one.
+   --------------------------------------------------------------------------- */
+
+// Bedrooms are stored as ranges ("1-2", "2-3", "3" ...). A wanted value matches when it
+// falls within the project's range; "5" means 5+.
+export function bedroomsMatch(range: string | null | undefined, want: string): boolean {
+  const nums = String(range ?? "").match(/\d+/g)?.map(Number) ?? [];
+  if (!nums.length) return false;
+  const lo = Math.min(...nums), hi = Math.max(...nums);
+  if (want === "5") return hi >= 5;
+  const n = Number(want);
+  return Number.isFinite(n) && lo <= n && n <= hi;
+}
+
+/* Exactly the columns mapDevelopmentRowToCard() reads — nothing else.
+
+   This replaced `include: { override: true, units: { select: ... } }`, which was
+   costing the /projects page its reputation. Measured 2026-11-11 against the
+   live database, 433 published developments:
+
+     include: { override: true }   1,472 ms   19.88 MB of JSON
+     this select                     281 ms    2.06 MB
+
+   The difference is almost entirely DevelopmentOverride's five-language
+   detail-page content: promoBlocks* 6,620 kB + description* 2,230 kB + seo
+   397 kB = 9,247 kB of the 9,585 kB override payload, none of which a card
+   grid renders. Postgres was never the problem; it answers the underlying SQL
+   in 7 ms either way. The cost is hydrating the rows in Node.
+
+   ADDING A FIELD TO THE MAPPER MEANS ADDING IT HERE. The test says which. */
+export const DEVELOPMENT_CARD_SELECT = {
+  id: true,
+  slug: true,
+  publicName: true,
+  category: true,
+  completion: true,
+  energy: true,
+  stage: true,
+  district: true,
+  town: true,
+  area: true,
+  priceFrom: true,
+  priceTo: true,
+  latitude: true,
+  longitude: true,
+  gallery: true,
+  distances: true,
+  createdAt: true,
+  override: {
+    select: {
+      alias: true,
+      mainImage: true,
+      gallery: true,
+      district: true,
+      town: true,
+      area: true,
+      completion: true,
+      energy: true,
+      stage: true,
+      vatApplies: true,
+      latitude: true,
+      longitude: true,
+    },
+  },
+  units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } },
+} as const;
+
+export function mapDevelopmentRowToCard(d: any) {
+  const ov = d.override;
+  const town = ov?.town || d.town || "";
+  const district = ov?.district || d.district || "";
+  const area = ov?.area || d.area || "";
+  const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
+  const previewImage = ov?.mainImage || gallery[0] || null;
+  const bedRange = resolveBedRange(d.units);
+  const areaRange = resolveBuildAreaRange(d.units);
+  const { priceFrom: devPriceFrom, priceTo: devPriceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
+  return {
+    sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
+    excerpt: null as string | null, previewImage, images: gallery,
+    keyFeatures: {
+      city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
+      bedrooms: bedRange, coveredArea: areaRange, completionDate: resolveRelativeCompletion(ov?.completion || d.completion), energyEfficiency: ov?.energy || d.energy || "",
+      price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
+    },
+    // KNOWN GAP (2026-07-27, found while diagnosing the ProjectLink null-price
+    // 500s): hardcoded rather than derived from unitsAvailable/unitsTotal
+    // below, so a fully sold-out Development never shows a sold badge on any
+    // card built from this function (ProjectLink's soldBadge, the {!isSold}
+    // price gate). unitsAvailable/unitsTotal ARE set correctly (used by
+    // pushSoldOutLast's isSoldOutItem check, so sold-out devs do at least
+    // sort last) — only this display-facing flag is wrong. Not a crash, just
+    // a missing sold badge; left as-is pending a separate decision.
+    isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
+    createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
+    // For the scarcity banner (src/app/components/ScarcityBanner) — same unit
+    // rows already loaded above, no extra query.
+    unitsAvailable: d.units.filter((u: any) => u.status === "available").length,
+    unitsTotal: d.units.length,
+    // Compact-4 card footer (Beach/School/Golf/Airport) — reuses the
+    // legacy renderer as-is; see toCardDistances for the shape adapter.
+    distances: toCardDistances(d.distances as Record<string, number> | null),
+    _matchLocations: [town, ...districtWithParent(district), area].map((v) => v.toLowerCase()),
+    _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
+    _priceFrom: devPriceFrom, _priceTo: devPriceTo,
+    // Resolved construction stage, override-wins-over-raw-feed-value per the
+    // documented precedence (see DevelopmentOverride.stage) -- for
+    // filterStage matching in fetchFilteredProjectsRaw. Raw/unnormalized;
+    // matching does its own case-insensitive comparison.
+    _stage: (ov?.stage || d.stage || null) as string | null,
+    _source: "development" as const,
+  };
+}
+
+/* The filter chain that used to sit inline in queryFilteredDevelopmentRows,
+   split out so it is a pure function over already-mapped cards.
+
+   That split is the whole point: the expensive part (load 433 developments and
+   map them) now happens once per request behind React.cache, while this —
+   which is cheap — still runs per call with its own filters. Semantics are
+   unchanged from the inline version, including the deliberate details: a search
+   term under three characters is not a filter at all, a price bound compares
+   against the opposite end of the development's own range, and a bounding box
+   needs all four edges before it filters anything. */
+export type DevelopmentCardFilters = {
+  city?: string;
+  propertyType?: string;
+  priceFrom?: number | null;
+  priceTo?: number | null;
+  bedrooms?: string;
+  q?: string;
+  north?: number | null;
+  south?: number | null;
+  east?: number | null;
+  west?: number | null;
+};
+
+export function filterDevelopmentCards<T extends ReturnType<typeof mapDevelopmentRowToCard>>(
+  cards: T[],
+  f: DevelopmentCardFilters,
+): T[] {
+  const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "",
+          north = null, south = null, east = null, west = null } = f;
+  const qActive = q && q.length >= 3 ? q.toLowerCase() : "";
+  return cards
+    .filter((d) => !city || d._matchLocations.includes(city.toLowerCase()))
+    .filter((d) => !propertyType || matchesPropertyTypeFilter(d.keyFeatures.propertyType, propertyType))
+    .filter((d) => !qActive || d._searchText.includes(qActive))
+    .filter((d) => priceFrom == null || d._priceTo == null || d._priceTo >= priceFrom)
+    .filter((d) => priceTo == null || d._priceFrom == null || d._priceFrom <= priceTo)
+    .filter((d) => !bedrooms || bedroomsMatch(d.keyFeatures.bedrooms, bedrooms))
+    .filter((d) => north == null || south == null || east == null || west == null
+      || (d.latitude != null && d.longitude != null
+          && d.latitude <= north && d.latitude >= south
+          && d.longitude <= east && d.longitude >= west));
+}
