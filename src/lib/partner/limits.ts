@@ -28,6 +28,8 @@ export const partnerLimits = {
   brand: makeThrottle(20, HOUR),
   /** Presentation create / revoke (phase 3e): per partner. */
   presentation: makeThrottle(30, HOUR),
+  /** Presentation builder match runs (debounced filter changes): per partner. */
+  presentationMatch: makeThrottle(600, HOUR),
   /** Partner pipeline writes (move, log, follow-up, viewing date, client edit): per partner. */
   pipeline: makeThrottle(200, HOUR),
 };

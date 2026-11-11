@@ -9,9 +9,10 @@ export type LocationOptions = { districts: string[]; areasByDistrict: Record<str
 // field empty. Spellings of one place collapse into one chip (placeNames.ts);
 // the matcher compares the same keys, so the chip still finds every spelling.
 // No auth here: callers check the session.
-export async function listPresentationLocationOptions(): Promise<LocationOptions> {
+/** publishedOnly: the partner portal offers published projects only (no "ready" drafts). */
+export async function listPresentationLocationOptions(opts: { publishedOnly?: boolean } = {}): Promise<LocationOptions> {
   const rows = await prisma.development.findMany({
-    where: { publishStatus: { in: ["published", "ready"] } },
+    where: { publishStatus: { in: opts.publishedOnly ? ["published"] : ["published", "ready"] } },
     select: { town: true, district: true, area: true, override: { select: { town: true, district: true, area: true } } },
   });
   const places = rows.map((r) => {
