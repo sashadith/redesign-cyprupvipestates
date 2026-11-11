@@ -28,13 +28,17 @@ const NO_SOURCES: Record<SourceKey, boolean> = {
   company: false, dividends: false, interest: false, property: false, crypto: false, pension: false, selfEmployed: false, employment: false,
 };
 
-type PresetKey = "owner" | "investor" | "pension" | "freelancer" | "employee";
+type PresetKey = "owner" | "investor" | "pension" | "freelancer" | "employee" | "mixed";
 const PRESETS: Record<PresetKey, { on: SourceKey[]; vals: Partial<Vals> }> = {
   owner: { on: ["company"], vals: { companyProfit: "250000", companySalary: "30000", companyDividend: "120000" } },
   investor: { on: ["dividends", "interest", "property"], vals: { dividends: "80000", interest: "20000", propertyGain: "150000" } },
   pension: { on: ["pension"], vals: { pension: "36000" } },
   freelancer: { on: ["selfEmployed"], vals: { selfEmployed: "70000" } },
   employee: { on: ["employment"], vals: { employment: "60000" } },
+  mixed: {
+    on: ["company", "dividends", "interest", "property", "crypto", "pension"],
+    vals: { companyProfit: "250000", companySalary: "30000", companyDividend: "120000", dividends: "60000", interest: "15000", propertyGain: "150000", cryptoGain: "40000", pension: "20000" },
+  },
 };
 
 const num = (s: string): number => {

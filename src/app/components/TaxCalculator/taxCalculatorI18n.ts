@@ -5,7 +5,7 @@ export type TaxCalcStrings = {
   title: string;
   lead: string;
   startFrom: string;
-  presets: { owner: string; investor: string; pension: string; freelancer: string; employee: string };
+  presets: { owner: string; investor: string; pension: string; freelancer: string; employee: string; mixed: string };
   clear: string;
   statusHeading: string;
   statusOptions: { nonDom: { title: string; text: string }; dom: { title: string; text: string } };
@@ -76,7 +76,7 @@ const EN: TaxCalcStrings = {
   title: "Cyprus tax calculator for 2026",
   lead: "Switch on the sources of your income and see what you keep after Cyprus tax, in under a minute. Built for company owners and investors. Nothing you type leaves your browser.",
   startFrom: "Start from an example",
-  presets: { owner: "Company owner", investor: "Investor", pension: "Pension from abroad", freelancer: "Freelancer", employee: "Employee" },
+  presets: { owner: "Company owner", investor: "Investor", pension: "Pension from abroad", freelancer: "Freelancer", employee: "Employee", mixed: "Owner and investor together" },
   clear: "Clear all",
   statusHeading: "Your tax status",
   statusOptions: {
@@ -84,7 +84,7 @@ const EN: TaxCalcStrings = {
     dom: { title: "Domiciled in Cyprus", text: "Pays the Special Defence Contribution: 5% on dividends and 17% on interest." },
   },
   incomeHeading: "Where your income comes from",
-  incomeHint: "Switch on every source you have. Amounts are euros for the whole year.",
+  incomeHint: "Switch on every source you have, as many as you need. The calculator adds them together and applies the shared limits once: one GHS maximum, one social insurance ceiling and one set of income tax bands. Amounts are euros for the whole year.",
   sources: {
     company: { title: "Your Cyprus company", hint: "The company pays 15% tax on its profit. You take salary and dividends out of it." },
     dividends: { title: "Dividends from other companies", hint: "Shares, funds or a holding company, in Cyprus or abroad." },
@@ -198,7 +198,7 @@ const DE: TaxCalcStrings = {
   title: "Steuerrechner Zypern 2026",
   lead: "Schalten Sie Ihre Einkommensquellen ein und sehen Sie in unter einer Minute, was nach zypriotischen Steuern bleibt. Gebaut für Unternehmer und Investoren. Ihre Eingaben verlassen den Browser nicht.",
   startFrom: "Mit einem Beispiel starten",
-  presets: { owner: "Firmeninhaber", investor: "Investor", pension: "Rente aus dem Ausland", freelancer: "Freiberufler", employee: "Angestellter" },
+  presets: { owner: "Firmeninhaber", investor: "Investor", pension: "Rente aus dem Ausland", freelancer: "Freiberufler", employee: "Angestellter", mixed: "Inhaber und Investor zugleich" },
   clear: "Alles löschen",
   statusHeading: "Ihr Steuerstatus",
   statusOptions: {
@@ -206,7 +206,7 @@ const DE: TaxCalcStrings = {
     dom: { title: "In Zypern domiziliert", text: "Zahlt die Sonderverteidigungsabgabe: 5 % auf Dividenden und 17 % auf Zinsen." },
   },
   incomeHeading: "Woher Ihr Einkommen kommt",
-  incomeHint: "Schalten Sie jede Quelle ein, die Sie haben. Beträge in Euro für das ganze Jahr.",
+  incomeHint: "Schalten Sie jede Quelle ein, die Sie haben, beliebig viele. Der Rechner addiert sie und wendet die gemeinsamen Grenzen einmal an: einen GHS-Höchstbetrag, eine Obergrenze der Sozialversicherung und eine Tarifstaffel. Beträge in Euro für das ganze Jahr.",
   sources: {
     company: { title: "Ihre zypriotische Firma", hint: "Die Firma zahlt 15 % Steuer auf den Gewinn. Gehalt und Dividenden entnehmen Sie daraus." },
     dividends: { title: "Dividenden anderer Unternehmen", hint: "Aktien, Fonds oder eine Holding, in Zypern oder im Ausland." },
@@ -320,7 +320,7 @@ const PL: TaxCalcStrings = {
   title: "Kalkulator podatkowy Cypr 2026",
   lead: "Włącz źródła swojego dochodu i zobacz w mniej niż minutę, ile zostaje po cypryjskich podatkach. Stworzony dla właścicieli firm i inwestorów. To, co wpiszesz, nie opuszcza Twojej przeglądarki.",
   startFrom: "Zacznij od przykładu",
-  presets: { owner: "Właściciel firmy", investor: "Inwestor", pension: "Emerytura z zagranicy", freelancer: "Freelancer", employee: "Pracownik" },
+  presets: { owner: "Właściciel firmy", investor: "Inwestor", pension: "Emerytura z zagranicy", freelancer: "Freelancer", employee: "Pracownik", mixed: "Właściciel i inwestor jednocześnie" },
   clear: "Wyczyść wszystko",
   statusHeading: "Twój status podatkowy",
   statusOptions: {
@@ -328,7 +328,7 @@ const PL: TaxCalcStrings = {
     dom: { title: "Z domicylem na Cyprze", text: "Płaci Special Defence Contribution: 5% od dywidend i 17% od odsetek." },
   },
   incomeHeading: "Skąd pochodzi Twój dochód",
-  incomeHint: "Włącz każde źródło, które masz. Kwoty w euro za cały rok.",
+  incomeHint: "Włącz każde źródło, które masz, ile trzeba. Kalkulator dodaje je do siebie i stosuje wspólne limity raz: jeden limit GHS, jeden pułap ubezpieczenia społecznego i jedną skalę podatku dochodowego. Kwoty w euro za cały rok.",
   sources: {
     company: { title: "Twoja cypryjska firma", hint: "Firma płaci 15% podatku od zysku. Pensję i dywidendy pobierasz z niej." },
     dividends: { title: "Dywidendy z innych spółek", hint: "Akcje, fundusze lub spółka holdingowa, na Cyprze lub za granicą." },
@@ -442,7 +442,7 @@ const RU: TaxCalcStrings = {
   title: "Налоговый калькулятор Кипра на 2026 год",
   lead: "Включите источники своего дохода и меньше чем за минуту узнайте, что остаётся после кипрских налогов. Сделан для владельцев компаний и инвесторов. Введённые данные не покидают ваш браузер.",
   startFrom: "Начать с примера",
-  presets: { owner: "Владелец компании", investor: "Инвестор", pension: "Пенсия из-за границы", freelancer: "Фрилансер", employee: "Сотрудник" },
+  presets: { owner: "Владелец компании", investor: "Инвестор", pension: "Пенсия из-за границы", freelancer: "Фрилансер", employee: "Сотрудник", mixed: "Владелец и инвестор вместе" },
   clear: "Очистить всё",
   statusHeading: "Ваш налоговый статус",
   statusOptions: {
@@ -450,7 +450,7 @@ const RU: TaxCalcStrings = {
     dom: { title: "Домицилий на Кипре", text: "Платит специальный оборонный взнос: 5% с дивидендов и 17% с процентов." },
   },
   incomeHeading: "Откуда ваш доход",
-  incomeHint: "Включите каждый источник, который у вас есть. Суммы в евро за весь год.",
+  incomeHint: "Включите каждый источник, который у вас есть, сколько нужно. Калькулятор складывает их и применяет общие пределы один раз: один максимум GHS, один потолок соцстрахования и одну шкалу подоходного налога. Суммы в евро за весь год.",
   sources: {
     company: { title: "Ваша кипрская компания", hint: "Компания платит 15% налога с прибыли. Зарплату и дивиденды вы получаете из неё." },
     dividends: { title: "Дивиденды из других компаний", hint: "Акции, фонды или холдинг, на Кипре или за границей." },
