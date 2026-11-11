@@ -73,7 +73,7 @@ test("items: unknown, duplicate, too many projects and over-long texts are refus
   assert.deepEqual(validatePartnerItems([{ developmentId: "zzz" }], ctx), { ok: false, code: "err.presentationProjects", developmentId: "zzz" });
   assert.equal(validatePartnerItems([{ developmentId: "a" }, { developmentId: "a" }], ctx).ok, false);
   assert.equal(validatePartnerItems([], ctx).ok, false);
-  const many = new Map(Array.from({ length: 13 }, (_, i) => [`p${i}`, { name: `P${i}`, units: [] }] as const));
+  const many = new Map<string, DevUnits>(Array.from({ length: 13 }, (_, i): [string, DevUnits] => [`p${i}`, { name: `P${i}`, units: [] }]));
   assert.deepEqual(validatePartnerItems(Array.from({ length: 13 }, (_, i) => ({ developmentId: `p${i}` })), { allowed: new Set(many.keys()), devs: many }),
     { ok: false, code: "err.presentationProjects" });
   assert.deepEqual(validatePartnerItems([{ developmentId: "a", aliasName: "x".repeat(121) }], ctx), { ok: false, code: "err.presentationText", developmentId: "a" });
