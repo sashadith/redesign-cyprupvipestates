@@ -164,6 +164,15 @@ export async function checkUrl(url: string, timeoutMs = 15_000): Promise<PageChe
     const res = await fetch(url, {
       redirect: "follow",
       signal: controller.signal,
+      // A watchdog may never read a cached page (2026-11-11). Next's patched
+      // fetch stores a 200 GET from a GET-only route handler for a year
+      // (revalidate `false`), force-dynamic does not stop it, and .next/cache
+      // survives deploys — so without this the daily check would classify the
+      // portal page as it looked on the first run, for a year: a copy that
+      // later loses its noindex would never be flagged, and a finding that was
+      // fixed would alert forever. That is the shape of the OpenWA health
+      // alarm that kept firing for a gateway reconnected hours earlier.
+      cache: "no-store",
       headers: {
         // Identify ourselves — an operator seeing this in their logs should be
         // able to tell what it is without guessing.

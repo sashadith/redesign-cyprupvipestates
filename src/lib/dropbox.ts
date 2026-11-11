@@ -55,9 +55,15 @@ async function safeJson(res: Response, context: string): Promise<any> {
 // their rate limit self-heals instead of aborting the whole sync partway
 // through. 3 attempts, capped backoff — this is a background sync job, not
 // a user-facing request, so a slower success beats a fast failure here.
+//
+// `cache: "no-store"` is defaulted here for the same reason sharepoint.ts does
+// it (2026-11-11): Next's patched fetch keeps a GET/HEAD answer for a year when
+// no cache mode is given, and .next/cache outlives deploys. Dropbox's calls are
+// POSTs today, which Next never caches, so this is purely a guard against the
+// next caller — every existing one already passes it explicitly.
 async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
-    const r = await fetch(url, init);
+    const r = await fetch(url, { ...init, cache: init.cache ?? "no-store" });
     if (r.status !== 429 || attempt >= 2) return r;
     const retryAfter = Number(r.headers.get("Retry-After"));
     const waitMs = (Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * (attempt + 1));
