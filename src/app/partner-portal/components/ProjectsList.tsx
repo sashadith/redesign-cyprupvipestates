@@ -73,7 +73,8 @@ export function ProjectsList({ t, locale, projects, trustMode, now: nowIso }: Pr
   const columns: { key: SortKey; label: string }[] = [
     { key: "name", label: T.colProject }, { key: "place", label: T.colPlace }, { key: "price", label: T.colFrom },
     { key: "beds", label: T.colBeds }, { key: "free", label: T.colFree }, { key: "delivery", label: T.colDelivery },
-    { key: "added", label: T.colAdded }, { key: "handover", label: t.submit.tabHandover }, { key: "fix", label: t.submit.tabFix },
+    // Handover and fix are the same project rate times the partner's two shares, so they sort alike: one column.
+    { key: "added", label: T.colAdded }, { key: "handover", label: `${t.submit.tabHandover} / ${t.submit.tabFix}` },
     ...(trustMode ? [{ key: "our" as SortKey, label: T.ourRate }] : []),
   ];
   const Th = ({ c }: { c: { key: SortKey; label: string } }) => {
@@ -183,8 +184,9 @@ export function ProjectsList({ t, locale, projects, trustMode, now: nowIso }: Pr
                     </td>
                     <td data-label={T.colDelivery}>{p.ready ? T.ready : p.completion || "—"}</td>
                     <td data-label={T.colAdded}>{p.addedAt ? day.format(new Date(p.addedAt)) : "—"}</td>
-                    <td data-label={t.submit.tabHandover}><strong className="pp-figure-sm">{rate(p.handoverRate)}</strong></td>
-                    <td data-label={t.submit.tabFix}><strong className="pp-figure-sm">{rate(p.fixRate)}</strong></td>
+                    <td data-label={`${t.submit.tabHandover} / ${t.submit.tabFix}`}>
+                      <span><strong className="pp-figure-sm">{rate(p.handoverRate)}</strong> / <strong className="pp-figure-sm">{rate(p.fixRate)}</strong></span>
+                    </td>
                     {trustMode && <td data-label={T.ourRate}><strong className="pp-figure-sm">{rate(p.ourRate)}</strong></td>}
                   </tr>
                 );
