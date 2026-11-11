@@ -17,7 +17,8 @@ import { sentHistory, type SentInfo } from "@/lib/crm/presentations/sentHistory"
 import { uniquePresentationToken } from "@/lib/crm/presentationToken";
 import { writePartnerAudit } from "@/lib/partner/audit";
 import { submissionView } from "@/lib/partner/clientDto";
-import { PARTNER_LOCALES, type PartnerLocale } from "@/lib/partner/i18n";
+import { PARTNER_LOCALES, dict, type PartnerLocale } from "@/lib/partner/i18n";
+import { presentationMailto, presentationWhatsApp } from "@/lib/partner/presentationShare";
 import { partnerLimits as L } from "@/lib/partner/limits";
 import { PRESENTATION_TTL_DAYS, presentationUrl } from "@/lib/partner/partnerPresentations";
 import {
@@ -69,26 +70,21 @@ async function partnerSent(partnerId: string, leadId: string, excludeId?: string
 export type BuilderContext = {
   filters: MatchFilters;
   sent: Record<string, SentInfo>;
-  email: string | null;
-  phone: string | null;
   firstName: string;
-  signer: string;
 };
 
 async function contextFor(me: { partner: { id: string } }, claimId: string, leadId: string, excludeId?: string): Promise<BuilderContext | Err> {
-  const [lead, claim, partner, sent] = await Promise.all([
+  const [lead, claim, sent] = await Promise.all([
     prisma.lead.findUnique({ where: { id: leadId }, select: { budgetMin: true, budgetMax: true } }),
     prisma.partnerClaim.findUnique({ where: { id: claimId }, select: { submission: true } }),
-    prisma.partner.findUnique({ where: { id: me.partner.id }, select: { brandName: true, firstName: true, lastName: true } }),
     partnerSent(me.partner.id, leadId, excludeId),
   ]);
   if (!lead || !claim) return err("err.presentationClient", "claimId");
   const sub = submissionView(claim.submission);
-  const signer = partner?.brandName?.trim() || `${partner?.firstName ?? ""} ${partner?.lastName ?? ""}`.trim();
   return {
     // Budget only: the property-type interest on the lead is our advisor's, partners never submit it.
     filters: parsePartnerFilters({ budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, onlyAvailable: true }),
-    sent, email: sub.email, phone: sub.phone, firstName: sub.firstName, signer,
+    sent, firstName: sub.firstName,
   };
 }
 
@@ -164,7 +160,22 @@ const prismaItem = (it: PresentationItemInput) => ({
 
 class ClaimGone extends Error {}
 
-export async function createPartnerPresentationAction(body: unknown): Promise<{ ok: true; id: string; url: string } | Err> {
+export type ShareLinks = { mailto: string | null; whatsapp: string | null };
+
+/** Prefilled links for the partner's own mail program and WhatsApp, in the presentation's language. */
+async function shareLinks(me: { partner: { id: string } }, claimId: string, g: General, url: string, updated: boolean): Promise<ShareLinks> {
+  const [claim, partner] = await Promise.all([
+    prisma.partnerClaim.findUnique({ where: { id: claimId }, select: { submission: true } }),
+    prisma.partner.findUnique({ where: { id: me.partner.id }, select: { brandName: true, firstName: true, lastName: true } }),
+  ]);
+  const sub = submissionView(claim?.submission);
+  const signer = partner?.brandName?.trim() || `${partner?.firstName ?? ""} ${partner?.lastName ?? ""}`.trim();
+  const t = dict(g.locale);
+  const base = { greetingName: g.greetingName, url, signer, updated };
+  return { mailto: presentationMailto(t, { ...base, email: sub.email }), whatsapp: presentationWhatsApp(t, { ...base, phone: sub.phone }) };
+}
+
+export async function createPartnerPresentationAction(body: unknown): Promise<{ ok: true; id: string; url: string; share: ShareLinks } | Err> {
   const { me, clients, allowed } = await scope();
   if (!L.presentation.hit(me.partner.id)) return err("err.rateLimited");
   const b = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
@@ -205,7 +216,8 @@ export async function createPartnerPresentationAction(body: unknown): Promise<{ 
     throw e;
   }
   revalidatePath("/partner-portal/presentations");
-  return { ok: true, id, url: presentationUrl(token) };
+  const url = presentationUrl(token);
+  return { ok: true, id, url, share: await shareLinks(me, client.claimId, g, url, false) };
 }
 
 async function ownPresentation(id: unknown) {
@@ -258,7 +270,7 @@ export async function loadPartnerPresentationAction(id: string): Promise<LoadedP
   };
 }
 
-export async function savePartnerPresentationAction(id: string, body: unknown): Promise<{ ok: true; url: string; summary: string } | Err> {
+export async function savePartnerPresentationAction(id: string, body: unknown): Promise<{ ok: true; url: string; summary: string; share: ShareLinks } | Err> {
   const { me, p, client, allowed } = await ownPresentation(id);
   if (!p || !client) return err("err.presentationNotFound");
   if (!L.presentation.hit(me.partner.id)) return err("err.rateLimited");
@@ -315,7 +327,8 @@ export async function savePartnerPresentationAction(id: string, body: unknown): 
     throw e;
   }
   revalidatePath("/partner-portal/presentations");
-  return { ok: true, url: presentationUrl(p.token), summary };
+  const url = presentationUrl(p.token);
+  return { ok: true, url, summary, share: await shareLinks(me, client.claimId, g, url, true) };
 }
 
 export async function partnerFavoritesSeedAction(id: string): Promise<(FavoritesSeed & { claimId: string }) | Err> {

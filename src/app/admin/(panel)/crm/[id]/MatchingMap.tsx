@@ -42,8 +42,9 @@ function FitToMarkers({ markers }: { markers: MatchingMapMarker[] }) {
   return null;
 }
 
-export default function MatchingMap({ markers }: { markers: MatchingMapMarker[] }) {
-  const s = useMemo(() => projectsStrings("en"), []);
+/** `lang`: the partner portal shows the card and layer labels in the partner's language (CRM: English). */
+export default function MatchingMap({ markers, lang = "en" }: { markers: MatchingMapMarker[]; lang?: "en" | "de" | "pl" | "ru" }) {
+  const s = useMemo(() => projectsStrings(lang), [lang]);
   const [poiActive, setPoiActive] = useState<Set<string>>(new Set());
   const [poiState, setPoiState] = useState<"idle" | "loading" | "zoom">("idle");
   const togglePoi = (k: string) =>

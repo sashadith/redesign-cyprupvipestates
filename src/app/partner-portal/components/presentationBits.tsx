@@ -45,6 +45,15 @@ export function PresentationTable({ t, locale, items, showClient = true, whatsap
             </th>
             <td data-label={P.colStatus}>
               <Chip label={status[p.status]} tone={tone[p.status]} />
+              {/* Edit / new from favourites: only while the client is still actively the partner's (the server re-checks). */}
+              {p.claimId && p.status !== "revoked" && (
+                <span className="pp-pres-actions">
+                  <Link href={`/presentations?edit=${encodeURIComponent(p.id)}#pres-new-title`} className="pp-linkbtn">{t.presBuilder.edit}</Link>
+                  {(p.stats?.favorites ?? 0) > 0 && (
+                    <Link href={`/presentations?favorites=${encodeURIComponent(p.id)}#pres-new-title`} className="pp-linkbtn">{t.presBuilder.fromFavorites}</Link>
+                  )}
+                </span>
+              )}
               {p.status === "active" && (
                 <span className="pp-pres-actions">
                   <a href={presentationPreviewUrl(p.url)} target="_blank" rel="noopener noreferrer" className="pp-linkbtn">{P.open}</a>
