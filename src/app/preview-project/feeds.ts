@@ -3,6 +3,7 @@ import type { UnitVM } from "./UnitsView";
 import { sizeKey, sizeOf } from "./imageSize";
 import { toTitleCaseName } from "@/lib/textCase";
 import type { ExtraLink } from "@/lib/developmentExtraLinks";
+import { xml2uUnitStatus } from "@/lib/xml2uUnitStatus";
 
 /* Developer-agnostic feed adapters → one canonical ProjectVM the preview page
    renders. Each adapter maps a raw feed (Island Blue XML, Qubehub API, …) to the
@@ -579,18 +580,8 @@ const stripProjectSuffix = (ref: string, projectId: string): string => {
   if (!ref || !suffix) return ref;
   return ref.toLowerCase().endsWith(suffix.toLowerCase()) ? ref.slice(0, ref.length - suffix.length).trim() : ref;
 };
-// Domenica's own Features list carries a per-unit "Status: Sold" / "Status:
-// Available For Sale" line; Pafilia's Feature1 is marketing copy, never a
-// status line, so this safely no-ops for Pafilia — it only ever matches a
-// Feature that literally starts with "Status:".
-const unitStatusFrom = (features: any): "available" | "sold" | "reserved" => {
-  const line = arr(Object.values(features ?? {})).map(txt).find((f: string) => /^status\s*:/i.test(f));
-  if (!line) return "available";
-  const v = line.slice(line.indexOf(":") + 1);
-  if (/sold/i.test(v)) return "sold";
-  if (/reserved/i.test(v)) return "reserved";
-  return "available";
-};
+// Unit status: Price.status first, the old Features "Status:" line as
+// fallback. See xml2uUnitStatus.ts for why both exist.
 const unitStatusLabel = (s: "available" | "sold" | "reserved") => (s === "sold" ? "Sold" : s === "reserved" ? "Reserved" : "Available");
 
 async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
@@ -606,7 +597,7 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
     const beds = clean(d.bedrooms) !== "0" ? clean(d.bedrooms) : "";
     const baths = clean(d.fullBathrooms) !== "0" ? clean(d.fullBathrooms) : "";
     const orientation = clean(d.orientation);
-    const status = unitStatusFrom(d.Features);
+    const status = xml2uUnitStatus(p?.Price?.status, d.Features);
     const attrs = [
       ["Floor area", areaM2(d.FloorSize?.floorSize)], ["Plot", areaM2(d.PlotSize?.plotSize)],
       ["Bedrooms", beds], ["Bathrooms", baths],
