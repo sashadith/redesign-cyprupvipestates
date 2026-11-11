@@ -62,6 +62,7 @@ import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracke
 import ProjectsSectionSlider from "@/app/components/ProjectsSectionSlider/ProjectsSectionSlider";
 import ProjectsSectionBlockComponent from "@/app/components/ProjectsSectionBlockComponent/ProjectsSectionBlockComponent";
 import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
+import TaxCalculator from "@/app/components/TaxCalculator/TaxCalculator";
 import GuideCta from "@/app/components/GuideCta/GuideCta";
 import GuidesStrip from "@/app/components/GuideCta/GuidesStrip";
 import { guideForArticle, guideTeaser, GUIDE_UI, guideLangFor } from "@/lib/guides/registry";
@@ -297,6 +298,8 @@ export const ArticleView = async ({ params }: Props) => {
         const projectsToShow = manual.length ? manual : Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
         return <ProjectsSectionSlider block={{ ...b, projects: projectsToShow }} lang={lang} />;
       }
+      case "taxCalculatorBlock":
+        return <TaxCalculator lang={lang} title={block.title || undefined} guideHref={block.guideHref || undefined} guideLabel={block.guideLabel || undefined} />;
       case "formMinimalBlock":
         // Wrapped so articleForm.css can re-skin it from the outside. The
         // component itself is a dark-background clone of FormStandard — on this
