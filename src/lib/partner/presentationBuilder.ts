@@ -46,9 +46,28 @@ export function parsePartnerFilters(raw: unknown): MatchFilters {
 }
 
 /** A match as a partner may see it: only their published projects, no developer, no commission. */
-export function toPartnerMatch(m: DevelopmentMatch, allowed: ReadonlySet<string>): DevelopmentMatch | null {
+/** The public site; images live there. */
+export const PUBLIC_SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL || "https://cyprusvipestates.com").replace(/\/+$/, "");
+
+/**
+ * Project images are stored as site-relative paths ("/uploads/..."), and the partner host's nginx
+ * blocks /uploads, so a relative path breaks there. Point it at the public site instead; absolute
+ * URLs and empty values pass through unchanged.
+ */
+export function partnerImageUrl(src: string | null, origin: string = PUBLIC_SITE_ORIGIN): string | null {
+  if (!src) return null;
+  return src.startsWith("/") && !src.startsWith("//") ? `${origin}${src}` : src;
+}
+
+export function toPartnerMatch(m: DevelopmentMatch, allowed: ReadonlySet<string>, origin: string = PUBLIC_SITE_ORIGIN): DevelopmentMatch | null {
   if (!allowed.has(m.development.id) || m.development.publishStatus !== "published") return null;
-  return { ...m, development: { ...m.development, developer: null, commission: { ratePercent: null, source: "MISSING" } } };
+  return {
+    ...m,
+    development: {
+      ...m.development, developer: null, commission: { ratePercent: null, source: "MISSING" },
+      mainImage: partnerImageUrl(m.development.mainImage, origin),
+    },
+  };
 }
 
 export type DevUnits = { name: string; units: { id: string; ref: string | null; status: string | null }[] };

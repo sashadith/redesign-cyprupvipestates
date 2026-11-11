@@ -22,7 +22,7 @@ import { presentationMailto, presentationWhatsApp } from "@/lib/partner/presenta
 import { partnerLimits as L } from "@/lib/partner/limits";
 import { PRESENTATION_TTL_DAYS, presentationUrl } from "@/lib/partner/partnerPresentations";
 import {
-  canEditPartnerPresentation, expiryFromInput, parsePartnerFilters, toPartnerMatch, validatePartnerItems, type DevUnits,
+  canEditPartnerPresentation, expiryFromInput, parsePartnerFilters, partnerImageUrl, toPartnerMatch, validatePartnerItems, type DevUnits,
 } from "@/lib/partner/presentationBuilder";
 import { GREETING_NAME_MAX, PERSONAL_NOTE_MAX } from "@/lib/partner/presentationDraft";
 import { myPresentationClients, myProjects } from "@/lib/partner/scope";
@@ -255,7 +255,7 @@ export async function loadPartnerPresentationAction(id: string): Promise<LoadedP
   if ("error" in ctx) return ctx;
   // Items of projects no longer offered to the partner (unpublished since) are dropped from the editor.
   const items = (await buildEditorItems(stored.filter((s) => allowed.has(s.developmentId))))
-    .map((it) => ({ ...it, publicName: names.get(it.developmentId) ?? it.publicName }));
+    .map((it) => ({ ...it, publicName: names.get(it.developmentId) ?? it.publicName, mainImage: partnerImageUrl(it.mainImage) }));
   return {
     presentation: {
       id: p.id, claimId: client.claimId, clientName: client.name,
