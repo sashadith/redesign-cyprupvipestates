@@ -1,0 +1,59 @@
+{
+  "slug": "amaya",
+  "name": "Amaya Residences",
+  "category": "Apartments",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Kapparis",
+  "town": null,
+  "latitude": 35.04773,
+  "longitude": 34.00749,
+  "pinSource": "Developer's own project page (karmadevelopers.com/projects/amaya-residences) embeds a Google Maps place marker q=35.04773,34.00749 (a marker, not a camera position). Cross-checked against the brochure's aerial: the plot sits on a main road between Paralimni and Kapparis; OSM puts Agia Triada beach ~1.5 km and Skoutari/Malama ~1.1 km away (developer says 1.2 / 1.3 km), so consistent to a few hundred metres. Medium-high confidence; not a surveyed plot centroid.",
+  "amenities": [
+    "Communal outdoor swimming pool with sun deck",
+    "Gated community with secure entry",
+    "Landscaped communal gardens with irrigation",
+    "Covered private parking and storage",
+    "EV charging provision for every parking space",
+    "Photovoltaic system (provision) for energy performance",
+    "Elevator in each block",
+    "Solar water heating per unit",
+    "Air-conditioning provision (split units) in living area and bedrooms",
+    "Commercial shop within the complex"
+  ],
+  "facts": [
+    "Amaya Residences is an off-plan apartment complex in Kapparis, Famagusta district, between Paralimni and Protaras.",
+    "The scheme comprises 37 units in two blocks: 36 one- and two-bedroom apartments (12 in Block A, 24 in Block B) plus one 150 m² commercial shop.",
+    "One-bedroom apartments have one bathroom and covered verandas of about 14 m²; two-bedroom apartments have two bathrooms and covered verandas of about 25-30 m²; some ground-floor units add uncovered verandas.",
+    "The site plan shows a communal swimming pool with sun deck between the two blocks, a private access road and covered parking at ground/piloti level.",
+    "Every apartment carries an A-class Energy Performance Certificate; the building envelope is insulated to Cyprus Energy Department requirements and windows are thermal aluminium frames with double glazing.",
+    "Finishes include ceramic floor tiles, porcelain-slab kitchen worktops and backsplash, soft-close kitchen cupboards, laminate fitted wardrobes and imported sanitary ware with walk-in showers and channel drains.",
+    "Each apartment gets its own solar water-heating system, a hot-water return pump, AC split-unit provision in the living area and all bedrooms, and an EV-charging provision at its parking space.",
+    "The developer states distances of 1.2 km to the nearest beach (Ayia Triada), 600 m to restaurants and shops, 250 m to a supermarket, 3.5 km to the general hospital, 2.6 km to Paralimni Marina and 45 km to Larnaca Airport.",
+    "A full turnkey furnishing package, house cleaning and rental services are offered as options on request."
+  ],
+  "totalUnitsInScheme": 37,
+  "sources": [
+    "RESORT/AMAYA/7. AMAYA DESCRIPTION/AMAYA DESCRIPTION.docx",
+    "RESORT/AMAYA/4. AMAYA SPECS & MATERIAL/AMAYA GENERAL TECHNICAL SPECIFICATIONS.pdf (5 pp.)",
+    "RESORT/AMAYA/4. AMAYA SPECS & MATERIAL/AMAYA MATERIAL SPECIFICATIONS.pdf",
+    "RESORT/AMAYA/6. .../AMAYA RESORT UNBRANDED PRESENTATION LQ.pdf (36 pp.: pp.5-7 location/distances, p.10 key facts, p.12 site layout, pp.13-26 plans)",
+    "RESORT/AMAYA/5. AMAYA AERIAL LAYOUTS & GOOGLE MAP (Google map + aerial with distances)",
+    "karmadevelopers.com/projects/amaya-residences (details, availability table, map marker)"
+  ],
+  "conflicts": [
+    "Size range: description.docx says buildable area 66-123 m²; website and presentation say 66-150 m² (the 150 m² is the commercial shop). Price list gives internal areas (52-53.5 m² 1-bed, 84 m² 2-bed); the website figures are total buildable area incl. common share, so not directly comparable.",
+    "Availability: the developer website (checked 2026-11-12) also shows A104 and A203 as 'Available', plus several Block B units; the price list is the source of truth for what is for sale.",
+    "Website availability table has apparent typos: B302 listed as 1-bed with 98.20 m² buildable, B304 as 2-bed with 78.80 m² (all siblings are 67.7 / 109.3 m²).",
+    "Beach distance: Malama Beach is given as 1.3 km on the Google-map image but 1.2 km on the aerial image; nearest beach (Ayia Triada) 1.2 km in both.",
+    "Pool: the General Technical Specifications do not mention the pool, but the presentation, material specification, site layout and price list all do."
+  ],
+  "openQuestions": [
+    "Expected completion / delivery date (no document states one).",
+    "Are the photovoltaic system and EV chargers installed or only provisioned (spec says 'provision')?",
+    "Communal pool dimensions and whether it is heated.",
+    "Is the commercial shop for sale to private buyers, and what will it be used for?"
+  ]
+}

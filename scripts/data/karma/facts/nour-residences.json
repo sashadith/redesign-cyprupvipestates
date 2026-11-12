@@ -1,0 +1,57 @@
+{
+  "slug": "nour-residences",
+  "name": "Nour Residences",
+  "category": "Apartments",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Paralimni",
+  "town": null,
+  "latitude": 35.04524,
+  "longitude": 33.9828,
+  "pinSource": "Developer's own project page (karmadevelopers.com/projects/nour-residences) embeds a Google Maps place marker q=35.04524072819608,33.98279636996582 (a marker, not a camera position). Consistent with the developer's Google-map screenshot (site north of Paralimni centre, which it puts 600 m away; the marker is ~0.8 km north of the central church square). Medium-high confidence; corner plot on a residential street.",
+  "amenities": [
+    "Private covered parking",
+    "Private storage room for every apartment",
+    "Elevator",
+    "Videophone entry",
+    "Photovoltaic system (2 kWp) for communal areas",
+    "EV charging provision at each parking space",
+    "Solar water heating",
+    "Air-conditioning provision (split units) in living area and bedrooms",
+    "CAT6 data cabling in all rooms",
+    "Landscaped communal planting"
+  ],
+  "facts": [
+    "Nour Residences is an off-plan apartment building in Paralimni, Famagusta district, with construction scheduled to start in 2026.",
+    "The building has 15 apartments over a ground floor and three upper floors: mostly two-bedroom, two-bathroom units plus three three-bedroom apartments.",
+    "Typical two-bedroom apartments have about 78-80 m² of internal space and a covered veranda of about 10 m²; upper-floor three-bedroom units have larger verandas.",
+    "Every apartment comes with a storage room and a covered parking space with EV-charging provision.",
+    "The building has an A-class energy rating: external walls are 250 mm thermal clay brick with an external thermal insulation system, windows are thermal aluminium frames with double glazing, and a 2 kWp photovoltaic system serves the common areas.",
+    "Water heating is by a roof-mounted solar system (800 L tank, 150 L cylinder, 1.9 m² collectors) with PEX pipe-in-pipe plumbing; AC split-unit provision covers the living area and all bedrooms.",
+    "Finishes include ceramic floor tiles, large-format porcelain-slab kitchen worktops, melamine fitted wardrobes, a wall-hung guest WC and a choice of three finish palettes.",
+    "The developer states distances of 600 m to Paralimni centre, 100 m to a supermarket, 500 m to restaurants and shops, 600 m to a private English school, 1.3 km to a private hospital, 3.2 km to the nearest beach and 45 km to Larnaca Airport."
+  ],
+  "totalUnitsInScheme": 15,
+  "sources": [
+    "LIFESTYLE/NOUR RESIDENCES/7. NOUR RESIDENCES DESCRIPTION/NOUR RESIDENCES DESCRIPTION.docx",
+    "4. NOUR RESIDENCES SPECS & MATERIAL/GENERAL TECHNICAL SPECIFICATIONS - NOUR RESIDENCES.pdf",
+    "4. NOUR RESIDENCES SPECS & MATERIAL/MATERIAL INFO - NOUR SERIDENCES.pdf",
+    "6. .../NOUR RESIDENCES PRESENTATION UNBRANDED LQ.pdf (21 pp.: p.3 text, p.5 distances, p.7 key facts)",
+    "5. NOUR RESIDENCES AERIAL LAYOUTS & GOOGLE MAP (Google map with distances, aerial)",
+    "karmadevelopers.com/projects/nour-residences (details, 'Construction Starts 2026', availability table, map marker)"
+  ],
+  "conflicts": [
+    "Availability: the developer website (checked 2026-11-12) shows Apartment 106 as SOLD and 105, 202 and 204 as Available; the price list offers 106. Price list wins, but worth confirming 106 with the developer.",
+    "The description.docx calls it a 'newly built residential development', while the price list, docx details and website say Off Plan and the website says 'Construction Starts 2026'. Treated as off-plan.",
+    "Nearest beach: 3.2 km in the presentation (Ayia Triada) vs 3.5 km on the website.",
+    "Size range: presentation 'Build Area 85-170 m²' vs docx/website 'Covered Area 87-138 m²'.",
+    "Specs: technical spec states 'The building will be served by one elevator'; no pool is mentioned in any document (consistent with the price list)."
+  ],
+  "openQuestions": [
+    "Expected completion / delivery date (only 'construction starts 2026' is stated).",
+    "Confirm Apartment 106 is still available (website shows it sold).",
+    "Some drone photos from the plot show a neighbouring building under scaffolding - confirm that is not Nour itself (i.e. that works have not started)."
+  ]
+}

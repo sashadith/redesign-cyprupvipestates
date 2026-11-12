@@ -1,0 +1,66 @@
+{
+  "slug": "ariel-residences",
+  "name": "Ariel Residences",
+  "category": "Villas",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Kapparis",
+  "town": null,
+  "latitude": 35.04802,
+  "longitude": 34.01767,
+  "pinSource": "Developer's own project page (karmadevelopers.com/projects/ariel-residences) embeds a Google Maps place marker q=35.04802368590336,34.017670391775106 (a marker, not a camera position). Checked against OSM: ~0.5 km from Ayia Triada beach (developer says 500-520 m) and ~2.0 km from Paralimni Marina (developer says 2 km), matching the developer's Google-location screenshot. High confidence.",
+  "amenities": [
+    "Private skimmer swimming pool (8 x 3 m, 1.40 m deep, glass mosaic, 2 LED lights, stainless-steel ladder) for every villa",
+    "Gated community with visitor parking",
+    "Uncovered private parking (per price list)",
+    "Photovoltaic system on the roof (per energy-performance requirements)",
+    "Provision for EV charging point at private parking",
+    "Solar water heating (2.4 m² collector, 200 L cylinder, 1,000 L tank)",
+    "Air-conditioning provision (split units) in living area and all bedrooms",
+    "Provision for electric radiators in living area, bedrooms and bathrooms",
+    "CAT6 data cabling provision in all rooms",
+    "Provision for alarm system and CCTV",
+    "External pool shower and BBQ bench provision",
+    "Provision for underground garden irrigation",
+    "Natural stone cladding on part of the facade",
+    "Double-glazed thermal aluminium windows"
+  ],
+  "facts": [
+    "Ariel Residences is an off-plan gated scheme of 14 detached two-storey villas in Kapparis, in the Protaras area of Famagusta district, near Ayia Triada beach.",
+    "The villas have three bedrooms upstairs with an en-suite master bedroom; the Type B design is also offered with a four-bedroom layout (fourth bedroom on the ground floor), and villa H12 is listed with four bedrooms.",
+    "Per the plans, Type A villas have 138.6 m² internal area (62 + 76.6 m²) plus a 14 m² covered veranda, and Type B villas 149.8 m² (70.8 + 79 m²) plus a 21 m² covered veranda.",
+    "Plots across the scheme range from 289 m² to 452 m²; the villas currently offered sit on plots of 306-413 m².",
+    "Each villa has a private 8 x 3 m skimmer pool, 1.40 m deep, with glass mosaic finish, in a walled garden with terrace.",
+    "The developer states Ayia Triada beach is about 500-520 m away, Malama beach 800 m, supermarkets 100 m, restaurants and shops 500 m, Paralimni Marina 2 km, a private hospital 4.6 km and Larnaca airport 45 km.",
+    "Kitchens have porcelain-slab worktops and backsplash with soft-close laminate units; bathrooms have wall-hung WCs and walk-in showers with channel drains.",
+    "Specification includes a photovoltaic system, EV-charging provision, CAT6 cabling, air-conditioning provision in all rooms and an A energy performance certificate."
+  ],
+  "totalUnitsInScheme": 14,
+  "sources": [
+    "LIFESTYLE/ARIEL RESIDENCES/6 .../ARIEL PRESENTATION LR.pdf (location, distances p.9, key facts p.13, '4 bedroom option upon request' p.18)",
+    "LIFESTYLE/ARIEL RESIDENCES/6 .../ARIEL RESIDENCES LEAFLET.pdf",
+    "LIFESTYLE/ARIEL RESIDENCES/7 .../ARIEL RESIDENCES DESCRIPTION.docx",
+    "LIFESTYLE/ARIEL RESIDENCES/4 .../ARIEL RESIDENCES GENERAL TECHNICAL SPECIFICATIONS.pdf and MATERIAL SPECIFICATIONS.pdf",
+    "LIFESTYLE/ARIEL RESIDENCES/3 .../ARIEL RESIDENCES LAYOUT.pdf (plot sizes, 8x3 pools, visitor parking) and all Type A/A1/B/B1 plans (Feb 2026) plus ARIEL H12 TYPE B 4 BED.pdf (Oct 2023)",
+    "LIFESTYLE/ARIEL RESIDENCES/5 .../ARIEL RESIDENCES GOOGLE LOCATION.jpg and aerial pictures",
+    "karmadevelopers.com/projects/ariel-residences/ (map marker, availability table)",
+    "Price list (orchestrator brief) for units/areas/plots"
+  ],
+  "conflicts": [
+    "H12 bedrooms: the current 'TYPE B MIRROR PLANS (VILLAS H12,H13,H14)' drawing (dated February 2026) shows 3 bedrooms, all upstairs. The separate file 'ARIEL H12 TYPE B 4 BED.pdf' (older, dated OCT 2023, titled 'HOUSE TYPE B', not mirror) shows 4 bedrooms: bedroom 1 with shower room on the ground floor in place of the open-plan kitchen corner, and 3 bedrooms upstairs, same 70.8 + 79 = 149.8 m² and 21 m² veranda. The presentation p.18 labels this '4 BEDROOM OPTION UPON REQUEST'. So H12 = 4 bed (price list) is the optional layout on the same footprint; H02 (Type B1, plan dated Feb 2026) = 3 bed is the standard layout. Both are consistent with the plans; the website still shows H12 as 3 bedrooms.",
+    "Developer website lists H02 as RESERVED, while the price list offers it for sale (H05, H11, H12 match as Available).",
+    "Website states buildable area 166.60-191.80 m² and per-villa 166.25 m² (Type B) / 148.10 m² (Type A); the plans, leaflet, description and price list give internal areas of 138.6-149.8 m² (website figures appear to include verandas/other areas). Price list used.",
+    "Plot range: description and presentation say 297-384 m², website 297-452 m², the layout drawing 289-452 m², price list for the offered villas 306-413 m².",
+    "Distance to Ayia Triada beach: presentation 520 m, Google-location image 500 m, website 700 m.",
+    "Description docx and website text say 'near Ayia Triada Beach'; the website's location text block is copied from Olivia ('named for the enduring olive tree') and is not about Ariel.",
+    "Website text says '2 or 3 bedrooms upstairs'; all plans and the price list show 3 (or 4 with the option)."
+  ],
+  "openQuestions": [
+    "Expected construction start and completion (delivery quarter).",
+    "Is the 4-bedroom layout for H12 already fixed, and is it available on other Type B villas (H02) at the same price?",
+    "Is H02 actually still available (website says reserved)?",
+    "Photovoltaic system size in kWp (spec says only 'as per energy performance requirements')."
+  ]
+}

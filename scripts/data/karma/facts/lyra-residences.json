@@ -1,0 +1,60 @@
+{
+  "slug": "lyra-residences",
+  "name": "Lyra Residences",
+  "category": "Apartments",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Deryneia",
+  "town": null,
+  "latitude": 35.0589,
+  "longitude": 33.96355,
+  "pinSource": "Presentation page 8 ('Project google location', arrow to PLOT 530) is a Google satellite screenshot with POI labels (Pergamos Shop Deryneia, Famagusta Gym, Thimonia bakery, playground). I matched its road pattern (a junction where a NW-SE road meets an east-west road leading to a gated villa cluster; plot on the junction's NE side, directly west of a house with an orange roof) against Esri satellite imagery and OSM (Thimonia bakery at 35.05907, 33.96648). Read off the imagery: about 35.0589, 33.9635. Medium confidence, accuracy about +/-30 m; not derived from a GPS tag or a developer pin. Cross-check: planning sheet 2-287-381, section 07, plot no. 530, Deryneia municipality (from the permit drawings) could confirm via the DLS portal.",
+  "amenities": [
+    "Covered private parking (7 spaces + 1 accessible space under the building)",
+    "Elevator (8 persons, 630 kg)",
+    "Gated community (per presentation)",
+    "Videophone entry",
+    "2 kWp photovoltaic system for the communal areas",
+    "EV charging provision for each private parking space",
+    "Solar water heating (800 L tank, 150 L cylinder)",
+    "Air-conditioning provisions (split units) in bedrooms and living area",
+    "CAT6 data cabling in all rooms",
+    "Landscaped communal areas with irrigation"
+  ],
+  "facts": [
+    "Lyra Residences is an off-plan apartment building on plot 530 in Deryneia, Famagusta district; planning permission was issued on 29 November 2024.",
+    "The building has seven apartments on three residential floors above a ground-floor parking level, on a 522 m² plot; maximum height 13.5 m.",
+    "The first and third floors each have two two-bedroom apartments of about 75-75.7 m² internal area with a 20.19 m² covered veranda.",
+    "The second floor has three one-bedroom apartments of about 50.5-52 m² internal area with verandas of 11.27-17.9 m².",
+    "Parking for 7 cars plus one accessible space is at ground level under the building; each private space has a provision for an EV charger.",
+    "The building has an A-class energy performance certificate, 250 mm thermal clay-brick external walls with an external insulation system, and thermally broken aluminium frames with double glazing.",
+    "Kitchens have laminate units with soft-close mechanisms and large-format porcelain worktops and backsplashes; bathrooms have concealed wall-hung WCs and shower channel drains.",
+    "A 2 kWp photovoltaic system serves the communal areas; hot water comes from a roof solar system with an 800-litre tank and 150-litre cylinder.",
+    "The developer states: nearest beach 4 km, restaurants and cafés 500 m, supermarkets 800 m, Deryneia centre 1 km, school 1 km, private hospital 3-4 km, Paralimni Marina 9 km, Larnaca Airport 48 km.",
+    "No swimming pool."
+  ],
+  "totalUnitsInScheme": 7,
+  "sources": [
+    "Price list (via orchestrator brief): apartments 1, 2 (first floor), 3 (second floor), 6, 7 (third floor); 1-bed 50.83 m² + 11.27 m² veranda, 2-bed 75-75.7 m² + 20.19 m² veranda; covered parking; no pool; OFF PLAN",
+    "6. LYRA RESIDENCES PRESENTATION/LYRA PRESENTATION.pdf (25 pages; pp. 6-11 location, key facts, map)",
+    "3. LYRA RESIDENCES PLANS/LYRA RESIDENCES PLANS.pdf (planning-permit drawings, permit stamp 29.11.2024, plot 530 Deryneia, 7 apartments, 522 m² plot)",
+    "4. LYRA RESIDENCES SPECS & MATERILA/GENERAL TECHNICAL SPECIFICATIONS - PLOT 530 - DERYNIA.pdf",
+    "1./2. LYRA RESIDENCES EXTERIOR / INTERIOR PICTURES (renders)",
+    "Esri World Imagery + OpenStreetMap (Overpass) for pin matching",
+    "karmadevelopers.com WordPress media library (no Lyra project page)"
+  ],
+  "conflicts": [
+    "Not a conflict but a naming risk: we already list a different 'Lyra' (another developer, Paphos). This draft is named 'Lyra Residences' and all texts say Deryneia/Famagusta.",
+    "Larnaca Airport distance: the Lyra presentation says 48 km, while the developer's Thea Residences materials (same town, Deryneia) say 38 km. Text uses the Lyra figure (48 km) as stated for this project.",
+    "Parking: the price list says covered parking; the permit ground plan labels some of the 8 spaces as open-air (ΥΠΑΙΘΡΙΟΙ). Price list wins; the developer may want to confirm which apartments get covered spaces.",
+    "All 19 images in the share are 3D renders (the presentation marks them 'artist impressions'); no real photos.",
+    "Developer's website: no Lyra project page; media library has lyra-exterior.jpg (1200x760) and three 380x280 interior thumbnails uploaded 10 Nov 2026 - nothing better than the share."
+  ],
+  "openQuestions": [
+    "Expected construction start and completion date?",
+    "Which of the eight parking spaces are covered, and is one assigned to each apartment?",
+    "Confirm plot location (plot 530, sheet 2-287-381, section 07) to tighten the pin."
+  ]
+}

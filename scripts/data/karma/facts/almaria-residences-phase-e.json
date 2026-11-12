@@ -1,0 +1,68 @@
+{
+  "slug": "almaria-residences-phase-e",
+  "name": "Almaria Residences Phase E",
+  "category": "Villas",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Pernera",
+  "town": null,
+  "latitude": 35.03007,
+  "longitude": 34.03141,
+  "pinSource": "Developer's own Almaria Residences page (karmadevelopers.com/projects/almaria-residences) embeds a Google Maps place marker q=35.03006911278542,34.03141212327931 (a marker, not a camera position). That page covers the whole Almaria scheme (phases A-D); there is no separate Phase E page. Checked against OSM: the marker is ~0.9 km from Pernera Beach (Phase E presentation says 900 m) and ~1.2 km from Paralimni Marina (presentation says 1 km). The 'ALMARIA all phases' aerial (presentation p.10) shows Phase E directly next to Phase A on the west side, so the true Phase E plot is within roughly 100-200 m of this marker. Medium confidence for the exact plot; high confidence for the location.",
+  "amenities": [
+    "Private skimmer swimming pool (3 x 7 m, 1.40 m deep, glass mosaic, 2 LED lights) for every villa",
+    "Covered parking (per price list)",
+    "Gated community",
+    "3 kWp photovoltaic system on the roof",
+    "Provision for a 32 A EV charging point at the private parking",
+    "Solar water heating (2 x 1.9 m² collectors, 250 L cylinder)",
+    "Air-conditioning provision (split units) in living area and all bedrooms",
+    "Provision for electric radiators in living area, bedrooms and bathrooms",
+    "CAT6 data cabling to all rooms",
+    "USB sockets beside the beds",
+    "Provision for alarm system, CCTV and electric parking gate",
+    "External pool shower and BBQ provision",
+    "Provision for underground garden irrigation",
+    "Thermally insulated envelope (ETICS) and double-glazed aluminium windows"
+  ],
+  "facts": [
+    "Almaria Residences Phase E is an off-plan scheme of 9 detached two-storey villas in Pernera, Protaras area, Famagusta district; it is the latest phase of the larger Almaria Residences development.",
+    "All villas have three bedrooms; per the price list they have 3-4 bathrooms and internal areas of about 139-160 m², plus 12.25-27.55 m² of covered verandas.",
+    "Plots range from 267 m² to 402 m²; the largest villa, H01 (Type C), has 159.6 m² internal area, 27.55 m² of covered verandas and a 402 m² plot.",
+    "Every villa has its own skimmer pool of 3 x 7 m, 1.40 m deep, finished with glass mosaic.",
+    "The developer states Pernera Beach is about 900 m away, Kalamies Beach 850 m, Paralimni Marina 1 km, supermarkets and restaurants about 400 m, Protaras centre 2.5 km and Larnaca airport 45 km.",
+    "Specification includes a 3 kWp photovoltaic system, provision for a 32 A EV charger, CAT6 cabling to all rooms, air-conditioning provision in all bedrooms and the living area, and solar water heating.",
+    "External walls are 25 cm thermal clay brick with an external thermal insulation system; windows are MU3000/MU2075 thermal aluminium with double glazing; balconies have 16 mm laminated glass balustrades.",
+    "Kitchens get 12 mm ceramic-slab worktops and backsplash; bathrooms have wall-hung WCs and glass shower cubicles.",
+    "The villas carry an A energy performance certificate."
+  ],
+  "totalUnitsInScheme": 9,
+  "sources": [
+    "LIFESTYLE/ALMARIA RESIDENCES PHASE E/6 .../ALMARIA Phase E - Presentation LR.pdf (pp. 6-11 description, distances, all-phases aerial, key facts; pp. 14-30 plans and renders)",
+    "LIFESTYLE/ALMARIA RESIDENCES PHASE E/4 .../ALMARIA E GENERAL TECHNICAL SPECIFICATIONS.pdf",
+    "LIFESTYLE/ALMARIA RESIDENCES PHASE E/3 .../ALMARIA E ARCHITECTURAL LAYOUT.pdf and ALMARIA E H01-H09 PLANS.pdf (area tables, plot areas, pool size; drawings dated 10-2025)",
+    "LIFESTYLE/ALMARIA RESIDENCES PHASE E/5 .../ALMARIA PHASE E GOOGLE MAP.jpg",
+    "LIFESTYLE/ALMARIA RESIDENCES PHASE E/1 ... EXTERNAL PICTURES (13 images)",
+    "LIFESTYLE/ALMARIA D/7 .../ALMARIA RESIDENCES PHASE D DESCRIPTION.docx and ALMARIA D/5 .../ALMARIA AERIAL - ALL PHASES.jpg (context only)",
+    "karmadevelopers.com/projects/almaria-residences/ (map marker, phase statuses)",
+    "Price list (orchestrator brief) for units/areas/plots"
+  ],
+  "conflicts": [
+    "Presentation key-facts page (p.11) says 'Build Area 173 m² - 202.7 m²'. That does not match the Phase E plans or price list (internal 138.98-159.6 m²); 173 and 202.7 m² are exactly the Phase D villa sizes on the developer website, so this slide looks carried over from Phase D. Price list figures used.",
+    "Presentation p.8 says the nearest beach is 900 m (Pernera), while the location slide gives Kalamies Beach as 850 m. Small internal inconsistency.",
+    "Price list says covered parking for all 9 villas; plans for H01-H04 show a covered-parking area (20.6-21.9 m²) but the Type A1/A2 plans (H05-H09) list no covered-parking figure (the A1 render does show a cantilevered canopy at the entrance).",
+    "Plans for H05-H09 all print 'Plot Area = 270 m²', while the price list gives individual plot sizes from 267 m²; price list wins.",
+    "The spec sheet mentions a TV point at the 'roof garden', but no plan or price-list row mentions an accessible roof garden for Phase E.",
+    "Almaria Phase D (folder /LIFESTYLE/ALMARIA D, 12 villas, 3-4 bed) is NOT on the price list, but the developer's website still shows it as 'Phase D - Available - OFF PLAN' with villa D06 marked AVAILABLE (D01, D03-D05, D09, D11, D12 reserved; D02, D07, D08, D10 sold) and the construction timeline calls Phase D 'Under Construction'. So Phase D is not completed and possibly not fully sold out; it is simply absent from the current price list.",
+    "There are no Phase E interior images in the share (no '2. interior pictures' folder); the presentation has interior renders on pp. 25-27 only inside the PDF."
+  ],
+  "openQuestions": [
+    "Expected construction start and completion (delivery quarter) for Phase E.",
+    "Do the Type A1/A2 villas (H05-H09) get a covered carport, and of what size?",
+    "Is the roof accessible as a roof garden (the spec mentions a roof-garden TV point)?",
+    "Can the developer supply separate interior image files for Phase E (the presentation pp. 25-27 renders)?",
+    "Is villa D06 of Phase D still for sale, given it is not on the price list?"
+  ]
+}

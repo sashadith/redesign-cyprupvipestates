@@ -1,0 +1,63 @@
+{
+ "slug": "malama-seafront-c",
+ "name": "Malama Seafront C",
+ "category": "Villas",
+ "stage": "Off Plan",
+ "completion": null,
+ "energy": "A",
+ "district": "Famagusta",
+ "area": "Kapparis",
+ "town": null,
+ "latitude": 35.0533,
+ "longitude": 34.0209,
+ "pinSource": "Matched the developer's own phase-C plot aerial (karmadevelopers.com image 'Malama-Seafront-Phase-C-plot', plot outlined and labelled 'Phase C' next to outlined 'Phase A'/'Phase B') and the presentation aerial 'Project Location' (labels Malama A, B, C) against Esri World Imagery: the C plot is the field/brush strip on the east side of the Kapparis headland, between the coastal footpath and the fields, just north of the modern white villa complex and roughly 250-300 m south-east of the completed phase-A villas. Pin = centre of that strip. Medium confidence, about +/-60 m; not a surveyed plot centroid. NOTE: the Google Maps place marker embedded on the developer's Malama page (35.054066, 34.018480) sits on the phase-A villas, not on phase C, so it was not used.",
+ "amenities": [
+  "Private infinity pool",
+  "Roof garden (28 m²)",
+  "Covered parking",
+  "Lower level (67 m²) in addition to the main floors",
+  "Covered and uncovered verandas",
+  "Seafront plot along the coastal footpath",
+  "Gated villas (developer's project description)"
+ ],
+ "facts": [
+  "Malama Seafront C is an off-plan phase of detached seafront villas in Kapparis, Protaras area, Famagusta district; it follows phase A, whose four villas are completed and sold.",
+  "The phase-C plot is on the coast along the coastal footpath on the Kapparis headland, a few hundred metres south-east of the completed phase-A villas, with phase B lying between them (developer aerials).",
+  "The villa on the price list (C04, plan type A) has 4 bedrooms, 4 bathrooms plus a guest WC, 225.9 m² internal area, a 67 m² lower level and 358 m² total buildable area.",
+  "Outdoor space for that villa: 27.6 m² covered verandas, 9.5 m² uncovered verandas, a 28 m² roof garden, covered parking and a private infinity pool on a 653 m² plot.",
+  "The developer's phase-C description says the villas have five bathrooms/WCs, contemporary kitchens and layouts planned to give sea views from several levels.",
+  "The developer's renders of phase C show flat-roofed contemporary villas finished in natural stone, timber cladding and render, with large glazed openings and infinity pools facing the sea.",
+  "The developer's aerial that labels Malama A, B and C gives about 400 m to Ayia Triada beach, 1 km to Vrysoudi Beach, 2 km to Paralimni Marina and 5 km to Protaras centre.",
+  "The developer's project page gives energy rating A for Malama Seafront (project-wide; no phase-C EPC document was supplied).",
+  "The developer's availability table lists four villas in phase C, of which only villa 4 is shown as available."
+ ],
+ "totalUnitsInScheme": null,
+ "sources": [
+  "Operator-supplied MALAMA SEAFRONT C AVAILABILITY list (2026-11-12): villa C04, plan A, 4 bed, 4 baths & WC, internal 225.9 m², cov. verandas 27.6 m², uncov. 9.5 m², lower level 67 m², total 358 m², roof garden 28 m², covered parking, plot 653 m², infinity pool, OFF PLAN",
+  "karmadevelopers.com/projects/malama-seafront/ (saved as karma/site-malama.html): Phase C text, Phase A and Phase C availability tables, details box (energy A, distances), construction timeline ('MALAMA SEAFRONT C – OFF PLAN'), phase-C renders 25-209-MALAMA-VIEW-1..7 / NIGHT1..3 and plot aerial Malama-Seafront-Phase-C-plot (viewed only, copies in karma/web-malama-c/)",
+  "SEAFRONT/MALAMA SEAFRONT A/4. .../MALAMA SEAFRONT A UNBRANDED PRESENTATION.pdf (pp.4-8: location, aerial labelling Malama A/B/C with distances; p.8 phase A = 4 mansions, sold and delivered; p.9 phase A key facts)",
+  "SEAFRONT/MALAMA SEAFRONT A/4. .../MALAMA SEAFRONT.pdf (older phase-A brochure, features)",
+  "SEAFRONT/MALAMA SEAFRONT A/2. .../MALAMA SEAFRONT A LAYOUT.pdf ('Agia Triada Villas' master plan, villas 1-4) and 2022-05-10_All Malama+Grand.pdf (Malama Seaview Villas + Malama Grand phase A; no phase C)",
+  "SEAFRONT/MALAMA SEAFRONT A/5. .../GENERAL TECHNICAL SPECIFICATIONS - MALAMA GRAND H04.pdf (phase A only, used for comparison, not for C facts)",
+  "SEAFRONT/MALAMA SEAFRONT A/1. .../MALAMA SEAFRONT H03 REAL PICTURES (DJI aerials, DSCF interiors) and 3. LOCATION images",
+  "Esri World Imagery tiles + OpenStreetMap (beach positions) for the pin"
+ ],
+ "conflicts": [
+  "GALLERY: the SharePoint share has no phase-C folder. Phase C is a DIFFERENT design from phase A: phase A = four large detached mansions (420-448 m² buildable, 939-1,116 m² plots, vertical concrete fins), while the developer's phase-C renders show smaller flat-roofed villas with stone and timber cladding on 473-700 m² plots (240-360 m² buildable). The gallery is therefore limited to 5 real drone photos of the Kapparis coastline/setting taken from the phase-A site; the completed and under-construction phase-A villas are visible in them. None of the images shows C04 or the phase-C plot itself.",
+  "Bathrooms: price list says 4 full baths & WC; developer website availability table says '5 Bath + WC' for every phase-C villa; the website's phase-C text says 'five bathrooms/WCs' (which matches 4 baths + 1 WC).",
+  "Villa 4 / C04: website availability table lists villa 4 as 6 bedrooms, 263 m² buildable, 653 m² plot; price list C04 = 4 bedrooms, 358 m² total buildable, 653 m² plot. Plot agrees; bedrooms and area do not (the website's villa-1 row, 4 bed / 360 m², resembles C04). Price list wins.",
+  "Number of villas in phase C: website text says phase C 'includes Villas 4, 5, and 6' (three villas); the website availability table lists four villas (1-4); the renders show four villas in two pairs. totalUnitsInScheme left null.",
+  "Distances: the website (project-wide text) says Malama Seafront is 200 m from Malama beach; the presentation gives 350 m for phase A, and phase C lies further south-east than phase A, so 200 m to Malama beach is unlikely to hold for C. Airport: website 55 km vs presentation 45 km (Larnaca). Content uses only the distances on the aerial that labels Malama C (Ayia Triada 400 m, Paralimni Marina 2 km, Protaras centre 5 km).",
+  "Website 'Details' box (units 8, 4-5 bedrooms, 420.66-448.51 m², plots 939-1,116 m²) describes phase A, not C.",
+  "Website Google Maps marker (35.054066, 34.018480) marks the phase-A site, not phase C."
+ ],
+ "openQuestions": [
+  "Phase-C renders, floor plans, technical specification and material list (none in the share; the developer's website has 11 phase-C renders, a plot aerial and 3 interior renders that could be requested for use).",
+  "Expected completion date for phase C.",
+  "Exact number of villas in phase C (3 or 4) and C04's position.",
+  "Bedrooms / bathrooms / buildable area of C04 vs the website table (4 vs 6 bedrooms, 358 vs 263 m²).",
+  "Is the infinity pool heated, and does phase C keep phase A's features (lift, VRV, underfloor heating, home automation, PV)?",
+  "Energy Performance Certificate class for the phase-C villas.",
+  "Exact plot location / cadastral reference to confirm the pin."
+ ]
+}

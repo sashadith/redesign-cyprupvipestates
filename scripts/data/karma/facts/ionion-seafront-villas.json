@@ -1,0 +1,69 @@
+{
+ "slug": "ionion-seafront-villas",
+ "name": "Ionion Seafront Villas",
+ "category": "Villas",
+ "stage": "Completed",
+ "completion": null,
+ "energy": "A",
+ "district": "Famagusta",
+ "area": "Ayia Thekla",
+ "town": null,
+ "latitude": 34.97269,
+ "longitude": 33.90356,
+ "pinSource": "Developer website project page (karmadevelopers.com/projects/ionion-villas) embeds a Google Maps place pin with plus code 'XWF3+3C Sotira, Cyprus' = 8G6MXWF3+3C, decoded to 34.97269, 33.90356 (centre of a ~14 m cell). Consistent with the developer's Google Map screenshot (complex at the western end of the Ayia Thekla coast) and roughly with stated distances (~3.9 km straight line to Ayia Napa Marina vs stated 3 km). It marks the whole Ionion complex, not specifically villa H07 (complex is ~300 m long). Medium-high confidence.",
+ "amenities": [
+  "Seafront plot",
+  "Private overflow pool (1-1.80 m deep, glass mosaic, LED lights)",
+  "Lawn garden with landscaping",
+  "Covered parking",
+  "Sold fully furnished (furniture, appliances, linen, outdoor furniture)",
+  "Ducted/VRV air conditioning on ground floor, split units in bedrooms",
+  "Fireplaces in living room and master bedroom",
+  "Solar water heating",
+  "Italian Lube kitchen",
+  "Porcelain tile floors 60x120 cm",
+  "Glass balconies with sea views",
+  "Gated community",
+  "Barbecue with pergola seating area (scheme feature list)"
+ ],
+ "facts": [
+  "Ionion is a completed scheme of 63 detached villas built in three phases on the seafront of Ayia Thekla, west of Ayia Napa.",
+  "Across the scheme, villas have 3, 4 or 5 bedrooms, 122-265 m² buildable area, plots of 338-861 m² and private overflow pools of 32-100 m² (leaflet).",
+  "Villa H07: 5 bedrooms on three levels - two bedrooms and a bathroom in the basement, kitchen/dining/sitting room and WC on the ground floor, three bedrooms upstairs with a sea-facing balcony; internal 165.72 m², total buildable 223.78 m², plot 773 m² (seafront).",
+  "H07 is sold fully furnished: a household-items list covers living and dining furniture, four furnished bedrooms, bedding and linen, kitchenware, 43-inch TV, oven, hob, extractor, fridge-freezer, washing machine, dishwasher, microwave, 4 split A/C units and outdoor dining set with 6 sunbeds.",
+  "Structure: concrete C25/30-C30/37 with B500C reinforcement, 25 cm clay masonry external walls with 5 cm external insulation, 8 cm roof insulation.",
+  "Finishes: Lastra 60x120 porcelain tiles (almond white; grey in bathrooms), Italian LUBE kitchen with Laminam-type worktop, Franke sinks, double-glazed aluminium frames, glass balustrades, white marble sills.",
+  "Heating/cooling: ducted A/C on ground floor (VRV), split units in bedrooms, built fireplaces in living room and master bedroom, provision for hydraulic underfloor heating; solar water heater (800 L tank, 150 L cylinder).",
+  "Pool: overflow type, depth 1-1.80 m, tricolour blue glass mosaic, marble coping, two LED lights, underground plant room, outdoor shower.",
+  "Developer-stated distances: sea 50 m (presentation) / 'frontline & 100 m' (docx), Sirens Beach 1.6-1.7 km, Ayia Thekla Beach 2.7-2.8 km, Ayia Napa Marina 3 km, Makronissos Beach 4.5 km, restaurants 500 m, supermarkets 2.2 km, Larnaca Airport 40 km.",
+  "Energy class A."
+ ],
+ "totalUnitsInScheme": 63,
+ "sources": [
+  "IONION SEAFRONT VILLAS DESCRIPTION.docx",
+  "IONION PRESENTATION UNBRANDED LQ.pdf",
+  "IONION LEAFLET.pdf",
+  "IONION H07 PLANS.pdf (sheets: basement & upper floor, ground floor & roof, elevations)",
+  "IONION H07 GENERAL TECHNICAL SPECIFICATIONS.pdf",
+  "IONION H07 MATERIAL SPECIFICATIONS.pdf",
+  "IONION H07 HOUSE HOLD ITEMS.pdf",
+  "IONION GOOGLE MAP.png, IONION AERIAL LAYOUT-DISTANCES.jpg",
+  "Developer website project page (karmadevelopers.com/projects/ionion-villas)"
+ ],
+ "conflicts": [
+  "Bathrooms: price list 5 baths; website '5 Bath + WC'; presentation key facts '4 bathrooms + wc'. Price list wins (5); plan count is not conclusive.",
+  "Pool: docx says 'Private Infinity Pool' and 'Private 7 m x 10 m swimming pool'; price list, website, leaflet and spec say overflow. Used 'overflow'.",
+  "Distance to sea: presentation 50 m; docx/website 'Frontline & 100 m'; website calls H07 a '773 Seafront Plot'. Text says 'seafront plot' without a figure.",
+  "Airport: presentation 40 km; docx/website '30 min'.",
+  "Docx feature list (outdoor solid-wood sauna, BBQ with pergola) is generic for the scheme; not in the H07 specification - not used in our text.",
+  "Household list furnishes 'basement bedroom' (one) + bedrooms 1-3 = 4 furnished bedrooms, while plans and price list show 5 bedrooms.",
+  "Name: website heading 'Ionion Luxury Villas', leaflet/logo 'Ionion seafront villas'; used 'Ionion Seafront Villas'."
+ ],
+ "openQuestions": [
+  "Year of completion of H07 / phase it belongs to.",
+  "Is the outdoor sauna or BBQ/pergola included with H07?",
+  "Exact bathroom count (4 + WC or 5 + WC).",
+  "Any communal fee for the Ionion complex?",
+  "Is the fifth bedroom furnished (household list covers four)?"
+ ]
+}
