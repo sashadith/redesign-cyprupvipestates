@@ -1,0 +1,38 @@
+{
+  "_source": "Written 2026-11-12 from the developer's own Meet Karma and Contact pages on karmadevelopers.com, their master price list (current projects) and the project folders in their SharePoint share. The site gives two different delivery totals (more than 6000 for the group, more than 4000 for Karma Developers itself), so the excerpt says 'several thousand' rather than pick one. Long body (html) and seo are left EMPTY on purpose: the short description is ours, the SEO copy is Alex's (standing split since 2026-10-31). No HE row — Hebrew is only added on explicit request.",
+  "slug": "karma-developers",
+  "accountSlug": "karma",
+  "title": "Karma Developers",
+  "logo": {
+    "_type": "image",
+    "alt": "Karma Developers logo",
+    "asset": { "_type": "reference", "_ref": "image-6210b9da5a6309426ec4592c75566c7acb436c66-548x123-png" }
+  },
+  "logoFile": "uploaded 2026-11-12 (served 200) to the VPS at /var/www/shared-uploads/images/6210b9da5a6309426ec4592c75566c7acb436c66-548x123.png. Cut from the KARMA wordmark in the developer's own '40 years' logo (karmadevelopers.com/wp-content/uploads/2020/01/logo-40-years-plain-1-2048x1571.png): the orange box is removed and the white letters kept on transparent, because both surfaces the logo lands on are dark (the #142E2D signboard on the developer page and the translucent plate on the developers index). The site's own header logo is white-on-orange with no transparency at 300 x 85 px, too small for the signboard.",
+  "languages": {
+    "en": {
+      "titleFull": "Karma Developers – Villas and Apartments for Sale in Protaras and Ayia Napa, Cyprus",
+      "excerpt": "Karma Developers was founded in 1985 in Paralimni and builds along the east coast of Cyprus, in the Famagusta district. Over four decades the company has delivered several thousand homes, and today it belongs to a group that also includes its own construction company and a property management and rentals business. Its current projects range from seafront villas in Ayia Napa and Ayia Thekla, through detached villas with private pools in Pernera, Kapparis, Ayia Triada and Cavo Greco, to apartment complexes in Kapparis, Protaras, Paralimni and Deryneia.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    },
+    "de": {
+      "titleFull": "Karma Developers – Villen und Wohnungen zum Verkauf in Protaras und Ayia Napa, Zypern",
+      "excerpt": "Karma Developers wurde 1985 in Paralimni gegründet und baut an der Ostküste Zyperns im Bezirk Famagusta. In vier Jahrzehnten hat das Unternehmen mehrere Tausend Wohnungen und Häuser übergeben; heute gehört es zu einer Gruppe mit eigener Baufirma sowie einer Firma für Hausverwaltung und Vermietung. Die aktuellen Projekte reichen von Villen direkt am Meer in Ayia Napa und Ayia Thekla über freistehende Villen mit eigenem Pool in Pernera, Kapparis, Ayia Triada und Cavo Greco bis zu Wohnanlagen in Kapparis, Protaras, Paralimni und Deryneia.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    },
+    "pl": {
+      "titleFull": "Karma Developers – wille i apartamenty na sprzedaż w Protaras i Ayia Napa na Cyprze",
+      "excerpt": "Karma Developers powstała w 1985 roku w Paralimni i buduje na wschodnim wybrzeżu Cypru, w dystrykcie Famagusta. W ciągu czterech dekad firma oddała kilka tysięcy domów i mieszkań, a dziś należy do grupy, w skład której wchodzą także własna firma budowlana oraz spółka zajmująca się zarządzaniem nieruchomościami i wynajmem. Obecne inwestycje to wille przy samym morzu w Ayia Napa i Ayia Thekla, wolnostojące wille z prywatnym basenem w Pernerze, Kapparis, Ayia Triada i Cavo Greco oraz osiedla apartamentów w Kapparis, Protaras, Paralimni i Deryneii.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    },
+    "ru": {
+      "titleFull": "Karma Developers — виллы и квартиры на продажу в Протарасе и Айя-Напе, Кипр",
+      "excerpt": "Karma Developers основана в 1985 году в Паралимни и строит на восточном побережье Кипра, в районе Фамагусты. За четыре десятилетия компания сдала несколько тысяч домов и квартир. Сегодня она входит в группу, где есть собственная строительная компания и фирма по управлению недвижимостью и аренде. Текущие проекты — виллы на первой линии в Айя-Напе и Айя-Текле, отдельные виллы с собственным бассейном в Пернере, Каппарисе, Айя-Триаде и Каво-Греко, а также жилые комплексы с квартирами в Каппарисе, Протарасе, Паралимни и Дерини.",
+      "seo": { "metaTitle": "", "metaDescription": "" },
+      "html": ""
+    }
+  }
+}

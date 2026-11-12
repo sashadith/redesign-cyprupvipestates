@@ -1,0 +1,63 @@
+{
+  "slug": "thea-residences-2",
+  "name": "Thea Residences 2",
+  "category": "Apartments",
+  "stage": "Under Construction",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Deryneia",
+  "town": null,
+  "latitude": 35.06482,
+  "longitude": 33.96589,
+  "pinSource": "The developer's own Thea Residences project page (karmadevelopers.com/projects/thea-residences, covering Thea 1 and Thea 2) embeds a Google Maps place marker q=35.06482249169283,33.96589417319512 (a marker, not a camera position). Checked against Esri satellite imagery and the developer's location image ('THEA RESIDENCES GOOGLE LOCATION.jpg' / presentation p.4: corner plot on the west side of the north-south road, south of the municipal amphitheatre at about 145 m): the marker sits on the two-building corner plot (completed Thea 1 plus the Thea 2 building next to it). High confidence for the plot; Thea 2 is the adjacent building on the same corner, within about 20 m.",
+  "amenities": [
+    "Private parking with EV charging provision",
+    "KONE elevator (8 persons, 630 kg)",
+    "Photovoltaic system on the roof for the communal areas",
+    "Solar water heating (800 L tank, 200 L cylinder)",
+    "Videophone entry",
+    "Air-conditioning provisions (split units) in living area and bedrooms",
+    "16 mm laminated glass balustrades",
+    "Water tap on every balcony",
+    "Roof garden for the penthouse maisonette (24.7 m²) and garden for the ground-floor maisonette (56 m²)"
+  ],
+  "facts": [
+    "Thea Residences 2 is the second phase of the Thea Residences complex in Deryneia, Famagusta district, built next to the completed first phase (Thea 1, delivered and sold out) on a corner plot beside the municipal amphitheatre.",
+    "The building has five apartments with two apartments per floor: a ground/first-floor maisonette with a 56 m² garden, three two-bedroom apartments on the first to third floors, and a second/third-floor penthouse maisonette with a 24.7 m² roof garden.",
+    "The two-bedroom, two-bathroom apartments (nos. 2, 3 and 4) have 78 m² of internal area; apartment 3 on the second floor has a 17.1 m² covered veranda, nos. 2 and 4 have 15.8 m².",
+    "Construction is in progress; the price list gives the stage as TILING.",
+    "External walls are 25 cm clay thermal bricks with an external thermal insulation system; windows and sliding doors are dark grey thermally broken aluminium (MU3000/MU2075 series) with double glazing; balustrades are 16 mm laminated glass.",
+    "Kitchens have high-quality laminate units (allowance up to €230/m) with soft-close mechanisms and granite worktops; bathrooms have concealed wall-hung WCs; a choice of three finish palettes (white, beige, grey) is offered.",
+    "The building is served by one KONE lift; a roof photovoltaic system serves the communal areas and each private parking space has an EV charging provision.",
+    "Hot water comes from a roof solar system with an 800-litre tank, 200-litre cylinder and 1.9 m² collectors, with a provision for a hot-water recirculation pump.",
+    "The developer states: park 100 m, amphitheatre 145 m, primary school 200 m, supermarket 460 m, post office 470 m, Ammochostos (Famagusta) General Hospital 500 m, Kapparis Beach 4 km, Malama Beach 4.5 km, Kalamies Beach 7 km, Konnos Beach 13 km, Larnaca Airport 38 km.",
+    "No swimming pool."
+  ],
+  "totalUnitsInScheme": 5,
+  "sources": [
+    "Price list (via orchestrator brief): apartment 3 (second floor), 2 bed / 2 bath, 78 m² + 17.1 m² covered veranda, uncovered parking, no pool, TILING",
+    "THEA RESIDENCES 2 PRESENTATION/THEA 2 RESIDENCES UNBRANDED PRESENTATION.pdf (9 pages)",
+    "PLANS & LAYOUT/THEA 2 PLANS.pdf (rev. 2, 11-02-2025)",
+    "SPECS - MATERIAL - THEA RESIDENCES 2 - FINAL 15.11.2024 (technical specs apartments 2, 3 & 4 and 1 & 5; material info)",
+    "THEA RESIDENCES 2 LOCATION/THEA RESIDENCES GOOGLE LOCATION.jpg",
+    "PICTURES/THEA 1 & 2 EXTERIOR (1)-(8) (renders) and PICTURES/REAL PICTURES FROM THEA 1/.../for Website (photos)",
+    "karmadevelopers.com/projects/thea-residences (status, energy rating A, availability table, map marker)"
+  ],
+  "conflicts": [
+    "Gallery images 9-17 are REAL PHOTOS OF THEA 1 (the earlier, completed phase next door, photo shoot of 21 Feb 2024), clearly labelled 'REAL PICTURES FROM THEA 1' in their file names. They show the finish standard and views of the sister building, not Thea 2 (which is under construction). Images 1-8 are 3D renders of the Thea 1 & 2 complex ('THEA 1 & 2 EXTERIOR'); the hero (EXTERIOR 8) is the Thea 2 building as shown on presentation page 3. The operator may prefer to drop the Thea 1 photos or caption them.",
+    "Parking: the price list says uncovered parking for apartment 3, while the presentation says 'exclusive covered parking spaces' and the website lists 'Covered Private Parking'. Price list wins; parking type is left out of the description text.",
+    "Availability: the developer's website availability table (Thea 2) shows SF03 as SOLD and FF02 as AVAILABLE, while the price list offers apartment 3 (second floor). Price list wins; the website is probably out of date, but worth confirming.",
+    "Floor count: the presentation calls it 'a three-floor building'; the plans show ground floor + three floors + roof (the website says 'a four-floor building' for the complex). Text avoids a floor count.",
+    "Hospital distance: presentation p.4 map says 450 m, p.5 list says 500 m. Text uses 500 m.",
+    "Energy class A comes from the developer's website (Thea Residences page, both phases); the Thea 2 technical specification itself does not state the class.",
+    "We already list a different 'Thea' (another developer, Paphos); this draft is named 'Thea Residences 2' and the text says Deryneia/Famagusta."
+  ],
+  "openQuestions": [
+    "Expected completion date of Thea 2?",
+    "Is apartment 3's parking space covered or uncovered?",
+    "Is apartment 2 (FF02) also still available, as the website shows?",
+    "Can the developer supply interior renders of Thea 2 (the share only has real photos of Thea 1)?",
+    "Confirm energy class A for Thea 2."
+  ]
+}

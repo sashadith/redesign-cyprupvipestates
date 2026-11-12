@@ -1,0 +1,12 @@
+{
+  "slug": "karma",
+  "name": "Karma Developers",
+  "website": "https://karmadevelopers.com",
+  "phone": "+357 23 730 777",
+  "email": "info@karmadevelopers.com.cy",
+  "contactPerson": null,
+  "contactInfo": "Karma Developers, 16 Kennedy Avenue (Kapparis), 5290 Paralimni, Cyprus, P.O. Box 33133. Tel +357 23 730 777 or 80 03 03 03 (free from Cyprus), fax +357 23 730 778, info@karmadevelopers.com.cy. Office hours Mon–Fri 09:00–17:30, Sat 09:00–13:00. Sales advisors listed on their website: Claudia Teslovan (+357 96 212 174, claudia@karmadevelopers.com.cy), Georgia Masia (+357 99 212 374, georgiamasia@karmadevelopers.com.cy), Yiolanda Manoli (+357 96 216 928, yiolanda@karmadevelopers.com.cy).",
+  "developerCloudUrl": null,
+  "manualSyncReminderDays": 30,
+  "notes": "SOURCE OF TRUTH for units and prices: Karma's 'MASTER PRICELIST – CURRENT PROJECTS' PDF, which the operator receives directly (first one 2026-11-12). It lists ONLY units for sale right now — no sold or reserved rows — so every imported unit is 'available' and a project's unit count is its for-sale count. A unit missing from a later list goes 'unlisted' (never 'sold', never deleted). VAT is not included; the list says prices may change without notice.\n\nMEDIA, specs, plans and descriptions: Karma's SharePoint share, one folder per project, grouped LIFESTYLE / RESORT / SEAFRONT. The link is a bearer credential (anonymous 'anyone with the link'), so it lives ONLY in DeveloperAccount.developerCloudUrl, never in this repo. Pass it once via KARMA_CLOUD_URL when running the sync, or set it in the admin. The share has NO price list in it.\n\nSCOPE 2026-11-12: the 12 projects on the master list plus Malama Seafront C. Malama Seafront C has its OWN availability list (separate PDF, 2026-11-12: villa C04) and no folder in the share; its media come from the MALAMA SEAFRONT A folder (earlier phase). NOT imported: ALMARIA D (folder in the share, not on the price list), MALAMA SEAFRONT A (earlier phase, not on any list) and HALKI LUXURY VILLAS (on the website only) — nothing of theirs is for sale per the list.\n\nNAME COLLISIONS: we already carry 'Lyra', 'Lyra B' and 'Thea' from Domenica (Paphos). Karma's are 'Lyra Residences' and 'Thea Residences 2' in Deryneia — give them distinct slugs on publish.\n\nMonthly: get the new master list from Karma, re-transcribe units-<date>.json, rebuild the data file, dry run, then --apply."
+}

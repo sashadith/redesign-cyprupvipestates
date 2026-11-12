@@ -1,0 +1,67 @@
+{
+  "slug": "narine-villas",
+  "name": "Narine Villas",
+  "category": "Villas",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Ayia Triada",
+  "town": null,
+  "latitude": 35.04883,
+  "longitude": 34.02095,
+  "pinSource": "EXIF GPS of the developer's own drone shots in '8. NARINE DRONE PICTURES/1ST FLOOR, 2ND FLOOR, 3RD FLOOR' (DJI_0263-0282, 15 Oct 2025): the drone hovered at one fixed point (35.04883, 34.02095, spread < 1 m) at three heights to show floor-level views, i.e. it was flown from/over the plot. Checked on satellite imagery: the point is a cultivated field edge north of the coastal road in Ayia Triada (north of Protaras/Paralimni), matching the foreground of those photos. Medium-high confidence, accuracy about +/-30 m (the hover point may be at the plot edge rather than its centre). The developer's website also places Narine in Ayia Triada.",
+  "amenities": [
+    "Private skimmer pool per villa (reinforced concrete, mosaic lining, 2 LED lights, 1.40 m deep)",
+    "Outdoor pool shower",
+    "Roof garden (20 m²)",
+    "Covered veranda (28.8 m²)",
+    "Uncovered private parking",
+    "3 kWp photovoltaic system on the roof",
+    "Solar water heating (1,000 L tank, 200 L cylinder)",
+    "Three-phase power supply",
+    "EV charging provision at the private parking space",
+    "Provisions for air conditioning (wall split units) and electric radiators",
+    "CAT6 data cabling in all rooms",
+    "Videophone entry; provision for a remote-controlled vehicle gate",
+    "Provisions for CCTV and a wired alarm system",
+    "Garden irrigation provision and two garden taps",
+    "Provision for an outdoor worktop with water, drainage and power"
+  ],
+  "facts": [
+    "Narine Villas is an off-plan development of detached villas in Ayia Triada, a coastal residential area north of Protaras and Paralimni in the Famagusta district.",
+    "The villas currently offered (H07, plan type Bm, and H08, plan type B) have three bedrooms and four bathrooms, 154.85 m² of internal area, a 28.8 m² covered veranda and a 20 m² roof garden.",
+    "The two villas on the price list stand on plots of 343 m² and 320 m²; each has uncovered parking and its own skimmer pool.",
+    "The specification describes a ground floor and a first floor, with ceramic floor tiles throughout, including the internal staircase.",
+    "Walls are 25 cm thermal bricks with a certified external thermal insulation system; aluminium frames are thermally broken with double glazing, and balcony balustrades are 16 mm laminated safety glass.",
+    "Each villa receives an energy performance certificate; the specification states energy class A.",
+    "A 3 kWp photovoltaic system is installed on the roof, alongside a solar water heater with a 1,000-litre tank, a 200-litre cylinder and a 2.4 m² collector; the supply is three-phase.",
+    "The pool is reinforced concrete, skimmer type, mosaic-lined, 1.40 m deep, with two LED lights, grey ceramic coping and an outdoor shower.",
+    "Electrical provisions include CAT6 and RG6 TV/data points, USB-C sockets by the beds, a videophone, an EV charging point at the parking space, and provisions for CCTV and an alarm.",
+    "Kitchen and wardrobe units are melamine (allowance up to €190/m) with soft-close hinges and large-format porcelain worktops (allowance up to €160/m)."
+  ],
+  "totalUnitsInScheme": null,
+  "sources": [
+    "Price list (via orchestrator brief): H07 (Bm) and H08 (B), 3 bed / 4 bath, 154.85 m² + 28.8 m² covered veranda + 20 m² roof garden, plots 343/320 m², skimmer pool, uncovered parking, OFF PLAN",
+    "4. NARINE VILLAS SPECS & MATERIAL/GENERAL TECHNICAL SPECIFICATIONS  NARINE D GR.pdf (Greek, 5 pages)",
+    "5. NARINE VILLAS AERIAL LAYOUTS & GOOGLE MAP/IMG-20260527-WA0034.jpg (dusk aerial image)",
+    "8. NARINE DRONE PICTURES (1ST/2ND/3RD FLOOR view-height shots and PLOT PHOTOS), EXIF GPS",
+    "karmadevelopers.com: 'The 5% VAT Window Is Closing' post lists 'Narine — Ayia Triada'; WordPress media library (no Narine project page exists)",
+    "Esri World Imagery satellite tiles for pin verification"
+  ],
+  "conflicts": [
+    "NO image of the Narine villas themselves exists in the share: there is no renders folder. The only non-drone image (5. AERIAL LAYOUTS/IMG-20260527-WA0034.jpg, 1600x881) is a dusk aerial view of the neighbourhood with modern villas and pools along the road; it is NOT clear whether these are Narine renders composited into the photo or existing neighbouring houses. It is used as the gallery hero only for lack of anything better; the operator should check it or replace it with a real render.",
+    "All other gallery images are honest plot/setting photos: DJI_0253-0262 ('PLOT PHOTOS') are high-altitude drone shots of the Ayia Triada coastline, fishing shelter and beach around the plot; DJI_0263-0282 ('1ST/2ND/3RD FLOOR') are drone shots taken above the plot at floor heights to show the future views (field in the foreground, sea and neighbouring houses beyond). None of them shows a villa of this project.",
+    "Developer's website (karmadevelopers.com, not downloaded): no Narine project page. The media library holds four Narine images uploaded Sep-Nov 2026: /wp-content/uploads/2026/11/narine.jpg (560x400), /2026/10/karma-5-vat-narine.jpg (1400x640, a branded campaign banner), /2026/09/narine.jpg (324x328), /2026/09/narine-v2.jpg (700x525). All are small (largest 1400 px wide and branded); presumably renders, but they are below or near the 1000 px usable minimum. Ask the developer for the original render files.",
+    "The spec file is named 'NARINE D' while the price-list villas are plan types B and Bm; it is not stated whether the spec applies equally to all plan types.",
+    "The spec is in Greek only and states 'all prices in the description include VAT' (material allowances), while the price list is ex-VAT; this only concerns the allowance figures, not the sale prices."
+  ],
+  "openQuestions": [
+    "Please send the Narine renders (exterior, pool, interiors) in full resolution; the share has none.",
+    "How many villas are in the Narine scheme in total (H01-H08 or more)?",
+    "Expected completion date / construction start?",
+    "Exact plot location or cadastral reference to confirm the pin.",
+    "Does the 'NARINE D' specification apply to plan types B and Bm (H07, H08)?",
+    "Is the image IMG-20260527-WA0034 a visualisation of Narine? If so, which houses are Narine?"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "slug": "olivia-residences",
+  "name": "Olivia Residences",
+  "category": "Villas",
+  "stage": "Under Construction",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Pernera",
+  "town": null,
+  "latitude": 35.02494,
+  "longitude": 34.03773,
+  "pinSource": "Developer's own project page (karmadevelopers.com/projects/olivia) embeds a Google Maps place marker q=35.02493658473738,34.03772657939273 (a marker, not a camera position). Checked against OSM: ~0.7 km from Marlita Beach (developer says 700-780 m), consistent with the developer's Google-map screenshot (site inland of Pernera/Polyxenia/Marlita beaches). High confidence.",
+  "amenities": [
+    "Private skimmer swimming pool (8 x 3 m, 1.40 m deep, glass mosaic, 2 LED lights, stainless-steel ladder) for every villa",
+    "Gated community",
+    "Uncovered private parking (per price list)",
+    "Photovoltaic system on the roof (per energy-performance requirements)",
+    "Provision for EV charging point at private parking",
+    "Solar water heating (2.4 m² collector, 200 L cylinder, 1,000 L tank)",
+    "Air-conditioning provision (split units) in living area and all bedrooms",
+    "Provision for electric radiators in living area, bedrooms and bathrooms",
+    "CAT6 data cabling provision in all rooms",
+    "Provision for alarm system and CCTV",
+    "External pool shower and outdoor BBQ workbench provision",
+    "Provision for underground garden irrigation",
+    "Glass balustrade on the internal staircase",
+    "Double-glazed thermal aluminium windows; HPL-clad entrance door"
+  ],
+  "facts": [
+    "Olivia Residences is a gated scheme of 13 villas in Pernera, in the northern part of Protaras, Famagusta district; the scheme mixes detached three-bedroom villas and semi-detached two-bedroom villas.",
+    "The scheme is under construction; the price list gives the villa on sale (H11) at the tiling stage.",
+    "The Type A detached villa has three bedrooms, 136.65 m² of internal area (65.15 m² ground floor, 71.50 m² first floor) and 20.35 m² of covered verandas; H11 sits on a 272 m² plot.",
+    "Plots across the scheme range from about 193 m² to 353 m².",
+    "Each villa has its own 8 x 3 m skimmer pool, 1.40 m deep, with glass mosaic finish, in a walled garden with terrace.",
+    "The developer states Marlita Beach is about 700 m away (780 m on the aerial), Polyxenia Beach 800 m, Pernera Beach 850 m, restaurants and shops 300 m, supermarkets 500 m, Protaras centre 1.4 km, the marina 2.5 km and Larnaca airport 45 km.",
+    "Interiors have large-format porcelain tiles (Rodano dark grey 60x120), porcelain-slab kitchen worktops, soft-close laminate kitchen units and wall-hung WCs.",
+    "Specification includes a photovoltaic system, EV-charging provision, CAT6 cabling, air-conditioning provision in all rooms and an A energy performance certificate."
+  ],
+  "totalUnitsInScheme": 13,
+  "sources": [
+    "LIFESTYLE/OLIVIA RESIDENCES/6 .../OLIVIA PRESENTATION UNBRANDED.pdf (distances p.3, key facts p.4, layout p.7, villa overviews pp.8-14)",
+    "LIFESTYLE/OLIVIA RESIDENCES/7 .../OLIVIA RESIDENCES DESCRIPTION.docx",
+    "LIFESTYLE/OLIVIA RESIDENCES/4 .../OLIVIA GENERAL TECHNICAL SPECIFICATIONS.pdf and OLIVIA MATERIAL SPECIFICATIONS.pdf",
+    "LIFESTYLE/OLIVIA RESIDENCES/3 .../OLIVIA TYPE A PLANS H11.pdf, OLIVIA H11 INDIVIDUAL LAYOUT.pdf, OLIVIA ARCHITECTURAL LAYOUT.pdf (13 houses, plot sizes, pool 8x3 m)",
+    "LIFESTYLE/OLIVIA RESIDENCES/5 .../OLIVIA RESIDENCES GOOGLE MAP.jpg and OLIVIA RESIDNECES AERIAL WITH DISTANCES.jpg",
+    "karmadevelopers.com/projects/olivia/ (map marker, status, availability table)",
+    "Price list (orchestrator brief) for unit/areas/plot/stage"
+  ],
+  "conflicts": [
+    "Description docx says 'Status: Off-plan'; website says 'Under Construction' (timeline photos May 2022, July 2025, September 2025); price list says TILING. Price list used (Under Construction).",
+    "Bathrooms: price list says 3 baths for H11; presentation describes the Type A villa as '2 full bathrooms + WC' (same three rooms, counted differently).",
+    "Airport distance: description docx says 50 km (and 'a short 45-minute drive'); presentation says Larnaca airport 45 km.",
+    "Nearest beach: description/website say Marlita Beach 700 m; the aerial-with-distances image says Marlita 780 m.",
+    "Website units field says '13 Under Study' and names villas A01-A13; plans name them H01-H13. Website lists A11 (= H11, 157 m² buildable incl. verandas, 272 m² plot) as AVAILABLE, matching the price list.",
+    "No interior images exist for Olivia in the share (no interior folder; presentation has none either), so the gallery is exterior-only."
+  ],
+  "openQuestions": [
+    "Expected completion / delivery quarter.",
+    "Photovoltaic system size in kWp.",
+    "Are there interior renders or real construction photos the developer can share?"
+  ]
+}

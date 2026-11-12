@@ -1,0 +1,60 @@
+{
+  "slug": "fig-tree-residences",
+  "name": "Fig Tree Residences",
+  "category": "Apartments",
+  "stage": "Off Plan",
+  "completion": null,
+  "energy": "A",
+  "district": "Famagusta",
+  "area": "Protaras",
+  "town": null,
+  "latitude": 35.00931,
+  "longitude": 34.05911,
+  "pinSource": "Developer's own project page (karmadevelopers.com/projects/fig-tree-residences) embeds a Google Maps place marker q=35.00931,34.05911 (a marker, not a camera position). Consistent with the developer's Google-map screenshot (site just south of Fig Tree Bay, 150 m from King Jason Hotel) and with OSM: Capo Bay Hotel is ~0.4 km away (developer: 350 m). High confidence to within ~100 m.",
+  "amenities": [
+    "Communal swimming pool",
+    "Landscaped gardens with irrigation",
+    "Private parking with EV charging provision",
+    "Storage rooms",
+    "Elevator in each building",
+    "KNX smart-home automation (lighting, shading, HVAC, blinds)",
+    "VRF air-conditioning system",
+    "Videophone entry, CCTV and fire detection in common areas",
+    "Photovoltaic system for communal needs"
+  ],
+  "facts": [
+    "Fig Tree Residences is an off-plan apartment scheme in Protaras, Famagusta district, about 250 m from the Blue Flag Fig Tree Bay beach.",
+    "The scheme has two apartment buildings (Block A and Block B) around a communal swimming pool, plus two detached villas with private pools.",
+    "Block B, where the apartments for sale are, has parking and storage on the ground floor, three two-bedroom apartments on each of the first and second floors and two three-bedroom apartments on the top floor.",
+    "The two-bedroom apartments have two bathrooms, about 78 m² of internal space and a covered veranda of about 21 m².",
+    "Every apartment has an A-class Energy Performance Certificate; external walls are 250 mm thermal clay brick with an external thermal insulation system, and windows are thermal aluminium frames with double glazing.",
+    "Each apartment comes with a KNX smart-automation system controlling lighting, blinds, hot water and a VRF air-conditioning system, plus sound-system provision in the living room and bedrooms.",
+    "Kitchens and vanities have large-format porcelain-slab worktops and soft-close cupboards; bathrooms use imported sanitary ware with walk-in showers and channel drains, with a choice of three finish palettes.",
+    "Common areas have CCTV, fire detection, videophone entry, landscaped planting and a photovoltaic system; each parking space has an EV-charging provision.",
+    "The developer states distances of 250 m to Fig Tree Bay beach, 50 m to a supermarket, 100 m to restaurants and shops, 1.2 km to a private hospital and 45 km to Larnaca Airport."
+  ],
+  "totalUnitsInScheme": null,
+  "sources": [
+    "LIFESTYLE/FIG TREE RESIDENCES/4. FIG TREE SPECS & MATERIAL/FIG TREE RESIDENCES GENERAL TECHNICAL SPECIFICATIONS.pdf",
+    "LIFESTYLE/FIG TREE RESIDENCES/4. FIG TREE SPECS & MATERIAL/FIG TREE RESIDENCES MATERIAL SPECIFICATIONS.pdf",
+    "6. .../BLOCK B/FIG TREE PRESENTATION BLOCK B UNBRANDED LR.pdf (21 pp.: p.3 text, p.5 distances, p.6 location, p.7 key facts, pp.9-14 Block B site + floor plans, p.15 Block A/B render)",
+    "6. .../BLOCK A/FIG TREE PRESENTATION  BLOCK A INVESTORS.pdf (30 pp.: Block A site + floor plans pp.14-19, rental projection p.27, 'why Fig Tree' p.28)",
+    "5. FIG TREE AERIAL LAYOUTS & GOOGLE MAP (Google map + aerial images)",
+    "8. FIG TREE DRONE PICTURES folder structure (BLOCK A / BLOCK B / villa 1 / location)",
+    "karmadevelopers.com/projects/fig-tree-residences (details, availability table, map marker)"
+  ],
+  "conflicts": [
+    "Scheme composition / unit count: the website says '10 units, Apartments & Villas, 2 & 3 bedrooms, 80-120 m²' and its availability table lists Block B (B101-B103, B201-B203, B301-B302) plus Villa H1 and H2 (4-bed, 185-192 m² buildable, both RESERVED). That 10 excludes Block A, which the Block A 'investors' presentation shows as a separate 3-floor building with 4 apartments per floor (12 apartments counted from plans, not stated in text) on adjoining plots 335/336 with the communal pool. Block B + villas sit on plot 337. totalUnitsInScheme left null.",
+    "Website headline '2 & 3 bedrooms, 80-120 m²' contradicts its own table (villas are 4-bed, 185-192 m²; Block B 3-beds 138-149 m² buildable).",
+    "Protaras Centre is 800 m on the presentation's distances page but 400 m on the presentation's aerial location image.",
+    "Presentation distances page says 'Larnaca Marina 3.7 km', which is clearly wrong (probably Paralimni Marina).",
+    "Block A investors deck mentions a gym; no other document (specs, Block B deck, website) does, so it was not used.",
+    "No interior images exist in the share (no '2. interior' folder); the gallery is exteriors/aerials only. One render (PICTURE (5)) carries a large developer logo on the façade and was excluded."
+  ],
+  "openQuestions": [
+    "How many units does the whole scheme have (Block A + Block B + 2 villas)? Is Block A sold/offered separately to investors?",
+    "Expected completion / delivery date (no document states one).",
+    "Is the communal pool shared by Block A and Block B, and do the villas have private pools (renders show them)?",
+    "Does the gym mentioned in the Block A investors deck exist in the final scheme?"
+  ]
+}

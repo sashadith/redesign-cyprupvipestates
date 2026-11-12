@@ -1,0 +1,69 @@
+{
+ "slug": "alaya-eco-friendly-villas",
+ "name": "Alaya Eco Villas",
+ "category": "Villas",
+ "stage": "Off Plan",
+ "completion": null,
+ "energy": "A",
+ "district": "Famagusta",
+ "area": "Cavo Greco",
+ "town": null,
+ "latitude": 34.990059,
+ "longitude": 34.067717,
+ "pinSource": "Developer website project page (karmadevelopers.com/projects/alaya-eco-villas) embeds a Google Maps PLACE pin q=34.990059255170166,34.067716892960036. Cross-checked: ~650 m north of Konnos Bay (OSM 34.9842, 34.0670), matching the developer's Google Map screenshot (Konnos Beach 600 m, west of the Protaras-Cavo Greco avenue); cadastral layout is on the Paralimni sheet. High confidence.",
+ "amenities": [
+  "Private overflow pool (1.40 m deep, built-in steps, 2 lights)",
+  "Outdoor shower",
+  "Covered parking",
+  "Gated entrance with video intercom and automatic gate",
+  "Photovoltaic panels",
+  "Automation system for lighting, A/C and blinds",
+  "Alarm system",
+  "Concealed ducted A/C on ground floor, VRV wall units in bedrooms",
+  "Solar lighting at parking and entrance",
+  "Aluminium double glazing",
+  "Fitted wardrobes",
+  "Mediterranean planting in communal areas",
+  "Walking alley"
+ ],
+ "facts": [
+  "Alaya is a scheme of five detached villas (H01-H05) next to Cape Greco National Park, overlooking Konnos Bay, between Protaras and Ayia Napa.",
+  "Villas have 4 or 5 bedrooms; plots range from 395 to 803 m² across the scheme (website availability list).",
+  "Villa H05: ground floor 60.60 m² (living, dining, kitchen), first floor 108 m² (four bedrooms), covered verandas 52.70 m² + 4.40 m², i.e. 168.6 m² internal and 225.7 m² total, on a 452 m² plot.",
+  "Structure: raft foundation, steel columns and beams with composite metal-deck concrete slabs; internal and external walls and ceilings of gypsum board filled with mineral wool.",
+  "A-class Energy Performance Certificate with a roof photovoltaic system.",
+  "Overflow pool 1.40 m deep with built-in steps and two lights; external free-standing shower.",
+  "Finishes: ceramic tiles throughout, Ceppo Romano porcelain countertops and vanity tops, Cashmere-colour carpentry, anthracite external walls and boundary walls, RAL 7006 aluminium frames.",
+  "No concrete boundary walls; communal management fee capped at EUR 1,200 per year (spec).",
+  "Developer-stated distances: Konnos Beach 600 m, nearest beach/swimming spot 500 m, Green Bay 1 km, Fig Tree Bay 2.5 km, Cyclops Cave 800 m, Protaras centre 3 km, Protaras Marina 6 km, supermarket 100-130 m, Larnaca Airport 42-45 km.",
+  "Website construction timeline: 'Construction Starts 2025'."
+ ],
+ "totalUnitsInScheme": 5,
+ "sources": [
+  "ALAYA ECO FRIENDLY VILLAS DESCRIPTION.docx",
+  "ALAYA UNBRANDED PRESENTATION.pdf",
+  "ALAYA ECO FRIENDLY VILLAS PLANS H05.pdf",
+  "ALAYA ECO FRIENDLY VILLAS PLANS H01.pdf",
+  "ALAYA ECO FRIENDLY VILLAS H3-H5 TECHNICAL SPECIFICATION.pdf",
+  "ALAYA ECO FRIENDLY VILLAS MATERIAL SPECIFICATIONS.pdf",
+  "ALAYA ECO FRIENDLY VILLAS GOOGLE MAP.jpg, ALAYA LAYOUT.jpeg",
+  "Drone folder 'ALAYA ECO FRIENDLY VILLA 5 VIEWS/9m' (view-from-plot photos)",
+  "Developer website project page (karmadevelopers.com/projects/alaya-eco-villas)"
+ ],
+ "conflicts": [
+  "Covered area: docx 'Covered Area 194 m²' (generic); presentation 169-194.95 m²; website 168.60-194 m²; H05 price list internal 168.6 m² (matches plan 60.60 + 108). Price list wins.",
+  "Pool type: website 'Private Infinity Swimming Pool'; price list and technical spec 'overflow'. Used 'overflow'.",
+  "Distances: nearest beach 500 m (presentation) vs Konnos Beach 600 m; supermarket 100 m (presentation) vs 130 m (website/map); airport 45 km (presentation) vs 42 km (website).",
+  "Location naming: brief/price list folder says Cavo Greco; website lists the project under 'Protaras'; cadastral sheet is Paralimni; presentation cover 'Cavo Greko - Protaras'.",
+  "Name: SharePoint folder 'Alaya Eco Friendly Villas', website 'Alaya Eco Villas', docx 'ALAYA EO FRIENDLY VILLAS' (typo). Used website name.",
+  "Gallery: all exterior/interior images are renders; two real photos used are from the drone folder 'VILLA 5 VIEWS/9m' (view from the H05 plot at 9 m height), labelled as such in the file path.",
+  "Website shows a '5% VAT eligible' banner - not used (prices/VAT not in description)."
+ ],
+ "openQuestions": [
+  "Construction start date and expected completion (quarter) for H05.",
+  "Has construction actually started (website says 'Construction Starts 2025', price list says OFF PLAN)?",
+  "Pool dimensions for H05.",
+  "Is H05's covered parking a carport (plan does not show a garage)?",
+  "Annual communal fee confirmation (spec caps at EUR 1,200)."
+ ]
+}
