@@ -828,7 +828,9 @@
    900px. Typography follows the article pages: display face for headings, light body, champagne
    links. Server-rendered by ProjectsSeoText. */
 .px__seo { padding-bottom: clamp(56px, 7vw, 104px); }
-.px__seo-inner { border-top: 1px solid var(--hairline); padding-top: clamp(40px, 5vw, 76px); }
+.px__seo-inner { padding-top: 0; }
+/* The popup button replaces the former hairline above the text (2026-11-12). */
+.px__seo-cta { display: flex; justify-content: center; margin-bottom: clamp(36px, 4.4vw, 64px); }
 .px__seo-head { max-width: 980px; margin-bottom: clamp(28px, 3.4vw, 48px); }
 .px__seo-head .px__h1 { font-size: clamp(1.8rem, 1.35rem + 1.9vw, 2.9rem); line-height: 1.1; letter-spacing: -0.02em; }
 .px__seo-lead { margin: clamp(16px, 2vw, 26px) 0 0; font-family: var(--font-body), sans-serif; font-size: clamp(1.06rem, 1rem + 0.35vw, 1.22rem); font-weight: 300; line-height: 1.7; color: var(--text-soft); max-width: 72ch; }

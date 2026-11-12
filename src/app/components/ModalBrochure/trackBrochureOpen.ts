@@ -16,7 +16,7 @@
  */
 import { newMetaEventId } from "@/lib/metaEventId";
 
-export type BrochureSource = "header" | "hero" | "brochure_block";
+export type BrochureSource = "header" | "hero" | "brochure_block" | "projects_text";
 
 export function trackBrochureOpen(source: BrochureSource): void {
   if (typeof window === "undefined") return;

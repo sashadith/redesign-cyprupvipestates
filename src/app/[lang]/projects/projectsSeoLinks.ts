@@ -2,7 +2,7 @@
 // Paths are the FINAL addresses of the target pages (resolved on 2026-11-12, after redirects:
 // guides live under /ratgeber and /poradniki in de and pl, landing pages can sit under a parent
 // landing page), so a click never goes through a redirect. The key names are shared by all
-// languages; a language without a key (de has no new-homes, beachfront, investment: those
+// languages; a language without a key (he has its own, smaller key set: see its block; de has no new-homes, beachfront, investment: those
 // landing pages are archived there) simply never uses it.
 
 const LINKS: Record<string, Record<string, string>> = {
@@ -134,6 +134,25 @@ const LINKS: Record<string, Record<string, string>> = {
     "beachfront": "/ru/nedvizhimost-u-plyazha-kipr",
     "investment": "/ru/investicionnaya-nedvizhimost-na-kipre",
     "residency": "/ru/blog/kak-poluchit-pmzh-na-kipre-polnoe-rukovodstvo",
+  },
+  he: {
+    "how-to-buy": "/he/buying-property-in-cyprus",
+    "prices": "/he/property-prices-cyprus",
+    "residency": "/he/permanent-residency-cyprus",
+    "tax": "/he/property-tax-cyprus",
+    "apartments": "/he/apartments-for-sale-cyprus",
+    "villas": "/he/villas-cyprus",
+    "houses": "/he/houses-for-sale-cyprus",
+    "limassol": "/he/limassol",
+    "paphos": "/he/paphos",
+    "hub": "/he/real-estate-cyprus",
+    "investment": "/he/property-investment-cyprus",
+    "seafront": "/he/seafront-villas-cyprus",
+    "relocation": "/he/relocation-cyprus",
+    "larnaca-guide": "/he/blog/larnaca-property-guide-areas-and-prices",
+    "company": "/he/blog/buying-property-in-cyprus-through-a-company",
+    "germasogeia": "/he/blog/germasogeia-limassol-property-guide",
+    "land": "/he/blog/buying-land-and-building-a-villa-in-cyprus",
   },
 };
 
