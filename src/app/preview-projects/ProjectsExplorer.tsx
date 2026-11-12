@@ -370,8 +370,9 @@ export default function ProjectsExplorer({
       <section className="px__results wrap" aria-label="Project results">
         <div className="px__results-head">
           <div className="px__results-title">
-            {/* The page's only <h1>. Visible on purpose; a visually hidden heading is not an option. */}
-            {s.h1 && <h1 className="px__h1">{s.h1}</h1>}
+            {/* The page's only <h1> no longer sits here: since 2026-11-12 it opens the text block under the
+                pagination (ProjectsSeoText, rendered by [lang]/projects/page.tsx), so the filters, the sort
+                and the cards are not split by a heading. */}
             <p className="px__count">
               <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
               {hasBbox && <span className="px__count-area"> {s.inThisMapArea}</span>}
