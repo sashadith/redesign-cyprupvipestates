@@ -101,9 +101,16 @@ const jarToHeader = (jar: Map<string, string>) => Array.from(jar.entries()).map(
 // 429 (and occasionally 503) plus a Retry-After. Same 3-attempt, honor-the-header
 // policy dropbox.ts uses, and for the same reason: this is a background job, so a
 // slower success beats a fast failure.
+//
+// Every caller below passes `cache: "no-store"` and must: Next.js patches the
+// global fetch, and a GET or HEAD with no cache mode inside a GET-only route
+// handler is stored for a year (revalidate `false`) in .next/cache, which
+// deploy-prod.sh copies forward between releases. A cached listing or download
+// would freeze a developer's availability indefinitely. Defaulted here rather
+// than left to each caller, so a new one cannot quietly omit it (2026-11-11).
 async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, init);
+    const res = await fetch(url, { ...init, cache: init.cache ?? "no-store" });
     if ((res.status !== 429 && res.status !== 503) || attempt >= 2) return res;
     const retryAfter = Number(res.headers.get("Retry-After"));
     const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * (attempt + 1);

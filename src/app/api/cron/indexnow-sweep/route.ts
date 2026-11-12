@@ -46,7 +46,14 @@ function authorized(req: NextRequest): boolean {
 
 async function returns200(url: string): Promise<boolean> {
   try {
-    const res = await fetch(url, { method: "HEAD", redirect: "manual", signal: AbortSignal.timeout(HEAD_TIMEOUT_MS) });
+    // HEAD is cacheable to Next, not just GET (patch-fetch allows both), and
+    // this route exports GET alone, so a 200 would be stored with revalidate
+    // `false` — a year, carried across deploys in .next/cache. The check would
+    // then stop running: a URL that answered 200 once keeps answering 200 from
+    // the cache, so a page later unpublished or redirected is still submitted
+    // to IndexNow and the gate below becomes decorative. (Non-200 answers are
+    // not stored, so the cache can only ever make this too optimistic.)
+    const res = await fetch(url, { method: "HEAD", redirect: "manual", cache: "no-store", signal: AbortSignal.timeout(HEAD_TIMEOUT_MS) });
     return res.status === 200;
   } catch {
     return false;

@@ -46,8 +46,18 @@ export type AggProject = {
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
 
+// `cache: "no-store"` on every request in this file is load-bearing, not tidiness
+// (2026-11-11): Next.js patches the global fetch, and a GET or HEAD that names no
+// cache mode inside a GET-only route handler is stored in .next/cache/fetch-cache
+// with revalidate `false` — one year. `export const dynamic = "force-dynamic"`
+// does NOT prevent it (it only sets forceDynamic; a route exporting POST/PUT/etc.
+// would get revalidate 0, and these cron routes export GET alone), and
+// deploy-prod.sh copies .next/cache forward between releases, so a stale answer
+// outlives every deploy. agg-sync is a GET-only cron route: without this, the
+// project list, the taxonomies and the gallery would be whatever agcyprus.com
+// said the first time and would never be read again.
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
+  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" }, cache: "no-store" });
   if (!res.ok) throw new Error(`AGG REST ${res.status} for ${url}`);
   return (await res.json()) as T;
 }
@@ -264,7 +274,12 @@ export type AggPricelistDownload = { buffer: Buffer; filename: string };
  */
 export async function downloadAggPricelist(ref: ShareOneDriveRef, file: DiscoveredPricelist): Promise<AggPricelistDownload> {
   const p = new URLSearchParams({ action: "shareonedrive-download", id: file.id, account_id: ref.account_id, drive_id: ref.drive_id, listtoken: ref.listtoken });
-  const res = await fetch(`${ref.base}?${p.toString()}`, { headers: { "User-Agent": UA } });
+  // no-store (see getJson): the price list IS the prices and the unit list. A
+  // cached copy would freeze both for a year — and so would a cached failure,
+  // because a rotated listtoken answers 200 with an HTML viewer page, which is
+  // exactly what Next stores. The "refresh driveFolderUrl" error below would
+  // then keep throwing after the URL had been refreshed.
+  const res = await fetch(`${ref.base}?${p.toString()}`, { headers: { "User-Agent": UA }, cache: "no-store" });
   if (!res.ok) throw new Error(`AGG price-list download ${res.status}`);
   const ct = res.headers.get("content-type") || "";
   const buffer = Buffer.from(await res.arrayBuffer());
