@@ -37,6 +37,8 @@ import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import Form from "@/app/preview-home/sections/Form";
 
 import ProjectsExplorer, { type ProjectCardData, type MapMarker } from "@/app/preview-projects/ProjectsExplorer";
+import ProjectsSeoText from "@/app/preview-projects/ProjectsSeoText";
+import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { resolveCompletionYear } from "@/lib/text";
 
 // Filters change per request (URL-driven) — always render fresh, like the preview.
@@ -220,6 +222,8 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           filters={filters}
           locale={lang}
         />
+        {/* H1 + reading text, under the cards and the pagination (moved here 2026-11-12) */}
+        <ProjectsSeoText lang={lang} h1={projectsStrings(lang).h1} />
         {/* Lead form (CRM) — redesign form, preserving production lead capture */}
         <Form lang={lang} />
       </main>

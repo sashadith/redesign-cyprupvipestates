@@ -821,3 +821,28 @@
   .px-poi { inset-inline: 8px; bottom: 10px; max-width: none; gap: 6px; padding: 8px; }
   .px-poi__lead { width: 100%; }
 }
+
+/* ---------------- H1 + READING TEXT under the results (2026-11-12) ----------------
+   The page's H1 moved here from between the filters and the cards; ~1,700 words follow in two
+   newspaper columns (the same two-column reading used on the developer pages), one column below
+   900px. Typography follows the article pages: display face for headings, light body, champagne
+   links. Server-rendered by ProjectsSeoText. */
+.px__seo { padding-bottom: clamp(56px, 7vw, 104px); }
+.px__seo-inner { padding-top: 0; }
+/* The popup button replaces the former hairline above the text (2026-11-12). */
+.px__seo-cta { display: flex; justify-content: center; margin-bottom: clamp(36px, 4.4vw, 64px); }
+.px__seo-head { max-width: 980px; margin-bottom: clamp(28px, 3.4vw, 48px); }
+.px__seo-head .px__h1 { font-size: clamp(1.8rem, 1.35rem + 1.9vw, 2.9rem); line-height: 1.1; letter-spacing: -0.02em; }
+.px__seo-lead { margin: clamp(16px, 2vw, 26px) 0 0; font-family: var(--font-body), sans-serif; font-size: clamp(1.06rem, 1rem + 0.35vw, 1.22rem); font-weight: 300; line-height: 1.7; color: var(--text-soft); max-width: 72ch; }
+.px__seo-cols { column-count: 2; column-gap: clamp(36px, 5vw, 80px); column-rule: 1px solid var(--hairline); max-width: 1360px; }
+.px__seo-cols h2 { margin: clamp(30px, 3.2vw, 46px) 0 14px; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, Georgia), Georgia, serif; font-weight: 400; font-size: clamp(1.35rem, 1.12rem + 0.9vw, 1.8rem); line-height: 1.18; letter-spacing: -0.015em; color: var(--ivory); text-wrap: balance; break-after: avoid; break-inside: avoid; }
+.px__seo-cols > :first-child { margin-top: 0; }
+.px__seo-cols h3 { margin: 22px 0 8px; font-family: var(--font-body), sans-serif; font-size: 1.02rem; font-weight: 600; line-height: 1.35; color: var(--ivory); break-after: avoid; break-inside: avoid; }
+.px__seo-cols p, .px__seo-cols li { font-family: var(--font-body), sans-serif; font-size: clamp(0.98rem, 0.94rem + 0.2vw, 1.06rem); font-weight: 300; line-height: 1.74; color: var(--text); }
+.px__seo-cols p { margin: 0 0 14px; }
+.px__seo-cols ul { margin: 0 0 16px; padding-inline-start: 1.25em; break-inside: avoid; }
+.px__seo-cols li { margin-bottom: 6px; }
+.px__seo-cols li::marker { color: var(--accent); }
+.px__seo a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 3px; transition: text-decoration-color var(--dur-sm) var(--ease); }
+.px__seo a:hover { text-decoration-color: var(--accent); }
+@media (max-width: 900px) { .px__seo-cols { column-count: 1; column-rule: 0; } }
