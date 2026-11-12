@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { areSeoAlertsEnabled } from "@/lib/toolSwitches";
 import { logCronRun } from "@/lib/cronLog";
 import { loadSweepEntries, type SweepEntry } from "./titleSweepLog";
 import { buildCanonicalMap, canonicalize } from "./urlCanonical";
@@ -635,6 +636,9 @@ export function titleSweepTelegramText(comparison: SweepComparison, siteUrl: str
 // indefinitely once due, matching the "items are live conditions"
 // architecture (see actionCenter/types.ts).
 export async function maybeSendTitleSweepTelegram(): Promise<{ sent: number }> {
+  // SEO alerts switched off (both SEO Advisor and Page Power off): no push.
+  // Nothing is marked sent, so a due batch still notifies once they're back on.
+  if (!(await areSeoAlertsEnabled())) return { sent: 0 };
   const comparisons = await computeTitleSweepComparison();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   let sent = 0;

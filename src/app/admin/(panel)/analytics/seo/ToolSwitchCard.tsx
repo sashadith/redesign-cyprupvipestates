@@ -3,8 +3,8 @@ import { TOOL_LABEL, type ToolKey, type ToolSwitchState } from "@/lib/toolSwitch
 import ToolSwitchToggle from "./ToolSwitchToggle";
 
 const OFF_EFFECT: Record<ToolKey, string> = {
-  seo_advisor: "When off: the Sunday run is skipped (no Claude call), no advisor summary in the Telegram digest, no advisor items in the Action Center.",
-  page_power: "When off: nothing is computed here, no Page Power items in the Action Center, and the SEO Advisor gets no Page Power data.",
+  seo_advisor: "When off: the Sunday run is skipped (no Claude call), no advisor summary in the Telegram digest, no advisor items in the Action Center. With Page Power also off, the Action Center, email and Telegram digest show no SEO alerts at all.",
+  page_power: "When off: nothing is computed here, no Page Power items in the Action Center, and the SEO Advisor gets no Page Power data. With SEO Advisor also off, the Action Center, email and Telegram digest show no SEO alerts at all.",
 };
 
 /** The on/off card at the top of the SEO Advisor and Page Power screens. The

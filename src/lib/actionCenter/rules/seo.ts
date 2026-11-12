@@ -3,6 +3,7 @@ import type { ActionItem } from "../types";
 import { computeTitleSweepComparison, sweepVerdictLine } from "@/lib/seo/titleSweepRemeasure";
 import { getCtrWatchlist, getWeekOverWeekMovers, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
 import { getStaleCopyFigures, groupStaleFigures } from "@/lib/seo/staleCopyFigures";
+import { areSeoAlertsEnabled } from "@/lib/toolSwitches";
 
 const DAY = 86_400_000;
 const RANK_DROP_MIN_IMPRESSIONS = 100;
@@ -252,7 +253,11 @@ async function staleCopyFigures(): Promise<ActionItem[]> {
   return groups.map((g) => ({
     id: `seo-stale-figure:${g.developmentId}:${g.kind}:${g.value}`,
     severity: g.kind === "price" ? "URGENT" : "ACTION",
-    category: "SEO",
+    // Under Developers, not SEO, since 2026-11-12: a wrong price in published
+    // copy is a content error a buyer acts on, and it has to stay visible when
+    // the SEO alerts are switched off (see areSeoAlertsEnabled). The id keeps
+    // its old prefix so existing snoozes still apply.
+    category: "DEVELOPERS",
     title: g.kind === "price"
       ? `${g.publicName} — published copy names ${g.said}, the page shows ${g.live}`
       : `${g.publicName} — published copy says "${g.said}", live is ${g.live}`,
@@ -263,6 +268,9 @@ async function staleCopyFigures(): Promise<ActionItem[]> {
 }
 
 export async function seoRules(): Promise<ActionItem[]> {
+  // SEO Advisor and Page Power both switched off: no SEO alerts at all, only
+  // the stale-figure check, which is a content error (see staleCopyFigures).
+  if (!(await areSeoAlertsEnabled())) return staleCopyFigures();
   const [a, b, c, d, e, f] = await Promise.all([ctrOutliers(), rankingDrops(), newPagesIndexed(), titleSweepDue(), cwvDegraded(), staleCopyFigures()]);
   return [...a, ...b, ...c, ...d, ...e, ...f];
 }

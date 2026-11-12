@@ -34,3 +34,19 @@ export async function getToolSwitch(key: ToolKey): Promise<ToolSwitchState> {
 export async function isToolEnabled(key: ToolKey): Promise<boolean> {
   return (await getToolSwitch(key)).enabled;
 }
+
+// The general SEO alerts (ranking drops, low CTR, newly indexed pages,
+// title-sweep re-measurement, Core Web Vitals) have no switch of their own.
+// Until 2026-11-12 they ran regardless, so with both tools switched off the
+// operator still saw an SEO section in the Action Center, the daily email and
+// Telegram. They now run while at least one of the two tools is on; with both
+// off, SEO is quiet. Stale figures in published copy (a wrong price or unit
+// count) are not affected: they are a content error, shown under Developers.
+export function seoAlertsOn(advisorOn: boolean, pagePowerOn: boolean): boolean {
+  return advisorOn || pagePowerOn;
+}
+
+export async function areSeoAlertsEnabled(): Promise<boolean> {
+  const [advisor, pagePower] = await Promise.all([isToolEnabled("seo_advisor"), isToolEnabled("page_power")]);
+  return seoAlertsOn(advisor, pagePower);
+}
