@@ -1666,6 +1666,14 @@ model Development {
   // archival history — it's simply overwritten on the next return event.
   returnedToMarketAt DateTime?
 
+  // archivedMissingFromFeedAt (2026-11-13): set when a FEED project is archived
+  // because it vanished from its developer's feed as a whole (BBF sold
+  // Golfside/Salt/Golf Valley to one investor). The sync republishes such a row
+  // by itself when the feed lists it again with an available unit, and clears
+  // the marker (src/lib/feedRepublish.ts). Any status change from the admin
+  // also clears it, so an operator's own archive is never undone by a feed.
+  archivedMissingFromFeedAt DateTime?
+
   // imageDriftDetectedAt / newFromFeed (2026-08-08, content-check added
   // same day after discovering several feed vendors reissue URLs for
   // unchanged images — see VerifiedDuplicateImage): once a Development is

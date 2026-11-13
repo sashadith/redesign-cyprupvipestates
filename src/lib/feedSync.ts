@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { shouldRepublishFromFeed } from "@/lib/feedRepublish";
 import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoCluster, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, mirrorImage, imageToneForSource, type MirrorOpts, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
@@ -474,6 +475,7 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     where: { feedKey },
     select: {
       id: true, publishStatus: true, gallery: true, plans: true, imageDriftDetectedAt: true,
+      archivedMissingFromFeedAt: true, publishedAt: true,
       // Read for FROZEN_WHEN_PUBLISHED_IF_SET — without these the freeze
       // cannot tell "already set" from "never had one" and would either
       // protect nothing or freeze blanks forever.
@@ -496,6 +498,21 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       override: { select: { gallery: true, mainImage: true } },
     },
   });
+  // A project archived because it had vanished from the feed is back with
+  // something to buy: publish it again BEFORE anything else runs, so the rest
+  // of this sync treats it as the published page it is about to be (frozen
+  // content, units updated in place by ref — never wiped and recreated).
+  // returnedToMarketAt makes it show up as "back in stock" in the Action Center.
+  if (existing && shouldRepublishFromFeed(existing, vm.units)) {
+    const now = new Date();
+    await prisma.development.update({
+      where: { id: existing.id },
+      data: { publishStatus: "published", archivedMissingFromFeedAt: null, returnedToMarketAt: now, publishedAt: existing.publishedAt ?? now },
+    });
+    existing.publishStatus = "published";
+    existing.archivedMissingFromFeedAt = null;
+    console.log(`[feedSync] ${feedKey} is back in the feed with available units — republished`);
+  }
   const resolvedStoredGallery: string[] = (() => {
     const raw = (existing?.gallery as string[] | null) ?? [];
     const ovGallery = (existing?.override?.gallery as string[] | null) ?? [];

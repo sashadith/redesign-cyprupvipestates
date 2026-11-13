@@ -855,7 +855,9 @@ export async function setStatus(formData: FormData) {
   }
   const updated = await prisma.development.update({
     where: { id },
-    data: { publishStatus: status, publishedAt: status === "published" ? new Date() : null, ...(slug ? { slug } : {}) },
+    // archivedMissingFromFeedAt is cleared on every admin status change: an
+    // operator's own decision always wins over the feed's auto-republish.
+    data: { publishStatus: status, publishedAt: status === "published" ? new Date() : null, archivedMissingFromFeedAt: null, ...(slug ? { slug } : {}) },
   });
   revalidatePath(`/admin/developments/${id}`);
   revalidatePath("/admin/developments");
