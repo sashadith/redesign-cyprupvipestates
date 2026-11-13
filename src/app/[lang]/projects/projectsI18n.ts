@@ -87,6 +87,10 @@ export type ProjectsStrings = {
   loading: string; // POI "Loading…"
   loadingMap: string; // dynamic-import fallback (full map)
   mapShort: string; // dynamic-import fallback (mini map)
+  /** Shown in the map box when the browser cannot run the map (no WebGL).
+      Optional: HE has none (HE copy is not written without a native reviewer),
+      so HE gets an empty box rather than English text. */
+  mapUnavailable?: string;
   poi: {
     school_private: string;
     school_public: string;
@@ -178,6 +182,7 @@ const EN: ProjectsStrings = {
   loading: "Loading…",
   loadingMap: "Loading map…",
   mapShort: "Map…",
+  mapUnavailable: "The interactive map can't be shown in this browser.",
   poi: {
     school_private: "Private School",
     school_public: "Public School",
@@ -269,6 +274,7 @@ const DE: ProjectsStrings = {
   loading: "Lädt…",
   loadingMap: "Karte wird geladen…",
   mapShort: "Karte…",
+  mapUnavailable: "Die interaktive Karte kann in diesem Browser nicht angezeigt werden.",
   poi: {
     school_private: "Privatschule",
     school_public: "Öffentliche Schule",
@@ -360,6 +366,7 @@ const PL: ProjectsStrings = {
   loading: "Ładowanie…",
   loadingMap: "Ładowanie mapy…",
   mapShort: "Mapa…",
+  mapUnavailable: "Interaktywnej mapy nie można wyświetlić w tej przeglądarce.",
   poi: {
     school_private: "Szkoła prywatna",
     school_public: "Szkoła publiczna",
@@ -451,6 +458,7 @@ const RU: ProjectsStrings = {
   loading: "Загрузка…",
   loadingMap: "Загрузка карты…",
   mapShort: "Карта…",
+  mapUnavailable: "Интерактивную карту не удаётся показать в этом браузере.",
   poi: {
     school_private: "Частная школа",
     school_public: "Гос. школа",

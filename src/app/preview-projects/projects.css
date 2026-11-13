@@ -592,6 +592,10 @@
 /* ---------------- MAP (MapLibre vector base) ---------------- */
 .px-map__loading { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-soft); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); }
 .px-maplibre { height: 100%; width: 100%; background: var(--sea-deep); }
+/* MapContainer's stand-in when the map cannot start (no WebGL) — same box,
+   same colour, one quiet line instead of the map. */
+.px-map-fallback { display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; }
+.px-map-fallback__note { margin: 0; max-width: 32ch; text-align: center; color: var(--text-soft); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.5; }
 
 /* ---------------- MapLibre: pins, popups, clusters ---------------- */
 /* MapLibre markers have no intrinsic size (Leaflet's divIcon set it via

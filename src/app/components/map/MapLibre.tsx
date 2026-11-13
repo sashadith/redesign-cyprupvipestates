@@ -15,6 +15,7 @@ import { createPortal } from "react-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CVE_MAP_STYLE } from "./cveMapStyle";
+import { canUseWebGL } from "@/lib/webgl";
 
 const MapCtx = createContext<maplibregl.Map | null>(null);
 
@@ -38,10 +39,60 @@ export type MapContainerProps = {
   locale?: Record<string, string>;
   /** Zoom in/out buttons, styled like the LIFE NEARBY chips (projects.css). */
   showZoom?: boolean;
+  /**
+   * Shown in the map's box when the map cannot run (no WebGL, or MapLibre or a
+   * child threw). Defaults to an empty box in the map's background colour.
+   * Must not depend on the map — the map does not exist when it renders.
+   */
+  fallback?: React.ReactNode;
   children?: React.ReactNode;
 };
 
-export function MapContainer({
+/**
+ * Keeps any map failure inside the map's box.
+ *
+ * Without WebGL the MapLibre constructor throws; it did so in a layout effect,
+ * which unmounted the entire page ("Application error: a client-side exception
+ * has occurred") — the /projects listing, footer and cookie banner all gone
+ * because one decorative map could not start (2026-11-02). The constructor is
+ * now guarded directly in MapContainerInner; this boundary is the backstop for
+ * anything else map-related that throws during render or in an effect
+ * (markers, popups, POI layers, a future MapLibre release).
+ */
+class MapErrorBoundary extends React.Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(err: unknown) {
+    console.warn("[map] disabled after an error:", err);
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+function MapFallbackBox({ className, style, children }: { className?: string; style?: React.CSSProperties; children?: React.ReactNode }) {
+  return (
+    <div className={[className, "px-map-fallback"].filter(Boolean).join(" ")} style={{ position: "relative", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+export function MapContainer(props: MapContainerProps) {
+  const box = <MapFallbackBox className={props.className} style={props.style}>{props.fallback}</MapFallbackBox>;
+  return (
+    <MapErrorBoundary fallback={box}>
+      <MapContainerInner {...props} />
+    </MapErrorBoundary>
+  );
+}
+
+function MapContainerInner({
   center,
   zoom,
   minZoom,
@@ -52,31 +103,48 @@ export function MapContainer({
   style,
   locale,
   showZoom = true,
+  fallback,
   children,
 }: MapContainerProps) {
   const host = useRef<HTMLDivElement | null>(null);
   const [map, setMap] = useState<maplibregl.Map | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useLayoutEffect(() => {
     if (!host.current) return;
-    const m = new maplibregl.Map({
-      container: host.current,
-      style: CVE_MAP_STYLE,
-      center,
-      zoom,
-      minZoom,
-      maxZoom,
-      interactive,
-      locale,
-      // OpenStreetMap data is ODbL-licensed and requires attribution. The old
-      // Leaflet setup hid the attribution control outright; MapLibre's compact
-      // form is a small ⓘ disc that expands on click, which satisfies the licence
-      // without competing with the map.
-      attributionControl: { compact: true },
-      // The pin/POI markers carry their own glow; MapLibre's default fade would
-      // make them pop in late on pan. 0 keeps them in step with the tiles.
-      fadeDuration: 0,
-    });
+    if (!canUseWebGL()) {
+      setFailed(true);
+      return;
+    }
+    let m: maplibregl.Map;
+    try {
+      m = new maplibregl.Map({
+        container: host.current,
+        style: CVE_MAP_STYLE,
+        center,
+        zoom,
+        minZoom,
+        maxZoom,
+        interactive,
+        locale,
+        // OpenStreetMap data is ODbL-licensed and requires attribution. The old
+        // Leaflet setup hid the attribution control outright; MapLibre's compact
+        // form is a small ⓘ disc that expands on click, which satisfies the licence
+        // without competing with the map.
+        attributionControl: { compact: true },
+        // The pin/POI markers carry their own glow; MapLibre's default fade would
+        // make them pop in late on pan. 0 keeps them in step with the tiles.
+        fadeDuration: 0,
+      });
+    } catch (err) {
+      // MapLibre throws here when it cannot get a WebGL context even though the
+      // probe got one (different context attributes, GPU blocklisted, context
+      // limit). The map is decoration on every page that uses it; the page is
+      // not, so fall back rather than rethrow.
+      console.warn("[map] could not start, showing fallback:", err);
+      setFailed(true);
+      return;
+    }
     // Enabled after construction on purpose: switching it on inserts an overlay
     // element into the container, which would fire the ResizeObserver while the
     // map is still building itself.
@@ -136,6 +204,8 @@ export function MapContainer({
       ro.disconnect();
     };
   }, [map]);
+
+  if (failed) return <MapFallbackBox className={className} style={style}>{fallback}</MapFallbackBox>;
 
   return (
     <div ref={host} dir="ltr" className={className} style={{ position: "relative", ...style }}>

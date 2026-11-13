@@ -7,6 +7,7 @@ import PropertyOverlay, { type OverlayUnit } from "./PropertyOverlay";
 import type { PLocale } from "./copy";
 import { COPY } from "./copy";
 import { gsap, ScrollTrigger, safeReveal, deepFadeVars, isMobileViewport } from "./anim";
+import { useWebGLSupport } from "@/lib/webgl";
 
 // Leaflet touches window at import time — client-only, no SSR.
 const PresentationMap = dynamic(() => import("./PresentationMap"), { ssr: false });
@@ -38,6 +39,8 @@ export default function PresentationBody({
   const open = items.find((i) => i.developmentId === openId) ?? null;
   const cardsWrapRef = useRef<HTMLDivElement>(null);
   const mapSectionRef = useRef<HTMLElement>(null);
+  // No WebGL → no map section, rather than an empty box (lib/webgl.ts).
+  const mapOk = useWebGLSupport();
 
   // Lifted here (not per-card local state) so the card's heart button and
   // the overlay's own heart button — same development, two different DOM
@@ -180,7 +183,7 @@ export default function PresentationBody({
         </section>
       </div>
 
-      {markers.length > 0 && (
+      {mapOk && markers.length > 0 && (
         <section className="cp-mapsection" ref={mapSectionRef}>
           <PresentationMap markers={markers} locale={locale} onSelect={scrollTo} />
         </section>
