@@ -72,6 +72,11 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // like kuutio-sync: an unchanged list writes its own ok row, so a missing row
   // means the crontab entry itself is gone.
   { job: "stylianides-sync", label: "stylianides-sync", expectedMs: 24 * HOUR },
+  // 2026-11-13 — DTA Group's Dropbox price lists (src/lib/dtaSync.ts), crontab
+  // `50 2 * * *`, same convention as stylianides-sync. Goes live with the deploy,
+  // so the crontab line belongs to the same deploy — until it exists this item
+  // reports the job as never run, which is the point.
+  { job: "dta-sync", label: "dta-sync", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

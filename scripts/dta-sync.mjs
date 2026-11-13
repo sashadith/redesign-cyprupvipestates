@@ -40,6 +40,14 @@ import { recomputeDevelopmentDistances } from "../src/lib/developmentDistances.t
 const file = process.argv[2];
 const APPLY = process.argv.includes("--apply");
 if (!file) { console.error("usage: dta-sync.mjs <data.json> [--apply]"); process.exit(1); }
+/* Since 2026-11-13 the daily connector (/api/cron/dta-sync, src/lib/dtaSync.ts) keeps
+ * status and price of these units in step with the Dropbox price lists. Re-applying a
+ * hand transcription would write an older reading over a newer one, so --apply now
+ * needs --override-connector: for onboarding a new project or a deliberate repair. */
+if (APPLY && !process.argv.includes("--override-connector")) {
+  console.error("dta-sync.mjs --apply is superseded by the daily connector (api/cron/dta-sync). Add --override-connector only for a deliberate repair.");
+  process.exit(1);
+}
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
 
 const m2 = (n) => (n == null ? null : `${Number(n)} m²`);
