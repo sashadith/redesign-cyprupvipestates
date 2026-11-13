@@ -144,6 +144,15 @@ async function writeProject(account, project, media) {
   }
   const fields = {
     feedKey, dev: DEV, developerAccountId: account.id,
+    /* feedKey is "<dev>:<feedProjectId>" by the schema's own definition, so the
+       slug has to be the feedProjectId or the two would disagree. developerName
+       is "the original project name from the feed" — for DOMO that is the folder
+       name, never the old studio name (Alveo, Seya, Vireo, Orien, Caeli), which
+       is exactly what publicName and developerName must NOT become.
+       Both are required columns with no default; domoSyncFields.test.ts checks
+       this object against the schema so a missing one fails before a run does. */
+    feedProjectId: project.slug,
+    developerName: project.name,
     publicName: project.name,
     developer: data.account.name,
     category: project.category,
@@ -209,5 +218,12 @@ for (const project of order) {
 }
 
 log(`\n${APPLY ? "APPLIED" : "DRY RUN"} — ${projects.length} projects`);
+if (APPLY) {
+  // A local run writes rows into the PRODUCTION database that point at image
+  // files on this laptop. Same step as Giovani, Marinakis, DTA, Platon and Reiwa.
+  log("\nImages were written to public/uploads/developments/domo-* of THIS checkout.");
+  log("They are not on the server until you rsync them:");
+  log("  rsync -av public/uploads/developments/domo-* root@72.60.89.239:/var/www/shared-uploads/developments/");
+}
 if (problems.length) { log(`\n${problems.length} problem(s):`); for (const p of problems) log(`  - ${p}`); }
 await prisma.$disconnect();
