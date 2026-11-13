@@ -53,6 +53,7 @@ export default function PropertyMap({
         locale={gestureLocale(locale)}
         className="px-maplibre"
         style={{ height: "100%", width: "100%" }}
+        fallback={s.mapUnavailable ? <p className="px-map-fallback__note">{s.mapUnavailable}</p> : null}
       >
         {/* the property itself — our glowing emblem, prominent (active variant) */}
         <Marker

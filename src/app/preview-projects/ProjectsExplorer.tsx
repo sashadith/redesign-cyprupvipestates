@@ -7,6 +7,7 @@ import PxSelect from "./PxSelect";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { ProjectCard, type ProjectCardData, type Distances } from "./ProjectCard";
 import { gridSlots } from "./gridSlots";
+import { useWebGLSupport } from "@/lib/webgl";
 import Bdi from "@/app/components/Bdi";
 
 export type { ProjectCardData, Distances };
@@ -106,6 +107,11 @@ export default function ProjectsExplorer({
   const [q, setQ] = useState(filters.q);
   const [mapOpen, setMapOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Browsers without WebGL cannot run the map (lib/webgl.ts). Drop every way
+  // into it — the grid tile, the filter-bar button, the floating button — so
+  // nobody clicks into a blank box. The tile is inserted, not swapped for a
+  // card (gridSlots.ts), so removing it loses no project.
+  const mapOk = useWebGLSupport();
   const [moreOpen, setMoreOpen] = useState(false); // mobile "Additional filters" disclosure
   const hasBbox = sp.get("north") != null;
   const activeMore = (filters.propertyType ? 1 : 0) + (filters.bedrooms ? 1 : 0); // active Type/Beds count
@@ -320,13 +326,13 @@ export default function ProjectsExplorer({
           </form>
 
           {/* 6. Map */}
-          <button type="button" className="px__mapbtn" onClick={() => setMapOpen(true)}>
+          {mapOk && <button type="button" className="px__mapbtn" onClick={() => setMapOpen(true)}>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden>
               <path d="M7.5 3 2.5 5v12l5-2 5 2 5-2V3l-5 2-5-2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
               <path d="M7.5 3v12M12.5 5v12" stroke="currentColor" strokeWidth="1.4" />
             </svg>
             {s.mapBtn}
-          </button>
+          </button>}
 
           {/* 7. Reset */}
           <button type="button" className="px__reset" onClick={reset}>{s.reset}</button>
@@ -400,7 +406,7 @@ export default function ProjectsExplorer({
             {/* The map preview takes the 3rd slot on every page, pushing the
                cards along rather than consuming one — see gridSlots.ts for why
                that distinction is load-bearing. */}
-            {gridSlots(cards, isMobile).map((slot) =>
+            {gridSlots(cards, isMobile || !mapOk).map((slot) =>
               slot.kind === "map" ? (
                 <MapTile key="map-tile" markers={markers} total={total} onOpen={() => setMapOpen(true)} s={s} />
               ) : (
@@ -426,13 +432,13 @@ export default function ProjectsExplorer({
       </section>
 
       {/* floating map button (mobile / scroll convenience) */}
-      <button type="button" className="px__mapfab" onClick={() => setMapOpen(true)} aria-label={s.mapFab}>
+      {mapOk && <button type="button" className="px__mapfab" onClick={() => setMapOpen(true)} aria-label={s.mapFab}>
         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
           <path d="M7.5 3 2.5 5v12l5-2 5 2 5-2V3l-5 2-5-2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
           <path d="M7.5 3v12M12.5 5v12" stroke="currentColor" strokeWidth="1.4" />
         </svg>
         <span>{s.mapFab}</span>
-      </button>
+      </button>}
 
       {/* ---------- map overlay (toggled) ---------- */}
       {mapOpen && (
