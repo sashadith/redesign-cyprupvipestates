@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { dropboxConfigured, getDropboxAccessToken, listSharedFolder, downloadSharedFile, isDropboxShareUrl, type DropboxFile } from "./dropbox";
-import { readPdfPages } from "./ai/availabilityTable";
+import { readPdfPages, type PdfPage } from "./ai/availabilityTable";
 import { DTA_PROJECTS, dtaFeedKey, findDtaProjectFolder, findDtaPriceFolder, findDtaPriceList, parseDtaPriceList, planDtaWrite, priceRangeAfter, type DtaProject } from "./dta";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { beginSyncWindow } from "./imageMirror";
@@ -121,13 +121,11 @@ export async function syncDta(
         select: { id: true, ref: true, status: true, price: true, beds: true, pinnedFields: true },
       });
 
-      let rows: string[][];
-      try {
-        const pages = await readPdfPages(await downloadSharedFile(shareUrl!, file.id, token));
-        rows = pages.flatMap((pg) => pg.rows.map((row) => row.cells.map((c) => c.t)));
-      } catch (e) { r.issues.push(`could not read ${file.name}: ${e instanceof Error ? e.message : String(e)}`); continue; }
+      let pages: PdfPage[];
+      try { pages = await readPdfPages(await downloadSharedFile(shareUrl!, file.id, token)); }
+      catch (e) { r.issues.push(`could not read ${file.name}: ${e instanceof Error ? e.message : String(e)}`); continue; }
 
-      const parsed = parseDtaPriceList(rows, existing.map((u) => u.ref ?? "").filter(Boolean), p.name);
+      const parsed = parseDtaPriceList(pages, existing.map((u) => u.ref ?? "").filter(Boolean), p.name);
       r.listDate = parsed.listDate;
       r.units = parsed.units.length;
       const plan = planDtaWrite(existing, parsed, p.name);
