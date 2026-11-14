@@ -1,17 +1,22 @@
 #!/usr/bin/env node
-/* DOMO Properties — phase 1: account, project drafts and media (2026-11-13).
+/* DOMO Properties — account, project drafts, media and units.
  *
  *   node --import tsx --env-file=.env.local scripts/domo-sync.mjs scripts/data/domo/2026-11-13.json           # dry run
  *   node --import tsx --env-file=.env.local scripts/domo-sync.mjs scripts/data/domo/2026-11-13.json --apply   # write
  *   DOMO_CLOUD_URL='https://domoproperties.sharepoint.com/:f:/g/...' … --apply                                # also stores the share link
+ *   … --units=scripts/data/domo/units-2026-11-14.json                                                         # also write units + delivery dates
  *
- * WHAT THIS DOES AND DOES NOT DO. It creates the developer account, one DRAFT
- * development per project in the data file, and mirrors that project's renders
- * and floor plans out of DOMO's SharePoint share. It writes NO units and NO
- * prices: those come from the master price list at domoproperties.com/mp in
- * phase 2, and until then every project here is a draft with pictures and no
- * stock. A draft is invisible on the site, which is the point — the operator
- * publishes when the content is right.
+ * WHAT THIS DOES. It creates the developer account, one DRAFT development per
+ * project in the data file, and mirrors that project's renders and floor plans out
+ * of DOMO's SharePoint share. A draft is invisible on the site, which is the point
+ * — the operator publishes when the content is right.
+ *
+ * UNITS AND PRICES (phase 2, 2026-11-14) come from the master price list at
+ * domoproperties.com/mp and from nowhere else. They are not read here:
+ * scripts/domo-pricelist.mjs reads the PDF and writes a units file, this reads that
+ * file. Two steps, because the parse is then reviewable as a diff before a price
+ * reaches a page, and because a failed fetch can never half-write a project's stock.
+ * Without --units nothing about units or delivery dates is touched.
  *
  * The share link is a bearer credential: anyone holding it can read DOMO's
  * agent library without signing in. It is never committed. Pass it once via
@@ -36,6 +41,7 @@ import { splitFolder, claimPhoto } from "../src/lib/domo/media.ts";
 import { storeUploadedImage, devKeyFor, pdfPagesToJpegs } from "../src/lib/imageMirror.ts";
 import { downloadFile } from "../src/lib/sharepoint.ts";
 import { recomputeDevelopmentDerivedState } from "../src/lib/developmentDerivedState.ts";
+import { writeFeedUnitsPreservingIds } from "../src/lib/feedUnitWrite.ts";
 
 /* The local DATABASE_URL tunnels to PRODUCTION, and the tunnel is not always up.
    A dry run's reads only decide "does this row already exist", so an unreachable
@@ -55,8 +61,11 @@ async function dbRead(fn) {
 const file = process.argv[2];
 const APPLY = process.argv.includes("--apply");
 const ONLY = (process.argv.find((a) => a.startsWith("--only=")) || "").slice("--only=".length);
-if (!file) { console.error("usage: domo-sync.mjs <data.json> [--apply] [--only=<slug>]"); process.exit(1); }
+const UNITS_FILE = (process.argv.find((a) => a.startsWith("--units=")) || "").slice("--units=".length);
+if (!file) { console.error("usage: domo-sync.mjs <data.json> [--apply] [--only=<slug>] [--units=<units.json>]"); process.exit(1); }
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
+const priceList = UNITS_FILE ? JSON.parse(fs.readFileSync(UNITS_FILE, "utf8")) : null;
+const prices = new Map((priceList?.projects ?? []).map((p) => [p.slug, p]));
 const DEV = "domo";
 const problems = [];
 const log = (...a) => console.log(...a);
@@ -127,8 +136,75 @@ async function mirrorProject(ctx, folderEntry, project, seenHashes) {
   return { gallery, plans, skippedShared, counted: { photos: split.photos.length, plans: split.plans.length } };
 }
 
+/* ── units ───────────────────────────────────────────────────────────────── */
+
+/* One stored row per price-list row. `ref` is the anchor
+   writeFeedUnitsPreservingIds matches on, so a re-run updates a unit in place and
+   its id — which Xellex and every client presentation hold — never moves.
+   `label` and `storage` are only sent when the list says something: writing null
+   would clear whatever the admin put there. */
+function unitRow(u) {
+  return {
+    ref: u.ref,
+    feedRef: u.ref,
+    ...(u.label ? { label: u.label } : {}),
+    type: u.type,
+    beds: u.beds,
+    floor: u.floor,
+    status: u.status,
+    // Faithful to the sheet: a sold or reserved flat has no price printed, and
+    // keeping yesterday's would publish a figure the developer withdrew.
+    price: u.price,
+    currency: "EUR",
+    areaInternal: u.areaInternal,
+    areaBuilt: u.areaBuilt,
+    areaVeranda: u.areaVeranda,
+    areaVerandaOpen: u.areaVerandaOpen,
+    ...(u.storage ? { storage: u.storage } : {}),
+    attrs: u.attrs,
+    source: "feed",
+  };
+}
+
+/* Refuse a run that would unlist more than half of what a project already lists.
+   The usual reason for a mass mismatch is a renumbering — Liora's Block B flats
+   are "B101" in one list and could be "101" in the next — and the damage is not
+   cosmetic: every old row goes "unlisted" and every new one gets a new id, which
+   is the churn feedUnitWrite.ts exists to prevent. Four is the floor because
+   Albion and Avon list five units each and a genuinely sold-out small project
+   must still be able to shrink. */
+function unlistGuard(existingRefs, freshRefs, slug) {
+  if (existingRefs.length < 4) return null;
+  const fresh = new Set(freshRefs);
+  const gone = existingRefs.filter((r) => !fresh.has(r));
+  return gone.length > existingRefs.length / 2
+    ? `${slug}: the price list no longer names ${gone.length} of the ${existingRefs.length} units on this page (${gone.slice(0, 4).join(", ")}…) — refusing to write, check whether DOMO renumbered them`
+    : null;
+}
+
+async function writeUnits(devId, project, price) {
+  if (!devId || !price) return;
+  const rows = price.units.map(unitRow);
+  const existing = (await dbRead(() => prisma.developmentUnit.findMany({
+    where: { developmentId: devId, source: "feed" },
+    select: { ref: true, status: true },
+  }))) ?? [];
+  const stop = unlistGuard(existing.filter((u) => u.ref && u.status !== "sold" && u.status !== "unlisted").map((u) => u.ref), rows.map((r) => r.ref), project.slug);
+  if (stop) { problems.push(stop); return; }
+  if (!rows.length) return;
+
+  if (!APPLY) {
+    const have = new Set(existing.map((u) => u.ref));
+    const create = rows.filter((r) => !have.has(r.ref)).length;
+    log(`     units: ${rows.length} in the list — ${create} new, ${rows.length - create} updated in place`);
+    return;
+  }
+  const result = await writeFeedUnitsPreservingIds(prisma, devId, rows);
+  log(`     units: ${result.created.length} created, ${result.updated} updated, ${result.unlisted.length} unlisted`);
+}
+
 /* ── projects ────────────────────────────────────────────────────────────── */
-async function writeProject(account, project, media) {
+async function writeProject(account, project, media, price) {
   const feedKey = `${DEV}:${project.slug}`;
   const existing = await dbRead(() => prisma.development.findUnique({
     where: { feedKey },
@@ -138,8 +214,14 @@ async function writeProject(account, project, media) {
     problems.push(`${project.slug}: feedKey ${feedKey} belongs to dev "${existing.dev}" ("${existing.publicName}") — not touched`);
     return null;
   }
+  /* Published means the CONTENT is frozen — name, category, pictures, delivery
+     date: all of it is the operator's once the page is live. Units are not
+     content and are not frozen here: availability and prices are exactly what a
+     live page must keep receiving, and writeUnits runs for a published project
+     like any other (the freeze that does apply to units is the per-unit pin,
+     src/lib/unitPins.ts, which writeFeedUnitsPreservingIds honours). */
   if (existing?.publishStatus === "published") {
-    log(`  ${project.slug}: published — frozen, nothing written`);
+    log(`  ${project.slug}: published — content frozen${price?.units.length ? ", units still updated" : ""}`);
     return existing.id;
   }
   const fields = {
@@ -164,11 +246,24 @@ async function writeProject(account, project, media) {
     longitude: project.longitude,
     publishStatus: "draft",
     ...(media ? { gallery: media.gallery, plans: media.plans } : {}),
+    /* The delivery quarter the price list prints for this project, read from the
+       page's own geometry (src/lib/domo/priceList.ts). Never written as null: a
+       list that stops carrying a date must not erase one somebody can still read
+       on the previous one. */
+    ...(price?.completion ? { completion: price.completion } : {}),
+    /* Blackfriars House, Strand House and Roman House are sold as whole buildings
+       and have no unit table, so their price has nowhere else to live. Every other
+       project leaves these alone: THE UNITS DECIDE there (developmentCard.ts). */
+    ...(price?.building?.sale ? { priceFrom: price.building.sale, priceTo: price.building.sale, currency: "EUR" } : {}),
   };
   const planWord = APPLY ? "plan pages" : "plan files";
-  log(`  ${project.slug}: ${existing ? "UPDATE" : "CREATE"} draft | ${media ? `${media.gallery.length} photos, ${media.plans.length} ${planWord}` : "no folder — metadata only"}`);
+  const extra = [
+    price?.completion ? `delivery ${price.completion}` : "",
+    price?.building?.sale ? `whole building €${price.building.sale.toLocaleString("en-US")}` : "",
+  ].filter(Boolean);
+  log(`  ${project.slug}: ${existing ? "UPDATE" : "CREATE"} draft | ${media ? `${media.gallery.length} photos, ${media.plans.length} ${planWord}` : "no folder — metadata only"}${extra.length ? ` | ${extra.join(", ")}` : ""}`);
   if (media?.skippedShared.length) log(`     shared renders skipped: ${media.skippedShared.join(", ")}`);
-  if (!APPLY) return null;
+  if (!APPLY) return existing?.id ?? null;
   const row = existing
     ? await prisma.development.update({ where: { id: existing.id }, data: fields })
     : await prisma.development.create({ data: fields });
@@ -214,10 +309,14 @@ for (const project of order) {
   if (media && media.counted.plans !== project.media.plans) {
     problems.push(`${project.slug}: data file expects ${project.media.plans} plan files, the share has ${media.counted.plans}`);
   }
-  await writeProject(account, project, media);
+  const price = prices.get(project.slug) ?? null;
+  if (priceList && !price) problems.push(`${project.slug}: not in ${UNITS_FILE} — no units, no delivery date`);
+  const devId = await writeProject(account, project, media, price);
+  await writeUnits(devId, project, price);
 }
 
-log(`\n${APPLY ? "APPLIED" : "DRY RUN"} — ${projects.length} projects`);
+const unitTotal = projects.reduce((n, p) => n + (prices.get(p.slug)?.units.length ?? 0), 0);
+log(`\n${APPLY ? "APPLIED" : "DRY RUN"} — ${projects.length} projects${priceList ? `, ${unitTotal} units from ${UNITS_FILE} (read ${priceList.source?.read ?? "?"})` : ", no units (pass --units=… to write them)"}`);
 if (APPLY) {
   // A local run writes rows into the PRODUCTION database that point at image
   // files on this laptop. Same step as Giovani, Marinakis, DTA, Platon and Reiwa.
