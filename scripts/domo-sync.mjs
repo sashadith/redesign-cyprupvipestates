@@ -62,7 +62,12 @@ const file = process.argv[2];
 const APPLY = process.argv.includes("--apply");
 const ONLY = (process.argv.find((a) => a.startsWith("--only=")) || "").slice("--only=".length);
 const UNITS_FILE = (process.argv.find((a) => a.startsWith("--units=")) || "").slice("--units=".length);
-if (!file) { console.error("usage: domo-sync.mjs <data.json> [--apply] [--only=<slug>] [--units=<units.json>]"); process.exit(1); }
+/* Media is the expensive half — ~400 MB out of SharePoint — and it only changes
+   when DOMO add renders. A price run does not need it: --no-media leaves gallery
+   and plans exactly as they are and writes units, prices and delivery dates only.
+   That is the shape phase 3's nightly job will take. */
+const NO_MEDIA = process.argv.includes("--no-media");
+if (!file) { console.error("usage: domo-sync.mjs <data.json> [--apply] [--only=<slug>] [--units=<units.json>] [--no-media]"); process.exit(1); }
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
 const priceList = UNITS_FILE ? JSON.parse(fs.readFileSync(UNITS_FILE, "utf8")) : null;
 const prices = new Map((priceList?.projects ?? []).map((p) => [p.slug, p]));
@@ -261,7 +266,7 @@ async function writeProject(account, project, media, price) {
     price?.completion ? `delivery ${price.completion}` : "",
     price?.building?.sale ? `whole building €${price.building.sale.toLocaleString("en-US")}` : "",
   ].filter(Boolean);
-  log(`  ${project.slug}: ${existing ? "UPDATE" : "CREATE"} draft | ${media ? `${media.gallery.length} photos, ${media.plans.length} ${planWord}` : "no folder — metadata only"}${extra.length ? ` | ${extra.join(", ")}` : ""}`);
+  log(`  ${project.slug}: ${existing ? "UPDATE" : "CREATE"} draft | ${media ? `${media.gallery.length} photos, ${media.plans.length} ${planWord}` : NO_MEDIA ? "media untouched" : "no folder — metadata only"}${extra.length ? ` | ${extra.join(", ")}` : ""}`);
   if (media?.skippedShared.length) log(`     shared renders skipped: ${media.skippedShared.join(", ")}`);
   if (!APPLY) return existing?.id ?? null;
   const row = existing
@@ -278,7 +283,9 @@ const projects = data.projects.filter((p) => !ONLY || p.slug === ONLY);
 
 let ctx = null;
 let roots = [];
-if (cloud) {
+if (NO_MEDIA) {
+  log("--no-media: the share is not opened, gallery and plans are left untouched\n");
+} else if (cloud) {
   ctx = await openShare(cloud);
   roots = await listFolder(ctx, ctx.rootId);
   log(`share opened: ${roots.filter(isFolder).length} folders\n`);
