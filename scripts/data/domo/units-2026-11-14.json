@@ -1,0 +1,5827 @@
+{
+  "source": {
+    "pdf": "/private/tmp/claude-501/-Users-sashadith-cvp-analysis--claude-worktrees-exciting-feynman-9a5f7d/d9c43bf0-1244-449d-8728-006a78aef023/scratchpad/domo-downloads/mp.pdf",
+    "page": "https://domoproperties.com/mp",
+    "read": "2026-11-14T08:23:15.245Z"
+  },
+  "projects": [
+    {
+      "slug": "evora",
+      "pages": [
+        7
+      ],
+      "completion": "Q3 2027",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": "10",
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8 m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "93m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "90",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "17m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "101",
+          "areaBuilt": "129",
+          "areaVeranda": "28",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 840000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "12m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "16m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "90",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "17m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "101",
+          "areaBuilt": "129",
+          "areaVeranda": "28",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 860000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "12m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "16m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "4m²"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "90",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "17m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "4m²"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "101",
+          "areaBuilt": "129",
+          "areaVeranda": "28",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 880000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "12m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "4m²"
+            }
+          ]
+        },
+        {
+          "ref": "401",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "115",
+          "areaBuilt": "269",
+          "areaVeranda": "49",
+          "areaVerandaOpen": "5",
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "100m²"
+            },
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            },
+            {
+              "name": "Storage",
+              "value": "4m²"
+            }
+          ]
+        },
+        {
+          "ref": "402",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "118",
+          "areaBuilt": "267",
+          "areaVeranda": "38",
+          "areaVerandaOpen": "8",
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "103m²"
+            },
+            {
+              "name": "Common area",
+              "value": "12m²"
+            },
+            {
+              "name": "Green terrace",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            },
+            {
+              "name": "Storage",
+              "value": "4m²"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "siena",
+      "pages": [
+        8
+      ],
+      "completion": "Q4 2027",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "60",
+          "areaVeranda": "10",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1S",
+          "areaInternal": "42",
+          "areaBuilt": "54",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 200000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "60",
+          "areaVeranda": "10",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1S",
+          "areaInternal": "42",
+          "areaBuilt": "51",
+          "areaVeranda": "9",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "92",
+          "areaVeranda": "10",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 350000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "32m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "5m²"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "154",
+          "areaVeranda": "17",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "62m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "10m²"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1S",
+          "areaInternal": "42",
+          "areaBuilt": "67",
+          "areaVeranda": "9",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 250000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "26m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "4m²"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "hampton",
+      "pages": [
+        9
+      ],
+      "completion": "Q3 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "108",
+          "areaVeranda": "23",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "108",
+          "areaVeranda": "23",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "92",
+          "areaVeranda": "17",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "122",
+          "areaVeranda": "27",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "92",
+          "areaVeranda": "17",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 520000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "122",
+          "areaVeranda": "27",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "401",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "171",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 800000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "65m²"
+            },
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "402",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "171",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 800000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "65m²"
+            },
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "403",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "197",
+          "areaVeranda": "27",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 890000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "75m²"
+            },
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "padua",
+      "pages": [
+        10
+      ],
+      "completion": "Q2 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "59",
+          "areaVeranda": "9",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 255000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "103",
+          "areaBuilt": "131",
+          "areaVeranda": "28",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "76",
+          "areaBuilt": "97",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 405000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "76",
+          "areaBuilt": "143",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "47m²"
+            },
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "142",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "48m²"
+            },
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "142",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "48m²"
+            },
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "304",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "101",
+          "areaBuilt": "189",
+          "areaVeranda": "28",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 670000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "60m²"
+            },
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "aalto",
+      "pages": [
+        11
+      ],
+      "completion": "Q3 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "77",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "66",
+          "areaBuilt": "79",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1S",
+          "areaInternal": "31",
+          "areaBuilt": "48",
+          "areaVeranda": "17",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "104",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "60",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "77",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 440000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "66",
+          "areaBuilt": "79",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1S",
+          "areaInternal": "31",
+          "areaBuilt": "48",
+          "areaVeranda": "17",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "204",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "60",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "78",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "77",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 450000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "76",
+          "areaBuilt": "101",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 520000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "401",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "128",
+          "areaBuilt": "196",
+          "areaVeranda": "34",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 960000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "34m²"
+            },
+            {
+              "name": "Common area",
+              "value": "12m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "402",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "86",
+          "areaBuilt": "125",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 645000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "23m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "1.5m²"
+            }
+          ]
+        },
+        {
+          "ref": "403",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "5",
+          "areaInternal": "214",
+          "areaBuilt": "321",
+          "areaVeranda": "50",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 1580000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "57m²"
+            },
+            {
+              "name": "Common area",
+              "value": "21m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            },
+            {
+              "name": "Storage",
+              "value": "13m²"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "mantua",
+      "pages": [
+        12
+      ],
+      "completion": "Q2 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "79",
+          "areaBuilt": "98",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "79",
+          "areaBuilt": "98",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "69",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "104",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "105",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "62",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "4m²"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "93",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "77",
+          "areaBuilt": "99",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 405000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "96",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 405000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "204",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "65",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "205",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "62",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "78",
+          "areaBuilt": "152",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 550000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "56m²"
+            },
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "77",
+          "areaBuilt": "156",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 550000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "58m²"
+            },
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "77",
+          "areaBuilt": "173",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 540000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "78m²"
+            },
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "304",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "108",
+          "areaBuilt": "215",
+          "areaVeranda": "27",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 750000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "78m²"
+            },
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "delta",
+      "pages": [
+        14
+      ],
+      "completion": "Q3 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "92",
+          "areaBuilt": "124",
+          "areaVeranda": "32",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 575000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "79",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "55",
+          "areaVeranda": "10",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "104",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "85",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "92",
+          "areaBuilt": "124",
+          "areaVeranda": "32",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "79",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "55",
+          "areaVeranda": "10",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "204",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "85",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 450000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "92",
+          "areaBuilt": "124",
+          "areaVeranda": "32",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "9 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "79",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "55",
+          "areaVeranda": "10",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "304",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "85",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 460000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "401",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "125",
+          "areaBuilt": "233",
+          "areaVeranda": "33",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 980000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "75m²"
+            },
+            {
+              "name": "Common area",
+              "value": "13 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "402",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "102",
+          "areaBuilt": "127",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 780000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10 m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "liora",
+      "pages": [
+        16,
+        17
+      ],
+      "completion": "Q4 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "A 101",
+          "label": "Block A · 101",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "64",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 102",
+          "label": "Block A · 102",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 360000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 103",
+          "label": "Block A · 103",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "62",
+          "areaVeranda": "12",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 104",
+          "label": "Block A · 104",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 105",
+          "label": "Block A · 105",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "64",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 106",
+          "label": "Block A · 106",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 107",
+          "label": "Block A · 107",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 201",
+          "label": "Block A · 201",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1+1",
+          "areaInternal": "60",
+          "areaBuilt": "71",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 320000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 202",
+          "label": "Block A · 202",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "91",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 380000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 203",
+          "label": "Block A · 203",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 204",
+          "label": "Block A · 204",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "64",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 205",
+          "label": "Block A · 205",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 206",
+          "label": "Block A · 206",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "58",
+          "areaVeranda": "8",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 207",
+          "label": "Block A · 207",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 301",
+          "label": "Block A · 301",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1+1",
+          "areaInternal": "60",
+          "areaBuilt": "125",
+          "areaVeranda": "35",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 420000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "30m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 302",
+          "label": "Block A · 302",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "136",
+          "areaVeranda": "29",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 540000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "32m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 303",
+          "label": "Block A · 303",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 280000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 304",
+          "label": "Block A · 304",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "153",
+          "areaVeranda": "32",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 540000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "46m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 305",
+          "label": "Block A · 305",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 280000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "A 306",
+          "label": "Block A · 306",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "87",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 340000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "24m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 101",
+          "label": "Block B · 101",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "53",
+          "areaBuilt": "67",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 255000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 102",
+          "label": "Block B · 102",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 360000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 103",
+          "label": "Block B · 103",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 104",
+          "label": "Block B · 104",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "64",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 105",
+          "label": "Block B · 105",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 106",
+          "label": "Block B · 106",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 107",
+          "label": "Block B · 107",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "53",
+          "areaBuilt": "68",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 240000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 201",
+          "label": "Block B · 201",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "53",
+          "areaBuilt": "67",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 275000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 202",
+          "label": "Block B · 202",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "91",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 380000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 203",
+          "label": "Block B · 203",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 204",
+          "label": "Block B · 204",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "64",
+          "areaVeranda": "14",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 205",
+          "label": "Block B · 205",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 206",
+          "label": "Block B · 206",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "58",
+          "areaVeranda": "8",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 207",
+          "label": "Block B · 207",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 260000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 301",
+          "label": "Block B · 301",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1+1",
+          "areaInternal": "60",
+          "areaBuilt": "105",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 400000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "30m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 302",
+          "label": "Block B · 302",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "136",
+          "areaVeranda": "29",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 540000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "32m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 303",
+          "label": "Block B · 303",
+          "block": "B",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 310000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 304",
+          "label": "Block B · 304",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "153",
+          "areaVeranda": "32",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 540000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "46m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 305",
+          "label": "Block B · 305",
+          "block": "B",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 305000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        },
+        {
+          "ref": "B 306",
+          "label": "Block B · 306",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "87",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": "yes",
+          "price": 350000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "24m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            },
+            {
+              "name": "Storage",
+              "value": "3m²"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "milford-heights",
+      "pages": [
+        19
+      ],
+      "completion": "Q1 2029",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "A 101",
+          "label": "Block A · 101",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "102",
+          "areaVeranda": "17",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 102",
+          "label": "Block A · 102",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "87",
+          "areaBuilt": "103",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 455000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 201",
+          "label": "Block A · 201",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "105",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 202",
+          "label": "Block A · 202",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "87",
+          "areaBuilt": "105",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 203",
+          "label": "Block A · 203",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "51",
+          "areaBuilt": "62",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 204",
+          "label": "Block A · 204",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "52",
+          "areaBuilt": "63",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 205",
+          "label": "Block A · 205",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "110",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 301",
+          "label": "Block A · 301",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "120",
+          "areaBuilt": "192",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "50m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 302",
+          "label": "Block A · 302",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "87",
+          "areaBuilt": "152",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 515000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "50m²"
+            },
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 303",
+          "label": "Block A · 303",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "51",
+          "areaBuilt": "62",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 295000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 304",
+          "label": "Block A · 304",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "52",
+          "areaBuilt": "63",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 305",
+          "label": "Block A · 305",
+          "block": "A",
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "110",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 401",
+          "label": "Block A · 401",
+          "block": "A",
+          "floor": "4",
+          "type": "Penthouse",
+          "beds": "4",
+          "areaInternal": "168",
+          "areaBuilt": "212",
+          "areaVeranda": "44",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 1300000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "4m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 101",
+          "label": "Block B · 101",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "110",
+          "areaBuilt": "137",
+          "areaVeranda": "27",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 675000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 201",
+          "label": "Block B · 201",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "110",
+          "areaBuilt": "141",
+          "areaVeranda": "31",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 202",
+          "label": "Block B · 202",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "66",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 320000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 203",
+          "label": "Block B · 203",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "101",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 510000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 301",
+          "label": "Block B · 301",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "110",
+          "areaBuilt": "179",
+          "areaVeranda": "29",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "40m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 302",
+          "label": "Block B · 302",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "103",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "40m²"
+            },
+            {
+              "name": "Common area",
+              "value": "3m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 303",
+          "label": "Block B · 303",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "138",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 560000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "40m²"
+            },
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "albion",
+      "pages": [
+        20
+      ],
+      "completion": "Q2 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "81",
+          "areaBuilt": "103",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 610000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "51",
+          "areaBuilt": "69",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "20m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "81",
+          "areaBuilt": "103",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 635000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "81",
+          "areaBuilt": "103",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 635000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "20m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "149",
+          "areaBuilt": "258",
+          "areaVeranda": "39",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 1570000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "70m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "avon",
+      "pages": [
+        22
+      ],
+      "completion": "Q3 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "51",
+          "areaBuilt": "69",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "84",
+          "areaBuilt": "106",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 615000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "85",
+          "areaBuilt": "109",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "sold",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "84",
+          "areaBuilt": "106",
+          "areaVeranda": "22",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 640000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "4",
+          "areaInternal": "148",
+          "areaBuilt": "265",
+          "areaVeranda": "37",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 1750000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "80m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "arden",
+      "pages": [
+        23
+      ],
+      "completion": "Q3 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "4",
+          "areaInternal": "150",
+          "areaBuilt": "190",
+          "areaVeranda": "40",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 1000000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "22m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 550000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "100",
+          "areaVeranda": "20",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 550000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "4",
+          "areaInternal": "155",
+          "areaBuilt": "195",
+          "areaVeranda": "40",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 1100000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "22m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "155",
+          "areaBuilt": "275",
+          "areaVeranda": "40",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 1250000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "80m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "the-glover",
+      "pages": [
+        24
+      ],
+      "completion": "Q4 2028",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "78",
+          "areaBuilt": "221",
+          "areaVeranda": "25",
+          "areaVerandaOpen": "113",
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "174",
+          "areaVeranda": "21",
+          "areaVerandaOpen": "68",
+          "storage": null,
+          "price": 500000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "79",
+          "areaBuilt": "111",
+          "areaVeranda": "27",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 400000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "80",
+          "areaBuilt": "104",
+          "areaVeranda": "16",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 400000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "88",
+          "areaBuilt": "158",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 650000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "44m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "80",
+          "areaBuilt": "195",
+          "areaVeranda": "15",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 580000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "95m²"
+            },
+            {
+              "name": "Common area",
+              "value": "9m²"
+            },
+            {
+              "name": "Parking",
+              "value": "2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "messina",
+      "pages": [
+        26
+      ],
+      "completion": "Q2 2029",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "101",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "58",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 275000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "102",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "56",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "103",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 390000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "104",
+          "label": null,
+          "block": null,
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 390000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "201",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "58",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 295000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "202",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "56",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 300000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "203",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": null,
+          "status": "reserved",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "204",
+          "label": null,
+          "block": null,
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 430000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "301",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "58",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 315000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "302",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "45",
+          "areaBuilt": "56",
+          "areaVeranda": "11",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 325000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "303",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 460000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "304",
+          "label": null,
+          "block": null,
+          "floor": "3",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 460000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "401",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "90",
+          "areaBuilt": "114",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 600000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "402",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 480000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "403",
+          "label": null,
+          "block": null,
+          "floor": "4",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "65",
+          "areaBuilt": "83",
+          "areaVeranda": "18",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 480000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "501",
+          "label": null,
+          "block": null,
+          "floor": "5",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "96",
+          "areaBuilt": "159",
+          "areaVeranda": "26",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 760000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "37m²"
+            },
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "502",
+          "label": null,
+          "block": null,
+          "floor": "5",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "109",
+          "areaBuilt": "176",
+          "areaVeranda": "28",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 850000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "39m²"
+            },
+            {
+              "name": "Common area",
+              "value": "6m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "navarre",
+      "pages": [
+        28,
+        29
+      ],
+      "completion": "Q2 2029",
+      "building": {
+        "sale": null,
+        "rent": null
+      },
+      "units": [
+        {
+          "ref": "A 101",
+          "label": "Block A · 101",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 375000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 102",
+          "label": "Block A · 102",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 375000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 103",
+          "label": "Block A · 103",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "119",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 475000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 104",
+          "label": "Block A · 104",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 375000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 105",
+          "label": "Block A · 105",
+          "block": "A",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "77",
+          "areaBuilt": "96",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 385000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 201",
+          "label": "Block A · 201",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 395000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 202",
+          "label": "Block A · 202",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "100",
+          "areaBuilt": "125",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 520000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 203",
+          "label": "Block A · 203",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "119",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 495000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 204",
+          "label": "Block A · 204",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "75",
+          "areaBuilt": "94",
+          "areaVeranda": "19",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 375000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 205",
+          "label": "Block A · 205",
+          "block": "A",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 245000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 301",
+          "label": "Block A · 301",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "100",
+          "areaBuilt": "215",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 600000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "90m²"
+            },
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 302",
+          "label": "Block A · 302",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "105",
+          "areaBuilt": "221",
+          "areaVeranda": "26",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 625000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "90m²"
+            },
+            {
+              "name": "Common area",
+              "value": "11m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 303",
+          "label": "Block A · 303",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "189",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 575000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "70m²"
+            },
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "A 304",
+          "label": "Block A · 304",
+          "block": "A",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "189",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 575000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "70m²"
+            },
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 101",
+          "label": "Block B · 101",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "119",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 475000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 102",
+          "label": "Block B · 102",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "119",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 475000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 103",
+          "label": "Block B · 103",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "82",
+          "areaBuilt": "103",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 410000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 104",
+          "label": "Block B · 104",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 250000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 105",
+          "label": "Block B · 105",
+          "block": "B",
+          "floor": "1",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 250000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 201",
+          "label": "Block B · 201",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "119",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 495000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 202",
+          "label": "Block B · 202",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "3",
+          "areaInternal": "95",
+          "areaBuilt": "119",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 495000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "10m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 203",
+          "label": "Block B · 203",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "2",
+          "areaInternal": "82",
+          "areaBuilt": "103",
+          "areaVeranda": "21",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 430000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "8m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 204",
+          "label": "Block B · 204",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 270000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 205",
+          "label": "Block B · 205",
+          "block": "B",
+          "floor": "2",
+          "type": "Apartment",
+          "beds": "1",
+          "areaInternal": "50",
+          "areaBuilt": "63",
+          "areaVeranda": "13",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 270000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Common area",
+              "value": "5m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 301",
+          "label": "Block B · 301",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "100",
+          "areaBuilt": "215",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 600000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "90m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 302",
+          "label": "Block B · 302",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "100",
+          "areaBuilt": "215",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 600000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "90m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 303",
+          "label": "Block B · 303",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "100",
+          "areaBuilt": "215",
+          "areaVeranda": "25",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 600000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "90m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "ref": "B 304",
+          "label": "Block B · 304",
+          "block": "B",
+          "floor": "3",
+          "type": "Penthouse",
+          "beds": "3",
+          "areaInternal": "97",
+          "areaBuilt": "191",
+          "areaVeranda": "24",
+          "areaVerandaOpen": null,
+          "storage": null,
+          "price": 575000,
+          "status": "available",
+          "attrs": [
+            {
+              "name": "Roof garden",
+              "value": "70m²"
+            },
+            {
+              "name": "Common area",
+              "value": "7m²"
+            },
+            {
+              "name": "Parking",
+              "value": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "blackfriars-house",
+      "pages": [
+        31
+      ],
+      "completion": "2028",
+      "building": {
+        "sale": 4800000,
+        "rent": 49000
+      },
+      "units": []
+    },
+    {
+      "slug": "strand-house",
+      "pages": [
+        32
+      ],
+      "completion": "2028",
+      "building": {
+        "sale": 3050000,
+        "rent": 30000
+      },
+      "units": []
+    },
+    {
+      "slug": "roman-house",
+      "pages": [
+        33
+      ],
+      "completion": "2028",
+      "building": {
+        "sale": 6000000,
+        "rent": null
+      },
+      "units": []
+    }
+  ]
+}
